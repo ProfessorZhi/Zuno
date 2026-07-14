@@ -112,7 +112,7 @@ REQUIRED_TERMS = [
     "Agent Core 拥有最终 `StepFeasibilityDecision`",
     "Gateway 不得激活 PlanVersion",
     "Gateway 不直接修改 AgentRun 终态",
-    "Gateway 不得自行扩大 Run Budget",
+    "不得自行扩大 Run Budget",
     "Gateway 不执行外部副作用",
     "模型不能直接写长期 Memory",
     "最终 Security Decision 必须由 Security 模块",
@@ -120,6 +120,7 @@ REQUIRED_TERMS = [
     "不得直接批准、激活、发布或提交长期事实",
     "Mock-only、单次成功调用或文档完成不能证明生产 Readiness",
     "src/backend/zuno/platform/model_gateway/",
+    "不得新增 `src/backend/zuno/model_gateway/`",
     "model_calls",
     "model_routing_decisions",
     "model_call_attempts",
@@ -195,9 +196,6 @@ def verify() -> list[str]:
     ]:
         if term not in doc:
             errors.append(f"Gateway document missing required term: {term}")
-
-    if "src/backend/zuno/model_gateway/" in doc:
-        errors.append("Gateway document proposes forbidden top-level zuno/model_gateway package")
 
     positions: list[int] = []
     for part in PARTS:

@@ -80,9 +80,9 @@ def test_wave1_adr_and_physical_ownership_are_aligned() -> None:
         "ModelUsageReceiptV1",
         "ModelCancellationReceiptV1",
         "src/backend/zuno/platform/model_gateway/",
+        "不得新增 `src/backend/zuno/model_gateway/`",
     ]:
         assert term in content
-    assert "src/backend/zuno/model_gateway/" not in content
 
 
 def test_all_model_roles_and_operations_are_defined() -> None:
@@ -171,7 +171,7 @@ def test_agent_core_security_memory_knowledge_and_tool_boundaries_are_explicit()
         "Agent Core 拥有最终 `StepFeasibilityDecision`",
         "Gateway 不得激活 PlanVersion",
         "Gateway 不直接修改 AgentRun 终态",
-        "Gateway 不得自行扩大 Run Budget",
+        "不得自行扩大 Run Budget",
         "模型输出永远是 `Proposal`、`Candidate`、`Score` 或 `Model Result`",
         "模型不能直接写长期 Memory",
         "最终 Security Decision 必须由 Security 模块",

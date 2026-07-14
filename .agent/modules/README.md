@@ -29,13 +29,15 @@ ADR 0003 与 Registry 是 Wave 1 跨模块 Owner、Envelope、Receipt、Failure 
 
 当前状态：`CONFIRMED_TARGET`。物理实现归 `src/backend/zuno/platform/**`；Agent Core 只持有 `ActionProposal / ActionExecutionBinding`，可执行副作用事实归 Tool Runtime `PreparedToolAction`。
 
-## Model Gateway 唯一 Target 镜像
+## Model Gateway Target 镜像
+
+Model Gateway 只保留一份完整 Target 架构镜像：
 
 ```text
 .agent/modules/04-model-gateway.md
 ```
 
-对应正式事实源：
+对应唯一正式事实源：
 
 ```text
 docs/modules/04-model-gateway.md
