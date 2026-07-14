@@ -26,18 +26,24 @@ Zuno 正式架构设计事实共十三份：
 - `architecture-views.md`：HTML 的 Mermaid 渲染源，不是第二份文字总架构。
 - `README.md`：目录、镜像和维护规则，不是架构正文。
 - `docs/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
+- `.agent/modules/06-agent-core-planning-control.md`：Agent Core 正式模块文档的字节级镜像示例；十一模块均遵循同一镜像规则。
 
 `.agent/architecture/` 是字节级镜像，不是独立事实源。
 
-## 状态事实
+## 状态、决策与治理入口
 
 ```text
 docs/status/production-readiness.md
 docs/evidence/
+docs/decisions/
+docs/governance/
 最新 main 的代码、Migration、测试、Trace、Eval 与运行证据
 ```
 
-负责 Current、Gap、Measurement 和 Production Readiness。Target 文档存在不能自动提升状态。
+- `docs/status/` 和 `docs/evidence/` 负责 Current、Gap、Measurement 和 Production Readiness。
+- `docs/decisions/` 保存正式 ADR。
+- `docs/governance/` 保存跨模块 Contract Registry、Ownership 和文档治理。
+- Target 文档存在不能自动提升状态。
 
 ## 更新与验证
 
