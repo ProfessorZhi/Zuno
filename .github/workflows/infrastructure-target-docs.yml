@@ -5,13 +5,9 @@ on:
     paths:
       - "docs/modules/11-infrastructure.md"
       - ".agent/modules/11-infrastructure.md"
-      - "docs/modules/11-infrastructure-data-services.md"
-      - ".agent/modules/11-infrastructure-data-services.md"
-      - "docs/modules/11-infrastructure-consistency-lifecycle.md"
-      - ".agent/modules/11-infrastructure-consistency-lifecycle.md"
-      - "docs/governance/wave1-cross-module-contract-registry.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
+      - ".agent/system.yaml"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tests/repo/test_infrastructure_target_protocols.py"
       - ".github/workflows/infrastructure-target-docs.yml"
@@ -21,13 +17,9 @@ on:
     paths:
       - "docs/modules/11-infrastructure.md"
       - ".agent/modules/11-infrastructure.md"
-      - "docs/modules/11-infrastructure-data-services.md"
-      - ".agent/modules/11-infrastructure-data-services.md"
-      - "docs/modules/11-infrastructure-consistency-lifecycle.md"
-      - ".agent/modules/11-infrastructure-consistency-lifecycle.md"
-      - "docs/governance/wave1-cross-module-contract-registry.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
+      - ".agent/system.yaml"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tests/repo/test_infrastructure_target_protocols.py"
       - ".github/workflows/infrastructure-target-docs.yml"
@@ -57,7 +49,7 @@ jobs:
           python -m py_compile tools/scripts/verify_infrastructure_target_protocols.py
           python -m py_compile tests/repo/test_infrastructure_target_protocols.py
 
-      - name: Verify Infrastructure target protocols
+      - name: Verify Infrastructure single target architecture
         run: python tools/scripts/verify_infrastructure_target_protocols.py
 
       - name: Run focused repository tests

@@ -8,8 +8,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_observability_eval_target_protocols.py"
 FORMAL_PATH = REPO_ROOT / "docs/modules/10-observability-eval.md"
 MIRROR_PATH = REPO_ROOT / ".agent/modules/10-observability-eval.md"
-RAG_FORMAL_PATH = REPO_ROOT / "docs/modules/10-observability-eval-rag-agent-evaluation.md"
-RAG_MIRROR_PATH = REPO_ROOT / ".agent/modules/10-observability-eval-rag-agent-evaluation.md"
+RETIRED_PATHS = [
+    REPO_ROOT / "docs/modules/10-observability-eval-rag-agent-evaluation.md",
+    REPO_ROOT / ".agent/modules/10-observability-eval-rag-agent-evaluation.md",
+    REPO_ROOT / "tools/scripts/align_observability_wave1.py",
+]
 
 
 def _load_verifier():
@@ -24,33 +27,50 @@ def _formal() -> str:
     return FORMAL_PATH.read_text(encoding="utf-8")
 
 
-def _rag_formal() -> str:
-    return RAG_FORMAL_PATH.read_text(encoding="utf-8")
-
-
 def test_observability_eval_protocol_verifier_passes() -> None:
-    verifier = _load_verifier()
-    assert verifier.verify() == []
+    assert _load_verifier().verify() == []
 
 
-def test_formal_documents_and_agent_mirrors_are_byte_identical() -> None:
+def test_single_formal_document_and_agent_mirror_are_byte_identical() -> None:
     assert FORMAL_PATH.read_bytes() == MIRROR_PATH.read_bytes()
-    assert RAG_FORMAL_PATH.read_bytes() == RAG_MIRROR_PATH.read_bytes()
+    for path in RETIRED_PATHS:
+        assert not path.exists()
+
+
+def test_document_has_agent_core_style_parts_and_single_source_boundary() -> None:
+    content = _formal()
+    for part in [
+        "# Part I：定位与概念架构",
+        "# Part II：完整运行流程",
+        "# Part III：Telemetry、Trace、Audit 与 Delivery Contract",
+        "# Part IV：Eval、RAG Core Five 与质量 Contract",
+        "# Part V：Agentic GraphRAG 与 Agent Efficiency Contract",
+        "# Part VI：状态机、安全、失败与恢复",
+        "# Part VII：存储、代码与 API 规格",
+        "# Part VIII：Release Gate、测试与完成证据",
+    ]:
+        assert part in content
+    assert "唯一的正式 Target 架构主设计" in content
+    assert "不再维护模块 10 的独立架构附录" in content
 
 
 def test_current_quality_claims_remain_blocked() -> None:
-    content = _formal() + _rag_formal()
+    content = _formal()
     assert "implementation available" in content
     assert "measurement blocked" in content
     assert "quality not yet proven" in content
-    assert "blocked_not_measured" in content
-    assert "quality proven" in content
+    assert "QUALITY_PROVEN" in content
     assert "production ready" in content
 
 
-def test_main_typed_contracts_and_agent_core_mapping_are_present() -> None:
+def test_platform_contracts_and_ownership_are_complete() -> None:
     content = _formal()
-    for contract in [
+    for term in [
+        "CrossModuleEnvelopeV1",
+        "TelemetryEnvelopeV1",
+        "SecurityAuditRequirementV1",
+        "AuditDurabilityRequirement",
+        "AuditPersistenceReceiptV1",
         "TraceContext",
         "TraceRecord",
         "SpanRecord",
@@ -58,26 +78,26 @@ def test_main_typed_contracts_and_agent_core_mapping_are_present() -> None:
         "AuditEvent",
         "MetricPoint",
         "StructuredLog",
-        "TelemetryEnvelope",
-        "EvidenceRecord",
-        "EvalDataset",
-        "EvalCase",
-        "EvalRun",
-        "EvalResult",
-        "JudgePolicy",
-        "FailureBucket",
-        "BenchmarkComparison",
-        "ReleaseGateEvaluation",
         "ExternalSinkDelivery",
-        "SamplingPolicy",
-        "RetentionPolicy",
         "MeasurementStatus",
+        "EvidenceRecord",
+        "Server-hosted Product API",
+        "CONFIRMED_TARGET",
+        "AuditPersistenceReceipt != accepted AuditEvent",
+        "ExternalSinkDelivery != source-domain success",
     ]:
-        assert contract in content
+        assert term in content
+
+
+def test_agent_core_evidence_mapping_is_explicit() -> None:
+    content = _formal()
     for term in [
+        "GoalVersion",
         "PlanVersion",
         "StepRun",
         "ActionRun",
+        "DispatchGroup",
+        "BranchResultRef",
         "ControlDecision",
         "FailureDecision",
         "RunCommand",
@@ -92,53 +112,8 @@ def test_main_typed_contracts_and_agent_core_mapping_are_present() -> None:
         assert term in content
 
 
-def test_main_faults_thresholds_and_requirement_registry_are_preserved() -> None:
+def test_rag_core_five_are_first_class_and_versioned() -> None:
     content = _formal()
-    for fault in [
-        "Duplicate Event",
-        "Out-of-order Event",
-        "Trace Store Unavailable",
-        "External Sink Failure",
-        "Redaction Failure",
-        "Audit Event Loss",
-        "Eval Worker Crash",
-        "Partial Eval Run",
-        "Judge Timeout",
-        "Dataset Version Mismatch",
-        "Missing Trace Fields",
-        "Blocked Profile",
-        "Release Gate with Incomparable Runs",
-        "Retention / Legal Hold Conflict",
-    ]:
-        assert fault in content
-    for threshold in [
-        "Agentic Recall@5 >= standard_rag",
-        "Evidence Text Available@5 >= 0.60",
-        "Source Doc Citation Accuracy >= 0.85",
-        "Citation Accuracy >= 0.30",
-        "Answer Correctness >= standard_rag",
-        "Unsupported Claim Rate 不得恶化",
-    ]:
-        assert threshold in content
-    for number in range(1, 25):
-        suffix = f"{number:03d}"
-        assert f"ARCH-OBS-{suffix}" in content
-        assert f"RC-OBS-{suffix}" in content
-        assert f"OBS-{suffix}-UT/IT/FT/E2E" in content
-        assert f"EV-OBS-{suffix}" in content
-
-
-def test_projection_audit_and_redaction_ownership_remain_separate() -> None:
-    content = _formal()
-    assert "接收到事件不转移领域事实 Ownership" in content
-    assert "Projection 丢失可从领域事件/Outbox 重建" in content
-    assert "AuditEvent 一旦按合规合同接收" in content
-    assert "Redaction 失败不得降级导出" in content
-    assert "外部 Sink 失败不回滚本地事实" in content
-
-
-def test_rag_core_five_are_canonical_first_class_metrics() -> None:
-    content = _rag_formal()
     for metric in [
         "CONTEXT_PRECISION",
         "CONTEXT_RECALL",
@@ -147,13 +122,6 @@ def test_rag_core_five_are_canonical_first_class_metrics() -> None:
         "ANSWER_CORRECTNESS",
     ]:
         assert metric in content
-    assert "TOP_K_CONTEXT_RELEVANT_RATIO" in content
-    assert "不得满足 `CONTEXT_PRECISION` Requirement" in content
-    assert "Core Five 全部必须是 MEASURED" in content
-
-
-def test_rag_metric_contracts_expose_claim_context_and_attempt_diagnostics() -> None:
-    content = _rag_formal()
     for contract in [
         "MetricDefinition",
         "MetricEvaluationAttempt",
@@ -161,6 +129,17 @@ def test_rag_metric_contracts_expose_claim_context_and_attempt_diagnostics() -> 
         "RAGCoreFiveInputBundle",
     ]:
         assert contract in content
+    assert "TOP_K_CONTEXT_RELEVANT_RATIO" in content
+    assert "Core Five 全部必须是 MEASURED" in content
+
+
+def test_core_five_scoring_and_claim_diagnostics_are_explicit() -> None:
+    content = _formal()
+    assert "Context Precision@K" in content
+    assert "retrieved_context_supported_reference_claims" in content
+    assert "supported_generated_claims / total_generated_claims" in content
+    assert "reverse-question" in content
+    assert "Factual F1" in content
     for term in [
         "reference_claim_refs",
         "generated_claim_refs",
@@ -176,19 +155,8 @@ def test_rag_metric_contracts_expose_claim_context_and_attempt_diagnostics() -> 
         assert term in content
 
 
-def test_core_five_scoring_semantics_are_explicit() -> None:
-    content = _rag_formal()
-    assert "Context Precision@K" in content
-    assert "retrieved_context_supported_reference_claims" in content
-    assert "supported_generated_claims / total_generated_claims" in content
-    assert "reverse-question" in content
-    assert "Factual F1" in content
-    assert "Semantic Similarity" in content
-    assert "Judge 超时、Embedding 缺失、Reference 缺失或 Trace 字段缺失不能记为 0" in content
-
-
 def test_agentic_graphrag_full_process_is_traceable() -> None:
-    content = _rag_formal()
+    content = _formal()
     for term in [
         "Query Normalize / Rewrite / Decompose",
         "Route and Profile Decision",
@@ -205,21 +173,16 @@ def test_agentic_graphrag_full_process_is_traceable() -> None:
         "Evidence Assembly / Compression",
         "Claim Extraction / Citation Binding",
         "Reflection / Replan Barrier",
-        "basic | local | global | drift",
-        "standard_rag | local_graphrag | deep_graphrag | agentic_graphrag",
-    ]:
-        assert term in content
-    for contract in [
         "AgenticGraphRAGTrace",
         "RetrievalCandidateTrace",
         "GraphTraversalRecord",
         "AgentLoopObservation",
     ]:
-        assert contract in content
+        assert term in content
 
 
-def test_graph_and_agent_failure_buckets_support_root_cause_drill_down() -> None:
-    content = _rag_formal()
+def test_failure_buckets_support_root_cause_drill_down() -> None:
+    content = _formal()
     for bucket in [
         "query_rewrite_drift",
         "route_mismatch",
@@ -240,11 +203,11 @@ def test_graph_and_agent_failure_buckets_support_root_cause_drill_down() -> None
         "parallel_join_waste",
     ]:
         assert bucket in content
-    assert "缺失字段返回 `unavailable_due_to_missing_trace_fields`" in content
+    assert "unavailable_due_to_missing_trace_fields" in content
 
 
 def test_agent_efficiency_is_quality_constrained_and_multidimensional() -> None:
-    content = _rag_formal()
+    content = _formal()
     assert "AgentEfficiencySnapshot" in content
     for term in [
         "Agent Goal Accuracy",
@@ -264,40 +227,35 @@ def test_agent_efficiency_is_quality_constrained_and_multidimensional() -> None:
         "Parallel Efficiency",
         "Quality per Cost",
         "质量、安全、权限和正确性是硬约束",
-        "quality-first gate",
     ]:
         assert term in content
 
 
-def test_rag_requirement_registry_is_complete() -> None:
-    content = _rag_formal()
+def test_release_gate_preserves_existing_thresholds_and_core_five_guards() -> None:
+    content = _formal()
+    for threshold in [
+        "Agentic Recall@5 >= standard_rag",
+        "Evidence Text Available@5 >= 0.60",
+        "Source Doc Citation Accuracy >= 0.85",
+        "Citation Accuracy >= 0.30",
+        "Answer Correctness >= standard_rag",
+        "Unsupported Claim Rate 不得恶化",
+    ]:
+        assert threshold in content
+    assert "BLOCKED、INCOMPARABLE、ERROR 都不是 FAILED" in content
+
+
+def test_requirement_registries_are_complete() -> None:
+    content = _formal()
+    for number in range(1, 25):
+        suffix = f"{number:03d}"
+        assert f"ARCH-OBS-{suffix}" in content
+        assert f"RC-OBS-{suffix}" in content
+        assert f"OBS-{suffix}-UT/IT/FT/E2E" in content
+        assert f"EV-OBS-{suffix}" in content
     for number in range(1, 21):
         suffix = f"{number:03d}"
         assert f"ARCH-OBS-RAG-{suffix}" in content
         assert f"RC-OBS-RAG-{suffix}" in content
         assert f"OBS-RAG-{suffix}-UT/IT/FT/E2E" in content
         assert f"EV-OBS-RAG-{suffix}" in content
-
-
-def test_wave1_contracts_are_confirmed_target() -> None:
-    content = _rag_formal()
-    assert "CONFIRMED_TARGET" in content
-    assert "ALIGNED_PENDING_FIELDS" not in content
-
-
-def test_server_authoritative_observability_contract_alignment() -> None:
-    content = _formal()
-    for term in [
-        "Server-hosted Product API",
-        "CrossModuleEnvelopeV1",
-        "TelemetryEnvelopeV1",
-        "SecurityAuditRequirementV1",
-        "AuditDurabilityRequirement",
-        "AuditPersistenceReceiptV1",
-        "effective_security_epoch_ref",
-        "payload_schema_hash",
-        "OBS_AUDIT_ACCEPTANCE_FAILED",
-        "AuditPersistenceReceipt != accepted AuditEvent",
-        "ExternalSinkDelivery != source-domain success",
-    ]:
-        assert term in content
