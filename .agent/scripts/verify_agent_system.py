@@ -13,7 +13,10 @@ CANONICAL_ARCHITECTURE_FILES = {
     "architecture.html",
 }
 
-AGENT_CORE_DOCS = ["06-agent-core-planning-control.md"]
+MIRRORED_MODULE_DOCS = [
+    "06-agent-core-planning-control.md",
+    "08-tool-runtime.md",
+]
 
 REQUIRED_PATHS = [
     "AGENTS.md",
@@ -27,7 +30,7 @@ REQUIRED_PATHS = [
     "docs/modules/02-input-document-ingestion.md",
     "docs/modules/03-knowledge-agentic-graphrag.md",
     "docs/modules/05-memory-context.md",
-    *[f"docs/modules/{name}" for name in AGENT_CORE_DOCS],
+    *[f"docs/modules/{name}" for name in MIRRORED_MODULE_DOCS],
     "docs/modules/07-capability-skill.md",
     "docs/modules/10-observability-eval.md",
     "docs/status/production-readiness.md",
@@ -41,7 +44,7 @@ REQUIRED_PATHS = [
     ".agent/architecture/architecture-views.md",
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
-    *[f".agent/modules/{name}" for name in AGENT_CORE_DOCS],
+    *[f".agent/modules/{name}" for name in MIRRORED_MODULE_DOCS],
     ".agent/references/README.md",
     ".agent/references/project-map.md",
     ".agent/references/task-routing.md",
@@ -81,6 +84,7 @@ REQUIRED_PATHS = [
     "tools/scripts/verify_repo_structure.py",
     "tools/scripts/verify_current_program.py",
     "tools/scripts/verify_agent_core_target_protocols.py",
+    "tools/scripts/verify_tool_runtime_target_protocols.py",
 ]
 
 FORBIDDEN_ACTIVE_PATHS = [
@@ -151,7 +155,7 @@ def verify_mirrors() -> list[str]:
         ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
         *[
             (f"docs/modules/{name}", f".agent/modules/{name}")
-            for name in AGENT_CORE_DOCS
+            for name in MIRRORED_MODULE_DOCS
         ],
     ]
     for formal, mirror in pairs:
@@ -181,13 +185,15 @@ def verify_entrypoint_boundaries() -> list[str]:
             "docs/governance/",
         ],
         "docs/modules/README.md": [
-            *AGENT_CORE_DOCS,
+            *MIRRORED_MODULE_DOCS,
             "docs/status/production-readiness.md",
             "verify_agent_core_target_protocols.py",
+            "verify_tool_runtime_target_protocols.py",
         ],
         ".agent/modules/README.md": [
-            *AGENT_CORE_DOCS,
+            *MIRRORED_MODULE_DOCS,
             "verify_agent_core_target_protocols.py",
+            "verify_tool_runtime_target_protocols.py",
         ],
         ".agent/README.md": [
             ".agent/architecture/",
@@ -245,7 +251,22 @@ def verify_module_contracts() -> list[str]:
         "docs/modules/07-capability-skill.md": [
             "Function Calling",
             "SkillMetadata",
-            "ToolRequest",
+            "ToolCapabilityDescriptor",
+            "08 保存权威 Tool Definition",
+        ],
+        "docs/modules/08-tool-runtime.md": [
+            "ToolInvocationGateway",
+            "ToolDefinition",
+            "ToolVersion",
+            "PreparedToolAction",
+            "ToolAttempt",
+            "ToolExecutionReceipt",
+            "EffectReceipt",
+            "EffectReconciliation",
+            "AdapterConformanceProfile",
+            "ALLOWED_LEGACY_TOOL_EXECUTION_PATHS",
+            "ARCH-TOOL-080",
+            "PostgreSQL",
         ],
         "docs/modules/10-observability-eval.md": [
             "Measurement Semantics",
@@ -260,19 +281,34 @@ def verify_module_contracts() -> list[str]:
     return errors
 
 
-def verify_agent_core_routing() -> list[str]:
+def verify_module_routing() -> list[str]:
     errors: list[str] = []
+    routing = {
+        "06-agent-core-planning-control.md": "verify_agent_core_target_protocols.py",
+        "08-tool-runtime.md": "verify_tool_runtime_target_protocols.py",
+    }
     for relative_path in ["AGENTS.md", ".agent/system.yaml"]:
         content = _read(relative_path)
-        for name in AGENT_CORE_DOCS:
+        for name, verifier in routing.items():
             if name not in content:
-                errors.append(f"{relative_path} does not route to Agent Core document: {name}")
-        if "verify_agent_core_target_protocols.py" not in content:
-            errors.append(f"{relative_path} does not route to Agent Core verifier")
+                errors.append(f"{relative_path} does not route to module document: {name}")
+            if verifier not in content:
+                errors.append(f"{relative_path} does not route to module verifier: {verifier}")
     if "Single GeneralAgent" in _read(".agent/system.yaml"):
         errors.append(".agent/system.yaml uses obsolete Single GeneralAgent terminology")
     if "Single Controller Agent Runtime" not in _read(".agent/system.yaml"):
         errors.append(".agent/system.yaml must declare Single Controller Agent Runtime")
+    return errors
+
+
+def verify_tool_runtime_single_document_contract() -> list[str]:
+    errors: list[str] = []
+    formal = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("08-*.md"))
+    mirrors = sorted(path.name for path in (REPO_ROOT / ".agent/modules").glob("08-*.md"))
+    if formal != ["08-tool-runtime.md"]:
+        errors.append(f"Tool Runtime must have one formal document, got: {formal}")
+    if mirrors != ["08-tool-runtime.md"]:
+        errors.append(f"Tool Runtime must have one mirror, got: {mirrors}")
     return errors
 
 
@@ -298,7 +334,8 @@ def main() -> int:
         verify_mirrors,
         verify_entrypoint_boundaries,
         verify_module_contracts,
-        verify_agent_core_routing,
+        verify_module_routing,
+        verify_tool_runtime_single_document_contract,
         verify_no_tracked_local_workspace,
     ]
     errors: list[str] = []
