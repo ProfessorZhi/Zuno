@@ -1,9 +1,9 @@
 # 01 Product Surface
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 01  
-formal_path: `docs/modules/01-product-surface.md`  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 01
+formal_path: `docs/modules/01-product-surface.md`
 agent_mirror: `.agent/modules/01-product-surface.md`
 
 > 本文是 Zuno 第 01 个逻辑模块——Product Surface——唯一的正式 Target 架构文档。

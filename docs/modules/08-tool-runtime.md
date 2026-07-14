@@ -1,9 +1,9 @@
 # 08 Tool Runtime
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 08  
-formal_path: `docs/modules/08-tool-runtime.md`  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 08
+formal_path: `docs/modules/08-tool-runtime.md`
 agent_mirror: `.agent/modules/08-tool-runtime.md`
 
 > 本文是 Zuno 第 08 个逻辑模块——Tool Runtime——唯一的正式 Target 架构主设计。

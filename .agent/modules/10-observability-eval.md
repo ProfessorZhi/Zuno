@@ -1,9 +1,9 @@
 # 10 Observability & Eval
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 10  
-formal_path: `docs/modules/10-observability-eval.md`  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 10
+formal_path: `docs/modules/10-observability-eval.md`
 agent_mirror: `.agent/modules/10-observability-eval.md`
 
 > 本文是 Zuno 第 10 个逻辑模块——Observability & Eval（可观测性与评测）——唯一的正式 Target 架构主设计。

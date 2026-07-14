@@ -1,8 +1,8 @@
 # 02 Input / Document Ingestion
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 02  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 02
 formal_path: `docs/modules/02-input-document-ingestion.md`
 
 > 本文是 Zuno 第 02 个逻辑模块——Input / Document Ingestion——唯一的正式 Target 架构主设计。

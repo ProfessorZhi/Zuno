@@ -1,8 +1,8 @@
 # Zuno 总体 Target 架构
 
-updated: 2026-07-14  
-status: normative-target-integration-architecture  
-document_role: cross-module integration source  
+updated: 2026-07-14
+status: normative-target-integration-architecture
+document_role: cross-module integration source
 current_state_source: `docs/status/production-readiness.md`
 
 > 本文是 Zuno 十一个逻辑模块的总体集成架构。它定义系统目标、模块协作、端到端流程、全局不变量、跨模块 Contract 与完成证据，但不重复每个模块已经定义的领域对象、全部字段、完整状态机、数据库表或 Adapter 细节。

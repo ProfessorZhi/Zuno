@@ -1,12 +1,12 @@
 # Zuno 09 Security Target 架构
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 09  
-formal_path: `docs/modules/09-security.md`  
-agent_mirror: `.agent/modules/09-security.md`  
-current_state_source: `docs/status/production-readiness.md`  
-shared_contract_source: `docs/governance/wave1-cross-module-contract-registry.md`  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 09
+formal_path: `docs/modules/09-security.md`
+agent_mirror: `.agent/modules/09-security.md`
+current_state_source: `docs/status/production-readiness.md`
+shared_contract_source: `docs/governance/wave1-cross-module-contract-registry.md`
 shared_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 
 > 本文是 Zuno 第 09 个逻辑模块——Security——唯一的正式 Target 架构主设计。

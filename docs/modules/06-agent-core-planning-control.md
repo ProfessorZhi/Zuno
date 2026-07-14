@@ -1,9 +1,9 @@
 # 06 Agent Core / Planning & Control
 
-updated: 2026-07-12  
-status: normative-target-module-architecture  
-module_number: 06  
-formal_path: `docs/modules/06-agent-core-planning-control.md`  
+updated: 2026-07-12
+status: normative-target-module-architecture
+module_number: 06
+formal_path: `docs/modules/06-agent-core-planning-control.md`
 agent_mirror: `.agent/modules/06-agent-core-planning-control.md`
 
 > 本文是 Zuno 第 06 个逻辑模块——Agent Core / Planning & Control——的正式 Target 架构主设计。

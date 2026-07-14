@@ -1,7 +1,7 @@
 # Zuno Architecture Visual Atlas Source
 
-updated: 2026-07-14  
-status: normative-target-visual-source  
+updated: 2026-07-14
+status: normative-target-visual-source
 text_design_source: `docs/architecture/architecture.md`
 
 本文件是 `architecture.html` 的 Mermaid 渲染源，不是第二份文字总架构。模块领域细节以十一份正式模块文档为准。

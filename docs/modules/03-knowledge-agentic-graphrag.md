@@ -1,8 +1,8 @@
 # 03 Knowledge / Agentic GraphRAG
 
-updated: 2026-07-14  
-status: normative-target-module-architecture  
-module_number: 03  
+updated: 2026-07-14
+status: normative-target-module-architecture
+module_number: 03
 formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
 
 > 本文是 Zuno 第 03 个逻辑模块——Knowledge / Agentic GraphRAG——的唯一正式 Target 架构主设计。
