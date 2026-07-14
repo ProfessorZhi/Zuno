@@ -74,7 +74,8 @@ def test_tool_runtime_requirements_and_controls_are_contiguous() -> None:
 def test_tool_runtime_owns_execution_facts_but_not_security_or_infrastructure() -> None:
     content = _content()
     for phrase in [
-        "Tool Runtime\n    PreparedToolAction",
+        "08 Tool Runtime\n    ToolProviderDefinition",
+        "PreparedToolAction",
         "ToolAttempt / ToolObservation",
         "ToolExecutionReceipt",
         "EffectReceipt / EffectReconciliation",
