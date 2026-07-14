@@ -1,0 +1,65 @@
+name: One-time architecture module alignment
+
+on:
+  push:
+    branches: [docs/architecture-module-realignment]
+    paths:
+      - "tools/scripts/finalize_architecture_module_alignment.py"
+      - ".github/workflows/finalize-architecture-module-alignment.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-module-realignment
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check pytest pyyaml
+      - name: Apply deterministic architecture alignment
+        run: python tools/scripts/finalize_architecture_module_alignment.py
+      - name: Validate generated architecture set
+        run: |
+          set -o pipefail
+          git diff --check
+          python -m py_compile \
+            tools/agent/render_architecture.py \
+            tools/scripts/verify_architecture_document_set.py \
+            tools/scripts/verify_architecture_semantic_alignment.py \
+            tests/repo/test_architecture_document_set.py \
+            tests/repo/test_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_docs_entrypoints.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+          pytest -q \
+            tests/repo/test_architecture_document_set.py \
+            tests/repo/test_architecture_semantic_alignment.py \
+            tests/repo/test_docs_entrypoints.py \
+            tests/repo/test_agent_core_target_protocols.py \
+            tests/repo/test_model_gateway_target_protocols.py \
+            tests/repo/test_memory_context_target_protocols.py \
+            tests/repo/test_capability_skill_target_protocols.py \
+            tests/repo/test_tool_runtime_target_protocols.py \
+            tests/repo/test_security_target_protocols.py \
+            tests/repo/test_observability_eval_target_protocols.py \
+            tests/repo/test_infrastructure_target_protocols.py \
+            tests/repo/test_wave1_contract_freeze.py \
+            -p no:cacheprovider
+      - name: Commit finalized architecture alignment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: realign total architecture with canonical modules"
+          git push origin HEAD:docs/architecture-module-realignment
