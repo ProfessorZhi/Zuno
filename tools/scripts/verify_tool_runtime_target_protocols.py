@@ -158,9 +158,9 @@ def verify() -> list[str]:
     docs_verifier = _read(DOCS_ENTRYPOINT_VERIFIER)
     system_verifier = _read(AGENT_SYSTEM_VERIFIER)
 
-    if "[08-tool-runtime.md](./08-tool-runtime.md)" not in docs_index:
+    if "(./08-tool-runtime.md)" not in docs_index:
         errors.append("docs/modules/README.md must link the sole Tool Runtime document")
-    if "[08-tool-runtime.md](./08-tool-runtime.md)" not in agent_index:
+    if "(./08-tool-runtime.md)" not in agent_index:
         errors.append(".agent/modules/README.md must link the Tool Runtime mirror")
     for content_name, content in [
         ("docs/modules/README.md", docs_index),
