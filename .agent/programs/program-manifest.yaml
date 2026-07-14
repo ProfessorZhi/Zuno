@@ -4,10 +4,12 @@ program:
   state: active
   current_phase: PHASE01
   phase_count: 22
+  atomic_work_package_count: 163
   architecture_baseline_commit: 249f1c95855043627cedd289a5de1fd3719f6cd0
   execution_contract: .agent/programs/task-execution-contract.md
   codex_runbook: .agent/programs/codex-medium-runbook.md
   migration_map: .agent/programs/legacy-to-target-migration-map.md
+  canonical_directory_contract: .agent/programs/canonical-directory-contract.md
   roadmap: .agent/programs/implementation-roadmap.md
   closure_checklist: .agent/programs/closure-checklist.md
 
@@ -17,6 +19,14 @@ status_policy:
   current_requires: [code, tests, runtime_or_integration_evidence]
   measured_requires: [fixed_dataset, complete_profiles, comparable_runs, metric_results]
   quality_proven_requires: [measured, release_gate_passed, evidence_available]
+
+final_tree_policy:
+  production_legacy_directories: forbidden
+  legacy_alias_registry: forbidden
+  permanent_dual_runtime: forbidden
+  permanent_dual_read_write: forbidden
+  versioned_external_api_adapters: allowed_without_domain_ownership
+  enforcement_task: P22-T03
 
 phases:
   - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: ready, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}

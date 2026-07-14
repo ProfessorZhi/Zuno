@@ -6,6 +6,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
 PHASE_COUNT = 22
+ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
 
 PHASE_FILES = [
@@ -40,6 +41,7 @@ REQUIRED_SHARED = [
     PROGRAM_ROOT / "task-execution-contract.md",
     PROGRAM_ROOT / "codex-medium-runbook.md",
     PROGRAM_ROOT / "legacy-to-target-migration-map.md",
+    PROGRAM_ROOT / "canonical-directory-contract.md",
     PROGRAM_ROOT / "program-manifest.yaml",
     PROGRAM_ROOT / "closure-checklist.md",
     REPO_ROOT / ".agent" / "references" / "current-program.md",
@@ -56,6 +58,7 @@ def load_manifest() -> dict[str, object]:
         "state": "active",
         "current_phase": "PHASE01",
         "phase_count": PHASE_COUNT,
+        "atomic_task_count": ATOMIC_TASK_COUNT,
         "architecture_baseline_commit": "249f1c95855043627cedd289a5de1fd3719f6cd0",
         "measurement_status": "measurement_blocked",
         "quality_gate_status": "quality_not_proven",
@@ -80,6 +83,8 @@ def verify_current_program() -> list[str]:
     reference = _read(REPO_ROOT / ".agent" / "references" / "current-program.md")
     runbook = _read(PROGRAM_ROOT / "codex-medium-runbook.md")
     migration = _read(PROGRAM_ROOT / "legacy-to-target-migration-map.md")
+    directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
+    phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
 
     for phrase in [
         "state: active",
@@ -103,6 +108,27 @@ def verify_current_program() -> list[str]:
     for phrase in ["apps/web/src/product", "apps/desktop/src/product", "GeneralAgent", "EffectReconciliation", "Feature Flag"]:
         if phrase not in migration:
             errors.append(f"migration map missing required surface: {phrase}")
+
+    for phrase in [
+        "生产源码零 legacy 目录",
+        "零 legacy alias registry",
+        "src/backend/zuno/platform/compatibility/legacy_aliases.py",
+        "apps/web/src/product",
+        "apps/desktop/src/product",
+        "api/product/v1",
+    ]:
+        if phrase not in directory_contract:
+            errors.append(f"canonical directory contract missing phrase: {phrase}")
+
+    for phrase in [
+        "Legacy-free Canonical Directory Cleanup",
+        "生产源码树零 Legacy 文件夹",
+        "legacy_aliases.py",
+        "tests/legacy_guards",
+        "永久双路径",
+    ]:
+        if phrase not in phase22:
+            errors.append(f"PHASE22 missing mandatory cleanup phrase: {phrase}")
 
     all_task_ids: list[str] = []
     required_sections = [
@@ -132,14 +158,18 @@ def verify_current_program() -> list[str]:
     duplicates = sorted({task for task in all_task_ids if all_task_ids.count(task) > 1})
     if duplicates:
         errors.append(f"duplicate task ids across phases: {duplicates}")
-    if len(all_task_ids) < 150:
-        errors.append(f"program must expose at least 150 atomic work packages, found {len(all_task_ids)}")
+    if len(all_task_ids) != ATOMIC_TASK_COUNT:
+        errors.append(
+            f"program must expose exactly {ATOMIC_TASK_COUNT} atomic work packages, found {len(all_task_ids)}"
+        )
 
     for index in range(1, PHASE_COUNT + 1):
         if f"PHASE{index:02d}" not in closure:
             errors.append(f"closure checklist missing PHASE{index:02d}")
 
-    combined = "\n".join([current, roadmap, closure, manifest, reference, runbook, migration])
+    combined = "\n".join(
+        [current, roadmap, closure, manifest, reference, runbook, migration, directory_contract]
+    )
     if re.search(r"[A-Za-z]:\\\\Users\\\\", combined):
         errors.append("active program contains a local absolute path")
     if "Agentic GraphRAG 已稳定优于" in combined and "不得声明" not in combined:
