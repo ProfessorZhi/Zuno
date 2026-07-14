@@ -142,8 +142,8 @@ def verify_entrypoints() -> list[str]:
     agents = _read("AGENTS.md")
     for phrase in [
         "Single Controller",
+        "docs/modules/",
         "docs/modules/06-agent-core-planning-control.md",
-        "docs/modules/08-tool-runtime.md",
         "python tools/scripts/verify_agent_core_target_protocols.py",
     ]:
         if phrase not in agents:
