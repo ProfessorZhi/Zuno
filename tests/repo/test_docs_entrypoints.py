@@ -73,6 +73,7 @@ def test_architecture_and_agent_mirrors_match() -> None:
         ).read_text(encoding="utf-8")
 
     for file_name in [
+        "05-memory-context.md",
         "06-agent-core-planning-control.md",
     ]:
         assert (REPO_ROOT / "docs/modules" / file_name).read_bytes() == (
@@ -120,6 +121,7 @@ def test_docs_front_path_readmes_explain_current_contract() -> None:
         "06-agent-core-planning-control.md",
         "07-capability-skill.md",
         "10-observability-eval.md",
+        "verify_memory_context_target_protocols.py",
     ]:
         assert phrase in modules_index
 
@@ -227,10 +229,14 @@ def test_module_docs_follow_logical_module_boundaries() -> None:
             "KnowledgeSnapshot",
         ],
         "05-memory-context.md": [
-            "Sensory Memory",
-            "Short-term Memory",
+            "Working Memory",
+            "Session Memory",
             "Long-term Memory",
-            "Entity Memory",
+            "Episodic Memory",
+            "Semantic Memory",
+            "Procedural Memory",
+            "C0 Deterministic Lossless",
+            "C3 Reasoning Consolidation",
             "ContextPack read view",
         ],
         "06-agent-core-planning-control.md": [

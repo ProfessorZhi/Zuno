@@ -24,7 +24,7 @@
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 已建立 Target 规范 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | 已建立 Target 规范 |
 | 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) + [`04-model-gateway-contract-freeze.md`](./04-model-gateway-contract-freeze.md) + [`04-model-gateway-operations-conformance.md`](./04-model-gateway-operations-conformance.md) | 已建立实施级 Target 规范 |
-| 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立 Target 规范 |
+| 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 已建立单一完整 Target 架构文档 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 已建立单一完整 Target 架构文档 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 已建立 Target 规范 |
 | 08 | Tool Runtime | `08-tool-runtime.md` | 待细化 |
@@ -72,6 +72,19 @@ docs/modules/10-observability-eval-rag-agent-evaluation.md
 
 主文档定义 Trace、Audit、Metric、Eval、Evidence、Release Gate、事件交付、恢复和质量证明边界；受控附录冻结 RAG Core Five、Agentic GraphRAG 全过程 Trace、Graph Failure Bucket 和 Agent Efficiency。旧 Retrieval、Citation、Safety 与 Runtime 指标保留为诊断层，不得冒充 Core Five。
 
+## Memory & Context 文档边界
+
+```text
+docs/modules/05-memory-context.md
+.agent/modules/05-memory-context.md
+```
+
+`docs/modules/05-memory-context.md` 是唯一正式详细 Target 架构文档；`.agent/modules/05-memory-context.md` 只是字节级 Agent 镜像，不是第二份独立架构文档。
+
+它统一定义 Working、Session、Long-term 三层生命周期，Episodic / Semantic / Procedural 三类长期内容，C0–C3 四类压缩，F0–F4 Context Fidelity，以及 Session Continuity、Memory Governance、ContextPack、Reflexion、Consolidation、隐私删除、恢复、数据库和测试规格。
+
+正式文档只描述 Target；Current、Gap 和 Measurement 继续由 `docs/status/production-readiness.md` 维护。实现和迁移计划进入 `.agent/programs/`。
+
 ## Agent Core 文档边界
 
 ```text
@@ -103,6 +116,9 @@ docs/history/      已完成 Program 与历史证据
 ## 专用验证
 
 ```text
+python tools/scripts/verify_memory_context_target_protocols.py
+pytest -q tests/repo/test_memory_context_target_protocols.py -p no:cacheprovider
+
 python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
 

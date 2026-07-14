@@ -45,6 +45,7 @@ REQUIRED_FRONT_PATHS = [
     "docs/architecture/architecture-views.md",
     "docs/architecture/architecture.html",
     "docs/modules/README.md",
+    "docs/modules/05-memory-context.md",
     "docs/modules/06-agent-core-planning-control.md",
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
@@ -54,6 +55,7 @@ REQUIRED_FRONT_PATHS = [
     ".agent/architecture/architecture-views.md",
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
+    ".agent/modules/05-memory-context.md",
     ".agent/modules/06-agent-core-planning-control.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
 ]
@@ -198,14 +200,18 @@ def verify_entrypoint_text() -> list[str]:
             "07-capability-skill.md",
             "10-observability-eval.md",
             "docs/status/production-readiness.md",
+            "verify_memory_context_target_protocols.py",
         ],
         ".agent/architecture/README.md": [
             ".agent/modules/06-agent-core-planning-control.md",
             "docs/status/production-readiness.md",
         ],
         ".agent/modules/README.md": [
+            ".agent/modules/05-memory-context.md",
+            "docs/modules/05-memory-context.md",
             ".agent/modules/06-agent-core-planning-control.md",
             "docs/modules/06-agent-core-planning-control.md",
+            "verify_memory_context_target_protocols.py",
         ],
     }
 
@@ -245,6 +251,24 @@ def verify_entrypoint_text() -> list[str]:
     ]:
         if phrase not in production:
             errors.append(f"docs/status/production-readiness.md missing phrase: {phrase}")
+
+    memory = _read("docs/modules/05-memory-context.md")
+    for phrase in [
+        "Working Memory",
+        "Session Memory",
+        "Long-term Memory",
+        "Episodic Memory",
+        "Semantic Memory",
+        "Procedural Memory",
+        "C0 Deterministic Lossless",
+        "C3 Reasoning Consolidation",
+        "ContextPack read view, not another memory layer",
+        "唯一的正式 Target 架构主设计",
+        ".agent/programs/",
+        "ARCH-MEM-060",
+    ]:
+        if phrase not in memory:
+            errors.append(f"Memory & Context module doc missing phrase: {phrase}")
 
     agent_core = _read("docs/modules/06-agent-core-planning-control.md")
     for phrase in [
@@ -316,13 +340,17 @@ def verify_architecture_mirrors() -> list[str]:
         ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
         ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
         (
+            "docs/modules/05-memory-context.md",
+            ".agent/modules/05-memory-context.md",
+        ),
+        (
             "docs/modules/06-agent-core-planning-control.md",
             ".agent/modules/06-agent-core-planning-control.md",
         ),
     ]
 
     for formal, mirror in pairs:
-        if _read(formal) != _read(mirror):
+        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
             errors.append(f"mirror mismatch: {mirror} must match {formal}")
 
     return errors
