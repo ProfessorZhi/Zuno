@@ -34,7 +34,6 @@ REQUIRED_MODULE_DOCS = {
     "05-memory-context.md",
     "06-agent-core-planning-control.md",
     "07-capability-skill.md",
-    "08-tool-runtime.md",
     "10-observability-eval.md",
 }
 
@@ -47,7 +46,6 @@ REQUIRED_FRONT_PATHS = [
     "docs/architecture/architecture.html",
     "docs/modules/README.md",
     "docs/modules/06-agent-core-planning-control.md",
-    "docs/modules/08-tool-runtime.md",
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
     "docs/governance/repo-ownership-matrix.md",
@@ -57,7 +55,6 @@ REQUIRED_FRONT_PATHS = [
     ".agent/architecture/architecture.html",
     ".agent/modules/README.md",
     ".agent/modules/06-agent-core-planning-control.md",
-    ".agent/modules/08-tool-runtime.md",
     "docs/history/architecture-surface-cleanup-2026-06-30/README.md",
 ]
 
@@ -148,13 +145,6 @@ def verify_front_path_shape() -> list[str]:
     if missing_modules:
         errors.append(f"docs/modules missing required module docs: {sorted(missing_modules)}")
 
-    tool_docs = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("08-*.md"))
-    tool_mirrors = sorted(path.name for path in (REPO_ROOT / ".agent/modules").glob("08-*.md"))
-    if tool_docs != ["08-tool-runtime.md"]:
-        errors.append(f"Module 08 must keep one formal document, got: {tool_docs}")
-    if tool_mirrors != ["08-tool-runtime.md"]:
-        errors.append(f"Module 08 must keep one mirror, got: {tool_mirrors}")
-
     for name in ARCHIVED_ARCHITECTURE_SPLIT_DOCS:
         if (REPO_ROOT / "docs" / "architecture" / name).exists():
             errors.append(f"split architecture doc must stay archived: docs/architecture/{name}")
@@ -206,9 +196,7 @@ def verify_entrypoint_text() -> list[str]:
             "05-memory-context.md",
             "06-agent-core-planning-control.md",
             "07-capability-skill.md",
-            "08-tool-runtime.md",
             "10-observability-eval.md",
-            "verify_tool_runtime_target_protocols.py",
             "docs/status/production-readiness.md",
         ],
         ".agent/architecture/README.md": [
@@ -218,9 +206,6 @@ def verify_entrypoint_text() -> list[str]:
         ".agent/modules/README.md": [
             ".agent/modules/06-agent-core-planning-control.md",
             "docs/modules/06-agent-core-planning-control.md",
-            ".agent/modules/08-tool-runtime.md",
-            "docs/modules/08-tool-runtime.md",
-            "verify_tool_runtime_target_protocols.py",
         ],
     }
 
@@ -275,22 +260,6 @@ def verify_entrypoint_text() -> list[str]:
     ]:
         if phrase not in agent_core:
             errors.append(f"Agent Core module doc missing phrase: {phrase}")
-
-    tool_runtime = _read("docs/modules/08-tool-runtime.md")
-    for phrase in [
-        "唯一的正式 Target 架构主设计",
-        "ToolInvocationGateway",
-        "PreparedToolAction",
-        "ToolAttempt",
-        "ToolExecutionReceipt",
-        "EffectReceipt",
-        "EffectReconciliation",
-        "AdapterConformanceProfile",
-        "ALLOWED_LEGACY_TOOL_EXECUTION_PATHS",
-        "ARCH-TOOL-080",
-    ]:
-        if phrase not in tool_runtime:
-            errors.append(f"Tool Runtime module doc missing phrase: {phrase}")
 
     return errors
 
@@ -350,7 +319,6 @@ def verify_architecture_mirrors() -> list[str]:
             "docs/modules/06-agent-core-planning-control.md",
             ".agent/modules/06-agent-core-planning-control.md",
         ),
-        ("docs/modules/08-tool-runtime.md", ".agent/modules/08-tool-runtime.md"),
     ]
 
     for formal, mirror in pairs:

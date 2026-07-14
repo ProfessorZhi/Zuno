@@ -7,8 +7,6 @@ on:
     paths:
       - "docs/modules/10-observability-eval.md"
       - ".agent/modules/10-observability-eval.md"
-      - "docs/modules/10-observability-eval-rag-agent-evaluation.md"
-      - ".agent/modules/10-observability-eval-rag-agent-evaluation.md"
       - "docs/modules/README.md"
       - ".agent/modules/README.md"
       - "tools/scripts/verify_observability_eval_target_protocols.py"
@@ -50,12 +48,14 @@ jobs:
       - name: Verify patch formatting
         run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml'
 
-      - name: Validate Observability and Wave 1 integration
+      - name: Validate single-document Observability architecture
         run: |
           python -m py_compile tools/scripts/verify_observability_eval_target_protocols.py tests/repo/test_observability_eval_target_protocols.py
           python tools/scripts/verify_observability_eval_target_protocols.py
           cmp docs/modules/10-observability-eval.md .agent/modules/10-observability-eval.md
-          cmp docs/modules/10-observability-eval-rag-agent-evaluation.md .agent/modules/10-observability-eval-rag-agent-evaluation.md
+          test ! -e docs/modules/10-observability-eval-rag-agent-evaluation.md
+          test ! -e .agent/modules/10-observability-eval-rag-agent-evaluation.md
+          test ! -e tools/scripts/align_observability_wave1.py
           python tools/scripts/verify_docs_entrypoints.py
           python .agent/scripts/verify_agent_system.py
           python .agent/scripts/verify_doc_boundaries.py

@@ -104,22 +104,6 @@ module_document_contract:
       - "code and migration"
     verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
     test: "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
-  tool_runtime:
-    formal:
-      - "docs/modules/08-tool-runtime.md"
-    mirror:
-      - ".agent/modules/08-tool-runtime.md"
-    one_formal_document_only: true
-    target_only: true
-    execution_plan_root: ".agent/programs"
-    normative_order:
-      - "global architecture principles"
-      - "ADR 0003 and Wave 1 Contract Registry"
-      - "Tool Runtime unified target architecture document"
-      - "Program"
-      - "code and migration"
-    verifier: "python tools/scripts/verify_tool_runtime_target_protocols.py"
-    test: "pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
 
 skill_file_contract:
   recommended_sections:
@@ -203,7 +187,6 @@ skill_routes:
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
       - "docs/modules/07-capability-skill.md"
-      - "docs/modules/08-tool-runtime.md"
       - "docs/modules/10-observability-eval.md"
       - "docs/status/production-readiness.md"
       - "docs/decisions/README.md"
@@ -219,7 +202,6 @@ skill_routes:
       - ".agent/modules/04-model-gateway-contract-freeze.md"
       - ".agent/modules/04-model-gateway-operations-conformance.md"
       - ".agent/modules/06-agent-core-planning-control.md"
-      - ".agent/modules/08-tool-runtime.md"
       - ".agent/references/docs-map.md"
       - ".agent/references/architecture-docs-map.md"
       - ".agent/references/documentation-governance.md"
@@ -241,11 +223,10 @@ skill_routes:
       - "python tools/scripts/verify_model_gateway_contract_freeze.py"
       - "python tools/scripts/verify_model_gateway_operations_conformance.py"
       - "python tools/scripts/verify_agent_core_target_protocols.py"
-      - "python tools/scripts/verify_tool_runtime_target_protocols.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
       - "pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider"
-      - "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
+      - "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
     match:
@@ -266,18 +247,15 @@ skill_routes:
       - "docs/architecture/architecture.md"
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
-      - "docs/modules/08-tool-runtime.md"
       - "docs/status/production-readiness.md"
       - ".agent/architecture/architecture.md"
       - ".agent/modules/06-agent-core-planning-control.md"
-      - ".agent/modules/08-tool-runtime.md"
       - ".agent/references/code-map.md"
       - ".agent/references/runtime-call-chain.md"
       - ".agent/references/verification-map.md"
     verify:
       - "python tools/scripts/verify_agent_core_target_protocols.py"
-      - "python tools/scripts/verify_tool_runtime_target_protocols.py"
-      - "pytest -q tests/repo/test_agent_core_target_protocols.py tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
+      - "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
       - "python .agent/scripts/verify_module_boundaries.py"
 
   - name: "capability-tool-retrieval"
@@ -285,28 +263,21 @@ skill_routes:
       paths:
         - "src/backend/zuno/platform/services/application/capabilities/**"
         - "src/backend/zuno/platform/services/capability_registry.py"
-        - "src/backend/zuno/platform/services/mcp/**"
-        - "src/backend/zuno/platform/services/mcp_openai/**"
-        - "src/backend/zuno/platform/services/user_defined_tool_runtime.py"
         - "src/backend/zuno/capability/**"
     skills:
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
-      - ".agent/references/docs-map.md"
     templates:
       - ".agent/templates/spec-coding-checklist.md"
     docs_sync:
       - "docs/architecture/architecture.md"
       - "docs/modules/03-knowledge-agentic-graphrag.md"
       - "docs/modules/07-capability-skill.md"
-      - "docs/modules/08-tool-runtime.md"
       - ".agent/architecture/architecture.md"
-      - ".agent/modules/08-tool-runtime.md"
       - ".agent/references/code-map.md"
       - ".agent/references/verification-map.md"
     verify:
-      - "python tools/scripts/verify_tool_runtime_target_protocols.py"
-      - "pytest -q tests/repo/test_tool_runtime_target_protocols.py tests/agent/test_capability_system.py tests/agent/test_capability_registry.py -p no:cacheprovider"
+      - "pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py -p no:cacheprovider"
 
   - name: "knowledge-graphrag-retrieval"
     match:
