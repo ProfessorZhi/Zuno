@@ -235,15 +235,17 @@ def verify() -> list[str]:
         if text not in web_agents:
             errors.append(f"apps/web/AGENTS.md missing Product rule: {text}")
 
-    for path in [
-        "src/backend/zuno/api/product/",
-        "src/backend/zuno/api/services/product/",
+    layout_fragments = [
+        "src/backend/zuno/api/",
+        "├── product/",
+        "├── services/product/",
         "src/backend/zuno/platform/database/product/",
         "apps/web/src/product/",
         "apps/desktop/src/product/",
-    ]:
-        if path not in formal:
-            errors.append(f"Product target code layout missing: {path}")
+    ]
+    for fragment in layout_fragments:
+        if fragment not in formal:
+            errors.append(f"Product target code layout missing: {fragment}")
 
     if "# Current Baseline" in formal or "# Current 实现" in formal:
         errors.append("Product Target document must not embed Current baseline sections")
