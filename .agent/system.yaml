@@ -1,6 +1,6 @@
-version: 1
+version: 2
 
-purpose: "Route Zuno tasks to local skills, templates, Target docs, Programs, and verification."
+purpose: "Route Zuno tasks to the eleven canonical module architectures, total architecture, Programs, and verification."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -16,35 +16,24 @@ system_identity:
   formal_status_root: "docs/status"
   history_root: "docs/history"
 
+runtime_boundary:
+  product_runtime: "Single Controller Agent Runtime"
+  engineering_parallelism: "parallel agents are engineering workflow helpers and do not change the product runtime architecture"
+
 program_rules:
   current_program_root: ".agent/programs"
   phase_filename_pattern: "PHASE[0-9][0-9]_<name>.md"
   new_program_first_phase: "PHASE01"
-  replaced_program_policy: "remove replaced active phase files; archive evidence under docs/history/programs"
+  replaced_program_policy: "archive evidence under docs/history/programs and do not keep competing active truth"
 
 work_modes:
-  runtime_boundary: "parallel agents are engineering workflow helpers; Zuno product runtime target remains a Single Controller Agent Runtime"
   branch_prefix: "codex/"
-  persistent_thread_slots: true
-  task_isolation_unit: "worktree + branch, not thread title"
+  task_isolation_unit: "worktree + branch"
   main_thread_can_self_execute: true
   main_thread_can_delegate: true
-  prompt_only_is_not_goal_mode: true
-  hangup_mode:
-    main_thread_goal_mode: true
-    allow_multi_agent_inside_main_thread: true
-    verification_owner: "main thread"
-  multi_thread_mode:
-    coordinator_thread_goal_mode: true
-    coordinator_role: "prepare child prompts, scopes, acceptance gates, progress tracking, diff review, integrated verification, and merge"
-    child_thread_goal_mode: "user-created Codex UI goal mode thread required"
-    require_fresh_or_confirmed_worktree_branch_per_task: true
-    prefer_reuse_existing_thread_slots: true
-    thread_prompt_root: ".agent/programs/thread-prompts"
-    coarse_grained_child_tasks: true
-    require_disjoint_write_scope: true
-    require_commit_and_push_before_merge: true
-    merge_owner: "main coordinator thread"
+  coordinator_role: "scope, contract freeze, conflict resolution, integrated verification, merge, and evidence reporting"
+  require_disjoint_write_scope_for_parallel_tasks: true
+  require_commit_and_push_before_merge: true
 
 architecture_directory_contract:
   formal_files:
@@ -57,8 +46,10 @@ architecture_directory_contract:
     - ".agent/architecture/architecture.md"
     - ".agent/architecture/architecture-views.md"
     - ".agent/architecture/architecture.html"
+  formal_design_fact_count: "11 module documents + architecture.md + architecture.html"
+  visual_source_role: "architecture-views.md is the Mermaid source for architecture.html, not a second textual architecture"
   forbidden_content:
-    - "module design"
+    - "module-specific second architecture documents"
     - "production readiness"
     - "ADR"
     - "program plan"
@@ -68,70 +59,87 @@ module_document_contract:
   formal_index: "docs/modules/README.md"
   agent_index: ".agent/modules/README.md"
   status_truth: "docs/status/production-readiness.md"
+  mirror_policy: "all eleven module formal documents and mirrors must be byte-identical"
+  owner_precedence: "the owning module document is canonical for domain objects, state machines, failures, persistence, and tests"
+
+  product_surface:
+    formal: "docs/modules/01-product-surface.md"
+    mirror: ".agent/modules/01-product-surface.md"
+    verifier: "python tools/scripts/verify_product_surface_target_protocols.py"
+    test: "pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider"
+
+  input_document_ingestion:
+    formal: "docs/modules/02-input-document-ingestion.md"
+    mirror: ".agent/modules/02-input-document-ingestion.md"
+    verifier: "python tools/scripts/verify_architecture_document_set.py"
+    test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
+
+  knowledge_agentic_graphrag:
+    formal: "docs/modules/03-knowledge-agentic-graphrag.md"
+    mirror: ".agent/modules/03-knowledge-agentic-graphrag.md"
+    verifier: "python tools/scripts/verify_architecture_document_set.py"
+    test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
+
   model_gateway:
-    formal:
-      - "docs/modules/04-model-gateway.md"
-      - "docs/modules/04-model-gateway-contract-freeze.md"
-      - "docs/modules/04-model-gateway-operations-conformance.md"
-    mirror:
-      - ".agent/modules/04-model-gateway.md"
-      - ".agent/modules/04-model-gateway-contract-freeze.md"
-      - ".agent/modules/04-model-gateway-operations-conformance.md"
+    formal: "docs/modules/04-model-gateway.md"
+    mirror: ".agent/modules/04-model-gateway.md"
     target_only: true
-    normative_order:
-      - "docs/modules/04-model-gateway.md"
-      - "docs/modules/04-model-gateway-contract-freeze.md"
-      - "docs/modules/04-model-gateway-operations-conformance.md"
-    verifiers:
-      - "python tools/scripts/verify_model_gateway_target_protocols.py"
-      - "python tools/scripts/verify_model_gateway_contract_freeze.py"
-      - "python tools/scripts/verify_model_gateway_operations_conformance.py"
-    tests:
-      - "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
-      - "pytest -q tests/repo/test_model_gateway_contract_freeze.py -p no:cacheprovider"
-      - "pytest -q tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider"
+    verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"
+    test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
+
+  memory_context:
+    formal: "docs/modules/05-memory-context.md"
+    mirror: ".agent/modules/05-memory-context.md"
+    verifier: "python tools/scripts/verify_memory_context_target_protocols.py"
+    test: "pytest -q tests/repo/test_memory_context_target_protocols.py -p no:cacheprovider"
+
   agent_core:
-    formal:
-      - "docs/modules/06-agent-core-planning-control.md"
-    mirror:
-      - ".agent/modules/06-agent-core-planning-control.md"
+    formal: "docs/modules/06-agent-core-planning-control.md"
+    mirror: ".agent/modules/06-agent-core-planning-control.md"
     target_only: true
     execution_plan_root: ".agent/programs"
-    normative_order:
-      - "global architecture principles"
-      - "Agent Core unified target architecture document"
-      - "Program"
-      - "code and migration"
     verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
     test: "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
-skill_file_contract:
-  recommended_sections:
-    - "When To Use"
-    - "Mental Model"
-    - "Current Truth"
-    - "Target Direction"
-    - "Must Preserve"
-    - "Before Editing"
-    - "Allowed Changes"
-    - "Forbidden Changes"
-    - "Common Failure Patterns"
-    - "Debug Playbooks"
-    - "Focused Tests"
-    - "Docs Sync"
-    - "Lessons Learned"
+  capability_skill:
+    formal: "docs/modules/07-capability-skill.md"
+    mirror: ".agent/modules/07-capability-skill.md"
+    verifier: "python tools/scripts/verify_capability_skill_target_protocols.py"
+    test: "pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider"
 
-template_rules:
-  purpose: "execution skeletons only"
-  forbidden_content:
-    - "project knowledge"
-    - "current architecture truth"
-    - "target architecture prose"
-    - "lessons learned"
-    - "debug playbooks"
+  tool_runtime:
+    formal: "docs/modules/08-tool-runtime.md"
+    mirror: ".agent/modules/08-tool-runtime.md"
+    verifier: "python tools/scripts/verify_tool_runtime_target_protocols.py"
+    test: "pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
+
+  security:
+    formal: "docs/modules/09-security.md"
+    mirror: ".agent/modules/09-security.md"
+    verifier: "python tools/scripts/verify_security_target_protocols.py"
+    test: "pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider"
+
+  observability_eval:
+    formal: "docs/modules/10-observability-eval.md"
+    mirror: ".agent/modules/10-observability-eval.md"
+    verifier: "python tools/scripts/verify_observability_eval_target_protocols.py"
+    test: "pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider"
+
+  infrastructure:
+    formal: "docs/modules/11-infrastructure.md"
+    mirror: ".agent/modules/11-infrastructure.md"
+    verifier: "python tools/scripts/verify_infrastructure_target_protocols.py"
+    test: "pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider"
+
+shared_contracts:
+  adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
+  registry: "docs/governance/wave1-cross-module-contract-registry.md"
+  status: "CONFIRMED_TARGET"
+  verifier: "python tools/scripts/verify_wave1_contract_freeze.py"
+  test: "pytest -q tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider"
 
 skill_routes:
-  - name: "docs-agent-system-history"
+  - name: "architecture-and-document-governance"
     match:
       paths:
         - "README.md"
@@ -146,13 +154,7 @@ skill_routes:
       - ".agent/references/architecture-docs-map.md"
       - ".agent/references/documentation-governance.md"
       - ".agent/references/architecture-update-policy.md"
-      - ".agent/references/diagram-inventory.md"
       - ".agent/references/current-target-future-rules.md"
-      - ".agent/references/workflow-governance.md"
-      - ".agent/references/workflow-update-policy.md"
-      - ".agent/references/workflow-requirements.md"
-      - ".agent/references/workflow-change-log.md"
-      - ".agent/references/workflow-maintenance-checklist.md"
       - ".agent/references/verification-map.md"
       - ".agent/references/known-pitfalls.md"
       - ".agent/references/zuno-repo-hygiene.md"
@@ -161,170 +163,90 @@ skill_routes:
       - ".agent/templates/readonly-audit-prompt.md"
       - ".agent/templates/phase-plan.md"
       - ".agent/templates/phase-closure-report.md"
-      - ".agent/templates/goal-mode-prompt.md"
-      - ".agent/templates/target-mode-prompt.md"
-      - ".agent/templates/codex-batch-prompt.md"
       - ".agent/templates/spec-coding-checklist.md"
       - ".agent/templates/architecture-doc-template.md"
-      - ".agent/templates/mermaid-diagram-template.md"
-      - ".agent/templates/architecture-change-note-template.md"
       - ".agent/templates/verification-report-template.md"
-      - ".agent/templates/workflow-change-note-template.md"
     docs_sync:
       - "AGENTS.md"
-      - "README.md"
-      - "docs/README.md"
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/architecture/architecture-views.md"
       - "docs/architecture/architecture.html"
       - "docs/modules/README.md"
+      - "docs/modules/01-product-surface.md"
       - "docs/modules/02-input-document-ingestion.md"
       - "docs/modules/03-knowledge-agentic-graphrag.md"
       - "docs/modules/04-model-gateway.md"
-      - "docs/modules/04-model-gateway-contract-freeze.md"
-      - "docs/modules/04-model-gateway-operations-conformance.md"
       - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
       - "docs/modules/07-capability-skill.md"
+      - "docs/modules/08-tool-runtime.md"
+      - "docs/modules/09-security.md"
       - "docs/modules/10-observability-eval.md"
+      - "docs/modules/11-infrastructure.md"
       - "docs/status/production-readiness.md"
-      - "docs/decisions/README.md"
-      - "docs/governance/repo-ownership-matrix.md"
-      - ".agent/README.md"
-      - ".agent/system.yaml"
-      - ".agent/architecture/README.md"
-      - ".agent/architecture/architecture.md"
-      - ".agent/architecture/architecture-views.md"
-      - ".agent/architecture/architecture.html"
-      - ".agent/modules/README.md"
-      - ".agent/modules/04-model-gateway.md"
-      - ".agent/modules/04-model-gateway-contract-freeze.md"
-      - ".agent/modules/04-model-gateway-operations-conformance.md"
-      - ".agent/modules/06-agent-core-planning-control.md"
+      - "docs/decisions/"
+      - "docs/governance/"
+      - ".agent/architecture/"
+      - ".agent/modules/"
       - ".agent/references/docs-map.md"
-      - ".agent/references/architecture-docs-map.md"
-      - ".agent/references/documentation-governance.md"
-      - ".agent/references/architecture-update-policy.md"
-      - ".agent/references/current-target-future-rules.md"
-      - ".agent/references/workflow.md"
-      - ".agent/references/verification-map.md"
-      - ".agent/programs/README.md"
-      - ".agent/programs/current.md"
-      - ".agent/programs/implementation-roadmap.md"
-      - ".agent/programs/closure-checklist.md"
+      - ".agent/system.yaml"
     verify:
       - "git diff --check"
+      - "python tools/scripts/verify_architecture_document_set.py"
       - "python tools/agent/render_architecture.py --check"
+      - "python tools/scripts/verify_wave1_contract_freeze.py"
       - "python tools/scripts/verify_docs_entrypoints.py"
-      - "python tools/scripts/verify_current_program.py"
-      - "python tools/scripts/verify_repo_structure.py"
-      - "python tools/scripts/verify_model_gateway_target_protocols.py"
-      - "python tools/scripts/verify_model_gateway_contract_freeze.py"
-      - "python tools/scripts/verify_model_gateway_operations_conformance.py"
-      - "python tools/scripts/verify_agent_core_target_protocols.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
-      - "pytest -q tests/repo/test_model_gateway_target_protocols.py tests/repo/test_model_gateway_contract_freeze.py tests/repo/test_model_gateway_operations_conformance.py -p no:cacheprovider"
-      - "pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
     match:
       paths:
-        - "src/backend/zuno/core/agents/**"
         - "src/backend/zuno/agent/**"
-        - "src/backend/zuno/services/memory/**"
-        - "src/backend/zuno/memory/**"
-    skills:
-      - ".agent/references/runtime-call-chain.md"
-      - ".agent/references/code-map.md"
-      - ".agent/references/zuno-repo-hygiene.md"
-      - ".agent/references/verification-map.md"
-    templates:
-      - ".agent/templates/spec-coding-checklist.md"
-      - ".agent/templates/phase-closure-report.md"
+        - "src/backend/zuno/core/agents/**"
     docs_sync:
-      - "docs/architecture/architecture.md"
-      - "docs/modules/05-memory-context.md"
       - "docs/modules/06-agent-core-planning-control.md"
-      - "docs/status/production-readiness.md"
-      - ".agent/architecture/architecture.md"
-      - ".agent/modules/06-agent-core-planning-control.md"
-      - ".agent/references/code-map.md"
-      - ".agent/references/runtime-call-chain.md"
-      - ".agent/references/verification-map.md"
+      - "docs/modules/04-model-gateway.md"
+      - "docs/modules/05-memory-context.md"
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/08-tool-runtime.md"
     verify:
       - "python tools/scripts/verify_agent_core_target_protocols.py"
       - "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
-      - "python .agent/scripts/verify_module_boundaries.py"
 
-  - name: "capability-tool-retrieval"
+  - name: "knowledge-ingestion-memory"
     match:
       paths:
-        - "src/backend/zuno/platform/services/application/capabilities/**"
-        - "src/backend/zuno/platform/services/capability_registry.py"
-        - "src/backend/zuno/capability/**"
-    skills:
-      - ".agent/references/code-map.md"
-      - ".agent/references/verification-map.md"
-    templates:
-      - ".agent/templates/spec-coding-checklist.md"
-    docs_sync:
-      - "docs/architecture/architecture.md"
-      - "docs/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/modules/07-capability-skill.md"
-      - ".agent/architecture/architecture.md"
-      - ".agent/references/code-map.md"
-      - ".agent/references/verification-map.md"
-    verify:
-      - "pytest -q tests/agent/test_capability_system.py tests/agent/test_capability_registry.py -p no:cacheprovider"
-
-  - name: "knowledge-graphrag-retrieval"
-    match:
-      paths:
-        - "src/backend/zuno/services/rag/**"
-        - "src/backend/zuno/services/retrieval/**"
-        - "src/backend/zuno/services/graphrag/**"
         - "src/backend/zuno/knowledge/**"
-    skills:
-      - ".agent/references/runtime-call-chain.md"
-      - ".agent/references/code-map.md"
-      - ".agent/references/verification-map.md"
-      - ".agent/references/known-pitfalls.md"
-    templates:
-      - ".agent/templates/spec-coding-checklist.md"
-      - ".agent/templates/phase-closure-report.md"
+        - "src/backend/zuno/memory/**"
+        - "src/backend/zuno/services/rag/**"
     docs_sync:
-      - "docs/architecture/architecture.md"
       - "docs/modules/02-input-document-ingestion.md"
       - "docs/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/status/production-readiness.md"
-      - ".agent/architecture/architecture.md"
-      - ".agent/references/runtime-call-chain.md"
-      - ".agent/references/verification-map.md"
+      - "docs/modules/05-memory-context.md"
+
+  - name: "capability-and-tool"
+    match:
+      paths:
+        - "src/backend/zuno/capability/**"
+    docs_sync:
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/08-tool-runtime.md"
     verify:
-      - "pytest -q tests/agent/test_knowledge_graphrag_runtime_contracts.py -p no:cacheprovider"
+      - "python tools/scripts/verify_capability_skill_target_protocols.py"
+      - "python tools/scripts/verify_tool_runtime_target_protocols.py"
 
   - name: "platform-foundation"
     match:
       paths:
         - "src/backend/zuno/platform/**"
-    skills:
-      - ".agent/references/code-map.md"
-      - ".agent/references/verification-map.md"
-      - ".agent/references/zuno-repo-hygiene.md"
-    templates:
-      - ".agent/templates/spec-coding-checklist.md"
-      - ".agent/templates/phase-closure-report.md"
     docs_sync:
-      - "docs/architecture/architecture.md"
-      - "docs/status/production-readiness.md"
+      - "docs/modules/04-model-gateway.md"
+      - "docs/modules/09-security.md"
+      - "docs/modules/10-observability-eval.md"
+      - "docs/modules/11-infrastructure.md"
       - "docs/governance/repo-ownership-matrix.md"
-      - ".agent/architecture/architecture.md"
-      - ".agent/references/code-map.md"
-      - ".agent/references/verification-map.md"
-    verify:
-      - "pytest -q tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py -p no:cacheprovider"
 
 stop_conditions:
   - "public API field rename"
