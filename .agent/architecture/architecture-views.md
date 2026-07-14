@@ -1,301 +1,258 @@
 # Zuno Architecture Visual Atlas Source
 
-updated: 2026-07-11  
-status: normative-target-visual-source  
+updated: 2026-07-14
+status: normative-target-visual-source
 text_design_source: `docs/architecture/architecture.md`
 
-本文件只维护 HTML Architecture Atlas 所需的 Mermaid 图。完整目标架构设计、模块职责、轻量实现边界和完成标准以 `architecture.md` 为准。
+本文件是 `architecture.html` 的 Mermaid 渲染源，不是第二份文字总架构。模块领域细节以十一份正式模块文档为准。
 
-箭头规范：
-
-```text
-==>  command / control request
--->  data / result / state transfer
--.-> cross-cutting governance / observation / constraint
-```
+箭头规范：`==>` 命令/控制，`-->` 数据/结果，`-.->` 横切约束/观测。
 
 ## 一、4+1 View Model
 
 ### Logical View (4+1)
 
-#### Overall — Eleven Logical Capabilities
+#### Overall — Eleven Modules
 
 ```mermaid
 flowchart TB
-  PS["1 Product Surface"]
-  IN["2 Input"]
-  KN["3 Knowledge"]
-  MG["4 Model Gateway"]
-  MM["5 Memory"]
-  AC["6 Agent Core / Planning & Control"]
-  CP["7 Capability"]
-  TR["8 Tool Runtime"]
-  SEC["9 Security"]
-  OBS["10 Observability & Eval"]
-  INF["11 Infrastructure"]
-  PS ==>|RuntimeRequest| AC
-  AC -->|RuntimeEvent · GroundedAnswer · ArtifactRef| PS
-  PS ==>|SourceObject| IN
-  IN -->|CanonicalDocumentIR · IndexHandoff| KN
-  AC ==>|ModelCallRequest| MG
-  MG -->|ModelResult · UsageRecord| AC
-  AC ==>|MemoryReadRequest · MemoryCommit| MM
-  MM -->|ContextPack · Memory refs| AC
-  AC ==>|RetrievalPlan| KN
-  KN -->|EvidenceBundle · RetrievalVerdict| AC
-  AC ==>|CapabilityQuery| CP
-  CP -->|CapabilityPlan · AllowedTools| AC
-  AC ==>|ToolCallIntent| TR
-  TR -->|NormalizedToolObservation| AC
-  SEC -.-> PS & IN & KN & MG & MM & AC & CP & TR
-  OBS -.-> PS & IN & KN & MG & MM & AC & CP & TR
-  PS & IN & KN & MG & MM & AC & CP & TR & SEC & OBS --> INF
+  PS[01 Product Surface] ==>|RuntimeRequest| AC[06 Agent Core]
+  AC -->|Publication and RunOutcome| PS
+  PS ==>|Source command| IN[02 Input]
+  IN -->|IndexableDocumentSnapshot| KN[03 Knowledge]
+  AC ==>|ModelRoleRequirement| MG[04 Model Gateway]
+  MG -->|ModelResponse and UsageReceipt| AC
+  AC ==>|MemoryReadRequest| MM[05 Memory]
+  MM -->|ContextPackVersion| AC
+  AC ==>|CapabilityRequirement| CP[07 Capability]
+  CP -->|CapabilitySelectionResult| AC
+  AC ==>|ActionProposal| TR[08 Tool Runtime]
+  TR -->|ToolObservation and EffectReceipt| AC
+  SEC[09 Security] -.-> PS & IN & KN & MG & MM & AC & CP & TR
+  OBS[10 Observability and Eval] -.-> PS & IN & KN & MG & MM & AC & CP & TR & SEC
+  PS & IN & KN & MG & MM & AC & CP & TR & SEC & OBS --> INF[11 Infrastructure]
 ```
 
-#### Local — Memory and Context Boundary
+#### Local — Canonical Ownership
 
 ```mermaid
 flowchart LR
-  Input[Current input and observations] --> Sensory[Sensory Memory]
-  Sensory --> Short[Short-term Memory]
-  Long[Long-term Memory] --> Policy[Memory Policy]
-  Entity[Entity Memory] --> Policy
-  Short --> Policy
-  Policy --> Rank[Retrieve and Rank]
-  Rank --> Context[ContextPack]
-  Context --> Agent[Agent Core]
-  Agent --> Candidate[Memory Candidate]
-  Candidate --> Review{Governance Review}
-  Review -->|approved lesson or episode| Long
-  Review -->|approved entity fact| Entity
-  Review -->|pending or rejected| Ledger[Governance Ledger]
+  Domain[Domain Fact Owner] --> Fact[Versioned Domain Fact]
+  Fact --> Outbox[Transactional Outbox]
+  Outbox --> Projection[Product or Observability Projection]
+  Infra[Infrastructure Receipt] -.-> Fact
+  Projection -.->|read only| Client[Client]
+  Client ==>|Command only| Domain
 ```
 
-#### Local — Agent Core Capability Boundary
+#### Local — Documentation Truth
 
 ```mermaid
-flowchart TB
-  Strategy --> Planner --> Executor --> Observe --> Evidence --> Synthesis --> Reflect{Reflection}
-  Reflect -->|PASS| Finalize
-  Reflect -->|REWRITE_ANSWER| Synthesis
-  Reflect -->|RETRIEVE_MORE| Replan --> Executor
-  Reflect -->|USE_TOOL| Executor
-  Reflect -->|ASK_USER| Interrupt
-  Reflect -->|ABSTAIN| Finalize
-  Executor ==>|RetrievalPlan| Knowledge
-  Executor ==>|ToolCallIntent| Tool
-  Planner ==>|ModelCallRequest| Model
-  Strategy ==>|MemoryReadRequest| Memory
-  Finalize ==>|MemoryCommit| Memory
+flowchart LR
+  ADR[Global principles and ADR] --> MOD[Eleven canonical module docs]
+  MOD --> ARCH[architecture.md integration]
+  ARCH --> HTML[architecture.html]
+  VIEWS[architecture-views.md render source] --> HTML
+  MOD & ARCH --> PROGRAM[Confirmed Program]
+  PROGRAM --> CODE[Code Migration Tests Evidence]
 ```
 
 ### Development View (4+1)
 
-#### Overall — Repository Ownership and Dependency Direction
+#### Overall — Repository Dependency
 
 ```mermaid
 flowchart TB
-  Web[apps/web] -->|typed API| API[zuno/api]
-  API -->|RuntimeRequest| Agent[zuno/agent]
-  Agent --> Memory[zuno/memory]
-  Agent --> Knowledge[zuno/knowledge]
-  Agent --> Capability[zuno/capability]
-  Agent --> Platform[zuno/platform]
-  Memory --> Platform
-  Knowledge --> Platform
-  Capability --> Platform
-  Docs[docs/architecture] --> Renderer[tools/agent]
-  Renderer --> Tests[tests/repo]
-  Tests -.-> Docs
+  WEB[apps/web] --> API[src/backend/zuno/api]
+  API --> PRODUCT[zuno product application]
+  PRODUCT --> AGENT[zuno/agent]
+  AGENT --> KNOW[zuno/knowledge]
+  AGENT --> MEMORY[zuno/memory]
+  AGENT --> CAP[zuno/capability]
+  KNOW & MEMORY & CAP & AGENT --> PLATFORM[zuno/platform ports and adapters]
+  DOCS[docs/modules and docs/architecture] --> VERIFY[verifiers and repo tests]
 ```
 
-#### Local — Runtime Package Dependency Rule
+#### Local — Module Package Rule
 
 ```mermaid
 flowchart LR
-  API --> Factory[RuntimeDependencyFactory]
-  Factory --> Service[UnifiedAgentRuntimeService]
-  Service --> Graph[Compiled LangGraph]
-  Graph --> Nodes[Runtime Nodes]
-  Nodes ==>|typed ports| Protocols[Runtime Protocols]
-  Protocols --> Adapters[Model · Memory · Knowledge · Tool Adapters]
-  Service --> Stores[Checkpoint · Event · Domain Stores]
-  Adapters --> Stores
+  Domain[Domain] --> Application[Application Services]
+  Application --> Ports[Typed Ports]
+  Adapters[Adapters] --> Ports
+  Adapters --> Platform[Infrastructure primitives]
+  API[Inbound API] --> Application
+  Domain -.->|no provider SDK| Adapters
 ```
 
-#### Local — Architecture Source Generation Chain
+#### Local — Architecture Build Chain
 
 ```mermaid
 flowchart LR
-  Text[architecture.md text-first design] --> Review[Architecture Review]
-  Views[architecture-views.md Mermaid source] --> HTML[architecture.html visual atlas]
-  Text --> MirrorText[.agent architecture.md]
-  Views --> MirrorViews[.agent architecture-views.md]
-  HTML --> MirrorHTML[.agent architecture.html]
-  Text & Views & HTML --> Verify[renderer and repo guardrails]
-  Verify -.->|findings| Text & Views
+  Modules[11 module docs] --> SetGuard[Architecture document-set verifier]
+  Total[architecture.md] --> Renderer[render_architecture.py]
+  Views[architecture-views.md] --> Renderer
+  HTML[architecture.html] --> Renderer
+  Renderer --> Mirrors[docs and agent mirrors]
+  SetGuard --> Tests[focused repository tests]
+  Mirrors --> Tests
 ```
 
 ### Process View (4+1)
 
-#### Overall — Unified LangGraph Runtime
+#### Overall — Agent Run
 
 ```mermaid
 flowchart TB
-  Start([START]) --> Input[input_gate] --> Context[build_context] --> Strategy{strategy_select}
-  Strategy -->|direct| Draft[draft_and_bind_claims]
-  Strategy -->|react or plan| Plan[create_or_update_plan]
-  Plan --> Execute[execute_step] --> Observe[observe]
-  Observe -->|plan remains| Execute
-  Observe -->|complete| Evidence[evidence_gate] --> Draft --> Reflect{reflection}
-  Reflect -->|PASS| Finalize[finalize]
-  Reflect -->|REWRITE_ANSWER| Revise[revise_draft] --> Draft
-  Reflect -->|RETRIEVE_MORE| Replan[replan] --> Execute
-  Reflect -->|USE_TOOL| Approval[approval and tool execution] --> Observe
-  Reflect -->|ASK_USER| Interrupt[interrupt]
-  Interrupt -->|Command resume| Execute
-  Reflect -->|ABSTAIN| Finalize
-  Finalize --> Commit[post_turn_commit] --> End([END])
+  REQ[RuntimeRequest] --> RUN[AgentRunGraph]
+  RUN --> PLAN[Plan Proposal Validate Activate]
+  PLAN --> READY[ReadySet Admission Budget]
+  READY --> SEND[Dispatch Commit and Send]
+  SEND --> STEP[StepExecutionGraph]
+  STEP --> OBS[NormalizedObservation]
+  OBS --> ACCEPT[Evaluation and Acceptance]
+  ACCEPT -->|continue| READY
+  ACCEPT -->|replan| BARRIER[Replan Barrier and new PlanVersion]
+  BARRIER --> READY
+  ACCEPT -->|complete| FINAL[FinalCandidate and Final Gate]
+  FINAL --> PUB[Publication]
+  PUB --> OUT[RunOutcome]
 ```
 
-#### Local — Single-step ReAct
+#### Local — Ingestion and Index
 
 ```mermaid
 flowchart LR
-  Step[PlanStep] --> Prompt[Step Context Builder] --> Model[Executor Model]
-  Model --> Decision{Action Decision}
-  Decision -->|retrieve| Knowledge --> Obs[NormalizedObservation]
-  Decision -->|tool| Tool --> Obs
-  Decision -->|model transform| Transform --> Obs
-  Obs --> Check{Acceptance Check}
-  Check -->|accepted| Done[Step Completed]
-  Check -->|continue within limit| Prompt
+  SRC[SourceObject] --> DV[DocumentVersion]
+  DV --> PARSE[ParsePlan Job Attempt]
+  PARSE --> IR[CanonicalDocumentIR and SourceSpan]
+  IR --> QUALITY[Parser Quality Gate]
+  QUALITY --> HAND[IndexableDocumentSnapshot]
+  HAND --> BUILD[IndexWriteBatch]
+  BUILD --> VIS[Write Visibility Verification]
+  VIS --> ACCEPT[Knowledge Acceptance]
+  ACCEPT --> CUT[IndexCutover and ServingWatermark]
 ```
 
-#### Local — Interrupt, Approval and Resume
+#### Local — Tool Effect
 
 ```mermaid
-sequenceDiagram
-  participant G as LangGraph
-  participant T as Tool Runtime
-  participant S as Checkpoint Store
-  participant API as Product API
-  participant U as User
-  G->>T: ToolRuntimeRequest
-  T-->>G: approval_required
-  G->>S: persist checkpoint and interrupt
-  G-->>API: RuntimeEvent
-  API-->>U: approval UI
-  U->>API: approve or deny
-  API->>G: Command(resume)
-  G->>S: load checkpoint
-  G->>T: execute with idempotency_key
-  T-->>G: NormalizedToolObservation
+flowchart LR
+  AP[ActionProposal] --> PREP[PreparedToolAction]
+  PREP --> SG[Security Prepare Gate]
+  SG --> APPROVAL[Optional Approval]
+  APPROVAL --> EXEC[Execute Gate and latest Epoch]
+  EXEC --> AUDIT[Mandatory Audit durability]
+  AUDIT --> CLAIM[IdempotencyClaim]
+  CLAIM --> ATT[ToolAttempt]
+  ATT --> EFFECT{Effect result}
+  EFFECT -->|known| RECEIPT[EffectReceipt]
+  EFFECT -->|unknown| REC[EffectReconciliation]
 ```
 
 ### Physical View (4+1)
 
-#### Overall — Lean Local-first Deployment
+#### Overall — Canonical Server Target
 
 ```mermaid
 flowchart TB
-  User[Browser or Desktop] --> Web[Web UI] ==>|HTTP and SSE| API[FastAPI]
-  API ==>|RuntimeRequest| Runtime[Unified LangGraph Runtime]
-  Runtime ==>|model calls| Provider[Configured Model Provider]
-  API --> Queue[TaskQueuePort]
-  Queue --> LocalWorker[In-process or local worker]
-  Queue -.-> Rabbit[Optional RabbitMQ adapter]
-  Runtime --> DB[(SQLite / SQLModel)]
-  API --> Object[(Local Object Store)]
-  Runtime --> Index[(BM25 · Vector · Graph Index)]
-  Runtime --> Trace[(Local Trace Store)]
-  Trace -.-> LangSmith[Optional LangSmith sink]
-  Trace --> Eval[(Eval Reports)]
+  CLIENT[Web Desktop External API] --> API[Server-hosted Product API]
+  API --> CONTROL[Controller role]
+  API --> WORKER[Async worker roles]
+  CONTROL --> PG[(PostgreSQL)]
+  CONTROL --> CP[(LangGraph Checkpointer)]
+  WORKER --> PG
+  WORKER --> OBJ[(Object Store)]
+  WORKER --> Q[(RabbitMQ)]
+  WORKER --> IDX[(BM25 Vector Graph projections)]
+  CONTROL --> IDX
+  CONTROL --> TRACE[(Trace Audit Eval store)]
 ```
 
-#### Local — Durable Storage and Recovery
+#### Local — Facts and Projections
 
 ```mermaid
 flowchart LR
-  Run[AgentRun] --> Checkpoint[(LangGraph Checkpoint)]
-  Run --> Events[(Runtime Event Log)]
-  Run --> Plans[(Plan Versions)]
-  Run --> Observations[(Observations)]
-  Run --> Interrupts[(Interrupts)]
-  Run --> Claims[(Tool Idempotency Claims)]
-  Restart[New process] --> Checkpoint
-  Checkpoint --> Resume[Resume correct node]
-  Claims --> Resume
+  PG[(PostgreSQL Domain Facts)] --> OUTBOX[Outbox]
+  OUTBOX --> Q[(RabbitMQ)]
+  Q --> WORKER[Idempotent Worker]
+  WORKER --> OBJ[(Object Store)]
+  WORKER --> INDEX[(Rebuildable Index)]
+  INDEX --> RECEIPT[Visibility and verification receipts]
+  RECEIPT --> PG
 ```
 
-#### Local — Model Connectivity
+#### Local — Recovery
 
 ```mermaid
 flowchart LR
-  Binding[ModelSlotBinding] --> Gateway[Model Gateway]
-  Gateway --> Local[Local Provider Adapter]
-  Gateway --> Remote[Remote Provider Adapter]
-  Gateway --> Mock[Mock Provider test only]
-  Local --> Usage[Usage · Cost · Trace]
-  Remote --> Usage
-  Mock --> Usage
-  Security -.-> Gateway
+  RESTART[Process restart] --> CHECK[(Checkpoint)]
+  RESTART --> DOMAIN[(Domain Store)]
+  CHECK --> RECON[Domain Checkpoint Reconciler]
+  DOMAIN --> RECON
+  RECON --> RESUME[Resume safe node]
+  LEASE[Lease and fencing] -.-> RESUME
+  OUTBOX[Inbox and Outbox] -.-> RESUME
 ```
 
 ### Scenarios View (4+1)
 
-#### Overall — Product Lifecycles
-
-```mermaid
-flowchart LR
-  Config[Model Configuration] --> Workspace[Workspace]
-  Workspace --> Prepare[Knowledge Preparation]
-  Prepare --> Ask[Agent Task]
-  Ask --> Answer[GroundedAnswer and Artifact]
-  Answer --> Inspect[Citation and Trace Inspection]
-  Inspect --> Feedback[Feedback]
-  Ask -.-> Recovery[Refresh or Restart Recovery]
-  Recovery --> Answer
-```
-
-#### Local — Document Preparation Scenario
+#### Overall — Strict Grounded Answer
 
 ```mermaid
 sequenceDiagram
   participant U as User
-  participant API as Product API
-  participant Q as Task Queue
-  participant P as Parse Worker
-  participant K as Knowledge Indexer
-  participant S as Stores
-  U->>API: upload file
-  API->>S: save SourceObject
-  API->>Q: enqueue ParseJob
-  Q->>P: claim job
-  P->>S: save CanonicalDocumentIR and SourceSpan
-  P->>K: IndexHandoffPayload
-  K->>S: save IndexManifest
-  API-->>U: indexed or blocked status
-```
-
-#### Local — Agent Task and Feedback
-
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant API as Product API
-  participant R as Unified Runtime
+  participant P as Product
+  participant A as Agent Core
   participant K as Knowledge
+  participant M as Model Gateway
+  U->>P: submit strict grounded task
+  P->>A: RuntimeRequest
+  A->>K: KnowledgeQueryRequest
+  K-->>A: EvidenceBundle with CitationLineage
+  A->>M: SYNTHESIZER requirement
+  M-->>A: candidate response
+  A-->>P: Publication and RunOutcome
+  P-->>U: authorized answer and citations
+```
+
+#### Local — Approval and Resume
+
+```mermaid
+sequenceDiagram
+  participant A as Agent Core
   participant T as Tool Runtime
-  U->>API: ask question
-  API->>R: RuntimeRequest
-  R->>K: RetrievalPlan
-  K-->>R: EvidenceBundle
-  R->>T: optional ToolCallIntent
-  T-->>R: ToolObservation
-  R-->>API: RuntimeEvents and GroundedAnswer
-  API-->>U: answer, citations, artifact, trace
-  U->>API: feedback
+  participant S as Security
+  participant P as Product
+  participant U as Approver
+  A->>T: ActionProposal
+  T->>S: PreparedToolAction
+  S-->>P: ApprovalRequest
+  P-->>U: authorized approval view
+  U->>P: approve
+  P->>S: approval command
+  S-->>A: SecurityApprovalDecision
+  A->>T: resume execution
+  T-->>A: EffectReceipt or Reconciliation
+```
+
+#### Local — Delete and Revoke
+
+```mermaid
+sequenceDiagram
+  participant P as Product
+  participant S as Security
+  participant I as Input
+  participant K as Knowledge
+  participant M as Memory
+  participant F as Infrastructure
+  P->>S: delete or revoke command
+  S-->>I: authorized deletion
+  I->>K: document tombstone
+  K->>M: evidence invalidation
+  K->>F: physical index deletion request
+  F-->>K: deletion verification
+  K-->>P: no-longer-retrievable projection
 ```
 
 ## 二、Views & Beyond
@@ -306,260 +263,213 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  PS[Product Surface] --> PA[Product & API]
-  IN[Input] --> IK[Input & Knowledge]
-  KN[Knowledge] --> IK
-  MG[Model Gateway] --> AR[Agent Core Runtime]
-  MM[Memory] --> AR
-  AC[Agent Core] --> AR
-  CP[Capability] --> CT[Capability & Tool]
-  TR[Tool Runtime] --> CT
-  SEC[Security] --> GO[Governance & Observability]
-  OBS[Observability & Eval] --> GO
-  INF[Infrastructure] --> LI[Local Infrastructure]
+  PS[01 Product] --> PD[Product and API]
+  IN[02 Input] --> KD[Knowledge and Memory Runtime]
+  KN[03 Knowledge] --> KD
+  MG[04 Model Gateway] --> AC[Agent Control Plane]
+  MM[05 Memory] --> KD
+  AG[06 Agent Core] --> AC
+  CP[07 Capability] --> TD[Capability and Tool]
+  TR[08 Tool Runtime] --> TD
+  SEC[09 Security] --> GD[Governance Plane]
+  OBS[10 Observability] --> GD
+  INF[11 Infrastructure] --> ID[Durable Infrastructure]
 ```
 
-#### Local — Agent Core Module
-
-```mermaid
-flowchart TB
-  State[Runtime State] --> Context[Context Builder]
-  Context --> Strategy[Strategy Selector]
-  Strategy --> Planner[Planner and Validator]
-  Planner --> Executor[Step Executor Registry]
-  Executor --> Observe[Observation Normalizer]
-  Observe --> Reflect[Reflection and Replan]
-  Reflect --> Synthesis[Grounded Synthesis]
-  Synthesis --> Finalize[Finalize and Memory Bridge]
-  Limits[Budget and Stop Controller] -.-> Strategy & Planner & Executor & Reflect
-```
-
-#### Local — Knowledge Module
+#### Local — Owns Consumes Produces
 
 ```mermaid
 flowchart LR
-  IR[CanonicalDocumentIR] --> Chunk[Parent and Citation Chunks]
-  Chunk --> BM25[(BM25)]
-  Chunk --> Vector[(Vector)]
-  Chunk --> Graph[(Graph Index)]
-  Query[RetrievalPlan] --> BM25 & Vector & Graph
-  BM25 & Vector & Graph --> Fusion[RRF Fusion]
-  Fusion --> Rerank[Rerank and Expansion]
-  Rerank --> Ledger[EvidenceLedger]
-  Ledger --> Verdict[RetrievalQualityVerdict]
+  OWNER[Canonical Owner] -->|owns| FACT[Domain Fact]
+  CONSUMER[Consumer] ==>|typed request| OWNER
+  OWNER -->|versioned result| CONSUMER
+  OWNER -->|domain event| OBS[Observability]
+  OWNER ==>|primitive request| INF[Infrastructure]
+  INF -->|physical receipt| OWNER
+```
+
+#### Local — Boundary Violation Guard
+
+```mermaid
+flowchart LR
+  MODEL[Model Proposal] --> GATE[Deterministic Gate]
+  CLIENT[Client Command] --> GATE
+  GATE --> OWNER[Domain Owner]
+  BYPASS[Direct SDK DB Tool write] --> REJECT[Repository and runtime guard]
+  REJECT -.-> OWNER
 ```
 
 ### Component-and-Connector View (Views & Beyond)
 
-#### Overall — Runtime Components and Contracts
+#### Overall — Commands Data and Observation
 
 ```mermaid
 flowchart TB
-  Product ==>|RuntimeRequest| Service[Runtime Service]
-  Service ==>|state| Graph[Agent Graph]
-  Graph ==>|ModelCallRequest| Model[Model Gateway]
-  Graph ==>|MemoryReadRequest| Memory
-  Graph ==>|RetrievalPlan| Knowledge
-  Graph ==>|CapabilityQuery| Capability
-  Graph ==>|ToolCallIntent| Tool
-  Model -->|ModelResult| Graph
-  Memory -->|ContextPack| Graph
-  Knowledge -->|EvidenceBundle| Graph
-  Capability -->|CapabilityPlan| Graph
-  Tool -->|NormalizedToolObservation| Graph
-  Graph -->|RuntimeEvent · GroundedAnswer| Product
+  PRODUCT ==>|Command| CORE[Agent Core]
+  CORE ==>|Query or Action request| DOMAIN[Knowledge Model Memory Capability Tool]
+  DOMAIN -->|Domain result| CORE
+  DOMAIN -->|Domain event| OBS[Observability]
+  CORE -->|Publication event| PRODUCT
+  DOMAIN ==>|Physical operation| INF[Infrastructure]
+  INF -->|Receipt| DOMAIN
+  SEC[Security] -.-> PRODUCT & CORE & DOMAIN
 ```
 
-#### Local — Model and Memory Connectors
+#### Local — CrossModuleEnvelope
 
 ```mermaid
-sequenceDiagram
-  participant A as Agent Core
-  participant M as Model Gateway
-  participant MEM as Memory
-  A->>MEM: MemoryReadRequest
-  MEM-->>A: ContextPack and selected refs
-  A->>M: ModelCallRequest(role, schema, budget)
-  M-->>A: ModelResult and UsageRecord
-  A->>MEM: MemoryCommit(candidate, trace refs)
-  MEM-->>A: commit status
+flowchart LR
+  PRODUCER[Producer] --> ENV[CrossModuleEnvelopeV1]
+  ENV --> HASH[Payload and schema hash]
+  ENV --> SCOPE[Tenant Workspace Principal]
+  ENV --> EPOCH[Security Epoch and authorization ref]
+  ENV --> TIME[Deadline correlation causation]
+  HASH & SCOPE & EPOCH & TIME --> CONSUMER[Consumer validation]
+  CONSUMER -->|valid| HANDLER[Idempotent handler]
+  CONSUMER -->|invalid| FAIL[Owned failure namespace]
 ```
 
-#### Local — Knowledge and Tool Connectors
+#### Local — Budget and Admission
 
 ```mermaid
-sequenceDiagram
-  participant A as Agent Core
-  participant K as Knowledge
-  participant C as Capability
-  participant T as Tool Runtime
-  A->>K: RetrievalPlan
-  K-->>A: EvidenceBundle and RetrievalVerdict
-  A->>C: CapabilityQuery
-  C-->>A: CapabilityPlan and AllowedTools
-  A->>T: ToolCallIntent
-  T-->>A: approval_required or NormalizedToolObservation
+flowchart LR
+  NEED[Step or operation need] --> FEAS[Capability feasibility]
+  FEAS --> SEC[Security compatibility]
+  SEC --> BUDGET[Budget reservation]
+  BUDGET --> CAPACITY[Capacity and quota]
+  CAPACITY --> DISPATCH[Dispatch]
+  DISPATCH --> SETTLE[Usage and budget settlement]
 ```
 
 ### Data View (Views & Beyond)
 
-#### Overall — Authoritative Data Ownership
+#### Overall — Authoritative Facts
 
 ```mermaid
 flowchart TB
-  Product[Workspace · Session · Task · Message] --> Run[AgentRun]
-  Source[SourceObject · DocumentVersion] --> IR[DocumentIR · SourceSpan]
-  IR --> Index[IndexManifest · CitationChunk]
-  Run --> Plan[PlanVersion · Observation · Interrupt]
-  Index --> Evidence[EvidenceLedger]
-  Plan --> Answer[Claim · CitationBinding · GroundedAnswer]
-  Evidence --> Answer
-  Answer --> Artifact[Artifact · Feedback]
-  Run --> Memory[MemoryCandidate · MemoryRecord · EntityFact]
-  Run --> Trace[TraceSpan · Usage · EvalRun]
+  PG[(PostgreSQL)] --> DOMAIN[Structured domain facts]
+  OBJ[(Object Store)] --> LARGE[Large immutable payloads]
+  CHECK[(Checkpointer)] --> CONTROL[Graph control state]
+  DOMAIN --> BM25[(BM25)]
+  DOMAIN --> VECTOR[(Vector)]
+  DOMAIN --> GRAPH[(Graph)]
+  DOMAIN --> PROJ[Product and Observability projections]
+  LARGE --> BM25 & VECTOR & GRAPH
+  CONTROL -.-> DOMAIN
 ```
 
-#### Local — Document and Citation Lineage
+#### Local — Knowledge Version Publication
 
 ```mermaid
 flowchart LR
-  Source[SourceObject] --> Version[DocumentVersion]
-  Version --> IR[CanonicalDocumentIR]
-  IR --> Block[DocumentBlock]
-  Block --> Span[SourceSpan]
-  Block --> Chunk[CitationChunk]
-  Chunk --> Index[IndexManifest]
-  Index --> Evidence[EvidenceLedgerRecord]
-  Evidence --> Binding[ClaimEvidenceBinding]
-  Binding --> Citation[CitationView]
+  SPEC[IndexSpec] --> BATCH[IndexWriteBatch]
+  BATCH --> WR[IndexWriteReceipt]
+  WR --> VR[VisibilityReceipt]
+  VR --> VERIFY[IndexVerification]
+  VERIFY --> MAN[IndexManifest]
+  MAN --> ACCEPT[Domain Acceptance]
+  ACCEPT --> CUT[IndexCutover]
+  CUT --> WATER[ServingWatermark]
 ```
 
-#### Local — Runtime and Memory Lifecycle
+#### Local — Version Pinning
 
 ```mermaid
 flowchart LR
-  Request[RuntimeRequest] --> Run[AgentRun]
-  Run --> Checkpoint[Checkpoint]
-  Run --> Event[RuntimeEvent]
-  Run --> Observation[NormalizedObservation]
-  Run --> Final[GroundedAnswer]
-  Final --> Raw[RawMemoryEvent]
-  Raw --> Candidate[MemoryCandidate]
-  Candidate --> Review[GovernanceRecord]
-  Review -->|approved| Record[MemoryRecord]
-  Record --> Context[Future ContextPack]
+  RUN[AgentRun] --> KS[KnowledgeSnapshot]
+  RUN --> MS[MemorySnapshot]
+  RUN --> MB[Model config bundle]
+  RUN --> SP[Security Policy and Epoch]
+  RUN --> RB[Runtime bundle]
+  KS & MS & MB & SP & RB --> HASH[ExecutionContextSnapshot hash]
 ```
 
 ### Quality View (Views & Beyond)
 
-#### Overall — Quality Attributes and Gates
-
-```mermaid
-flowchart TB
-  Runtime[Agent Runtime]
-  Security[Security]
-  Grounding[Evidence and Citation]
-  Recovery[Checkpoint and Idempotency]
-  Observability[Trace and Diagnostics]
-  Performance[Latency and Throughput]
-  Cost[Budget and Usage]
-  Privacy[Redaction and Memory Governance]
-  Eval[Benchmark and Release Gate]
-  Security -.-> Runtime
-  Grounding -.-> Runtime
-  Recovery -.-> Runtime
-  Observability -.-> Runtime
-  Performance -.-> Runtime
-  Cost -.-> Runtime
-  Privacy -.-> Runtime
-  Eval -.-> Runtime
-```
-
-#### Local — Security and Observability Joint Chain
+#### Overall — Requirement to Evidence
 
 ```mermaid
 flowchart LR
-  Input[Input Gate] --> Context[Memory and Model Context Gate]
-  Context --> Retrieval[Retrieval Gate]
-  Retrieval --> Tool[Tool Gate]
-  Tool --> Output[Output Gate]
-  Output --> Artifact[Artifact Gate]
-  Input & Context & Retrieval & Tool & Output & Artifact --> Audit[(Audit Events)]
-  Input & Context & Retrieval & Tool & Output & Artifact --> Trace[(Trace Spans)]
-  Trace -.-> LangSmith[Optional LangSmith]
+  REQ[ARCH Requirement] --> CONTROL[Runtime or repository control]
+  CONTROL --> UT[Unit Contract]
+  CONTROL --> IT[Integration]
+  CONTROL --> FT[Fault Injection]
+  CONTROL --> E2E[E2E]
+  UT & IT & FT & E2E --> EVID[Evidence Registry]
+  EVID --> GATE[ReleaseGateEvaluation]
 ```
 
-#### Local — Trace, Failure Buckets and Release Gate
+#### Local — Quality Status
+
+```mermaid
+stateDiagram-v2
+  [*] --> PREPARED
+  PREPARED --> RUNTIME_OBSERVED
+  RUNTIME_OBSERVED --> MEASURED
+  PREPARED --> BLOCKED
+  RUNTIME_OBSERVED --> BLOCKED
+  MEASURED --> QUALITY_PROVEN
+  BLOCKED --> MEASURED
+  QUALITY_PROVEN --> [*]
+```
+
+#### Local — Quality Cost Safety Gate
 
 ```mermaid
 flowchart LR
-  Run[AgentRun] --> Spans[Span Tree]
-  Spans --> Buckets[Failure Buckets]
-  Spans --> Metrics[Recall · Correctness · Citation · Latency · Token · Cost]
-  Buckets --> Diagnostics[Environment and Profile Completeness]
-  Metrics --> Gate{Release Gate}
-  Diagnostics --> Gate
-  Gate -->|measured pass| Pass[quality proven]
-  Gate -->|measured fail| Fail[quality failed]
-  Gate -->|blocked| Blocked[quality not yet proven]
+  Q[Quality metrics] --> G[Release Gate]
+  C[Cost and latency] --> G
+  S[Security and privacy] --> G
+  R[Reliability and recovery] --> G
+  G -->|all constraints pass| PASS[Eligible]
+  G -->|any hard constraint fails| BLOCK[Blocked]
 ```
 
 ## 三、Zuno Product Core
 
 ### Agentic GraphRAG Evidence and Agent Loop (Zuno)
 
-#### Overall — Agentic GraphRAG Pipeline
+#### Overall — Outer and Inner Control Loops
 
 ```mermaid
 flowchart TB
-  Question[Question and ContextPack] --> Need{Need Retrieval?}
-  Need -->|yes| Strategy[Query Strategy]
-  Strategy --> BM25[BM25]
-  Strategy --> Vector[Vector]
-  Strategy --> Graph[Graph Traversal]
-  BM25 & Vector & Graph --> Fusion[RRF Fusion]
-  Fusion --> Rerank[Rerank and Expansion]
-  Rerank --> Ledger[EvidenceLedger]
-  Ledger --> Quality{Retrieval Quality Gate}
-  Quality -->|sufficient| Claims[Claim Extraction and Binding]
-  Quality -->|insufficient| Correct[Corrective Action]
-  Correct --> Strategy
-  Claims --> Synthesis[Grounded Synthesis]
-  Synthesis --> Reflect{Reflection}
-  Reflect -->|PASS| Final[GroundedAnswer]
-  Reflect -->|RETRIEVE_MORE| Correct
-  Reflect -->|ABSTAIN| Abstain[Abstained Answer]
+  TASK[TaskContract] --> PLAN[Agent Core Plan]
+  PLAN --> KR[KnowledgeRetrievalGraph]
+  KR --> STRAT[RetrievalPlan]
+  STRAT --> RET[Parallel retrievers]
+  RET --> LEDGER[EvidenceLedger and EvidenceFrontier]
+  LEDGER --> QUALITY[RetrievalQualityVerdict]
+  QUALITY -->|correct| STRAT
+  QUALITY -->|sufficient| BUNDLE[SelectedEvidenceBundle]
+  QUALITY -->|task change needed| PROP[KnowledgeControlProposal]
+  BUNDLE --> ACCEPT[Step Acceptance]
+  PROP --> PLAN
+  ACCEPT --> FINAL[Final Gate and Publication]
 ```
 
-#### Local — Corrective Retrieval Loop
+#### Local — Evidence Lineage
 
 ```mermaid
 flowchart LR
-  Round[Retrieval Round] --> Verdict{Quality Verdict}
-  Verdict -->|doc miss| Rewrite[Rewrite or Multi Query]
-  Verdict -->|text miss| HyDE[HyDE or Step-back]
-  Verdict -->|entity miss| Entity[Entity Decomposition]
-  Verdict -->|relation miss| Relation[Graph Relation Query]
-  Verdict -->|contradiction| Diversify[Diversify Sources]
-  Rewrite & HyDE & Entity & Relation & Diversify --> Next[Next RetrievalPlan]
-  Next --> Round
-  Verdict -->|sufficient| Stop[Stop Retrieval]
-  Verdict -->|limits reached| Abstain[Abstain or Ask User]
+  DOC[DocumentVersion] --> SPAN[SourceSpan]
+  SPAN --> CHUNK[CitationChunk]
+  CHUNK --> EDGE[Entity Relation Community Evidence]
+  EDGE --> ROUND[RetrievalRound]
+  ROUND --> LEDGER[EvidenceLedger]
+  LEDGER --> CLAIM[Claim Evidence Binding]
+  CLAIM --> CITATION[Citation]
+  CITATION --> ANSWER[GroundedAnswer Publication]
 ```
 
-#### Local — EvidenceLedger and Claim Binding
+#### Local — Corrective Retrieval and Replan
 
 ```mermaid
 flowchart LR
-  R1[Round 1 Evidence] --> Ledger[EvidenceLedger]
-  R2[Round 2 Evidence] --> Ledger
-  R3[Round 3 Evidence] --> Ledger
-  Ledger --> Dedup[Deduplicate · Version Check · Contradiction]
-  Dedup --> Claims[Structured Claims]
-  Claims --> Binder[Claim-level Citation Binder]
-  Dedup --> Binder
-  Binder --> Supported[Supported Claims]
-  Binder --> Unsupported[Unsupported Claims]
-  Supported --> Answer[GroundedAnswer]
-  Unsupported --> Reflection[Reflection: rewrite, retrieve more, abstain]
+  GAP[Evidence gap] --> CLASS{Failure class}
+  CLASS -->|query issue| REWRITE[Query rewrite or expansion]
+  CLASS -->|path issue| ROUTE[Graph text structured route]
+  CLASS -->|index issue| RECOVER[Index recovery]
+  CLASS -->|task assumption invalid| REPLAN[Agent Replan]
+  CLASS -->|no safe path| ABSTAIN[Abstain]
+  REWRITE & ROUTE --> NEXT[Next RetrievalRound]
 ```

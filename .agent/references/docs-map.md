@@ -2,110 +2,99 @@
 
 ## When To Use
 
-当任务触碰 `docs/`、`.agent/`、AGENTS.md、history、README、架构叙事或术语边界时使用本 skill。
+当任务触碰 `docs/`、`.agent/`、AGENTS.md、README、架构、状态、ADR、治理或术语边界时使用。
 
 ## Mental Model
 
 ```text
-docs/architecture/ = four canonical architecture files
-docs/modules/ = formal logical module designs
-docs/status/ = current and readiness truth
-docs/decisions/ = ADR
-docs/governance/ = ownership and documentation governance
-docs/evidence/ = reproducible evidence
-docs/history/ = archive
-.agent/architecture/ = four generated architecture mirrors
-.agent/modules/ = selected module design mirrors
-.agent/references/ = local skills and lessons
-.agent/templates/ = execution skeletons
-.agent/programs/ = active execution plan
+docs/architecture/ = 总架构四个支撑文件
+docs/modules/      = 十一个领域模块唯一正式 Target 文档
+docs/status/       = Current / Gap / Readiness
+docs/decisions/    = ADR
+docs/governance/   = Ownership 与共享 Contract
+docs/evidence/     = 可复现证据
+docs/history/      = History
+.agent/architecture/ = 总架构字节级镜像
+.agent/modules/      = 十一模块字节级镜像
+.agent/programs/     = Current → Target 实施计划
 ```
 
-## Current Truth
+## 正式架构入口
 
-正式人类入口：
+```text
+docs/architecture/architecture.md
+docs/architecture/architecture.html
+docs/architecture/architecture-views.md
+docs/status/production-readiness.md
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
+docs/governance/wave1-cross-module-contract-registry.md
+```
 
-- `README.md`：仓库总览和首读路径。
-- `docs/README.md`：文档总入口。
-- `docs/architecture/README.md`：总架构目录规则。
-- `docs/architecture/architecture.md`：Lean Complete Agentic GraphRAG Product 的重文字目标总架构。
-- `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
-- `docs/architecture/architecture.html`：读取图源的 Architecture Atlas。
-- `docs/modules/README.md`：十一个逻辑模块入口。
-- `docs/modules/06-agent-core-planning-control.md`：Agent Core V2 实施级设计。
-- `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
-- `docs/decisions/README.md`：正式 ADR 入口。
-- `docs/governance/repo-ownership-matrix.md`：代码目录 ownership 与迁移边界。
-- `docs/evidence/public-demo.md`：精选公开证据入口。
-- `docs/history/`：历史档案。
+`architecture-views.md` 是 HTML Mermaid 图源，不是第二份文字总架构。
 
-Agent 工作流入口：
+## 十一个模块路由
 
-- `AGENTS.md`：仓库级 Agent bootloader。
-- `.agent/README.md`：Zuno Local Agent Skill System 说明。
-- `.agent/system.yaml`：路径到 skills、templates、docs_sync、verify 的路由。
-- `.agent/references/`：本地项目 skills、lessons、playbooks。
-- `.agent/templates/`：执行骨架。
-- `.agent/programs/`：当前执行入口。
-- `.agent/architecture/architecture.md`：正式总架构文字镜像。
-- `.agent/architecture/architecture-views.md`：正式 Mermaid 图源镜像。
-- `.agent/architecture/architecture.html`：正式 HTML Atlas 镜像。
-- `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
+| 模块 | 正式文档 | Agent 镜像 | Verifier |
+| --- | --- | --- | --- |
+| 01 Product Surface | `docs/modules/01-product-surface.md` | `.agent/modules/01-product-surface.md` | `python tools/scripts/verify_product_surface_target_protocols.py` |
+| 02 Input / Document Ingestion | `docs/modules/02-input-document-ingestion.md` | `.agent/modules/02-input-document-ingestion.md` | `python tools/scripts/verify_architecture_document_set.py` |
+| 03 Knowledge / Agentic GraphRAG | `docs/modules/03-knowledge-agentic-graphrag.md` | `.agent/modules/03-knowledge-agentic-graphrag.md` | `python tools/scripts/verify_architecture_document_set.py` |
+| 04 Model Gateway | `docs/modules/04-model-gateway.md` | `.agent/modules/04-model-gateway.md` | `python tools/scripts/verify_model_gateway_target_protocols.py` |
+| 05 Memory & Context | `docs/modules/05-memory-context.md` | `.agent/modules/05-memory-context.md` | `python tools/scripts/verify_memory_context_target_protocols.py` |
+| 06 Agent Core / Planning & Control | `docs/modules/06-agent-core-planning-control.md` | `.agent/modules/06-agent-core-planning-control.md` | `python tools/scripts/verify_agent_core_target_protocols.py` |
+| 07 Capability / Skill | `docs/modules/07-capability-skill.md` | `.agent/modules/07-capability-skill.md` | `python tools/scripts/verify_capability_skill_target_protocols.py` |
+| 08 Tool Runtime | `docs/modules/08-tool-runtime.md` | `.agent/modules/08-tool-runtime.md` | `python tools/scripts/verify_tool_runtime_target_protocols.py` |
+| 09 Security | `docs/modules/09-security.md` | `.agent/modules/09-security.md` | `python tools/scripts/verify_security_target_protocols.py` |
+| 10 Observability & Eval | `docs/modules/10-observability-eval.md` | `.agent/modules/10-observability-eval.md` | `python tools/scripts/verify_observability_eval_target_protocols.py` |
+| 11 Infrastructure | `docs/modules/11-infrastructure.md` | `.agent/modules/11-infrastructure.md` | `python tools/scripts/verify_infrastructure_target_protocols.py` |
 
 ## Must Preserve
 
-- `docs/architecture/` 和 `.agent/architecture/` 都只能包含 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`。
-- 模块设计必须进入 `docs/modules/`，不能回到 architecture 目录。
-- Current 只描述代码、测试、trace/eval 或 verifier 已证明事实。
-- Target 只描述近期目标，不等于完成声明。
-- Future Optional 不得成为短期 blocker。
-- History 保留旧材料原文，不为了新叙事改写证据。
-- `architecture.md` 必须以设计文字为主，只保留少量关键图。
-- `architecture-views.md` 承担十类 Mermaid 图源，不承载完整设计解释。
-- HTML 是图谱展示，不承担完整目标架构事实源。
-
-## Focused Tests
-
-```powershell
-git diff --check
-python .agent/scripts/verify_agent_system.py
-powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_docs_entrypoints.py
-pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
-```
+- 每个模块只有一份 `docs/modules/<NN>-*.md` 正式 Target 文档。
+- 十一份模块文档都有同名字节级 `.agent/modules/` 镜像。
+- `docs/architecture/` 与 `.agent/architecture/` 只能包含 README、Markdown、Mermaid source 和 HTML 四个文件。
+- 模块领域细节以对应 Owner 模块文档为准；总架构只做跨模块集成。
+- Current 只由代码、Migration、测试、Trace、Eval 和运行证据证明。
+- 历史分拆文档不得重新成为活跃事实源。
+- Tool Runtime 拥有 `PreparedToolAction`、`ToolAttempt`、`EffectReceipt`、`EffectReconciliation`；Capability / Skill 只拥有能力语义、版本、可用性和选择。
 
 ## Docs Sync
 
-修改总架构时检查：
+修改模块设计时同步：
 
-- `docs/architecture/README.md`
-- `docs/architecture/architecture.md`
-- `docs/architecture/architecture-views.md`
-- `docs/architecture/architecture.html`
-- `.agent/architecture/README.md`
-- `.agent/architecture/architecture.md`
-- `.agent/architecture/architecture-views.md`
-- `.agent/architecture/architecture.html`
+```text
+docs/modules/<NN>-module.md
+.agent/modules/<NN>-module.md
+docs/modules/README.md
+.agent/modules/README.md
+.agent/system.yaml
+对应 verifier / focused test
+必要时同步 architecture.md / architecture-views.md / architecture.html
+```
 
-修改模块设计时检查：
+修改总架构时同步：
 
-- `docs/modules/README.md`
-- 对应 `docs/modules/<module>.md`
-- 存在镜像时同步 `.agent/modules/<module>.md`
+```text
+docs/architecture/architecture.md
+.agent/architecture/architecture.md
+docs/architecture/architecture-views.md
+.agent/architecture/architecture-views.md
+docs/architecture/architecture.html
+.agent/architecture/architecture.html
+```
 
-修改 Current / readiness 时检查：
+## Focused Tests
 
-- `docs/status/production-readiness.md`
-- `README.md`
-- `docs/README.md`
-
-修改 ADR 或 ownership 时检查：
-
-- `docs/decisions/`
-- `docs/governance/`
-- `.agent/references/architecture-docs-map.md`
+```text
+git diff --check
+python tools/scripts/verify_architecture_document_set.py
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+```
 
 ## Lessons Learned
 
-文档同步的本质不是“所有地方都写一遍”，而是每个 surface 只承载自己的事实层级，并且入口之间不互相矛盾。
+文档同步不是在所有地方复制正文，而是让每个 surface 只承载自己的事实层级，并通过路由、镜像和机器校验保持一致。
