@@ -6,7 +6,7 @@ on:
   push:
     branches: [docs/architecture-module-realignment]
     paths:
-      - "tools/scripts/finalize_architecture_module_alignment.py"
+      - "tools/scripts/finalize_architecture-module-alignment.py"
       - "tools/scripts/patch_observability_alignment_tests.py"
       - ".github/workflows/finalize-architecture-module-alignment.yml"
   workflow_dispatch:
@@ -80,6 +80,7 @@ jobs:
             -p no:cacheprovider
       - name: Commit finalized architecture alignment
         run: |
+          git checkout HEAD -- tools/scripts/finalize_architecture_module_alignment.py .github/workflows/finalize-architecture-module-alignment.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
