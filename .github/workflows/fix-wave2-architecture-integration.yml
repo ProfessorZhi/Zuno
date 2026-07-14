@@ -1,0 +1,102 @@
+name: Temporary Wave 2 architecture integration fixer
+
+on:
+  push:
+    branches: [agent/wave2-architecture-integration]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/wave2-architecture-integration
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check pytest pyyaml
+      - name: Strip Markdown trailing whitespace from canonical architecture files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          roots = [
+              Path('docs/architecture'),
+              Path('.agent/architecture'),
+              Path('docs/modules'),
+              Path('.agent/modules'),
+          ]
+          paths = []
+          for root in roots:
+              if 'architecture' in root.parts:
+                  paths.extend(root.glob('*.md'))
+              else:
+                  paths.extend(root.glob('[0-9][0-9]-*.md'))
+          for path in sorted(set(paths)):
+              original = path.read_text(encoding='utf-8')
+              normalized = '\n'.join(line.rstrip() for line in original.splitlines()) + ('\n' if original.endswith('\n') else '')
+              if normalized != original:
+                  path.write_text(normalized, encoding='utf-8', newline='\n')
+          PY
+          git diff --check
+      - name: Commit whitespace normalization
+        run: |
+          if git diff --quiet; then
+            echo "No whitespace changes required."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/architecture .agent/architecture docs/modules .agent/modules
+            git commit -m "docs: normalize canonical architecture whitespace"
+            git push origin HEAD:agent/wave2-architecture-integration
+          fi
+      - name: Run integrated diagnostics
+        if: always()
+        run: |
+          mkdir -p integration-diagnostics
+          set +e
+          python tools/scripts/verify_architecture_document_set.py > integration-diagnostics/document-set.log 2>&1
+          echo $? > integration-diagnostics/document-set.exit
+          python tools/agent/render_architecture.py --check > integration-diagnostics/render.log 2>&1
+          echo $? > integration-diagnostics/render.exit
+          python tools/scripts/verify_wave1_contract_freeze.py > integration-diagnostics/wave1.log 2>&1
+          echo $? > integration-diagnostics/wave1.exit
+          python tools/scripts/verify_infrastructure_target_protocols.py > integration-diagnostics/infrastructure.log 2>&1
+          echo $? > integration-diagnostics/infrastructure.exit
+          python tools/scripts/verify_agent_core_target_protocols.py > integration-diagnostics/agent-core.log 2>&1
+          echo $? > integration-diagnostics/agent-core.exit
+          python tools/scripts/verify_model_gateway_target_protocols.py > integration-diagnostics/model-gateway.log 2>&1
+          echo $? > integration-diagnostics/model-gateway.exit
+          python tools/scripts/verify_memory_context_target_protocols.py > integration-diagnostics/memory.log 2>&1
+          echo $? > integration-diagnostics/memory.exit
+          python tools/scripts/verify_capability_skill_target_protocols.py > integration-diagnostics/capability.log 2>&1
+          echo $? > integration-diagnostics/capability.exit
+          python tools/scripts/verify_tool_runtime_target_protocols.py > integration-diagnostics/tool-runtime.log 2>&1
+          echo $? > integration-diagnostics/tool-runtime.exit
+          python tools/scripts/verify_security_target_protocols.py > integration-diagnostics/security.log 2>&1
+          echo $? > integration-diagnostics/security.exit
+          python tools/scripts/verify_observability_eval_target_protocols.py > integration-diagnostics/observability.log 2>&1
+          echo $? > integration-diagnostics/observability.exit
+          python tools/scripts/verify_docs_entrypoints.py > integration-diagnostics/entrypoints.log 2>&1
+          echo $? > integration-diagnostics/entrypoints.exit
+          python .agent/scripts/verify_agent_system.py > integration-diagnostics/agent-system.log 2>&1
+          echo $? > integration-diagnostics/agent-system.exit
+          python .agent/scripts/verify_doc_boundaries.py > integration-diagnostics/doc-boundaries.log 2>&1
+          echo $? > integration-diagnostics/doc-boundaries.exit
+          pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py tests/repo/test_product_surface_target_protocols.py tests/repo/test_model_gateway_target_protocols.py tests/repo/test_memory_context_target_protocols.py tests/repo/test_capability_skill_target_protocols.py tests/repo/test_tool_runtime_target_protocols.py tests/repo/test_security_target_protocols.py tests/repo/test_observability_eval_target_protocols.py tests/repo/test_infrastructure_target_protocols.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider > integration-diagnostics/pytest.log 2>&1
+          echo $? > integration-diagnostics/pytest.exit
+          set -e
+      - name: Upload integrated diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave2-architecture-integration-diagnostics
+          path: integration-diagnostics
+          if-no-files-found: error
+          retention-days: 7
