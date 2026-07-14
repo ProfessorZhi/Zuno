@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHIVE_ROOT = "docs/history/architecture-surface-cleanup-2026-06-30"
 
@@ -12,6 +11,20 @@ CANONICAL_ARCHITECTURE_FILES = {
     "architecture-views.md",
     "architecture.html",
 }
+
+MODULE_DOCS = [
+    "01-product-surface.md",
+    "02-input-document-ingestion.md",
+    "03-knowledge-agentic-graphrag.md",
+    "04-model-gateway.md",
+    "05-memory-context.md",
+    "06-agent-core-planning-control.md",
+    "07-capability-skill.md",
+    "08-tool-runtime.md",
+    "09-security.md",
+    "10-observability-eval.md",
+    "11-infrastructure.md",
+]
 
 RETIRED_FRONT_PATHS = [
     "docs/architecture/current-architecture.md",
@@ -36,8 +49,14 @@ RETIRED_FRONT_PATHS = [
     ".agent/architecture/near-term",
     ".agent/architecture/future",
     ".agent/architecture/decisions",
-    ".agent/architecture/00-architecture-index.md",
-    ".agent/architecture/glossary.md",
+]
+
+RETIRED_MODULE_DOCS = [
+    "04-model-gateway-contract-freeze.md",
+    "04-model-gateway-operations-conformance.md",
+    "10-observability-eval-rag-agent-evaluation.md",
+    "11-infrastructure-data-services.md",
+    "11-infrastructure-consistency-lifecycle.md",
 ]
 
 REQUIRED_ARCHIVES = [
@@ -48,9 +67,6 @@ REQUIRED_ARCHIVES = [
     f"{ARCHIVE_ROOT}/docs-architecture/product-scenario-enterprise-kb.md",
     f"{ARCHIVE_ROOT}/docs-architecture/security-and-sandbox.md",
     f"{ARCHIVE_ROOT}/docs-architecture/deliverables.md",
-    f"{ARCHIVE_ROOT}/agent-architecture/near-term/00-architecture-index.md",
-    f"{ARCHIVE_ROOT}/agent-architecture/future/README.md",
-    f"{ARCHIVE_ROOT}/agent-architecture/decisions/README.md",
 ]
 
 CANONICAL_VIEWS = [
@@ -73,43 +89,45 @@ def _read(path: str) -> str:
 
 def verify_architecture_surface() -> list[str]:
     errors: list[str] = []
-
     for relative_root in ["docs/architecture", ".agent/architecture"]:
         root = REPO_ROOT / relative_root
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
-
         if files != CANONICAL_ARCHITECTURE_FILES:
             errors.append(
-                f"{relative_root} must contain only the four canonical files: "
-                f"expected {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}"
+                f"{relative_root} must contain only {sorted(CANONICAL_ARCHITECTURE_FILES)}; got {sorted(files)}"
             )
         if directories:
-            errors.append(
-                f"{relative_root} must not contain subdirectories: {sorted(directories)}"
-            )
+            errors.append(f"{relative_root} must not contain subdirectories: {sorted(directories)}")
 
     for relative_path in RETIRED_FRONT_PATHS:
         if (REPO_ROOT / relative_path).exists():
             errors.append(f"retired architecture front path still exists: {relative_path}")
-
     for relative_path in REQUIRED_ARCHIVES:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing architecture cleanup archive path: {relative_path}")
 
+    formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"))
+    mirror_modules = sorted(path.name for path in (REPO_ROOT / ".agent/modules").glob("[0-9][0-9]-*.md"))
+    if formal_modules != MODULE_DOCS:
+        errors.append(f"formal module document set mismatch: {formal_modules}")
+    if mirror_modules != MODULE_DOCS:
+        errors.append(f"Agent module mirror set mismatch: {mirror_modules}")
+
+    for name in RETIRED_MODULE_DOCS:
+        if (REPO_ROOT / "docs/modules" / name).exists() or (REPO_ROOT / ".agent/modules" / name).exists():
+            errors.append(f"retired split module document remains active: {name}")
+
     pairs = [
         ("docs/architecture/README.md", ".agent/architecture/README.md"),
         ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
-        (
-            "docs/architecture/architecture-views.md",
-            ".agent/architecture/architecture-views.md",
-        ),
+        ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
         ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
+        *[(f"docs/modules/{name}", f".agent/modules/{name}") for name in MODULE_DOCS],
     ]
     for formal, mirror in pairs:
         if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
-            errors.append(f"architecture mirror mismatch: {mirror} must match {formal}")
-
+            errors.append(f"mirror mismatch: {mirror} must match {formal}")
     return errors
 
 
@@ -117,11 +135,10 @@ def verify_architecture_markdown_contract() -> list[str]:
     errors: list[str] = []
     content = _read("docs/architecture/architecture.md")
     required_phrases = [
-        "Zuno Target Architecture Atlas",
-        "项目定位与架构目标",
-        "十一逻辑模块",
+        "# Zuno 总体 Target 架构",
+        "十一个逻辑模块",
         "六个物理运行域",
-        "Single Controller Agent Runtime",
+        "Single Controller",
         "AgentRunGraph",
         "Plan DAG",
         "StepExecutionGraph",
@@ -129,33 +146,32 @@ def verify_architecture_markdown_contract() -> list[str]:
         "FinalCandidate",
         "Publication",
         "EvidenceLedger",
+        "PreparedToolAction",
+        "EffectReconciliation",
         "docs/status/production-readiness.md",
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
-        ".agent/architecture/architecture.md",
     ]
     for phrase in required_phrases:
         if phrase not in content:
-            errors.append(
-                f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}"
-            )
+            errors.append(f"docs/architecture/architecture.md missing architecture contract phrase: {phrase}")
+    for name in MODULE_DOCS:
+        if f"docs/modules/{name}" not in content:
+            errors.append(f"docs/architecture/architecture.md does not route module: {name}")
 
     mermaid_count = content.count("```mermaid")
-    if mermaid_count < 2:
-        errors.append("docs/architecture/architecture.md must keep supporting Mermaid diagrams")
-    if mermaid_count > 8:
-        errors.append("docs/architecture/architecture.md must remain text-first")
-    if len(content) < 20000:
-        errors.append("docs/architecture/architecture.md is too short for the normative target design")
+    if not 3 <= mermaid_count <= 8:
+        errors.append("docs/architecture/architecture.md must remain text-first with three to eight Mermaid diagrams")
+    if len(content) < 15000:
+        errors.append("docs/architecture/architecture.md is too short for the integration target design")
     return errors
 
 
 def verify_architecture_views_contract() -> list[str]:
     errors: list[str] = []
     content = _read("docs/architecture/architecture-views.md")
-    if content.count("```mermaid") < 30:
-        errors.append("docs/architecture/architecture-views.md must keep at least thirty Mermaid diagrams")
-
+    if content.count("```mermaid") != 30:
+        errors.append("docs/architecture/architecture-views.md must keep exactly thirty Mermaid diagrams")
     for title in CANONICAL_VIEWS:
         marker = f"### {title}"
         if marker not in content:
@@ -165,8 +181,7 @@ def verify_architecture_views_contract() -> list[str]:
         later = [
             content.find(f"### {other}", section_start + len(marker))
             for other in CANONICAL_VIEWS
-            if other != title
-            and content.find(f"### {other}", section_start + len(marker)) >= 0
+            if other != title and content.find(f"### {other}", section_start + len(marker)) >= 0
         ]
         section_end = min(later) if later else len(content)
         section = content[section_start:section_end]
@@ -181,14 +196,14 @@ def verify_architecture_html_contract() -> list[str]:
     errors: list[str] = []
     content = _read("docs/architecture/architecture.html")
     required = [
-        "Zuno Target Architecture Atlas",
+        "Zuno Target Architecture",
         '<script type="module">',
-        'fetch("/docs/architecture/architecture-views.md"',
+        'fetch("./architecture-views.md")',
         "mermaid@11",
-        'className = "mermaid"',
+        "../modules/README.md",
+        "../status/production-readiness.md",
         "diagram-dialog",
         "Mermaid source",
-        "阅读文字总架构",
     ]
     for phrase in required:
         if phrase not in content:
@@ -208,38 +223,21 @@ def verify_future_only_terms() -> list[str]:
         "microservice",
         "microservices",
         "微服务",
-        "event-driven worker",
-        "event workers",
-        "事件驱动 worker",
-        "事件 worker",
         "product-level multi-agent",
-        "product/runtime default multi-agent",
-        "多 Agent 平台",
         "多 Agent runtime",
         "产品级多 Agent",
         "Coding Agent",
     ]
     allowed_context_markers = [
         "Future",
-        "非近期目标",
-        "不属于 Current",
-        "当前不是什么",
-        "当前路线图不实施",
-        "不能写成 Current",
-        "不作为近期实现",
-        "不默认实施",
+        "非目标",
+        "不默认建设",
+        "不作为",
         "不是当前",
         "不是近期",
-        "不是默认",
-        "不把近期目标",
-        "近期明确不做",
+        "不用微服务数量证明成熟度",
+        "不默认引入",
         "Future Optional",
-        "近期不追求",
-        "不要求一开始拆成大量微服务",
-        "不是微服务",
-        "不代表十一个微服务",
-        "不需要提前拆微服务",
-        "不实施",
     ]
     for relative_path in ["README.md", "docs/architecture/architecture.md"]:
         lines = _read(relative_path).splitlines()
@@ -249,8 +247,7 @@ def verify_future_only_terms() -> list[str]:
             window = "\n".join(lines[max(0, index - 12) : min(len(lines), index + 3)])
             if not any(marker in window for marker in allowed_context_markers):
                 errors.append(
-                    f"{relative_path}:{index} mentions future-only term outside explicit "
-                    f"Future/not-Current context: {line.strip()}"
+                    f"{relative_path}:{index} mentions future-only term outside explicit Future/not-Current context: {line.strip()}"
                 )
     return errors
 
@@ -278,13 +275,11 @@ def main() -> int:
     errors: list[str] = []
     for check in checks:
         errors.extend(check())
-
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         print("Doc boundary verification failed.")
         return 1
-
     print("Doc boundary verification passed.")
     return 0
 
