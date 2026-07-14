@@ -30,6 +30,28 @@
 | 10 | Observability & Eval | [`10-observability-eval.md`](./10-observability-eval.md) | 单一完整实施级 Target 架构 |
 | 11 | Infrastructure | [`11-infrastructure.md`](./11-infrastructure.md) | 单一完整实施级 Target 架构 |
 
+## Wave 1 共享 Contract
+
+Wave 1 的跨模块 Contract 已确认为 `CONFIRMED_TARGET`：
+
+```text
+docs/decisions/0003-wave1-cross-module-contract-freeze.md
+docs/governance/wave1-cross-module-contract-registry.md
+```
+
+共享基线包括 `CrossModuleEnvelopeV1`、`PreparedToolAction`、Security Epoch、Credential / Secret、Audit、Model Usage、Index Publish、Failure Namespace 与 Recovery Ownership。物理实现归 `src/backend/zuno/platform/**`；模块文档不得复制或改写这些共享事实。
+
+## Model Gateway 文档边界
+
+Module 04 只有一份正式 Target 文档：
+
+```text
+docs/modules/04-model-gateway.md
+.agent/modules/04-model-gateway.md
+```
+
+历史 Contract Freeze 与 Operations Conformance 附录已吸收到唯一主文档，不得重新创建。
+
 ## 正式架构文档集
 
 正式设计事实共十三份：
@@ -85,10 +107,11 @@ docs/modules/<file>
 ```text
 python tools/scripts/verify_architecture_document_set.py
 python tools/agent/render_architecture.py --check
+python tools/scripts/verify_wave1_contract_freeze.py
 python tools/scripts/verify_docs_entrypoints.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
-pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider
 ```
 
 各模块专用 verifier 和 focused tests 继续验证该模块的 Requirement、状态机、Ownership 与完成证据。
