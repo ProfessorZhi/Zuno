@@ -54,8 +54,25 @@ jobs:
         run: python tools/scripts/verify_docs_entrypoints.py
       - name: Verify Agent system routes
         run: python .agent/scripts/verify_agent_system.py
-      - name: Verify document boundaries
-        run: python .agent/scripts/verify_doc_boundaries.py
+      - name: Capture document boundary diagnostics
+        run: |
+          set +e
+          python .agent/scripts/verify_doc_boundaries.py > architecture-boundary.log 2>&1
+          status=$?
+          cat architecture-boundary.log
+          echo "$status" > architecture-boundary.status
+          exit 0
+      - name: Upload document boundary diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-boundary-diagnostics
+          path: |
+            architecture-boundary.log
+            architecture-boundary.status
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce document boundary result
+        run: test "$(cat architecture-boundary.status)" = "0"
       - name: Run focused architecture tests
         run: |
           pytest -q \
