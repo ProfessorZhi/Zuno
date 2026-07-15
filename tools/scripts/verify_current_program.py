@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE03"
+CURRENT_PHASE = "PHASE04"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -61,6 +61,12 @@ REQUIRED_PHASE01_WORK_PRODUCTS = [
 ]
 
 PHASE02_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py"
+PHASE03_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase03_contract_bundle.py"
+
+REQUIRED_PHASE03_WORK_PRODUCTS = [
+    WORK_PRODUCTS / "phase03-readiness.yaml",
+    REPO_ROOT / "docs" / "evidence" / "phase03-contract-bundle.md",
+]
 
 MODULE_REQUIREMENT_SOURCES = [
     REPO_ROOT / "docs" / "modules" / "01-product-surface.md",
@@ -241,6 +247,51 @@ def _verify_phase02_work_products() -> list[str]:
     return list(module.verify_phase02_compatibility_boundaries())
 
 
+def _verify_phase03_work_products() -> list[str]:
+    errors: list[str] = []
+    for path in REQUIRED_PHASE03_WORK_PRODUCTS:
+        if not path.exists():
+            errors.append(f"missing PHASE03 work product: {path.relative_to(REPO_ROOT).as_posix()}")
+    if errors:
+        return errors
+
+    readiness = _read(WORK_PRODUCTS / "phase03-readiness.yaml")
+    evidence = _read(REPO_ROOT / "docs" / "evidence" / "phase03-contract-bundle.md")
+    for phrase in [
+        "current_phase_status: completion_candidate",
+        "PHASE04",
+        "ready_after_phase03_closure",
+        "src/backend/zuno/platform/contracts",
+        "tests/contracts",
+        "verify_phase03_contract_bundle.py",
+    ]:
+        if phrase not in readiness:
+            errors.append(f"phase03-readiness.yaml missing readiness phrase: {phrase}")
+    for task_id in [f"P03-T{index:02d}" for index in range(1, 8)]:
+        if task_id not in readiness:
+            errors.append(f"phase03-readiness.yaml missing work package: {task_id}")
+    for phrase in [
+        "PHASE03 Executable Cross-module Contract Bundle",
+        "PHASE03 contract bundle verification passed",
+        "8 passed",
+        "真实边界",
+    ]:
+        if phrase not in evidence:
+            errors.append(f"phase03-contract-bundle.md missing evidence phrase: {phrase}")
+
+    if not PHASE03_VERIFIER.exists():
+        errors.append("missing PHASE03 verifier: tools/scripts/verify_phase03_contract_bundle.py")
+        return errors
+    spec = spec_from_file_location("verify_phase03_contract_bundle", PHASE03_VERIFIER)
+    if spec is None or spec.loader is None:
+        errors.append("cannot load PHASE03 contract bundle verifier")
+        return errors
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    errors.extend(module.verify_phase03_contract_bundle())
+    return errors
+
+
 def load_manifest() -> dict[str, object]:
     return {
         "program": PROGRAM,
@@ -267,6 +318,7 @@ def verify_current_program() -> list[str]:
 
     errors.extend(_verify_phase01_work_products())
     errors.extend(_verify_phase02_work_products())
+    errors.extend(_verify_phase03_work_products())
 
     current = _read(PROGRAM_ROOT / "current.md")
     roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")

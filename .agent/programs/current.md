@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE03
+current_phase: PHASE04
 phase_count: 22
 program_version: 1
 activated_at: 2026-07-14
@@ -33,14 +33,16 @@ Current 审计
 ## 当前阶段
 
 ```text
-PHASE03_executable-cross-module-contract-bundle
+PHASE04_postgres-domain-and-transaction-foundation
 ```
 
 PHASE01 已完成 Current Baseline、Requirement Ledger、Frontend Inventory、Legacy Bypass Inventory 和风险依赖图，产物位于 `.agent/programs/work-products/`。
 
 PHASE02 已完成临时兼容、Feature Flag、Allowlist、数据切流、Rollback 和 Migration Guard 产物，产物位于 `.agent/programs/work-products/`。
 
-PHASE03 基于 ADR 0003、Wave 1 Registry、PHASE02 兼容矩阵和现有 Contract/DTO，把跨模块共享 Contract 实现为唯一版本化 Pydantic/JSON Schema Bundle，具备确定性序列化、Hash、Fixture 和兼容测试。
+PHASE03 已完成跨模块共享 Contract 的唯一版本化 Pydantic/JSON Schema Bundle、确定性序列化、Hash、Fixture 和兼容测试，产物位于 `src/backend/zuno/platform/contracts/`、`tests/contracts/` 和 `.agent/programs/work-products/phase03-readiness.yaml`。
+
+PHASE04 基于 PHASE03 Contract Bundle、PHASE01 Persistence Inventory 和 PHASE02 Data Cutover Matrix，开始建立 PostgreSQL、Alembic、Unit of Work、Outbox/Inbox、Idempotency、Lease/Fencing、Object Manifest 和 LangGraph Checkpointer 的物理基础。该阶段必须以真实 PostgreSQL Integration Evidence 关闭，不能用 SQLite 或 Mock 替代。
 
 ## 事实源优先级
 

@@ -1,0 +1,8 @@
+{
+  "code": "TOOL_EFFECT_UNKNOWN",
+  "owner": "TOOL_RUNTIME",
+  "retryable": false,
+  "recovery_owner": "TOOL_RUNTIME",
+  "requires_reconcile": true,
+  "user_visible": false
+}
