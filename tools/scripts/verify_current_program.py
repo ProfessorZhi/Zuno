@@ -5,9 +5,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
+CURRENT_PHASE = "PHASE02"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
+WORK_PRODUCTS = PROGRAM_ROOT / "work-products"
 
 PHASE_FILES = [
     "PHASE01_current-baseline-and-requirement-ledger.md",
@@ -47,16 +49,189 @@ REQUIRED_SHARED = [
     REPO_ROOT / ".agent" / "references" / "current-program.md",
 ]
 
+REQUIRED_PHASE01_WORK_PRODUCTS = [
+    WORK_PRODUCTS / "current-runtime-inventory.md",
+    WORK_PRODUCTS / "current-persistence-inventory.md",
+    WORK_PRODUCTS / "requirement-ledger.yaml",
+    WORK_PRODUCTS / "frontend-current-inventory.md",
+    WORK_PRODUCTS / "legacy-bypass-inventory.yaml",
+    WORK_PRODUCTS / "program-risk-register.md",
+    WORK_PRODUCTS / "phase-readiness.yaml",
+]
+
+MODULE_REQUIREMENT_SOURCES = [
+    REPO_ROOT / "docs" / "modules" / "01-product-surface.md",
+    REPO_ROOT / "docs" / "modules" / "02-input-document-ingestion.md",
+    REPO_ROOT / "docs" / "modules" / "03-knowledge-agentic-graphrag.md",
+    REPO_ROOT / "docs" / "modules" / "04-model-gateway.md",
+    REPO_ROOT / "docs" / "modules" / "05-memory-context.md",
+    REPO_ROOT / "docs" / "modules" / "06-agent-core-planning-control.md",
+    REPO_ROOT / "docs" / "modules" / "07-capability-skill.md",
+    REPO_ROOT / "docs" / "modules" / "08-tool-runtime.md",
+    REPO_ROOT / "docs" / "modules" / "09-security.md",
+    REPO_ROOT / "docs" / "modules" / "10-observability-eval.md",
+    REPO_ROOT / "docs" / "modules" / "11-infrastructure.md",
+    REPO_ROOT / "docs" / "governance" / "wave1-cross-module-contract-registry.md",
+]
+
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _extract_requirement_ids_from_source(path: Path) -> set[str]:
+    """Extract only table-row requirement IDs, not narrative placeholders."""
+    ids: set[str] = set()
+    pattern = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3}")
+    for line in _read(path).splitlines():
+        if not line.lstrip().startswith("|"):
+            continue
+        match = pattern.search(line)
+        if not match:
+            continue
+        cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
+        if cells and cells[0] == match.group(0):
+            ids.add(match.group(0))
+    return ids
+
+
+def _extract_list_item_blocks(text: str, marker: str) -> list[str]:
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if line.startswith(marker):
+            if current:
+                blocks.append("\n".join(current))
+            current = [line]
+        elif current:
+            current.append(line)
+    if current:
+        blocks.append("\n".join(current))
+    return blocks
+
+
+def _verify_phase01_work_products() -> list[str]:
+    errors: list[str] = []
+    for path in REQUIRED_PHASE01_WORK_PRODUCTS:
+        if not path.exists():
+            errors.append(f"missing PHASE01 work product: {path.relative_to(REPO_ROOT).as_posix()}")
+    if errors:
+        return errors
+
+    runtime = _read(WORK_PRODUCTS / "current-runtime-inventory.md")
+    persistence = _read(WORK_PRODUCTS / "current-persistence-inventory.md")
+    frontend = _read(WORK_PRODUCTS / "frontend-current-inventory.md")
+    legacy = _read(WORK_PRODUCTS / "legacy-bypass-inventory.yaml")
+    risks = _read(WORK_PRODUCTS / "program-risk-register.md")
+    readiness = _read(WORK_PRODUCTS / "phase-readiness.yaml")
+    ledger = _read(WORK_PRODUCTS / "requirement-ledger.yaml")
+
+    required_runtime_phrases = [
+        "CompletionService",
+        "WorkspaceTaskRuntimeService",
+        "UnifiedAgentRuntimeService",
+        "GeneralAgent",
+        "ModelGateway",
+        "ToolControlPlaneRuntime",
+        "AgenticRetrievalRuntime",
+        "SQLiteAgentRunStore",
+        "legacy_aliases.py",
+    ]
+    for phrase in required_runtime_phrases:
+        if phrase not in runtime:
+            errors.append(f"current-runtime-inventory.md missing runtime anchor: {phrase}")
+
+    for phrase in [
+        "SQLiteDurableIngestionStore",
+        "LocalObjectStore",
+        "LocalQueueBackend",
+        "SQLiteAgentRunStore",
+        "PostgreSQL",
+        "RabbitMQ",
+        "MinIO/S3",
+        "not proven Current",
+    ]:
+        if phrase not in persistence:
+            errors.append(f"current-persistence-inventory.md missing infrastructure anchor: {phrase}")
+
+    for phrase in [
+        "apps/web/src/apis/workspace.ts",
+        "fetch-event-source",
+        "pendingToolApproval",
+        "apps/desktop/bridge.cjs",
+        "No Playwright/Cypress/Selenium/browser Electron E2E",
+    ]:
+        if phrase not in frontend:
+            errors.append(f"frontend-current-inventory.md missing frontend anchor: {phrase}")
+
+    legacy_blocks = _extract_list_item_blocks(legacy, "  - path: ")
+    if len(legacy_blocks) < 20:
+        errors.append("legacy-bypass-inventory.yaml must register at least 20 bypass/legacy entries")
+    for block in legacy_blocks:
+        for field in [
+            "symbol:",
+            "owner:",
+            "risk:",
+            "target_gateway:",
+            "temporary_allowlist:",
+            "migration_task:",
+            "removal_task:",
+        ]:
+            if field not in block:
+                errors.append(f"legacy-bypass-inventory.yaml entry missing {field}: {block.splitlines()[0]}")
+        if "P22-T03" not in block:
+            errors.append(f"legacy-bypass-inventory.yaml entry missing P22-T03 removal: {block.splitlines()[0]}")
+
+    source_ids: set[str] = set()
+    for path in MODULE_REQUIREMENT_SOURCES:
+        source_ids.update(_extract_requirement_ids_from_source(path))
+    ledger_ids = set(re.findall(r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3})$", ledger, re.MULTILINE))
+    if source_ids != ledger_ids:
+        missing = sorted(source_ids - ledger_ids)
+        extra = sorted(ledger_ids - source_ids)
+        if missing:
+            errors.append(f"requirement-ledger.yaml missing requirement ids: {missing[:10]}")
+        if extra:
+            errors.append(f"requirement-ledger.yaml has extra requirement ids: {extra[:10]}")
+    count_match = re.search(r"^requirement_count: (\d+)$", ledger, re.MULTILINE)
+    if not count_match:
+        errors.append("requirement-ledger.yaml missing requirement_count")
+    elif int(count_match.group(1)) != len(source_ids):
+        errors.append(
+            f"requirement-ledger.yaml requirement_count {count_match.group(1)} does not match source count {len(source_ids)}"
+        )
+    if "ARCH-MEM-NNN" in ledger:
+        errors.append("requirement-ledger.yaml must not include narrative placeholder ARCH-MEM-NNN")
+    for phrase in [
+        "mandatory: true",
+        "current_status: target_not_current",
+        "target_phase:",
+        "test_ids:",
+        "evidence_refs:",
+    ]:
+        if phrase not in ledger:
+            errors.append(f"requirement-ledger.yaml missing required field phrase: {phrase}")
+
+    for phrase in ["P01-R001", "P01-R008", "severity | owner", "needs-evidence", "assigned"]:
+        if phrase not in risks:
+            errors.append(f"program-risk-register.md missing risk phrase: {phrase}")
+    if "unassigned: []" not in readiness:
+        errors.append("phase-readiness.yaml must explicitly show no unassigned P0 risks")
+    for task_id in [f"P01-T{index:02d}" for index in range(1, 7)]:
+        if task_id not in readiness:
+            errors.append(f"phase-readiness.yaml missing work package: {task_id}")
+    for phrase in ["current_phase_status: completion_candidate", "PHASE02", "ready_after_phase01_closure"]:
+        if phrase not in readiness:
+            errors.append(f"phase-readiness.yaml missing readiness phrase: {phrase}")
+
+    return errors
 
 
 def load_manifest() -> dict[str, object]:
     return {
         "program": PROGRAM,
         "state": "active",
-        "current_phase": "PHASE01",
+        "current_phase": CURRENT_PHASE,
         "phase_count": PHASE_COUNT,
         "atomic_task_count": ATOMIC_TASK_COUNT,
         "architecture_baseline_commit": "249f1c95855043627cedd289a5de1fd3719f6cd0",
@@ -76,6 +251,8 @@ def verify_current_program() -> list[str]:
     if errors:
         return errors
 
+    errors.extend(_verify_phase01_work_products())
+
     current = _read(PROGRAM_ROOT / "current.md")
     roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")
     closure = _read(PROGRAM_ROOT / "closure-checklist.md")
@@ -89,7 +266,7 @@ def verify_current_program() -> list[str]:
     for phrase in [
         "state: active",
         f"active_program: {PROGRAM}",
-        "current_phase: PHASE01",
+        f"current_phase: {CURRENT_PHASE}",
         f"phase_count: {PHASE_COUNT}",
         "measurement blocked",
         "quality not yet proven",

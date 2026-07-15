@@ -1,0 +1,71 @@
+# PHASE01 Phase Readiness
+phase_id: PHASE01
+task_id: P01-T06
+start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
+current_phase_status: completion_candidate
+status_boundary: "PHASE02 can become ready only after PHASE01 closure validation passes and no unassigned P0 risk remains."
+work_packages:
+  P01-T01:
+    state: completion_candidate
+    output: ".agent/programs/work-products/current-runtime-inventory.md"
+    reviewer: Coordinator
+  P01-T02:
+    state: completion_candidate
+    output: ".agent/programs/work-products/current-persistence-inventory.md"
+    reviewer: Coordinator
+  P01-T03:
+    state: completion_candidate
+    output: ".agent/programs/work-products/requirement-ledger.yaml"
+    reviewer: Coordinator
+  P01-T04:
+    state: completion_candidate
+    output: ".agent/programs/work-products/frontend-current-inventory.md"
+    reviewer: Coordinator
+  P01-T05:
+    state: completion_candidate
+    output: ".agent/programs/work-products/legacy-bypass-inventory.yaml"
+    reviewer: Coordinator
+  P01-T06:
+    state: completion_candidate
+    outputs:
+      - ".agent/programs/work-products/program-risk-register.md"
+      - ".agent/programs/work-products/phase-readiness.yaml"
+    reviewer: Coordinator
+phase_dependencies:
+  PHASE02:
+    depends_on: [PHASE01]
+    readiness: ready_after_phase01_closure
+    required_inputs:
+      - current_runtime_inventory
+      - current_persistence_inventory
+      - frontend_current_inventory
+      - legacy_bypass_inventory
+      - requirement_ledger
+      - program_risk_register
+    p0_risks:
+      assigned:
+        - P01-R001
+        - P01-R002
+        - P01-R003
+        - P01-R004
+        - P01-R005
+        - P01-R006
+        - P01-R007
+        - P01-R008
+      unassigned: []
+    stop_conditions: []
+validation:
+  required_commands:
+    - "git diff --check"
+    - "python tools/scripts/verify_current_program.py"
+    - "python .agent/scripts/verify_agent_system.py"
+    - "pytest -q tests/repo/test_current_program_contract.py -p no:cacheprovider"
+  required_real_environment_for_phase01: []
+  not_required_in_phase01:
+    - "PostgreSQL integration"
+    - "RabbitMQ integration"
+    - "MinIO/S3 integration"
+    - "Browser/Desktop E2E"
+closure_decision:
+  coordinator_approval: pending
+  may_start_phase02_after_validation: true

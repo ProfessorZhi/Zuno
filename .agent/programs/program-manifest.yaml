@@ -2,7 +2,7 @@ program:
   id: zuno-canonical-architecture-runtime-realization-v1
   version: 1
   state: active
-  current_phase: PHASE01
+  current_phase: PHASE02
   phase_count: 22
   atomic_work_package_count: 163
   architecture_baseline_commit: 249f1c95855043627cedd289a5de1fd3719f6cd0
@@ -29,8 +29,8 @@ final_tree_policy:
   enforcement_task: P22-T03
 
 phases:
-  - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: ready, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}
-  - {id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: planned, depends_on: [PHASE01], tasks: [P02-T01,P02-T02,P02-T03,P02-T04,P02-T05,P02-T06]}
+  - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}
+  - {id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: ready, depends_on: [PHASE01], tasks: [P02-T01,P02-T02,P02-T03,P02-T04,P02-T05,P02-T06]}
   - {id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: planned, depends_on: [PHASE02], tasks: [P03-T01,P03-T02,P03-T03,P03-T04,P03-T05,P03-T06,P03-T07]}
   - {id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: planned, depends_on: [PHASE03], tasks: [P04-T01,P04-T02,P04-T03,P04-T04,P04-T05,P04-T06,P04-T07]}
   - {id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: planned, depends_on: [PHASE03,PHASE04], tasks: [P05-T01,P05-T02,P05-T03,P05-T04,P05-T05,P05-T06,P05-T07]}

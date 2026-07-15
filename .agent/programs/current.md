@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE01
+current_phase: PHASE02
 phase_count: 22
 program_version: 1
 activated_at: 2026-07-14
@@ -33,10 +33,12 @@ Current 审计
 ## 当前阶段
 
 ```text
-PHASE01_current-baseline-and-requirement-ledger
+PHASE02_legacy-runtime-compatibility-and-cutover-map
 ```
 
-PHASE01 只建立最新 `main` 的 Current 事实、Requirement Ledger、Frontend Inventory、Legacy Bypass Inventory 和风险依赖图。不得在 PHASE01 大规模修改 Runtime、数据库、公开 API 或前端行为。
+PHASE01 已完成 Current Baseline、Requirement Ledger、Frontend Inventory、Legacy Bypass Inventory 和风险依赖图，产物位于 `.agent/programs/work-products/`。
+
+PHASE02 基于 PHASE01 产物把旧 Agent、API、Store、Tool、Model、Retrieval、Frontend 和 Import 路径转成临时迁移对象：有版本、有 Feature Flag、有 Shadow/Canary、Rollback、Removal Gate 和静态 Guard。不得在 PHASE02 实现新领域模型或大规模迁移数据。
 
 ## 事实源优先级
 
