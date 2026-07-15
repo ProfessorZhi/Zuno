@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE02
+current_phase: PHASE03
 phase_count: 22
 program_version: 1
 activated_at: 2026-07-14
@@ -33,12 +33,14 @@ Current 审计
 ## 当前阶段
 
 ```text
-PHASE02_legacy-runtime-compatibility-and-cutover-map
+PHASE03_executable-cross-module-contract-bundle
 ```
 
 PHASE01 已完成 Current Baseline、Requirement Ledger、Frontend Inventory、Legacy Bypass Inventory 和风险依赖图，产物位于 `.agent/programs/work-products/`。
 
-PHASE02 基于 PHASE01 产物把旧 Agent、API、Store、Tool、Model、Retrieval、Frontend 和 Import 路径转成临时迁移对象：有版本、有 Feature Flag、有 Shadow/Canary、Rollback、Removal Gate 和静态 Guard。不得在 PHASE02 实现新领域模型或大规模迁移数据。
+PHASE02 已完成临时兼容、Feature Flag、Allowlist、数据切流、Rollback 和 Migration Guard 产物，产物位于 `.agent/programs/work-products/`。
+
+PHASE03 基于 ADR 0003、Wave 1 Registry、PHASE02 兼容矩阵和现有 Contract/DTO，把跨模块共享 Contract 实现为唯一版本化 Pydantic/JSON Schema Bundle，具备确定性序列化、Hash、Fixture 和兼容测试。
 
 ## 事实源优先级
 

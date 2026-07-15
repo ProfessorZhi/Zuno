@@ -1,0 +1,96 @@
+# PHASE02 Public API Compatibility Matrix
+phase_id: PHASE02
+task_id: P02-T01
+start_commit: 000928c7fc46224264e43677a5877d76731cd04c
+status_boundary: "本矩阵只定义临时兼容和切流策略，不创建第二套 Product Runtime。"
+version_policy:
+  canonical_target: "api/product/** + apps/web/src/product/** + apps/desktop/src/product/**"
+  compatibility_allowed_until: "PHASE10 client cutover validation"
+  final_removal_task: "P22-T03"
+  unknown_enum_policy: "fail_closed"
+  security_field_policy: "never_drop_or_default"
+endpoints:
+  - endpoint: "POST /api/v1/completion"
+    current_handler: "src/backend/zuno/api/v1/completion.py::completion"
+    current_contract: "legacy completion SSE chunk stream with ZUNO_AGENT_RUNTIME rollback"
+    strategy: "version_adapter_then_remove"
+    canonical_target: "Product Command creates RuntimeRequest and Product Stream returns Projection events"
+    compatibility_adapter: "api/product/v1/completion_adapter"
+    client_surfaces: ["apps/web existing completion callers if any", "external demo clients"]
+    required_guards: ["no direct GeneralAgent default", "Security/Budget/Trace/RunOutcome preserved"]
+    rollback: "set route adapter to legacy_general_agent only during rollback window"
+    sunset: "PHASE10"
+    removal_task: "P22-T03"
+  - endpoint: "POST /api/v1/workspace/task"
+    current_handler: "src/backend/zuno/api/v1/workspace.py::create_workspace_task"
+    current_contract: "WorkspaceTaskContract / WorkspaceTaskLifecycleSnapshot"
+    strategy: "shadow_product_command"
+    canonical_target: "Product Command API creates ProductCommand + RuntimeRequest"
+    compatibility_adapter: "api/product/v1/workspace_task_adapter"
+    client_surfaces: ["apps/web/src/apis/workspace.ts", "apps/desktop preload task lifecycle"]
+    required_guards: ["idempotency key", "server AvailableAction only", "RunOutcome not flattened"]
+    rollback: "route client back to workspace adapter without changing domain facts"
+    sunset: "PHASE10"
+    removal_task: "P22-T03"
+  - endpoint: "GET /api/v1/workspace/task/{taskId}/events/stream"
+    current_handler: "apps/web/src/apis/workspace.ts task event stream"
+    current_contract: "workspace task event SSE without proven opaque cursor resume"
+    strategy: "add_snapshot_delta_stream_adapter"
+    canonical_target: "ProductProjectionEventV1 Snapshot + Delta stream"
+    compatibility_adapter: "api/product/v1/workspace_stream_adapter"
+    client_surfaces: ["Workspace page", "Desktop runtime shell"]
+    required_guards: ["Last-Event-ID or opaque cursor", "retention expiry", "reauthorization on reconnect", "gap forces resync"]
+    rollback: "fall back to polling/query projection while preserving Run state"
+    sunset: "PHASE10"
+    removal_task: "P22-T03"
+  - endpoint: "POST /api/v1/workspace/task/{taskId}/approve"
+    current_handler: "src/backend/zuno/api/v1/workspace.py::approve_workspace_task"
+    current_contract: "single pending tool approval UI model"
+    strategy: "adapter_to_available_action_signal"
+    canonical_target: "Product Signal API consumes one valid AvailableAction token"
+    compatibility_adapter: "api/product/v1/approval_signal_adapter"
+    client_surfaces: ["apps/web defaultPage.vue pendingToolApproval"]
+    required_guards: ["multiple pending interrupts", "PreparedToolAction hash binding", "Security epoch recheck"]
+    rollback: "disable new action-token path and keep adapter in rollback window"
+    sunset: "PHASE10"
+    removal_task: "P22-T03"
+  - endpoint: "GET /api/v1/workspace/artifact/{artifactId}/download"
+    current_handler: "WorkspaceTaskRuntimeService artifact download"
+    current_contract: "Bearer-protected blob download"
+    strategy: "short_lived_download_session_adapter"
+    canonical_target: "Product Artifact Download Session"
+    compatibility_adapter: "api/product/v1/artifact_download_adapter"
+    client_surfaces: ["apps/web artifact panel", "desktop artifact endpoint"]
+    required_guards: ["independent artifact authorization", "revocation invalidates session", "no raw checkpoint exposure"]
+    rollback: "query artifact projection and issue old blob endpoint within rollback window"
+    sunset: "PHASE10"
+    removal_task: "P22-T03"
+  - endpoint: "POST /api/v1/tool/* and /api/v1/mcp_server/*"
+    current_handler: "src/backend/zuno/api/v1/tool.py / src/backend/zuno/api/v1/mcp_server.py"
+    current_contract: "tool and MCP management through service surfaces"
+    strategy: "control_plane_adapter"
+    canonical_target: "Product API delegates to Capability / Tool Runtime control plane"
+    compatibility_adapter: "api/product/v1/tool_control_adapter"
+    client_surfaces: ["tool settings UI", "workspace tool preflight"]
+    required_guards: ["Tool Runtime owns PreparedToolAction/Attempt/Effect", "Security owns Approval/Epoch"]
+    rollback: "read-only management only if side-effect guard unavailable"
+    sunset: "PHASE15"
+    removal_task: "P22-T03"
+frontend_contracts:
+  old_dto_policy:
+    - symbol: "UnifiedResponse"
+      path: "apps/web/src/apis/knowledge.ts"
+      strategy: "transport_adapter_only"
+      removal_task: "P22-T03"
+    - symbol: "WorkSpaceSimpleTask"
+      path: "apps/web/src/apis/workspace.ts"
+      strategy: "map_to_ProductCommandDraft"
+      removal_task: "P22-T03"
+  state_string_policy:
+    strategy: "replace with generated Product enums and AvailableAction"
+    forbidden_after: "PHASE10"
+    removal_task: "P22-T03"
+acceptance:
+  - "Every compatibility endpoint has canonical_target, rollback, sunset, removal_task."
+  - "No compatibility adapter may own domain state."
+  - "Security, approval, audit, budget and RunOutcome fields cannot be dropped."

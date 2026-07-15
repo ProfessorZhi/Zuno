@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import re
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE02"
+CURRENT_PHASE = "PHASE03"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -58,6 +59,8 @@ REQUIRED_PHASE01_WORK_PRODUCTS = [
     WORK_PRODUCTS / "program-risk-register.md",
     WORK_PRODUCTS / "phase-readiness.yaml",
 ]
+
+PHASE02_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py"
 
 MODULE_REQUIREMENT_SOURCES = [
     REPO_ROOT / "docs" / "modules" / "01-product-surface.md",
@@ -227,6 +230,17 @@ def _verify_phase01_work_products() -> list[str]:
     return errors
 
 
+def _verify_phase02_work_products() -> list[str]:
+    if not PHASE02_VERIFIER.exists():
+        return ["missing PHASE02 verifier: tools/scripts/verify_phase02_compatibility_boundaries.py"]
+    spec = spec_from_file_location("verify_phase02_compatibility_boundaries", PHASE02_VERIFIER)
+    if spec is None or spec.loader is None:
+        return ["cannot load PHASE02 compatibility boundary verifier"]
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return list(module.verify_phase02_compatibility_boundaries())
+
+
 def load_manifest() -> dict[str, object]:
     return {
         "program": PROGRAM,
@@ -252,6 +266,7 @@ def verify_current_program() -> list[str]:
         return errors
 
     errors.extend(_verify_phase01_work_products())
+    errors.extend(_verify_phase02_work_products())
 
     current = _read(PROGRAM_ROOT / "current.md")
     roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")

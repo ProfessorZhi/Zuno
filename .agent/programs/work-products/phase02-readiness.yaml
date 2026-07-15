@@ -1,0 +1,48 @@
+# PHASE02 Completion State
+phase_id: PHASE02
+task_id: P02-T06
+start_commit: 000928c7fc46224264e43677a5877d76731cd04c
+current_phase_status: completion_candidate
+work_packages:
+  P02-T01:
+    state: completion_candidate
+    output: ".agent/programs/work-products/api-contract-compatibility-matrix.yaml"
+  P02-T02:
+    state: completion_candidate
+    output: ".agent/programs/work-products/feature-flag-registry.yaml"
+  P02-T03:
+    state: completion_candidate
+    output: ".agent/programs/work-products/temporary-allowlist.yaml"
+  P02-T04:
+    state: completion_candidate
+    output: ".agent/programs/work-products/data-cutover-matrix.yaml"
+  P02-T05:
+    state: completion_candidate
+    output: ".agent/programs/work-products/rollback-recovery-playbook.md"
+  P02-T06:
+    state: completion_candidate
+    outputs:
+      - "tools/scripts/verify_phase02_compatibility_boundaries.py"
+      - "tests/repo/test_phase02_compatibility_boundaries.py"
+phase_dependencies:
+  PHASE03:
+    depends_on: [PHASE02]
+    readiness: ready_after_phase02_closure
+    required_inputs:
+      - api_contract_compatibility_matrix
+      - feature_flag_registry
+      - temporary_allowlist
+      - data_cutover_matrix
+      - rollback_recovery_playbook
+      - migration_guard_test_suite
+    p0_risks:
+      unassigned: []
+validation:
+  required_commands:
+    - "git diff --check"
+    - "python tools/scripts/verify_current_program.py"
+    - "python tools/scripts/verify_phase02_compatibility_boundaries.py"
+    - "pytest -q tests/repo/test_current_program_contract.py tests/repo/test_phase02_compatibility_boundaries.py -p no:cacheprovider"
+closure_decision:
+  coordinator_approval: pending
+  may_start_phase03_after_validation: true

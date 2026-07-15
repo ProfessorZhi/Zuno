@@ -1,0 +1,66 @@
+# PHASE02 Feature Flag and Rollout State Machine
+phase_id: PHASE02
+task_id: P02-T02
+start_commit: 000928c7fc46224264e43677a5877d76731cd04c
+status_boundary: "Flag 只允许路由和观测，不允许复制领域事实或成为永久双路径。"
+lifecycle:
+  allowed_states: [DECLARED, SHADOW, CANARY, DEFAULT_NEW, ROLLBACK_WINDOW, RETIRED]
+  allowed_transitions:
+    DECLARED: [SHADOW]
+    SHADOW: [CANARY, RETIRED]
+    CANARY: [DEFAULT_NEW, ROLLBACK_WINDOW]
+    DEFAULT_NEW: [ROLLBACK_WINDOW, RETIRED]
+    ROLLBACK_WINDOW: [DEFAULT_NEW, RETIRED]
+    RETIRED: []
+  illegal: ["RETIRED -> DEFAULT_NEW", "DECLARED -> DEFAULT_NEW", "CANARY -> RETIRED without rollback_window_decision"]
+flags:
+  - flag: "product_api_v1_adapter"
+    owner: "01 Product Surface"
+    scope: "server route"
+    default: "DECLARED"
+    metric: ["command_acceptance_rate", "projection_gap_count", "run_outcome_mismatch"]
+    rollback_command: "set product_api_v1_adapter=ROLLBACK_WINDOW"
+    expires_at_phase: "PHASE10"
+    retire_task: "P22-T03"
+    domain_fact_owner: "unchanged"
+  - flag: "workspace_projection_stream_v1"
+    owner: "01 Product Surface"
+    scope: "SSE stream"
+    default: "DECLARED"
+    metric: ["sse_resume_success_rate", "cursor_expiry_count", "reauthorization_denied_count"]
+    rollback_command: "disable stream adapter and use query/polling projection"
+    expires_at_phase: "PHASE10"
+    retire_task: "P22-T03"
+    domain_fact_owner: "unchanged"
+  - flag: "legacy_general_agent_completion_rollback"
+    owner: "06 Agent Core"
+    scope: "completion route rollback"
+    default: "ROLLBACK_WINDOW"
+    metric: ["legacy_completion_invocation_count", "missing_trace_count"]
+    rollback_command: "ZUNO_AGENT_RUNTIME=legacy_general_agent"
+    expires_at_phase: "PHASE08"
+    retire_task: "P22-T03"
+    domain_fact_owner: "unchanged"
+  - flag: "tool_runtime_readonly_gateway"
+    owner: "08 Tool Runtime"
+    scope: "tool invocation"
+    default: "DECLARED"
+    metric: ["tool_bypass_count", "prepared_action_count", "approval_binding_failure_count"]
+    rollback_command: "disable new read-only gateway only before side-effect cutover"
+    expires_at_phase: "PHASE15"
+    retire_task: "P22-T03"
+    domain_fact_owner: "unchanged"
+  - flag: "postgres_domain_uow_shadow"
+    owner: "11 Infrastructure"
+    scope: "persistence"
+    default: "DECLARED"
+    metric: ["uow_conflict_count", "migration_failure_count", "rollback_rehearsal_result"]
+    rollback_command: "stop writes before WRITE_CUTOVER; keep SQLite/local adapter as previous safe read path"
+    expires_at_phase: "PHASE04"
+    retire_task: "P22-T03"
+    domain_fact_owner: "canonical owner tables after cutover"
+validation_rules:
+  - "owner, scope, default, metric, rollback_command, expires_at_phase and retire_task are mandatory."
+  - "retire_task must be P22-T03 or a stricter module-specific removal task that still feeds P22-T03."
+  - "domain_fact_owner cannot be a feature flag."
+  - "expired flags fail the guard."

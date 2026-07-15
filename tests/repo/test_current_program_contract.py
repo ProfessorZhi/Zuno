@@ -23,7 +23,7 @@ def test_active_program_manifest_preserves_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE02"
+    assert manifest["current_phase"] == "PHASE03"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
     assert manifest["measurement_status"] == "measurement_blocked"
