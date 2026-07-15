@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE04"
+CURRENT_PHASE = "PHASE05"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -62,10 +62,16 @@ REQUIRED_PHASE01_WORK_PRODUCTS = [
 
 PHASE02_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py"
 PHASE03_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase03_contract_bundle.py"
+PHASE04_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_foundation.py"
 
 REQUIRED_PHASE03_WORK_PRODUCTS = [
     WORK_PRODUCTS / "phase03-readiness.yaml",
     REPO_ROOT / "docs" / "evidence" / "phase03-contract-bundle.md",
+]
+
+REQUIRED_PHASE04_WORK_PRODUCTS = [
+    WORK_PRODUCTS / "phase04-readiness.yaml",
+    REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md",
 ]
 
 MODULE_REQUIREMENT_SOURCES = [
@@ -292,6 +298,51 @@ def _verify_phase03_work_products() -> list[str]:
     return errors
 
 
+def _verify_phase04_work_products() -> list[str]:
+    errors: list[str] = []
+    for path in REQUIRED_PHASE04_WORK_PRODUCTS:
+        if not path.exists():
+            errors.append(f"missing PHASE04 work product: {path.relative_to(REPO_ROOT).as_posix()}")
+    if errors:
+        return errors
+
+    readiness = _read(WORK_PRODUCTS / "phase04-readiness.yaml")
+    evidence = _read(REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md")
+    for phrase in [
+        "current_phase_status: completion_candidate",
+        "PHASE05",
+        "ready_after_phase04_closure",
+        "PostgreSQL 16",
+        "alembic -c infra/db/alembic.ini upgrade head",
+        "tests/integration/test_phase04_postgres_foundation.py",
+    ]:
+        if phrase not in readiness:
+            errors.append(f"phase04-readiness.yaml missing readiness phrase: {phrase}")
+    for task_id in [f"P04-T{index:02d}" for index in range(1, 8)]:
+        if task_id not in readiness:
+            errors.append(f"phase04-readiness.yaml missing work package: {task_id}")
+    for phrase in [
+        "PHASE04 PostgreSQL Domain and Transaction Foundation",
+        "PostgreSQL 16",
+        "5 passed",
+        "真实边界",
+    ]:
+        if phrase not in evidence:
+            errors.append(f"phase04-postgres-foundation.md missing evidence phrase: {phrase}")
+
+    if not PHASE04_VERIFIER.exists():
+        errors.append("missing PHASE04 verifier: tools/scripts/verify_phase04_postgres_foundation.py")
+        return errors
+    spec = spec_from_file_location("verify_phase04_postgres_foundation", PHASE04_VERIFIER)
+    if spec is None or spec.loader is None:
+        errors.append("cannot load PHASE04 PostgreSQL foundation verifier")
+        return errors
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    errors.extend(module.verify_phase04_postgres_foundation())
+    return errors
+
+
 def load_manifest() -> dict[str, object]:
     return {
         "program": PROGRAM,
@@ -319,6 +370,7 @@ def verify_current_program() -> list[str]:
     errors.extend(_verify_phase01_work_products())
     errors.extend(_verify_phase02_work_products())
     errors.extend(_verify_phase03_work_products())
+    errors.extend(_verify_phase04_work_products())
 
     current = _read(PROGRAM_ROOT / "current.md")
     roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")

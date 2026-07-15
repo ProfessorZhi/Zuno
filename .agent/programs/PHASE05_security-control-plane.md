@@ -1,7 +1,7 @@
 # PHASE05 Security Control Plane
 
 phase_id: PHASE05
-status: planned
+status: ready
 depends_on: PHASE03, PHASE04
 owner: Module 09 Security
 

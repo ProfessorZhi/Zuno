@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE04
+current_phase: PHASE05
 phase_count: 22
 program_version: 1
 activated_at: 2026-07-14
@@ -33,7 +33,7 @@ Current 审计
 ## 当前阶段
 
 ```text
-PHASE04_postgres-domain-and-transaction-foundation
+PHASE05_security-control-plane
 ```
 
 PHASE01 已完成 Current Baseline、Requirement Ledger、Frontend Inventory、Legacy Bypass Inventory 和风险依赖图，产物位于 `.agent/programs/work-products/`。
@@ -43,6 +43,10 @@ PHASE02 已完成临时兼容、Feature Flag、Allowlist、数据切流、Rollba
 PHASE03 已完成跨模块共享 Contract 的唯一版本化 Pydantic/JSON Schema Bundle、确定性序列化、Hash、Fixture 和兼容测试，产物位于 `src/backend/zuno/platform/contracts/`、`tests/contracts/` 和 `.agent/programs/work-products/phase03-readiness.yaml`。
 
 PHASE04 基于 PHASE03 Contract Bundle、PHASE01 Persistence Inventory 和 PHASE02 Data Cutover Matrix，开始建立 PostgreSQL、Alembic、Unit of Work、Outbox/Inbox、Idempotency、Lease/Fencing、Object Manifest 和 LangGraph Checkpointer 的物理基础。该阶段必须以真实 PostgreSQL Integration Evidence 关闭，不能用 SQLite 或 Mock 替代。
+
+PHASE04 已完成 PostgreSQL 16、Alembic、Infrastructure Unit of Work、Outbox/Inbox、IdempotencyClaim、Lease/Fencing、Object Manifest 和 Checkpoint primitive 的最小真实集成闭环，证据位于 `docs/evidence/phase04-postgres-foundation.md`。该完成事实不代表 RabbitMQ、MinIO/S3、LangGraph 产品运行路径或领域切流已经完成；这些仍由后续 Phase 证明。
+
+PHASE05 基于 PHASE03 Contract Bundle 和 PHASE04 PostgreSQL primitive，开始实现 Security Control Plane。
 
 ## 事实源优先级
 
