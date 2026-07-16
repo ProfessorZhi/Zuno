@@ -1,13 +1,21 @@
 # PHASE01 Current Baseline and Requirement Ledger
 
 phase_id: PHASE01
-status: completed
+status: ready
 depends_on: none
 owner: Coordinator / Repository Governance
 
+## 订正说明
+
+2026-07-16 撤回此前 `completed` 结论。已有 Inventory、Requirement Ledger 和 Risk Register 作为部分证据保留，但未经过完整 Coordinator Closure、双向 Requirement Traceability、陈旧路径检查和独立复核，不足以证明本 Phase 完成。
+
+本 Phase 是完整目标架构实现的事实基线，不是一次性盘点。后续任何 Phase 都不得以旧文档、目录存在或局部测试替代这里冻结的最新 `main` Current。
+
 ## Phase 目标
 
-基于最新 `main` 的代码、Migration、测试、Trace、Eval 和运行证据建立 Current 真相，生成十一模块 Requirement Ledger、Legacy/Bypass Inventory、Frontend Inventory、数据迁移源表和风险依赖图。本 Phase 不实现新 Runtime。
+基于最新 `main` 的代码、Migration、测试、Trace、Eval、运行配置和真实环境证据，建立十一模块可机器验证的 Current 真相与完整 Gap Ledger。每个 Mandatory Requirement 必须能够从 Target Requirement 双向追踪到 Current 代码、数据、测试、证据和负责 Phase；无法证明的能力必须标记为 `target_not_current`、`blocked` 或 `needs_evidence`。
+
+本 Phase 不实现业务 Runtime，但必须把后续完整实现需要的所有范围、旧路径、数据源、环境依赖、风险和验收证据固定下来。遗漏任何生产入口、动态注册路径、持久化事实源或 Mandatory Requirement 都会阻止 Phase 关闭。
 
 ## Minimal Read Set
 
@@ -15,9 +23,11 @@ owner: Coordinator / Repository Governance
 - `.agent/programs/current.md`
 - `.agent/programs/task-execution-contract.md`
 - `docs/modules/README.md`
+- 十一份模块 Target 文档
+- `docs/architecture/architecture.md`
 - `docs/status/production-readiness.md`
-- `.agent/references/code-map.md`
-- 当前任务对应模块文档
+- accepted ADR、Contract Registry 与 Governance 文档
+- 最新代码、Migration、测试、CI、Trace、Eval 和部署配置
 
 ## Current Anchors
 
@@ -26,10 +36,11 @@ src/backend/zuno/{api,agent,memory,capability,knowledge,platform}/**
 apps/web/**
 apps/desktop/**
 infra/**
-alembic/** 或当前 migration roots
 tests/**
 tools/evals/zuno/**
-src/backend/zuno/platform/compatibility/legacy_aliases.py
+docs/status/**
+.agent/references/**
+所有 migration roots、动态 registry、feature flags、plugin/tool/model/provider factories
 ```
 
 ## Allowed Paths
@@ -39,73 +50,73 @@ src/backend/zuno/platform/compatibility/legacy_aliases.py
 .agent/references/code-map.md
 .agent/references/runtime-call-chain.md
 docs/status/production-readiness.md
+docs/evidence/phase01-*.md
 tools/scripts/verify_current_program.py
+tools/scripts/verify_phase01_*.py
 tests/repo/test_current_program_contract.py
+tests/repo/test_phase01_*.py
 ```
 
 ## Forbidden Paths
 
 - Runtime 业务代码、Migration、公开 API 和前端行为。
-- 十一模块 Target 原则和总架构。
-- 为让审计通过而删除失败测试或把未知写成已实现。
+- 改变十一模块 Target、Ownership 或已接受 ADR。
+- 以文档存在、类名存在、Compose 声明或 Mock 作为 Current。
+- 为通过审计删除失败测试、降低 Requirement、忽略动态入口或把未知写成已实现。
+- 使用模糊的 `implementation available` 覆盖模块级、Requirement 级真实状态。
 
 ## Work Packages
 
 ### P01-T01 Runtime Call-chain Inventory
 
-- Goal：列出 Completion、Workspace Task、Unified Runtime、GeneralAgent、Knowledge、Memory、Capability、Tool、Model 的真实默认调用链、测试调用链和回滚 Flag。
-- Steps：用 `rg` 搜入口、构造点、默认值、依赖工厂和调用者；记录同步/异步、事务、状态写入和外部副作用。
-- Output：`work-products/current-runtime-inventory.md`。
-- Required fields：path、symbol、caller、callee、default_or_legacy、state_owner、side_effect、test_evidence、target_phase。
-- Tests：Inventory 中每个符号可被仓库搜索命中；抽样链路与 focused tests 对齐。
-- Acceptance：不得用旧 Program 结论替代最新代码事实。
+- Goal：完整列出所有产品默认路径、测试路径、回滚路径和旁路，包括 Completion、Workspace、Agent Core、Knowledge、Memory、Capability、Tool、Model、Security、Observability、Ingestion、Web 与 Desktop。
+- Required：path、symbol、caller、callee、selection condition、default/legacy、state owner、transaction、external effect、security gate、test/evidence、target phase。
+- Tests：静态搜索、动态 Registry/Factory 枚举和 focused runtime tests 三方对账；所有公开入口均能到达唯一 Owner。
+- Acceptance：不存在未登记默认入口、直接 Provider/Tool 调用或 Route 业务编排。
 
 ### P01-T02 Persistence and Infrastructure Inventory
 
-- Goal：盘点 SQLite/PostgreSQL、SQLModel、Alembic、Object Store、Queue、Redis、Checkpointer、Vector/Graph Index、Secret 和 Backup Current。
-- Steps：记录配置、Adapter、表、Migration、真实连接、环境要求、并发/恢复测试和未证明能力。
-- Output：`work-products/current-persistence-inventory.md`。
-- Tests：每个“Current”至少关联代码与测试或运行证据；Compose/依赖声明不能单独算 Current。
-- Acceptance：明确 Developer/CI Adapter 与 Server Product Target。
+- Goal：完整盘点 PostgreSQL/SQLite、Alembic、RabbitMQ、Object Store、Redis、Checkpointer、Vector/Graph/Search、Secret、Backup/Restore、PITR 和 Projection Rebuild Current。
+- Required：物理 Owner、领域 Owner、表/对象/队列、Migration、连接配置、事务边界、并发/故障测试、真实环境证据、恢复责任。
+- Tests：每个 Current 至少关联代码与真实 Integration/Fault/运行证据；配置或 Adapter 声明不能单独算 Current。
+- Acceptance：Developer/CI Adapter、Server Product Current、Target 和 blocked 边界清晰。
 
 ### P01-T03 Architecture Requirement Ledger
 
-- Goal：提取十一模块全部 `ARCH-*` Requirement，映射 Current、Gap、依赖、测试和 Evidence。
-- Output：`work-products/requirement-ledger.yaml`。
-- Required fields：requirement_id、module、mandatory、current_status、current_paths、gap、dependencies、target_phase、test_ids、evidence_refs。
-- Tests：Requirement ID 唯一；每个 Mandatory Requirement 分配到 PHASE02–PHASE22；无悬空依赖。
-- Acceptance：文档中存在类名、表名或流程不能自动标记 implementation available。
+- Goal：提取十一模块全部 Mandatory `ARCH-*` Requirement，形成 Target→Current→Gap→Phase→Test→Evidence 双向追踪。
+- Required：requirement_id、owner、mandatory、target statement、current status、current paths、migration/data impact、failure/recovery requirement、dependencies、target phase、test IDs、evidence refs、reviewer。
+- Tests：Requirement ID 与模块文档完全一致；每项只有一个 Owner；每项分配到 PHASE02–22；无悬空依赖、空 Evidence 或通用占位符。
+- Acceptance：Ledger 能生成每 Phase 完整验收清单，并能从代码/测试反向找到所满足的 Requirement。
 
 ### P01-T04 Frontend and Desktop Inventory
 
-- Goal：盘点 Web/Desktop API Client、Pinia Store、SSE、Approval、Citation、Artifact、Trace/Eval、路由、Bridge 和现有 E2E。
-- Output：`work-products/frontend-current-inventory.md`。
-- Required：旧 DTO、状态字符串推断、单 pending approval、SSE cursor/resume、桌面 bridge、下载/授权、构建/测试入口。
-- Tests：记录 `npm run lint`、`npm run build` 和可用 Browser/Desktop 测试；本任务不修改页面。
-- Acceptance：区分“页面存在”“Contract 接入”“真实断线/撤权/E2E 证明”。
+- Goal：完整盘点 Web/Desktop API Client、Store、DTO、SSE、Approval、Citation、Artifact、Trace/Eval、路由、Bridge、Build、Browser E2E 和 Desktop Smoke。
+- Required：旧 DTO、字符串状态推断、单 Pending Approval、SSE Cursor/Resume、Authorized Projection、AvailableAction、下载授权、断线/撤权/多 Interrupt/UNKNOWN UI 缺口。
+- Tests：运行可用的 lint/build/unit/E2E；未运行项必须明确 blocked 原因和后续 Phase。
+- Acceptance：区分页面存在、Contract 接入、真实断线恢复和端到端证明。
 
 ### P01-T05 Legacy, Alias and Bypass Inventory
 
-- Goal：枚举所有直接 Provider SDK、Tool Execute、MCP call、httpx write、subprocess、旧 root import alias、跨模块 Repository/DB 写入和 Route 业务编排。
-- Output：`work-products/legacy-bypass-inventory.yaml`。
-- Required：path、symbol、owner、risk、target_gateway、temporary_allowlist、migration_task、removal_task。
-- Tests：静态搜索可重复；覆盖动态 Import、注册表、Monkey Patch 和环境 Flag。
-- Acceptance：生产代码中名称含 `legacy` 的目录/文件、`platform/compatibility/legacy_aliases.py` 和 `tests/legacy_guards/**` 都登记到 PHASE22 删除，不允许最终保留。
+- Goal：枚举所有直接 Provider SDK、Tool Execute、MCP、HTTP Write、Subprocess、旧 Import Alias、跨 Owner DB Write、旧 Runtime、动态加载和环境 Flag。
+- Required：path、symbol、owner、risk、target gateway、current callers、temporary allowlist、migration task、removal task、deadline、guard test。
+- Tests：AST/文本/运行时注册表联合扫描；新增未登记旁路必须 CI Fail；Inventory 与 PHASE22 删除清单双向一致。
+- Acceptance：不存在无法归属或没有迁移/删除任务的生产旁路。
 
 ### P01-T06 Risk, Dependency and Readiness Report
 
-- Goal：把 P01-T01–T05 转成 Phase 依赖、环境需求、并行边界和 Stop Condition。
-- Output：`work-products/program-risk-register.md`、`work-products/phase-readiness.yaml`。
-- Required risks：schema migration、dual path、provider、Postgres/RabbitMQ/Object/Checkpointer、frontend compatibility、benchmark data、security/secret、legacy retirement。
-- Tests：PHASE02 只有在无未归属 P0 风险时才可 ready。
-- Acceptance：未知项写 blocked/needs-evidence，不通过猜测关闭。
+- Goal：把 P01-T01–T05 转为完整依赖图、环境矩阵、P0/P1 风险、Stop Condition 和 Phase Readiness。
+- Required risks：Schema/Cutover、Provider、PostgreSQL/RabbitMQ/Object/Checkpointer、Security/Secret、Frontend、Benchmark、Legacy Removal、Backup/Restore、CI capacity。
+- Tests：所有 P0 有 Owner、Mitigation、验证 Phase 和 Stop Condition；对 Inventory 和 Ledger 进行独立抽样复核。
+- Acceptance：只有在无遗漏 Mandatory Requirement、无未归属 P0、无陈旧路径且 Coordinator 正式批准后，PHASE02 才可 ready。
 
 ## Phase 完成定义
 
-- 六个 Work Package 经 Coordinator 审核。
-- Requirement Ledger 覆盖十一模块 Mandatory Requirement。
-- Runtime、Persistence、Frontend、Legacy Current 有路径和证据。
-- 每个 Legacy/Bypass 都有迁移任务和最终删除任务。
+- 六个 Work Package 全部由 Coordinator 复核并标记 `completed`，不能停留在 `completion_candidate`。
+- Requirement Ledger 100% 覆盖十一模块 Mandatory Requirement，具备 Target↔Code/Test/Evidence 双向追踪。
+- Runtime、Persistence、Frontend、Legacy Inventory 覆盖静态与动态入口，并记录审计基线 Commit。
+- 所有 Current 声明有代码与测试/运行证据；所有未证明能力明确为 Gap/Blocked。
+- 每个 Legacy/Bypass 有迁移、Guard、Deadline 和最终删除任务。
+- 运行仓库级验证并保存 Evidence；未运行完整 CI 时不得关闭。
 - 本 Phase 未修改 Runtime 行为。
 
 ## Validation
@@ -114,5 +125,7 @@ tests/repo/test_current_program_contract.py
 git diff --check
 python tools/scripts/verify_current_program.py
 python .agent/scripts/verify_agent_system.py
-pytest -q tests/repo/test_current_program_contract.py -p no:cacheprovider
+python tools/scripts/verify_phase01_complete_baseline.py
+pytest -q tests/repo/test_current_program_contract.py tests/repo/test_phase01_complete_baseline.py -p no:cacheprovider
+# 运行并记录仓库当前可用的 backend/web/desktop inventory verification commands
 ```
