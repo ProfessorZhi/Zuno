@@ -19,7 +19,6 @@ def test_phase04_complete_infrastructure_is_fail_closed_without_real_services() 
     errors = "\n".join(verifier.verify_phase04_complete_infrastructure())
     assert "PHASE04 coordinator approval is not approved" in errors
     assert "PHASE05 start gate remains closed" in errors
-    assert "PostgreSQL real service is not reachable" in errors
     assert "RabbitMQ real service is not reachable" in errors
     assert "MinIO/S3 real service is not reachable" in errors
 

@@ -379,7 +379,6 @@ def verify_current_program() -> list[str]:
         expected_fragments = [
             "PHASE04 coordinator approval is not approved",
             "PHASE05 start gate remains closed",
-            "PostgreSQL real service is not reachable",
             "RabbitMQ real service is not reachable",
             "MinIO/S3 real service is not reachable",
         ]

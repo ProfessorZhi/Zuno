@@ -16,10 +16,12 @@ The goal file explicitly requires real PostgreSQL, RabbitMQ, MinIO/S3, LangGraph
 
 | Probe | Result |
 | --- | --- |
-| `docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"` | failed: Docker Desktop Linux engine pipe not found |
-| `Test-NetConnection localhost -Port 5432` | `TcpTestSucceeded: False` |
+| `docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"` | initial failure: Docker Desktop Linux engine pipe not found; after Coordinator start, Docker engine `29.4.0` became available |
+| `docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio` | PostgreSQL started healthy; RabbitMQ and MinIO image pulls failed with Docker Hub EOF |
+| `Test-NetConnection localhost -Port 5432` | initial `TcpTestSucceeded: False`; after Docker start `TcpTestSucceeded: True` |
 | `Test-NetConnection localhost -Port 5672` | `TcpTestSucceeded: False` |
 | `Test-NetConnection localhost -Port 9000` | `TcpTestSucceeded: False` |
+| `pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` | passed, `5 passed` against real PostgreSQL on localhost:5432 |
 
 ## Missing Required Proof
 
@@ -37,8 +39,8 @@ The goal file explicitly requires real PostgreSQL, RabbitMQ, MinIO/S3, LangGraph
 
 ## Existing Partial Evidence
 
-`docs/evidence/phase04-postgres-foundation.md` remains valid only as partial evidence. It records PostgreSQL 16 primitive integration, Alembic upgrade/downgrade and five focused integration tests, but it explicitly remains `partial_implementation_available` with `phase_completion: withdrawn`.
+`docs/evidence/phase04-postgres-foundation.md` remains valid only as partial evidence. It records PostgreSQL 16 primitive integration, Alembic upgrade/downgrade and five focused integration tests, and the PostgreSQL focused integration test was re-run successfully after Docker was started. It explicitly remains `partial_implementation_available` with `phase_completion: withdrawn` because RabbitMQ, MinIO/S3, official LangGraph PostgreSQL Checkpointer and Backup/Restore/Replay evidence are still missing.
 
 ## Gate Decision
 
-PHASE04 remains not completed. PHASE05 must remain blocked until the real dependency environment is available and the complete PHASE04 verification commands pass with reproducible evidence.
+PHASE04 remains not completed. PHASE05 must remain blocked until RabbitMQ and MinIO/S3 images/services are available, the official LangGraph PostgreSQL Checkpointer path is proven, Backup/Restore/Replay evidence exists, and the complete PHASE04 verification commands pass with reproducible evidence.
