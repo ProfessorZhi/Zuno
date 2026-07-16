@@ -233,6 +233,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "expiry: passed",
             "stale_generation_reject: passed",
             "result_replay: passed",
+            "high_concurrency_single_winner: passed",
             "Idempotency Claim != Domain Success",
         ]:
             if phrase not in idempotency_evidence:

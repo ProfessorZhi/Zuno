@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 
 import pytest
 from sqlalchemy import text
@@ -216,6 +218,68 @@ def test_idempotency_claim_expiry_renew_and_stale_generation(engine) -> None:
             replacement_generation,
             "effect:new",
         )
+
+
+def test_idempotency_claim_concurrent_single_winner(engine) -> None:
+    contenders = 12
+    barrier = Barrier(contenders)
+
+    def claim(index: int):
+        barrier.wait(timeout=10)
+        uow = InfrastructureUnitOfWork(engine)
+        with uow as repo:
+            return repo.claim_idempotency_receipt(
+                scope="tool",
+                key="idem-concurrent",
+                owner=f"worker-{index}",
+                request={"operation": "send", "target": "x"},
+                ttl_seconds=30,
+            )
+
+    with ThreadPoolExecutor(max_workers=contenders) as executor:
+        receipts = list(executor.map(claim, range(contenders)))
+
+    winners = [receipt for receipt in receipts if receipt.acquired]
+    assert len(winners) == 1
+    assert winners[0].status == "in_progress"
+    assert winners[0].generation == 1
+    assert winners[0].result_ref == ""
+    assert all(receipt.status == "in_progress" for receipt in receipts)
+    assert all(receipt.generation == 1 for receipt in receipts)
+    assert all(receipt.result_ref == "" for receipt in receipts)
+    assert all(receipt.owner == winners[0].owner for receipt in receipts)
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM infra_idempotency_claims
+                WHERE scope = 'tool' AND idempotency_key = 'idem-concurrent'
+                """
+            )
+        ).scalar_one() == 1
+
+    uow = InfrastructureUnitOfWork(engine)
+    with uow as repo:
+        repo.complete_idempotency(
+            scope="tool",
+            key="idem-concurrent",
+            generation=winners[0].generation,
+            result_ref="effect:concurrent",
+        )
+
+    with uow as repo:
+        receipt = repo.claim_idempotency_receipt(
+            scope="tool",
+            key="idem-concurrent",
+            owner="worker-after",
+            request={"operation": "send", "target": "x"},
+        )
+        assert receipt.status == "completed"
+        assert receipt.generation == 1
+        assert receipt.result_ref == "effect:concurrent"
+        assert receipt.acquired is False
 
 
 def test_lease_fencing_rejects_late_owner(engine) -> None:

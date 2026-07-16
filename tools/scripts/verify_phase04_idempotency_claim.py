@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
 from sqlalchemy import text
 
 from zuno.platform.database.foundation import (
@@ -17,6 +20,7 @@ def verify_phase04_idempotency_claim() -> list[str]:
     errors: list[str] = []
     scope = "phase04-idempotency"
     key = "claim-lifecycle"
+    concurrent_key = "claim-concurrent"
     request = {"operation": "publish", "target": "phase04"}
     try:
         with engine.begin() as conn:
@@ -24,10 +28,10 @@ def verify_phase04_idempotency_claim() -> list[str]:
                 text(
                     """
                     DELETE FROM infra_idempotency_claims
-                    WHERE scope = :scope AND idempotency_key = :key
+                    WHERE scope = :scope AND idempotency_key IN (:key, :concurrent_key)
                     """
                 ),
-                {"scope": scope, "key": key},
+                {"scope": scope, "key": key, "concurrent_key": concurrent_key},
             )
 
         uow = InfrastructureUnitOfWork(engine)
@@ -104,6 +108,49 @@ def verify_phase04_idempotency_claim() -> list[str]:
             )
             if (status, completed_generation, result_ref) != ("completed", replacement_generation, "effect:new"):
                 errors.append(f"completed result replay mismatch: {(status, completed_generation, result_ref)!r}")
+
+        contenders = 12
+        barrier = Barrier(contenders)
+
+        def claim(index: int):
+            barrier.wait(timeout=10)
+            thread_uow = InfrastructureUnitOfWork(engine)
+            with thread_uow as repo:
+                return repo.claim_idempotency_receipt(
+                    scope=scope,
+                    key=concurrent_key,
+                    owner=f"worker-concurrent-{index}",
+                    request=request,
+                    ttl_seconds=30,
+                )
+
+        with ThreadPoolExecutor(max_workers=contenders) as executor:
+            receipts = list(executor.map(claim, range(contenders)))
+
+        winners = [receipt for receipt in receipts if receipt.acquired]
+        if len(winners) != 1:
+            errors.append(f"concurrent claim winner count mismatch: {len(winners)}")
+        elif not all(receipt.owner == winners[0].owner for receipt in receipts):
+            errors.append(f"concurrent claims did not converge on one owner: {receipts!r}")
+        elif not all(
+            receipt.status == "in_progress" and receipt.generation == 1 and receipt.result_ref == ""
+            for receipt in receipts
+        ):
+            errors.append(f"concurrent claim receipt mismatch: {receipts!r}")
+
+        with engine.connect() as conn:
+            row_count = conn.execute(
+                text(
+                    """
+                    SELECT count(*)
+                    FROM infra_idempotency_claims
+                    WHERE scope = :scope AND idempotency_key = :key
+                    """
+                ),
+                {"scope": scope, "key": concurrent_key},
+            ).scalar_one()
+            if row_count != 1:
+                errors.append(f"concurrent claim row count mismatch: {row_count!r}")
     finally:
         engine.dispose()
     return errors

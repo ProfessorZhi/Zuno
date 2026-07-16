@@ -39,6 +39,15 @@ class OutboxEventRecord:
     claim_owner: str
 
 
+@dataclass(frozen=True, slots=True)
+class IdempotencyClaimReceipt:
+    status: str
+    generation: int
+    result_ref: str
+    owner: str
+    acquired: bool
+
+
 def create_foundation_engine(database_url: str, **kwargs: Any) -> Engine:
     return create_engine(database_url, pool_pre_ping=True, future=True, **kwargs)
 
@@ -215,53 +224,74 @@ class InfrastructureRepository:
         request: dict[str, Any],
         ttl_seconds: int = 60,
     ) -> tuple[str, int, str]:
+        receipt = self.claim_idempotency_receipt(
+            scope=scope,
+            key=key,
+            owner=owner,
+            request=request,
+            ttl_seconds=ttl_seconds,
+        )
+        return receipt.status, receipt.generation, receipt.result_ref
+
+    def claim_idempotency_receipt(
+        self,
+        *,
+        scope: str,
+        key: str,
+        owner: str,
+        request: dict[str, Any],
+        ttl_seconds: int = 60,
+    ) -> IdempotencyClaimReceipt:
         request_hash = canonical_sha256(request)
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
         row = self.connection.execute(
             text(
                 """
-                INSERT INTO infra_idempotency_claims(
-                    scope, idempotency_key, owner, request_hash, status, generation, expires_at
-                ) VALUES (
-                    :scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at
+                WITH claim_lock AS (
+                    SELECT pg_advisory_xact_lock(hashtextextended(:scope || ':' || :key, 0))
+                ),
+                inserted AS (
+                    INSERT INTO infra_idempotency_claims(
+                        scope, idempotency_key, owner, request_hash, status, generation, expires_at
+                    )
+                    SELECT :scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at
+                    FROM claim_lock
+                    ON CONFLICT (scope, idempotency_key) DO NOTHING
+                    RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
+                ),
+                reclaimed AS (
+                    UPDATE infra_idempotency_claims
+                    SET generation = infra_idempotency_claims.generation + 1,
+                        owner = :owner,
+                        status = 'in_progress',
+                        result_ref = NULL,
+                        expires_at = :expires_at
+                    WHERE scope = :scope
+                      AND idempotency_key = :key
+                      AND request_hash = :request_hash
+                      AND status in ('in_progress','expired')
+                      AND expires_at < now()
+                      AND NOT EXISTS (SELECT 1 FROM inserted)
+                      AND EXISTS (SELECT 1 FROM claim_lock)
+                    RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
+                ),
+                current_claim AS (
+                    SELECT owner, request_hash, status, generation, result_ref, false AS acquired
+                    FROM infra_idempotency_claims
+                    WHERE scope = :scope
+                      AND idempotency_key = :key
+                      AND NOT EXISTS (SELECT 1 FROM inserted)
+                      AND NOT EXISTS (SELECT 1 FROM reclaimed)
+                      AND EXISTS (SELECT 1 FROM claim_lock)
                 )
-                ON CONFLICT (scope, idempotency_key) DO UPDATE
-                SET generation = CASE
-                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
-                     AND infra_idempotency_claims.status in ('in_progress','expired')
-                     AND infra_idempotency_claims.expires_at < now()
-                    THEN infra_idempotency_claims.generation + 1
-                    ELSE infra_idempotency_claims.generation
-                END,
-                owner = CASE
-                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
-                     AND infra_idempotency_claims.status in ('in_progress','expired')
-                     AND infra_idempotency_claims.expires_at < now()
-                    THEN EXCLUDED.owner
-                    ELSE infra_idempotency_claims.owner
-                END,
-                status = CASE
-                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
-                     AND infra_idempotency_claims.status in ('in_progress','expired')
-                     AND infra_idempotency_claims.expires_at < now()
-                    THEN 'in_progress'
-                    ELSE infra_idempotency_claims.status
-                END,
-                result_ref = CASE
-                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
-                     AND infra_idempotency_claims.status in ('in_progress','expired')
-                     AND infra_idempotency_claims.expires_at < now()
-                    THEN NULL
-                    ELSE infra_idempotency_claims.result_ref
-                END,
-                expires_at = CASE
-                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
-                     AND infra_idempotency_claims.status in ('in_progress','expired')
-                     AND infra_idempotency_claims.expires_at < now()
-                    THEN EXCLUDED.expires_at
-                    ELSE infra_idempotency_claims.expires_at
-                END
-                RETURNING claim_id, request_hash, status, generation, result_ref
+                SELECT owner, request_hash, status, generation, result_ref, acquired
+                FROM inserted
+                UNION ALL
+                SELECT owner, request_hash, status, generation, result_ref, acquired
+                FROM reclaimed
+                UNION ALL
+                SELECT owner, request_hash, status, generation, result_ref, acquired
+                FROM current_claim
                 """
             ),
             {
@@ -274,7 +304,13 @@ class InfrastructureRepository:
         ).one()
         if row.request_hash != request_hash:
             raise InfrastructureConflictError("idempotency key was reused with a different request hash")
-        return str(row.status), int(row.generation), str(row.result_ref or "")
+        return IdempotencyClaimReceipt(
+            status=str(row.status),
+            generation=int(row.generation),
+            result_ref=str(row.result_ref or ""),
+            owner=str(row.owner),
+            acquired=bool(row.acquired),
+        )
 
     def renew_idempotency(
         self,
@@ -500,6 +536,7 @@ def _json(payload: dict[str, Any]) -> str:
 __all__ = [
     "FencingRejectedError",
     "FencingToken",
+    "IdempotencyClaimReceipt",
     "InfrastructureConflictError",
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",
