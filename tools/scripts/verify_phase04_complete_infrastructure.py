@@ -18,6 +18,7 @@ REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_ser
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
 RABBITMQ_BACKLOG_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_backlog.py"
+RABBITMQ_RETRY_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_retry_exhaustion.py"
 OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
 RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
@@ -194,6 +195,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "dlq: passed",
             "dlq_replay: passed",
             "backlog_depth: passed",
+            "retry_exhaustion: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in rabbit_evidence:
@@ -209,6 +211,17 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         )()
         for backlog_error in backlog_errors:
             errors.append(f"PHASE04 RabbitMQ backlog verification failed: {backlog_error}")
+
+    if not RABBITMQ_RETRY_EXHAUSTION_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ retry exhaustion verifier")
+    else:
+        retry_exhaustion_errors = _load_verifier(
+            RABBITMQ_RETRY_EXHAUSTION_VERIFIER,
+            "verify_phase04_rabbitmq_retry_exhaustion",
+            "verify_phase04_rabbitmq_retry_exhaustion",
+        )()
+        for retry_exhaustion_error in retry_exhaustion_errors:
+            errors.append(f"PHASE04 RabbitMQ retry exhaustion verification failed: {retry_exhaustion_error}")
 
     if not OUTBOX_RABBITMQ_VERIFIER.exists():
         errors.append("missing PHASE04 outbox RabbitMQ publisher verifier")

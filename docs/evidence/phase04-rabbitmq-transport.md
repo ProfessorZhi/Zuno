@@ -9,6 +9,7 @@ redelivery: passed
 dlq: passed
 dlq_replay: passed
 backlog_depth: passed
+retry_exhaustion: passed
 broker_restart: not_yet_proven
 network_partition: not_yet_proven
 outbox_inbox_atomicity: not_yet_proven
@@ -28,6 +29,7 @@ Queue ACK != Domain Success. RabbitMQ delivery, ACK, NACK, reject and DLQ are tr
 | AMQP endpoint | `amqp://guest:guest@localhost:5672/` |
 | Verification command | `python tools/scripts/verify_phase04_rabbitmq_transport.py` |
 | Backlog verification | `python tools/scripts/verify_phase04_rabbitmq_backlog.py` |
+| Retry exhaustion verification | `python tools/scripts/verify_phase04_rabbitmq_retry_exhaustion.py` |
 | Integration test | `pytest -q tests/integration/test_phase04_rabbitmq_transport.py -p no:cacheprovider` |
 
 ## Verified Behavior
@@ -39,6 +41,7 @@ Queue ACK != Domain Success. RabbitMQ delivery, ACK, NACK, reject and DLQ are tr
 - Reject with `requeue=False` routes the poison message to the DLQ.
 - Replays the DLQ message back to the main queue with the same message id and payload plus a replay receipt header.
 - Reads passive queue depth to prove backlog growth after publish and drain after ACK.
+- Applies transport retry policy by incrementing `retry_attempt`, preserving tenant context, republishing persistent messages until `max_attempts`, then routing the exhausted message to the DLQ with `retry_exhausted: true`.
 - Deletes the temporary exchange and queues after the run.
 
 ## Commands And Results
@@ -54,7 +57,17 @@ PHASE04 RabbitMQ backlog verification passed.
 ```
 
 ```text
+python tools/scripts/verify_phase04_rabbitmq_retry_exhaustion.py
+PHASE04 RabbitMQ retry exhaustion verification passed.
+```
+
+```text
 pytest -q tests/integration/test_phase04_rabbitmq_transport.py -p no:cacheprovider
+1 passed
+```
+
+```text
+pytest -q tests/integration/test_phase04_rabbitmq_retry_exhaustion.py -p no:cacheprovider
 1 passed
 ```
 
@@ -62,5 +75,5 @@ pytest -q tests/integration/test_phase04_rabbitmq_transport.py -p no:cacheprovid
 
 - Transactional outbox publisher claim and RabbitMQ publish are not yet integrated as one recovery flow.
 - Consumer inbox dedup and ACK-after-commit are not yet proven against RabbitMQ redelivery.
-- Broker restart, connection loss, partition and retry exhaustion are still missing in this evidence file.
+- Broker restart, connection loss, partition and full recovery are still missing in this evidence file.
 - P04-T03 remains `ready`, not completed.

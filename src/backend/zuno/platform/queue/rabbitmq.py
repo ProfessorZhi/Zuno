@@ -154,6 +154,36 @@ class RabbitMQTransport:
         )
         await exchange.publish(message, routing_key=topology.routing_key)
 
+    async def retry_or_dead_letter(
+        self,
+        topology: RabbitMQTopology,
+        delivery: RabbitMQDelivery,
+        *,
+        max_attempts: int,
+        retry_trace_id: str,
+    ) -> int:
+        headers = dict(delivery.headers)
+        attempt = int(headers.get("retry_attempt", 0)) + 1
+        headers["retry_attempt"] = attempt
+        headers["trace_id"] = retry_trace_id
+        headers["retry_exhausted"] = attempt >= max_attempts
+        message = aio_pika.Message(
+            body=json.dumps(delivery.payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+            content_type="application/json",
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            message_id=delivery.message_id,
+            headers=headers,
+        )
+        if attempt >= max_attempts:
+            exchange = await self.channel.get_exchange(topology.dead_letter_exchange)
+            routing_key = topology.dead_letter_routing_key
+        else:
+            exchange = await self.channel.get_exchange(topology.exchange)
+            routing_key = topology.routing_key
+        await exchange.publish(message, routing_key=routing_key)
+        await delivery.ack()
+        return attempt
+
     async def get(self, queue_name: str, *, timeout: float = 5.0) -> RabbitMQDelivery | None:
         queue = await self.channel.get_queue(queue_name)
         message = await queue.get(timeout=timeout, fail=False)
