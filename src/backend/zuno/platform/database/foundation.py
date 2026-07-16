@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -7,6 +9,7 @@ from uuid import uuid4
 
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import Connection
+from sqlalchemy.exc import DBAPIError
 
 from zuno.platform.contracts import canonical_json, canonical_sha256
 
@@ -48,6 +51,13 @@ class IdempotencyClaimReceipt:
     acquired: bool
 
 
+@dataclass(frozen=True, slots=True)
+class TransactionRetryReceipt:
+    result: Any
+    attempts: int
+    retried_sqlstates: tuple[str, ...]
+
+
 def create_foundation_engine(database_url: str, **kwargs: Any) -> Engine:
     return create_engine(database_url, pool_pre_ping=True, future=True, **kwargs)
 
@@ -64,15 +74,23 @@ class InfrastructureUnitOfWork:
         tenant_id: str | None = None,
         statement_timeout_ms: int | None = None,
         lock_timeout_ms: int | None = None,
+        isolation_level: str | None = None,
     ) -> None:
         self.engine = engine
         self.tenant_id = tenant_id
         self.statement_timeout_ms = statement_timeout_ms
         self.lock_timeout_ms = lock_timeout_ms
+        self.isolation_level = isolation_level
 
     def __enter__(self) -> InfrastructureRepository:
-        self._context = self.engine.begin()
-        self.connection = self._context.__enter__()
+        if self.isolation_level is None:
+            self._context = self.engine.begin()
+            self.connection = self._context.__enter__()
+            self._transaction = None
+        else:
+            self._context = self.engine.connect()
+            self.connection = self._context.__enter__().execution_options(isolation_level=self.isolation_level)
+            self._transaction = self.connection.begin()
         if self.tenant_id is not None:
             self.connection.execute(text("SELECT set_config('app.tenant_id', :tenant_id, true)"), {"tenant_id": self.tenant_id})
         if self.statement_timeout_ms is not None:
@@ -88,7 +106,49 @@ class InfrastructureUnitOfWork:
         return InfrastructureRepository(self.connection)
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        if self._transaction is not None:
+            try:
+                self._transaction.__exit__(exc_type, exc, tb)
+            finally:
+                self._context.__exit__(exc_type, exc, tb)
+            return
         self._context.__exit__(exc_type, exc, tb)
+
+
+def run_transaction_with_retry(
+    engine: Engine,
+    operation: Callable[[InfrastructureRepository], Any],
+    *,
+    max_attempts: int = 3,
+    retry_sqlstates: tuple[str, ...] = ("40P01", "40001"),
+    backoff_seconds: float = 0.05,
+    tenant_id: str | None = None,
+    statement_timeout_ms: int | None = None,
+    lock_timeout_ms: int | None = None,
+    isolation_level: str | None = None,
+) -> TransactionRetryReceipt:
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least 1")
+
+    retried_sqlstates: list[str] = []
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with InfrastructureUnitOfWork(
+                engine,
+                tenant_id=tenant_id,
+                statement_timeout_ms=statement_timeout_ms,
+                lock_timeout_ms=lock_timeout_ms,
+                isolation_level=isolation_level,
+            ) as repo:
+                result = operation(repo)
+            return TransactionRetryReceipt(result=result, attempts=attempt, retried_sqlstates=tuple(retried_sqlstates))
+        except DBAPIError as exc:
+            sqlstate = _sqlstate(exc)
+            if sqlstate not in retry_sqlstates or attempt >= max_attempts:
+                raise
+            retried_sqlstates.append(sqlstate)
+            time.sleep(backoff_seconds * attempt)
+    raise RuntimeError("transaction retry loop exited unexpectedly")
 
 
 class InfrastructureRepository:
@@ -619,6 +679,10 @@ def _json(payload: dict[str, Any]) -> str:
     return canonical_json(payload)
 
 
+def _sqlstate(exc: DBAPIError) -> str:
+    return str(getattr(exc.orig, "sqlstate", "") or getattr(exc.orig, "pgcode", ""))
+
+
 __all__ = [
     "FencingRejectedError",
     "FencingToken",
@@ -627,5 +691,7 @@ __all__ = [
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",
     "OutboxEventRecord",
+    "TransactionRetryReceipt",
     "create_foundation_engine",
+    "run_transaction_with_retry",
 ]

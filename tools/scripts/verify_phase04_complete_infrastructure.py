@@ -14,6 +14,7 @@ ALEMBIC_MIGRATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_a
 ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
 POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
+POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -166,10 +167,22 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "tenant_context_no_leak: passed",
             "statement_timeout: passed",
             "lock_timeout: passed",
+            "deadlock_retry_boundary: passed",
             "不关闭 P04-T01",
         ]:
             if phrase not in postgres_runtime_evidence:
                 errors.append(f"PHASE04 PostgreSQL runtime evidence missing phrase: {phrase}")
+
+    if not POSTGRES_DEADLOCK_RETRY_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL deadlock retry verifier")
+    else:
+        postgres_deadlock_errors = _load_verifier(
+            POSTGRES_DEADLOCK_RETRY_VERIFIER,
+            "verify_phase04_postgres_deadlock_retry",
+            "verify_phase04_postgres_deadlock_retry",
+        )()
+        for postgres_deadlock_error in postgres_deadlock_errors:
+            errors.append(f"PHASE04 PostgreSQL deadlock retry verification failed: {postgres_deadlock_error}")
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
