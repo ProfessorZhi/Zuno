@@ -15,6 +15,8 @@ RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
 MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
+BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
+BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -152,6 +154,32 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in minio_evidence:
                 errors.append(f"PHASE04 MinIO object store evidence missing phrase: {phrase}")
+
+    if not BACKUP_RESTORE_VERIFIER.exists():
+        errors.append("missing PHASE04 backup/restore/replay verifier")
+    else:
+        backup_errors = _load_verifier(
+            BACKUP_RESTORE_VERIFIER,
+            "verify_phase04_backup_restore_replay",
+            "verify_phase04_backup_restore_replay",
+        )()
+        for backup_error in backup_errors:
+            errors.append(f"PHASE04 backup/restore/replay verification failed: {backup_error}")
+
+    if not BACKUP_RESTORE_EVIDENCE.exists():
+        errors.append("missing PHASE04 backup/restore/replay evidence")
+    else:
+        backup_evidence = _read(BACKUP_RESTORE_EVIDENCE)
+        for phrase in [
+            "postgres_backup: passed",
+            "postgres_restore: passed",
+            "object_manifest_restore: passed",
+            "checkpoint_table_restore: passed",
+            "outbox_inbox_watermark: passed",
+            "Backup/Restore/Replay subset != PHASE04 completion",
+        ]:
+            if phrase not in backup_evidence:
+                errors.append(f"PHASE04 backup/restore/replay evidence missing phrase: {phrase}")
 
     if not PARTIAL_EVIDENCE.exists():
         errors.append("missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md")
