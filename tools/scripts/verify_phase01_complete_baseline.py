@@ -36,7 +36,7 @@ MODULE_REQUIREMENT_SOURCES = [
     REPO_ROOT / "docs" / "governance" / "wave1-cross-module-contract-registry.md",
 ]
 
-REQUIREMENT_PATTERN = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3}")
+REQUIREMENT_PATTERN = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3}")
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -72,7 +72,7 @@ def _source_requirement_ids() -> set[str]:
             if not match:
                 continue
             cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
-            if cells and cells[0] == match.group(0):
+            if cells and cells[0].startswith(match.group(0)):
                 ids.add(match.group(0))
     return ids
 
@@ -150,7 +150,7 @@ def _verify_requirement_ledger(errors: list[str]) -> None:
     ledger = _read(REQUIREMENT_LEDGER)
     source_ids = _source_requirement_ids()
     ledger_ids = set(
-        re.findall(r"(?m)^\s+- requirement_id:\s*(ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3})\s*$", ledger)
+        re.findall(r"(?m)^\s+- requirement_id:\s*(ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3})\s*$", ledger)
     )
     if source_ids != ledger_ids:
         missing = sorted(source_ids - ledger_ids)
@@ -169,28 +169,60 @@ def _verify_requirement_ledger(errors: list[str]) -> None:
         )
 
     blocks = _ledger_blocks(ledger)
-    missing_reviewer = 0
-    missing_reverse_trace = 0
+    required_fields = [
+        "module",
+        "mandatory",
+        "target_statement",
+        "current_status",
+        "current_paths",
+        "gap",
+        "owner",
+        "target_phase",
+        "planned_work_package",
+        "dependencies",
+        "failure_or_recovery_requirement",
+        "test_ids",
+        "evidence_refs",
+        "reverse_trace_refs",
+        "reviewer",
+    ]
+    missing_fields: dict[str, int] = {}
     empty_test_refs = 0
     empty_evidence_refs = 0
+    empty_reverse_trace_refs = 0
+    unresolved_evidence_explanations = 0
+    invalid_target_phase = 0
     for block in blocks:
-        if _field_missing(block, "reviewer"):
-            missing_reviewer += 1
-        if _field_missing(block, "reverse_trace_refs"):
-            missing_reverse_trace += 1
+        for field in required_fields:
+            if _field_missing(block, field):
+                missing_fields[field] = missing_fields.get(field, 0) + 1
         if _field_list_is_empty(block, "test_ids"):
             empty_test_refs += 1
         if _field_list_is_empty(block, "evidence_refs"):
             empty_evidence_refs += 1
+        if _field_list_is_empty(block, "reverse_trace_refs"):
+            empty_reverse_trace_refs += 1
+        if re.search(r"(?m)^\s+current_status:\s*target_not_current\s*$", block):
+            if "needs_evidence:" not in block and "target_not_current:" not in block:
+                unresolved_evidence_explanations += 1
+        if re.search(r"(?m)^\s+target_phase:\s*[\"']?PHASE(?:0[2-9]|1[0-9]|2[0-2])[\"']?\s*$", block) is None:
+            invalid_target_phase += 1
 
-    if missing_reviewer:
-        errors.append(f"requirement ledger entries missing reviewer: {missing_reviewer}")
-    if missing_reverse_trace:
-        errors.append(f"requirement ledger entries missing reverse_trace_refs: {missing_reverse_trace}")
+    for field, count in sorted(missing_fields.items()):
+        errors.append(f"requirement ledger entries missing {field}: {count}")
     if empty_test_refs:
         errors.append(f"requirement ledger entries with empty test_ids: {empty_test_refs}")
     if empty_evidence_refs:
         errors.append(f"requirement ledger entries with empty evidence_refs: {empty_evidence_refs}")
+    if empty_reverse_trace_refs:
+        errors.append(f"requirement ledger entries with empty reverse_trace_refs: {empty_reverse_trace_refs}")
+    if unresolved_evidence_explanations:
+        errors.append(
+            "requirement ledger target_not_current entries missing needs_evidence/target_not_current explanation: "
+            f"{unresolved_evidence_explanations}"
+        )
+    if invalid_target_phase:
+        errors.append(f"requirement ledger entries with invalid target_phase: {invalid_target_phase}")
 
 
 def _verify_readiness(errors: list[str]) -> None:
