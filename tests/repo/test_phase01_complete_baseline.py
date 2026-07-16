@@ -25,7 +25,7 @@ def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
     errors = "\n".join(verifier.verify_phase01_complete_baseline())
     assert "coordinator approval is not approved" in errors
     assert "PHASE02 start gate remains closed" in errors
-    assert "docs/evidence has no phase01-*.md reproducible evidence bundle" in errors
+    assert "P01-T02 is not completed in phase-readiness.yaml" in errors
 
 
 def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None:
@@ -35,3 +35,12 @@ def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None
     assert "requirement ledger entries missing reverse_trace_refs" in errors
     assert "requirement ledger entries with empty test_ids" in errors
     assert "requirement ledger entries with empty evidence_refs" in errors
+
+
+def test_p01_t01_runtime_inventory_has_required_contract_fields() -> None:
+    verifier = _load_verifier()
+    errors = "\n".join(verifier.verify_phase01_complete_baseline())
+    assert "P01-T01 runtime inventory missing required field row" not in errors
+    assert "P01-T01 runtime inventory missing required coverage" not in errors
+    assert "P01-T01 evidence file missing" not in errors
+    assert "P01-T01 evidence missing required field" not in errors
