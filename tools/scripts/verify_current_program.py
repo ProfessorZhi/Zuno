@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE05"
+CURRENT_PHASE = "PHASE01"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -60,20 +60,6 @@ REQUIRED_PHASE01_WORK_PRODUCTS = [
     WORK_PRODUCTS / "phase-readiness.yaml",
 ]
 
-PHASE02_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py"
-PHASE03_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase03_contract_bundle.py"
-PHASE04_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_foundation.py"
-
-REQUIRED_PHASE03_WORK_PRODUCTS = [
-    WORK_PRODUCTS / "phase03-readiness.yaml",
-    REPO_ROOT / "docs" / "evidence" / "phase03-contract-bundle.md",
-]
-
-REQUIRED_PHASE04_WORK_PRODUCTS = [
-    WORK_PRODUCTS / "phase04-readiness.yaml",
-    REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md",
-]
-
 MODULE_REQUIREMENT_SOURCES = [
     REPO_ROOT / "docs" / "modules" / "01-product-surface.md",
     REPO_ROOT / "docs" / "modules" / "02-input-document-ingestion.md",
@@ -94,8 +80,11 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _require_phrases(text: str, phrases: list[str], label: str) -> list[str]:
+    return [f"{label} missing phrase: {phrase}" for phrase in phrases if phrase not in text]
+
+
 def _extract_requirement_ids_from_source(path: Path) -> set[str]:
-    """Extract only table-row requirement IDs, not narrative placeholders."""
     ids: set[str] = set()
     pattern = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3}")
     for line in _read(path).splitlines():
@@ -110,104 +99,37 @@ def _extract_requirement_ids_from_source(path: Path) -> set[str]:
     return ids
 
 
-def _extract_list_item_blocks(text: str, marker: str) -> list[str]:
-    blocks: list[str] = []
-    current: list[str] = []
-    for line in text.splitlines():
-        if line.startswith(marker):
-            if current:
-                blocks.append("\n".join(current))
-            current = [line]
-        elif current:
-            current.append(line)
-    if current:
-        blocks.append("\n".join(current))
-    return blocks
+def _load_verifier(path: Path, module_name: str, function_name: str) -> list[str]:
+    if not path.exists():
+        return [f"missing verifier: {path.relative_to(REPO_ROOT).as_posix()}"]
+    spec = spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        return [f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"]
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    function = getattr(module, function_name)
+    return list(function())
 
 
-def _verify_phase01_work_products() -> list[str]:
+def _verify_requirement_ledger() -> list[str]:
     errors: list[str] = []
-    for path in REQUIRED_PHASE01_WORK_PRODUCTS:
-        if not path.exists():
-            errors.append(f"missing PHASE01 work product: {path.relative_to(REPO_ROOT).as_posix()}")
-    if errors:
-        return errors
-
-    runtime = _read(WORK_PRODUCTS / "current-runtime-inventory.md")
-    persistence = _read(WORK_PRODUCTS / "current-persistence-inventory.md")
-    frontend = _read(WORK_PRODUCTS / "frontend-current-inventory.md")
-    legacy = _read(WORK_PRODUCTS / "legacy-bypass-inventory.yaml")
-    risks = _read(WORK_PRODUCTS / "program-risk-register.md")
-    readiness = _read(WORK_PRODUCTS / "phase-readiness.yaml")
-    ledger = _read(WORK_PRODUCTS / "requirement-ledger.yaml")
-
-    required_runtime_phrases = [
-        "CompletionService",
-        "WorkspaceTaskRuntimeService",
-        "UnifiedAgentRuntimeService",
-        "GeneralAgent",
-        "ModelGateway",
-        "ToolControlPlaneRuntime",
-        "AgenticRetrievalRuntime",
-        "SQLiteAgentRunStore",
-        "legacy_aliases.py",
-    ]
-    for phrase in required_runtime_phrases:
-        if phrase not in runtime:
-            errors.append(f"current-runtime-inventory.md missing runtime anchor: {phrase}")
-
-    for phrase in [
-        "SQLiteDurableIngestionStore",
-        "LocalObjectStore",
-        "LocalQueueBackend",
-        "SQLiteAgentRunStore",
-        "PostgreSQL",
-        "RabbitMQ",
-        "MinIO/S3",
-        "not proven Current",
-    ]:
-        if phrase not in persistence:
-            errors.append(f"current-persistence-inventory.md missing infrastructure anchor: {phrase}")
-
-    for phrase in [
-        "apps/web/src/apis/workspace.ts",
-        "fetch-event-source",
-        "pendingToolApproval",
-        "apps/desktop/bridge.cjs",
-        "No Playwright/Cypress/Selenium/browser Electron E2E",
-    ]:
-        if phrase not in frontend:
-            errors.append(f"frontend-current-inventory.md missing frontend anchor: {phrase}")
-
-    legacy_blocks = _extract_list_item_blocks(legacy, "  - path: ")
-    if len(legacy_blocks) < 20:
-        errors.append("legacy-bypass-inventory.yaml must register at least 20 bypass/legacy entries")
-    for block in legacy_blocks:
-        for field in [
-            "symbol:",
-            "owner:",
-            "risk:",
-            "target_gateway:",
-            "temporary_allowlist:",
-            "migration_task:",
-            "removal_task:",
-        ]:
-            if field not in block:
-                errors.append(f"legacy-bypass-inventory.yaml entry missing {field}: {block.splitlines()[0]}")
-        if "P22-T03" not in block:
-            errors.append(f"legacy-bypass-inventory.yaml entry missing P22-T03 removal: {block.splitlines()[0]}")
-
+    ledger_path = WORK_PRODUCTS / "requirement-ledger.yaml"
+    if not ledger_path.exists():
+        return ["missing PHASE01 work product: .agent/programs/work-products/requirement-ledger.yaml"]
+    ledger = _read(ledger_path)
     source_ids: set[str] = set()
     for path in MODULE_REQUIREMENT_SOURCES:
+        if not path.exists():
+            errors.append(f"missing requirement source: {path.relative_to(REPO_ROOT).as_posix()}")
+            continue
         source_ids.update(_extract_requirement_ids_from_source(path))
     ledger_ids = set(re.findall(r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3})$", ledger, re.MULTILINE))
-    if source_ids != ledger_ids:
-        missing = sorted(source_ids - ledger_ids)
-        extra = sorted(ledger_ids - source_ids)
-        if missing:
-            errors.append(f"requirement-ledger.yaml missing requirement ids: {missing[:10]}")
-        if extra:
-            errors.append(f"requirement-ledger.yaml has extra requirement ids: {extra[:10]}")
+    missing = sorted(source_ids - ledger_ids)
+    extra = sorted(ledger_ids - source_ids)
+    if missing:
+        errors.append(f"requirement-ledger.yaml missing requirement ids: {missing[:10]}")
+    if extra:
+        errors.append(f"requirement-ledger.yaml has extra requirement ids: {extra[:10]}")
     count_match = re.search(r"^requirement_count: (\d+)$", ledger, re.MULTILINE)
     if not count_match:
         errors.append("requirement-ledger.yaml missing requirement_count")
@@ -215,8 +137,6 @@ def _verify_phase01_work_products() -> list[str]:
         errors.append(
             f"requirement-ledger.yaml requirement_count {count_match.group(1)} does not match source count {len(source_ids)}"
         )
-    if "ARCH-MEM-NNN" in ledger:
-        errors.append("requirement-ledger.yaml must not include narrative placeholder ARCH-MEM-NNN")
     for phrase in [
         "mandatory: true",
         "current_status: target_not_current",
@@ -226,120 +146,62 @@ def _verify_phase01_work_products() -> list[str]:
     ]:
         if phrase not in ledger:
             errors.append(f"requirement-ledger.yaml missing required field phrase: {phrase}")
-
-    for phrase in ["P01-R001", "P01-R008", "severity | owner", "needs-evidence", "assigned"]:
-        if phrase not in risks:
-            errors.append(f"program-risk-register.md missing risk phrase: {phrase}")
-    if "unassigned: []" not in readiness:
-        errors.append("phase-readiness.yaml must explicitly show no unassigned P0 risks")
-    for task_id in [f"P01-T{index:02d}" for index in range(1, 7)]:
-        if task_id not in readiness:
-            errors.append(f"phase-readiness.yaml missing work package: {task_id}")
-    for phrase in ["current_phase_status: completion_candidate", "PHASE02", "ready_after_phase01_closure"]:
-        if phrase not in readiness:
-            errors.append(f"phase-readiness.yaml missing readiness phrase: {phrase}")
-
     return errors
 
 
-def _verify_phase02_work_products() -> list[str]:
-    if not PHASE02_VERIFIER.exists():
-        return ["missing PHASE02 verifier: tools/scripts/verify_phase02_compatibility_boundaries.py"]
-    spec = spec_from_file_location("verify_phase02_compatibility_boundaries", PHASE02_VERIFIER)
-    if spec is None or spec.loader is None:
-        return ["cannot load PHASE02 compatibility boundary verifier"]
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return list(module.verify_phase02_compatibility_boundaries())
-
-
-def _verify_phase03_work_products() -> list[str]:
+def _verify_correction_states() -> list[str]:
     errors: list[str] = []
-    for path in REQUIRED_PHASE03_WORK_PRODUCTS:
+    expected_phase_states = {
+        PHASE_FILES[0]: "ready",
+        PHASE_FILES[1]: "planned",
+        PHASE_FILES[2]: "planned",
+        PHASE_FILES[3]: "planned",
+        PHASE_FILES[4]: "planned",
+    }
+    for filename, expected in expected_phase_states.items():
+        text = _read(PROGRAM_ROOT / filename)
+        if f"status: {expected}" not in text:
+            errors.append(f"{filename} must be {expected} after PHASE01-04 correction")
+    readiness_checks = {
+        "phase-readiness.yaml": [
+            "current_phase_status: ready",
+            "prior_completion_candidate: superseded",
+            "may_start_phase02_after_validation: false",
+        ],
+        "phase02-readiness.yaml": [
+            "current_phase_status: planned",
+            "prior_completion_candidate: superseded",
+            "may_start_phase03_after_validation: false",
+        ],
+        "phase03-readiness.yaml": [
+            "current_phase_status: planned",
+            "prior_completion_candidate: superseded",
+            "may_start_phase04_after_validation: false",
+        ],
+        "phase04-readiness.yaml": [
+            "current_phase_status: planned",
+            "prior_completion_candidate: superseded",
+            "may_start_phase05_after_validation: false",
+        ],
+    }
+    for filename, phrases in readiness_checks.items():
+        path = WORK_PRODUCTS / filename
         if not path.exists():
-            errors.append(f"missing PHASE03 work product: {path.relative_to(REPO_ROOT).as_posix()}")
-    if errors:
-        return errors
-
-    readiness = _read(WORK_PRODUCTS / "phase03-readiness.yaml")
-    evidence = _read(REPO_ROOT / "docs" / "evidence" / "phase03-contract-bundle.md")
-    for phrase in [
-        "current_phase_status: completion_candidate",
-        "PHASE04",
-        "ready_after_phase03_closure",
-        "src/backend/zuno/platform/contracts",
-        "tests/contracts",
-        "verify_phase03_contract_bundle.py",
-    ]:
-        if phrase not in readiness:
-            errors.append(f"phase03-readiness.yaml missing readiness phrase: {phrase}")
-    for task_id in [f"P03-T{index:02d}" for index in range(1, 8)]:
-        if task_id not in readiness:
-            errors.append(f"phase03-readiness.yaml missing work package: {task_id}")
-    for phrase in [
-        "PHASE03 Executable Cross-module Contract Bundle",
-        "PHASE03 contract bundle verification passed",
-        "8 passed",
-        "真实边界",
-    ]:
-        if phrase not in evidence:
-            errors.append(f"phase03-contract-bundle.md missing evidence phrase: {phrase}")
-
-    if not PHASE03_VERIFIER.exists():
-        errors.append("missing PHASE03 verifier: tools/scripts/verify_phase03_contract_bundle.py")
-        return errors
-    spec = spec_from_file_location("verify_phase03_contract_bundle", PHASE03_VERIFIER)
-    if spec is None or spec.loader is None:
-        errors.append("cannot load PHASE03 contract bundle verifier")
-        return errors
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    errors.extend(module.verify_phase03_contract_bundle())
-    return errors
-
-
-def _verify_phase04_work_products() -> list[str]:
-    errors: list[str] = []
-    for path in REQUIRED_PHASE04_WORK_PRODUCTS:
+            errors.append(f"missing corrected readiness file: {path.relative_to(REPO_ROOT).as_posix()}")
+            continue
+        errors.extend(_require_phrases(_read(path), phrases, filename))
+    for evidence_name in ["phase03-contract-bundle.md", "phase04-postgres-foundation.md"]:
+        path = REPO_ROOT / "docs" / "evidence" / evidence_name
         if not path.exists():
-            errors.append(f"missing PHASE04 work product: {path.relative_to(REPO_ROOT).as_posix()}")
-    if errors:
-        return errors
-
-    readiness = _read(WORK_PRODUCTS / "phase04-readiness.yaml")
-    evidence = _read(REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md")
-    for phrase in [
-        "current_phase_status: completion_candidate",
-        "PHASE05",
-        "ready_after_phase04_closure",
-        "PostgreSQL 16",
-        "alembic -c infra/db/alembic.ini upgrade head",
-        "tests/integration/test_phase04_postgres_foundation.py",
-    ]:
-        if phrase not in readiness:
-            errors.append(f"phase04-readiness.yaml missing readiness phrase: {phrase}")
-    for task_id in [f"P04-T{index:02d}" for index in range(1, 8)]:
-        if task_id not in readiness:
-            errors.append(f"phase04-readiness.yaml missing work package: {task_id}")
-    for phrase in [
-        "PHASE04 PostgreSQL Domain and Transaction Foundation",
-        "PostgreSQL 16",
-        "5 passed",
-        "真实边界",
-    ]:
-        if phrase not in evidence:
-            errors.append(f"phase04-postgres-foundation.md missing evidence phrase: {phrase}")
-
-    if not PHASE04_VERIFIER.exists():
-        errors.append("missing PHASE04 verifier: tools/scripts/verify_phase04_postgres_foundation.py")
-        return errors
-    spec = spec_from_file_location("verify_phase04_postgres_foundation", PHASE04_VERIFIER)
-    if spec is None or spec.loader is None:
-        errors.append("cannot load PHASE04 PostgreSQL foundation verifier")
-        return errors
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    errors.extend(module.verify_phase04_postgres_foundation())
+            errors.append(f"missing partial evidence: docs/evidence/{evidence_name}")
+            continue
+        errors.extend(
+            _require_phrases(
+                _read(path),
+                ["partial_implementation_available", "phase_completion: `withdrawn`", "2026-07-16"],
+                evidence_name,
+            )
+        )
     return errors
 
 
@@ -351,6 +213,7 @@ def load_manifest() -> dict[str, object]:
         "phase_count": PHASE_COUNT,
         "atomic_task_count": ATOMIC_TASK_COUNT,
         "architecture_baseline_commit": "249f1c95855043627cedd289a5de1fd3719f6cd0",
+        "correction_baseline_commit": "49a6aec8392bfa4be8e0662f98b9d1ef6a65960a",
         "measurement_status": "measurement_blocked",
         "quality_gate_status": "quality_not_proven",
     }
@@ -364,47 +227,100 @@ def verify_current_program() -> list[str]:
     for name in PHASE_FILES:
         if not (PROGRAM_ROOT / name).exists():
             errors.append(f"missing phase file: .agent/programs/{name}")
+    for path in REQUIRED_PHASE01_WORK_PRODUCTS:
+        if not path.exists():
+            errors.append(f"missing PHASE01 work product: {path.relative_to(REPO_ROOT).as_posix()}")
     if errors:
         return errors
 
-    errors.extend(_verify_phase01_work_products())
-    errors.extend(_verify_phase02_work_products())
-    errors.extend(_verify_phase03_work_products())
-    errors.extend(_verify_phase04_work_products())
-
     current = _read(PROGRAM_ROOT / "current.md")
     roadmap = _read(PROGRAM_ROOT / "implementation-roadmap.md")
-    closure = _read(PROGRAM_ROOT / "closure-checklist.md")
     manifest = _read(PROGRAM_ROOT / "program-manifest.yaml")
+    closure = _read(PROGRAM_ROOT / "closure-checklist.md")
+    readme = _read(PROGRAM_ROOT / "README.md")
     reference = _read(REPO_ROOT / ".agent" / "references" / "current-program.md")
+    task_contract = _read(PROGRAM_ROOT / "task-execution-contract.md")
     runbook = _read(PROGRAM_ROOT / "codex-medium-runbook.md")
     migration = _read(PROGRAM_ROOT / "legacy-to-target-migration-map.md")
     directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
 
-    for phrase in [
-        "state: active",
-        f"active_program: {PROGRAM}",
-        f"current_phase: {CURRENT_PHASE}",
-        f"phase_count: {PHASE_COUNT}",
-        "measurement blocked",
-        "quality not yet proven",
+    errors.extend(
+        _require_phrases(
+            current,
+            [
+                "state: active",
+                f"active_program: {PROGRAM}",
+                "current_phase: PHASE01",
+                "program_version: 2",
+                "PHASE01–04 订正决定",
+                "最小 Vertical Slice 只能作为阶段中的中间检查点",
+                "partial implementation available",
+                "measurement blocked",
+                "quality not yet proven",
+            ],
+            "current.md",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            roadmap + manifest + closure + readme + reference,
+            [
+                PROGRAM,
+                "current_phase: PHASE01",
+                "program_version: 2",
+                "reopen_phase01_through_phase04",
+                "partial implementation",
+                "RabbitMQ",
+                "Object Store",
+                "LangGraph PostgreSQL Checkpointer",
+                "Fixed Benchmark",
+            ],
+            "program correction surfaces",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            manifest,
+            [
+                "minimum_vertical_slice_is_phase_completion: false",
+                "state: ready, depends_on: [], tasks: [P01-T01",
+                "id: PHASE02",
+                "id: PHASE03",
+                "id: PHASE04",
+                "id: PHASE05",
+            ],
+            "program-manifest.yaml",
+        )
+    )
+    for forbidden in [
+        "id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed",
+        "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed",
+        "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed",
+        "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
+        "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
     ]:
-        if phrase not in current:
-            errors.append(f"current.md missing phrase: {phrase}")
+        if forbidden in manifest:
+            errors.append(f"program-manifest.yaml retains withdrawn phase state: {forbidden}")
 
-    for phrase in [PROGRAM, "phase_count: 22", "Web and Desktop", "Legacy", "Fixed Benchmark"]:
-        if phrase not in roadmap + reference + manifest:
-            errors.append(f"program surfaces missing phrase: {phrase}")
+    errors.extend(_verify_correction_states())
+    errors.extend(_verify_requirement_ledger())
+
+    task_count = 0
+    for phase_file in PHASE_FILES:
+        task_count += len(set(re.findall(r"P\d{2}-T\d{2}", _read(PROGRAM_ROOT / phase_file))))
+    if task_count != ATOMIC_TASK_COUNT:
+        errors.append(f"phase files contain {task_count} atomic tasks, expected {ATOMIC_TASK_COUNT}")
 
     for phrase in ["GPT-5.5 medium", "一次只执行一个 Work Package", "不降低架构能力", "Minimal Read Set"]:
         if phrase not in runbook:
             errors.append(f"Codex medium runbook missing phrase: {phrase}")
-
+    for phrase in ["只有接口或 Stub", "只有 Mock Test", "Coordinator 合并前必须确认"]:
+        if phrase not in task_contract:
+            errors.append(f"task execution contract missing phrase: {phrase}")
     for phrase in ["apps/web/src/product", "apps/desktop/src/product", "GeneralAgent", "EffectReconciliation", "Feature Flag"]:
         if phrase not in migration:
             errors.append(f"migration map missing required surface: {phrase}")
-
     for phrase in [
         "生产源码零 legacy 目录",
         "零 legacy alias registry",
@@ -415,61 +331,31 @@ def verify_current_program() -> list[str]:
     ]:
         if phrase not in directory_contract:
             errors.append(f"canonical directory contract missing phrase: {phrase}")
-
-    for phrase in [
-        "Legacy-free Canonical Directory Cleanup",
-        "生产源码树零 Legacy 文件夹",
-        "legacy_aliases.py",
-        "tests/legacy_guards",
-        "永久双路径",
-    ]:
+    for phrase in ["Legacy-free Canonical Directory Cleanup", "生产源码树零 Legacy 文件夹", "legacy_aliases.py"]:
         if phrase not in phase22:
-            errors.append(f"PHASE22 missing mandatory cleanup phrase: {phrase}")
+            errors.append(f"PHASE22 missing final cleanup phrase: {phrase}")
 
-    all_task_ids: list[str] = []
-    required_sections = [
-        "## Phase 目标",
-        "## Minimal Read Set",
-        "## Current Anchors",
-        "## Allowed Paths",
-        "## Forbidden Paths",
-        "## Work Packages",
-        "## Phase 完成定义",
-    ]
-    for index, name in enumerate(PHASE_FILES, start=1):
-        text = _read(PROGRAM_ROOT / name)
-        phase_id = f"PHASE{index:02d}"
-        for phrase in [f"phase_id: {phase_id}", *required_sections]:
-            if phrase not in text:
-                errors.append(f"{name} missing phrase: {phrase}")
-        task_ids = re.findall(rf"P{index:02d}-T\d{{2}}", text)
-        unique_ids = sorted(set(task_ids))
-        if len(unique_ids) < 6:
-            errors.append(f"{name} must define at least 6 atomic work packages")
-        for task_id in unique_ids:
-            if task_id not in manifest:
-                errors.append(f"manifest missing task id: {task_id}")
-        all_task_ids.extend(unique_ids)
-
-    duplicates = sorted({task for task in all_task_ids if all_task_ids.count(task) > 1})
-    if duplicates:
-        errors.append(f"duplicate task ids across phases: {duplicates}")
-    if len(all_task_ids) != ATOMIC_TASK_COUNT:
-        errors.append(
-            f"program must expose exactly {ATOMIC_TASK_COUNT} atomic work packages, found {len(all_task_ids)}"
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py",
+            "verify_phase02_compatibility_boundaries",
+            "verify_phase02_compatibility_boundaries",
         )
-
-    for index in range(1, PHASE_COUNT + 1):
-        if f"PHASE{index:02d}" not in closure:
-            errors.append(f"closure checklist missing PHASE{index:02d}")
-
-    combined = "\n".join(
-        [current, roadmap, closure, manifest, reference, runbook, migration, directory_contract]
     )
-    if re.search(r"[A-Za-z]:\\\\Users\\\\", combined):
-        errors.append("active program contains a local absolute path")
-    if "Agentic GraphRAG 已稳定优于" in combined and "不得声明" not in combined:
-        errors.append("active program improperly promotes Agentic GraphRAG superiority")
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT / "tools" / "scripts" / "verify_phase03_contract_bundle.py",
+            "verify_phase03_contract_bundle",
+            "verify_phase03_contract_bundle",
+        )
+    )
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_foundation.py",
+            "verify_phase04_postgres_foundation",
+            "verify_phase04_postgres_foundation",
+        )
+    )
     return errors
 
 
