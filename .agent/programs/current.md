@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE03
+current_phase: PHASE04
 phase_count: 22
 program_version: 2
 activated_at: 2026-07-14
@@ -46,7 +46,7 @@ Current 审计
 ## 当前阶段
 
 ```text
-PHASE03_executable-cross-module-contract-bundle
+PHASE04_postgres-domain-and-transaction-foundation
 ```
 
 PHASE01 先重新冻结最新 `main` Current、完整 Requirement Ledger、Runtime/Persistence/Frontend/Legacy Inventory 和风险依赖，确保后续实现没有遗漏范围。PHASE02–04 按订正后的完整完成定义依次推进。

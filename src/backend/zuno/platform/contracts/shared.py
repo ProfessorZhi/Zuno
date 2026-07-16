@@ -184,6 +184,73 @@ class ModelUsageReceiptV1(StrictContract):
     idempotency_key: str
 
 
+class ProductCommandV1(StrictContract):
+    command_id: str
+    command_kind: str
+    tenant_id: str
+    workspace_id: str
+    principal_context_ref: str
+    idempotency_key: str
+    payload_schema_hash: str
+    payload_hash: str
+    submitted_at: datetime
+
+
+class SourceObjectRefV1(StrictContract):
+    source_object_ref: str
+    tenant_id: str
+    workspace_id: str
+    object_uri: str
+    content_hash: str
+    parser_policy_ref: str
+    lineage_ref: str
+
+
+class KnowledgeVersionRefV1(StrictContract):
+    knowledge_version_ref: str
+    knowledge_space_id: str
+    source_snapshot_ref: str
+    index_manifest_hash: str
+    visibility_receipt_ref: str
+
+
+class MemoryContextRefV1(StrictContract):
+    memory_context_ref: str
+    tenant_id: str
+    workspace_id: str
+    policy_snapshot_ref: str
+    activation_snapshot_hash: str
+    expires_at: datetime | None = None
+
+
+class CapabilityInvocationRefV1(StrictContract):
+    capability_invocation_ref: str
+    capability_ref: str
+    version: str
+    caller_module: str
+    input_contract_ref: str
+    output_contract_ref: str
+    security_context_ref: str
+
+
+class ObservabilityEventRefV1(StrictContract):
+    observability_event_ref: str
+    trace_id: str
+    producer_module: str
+    event_kind: str
+    payload_hash: str
+    redaction_decision_ref: str | None = None
+
+
+class InfrastructureLeaseRefV1(StrictContract):
+    infrastructure_lease_ref: str
+    resource_ref: str
+    holder_ref: str
+    fencing_token: str
+    acquired_at: datetime
+    expires_at: datetime
+
+
 class IndexWriteBatchV1(StrictContract):
     batch_id: str
     build_run_id: str

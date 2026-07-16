@@ -1,0 +1,11 @@
+{
+  "command_id": "cmd-1",
+  "command_kind": "workspace.task.create",
+  "tenant_id": "tenant-a",
+  "workspace_id": "workspace-a",
+  "principal_context_ref": "principal-1",
+  "idempotency_key": "idem-1",
+  "payload_schema_hash": "schema-hash",
+  "payload_hash": "payload-hash",
+  "submitted_at": "2026-07-16T12:00:00Z"
+}

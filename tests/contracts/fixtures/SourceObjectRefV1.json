@@ -1,0 +1,9 @@
+{
+  "source_object_ref": "source-object-1",
+  "tenant_id": "tenant-a",
+  "workspace_id": "workspace-a",
+  "object_uri": "s3://bucket/source-object-1",
+  "content_hash": "content-hash",
+  "parser_policy_ref": "parser-policy-1",
+  "lineage_ref": "lineage-1"
+}

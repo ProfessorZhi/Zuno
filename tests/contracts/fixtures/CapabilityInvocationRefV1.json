@@ -1,0 +1,9 @@
+{
+  "capability_invocation_ref": "capability-invocation-1",
+  "capability_ref": "capability.search",
+  "version": "1.0",
+  "caller_module": "Agent Core",
+  "input_contract_ref": "ProductCommandV1:1.0",
+  "output_contract_ref": "ToolObservationV1:1.0",
+  "security_context_ref": "security-context-1"
+}

@@ -3,36 +3,36 @@ phase_id: PHASE04
 task_id: P04-T07
 original_start_commit: 02dcbfc907ce6ab8a30189f9634bcbf524974863
 correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
-current_phase_status: planned
+current_phase_status: ready
 prior_completion_candidate: superseded
 status_boundary: "Existing PostgreSQL primitive implementation and five integration tests are partial evidence only. PHASE04 requires complete PostgreSQL, RabbitMQ, S3-compatible Object Store, LangGraph PostgreSQL Checkpointer, backup/restore, concurrency and fault evidence."
 work_packages:
   P04-T01:
-    state: planned
+    state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "production sync/async sessions, tenant context, timeout, pool, connection-loss and UoW semantics"
   P04-T02:
-    state: planned
+    state: ready
     existing_output: "infra/db/alembic/versions/20260715_04_infrastructure_foundation.py"
     remaining_scope: "complete Alembic ownership, drift, online migration, rollback/forward-fix and data cutover integration"
   P04-T03:
-    state: planned
+    state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "transactional outbox/inbox plus real RabbitMQ confirm, redelivery, DLQ, replay and partition handling"
   P04-T04:
-    state: planned
+    state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "complete idempotency lifecycle, high-concurrency claim, renew, crash and result-loss semantics"
   P04-T05:
-    state: planned
+    state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "complete lease/heartbeat/fencing/handoff/late-result and network-partition semantics"
   P04-T06:
-    state: planned
+    state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "real S3/MinIO object adapter and official LangGraph PostgreSQL checkpointer integration"
   P04-T07:
-    state: planned
+    state: ready
     existing_outputs:
       - "tests/integration/test_phase04_postgres_foundation.py"
       - "tools/scripts/verify_phase04_postgres_foundation.py"

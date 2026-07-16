@@ -23,7 +23,7 @@ def test_active_program_manifest_preserves_corrected_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE03"
+    assert manifest["current_phase"] == "PHASE04"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
     assert manifest["correction_baseline_commit"] == "49a6aec8392bfa4be8e0662f98b9d1ef6a65960a"
@@ -36,8 +36,8 @@ def test_phase01_through_phase04_are_reopened_for_full_scope() -> None:
     expected = {
         "PHASE01_current-baseline-and-requirement-ledger.md": "status: completed",
         "PHASE02_legacy-runtime-compatibility-and-cutover-map.md": "status: completed",
-        "PHASE03_executable-cross-module-contract-bundle.md": "status: ready",
-        "PHASE04_postgres-domain-and-transaction-foundation.md": "status: planned",
+        "PHASE03_executable-cross-module-contract-bundle.md": "status: completed",
+        "PHASE04_postgres-domain-and-transaction-foundation.md": "status: ready",
         "PHASE05_security-control-plane.md": "status: planned",
     }
     for filename, state in expected.items():
@@ -48,7 +48,8 @@ def test_phase01_through_phase04_are_reopened_for_full_scope() -> None:
     assert "reopen_phase01_through_phase04" in manifest
     assert "id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed" in manifest
     assert "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed" in manifest
-    assert "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: ready" in manifest
+    assert "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed" in manifest
+    assert "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: ready" in manifest
 
 
 def test_partial_phase03_and_phase04_evidence_is_not_completion() -> None:

@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PHASE03_READINESS = REPO_ROOT / ".agent" / "programs" / "work-products" / "phase03-readiness.yaml"
 
 
 def verify_phase03_contract_bundle() -> list[str]:
@@ -33,6 +34,13 @@ def verify_phase03_contract_bundle() -> list[str]:
     names = {entry.contract_name for entry in manifest.entries}
     required_contracts = {
         "CrossModuleEnvelopeV1",
+        "ProductCommandV1",
+        "SourceObjectRefV1",
+        "KnowledgeVersionRefV1",
+        "MemoryContextRefV1",
+        "CapabilityInvocationRefV1",
+        "ObservabilityEventRefV1",
+        "InfrastructureLeaseRefV1",
         "EffectiveSecurityEpochRefV1",
         "SecurityApprovalDecisionV1",
         "AuditPersistenceReceiptV1",
@@ -63,6 +71,14 @@ def verify_phase03_contract_bundle() -> list[str]:
     for fixture_name in ["CrossModuleEnvelopeV1.json", "FailureCodeV1.json"]:
         if not (fixture_root / fixture_name).exists():
             errors.append(f"missing contract fixture: {fixture_name}")
+    readiness = PHASE03_READINESS.read_text(encoding="utf-8") if PHASE03_READINESS.exists() else ""
+    for task_id in [f"P03-T{index:02d}" for index in range(1, 8)]:
+        if re.search(rf"(?s){task_id}:\s*\n\s+state:\s+completed\b", readiness) is None:
+            errors.append(f"{task_id} is not completed in phase03-readiness.yaml")
+    if "coordinator_approval: approved" not in readiness:
+        errors.append("PHASE03 coordinator approval is not approved")
+    if "may_start_phase04_after_validation: true" not in readiness:
+        errors.append("PHASE04 start gate remains closed")
     return errors
 
 
