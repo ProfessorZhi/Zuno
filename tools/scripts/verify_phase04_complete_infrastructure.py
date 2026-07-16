@@ -15,6 +15,8 @@ RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
 OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
+RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
+RABBITMQ_RESTART_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
 MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
 BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
@@ -157,6 +159,30 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in outbox_evidence:
                 errors.append(f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}")
+
+    if not RABBITMQ_RESTART_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ broker restart verifier")
+    else:
+        restart_errors = _load_verifier(
+            RABBITMQ_RESTART_VERIFIER,
+            "verify_phase04_rabbitmq_broker_restart",
+            "verify_phase04_rabbitmq_broker_restart",
+        )()
+        for restart_error in restart_errors:
+            errors.append(f"PHASE04 RabbitMQ broker restart verification failed: {restart_error}")
+
+    if not RABBITMQ_RESTART_EVIDENCE.exists():
+        errors.append("missing PHASE04 RabbitMQ broker restart evidence")
+    else:
+        restart_evidence = _read(RABBITMQ_RESTART_EVIDENCE)
+        for phrase in [
+            "broker_restart: passed",
+            "durable_topology: passed",
+            "persistent_message_survived_restart: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in restart_evidence:
+                errors.append(f"PHASE04 RabbitMQ broker restart evidence missing phrase: {phrase}")
 
     if not MINIO_OBJECT_VERIFIER.exists():
         errors.append("missing PHASE04 MinIO object store verifier")

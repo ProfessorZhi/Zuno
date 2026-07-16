@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import time
 from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
@@ -20,6 +21,18 @@ MINIO_SECRET_KEY = "minioadmin"
 
 def _run(command: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
+
+
+def _wait_for_rabbitmq_health(timeout_seconds: int = 90) -> list[str]:
+    deadline = time.time() + timeout_seconds
+    last_status = ""
+    while time.time() < deadline:
+        result = _run(["docker", "inspect", "-f", "{{.State.Health.Status}}", "zuno-rabbitmq"])
+        last_status = result.stdout.strip() or result.stderr.strip()
+        if result.returncode == 0 and last_status == "healthy":
+            return []
+        time.sleep(1)
+    return [f"RabbitMQ container did not become healthy: {last_status}"]
 
 
 def _verify_postgres_schema_backup() -> list[str]:
@@ -55,6 +68,9 @@ def _verify_postgres_schema_backup() -> list[str]:
 
 
 def _verify_rabbitmq_publish_get() -> list[str]:
+    health_errors = _wait_for_rabbitmq_health()
+    if health_errors:
+        return health_errors
     queue = f"phase04-smoke-{uuid4().hex}"
     payload = json.dumps({"phase": "PHASE04", "message_id": queue}, sort_keys=True)
     declare = _run(

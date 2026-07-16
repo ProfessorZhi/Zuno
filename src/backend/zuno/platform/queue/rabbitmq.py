@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 from dataclasses import dataclass
 from typing import Any
 
 import aio_pika
+from aiormq.exceptions import AMQPConnectionError
 from aio_pika.abc import AbstractIncomingMessage, AbstractRobustChannel, AbstractRobustConnection
 
 
@@ -49,9 +52,19 @@ class RabbitMQTransport:
     async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
         await self.close()
 
-    async def connect(self) -> None:
-        self._connection = await aio_pika.connect_robust(self.url)
-        self._channel = await self._connection.channel(publisher_confirms=True)
+    async def connect(self, *, timeout_seconds: int = 90) -> None:
+        deadline = time.time() + timeout_seconds
+        last_error: Exception | None = None
+        while time.time() < deadline:
+            try:
+                self._connection = await aio_pika.connect_robust(self.url)
+                self._channel = await self._connection.channel(publisher_confirms=True)
+                return
+            except (AMQPConnectionError, ConnectionError, OSError) as exc:
+                last_error = exc
+                await self.close()
+                await asyncio.sleep(1)
+        raise TimeoutError(f"RabbitMQTransport did not connect before deadline: {last_error}")
 
     async def close(self) -> None:
         if self._channel is not None and not self._channel.is_closed:
