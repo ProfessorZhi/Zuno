@@ -15,6 +15,7 @@ ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-
 POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
+POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -168,6 +169,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "statement_timeout: passed",
             "lock_timeout: passed",
             "deadlock_retry_boundary: passed",
+            "serialization_retry_boundary: passed",
             "不关闭 P04-T01",
         ]:
             if phrase not in postgres_runtime_evidence:
@@ -183,6 +185,19 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         )()
         for postgres_deadlock_error in postgres_deadlock_errors:
             errors.append(f"PHASE04 PostgreSQL deadlock retry verification failed: {postgres_deadlock_error}")
+
+    if not POSTGRES_SERIALIZATION_RETRY_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL serialization retry verifier")
+    else:
+        postgres_serialization_errors = _load_verifier(
+            POSTGRES_SERIALIZATION_RETRY_VERIFIER,
+            "verify_phase04_postgres_serialization_retry",
+            "verify_phase04_postgres_serialization_retry",
+        )()
+        for postgres_serialization_error in postgres_serialization_errors:
+            errors.append(
+                f"PHASE04 PostgreSQL serialization retry verification failed: {postgres_serialization_error}"
+            )
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
