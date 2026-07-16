@@ -20,9 +20,10 @@ work_packages:
     remaining_scope: "Coordinator review of real environment, recovery and physical/domain ownership inventory; real dependency checks remain target_not_current/needs_evidence where not proven"
     reviewer: Coordinator
   P01-T03:
-    state: ready
+    state: completion_candidate
     existing_output: ".agent/programs/work-products/requirement-ledger.yaml"
-    remaining_scope: "complete Target-Code-Test-Evidence bidirectional traceability and reviewer field"
+    completed_scope: "Requirement Ledger regenerated from eleven module target documents plus Wave 1 registry; 756 mandatory ARCH-* items now include owner, target phase, planned work package, target/current gap, planned tests/evidence, reverse trace refs and reviewer."
+    remaining_scope: "Coordinator independent sampling review and future Phase backfill from planned test/evidence refs to real code/test/runtime evidence."
     reviewer: Coordinator
   P01-T04:
     state: ready

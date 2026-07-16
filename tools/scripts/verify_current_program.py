@@ -86,7 +86,7 @@ def _require_phrases(text: str, phrases: list[str], label: str) -> list[str]:
 
 def _extract_requirement_ids_from_source(path: Path) -> set[str]:
     ids: set[str] = set()
-    pattern = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3}")
+    pattern = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3}")
     for line in _read(path).splitlines():
         if not line.lstrip().startswith("|"):
             continue
@@ -94,7 +94,7 @@ def _extract_requirement_ids_from_source(path: Path) -> set[str]:
         if not match:
             continue
         cells = [cell.strip().strip("`") for cell in line.strip().strip("|").split("|")]
-        if cells and cells[0] == match.group(0):
+        if cells and cells[0].startswith(match.group(0)):
             ids.add(match.group(0))
     return ids
 
@@ -123,7 +123,9 @@ def _verify_requirement_ledger() -> list[str]:
             errors.append(f"missing requirement source: {path.relative_to(REPO_ROOT).as_posix()}")
             continue
         source_ids.update(_extract_requirement_ids_from_source(path))
-    ledger_ids = set(re.findall(r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3})$", ledger, re.MULTILINE))
+    ledger_ids = set(
+        re.findall(r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3})$", ledger, re.MULTILINE)
+    )
     missing = sorted(source_ids - ledger_ids)
     extra = sorted(ledger_ids - source_ids)
     if missing:

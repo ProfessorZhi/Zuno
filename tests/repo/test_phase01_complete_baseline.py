@@ -27,17 +27,24 @@ def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
     assert "PHASE02 start gate remains closed" in errors
     assert "P01-T01 is not completed in phase-readiness.yaml" in errors
     assert "P01-T02 is not completed in phase-readiness.yaml" in errors
+    assert "P01-T03 is not completed in phase-readiness.yaml" in errors
+    assert "P01-T04 is not completed in phase-readiness.yaml" in errors
     assert "P01-T06 is not completed in phase-readiness.yaml" in errors
     assert "P01-T05 is not completed in phase-readiness.yaml" not in errors
 
 
-def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None:
+def test_phase01_requirement_ledger_has_bidirectional_traceability_fields() -> None:
     verifier = _load_verifier()
     errors = "\n".join(verifier.verify_phase01_complete_baseline())
-    assert "requirement ledger entries missing reviewer" in errors
-    assert "requirement ledger entries missing reverse_trace_refs" in errors
-    assert "requirement ledger entries with empty test_ids" in errors
-    assert "requirement ledger entries with empty evidence_refs" in errors
+    assert "requirement ledger missing source ids" not in errors
+    assert "requirement ledger has ids not in sources" not in errors
+    assert "requirement_count" not in errors
+    assert "requirement ledger entries missing" not in errors
+    assert "requirement ledger entries with empty test_ids" not in errors
+    assert "requirement ledger entries with empty evidence_refs" not in errors
+    assert "requirement ledger entries with empty reverse_trace_refs" not in errors
+    assert "requirement ledger target_not_current entries missing" not in errors
+
 
 def test_p01_t05_legacy_bypass_inventory_and_evidence_are_registered() -> None:
     verifier = _load_verifier()
