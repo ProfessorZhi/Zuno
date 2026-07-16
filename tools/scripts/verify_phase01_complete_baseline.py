@@ -22,6 +22,47 @@ TEMPORARY_ALLOWLIST = WORK_PRODUCTS / "temporary-allowlist.yaml"
 P01_T05_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase01-legacy-bypass-inventory.md"
 
 RISK_REGISTER = WORK_PRODUCTS / "program-risk-register.md"
+P01_T01_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase01-runtime-call-chain-inventory.md"
+
+P01_T01_REQUIRED_FIELDS = [
+    "entrypoint",
+    "caller",
+    "callee",
+    "factory/registry/decorator/plugin loader/env flag/string route/MCP/CLI/worker",
+    "default implementation",
+    "feature flag",
+    "state owner",
+    "transaction boundary",
+    "external side effect",
+    "security gate",
+    "test evidence",
+    "target phase",
+    "legacy/removal task",
+]
+
+P01_T01_REQUIRED_COVERAGE = [
+    "Completion",
+    "Workspace",
+    "Product",
+    "Compatibility",
+    "GeneralAgent",
+    "Unified Runtime",
+    "Durable",
+    "LangGraph",
+    "Model",
+    "Knowledge",
+    "Memory",
+    "Capability",
+    "Tool",
+    "Security",
+    "Observability",
+    "Queue/Worker",
+    "Web",
+    "Desktop",
+    "Dynamic Entrypoint Coverage",
+    "MCP",
+    "CLI",
+]
 
 MODULE_REQUIREMENT_SOURCES = [
     REPO_ROOT / "docs" / "modules" / "01-product-surface.md",
@@ -129,6 +170,17 @@ def _verify_work_product_freshness(errors: list[str]) -> None:
 
 def _verify_inventory_coverage(errors: list[str]) -> None:
     runtime = _read(INVENTORY_FILES["P01-T01"])
+    if "status: completion_candidate" not in runtime:
+        errors.append("P01-T01 runtime inventory is not marked completion_candidate")
+    for field in P01_T01_REQUIRED_FIELDS:
+        if f"| {field} |" not in runtime:
+            errors.append(f"P01-T01 runtime inventory missing required field row: {field}")
+    chain_count = len(re.findall(r"(?m)^### RC-\d{3} ", runtime))
+    if chain_count < 18:
+        errors.append(f"P01-T01 runtime inventory has too few runtime chains: {chain_count}")
+    for phrase in P01_T01_REQUIRED_COVERAGE:
+        if phrase not in runtime:
+            errors.append(f"P01-T01 runtime inventory missing required coverage: {phrase}")
     for phrase in [
         "dynamic",
         "Registry",
@@ -141,6 +193,22 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
     ]:
         if phrase not in runtime:
             errors.append(f"P01-T01 runtime inventory missing explicit dynamic-entry coverage: {phrase}")
+    if not P01_T01_EVIDENCE.exists():
+        errors.append("P01-T01 evidence file missing: docs/evidence/phase01-runtime-call-chain-inventory.md")
+    else:
+        evidence = _read(P01_T01_EVIDENCE)
+        for phrase in [
+            "commit",
+            "environment",
+            "command",
+            "result",
+            "artifact hash",
+            "Sampled Code Paths",
+            "Dynamic Registry / Factory Findings",
+            "Not-run Commands",
+        ]:
+            if phrase.lower() not in evidence.lower():
+                errors.append(f"P01-T01 evidence missing required field: {phrase}")
 
     persistence = _read(INVENTORY_FILES["P01-T02"])
     for phrase in ["runtime/integration evidence", "Backup", "Restore", "PITR", "real environment"]:

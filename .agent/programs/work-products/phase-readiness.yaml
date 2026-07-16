@@ -8,9 +8,10 @@ prior_completion_candidate: superseded
 status_boundary: "Previous inventory and ledger outputs are retained as partial evidence. PHASE02 remains planned until complete baseline, bidirectional traceability, dynamic entrypoint coverage and Coordinator closure pass."
 work_packages:
   P01-T01:
-    state: ready
+    state: completion_candidate
     existing_output: ".agent/programs/work-products/current-runtime-inventory.md"
-    remaining_scope: "complete static and dynamic runtime entrypoint coverage and independent review"
+    remaining_scope: "Coordinator independent review; PHASE01 closure still depends on P01-T02..P01-T06"
+    evidence: "docs/evidence/phase01-runtime-call-chain-inventory.md"
     reviewer: Coordinator
   P01-T02:
     state: ready
