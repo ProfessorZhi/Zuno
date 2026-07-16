@@ -1,47 +1,55 @@
 # PHASE01 Phase Readiness
 phase_id: PHASE01
 task_id: P01-T06
-start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
-current_phase_status: completion_candidate
-status_boundary: "PHASE02 can become ready only after PHASE01 closure validation passes and no unassigned P0 risk remains."
+original_start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
+correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
+current_phase_status: ready
+prior_completion_candidate: superseded
+status_boundary: "Previous inventory and ledger outputs are retained as partial evidence. PHASE02 remains planned until complete baseline, bidirectional traceability, dynamic entrypoint coverage and Coordinator closure pass."
 work_packages:
   P01-T01:
-    state: completion_candidate
-    output: ".agent/programs/work-products/current-runtime-inventory.md"
+    state: ready
+    existing_output: ".agent/programs/work-products/current-runtime-inventory.md"
+    remaining_scope: "complete static and dynamic runtime entrypoint coverage and independent review"
     reviewer: Coordinator
   P01-T02:
-    state: completion_candidate
-    output: ".agent/programs/work-products/current-persistence-inventory.md"
+    state: ready
+    existing_output: ".agent/programs/work-products/current-persistence-inventory.md"
+    remaining_scope: "complete real environment, recovery and physical/domain ownership inventory"
     reviewer: Coordinator
   P01-T03:
-    state: completion_candidate
-    output: ".agent/programs/work-products/requirement-ledger.yaml"
+    state: ready
+    existing_output: ".agent/programs/work-products/requirement-ledger.yaml"
+    remaining_scope: "complete Target-Code-Test-Evidence bidirectional traceability and reviewer field"
     reviewer: Coordinator
   P01-T04:
-    state: completion_candidate
-    output: ".agent/programs/work-products/frontend-current-inventory.md"
+    state: ready
+    existing_output: ".agent/programs/work-products/frontend-current-inventory.md"
+    remaining_scope: "complete Web/Desktop build, contract, disconnect, authorization and E2E inventory"
     reviewer: Coordinator
   P01-T05:
-    state: completion_candidate
-    output: ".agent/programs/work-products/legacy-bypass-inventory.yaml"
+    state: ready
+    existing_output: ".agent/programs/work-products/legacy-bypass-inventory.yaml"
+    remaining_scope: "complete dynamic registry/factory/monkey-patch and removal-gate coverage"
     reviewer: Coordinator
   P01-T06:
-    state: completion_candidate
-    outputs:
+    state: ready
+    existing_outputs:
       - ".agent/programs/work-products/program-risk-register.md"
       - ".agent/programs/work-products/phase-readiness.yaml"
+    remaining_scope: "independent sampling review, freshness verification and formal closure evidence"
     reviewer: Coordinator
 phase_dependencies:
   PHASE02:
     depends_on: [PHASE01]
-    readiness: ready_after_phase01_closure
+    readiness: blocked_until_corrected_phase01_closure
     required_inputs:
-      - current_runtime_inventory
-      - current_persistence_inventory
-      - frontend_current_inventory
-      - legacy_bypass_inventory
-      - requirement_ledger
-      - program_risk_register
+      - complete_current_runtime_inventory
+      - complete_current_persistence_inventory
+      - complete_frontend_current_inventory
+      - complete_legacy_bypass_inventory
+      - bidirectional_requirement_ledger
+      - reviewed_program_risk_register
     p0_risks:
       assigned:
         - P01-R001
@@ -53,19 +61,16 @@ phase_dependencies:
         - P01-R007
         - P01-R008
       unassigned: []
-    stop_conditions: []
+    stop_conditions:
+      - "missing mandatory requirement or unregistered runtime entrypoint"
+      - "current claim without code and test/runtime evidence"
 validation:
   required_commands:
     - "git diff --check"
     - "python tools/scripts/verify_current_program.py"
     - "python .agent/scripts/verify_agent_system.py"
-    - "pytest -q tests/repo/test_current_program_contract.py -p no:cacheprovider"
-  required_real_environment_for_phase01: []
-  not_required_in_phase01:
-    - "PostgreSQL integration"
-    - "RabbitMQ integration"
-    - "MinIO/S3 integration"
-    - "Browser/Desktop E2E"
+    - "python tools/scripts/verify_phase01_complete_baseline.py"
+    - "pytest -q tests/repo/test_current_program_contract.py tests/repo/test_phase01_complete_baseline.py -p no:cacheprovider"
 closure_decision:
   coordinator_approval: pending
-  may_start_phase02_after_validation: true
+  may_start_phase02_after_validation: false
