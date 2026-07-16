@@ -23,9 +23,9 @@ work_packages:
     remaining_scope: "complete Target-Code-Test-Evidence bidirectional traceability and reviewer field"
     reviewer: Coordinator
   P01-T04:
-    state: ready
+    state: completion_candidate
     existing_output: ".agent/programs/work-products/frontend-current-inventory.md"
-    remaining_scope: "complete Web/Desktop build, contract, disconnect, authorization and E2E inventory"
+    remaining_scope: "Coordinator review; Browser E2E/Desktop Smoke remain target evidence for PHASE10/PHASE21, not PHASE01 Current"
     reviewer: Coordinator
   P01-T05:
     state: ready

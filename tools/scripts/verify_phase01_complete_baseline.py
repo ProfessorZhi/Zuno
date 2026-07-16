@@ -136,7 +136,24 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
             errors.append(f"P01-T02 persistence inventory missing required evidence boundary: {phrase}")
 
     frontend = _read(INVENTORY_FILES["P01-T04"])
-    for phrase in ["Desktop", "Browser E2E", "SSE resume", "reauthorization", "UNKNOWN"]:
+    for phrase in [
+        "page/component exists",
+        "contract adopted",
+        "generated or machine-checked type",
+        "authorized projection",
+        "available action",
+        "real E2E/smoke evidence",
+        "gap/blocker",
+        "target phase",
+        "Desktop",
+        "Browser E2E",
+        "SSE resume",
+        "reauthorization",
+        "multiple Interrupt",
+        "UNKNOWN",
+        "PHASE10",
+        "PHASE21",
+    ]:
         if phrase not in frontend:
             errors.append(f"P01-T04 frontend inventory missing required surface: {phrase}")
 
@@ -216,6 +233,23 @@ def _verify_phase01_evidence(errors: list[str]) -> None:
     if not phase01_evidence:
         errors.append("docs/evidence has no phase01-*.md reproducible evidence bundle")
         return
+    frontend_evidence = evidence_dir / "phase01-frontend-desktop-inventory.md"
+    if frontend_evidence.exists():
+        frontend_text = _read(frontend_evidence)
+        for phrase in [
+            "task_id: P01-T04",
+            "artifact hash",
+            "Browser E2E",
+            "Desktop Smoke",
+            "not run",
+            "node_modules",
+            "AvailableAction",
+            "UNKNOWN",
+        ]:
+            if phrase not in frontend_text:
+                errors.append(f"P01-T04 frontend evidence missing reproducibility field: {phrase}")
+    else:
+        errors.append("missing P01-T04 evidence bundle: docs/evidence/phase01-frontend-desktop-inventory.md")
     combined = "\n".join(_read(path) for path in phase01_evidence)
     for phrase in ["commit", "environment", "command", "result", "artifact hash"]:
         if phrase not in combined.lower():
