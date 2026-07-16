@@ -14,23 +14,19 @@ def _load_verifier():
     return module
 
 
-def test_phase01_complete_baseline_verifier_is_fail_closed() -> None:
+def test_phase01_complete_baseline_verifier_passes_after_coordinator_closure() -> None:
     verifier = _load_verifier()
     errors = verifier.verify_phase01_complete_baseline()
-    assert errors
+    assert errors == []
 
 
-def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
+def test_phase01_current_outputs_satisfy_closure_gate() -> None:
     verifier = _load_verifier()
     errors = "\n".join(verifier.verify_phase01_complete_baseline())
-    assert "coordinator approval is not approved" in errors
-    assert "PHASE02 start gate remains closed" in errors
-    assert "P01-T01 is not completed in phase-readiness.yaml" in errors
-    assert "P01-T02 is not completed in phase-readiness.yaml" in errors
-    assert "P01-T03 is not completed in phase-readiness.yaml" in errors
-    assert "P01-T04 is not completed in phase-readiness.yaml" in errors
-    assert "P01-T06 is not completed in phase-readiness.yaml" in errors
-    assert "P01-T05 is not completed in phase-readiness.yaml" not in errors
+    assert "coordinator approval is not approved" not in errors
+    assert "PHASE02 start gate remains closed" not in errors
+    for task_id in ["P01-T01", "P01-T02", "P01-T03", "P01-T04", "P01-T05", "P01-T06"]:
+        assert f"{task_id} is not completed in phase-readiness.yaml" not in errors
 
 
 def test_phase01_requirement_ledger_has_bidirectional_traceability_fields() -> None:

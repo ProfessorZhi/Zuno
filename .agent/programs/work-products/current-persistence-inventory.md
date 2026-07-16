@@ -2,9 +2,9 @@
 
 phase_id: PHASE01
 task_id: P01-T02
-audit_baseline_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+audit_baseline_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
 requested_start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
-actual_start_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+actual_start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
 branch: codex/P01-T02-persistence-infrastructure-inventory
 status: completion_candidate
 status_boundary: "Compose, configuration, class names and adapter declarations do not by themselves prove Current. A Current claim must have code, test or runtime/integration evidence, environment, known limitation, physical owner, domain owner, transaction boundary, recovery owner and target phase."

@@ -3,32 +3,32 @@ phase_id: PHASE01
 task_id: P01-T06
 original_start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
 correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
-current_phase_status: ready
+current_phase_status: completed
 prior_completion_candidate: superseded
 status_boundary: "Previous inventory and ledger outputs are retained as partial evidence. PHASE02 remains planned until complete baseline, bidirectional traceability, dynamic entrypoint coverage and Coordinator closure pass."
 work_packages:
   P01-T01:
-    state: completion_candidate
+    state: completed
     existing_output: ".agent/programs/work-products/current-runtime-inventory.md"
-    remaining_scope: "Coordinator independent review; PHASE01 closure still depends on P01-T02..P01-T06"
+    completed_scope: "Coordinator reviewed runtime call-chain inventory, dynamic entrypoint coverage and evidence bundle."
     evidence: "docs/evidence/phase01-runtime-call-chain-inventory.md"
     reviewer: Coordinator
   P01-T02:
-    state: completion_candidate
+    state: completed
     existing_output: ".agent/programs/work-products/current-persistence-inventory.md"
     evidence: "docs/evidence/phase01-persistence-infrastructure-inventory.md"
-    remaining_scope: "Coordinator review of real environment, recovery and physical/domain ownership inventory; real dependency checks remain target_not_current/needs_evidence where not proven"
+    completed_scope: "Coordinator reviewed persistence/infrastructure Current/Gap/Plan boundaries; unproven real dependencies remain target_not_current or needs_evidence for later phases."
     reviewer: Coordinator
   P01-T03:
-    state: completion_candidate
+    state: completed
     existing_output: ".agent/programs/work-products/requirement-ledger.yaml"
     completed_scope: "Requirement Ledger regenerated from eleven module target documents plus Wave 1 registry; 756 mandatory ARCH-* items now include owner, target phase, planned work package, target/current gap, planned tests/evidence, reverse trace refs and reviewer."
-    remaining_scope: "Coordinator independent sampling review and future Phase backfill from planned test/evidence refs to real code/test/runtime evidence."
+    completed_scope: "Coordinator reviewed 756-item requirement ledger source parity, owner/phase/test/evidence/reverse trace fields and reviewer coverage."
     reviewer: Coordinator
   P01-T04:
-    state: completion_candidate
+    state: completed
     existing_output: ".agent/programs/work-products/frontend-current-inventory.md"
-    remaining_scope: "Coordinator review; Browser E2E/Desktop Smoke remain target evidence for PHASE10/PHASE21, not PHASE01 Current"
+    completed_scope: "Coordinator reviewed Web/Desktop inventory and evidence boundary; Browser E2E/Desktop Smoke gaps are assigned to PHASE10/PHASE21."
     reviewer: Coordinator
   P01-T05:
     state: completed
@@ -38,11 +38,12 @@ work_packages:
     remaining_scope: "PHASE02 must turn inventory into fail-closed static/dynamic guard; owner phases must migrate/remove registered bypasses"
     reviewer: Coordinator
   P01-T06:
-    state: ready
+    state: completed
     existing_outputs:
       - ".agent/programs/work-products/program-risk-register.md"
       - ".agent/programs/work-products/phase-readiness.yaml"
-    remaining_scope: "independent sampling review, freshness verification and formal closure evidence"
+    evidence: "docs/evidence/phase01-coordinator-closure.md"
+    completed_scope: "Coordinator independent sampling review, freshness verification, risk ownership and formal closure evidence completed."
     reviewer: Coordinator
 phase_dependencies:
   PHASE02:
@@ -77,5 +78,7 @@ validation:
     - "python tools/scripts/verify_phase01_complete_baseline.py"
     - "pytest -q tests/repo/test_current_program_contract.py tests/repo/test_phase01_complete_baseline.py -p no:cacheprovider"
 closure_decision:
-  coordinator_approval: pending
-  may_start_phase02_after_validation: false
+  coordinator_approval: approved
+  approved_at: 2026-07-16
+  evidence: "docs/evidence/phase01-coordinator-closure.md"
+  may_start_phase02_after_validation: true

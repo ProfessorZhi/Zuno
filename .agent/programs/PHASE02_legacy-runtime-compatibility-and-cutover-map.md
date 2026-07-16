@@ -1,7 +1,7 @@
 # PHASE02 Temporary Compatibility and Cutover Control
 
 phase_id: PHASE02
-status: planned
+status: ready
 depends_on: PHASE01
 owner: Coordinator / Compatibility Governance
 

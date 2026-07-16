@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE01"
+CURRENT_PHASE = "PHASE02"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -154,8 +154,8 @@ def _verify_requirement_ledger() -> list[str]:
 def _verify_correction_states() -> list[str]:
     errors: list[str] = []
     expected_phase_states = {
-        PHASE_FILES[0]: "ready",
-        PHASE_FILES[1]: "planned",
+        PHASE_FILES[0]: "completed",
+        PHASE_FILES[1]: "ready",
         PHASE_FILES[2]: "planned",
         PHASE_FILES[3]: "planned",
         PHASE_FILES[4]: "planned",
@@ -166,12 +166,12 @@ def _verify_correction_states() -> list[str]:
             errors.append(f"{filename} must be {expected} after PHASE01-04 correction")
     readiness_checks = {
         "phase-readiness.yaml": [
-            "current_phase_status: ready",
+            "current_phase_status: completed",
             "prior_completion_candidate: superseded",
-            "may_start_phase02_after_validation: false",
+            "may_start_phase02_after_validation: true",
         ],
         "phase02-readiness.yaml": [
-            "current_phase_status: planned",
+            "current_phase_status: ready",
             "prior_completion_candidate: superseded",
             "may_start_phase03_after_validation: false",
         ],
@@ -253,7 +253,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE01",
+                "current_phase: PHASE02",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
@@ -269,7 +269,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE01",
+                "current_phase: PHASE02",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -286,8 +286,8 @@ def verify_current_program() -> list[str]:
             manifest,
             [
                 "minimum_vertical_slice_is_phase_completion: false",
-                "state: ready, depends_on: [], tasks: [P01-T01",
-                "id: PHASE02",
+                "state: completed, depends_on: [], tasks: [P01-T01",
+                "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: ready",
                 "id: PHASE03",
                 "id: PHASE04",
                 "id: PHASE05",
@@ -296,7 +296,6 @@ def verify_current_program() -> list[str]:
         )
     )
     for forbidden in [
-        "id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed",
         "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed",
         "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed",
         "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",

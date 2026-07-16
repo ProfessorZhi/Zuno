@@ -1,7 +1,7 @@
 # PHASE01 Current Baseline and Requirement Ledger
 
 phase_id: PHASE01
-status: ready
+status: completed
 depends_on: none
 owner: Coordinator / Repository Governance
 

@@ -2,7 +2,7 @@
 
 phase_id: PHASE01
 task_id: P01-T04
-start_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
 prompt_start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
 branch: codex/P01-T04-frontend-desktop-inventory
 owner_module: "01 Product Surface, Web/Desktop clients as consumers"

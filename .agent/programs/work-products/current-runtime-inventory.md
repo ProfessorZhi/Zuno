@@ -2,8 +2,8 @@
 
 phase_id: PHASE01
 task_id: P01-T01
-start_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
-audit_baseline_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
+audit_baseline_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
 branch: codex/P01-T01-runtime-call-chain-inventory
 status: completion_candidate
 status_boundary: "本文件只记录当前代码、测试和静态搜索能证明的 Runtime 调用链事实；Target 文档、类名、目录和历史 Phase 结论不能提升为 Current。"

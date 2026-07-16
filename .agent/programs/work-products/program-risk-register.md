@@ -2,8 +2,9 @@
 
 phase_id: PHASE01
 task_id: P01-T06
-start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
-status_boundary: "未知项写 blocked/needs-evidence，不通过猜测关闭。"
+start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
+status_boundary: "未知项必须写 blocked/needs-evidence，不通过猜测关闭。"
+unassigned P0: none
 
 | risk_id | severity | owner | source | risk | dependency / next phase | status |
 | --- | --- | --- | --- | --- | --- | --- |
