@@ -1,40 +1,49 @@
 # PHASE02 Completion State
 phase_id: PHASE02
 task_id: P02-T06
-start_commit: 000928c7fc46224264e43677a5877d76731cd04c
-current_phase_status: completion_candidate
+original_start_commit: 000928c7fc46224264e43677a5877d76731cd04c
+correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
+current_phase_status: planned
+prior_completion_candidate: superseded
+status_boundary: "Existing matrices, registries, allowlists and playbook are design inputs only. PHASE02 completion requires executable adapters, flag state machine, cutover controller, rollback drills and runtime/CI enforcement."
 work_packages:
   P02-T01:
-    state: completion_candidate
-    output: ".agent/programs/work-products/api-contract-compatibility-matrix.yaml"
+    state: planned
+    existing_output: ".agent/programs/work-products/api-contract-compatibility-matrix.yaml"
+    required_output: "executable versioned API/Web/Desktop compatibility adapters and producer/consumer tests"
   P02-T02:
-    state: completion_candidate
-    output: ".agent/programs/work-products/feature-flag-registry.yaml"
+    state: planned
+    existing_output: ".agent/programs/work-products/feature-flag-registry.yaml"
+    required_output: "audited rollout state machine, operator commands and retirement enforcement"
   P02-T03:
-    state: completion_candidate
-    output: ".agent/programs/work-products/temporary-allowlist.yaml"
+    state: planned
+    existing_output: ".agent/programs/work-products/temporary-allowlist.yaml"
+    required_output: "static and dynamic bypass guards with monotonic allowlist enforcement"
   P02-T04:
-    state: completion_candidate
-    output: ".agent/programs/work-products/data-cutover-matrix.yaml"
+    state: planned
+    existing_output: ".agent/programs/work-products/data-cutover-matrix.yaml"
+    required_output: "executable cutover records, watermarks, resumable backfill and verification controls"
   P02-T05:
-    state: completion_candidate
-    output: ".agent/programs/work-products/rollback-recovery-playbook.md"
+    state: planned
+    existing_output: ".agent/programs/work-products/rollback-recovery-playbook.md"
+    required_output: "executable rollback/recovery commands and representative drills"
   P02-T06:
-    state: completion_candidate
-    outputs:
+    state: planned
+    existing_outputs:
       - "tools/scripts/verify_phase02_compatibility_boundaries.py"
       - "tests/repo/test_phase02_compatibility_boundaries.py"
+    required_output: "repository, integration and fault gates proving all current legacy paths are controlled"
 phase_dependencies:
   PHASE03:
     depends_on: [PHASE02]
-    readiness: ready_after_phase02_closure
+    readiness: blocked_until_corrected_phase02_closure
     required_inputs:
-      - api_contract_compatibility_matrix
-      - feature_flag_registry
-      - temporary_allowlist
-      - data_cutover_matrix
-      - rollback_recovery_playbook
-      - migration_guard_test_suite
+      - executable_api_and_client_adapters
+      - rollout_state_machine
+      - runtime_and_ci_bypass_guards
+      - executable_data_cutover_controller
+      - rollback_and_recovery_evidence
+      - removal_gate_suite
     p0_risks:
       unassigned: []
 validation:
@@ -42,7 +51,7 @@ validation:
     - "git diff --check"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase02_compatibility_boundaries.py"
-    - "pytest -q tests/repo/test_current_program_contract.py tests/repo/test_phase02_compatibility_boundaries.py -p no:cacheprovider"
+    - "pytest -q tests/repo tests/contracts tests/integration tests/fault -k 'compatibility or boundary or cutover or rollback or feature_flag' -p no:cacheprovider"
 closure_decision:
   coordinator_approval: pending
-  may_start_phase03_after_validation: true
+  may_start_phase03_after_validation: false
