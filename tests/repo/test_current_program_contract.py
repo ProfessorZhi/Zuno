@@ -59,6 +59,16 @@ def test_partial_phase03_and_phase04_evidence_is_not_completion() -> None:
         assert "phase_completion: `withdrawn`" in text
 
 
+def test_phase04_complete_infrastructure_gate_is_fail_closed() -> None:
+    verifier_path = REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
+    blocker = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+    assert verifier_path.exists()
+    assert blocker.exists()
+    text = blocker.read_text(encoding="utf-8")
+    assert "status: blocked" in text
+    assert "PHASE05 must remain blocked" in text
+
+
 def test_program_has_all_phase_files_and_atomic_tasks() -> None:
     verifier = _load_verifier()
     assert len(verifier.PHASE_FILES) == 22

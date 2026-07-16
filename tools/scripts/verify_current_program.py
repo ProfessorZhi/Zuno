@@ -111,6 +111,15 @@ def _load_verifier(path: Path, module_name: str, function_name: str) -> list[str
     return list(function())
 
 
+def _load_verifier_function(path: Path, module_name: str, function_name: str):
+    spec = spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}")
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return getattr(module, function_name)
+
+
 def _verify_requirement_ledger() -> list[str]:
     errors: list[str] = []
     ledger_path = WORK_PRODUCTS / "requirement-ledger.yaml"
@@ -355,6 +364,33 @@ def verify_current_program() -> list[str]:
             "verify_phase04_postgres_foundation",
         )
     )
+    phase04_complete_path = REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
+    phase04_blocker = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+    if not phase04_complete_path.exists():
+        errors.append("missing PHASE04 complete infrastructure verifier")
+    elif not phase04_blocker.exists():
+        errors.append("missing PHASE04 blocker evidence")
+    else:
+        complete_errors = _load_verifier_function(
+            phase04_complete_path,
+            "verify_phase04_complete_infrastructure",
+            "verify_phase04_complete_infrastructure",
+        )()
+        expected_fragments = [
+            "PHASE04 coordinator approval is not approved",
+            "PHASE05 start gate remains closed",
+            "PostgreSQL real service is not reachable",
+            "RabbitMQ real service is not reachable",
+            "MinIO/S3 real service is not reachable",
+        ]
+        combined = "\n".join(complete_errors)
+        for fragment in expected_fragments:
+            if fragment not in combined:
+                errors.append(f"PHASE04 complete infrastructure gate missing blocker: {fragment}")
+        blocker_text = _read(phase04_blocker)
+        for phrase in ["status: blocked", "Docker Desktop Linux engine", "TcpTestSucceeded: False"]:
+            if phrase not in blocker_text:
+                errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")
     return errors
 
 
