@@ -1,56 +1,68 @@
 # PHASE04 Completion State
 phase_id: PHASE04
 task_id: P04-T07
-start_commit: 02dcbfc9fc812e6f4c764512c00c77b1cedeb597
-current_phase_status: completion_candidate
+original_start_commit: 02dcbfc907ce6ab8a30189f9634bcbf524974863
+correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
+current_phase_status: planned
+prior_completion_candidate: superseded
+status_boundary: "Existing PostgreSQL primitive implementation and five integration tests are partial evidence only. PHASE04 requires complete PostgreSQL, RabbitMQ, S3-compatible Object Store, LangGraph PostgreSQL Checkpointer, backup/restore, concurrency and fault evidence."
 work_packages:
   P04-T01:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/database/foundation.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/database/foundation.py"
+    remaining_scope: "production sync/async sessions, tenant context, timeout, pool, connection-loss and UoW semantics"
   P04-T02:
-    state: completion_candidate
-    output: "infra/db/alembic/versions/20260715_04_infrastructure_foundation.py"
+    state: planned
+    existing_output: "infra/db/alembic/versions/20260715_04_infrastructure_foundation.py"
+    remaining_scope: "complete Alembic ownership, drift, online migration, rollback/forward-fix and data cutover integration"
   P04-T03:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/database/foundation.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/database/foundation.py"
+    remaining_scope: "transactional outbox/inbox plus real RabbitMQ confirm, redelivery, DLQ, replay and partition handling"
   P04-T04:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/database/foundation.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/database/foundation.py"
+    remaining_scope: "complete idempotency lifecycle, high-concurrency claim, renew, crash and result-loss semantics"
   P04-T05:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/database/foundation.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/database/foundation.py"
+    remaining_scope: "complete lease/heartbeat/fencing/handoff/late-result and network-partition semantics"
   P04-T06:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/database/foundation.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/database/foundation.py"
+    remaining_scope: "real S3/MinIO object adapter and official LangGraph PostgreSQL checkpointer integration"
   P04-T07:
-    state: completion_candidate
-    outputs:
+    state: planned
+    existing_outputs:
       - "tests/integration/test_phase04_postgres_foundation.py"
       - "tools/scripts/verify_phase04_postgres_foundation.py"
       - "docs/evidence/phase04-postgres-foundation.md"
+    remaining_scope: "backup/restore, replay, combined-service fault, capacity, health/readiness and operator evidence"
 phase_dependencies:
   PHASE05:
     depends_on: [PHASE03, PHASE04]
-    readiness: ready_after_phase04_closure
+    readiness: blocked_until_corrected_phase03_and_phase04_closure
     required_inputs:
-      - PostgreSQL 16 integration evidence
-      - Alembic upgrade and downgrade evidence
-      - infrastructure unit of work
-      - transactional outbox and inbox primitive
-      - idempotency claim primitive
-      - lease and fencing primitive
-      - object manifest and checkpoint primitive
+      - complete PostgreSQL and Alembic evidence
+      - complete infrastructure unit of work
+      - transactional outbox and inbox with RabbitMQ
+      - complete idempotency claim
+      - complete lease and fencing
+      - real S3-compatible object store
+      - real LangGraph PostgreSQL checkpointer
+      - backup restore replay and fault evidence
     p0_risks:
       unassigned: []
 validation:
   required_commands:
     - "git diff --check"
     - "alembic -c infra/db/alembic.ini upgrade head"
-    - "alembic -c infra/db/alembic.ini downgrade 20260417_01"
+    - "alembic -c infra/db/alembic.ini downgrade <verified_revision>"
     - "alembic -c infra/db/alembic.ini upgrade head"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
-    - "pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider"
+    - "python tools/scripts/verify_phase04_complete_infrastructure.py"
+    - "pytest -q tests/integration tests/fault tests/e2e -k 'postgres or alembic or outbox or inbox or rabbitmq or idempotency or lease or fencing or object or minio or s3 or checkpoint or restore or replay' -p no:cacheprovider"
 closure_decision:
   coordinator_approval: pending
-  may_start_phase05_after_validation: true
+  may_start_phase05_after_validation: false
