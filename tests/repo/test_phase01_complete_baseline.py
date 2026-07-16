@@ -89,3 +89,42 @@ def test_phase01_persistence_evidence_discloses_not_run_real_dependencies() -> N
         "Backup / Restore / PITR",
     ]:
         assert phrase in evidence
+
+
+def test_phase01_frontend_desktop_inventory_has_required_contract_matrix() -> None:
+    inventory = (
+        REPO_ROOT / ".agent/programs/work-products/frontend-current-inventory.md"
+    ).read_text(encoding="utf-8")
+    evidence = (
+        REPO_ROOT / "docs/evidence/phase01-frontend-desktop-inventory.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "page/component exists",
+        "contract adopted",
+        "generated or machine-checked type",
+        "authorized projection",
+        "available action",
+        "real E2E/smoke evidence",
+        "gap/blocker",
+        "target phase",
+        "SSE resume",
+        "reauthorization",
+        "multiple Interrupt",
+        "UNKNOWN",
+        "PHASE10",
+        "PHASE21",
+    ]:
+        assert phrase in inventory
+
+    for phrase in [
+        "task_id: P01-T04",
+        "artifact hash",
+        "Browser E2E",
+        "Desktop Smoke",
+        "not run",
+        "node_modules",
+        "AvailableAction",
+        "UNKNOWN",
+    ]:
+        assert phrase in evidence
