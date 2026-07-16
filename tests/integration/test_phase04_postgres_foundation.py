@@ -287,6 +287,12 @@ def test_lease_fencing_rejects_late_owner(engine) -> None:
     with uow as repo:
         token = repo.acquire_lease(resource_id="run-1", owner_id="worker-a", ttl_seconds=30)
         repo.assert_fence(token)
+        renewed = repo.renew_lease(token, ttl_seconds=60)
+        assert renewed.resource_id == token.resource_id
+        assert renewed.owner_id == token.owner_id
+        assert renewed.lease_id == token.lease_id
+        assert renewed.epoch == token.epoch
+        repo.assert_fence(renewed)
         with pytest.raises(FencingRejectedError):
             repo.acquire_lease(resource_id="run-1", owner_id="worker-b", ttl_seconds=30)
 
@@ -295,9 +301,27 @@ def test_lease_fencing_rejects_late_owner(engine) -> None:
 
     with uow as repo:
         replacement = repo.acquire_lease(resource_id="run-1", owner_id="worker-b", ttl_seconds=30)
-        assert replacement.epoch == token.epoch + 1
+        assert replacement.epoch == renewed.epoch + 1
+        with pytest.raises(FencingRejectedError):
+            repo.assert_fence(renewed)
+        with pytest.raises(FencingRejectedError):
+            repo.renew_lease(renewed, ttl_seconds=60)
+
+
+def test_lease_cancel_allows_transfer_and_rejects_late_result(engine) -> None:
+    uow = InfrastructureUnitOfWork(engine)
+    with uow as repo:
+        token = repo.acquire_lease(resource_id="run-cancel", owner_id="worker-a", ttl_seconds=30)
+        repo.cancel_lease(token)
         with pytest.raises(FencingRejectedError):
             repo.assert_fence(token)
+        with pytest.raises(FencingRejectedError):
+            repo.cancel_lease(token)
+
+    with uow as repo:
+        replacement = repo.acquire_lease(resource_id="run-cancel", owner_id="worker-b", ttl_seconds=30)
+        assert replacement.epoch == token.epoch + 1
+        repo.assert_fence(replacement)
 
 
 def test_object_manifest_and_checkpoint_hash_boundaries(engine) -> None:

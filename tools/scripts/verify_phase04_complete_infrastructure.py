@@ -23,6 +23,8 @@ BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_back
 BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
 IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
 IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
+LEASE_FENCING_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
+LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencing.md"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -264,6 +266,33 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in backup_evidence:
                 errors.append(f"PHASE04 backup/restore/replay evidence missing phrase: {phrase}")
+
+    if not LEASE_FENCING_VERIFIER.exists():
+        errors.append("missing PHASE04 lease/fencing verifier")
+    else:
+        lease_errors = _load_verifier(
+            LEASE_FENCING_VERIFIER,
+            "verify_phase04_lease_fencing",
+            "verify_phase04_lease_fencing",
+        )()
+        for lease_error in lease_errors:
+            errors.append(f"PHASE04 lease/fencing verification failed: {lease_error}")
+
+    if not LEASE_FENCING_EVIDENCE.exists():
+        errors.append("missing PHASE04 lease/fencing evidence")
+    else:
+        lease_evidence = _read(LEASE_FENCING_EVIDENCE)
+        for phrase in [
+            "lease_acquire: passed",
+            "heartbeat_renew: passed",
+            "duplicate_worker_reject: passed",
+            "expiry_transfer: passed",
+            "cancel_transfer: passed",
+            "late_fencing_token_reject: passed",
+            "不能代表领域结果成功",
+        ]:
+            if phrase not in lease_evidence:
+                errors.append(f"PHASE04 lease/fencing evidence missing phrase: {phrase}")
 
     if not PARTIAL_EVIDENCE.exists():
         errors.append("missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md")

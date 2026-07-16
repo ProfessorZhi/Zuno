@@ -428,6 +428,62 @@ class InfrastructureRepository:
         if row is None or int(row.epoch) != token.epoch or row.lease_id != token.lease_id or row.expires_at < utcnow():
             raise FencingRejectedError("fencing token is stale")
 
+    def renew_lease(self, token: FencingToken, *, ttl_seconds: int = 30) -> FencingToken:
+        expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_worker_leases
+                SET expires_at = :expires_at, updated_at = now()
+                WHERE resource_id = :resource_id
+                  AND owner_id = :owner_id
+                  AND lease_id = :lease_id
+                  AND epoch = :epoch
+                  AND expires_at >= now()
+                RETURNING resource_id, owner_id, lease_id, epoch, expires_at
+                """
+            ),
+            {
+                "resource_id": token.resource_id,
+                "owner_id": token.owner_id,
+                "lease_id": token.lease_id,
+                "epoch": token.epoch,
+                "expires_at": expires_at,
+            },
+        ).first()
+        if row is None:
+            raise FencingRejectedError("lease cannot be renewed by this fencing token")
+        return FencingToken(
+            resource_id=str(row.resource_id),
+            owner_id=str(row.owner_id),
+            lease_id=str(row.lease_id),
+            epoch=int(row.epoch),
+            expires_at=row.expires_at,
+        )
+
+    def cancel_lease(self, token: FencingToken) -> None:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_worker_leases
+                SET expires_at = now() - interval '1 day', updated_at = now()
+                WHERE resource_id = :resource_id
+                  AND owner_id = :owner_id
+                  AND lease_id = :lease_id
+                  AND epoch = :epoch
+                  AND expires_at >= now()
+                """
+            ),
+            {
+                "resource_id": token.resource_id,
+                "owner_id": token.owner_id,
+                "lease_id": token.lease_id,
+                "epoch": token.epoch,
+            },
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("lease cannot be cancelled by this fencing token")
+
     def put_object_manifest(
         self,
         *,
