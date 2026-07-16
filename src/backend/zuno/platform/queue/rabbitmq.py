@@ -134,6 +134,26 @@ class RabbitMQTransport:
         )
         await exchange.publish(message, routing_key=topology.routing_key)
 
+    async def replay_dead_letter(
+        self,
+        topology: RabbitMQTopology,
+        delivery: RabbitMQDelivery,
+        *,
+        replay_trace_id: str,
+    ) -> None:
+        exchange = await self.channel.get_exchange(topology.exchange)
+        headers = dict(delivery.headers)
+        headers["trace_id"] = replay_trace_id
+        headers["replayed_from_dlq"] = True
+        message = aio_pika.Message(
+            body=json.dumps(delivery.payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+            content_type="application/json",
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            message_id=delivery.message_id,
+            headers=headers,
+        )
+        await exchange.publish(message, routing_key=topology.routing_key)
+
     async def get(self, queue_name: str, *, timeout: float = 5.0) -> RabbitMQDelivery | None:
         queue = await self.channel.get_queue(queue_name)
         message = await queue.get(timeout=timeout, fail=False)

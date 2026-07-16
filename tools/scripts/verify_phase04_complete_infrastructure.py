@@ -134,6 +134,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "publisher_confirm: passed",
             "redelivery: passed",
             "dlq: passed",
+            "dlq_replay: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in rabbit_evidence:

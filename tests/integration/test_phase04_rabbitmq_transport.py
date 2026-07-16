@@ -66,6 +66,15 @@ async def _verify_rabbitmq_transport_confirm_redelivery_and_dlq() -> None:
             assert dead_letter.message_id == "msg-poison"
             assert dead_letter.payload == {"kind": "phase04", "poison": True}
             assert dead_letter.headers["message_version"] == "v1"
+            await transport.replay_dead_letter(topology, dead_letter, replay_trace_id="trace-dlq-replay")
             await dead_letter.ack()
+
+            replayed = await transport.get(topology.queue)
+            assert replayed is not None
+            assert replayed.message_id == "msg-poison"
+            assert replayed.payload == {"kind": "phase04", "poison": True}
+            assert replayed.headers["replayed_from_dlq"] is True
+            assert replayed.headers["trace_id"] == "trace-dlq-replay"
+            await replayed.ack()
         finally:
             await transport.delete_topology(topology)

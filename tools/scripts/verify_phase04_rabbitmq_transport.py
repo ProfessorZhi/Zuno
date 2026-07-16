@@ -66,7 +66,25 @@ async def _verify() -> list[str]:
                 else:
                     if dead_letter.message_id != "phase04-poison":
                         errors.append("RabbitMQ DLQ message id changed")
+                    await transport.replay_dead_letter(
+                        topology,
+                        dead_letter,
+                        replay_trace_id="trace-phase04-dlq-replay",
+                    )
                     await dead_letter.ack()
+                    replayed = await transport.get(topology.queue)
+                    if replayed is None:
+                        errors.append("RabbitMQ DLQ replay did not return message to main queue")
+                    else:
+                        if replayed.message_id != "phase04-poison":
+                            errors.append("RabbitMQ replayed message id changed")
+                        if replayed.payload != {"scenario": "dlq"}:
+                            errors.append("RabbitMQ replayed payload changed")
+                        if replayed.headers.get("replayed_from_dlq") is not True:
+                            errors.append("RabbitMQ replay receipt header was missing")
+                        if replayed.headers.get("trace_id") != "trace-phase04-dlq-replay":
+                            errors.append("RabbitMQ replay trace id was not applied")
+                        await replayed.ack()
         finally:
             await transport.delete_topology(topology)
     return errors
