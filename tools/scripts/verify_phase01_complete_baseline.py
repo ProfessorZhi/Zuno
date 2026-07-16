@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -11,6 +10,7 @@ WORK_PRODUCTS = PROGRAM_ROOT / "work-products"
 PHASE01_FILE = PROGRAM_ROOT / "PHASE01_current-baseline-and-requirement-ledger.md"
 PHASE_READINESS = WORK_PRODUCTS / "phase-readiness.yaml"
 REQUIREMENT_LEDGER = WORK_PRODUCTS / "requirement-ledger.yaml"
+PHASE01_BASELINE_COMMIT = "c01420e915db19a3b0d6f979ca4450c8d5de0c85"
 
 INVENTORY_FILES = {
     "P01-T01": WORK_PRODUCTS / "current-runtime-inventory.md",
@@ -18,6 +18,7 @@ INVENTORY_FILES = {
     "P01-T04": WORK_PRODUCTS / "frontend-current-inventory.md",
     "P01-T05": WORK_PRODUCTS / "legacy-bypass-inventory.yaml",
 }
+TEMPORARY_ALLOWLIST = WORK_PRODUCTS / "temporary-allowlist.yaml"
 
 RISK_REGISTER = WORK_PRODUCTS / "program-risk-register.md"
 
@@ -42,18 +43,6 @@ SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
-
-
-def _git_head() -> str | None:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            cwd=REPO_ROOT,
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return None
 
 
 def _extract_start_commit(text: str) -> str | None:
@@ -92,6 +81,25 @@ def _ledger_blocks(text: str) -> list[str]:
     return blocks
 
 
+def _yaml_list_blocks(text: str, marker: str = "  - path: ") -> list[str]:
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if line.startswith(marker):
+            if current:
+                blocks.append("\n".join(current))
+            current = [line]
+        elif current:
+            current.append(line)
+    if current:
+        blocks.append("\n".join(current))
+    return blocks
+
+
+def _path_values(text: str) -> set[str]:
+    return set(re.findall(r'(?m)^\s+- path: "([^"]+)"', text))
+
+
 def _field_list_is_empty(block: str, field: str) -> bool:
     return re.search(rf"(?m)^\s+{field}:\s*\[\]\s*$", block) is not None
 
@@ -101,7 +109,6 @@ def _field_missing(block: str, field: str) -> bool:
 
 
 def _verify_work_product_freshness(errors: list[str]) -> None:
-    head = _git_head()
     for task_id, path in INVENTORY_FILES.items():
         text = _read(path)
         start_commit = _extract_start_commit(text)
@@ -109,9 +116,9 @@ def _verify_work_product_freshness(errors: list[str]) -> None:
             errors.append(f"{path.relative_to(REPO_ROOT).as_posix()} missing start_commit")
         elif not SHA_PATTERN.match(start_commit):
             errors.append(f"{path.relative_to(REPO_ROOT).as_posix()} has invalid start_commit")
-        if head and start_commit and start_commit != head:
+        if start_commit and start_commit != PHASE01_BASELINE_COMMIT:
             errors.append(
-                f"{task_id} inventory baseline {start_commit} is stale against current HEAD {head}"
+                f"{task_id} inventory baseline {start_commit} is stale against PHASE01 baseline {PHASE01_BASELINE_COMMIT}"
             )
 
 
@@ -141,9 +148,35 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
             errors.append(f"P01-T04 frontend inventory missing required surface: {phrase}")
 
     legacy = _read(INVENTORY_FILES["P01-T05"])
-    for phrase in ["deadline", "guard", "removal_task", "temporary_allowlist"]:
-        if phrase not in legacy:
-            errors.append(f"P01-T05 legacy inventory missing required field/surface: {phrase}")
+    allowlist = _read(TEMPORARY_ALLOWLIST) if TEMPORARY_ALLOWLIST.exists() else ""
+    required_fields = [
+        "path",
+        "symbol",
+        "owner",
+        "risk",
+        "target_gateway",
+        "current_callers",
+        "temporary_allowlist",
+        "migration_task",
+        "removal_task",
+        "deadline",
+        "guard",
+        "test",
+    ]
+    legacy_paths = _path_values(legacy)
+    allowlist_paths = _path_values(allowlist)
+    missing_from_allowlist = sorted(legacy_paths - allowlist_paths)
+    if missing_from_allowlist:
+        errors.append(f"P01-T05 legacy paths missing from PHASE02 temporary allowlist: {missing_from_allowlist[:10]}")
+    for block in _yaml_list_blocks(legacy):
+        first_line = block.splitlines()[0]
+        for field in required_fields:
+            if field == "path":
+                has_field = re.search(r'(?m)^\s+- path:', block) is not None
+            else:
+                has_field = re.search(rf"(?m)^\s+{field}:", block) is not None
+            if not has_field:
+                errors.append(f"P01-T05 legacy inventory entry missing {field}: {first_line}")
 
 
 def _verify_requirement_ledger(errors: list[str]) -> None:
@@ -229,6 +262,7 @@ def verify_phase01_complete_baseline() -> list[str]:
         PHASE_READINESS,
         REQUIREMENT_LEDGER,
         RISK_REGISTER,
+        TEMPORARY_ALLOWLIST,
         *INVENTORY_FILES.values(),
     ]
     for path in required_paths:

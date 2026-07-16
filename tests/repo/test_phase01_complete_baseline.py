@@ -25,7 +25,8 @@ def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
     errors = "\n".join(verifier.verify_phase01_complete_baseline())
     assert "coordinator approval is not approved" in errors
     assert "PHASE02 start gate remains closed" in errors
-    assert "docs/evidence has no phase01-*.md reproducible evidence bundle" in errors
+    assert "P01-T01 is not completed in phase-readiness.yaml" in errors
+    assert "P01-T06 is not completed in phase-readiness.yaml" in errors
 
 
 def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None:
