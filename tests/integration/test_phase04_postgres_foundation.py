@@ -141,6 +141,83 @@ def test_idempotency_claim_reuses_result_and_rejects_hash_conflict(engine) -> No
             )
 
 
+def test_idempotency_claim_expiry_renew_and_stale_generation(engine) -> None:
+    uow = InfrastructureUnitOfWork(engine)
+    with uow as repo:
+        status, generation, result_ref = repo.claim_idempotency(
+            scope="tool",
+            key="idem-expiry",
+            owner="worker-a",
+            request={"operation": "send", "target": "x"},
+            ttl_seconds=30,
+        )
+        assert (status, generation, result_ref) == ("in_progress", 1, "")
+        renewed_at = repo.renew_idempotency(
+            scope="tool",
+            key="idem-expiry",
+            owner="worker-a",
+            generation=generation,
+            ttl_seconds=120,
+        )
+        assert renewed_at is not None
+        with pytest.raises(FencingRejectedError):
+            repo.renew_idempotency(
+                scope="tool",
+                key="idem-expiry",
+                owner="worker-b",
+                generation=generation,
+                ttl_seconds=120,
+            )
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE infra_idempotency_claims
+                SET expires_at = now() - interval '1 second'
+                WHERE scope = 'tool' AND idempotency_key = 'idem-expiry'
+                """
+            )
+        )
+
+    with uow as repo:
+        assert repo.expire_stale_idempotency_claims() == ["tool:idem-expiry"]
+        status, replacement_generation, result_ref = repo.claim_idempotency(
+            scope="tool",
+            key="idem-expiry",
+            owner="worker-b",
+            request={"operation": "send", "target": "x"},
+            ttl_seconds=30,
+        )
+        assert (status, replacement_generation, result_ref) == ("in_progress", generation + 1, "")
+        with pytest.raises(FencingRejectedError):
+            repo.complete_idempotency(
+                scope="tool",
+                key="idem-expiry",
+                generation=generation,
+                result_ref="effect:stale",
+            )
+        repo.complete_idempotency(
+            scope="tool",
+            key="idem-expiry",
+            generation=replacement_generation,
+            result_ref="effect:new",
+        )
+
+    with uow as repo:
+        status, generation_after_completion, result_ref = repo.claim_idempotency(
+            scope="tool",
+            key="idem-expiry",
+            owner="worker-c",
+            request={"operation": "send", "target": "x"},
+        )
+        assert (status, generation_after_completion, result_ref) == (
+            "completed",
+            replacement_generation,
+            "effect:new",
+        )
+
+
 def test_lease_fencing_rejects_late_owner(engine) -> None:
     uow = InfrastructureUnitOfWork(engine)
     with uow as repo:

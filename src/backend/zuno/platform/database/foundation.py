@@ -228,18 +228,35 @@ class InfrastructureRepository:
                 ON CONFLICT (scope, idempotency_key) DO UPDATE
                 SET generation = CASE
                     WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
+                     AND infra_idempotency_claims.status in ('in_progress','expired')
                      AND infra_idempotency_claims.expires_at < now()
                     THEN infra_idempotency_claims.generation + 1
                     ELSE infra_idempotency_claims.generation
                 END,
                 owner = CASE
                     WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
+                     AND infra_idempotency_claims.status in ('in_progress','expired')
                      AND infra_idempotency_claims.expires_at < now()
                     THEN EXCLUDED.owner
                     ELSE infra_idempotency_claims.owner
                 END,
+                status = CASE
+                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
+                     AND infra_idempotency_claims.status in ('in_progress','expired')
+                     AND infra_idempotency_claims.expires_at < now()
+                    THEN 'in_progress'
+                    ELSE infra_idempotency_claims.status
+                END,
+                result_ref = CASE
+                    WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
+                     AND infra_idempotency_claims.status in ('in_progress','expired')
+                     AND infra_idempotency_claims.expires_at < now()
+                    THEN NULL
+                    ELSE infra_idempotency_claims.result_ref
+                END,
                 expires_at = CASE
                     WHEN infra_idempotency_claims.request_hash = EXCLUDED.request_hash
+                     AND infra_idempotency_claims.status in ('in_progress','expired')
                      AND infra_idempotency_claims.expires_at < now()
                     THEN EXCLUDED.expires_at
                     ELSE infra_idempotency_claims.expires_at
@@ -259,13 +276,65 @@ class InfrastructureRepository:
             raise InfrastructureConflictError("idempotency key was reused with a different request hash")
         return str(row.status), int(row.generation), str(row.result_ref or "")
 
+    def renew_idempotency(
+        self,
+        *,
+        scope: str,
+        key: str,
+        owner: str,
+        generation: int,
+        ttl_seconds: int = 60,
+    ) -> datetime:
+        expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_idempotency_claims
+                SET expires_at = :expires_at
+                WHERE scope = :scope
+                  AND idempotency_key = :key
+                  AND owner = :owner
+                  AND generation = :generation
+                  AND status = 'in_progress'
+                  AND expires_at >= now()
+                RETURNING expires_at
+                """
+            ),
+            {
+                "scope": scope,
+                "key": key,
+                "owner": owner,
+                "generation": generation,
+                "expires_at": expires_at,
+            },
+        ).first()
+        if row is None:
+            raise FencingRejectedError("idempotency claim cannot be renewed by this owner/generation")
+        return row.expires_at
+
+    def expire_stale_idempotency_claims(self) -> list[str]:
+        rows = self.connection.execute(
+            text(
+                """
+                UPDATE infra_idempotency_claims
+                SET status = 'expired'
+                WHERE status = 'in_progress' AND expires_at < now()
+                RETURNING scope || ':' || idempotency_key AS claim_key
+                """
+            )
+        ).all()
+        return [str(row.claim_key) for row in rows]
+
     def complete_idempotency(self, *, scope: str, key: str, generation: int, result_ref: str) -> None:
         result = self.connection.execute(
             text(
                 """
                 UPDATE infra_idempotency_claims
                 SET status = 'completed', result_ref = :result_ref, completed_at = now()
-                WHERE scope = :scope AND idempotency_key = :key AND generation = :generation
+                WHERE scope = :scope
+                  AND idempotency_key = :key
+                  AND generation = :generation
+                  AND status = 'in_progress'
                 """
             ),
             {"scope": scope, "key": key, "generation": generation, "result_ref": result_ref},

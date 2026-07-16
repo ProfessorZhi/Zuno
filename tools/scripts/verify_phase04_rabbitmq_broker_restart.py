@@ -33,6 +33,16 @@ def _docker_restart_rabbitmq() -> str:
         check=False,
     )
     if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip()
+        if "is not running" in message:
+            start = subprocess.run(
+                ["docker", "start", "zuno-rabbitmq"],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if start.returncode == 0:
+                return start.stdout.strip()
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     return result.stdout.strip()
 

@@ -21,6 +21,8 @@ MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
 BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
 BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
+IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
+IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -208,6 +210,33 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in minio_evidence:
                 errors.append(f"PHASE04 MinIO object store evidence missing phrase: {phrase}")
+
+    if not IDEMPOTENCY_VERIFIER.exists():
+        errors.append("missing PHASE04 idempotency claim verifier")
+    else:
+        idempotency_errors = _load_verifier(
+            IDEMPOTENCY_VERIFIER,
+            "verify_phase04_idempotency_claim",
+            "verify_phase04_idempotency_claim",
+        )()
+        for idempotency_error in idempotency_errors:
+            errors.append(f"PHASE04 idempotency claim verification failed: {idempotency_error}")
+
+    if not IDEMPOTENCY_EVIDENCE.exists():
+        errors.append("missing PHASE04 idempotency claim evidence")
+    else:
+        idempotency_evidence = _read(IDEMPOTENCY_EVIDENCE)
+        for phrase in [
+            "same_key_same_hash: passed",
+            "same_key_different_hash: passed",
+            "renew: passed",
+            "expiry: passed",
+            "stale_generation_reject: passed",
+            "result_replay: passed",
+            "Idempotency Claim != Domain Success",
+        ]:
+            if phrase not in idempotency_evidence:
+                errors.append(f"PHASE04 idempotency claim evidence missing phrase: {phrase}")
 
     if not BACKUP_RESTORE_VERIFIER.exists():
         errors.append("missing PHASE04 backup/restore/replay verifier")
