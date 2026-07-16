@@ -28,6 +28,17 @@ class FencingToken:
     expires_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class OutboxEventRecord:
+    event_id: str
+    aggregate_id: str
+    topic: str
+    payload: dict[str, Any]
+    payload_hash: str
+    idempotency_key: str
+    claim_owner: str
+
+
 def create_foundation_engine(database_url: str, **kwargs: Any) -> Engine:
     return create_engine(database_url, pool_pre_ping=True, future=True, **kwargs)
 
@@ -121,6 +132,32 @@ class InfrastructureRepository:
         )
         if result.rowcount != 1:
             raise FencingRejectedError("outbox event is not claimed by this worker")
+
+    def load_claimed_outbox_event(self, *, event_id: str, worker_id: str) -> OutboxEventRecord:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT event_id, aggregate_id, topic, payload, payload_hash, idempotency_key, claim_owner
+                FROM infra_outbox_events
+                WHERE event_id = :event_id AND claim_owner = :worker_id AND status = 'claimed'
+                """
+            ),
+            {"event_id": event_id, "worker_id": worker_id},
+        ).first()
+        if row is None:
+            raise FencingRejectedError("outbox event is not claimed by this worker")
+        payload = dict(row.payload)
+        if canonical_sha256(payload) != row.payload_hash:
+            raise InfrastructureConflictError("outbox payload hash mismatch")
+        return OutboxEventRecord(
+            event_id=str(row.event_id),
+            aggregate_id=str(row.aggregate_id),
+            topic=str(row.topic),
+            payload=payload,
+            payload_hash=str(row.payload_hash),
+            idempotency_key=str(row.idempotency_key),
+            claim_owner=str(row.claim_owner),
+        )
 
     def record_inbox(self, *, consumer: str, message_id: str, payload: dict[str, Any]) -> str:
         payload_hash = canonical_sha256(payload)
@@ -382,5 +419,6 @@ __all__ = [
     "InfrastructureConflictError",
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",
+    "OutboxEventRecord",
     "create_foundation_engine",
 ]

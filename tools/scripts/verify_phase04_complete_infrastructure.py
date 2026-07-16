@@ -13,6 +13,8 @@ PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundatio
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
+OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
+OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
 MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
 BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
@@ -129,6 +131,31 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in rabbit_evidence:
                 errors.append(f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}")
+
+    if not OUTBOX_RABBITMQ_VERIFIER.exists():
+        errors.append("missing PHASE04 outbox RabbitMQ publisher verifier")
+    else:
+        outbox_errors = _load_verifier(
+            OUTBOX_RABBITMQ_VERIFIER,
+            "verify_phase04_outbox_rabbitmq_publisher",
+            "verify_phase04_outbox_rabbitmq_publisher",
+        )()
+        for outbox_error in outbox_errors:
+            errors.append(f"PHASE04 outbox RabbitMQ publisher verification failed: {outbox_error}")
+
+    if not OUTBOX_RABBITMQ_EVIDENCE.exists():
+        errors.append("missing PHASE04 outbox RabbitMQ publisher evidence")
+    else:
+        outbox_evidence = _read(OUTBOX_RABBITMQ_EVIDENCE)
+        for phrase in [
+            "outbox_claim: passed",
+            "rabbitmq_publish_confirm: passed",
+            "outbox_published_receipt: passed",
+            "inbox_dedup_receipt: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in outbox_evidence:
+                errors.append(f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}")
 
     if not MINIO_OBJECT_VERIFIER.exists():
         errors.append("missing PHASE04 MinIO object store verifier")
