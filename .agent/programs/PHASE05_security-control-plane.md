@@ -1,9 +1,13 @@
 # PHASE05 Security Control Plane
 
 phase_id: PHASE05
-status: ready
+status: planned
 depends_on: PHASE03, PHASE04
 owner: Module 09 Security
+
+## Readiness Boundary
+
+PHASE05 在订正后的 PHASE03 完整 Contract Adoption 与 PHASE04 完整 Durable Infrastructure 正式关闭前不得进入 `ready`。此前 PHASE03/04 的部分实现可以用于设计和本地探索，但不能作为 Security Control Plane 的完成依赖。
 
 ## Phase 目标
 
@@ -13,8 +17,8 @@ owner: Module 09 Security
 
 - `docs/modules/09-security.md`
 - Wave 1 Registry
-- PHASE03 Security Contracts
-- PHASE04 PostgreSQL/UoW/Outbox
+- 订正后完整 PHASE03 Security Contracts
+- 订正后完整 PHASE04 PostgreSQL/UoW/Outbox/RabbitMQ/Object/Checkpointer
 - 当前 auth/security/middleware/approval/credential 代码
 
 ## Current Anchors
