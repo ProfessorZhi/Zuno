@@ -65,7 +65,7 @@ def verify_phase04_postgres_foundation() -> list[str]:
     for phrase in [
         "PostgreSQL 16",
         "alembic -c infra/db/alembic.ini upgrade head",
-        "5 passed",
+        "9 passed",
         "真实边界",
     ]:
         if phrase not in evidence:

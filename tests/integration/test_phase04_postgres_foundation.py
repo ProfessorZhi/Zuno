@@ -8,6 +8,7 @@ from threading import Barrier
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 
 from zuno.platform.database.foundation import (
     FencingRejectedError,
@@ -88,6 +89,42 @@ def test_uow_commit_and_rollback(engine) -> None:
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 1
+
+
+def test_postgres_runtime_context_readiness_and_timeouts(engine) -> None:
+    with InfrastructureUnitOfWork(engine, tenant_id="tenant-a") as repo:
+        assert repo.check_readiness() is True
+        assert repo.current_tenant_id() == "tenant-a"
+
+    with InfrastructureUnitOfWork(engine) as repo:
+        assert repo.current_tenant_id() == ""
+
+    with pytest.raises(DBAPIError):
+        with InfrastructureUnitOfWork(engine, statement_timeout_ms=100) as repo:
+            repo.connection.execute(text("SELECT pg_sleep(1)"))
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO infra_worker_leases(resource_id, owner_id, lease_id, epoch, expires_at)
+                VALUES ('lock-target', 'worker-a', 'lease-a', 1, now() + interval '30 seconds')
+                """
+            )
+        )
+
+    lock_conn = engine.connect()
+    lock_tx = lock_conn.begin()
+    try:
+        lock_conn.execute(text("SELECT * FROM infra_worker_leases WHERE resource_id = 'lock-target' FOR UPDATE"))
+        with pytest.raises(DBAPIError):
+            with InfrastructureUnitOfWork(engine, lock_timeout_ms=100) as repo:
+                repo.connection.execute(
+                    text("SELECT * FROM infra_worker_leases WHERE resource_id = 'lock-target' FOR UPDATE")
+                )
+    finally:
+        lock_tx.rollback()
+        lock_conn.close()
 
 
 def test_outbox_claim_and_inbox_hash_conflict(engine) -> None:

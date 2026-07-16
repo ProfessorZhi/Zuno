@@ -13,7 +13,7 @@ correction_date: 2026-07-16
 - 真实 RabbitMQ publisher confirm、redelivery、DLQ、replay 和 partition recovery；
 - 真实 MinIO/S3 Object staging、commit、visibility、authorization、delete、restore 和 legal hold；
 - 官方 LangGraph PostgreSQL Checkpointer 的 interrupt/resume、thread isolation、generation reconcile 和 schema upgrade；
-- PostgreSQL deadlock/serialization、pool exhaustion、connection loss 和 tenant isolation；
+- PostgreSQL deadlock/serialization、pool exhaustion、connection loss 和完整 tenant isolation；
 - Backup/Restore、PITR、Projection Replay、Recovery Set 和组合依赖故障；
 - 后续领域默认路径已经切换到这些 Primitive。
 
@@ -42,7 +42,7 @@ Running upgrade 20260417_01 -> 20260715_04, add infrastructure foundation primit
 
 ```text
 pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider
-5 passed in 4.22s
+9 passed
 ```
 
-这些结果仅支持 `partial implementation available`。订正后的完整完成要求以 `.agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md` 和 `closure-checklist.md` 为准。
+新增的 4 个 runtime-focused checks 证明 readiness、transaction-local tenant context、statement timeout 和 lock timeout 子集；这些结果仍仅支持 `partial implementation available`。订正后的完整完成要求以 `.agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md` 和 `closure-checklist.md` 为准。

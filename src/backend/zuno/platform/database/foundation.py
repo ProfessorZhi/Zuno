@@ -57,12 +57,34 @@ def utcnow() -> datetime:
 
 
 class InfrastructureUnitOfWork:
-    def __init__(self, engine: Engine) -> None:
+    def __init__(
+        self,
+        engine: Engine,
+        *,
+        tenant_id: str | None = None,
+        statement_timeout_ms: int | None = None,
+        lock_timeout_ms: int | None = None,
+    ) -> None:
         self.engine = engine
+        self.tenant_id = tenant_id
+        self.statement_timeout_ms = statement_timeout_ms
+        self.lock_timeout_ms = lock_timeout_ms
 
     def __enter__(self) -> InfrastructureRepository:
         self._context = self.engine.begin()
         self.connection = self._context.__enter__()
+        if self.tenant_id is not None:
+            self.connection.execute(text("SELECT set_config('app.tenant_id', :tenant_id, true)"), {"tenant_id": self.tenant_id})
+        if self.statement_timeout_ms is not None:
+            self.connection.execute(
+                text("SELECT set_config('statement_timeout', :timeout_ms, true)"),
+                {"timeout_ms": str(self.statement_timeout_ms)},
+            )
+        if self.lock_timeout_ms is not None:
+            self.connection.execute(
+                text("SELECT set_config('lock_timeout', :timeout_ms, true)"),
+                {"timeout_ms": str(self.lock_timeout_ms)},
+            )
         return InfrastructureRepository(self.connection)
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
@@ -72,6 +94,12 @@ class InfrastructureUnitOfWork:
 class InfrastructureRepository:
     def __init__(self, connection: Connection) -> None:
         self.connection = connection
+
+    def check_readiness(self) -> bool:
+        return self.connection.execute(text("SELECT 1")).scalar_one() == 1
+
+    def current_tenant_id(self) -> str:
+        return str(self.connection.execute(text("SELECT current_setting('app.tenant_id', true)")).scalar_one() or "")
 
     def enqueue_outbox(
         self,

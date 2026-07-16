@@ -12,6 +12,8 @@ PHASE04_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastru
 PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md"
 ALEMBIC_MIGRATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_alembic_migration.py"
 ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
+POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
+POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -139,6 +141,32 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in alembic_evidence:
                 errors.append(f"PHASE04 Alembic migration evidence missing phrase: {phrase}")
+
+    if not POSTGRES_RUNTIME_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL runtime verifier")
+    else:
+        postgres_runtime_errors = _load_verifier(
+            POSTGRES_RUNTIME_VERIFIER,
+            "verify_phase04_postgres_runtime",
+            "verify_phase04_postgres_runtime",
+        )()
+        for postgres_runtime_error in postgres_runtime_errors:
+            errors.append(f"PHASE04 PostgreSQL runtime verification failed: {postgres_runtime_error}")
+
+    if not POSTGRES_RUNTIME_EVIDENCE.exists():
+        errors.append("missing PHASE04 PostgreSQL runtime evidence")
+    else:
+        postgres_runtime_evidence = _read(POSTGRES_RUNTIME_EVIDENCE)
+        for phrase in [
+            "readiness: passed",
+            "tenant_context: passed",
+            "tenant_context_no_leak: passed",
+            "statement_timeout: passed",
+            "lock_timeout: passed",
+            "不关闭 P04-T01",
+        ]:
+            if phrase not in postgres_runtime_evidence:
+                errors.append(f"PHASE04 PostgreSQL runtime evidence missing phrase: {phrase}")
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
