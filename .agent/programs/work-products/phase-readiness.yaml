@@ -14,9 +14,10 @@ work_packages:
     evidence: "docs/evidence/phase01-runtime-call-chain-inventory.md"
     reviewer: Coordinator
   P01-T02:
-    state: ready
+    state: completion_candidate
     existing_output: ".agent/programs/work-products/current-persistence-inventory.md"
-    remaining_scope: "complete real environment, recovery and physical/domain ownership inventory"
+    evidence: "docs/evidence/phase01-persistence-infrastructure-inventory.md"
+    remaining_scope: "Coordinator review of real environment, recovery and physical/domain ownership inventory; real dependency checks remain target_not_current/needs_evidence where not proven"
     reviewer: Coordinator
   P01-T03:
     state: ready

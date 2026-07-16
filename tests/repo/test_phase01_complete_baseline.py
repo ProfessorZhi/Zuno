@@ -57,3 +57,28 @@ def test_p01_t01_runtime_inventory_has_required_contract_fields() -> None:
     assert "P01-T01 runtime inventory missing required coverage" not in errors
     assert "P01-T01 evidence file missing" not in errors
     assert "P01-T01 evidence missing required field" not in errors
+
+
+def test_phase01_persistence_inventory_has_required_contract_fields() -> None:
+    verifier = _load_verifier()
+    inventory = (
+        REPO_ROOT / ".agent" / "programs" / "work-products" / "current-persistence-inventory.md"
+    ).read_text(encoding="utf-8")
+    errors: list[str] = []
+    verifier._verify_p01_t02_contract(inventory, errors)
+    assert not errors
+
+
+def test_phase01_persistence_evidence_discloses_not_run_real_dependencies() -> None:
+    evidence = (
+        REPO_ROOT / "docs" / "evidence" / "phase01-persistence-infrastructure-inventory.md"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "Not-Run Real Dependency Checks",
+        "RabbitMQ",
+        "MinIO/S3",
+        "Milvus",
+        "Neo4j",
+        "Backup / Restore / PITR",
+    ]:
+        assert phrase in evidence
