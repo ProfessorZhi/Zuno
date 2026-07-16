@@ -2,14 +2,25 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE05
+current_phase: PHASE01
+program_version: 2
+
+## PHASE01–04 订正状态
+
+- [x] 旧完成结论已撤回，已有产物保留为部分证据。
+- [x] Program Manifest、Roadmap、Current 和 Phase 文件已改为完整范围完成标准。
+- [ ] PHASE01 完整 Current/Gap/Requirement 双向追踪重新关闭。
+- [ ] PHASE02 可执行 Adapter/Flag/Cutover/Rollback/Guard 重新关闭。
+- [ ] PHASE03 十一模块完整 Contract/Producer/Consumer Adoption 重新关闭。
+- [ ] PHASE04 PostgreSQL/RabbitMQ/Object/Checkpointer/Backup/Restore/Fault 重新关闭。
+- [ ] PHASE05 在订正后的 PHASE03/04 关闭后 ready。
 
 ## Phase 状态
 
-- [x] PHASE01 Current Baseline and Requirement Ledger
-- [x] PHASE02 Legacy Runtime Compatibility and Cutover Map
-- [x] PHASE03 Executable Cross-module Contract Bundle
-- [x] PHASE04 PostgreSQL Domain and Transaction Foundation
+- [ ] PHASE01 Current Baseline and Requirement Ledger
+- [ ] PHASE02 Legacy Runtime Compatibility and Cutover Control
+- [ ] PHASE03 Executable Cross-module Contract Bundle
+- [ ] PHASE04 PostgreSQL Domain and Transaction Foundation
 - [ ] PHASE05 Security Control Plane
 - [ ] PHASE06 Observability Minimum Black Box
 - [ ] PHASE07 Model Gateway Runtime
@@ -29,6 +40,18 @@ current_phase: PHASE05
 - [ ] PHASE21 Fault Recovery, Full E2E and Cutover
 - [ ] PHASE22 Fixed Benchmark, Production Readiness and Closure
 
+## Phase 完整关闭纪律
+
+- [ ] 最小 Vertical Slice 只作为中间检查点，没有被用作 Phase Completion。
+- [ ] Phase 范围内不存在仍标记 `target_not_current` 的 Mandatory Requirement。
+- [ ] Readiness 中全部 Mandatory Work Package 为 `completed`。
+- [ ] Coordinator Approval 为 `approved`，不是 `pending`。
+- [ ] 真实默认路径接入，不只有 Stub、Mock、Fixture 或未调用的新目录。
+- [ ] 正常、失败、恢复、并发、取消、幂等、安全和故障注入证据齐全。
+- [ ] 真实依赖按要求运行；环境缺失被标记 Blocked，而非使用本地替代品关闭。
+- [ ] Evidence 包含 Commit、环境版本、配置、Artifact Hash 和重现命令。
+- [ ] 未运行完整 CI/E2E/Fault/Migration/Security/Load/DR 时没有宣称通过。
+
 ## 架构不变量
 
 - [ ] Single Controller 是唯一产品控制器。
@@ -44,9 +67,10 @@ current_phase: PHASE05
 
 ## Legacy 迁移
 
-- [ ] 所有旧 Agent、Model、Retrieval、Tool、API、Frontend 执行入口有 Inventory。
-- [ ] 每个兼容 Flag 有 Owner、状态、Rollback 和删除日期。
-- [ ] 所有 Legacy Allowlist 有测试和移除条件。
+- [ ] 所有旧 Agent、Model、Retrieval、Tool、API、Frontend 执行入口有完整 Inventory。
+- [ ] 每个兼容入口真实接入版本 Adapter 或被明确禁用/删除。
+- [ ] 每个兼容 Flag 有可执行状态机、Owner、Audit、Rollback 和删除日期。
+- [ ] 所有 Legacy Allowlist 有静态与动态 Guard、测试和移除条件。
 - [ ] 旧数据库数据完成 Backfill/Cutover/Verification。
 - [ ] 旧 API 只通过版本化 Adapter 兼容，不永久代理新架构。
 - [ ] 旧 GeneralAgent 默认路径退出。
@@ -54,15 +78,28 @@ current_phase: PHASE05
 - [ ] 直接 Tool 执行旁路归零。
 - [ ] 无必要 Legacy Alias 删除。
 
+## Contract Bundle
+
+- [ ] 十一模块跨 Owner Contract 在 Registry 中 100% 覆盖。
+- [ ] 每个 Contract 有唯一 Owner、Schema、Canonical Hash 和版本策略。
+- [ ] 每个 Contract 有 Producer Fixture 与 Consumer Fixture。
+- [ ] 当前真实 Backend Producer/Consumer 已采用 Canonical Contract 或期限 Adapter。
+- [ ] Web/Desktop 类型由 Schema 生成或自动验证一致。
+- [ ] 重复 Envelope/Security/Failure/Receipt/Projection/DTO 定义已清理。
+- [ ] Unknown Major/Enum、Tamper、Backward/Forward Compatibility 测试通过。
+
 ## 数据与基础设施
 
 - [ ] Alembic Upgrade/Downgrade 或恢复策略验证。
-- [ ] PostgreSQL 事务、约束、并发和隔离验证。
-- [ ] Outbox/Inbox Duplicate、Gap、Redelivery 验证。
-- [ ] Lease/Fencing 拒绝晚到结果。
-- [ ] Object Store Hash、Commit、Delete、Restore 验证。
-- [ ] Checkpointer Restart/Resume/Generation Reconcile 验证。
-- [ ] Backup/Restore 与 Projection Rebuild 验证。
+- [ ] PostgreSQL 事务、约束、并发、隔离、连接丢失和恢复验证。
+- [ ] Outbox/Inbox Duplicate、Gap、Redelivery、Hash Conflict 和 Crash 验证。
+- [ ] 真实 RabbitMQ Confirm、Reconnect、DLQ、Replay 和 Partition 验证。
+- [ ] Idempotency Claim 并发、冲突、过期、续租和结果丢失验证。
+- [ ] Lease/Fencing 拒绝晚到结果和旧 Worker 提交。
+- [ ] 真实 S3/MinIO Hash、Commit、Visibility、Delete、Restore、Legal Hold 验证。
+- [ ] 真实 LangGraph PostgreSQL Checkpointer Restart/Resume/Generation/Schema Upgrade 验证。
+- [ ] Backup/Restore、PITR（环境支持时）、Projection Replay 和 Recovery Reconcile 验证。
+- [ ] Health/Readiness/Metrics/Operator Runbook 可用。
 
 ## Web / Desktop
 
@@ -99,7 +136,7 @@ current_phase: PHASE05
 
 ## 最终证据与归档
 
-- [ ] Requirement Ledger 的 Mandatory 项有 Code/Test/Trace/Eval/Evidence。
+- [ ] Requirement Ledger 的 Mandatory 项 100% 有 Code/Test/Trace/Eval/Evidence。
 - [ ] Fixed Dataset 和 Case Set Hash 被跟踪。
 - [ ] Benchmark Comparison 是 COMPARABLE 或如实 INCOMPARABLE。
 - [ ] Release Gate 不把 BLOCKED/UNAVAILABLE/ERROR 写成 PASS。
@@ -111,6 +148,7 @@ current_phase: PHASE05
 ## 当前未证明
 
 ```text
+PHASE01-04 complete after correction
 fixed benchmark measured pass
 Agentic GraphRAG stable superiority
 production-grade recovery
