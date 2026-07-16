@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +16,7 @@ REQUIRED = {
     "readiness": WORK_PRODUCTS / "phase02-readiness.yaml",
     "p01_legacy": WORK_PRODUCTS / "legacy-bypass-inventory.yaml",
 }
+RUNTIME_CONTROLS = REPO_ROOT / "tools" / "scripts" / "phase02_compatibility_runtime.py"
 
 
 def _read(path: Path) -> str:
@@ -38,6 +40,17 @@ def _blocks(text: str, marker: str) -> list[str]:
     if current:
         result.append("\n".join(current))
     return result
+
+
+def _verify_runtime_controls() -> list[str]:
+    if not RUNTIME_CONTROLS.exists():
+        return ["missing PHASE02 executable controls: tools/scripts/phase02_compatibility_runtime.py"]
+    spec = spec_from_file_location("phase02_compatibility_runtime", RUNTIME_CONTROLS)
+    if spec is None or spec.loader is None:
+        return ["cannot load PHASE02 executable controls"]
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return list(module.verify_phase02_runtime_controls())
 
 
 def verify_phase02_compatibility_boundaries() -> list[str]:
@@ -123,8 +136,15 @@ def verify_phase02_compatibility_boundaries() -> list[str]:
     for task_id in [f"P02-T{index:02d}" for index in range(1, 7)]:
         if task_id not in readiness:
             errors.append(f"phase02-readiness.yaml missing work package: {task_id}")
+        if re.search(rf"(?s){task_id}:\s*\n\s+state:\s+completed\b", readiness) is None:
+            errors.append(f"{task_id} is not completed in phase02-readiness.yaml")
     if "unassigned: []" not in readiness:
         errors.append("phase02-readiness.yaml must show no unassigned P0 risks")
+    if "coordinator_approval: approved" not in readiness:
+        errors.append("PHASE02 coordinator approval is not approved")
+    if "may_start_phase03_after_validation: true" not in readiness:
+        errors.append("PHASE03 start gate remains closed")
+    errors.extend(_verify_runtime_controls())
     return errors
 
 
