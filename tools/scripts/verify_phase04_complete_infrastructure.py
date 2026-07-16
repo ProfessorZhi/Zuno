@@ -29,6 +29,7 @@ BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_back
 BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
 IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
 IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
+IDEMPOTENCY_OWNER_CRASH_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_owner_crash.py"
 LEASE_FENCING_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
 LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencing.md"
 
@@ -318,11 +319,23 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "expiry: passed",
             "stale_generation_reject: passed",
             "result_replay: passed",
+            "owner_crash: passed_process_exit_reclaim",
             "high_concurrency_single_winner: passed",
             "Idempotency Claim != Domain Success",
         ]:
             if phrase not in idempotency_evidence:
                 errors.append(f"PHASE04 idempotency claim evidence missing phrase: {phrase}")
+
+    if not IDEMPOTENCY_OWNER_CRASH_VERIFIER.exists():
+        errors.append("missing PHASE04 idempotency owner crash verifier")
+    else:
+        owner_crash_errors = _load_verifier(
+            IDEMPOTENCY_OWNER_CRASH_VERIFIER,
+            "verify_phase04_idempotency_owner_crash",
+            "verify_phase04_idempotency_owner_crash",
+        )()
+        for owner_crash_error in owner_crash_errors:
+            errors.append(f"PHASE04 idempotency owner crash verification failed: {owner_crash_error}")
 
     if not BACKUP_RESTORE_VERIFIER.exists():
         errors.append("missing PHASE04 backup/restore/replay verifier")

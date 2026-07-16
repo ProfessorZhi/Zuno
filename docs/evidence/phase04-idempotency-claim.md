@@ -10,7 +10,7 @@ renew: passed
 expiry: passed
 stale_generation_reject: passed
 result_replay: passed
-owner_crash: partial_expiry_reclaim_only
+owner_crash: passed_process_exit_reclaim
 high_concurrency_single_winner: passed
 
 ## Boundary
@@ -38,6 +38,7 @@ Idempotency Claim != Domain Success. A completed claim only records that the sam
 - Same request hash can reclaim an expired claim with the next generation.
 - Stale generation cannot complete after a newer generation exists.
 - Completed claim replays the stored `result_ref`.
+- A worker subprocess can commit an in-progress claim and exit before completion; after expiry, a replacement owner can reclaim the same request at the next generation, stale generation completion is rejected, and the replacement result is replayed.
 - Twelve concurrent contenders for the same scope/key/request converge on one PostgreSQL claim row, one `acquired: true` winner, one owner and one generation.
 
 ## Commands And Results
@@ -48,12 +49,22 @@ PHASE04 idempotency claim verification passed.
 ```
 
 ```text
+python tools/scripts/verify_phase04_idempotency_owner_crash.py
+PHASE04 idempotency owner crash verification passed.
+```
+
+```text
 pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider
-7 passed
+9 passed
+```
+
+```text
+pytest -q tests/integration/test_phase04_idempotency_owner_crash.py -p no:cacheprovider
+1 passed
 ```
 
 ## Remaining Gap
 
-- Owner crash is represented by expiry/reclaim only; process-level crash evidence remains missing.
+- Owner crash has process-exit-plus-expiry reclaim evidence; full worker runtime crash supervision remains missing.
 - Cross-tenant idempotency isolation is not yet proven.
 - P04-T04 remains `ready`, not completed.
