@@ -38,6 +38,50 @@ MODULE_REQUIREMENT_SOURCES = [
 
 REQUIREMENT_PATTERN = re.compile(r"ARCH-[A-Z]+(?:-[A-Z]+)?-\d{3}")
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+P01_T02_REQUIRED_FIELDS = [
+    "code",
+    "test",
+    "runtime/integration evidence",
+    "environment",
+    "known limitation",
+    "physical owner",
+    "domain owner",
+    "transaction boundary",
+    "recovery owner",
+    "target phase",
+]
+P01_T02_REQUIRED_CAPABILITIES = [
+    "SQLite",
+    "PostgreSQL",
+    "SQLModel",
+    "SQLAlchemy",
+    "Alembic",
+    "Redis",
+    "RabbitMQ",
+    "MinIO",
+    "S3",
+    "Elasticsearch",
+    "Milvus",
+    "Neo4j",
+    "Checkpointer",
+    "Backup",
+    "Restore",
+    "Secret",
+    "Object lifecycle",
+    "Worker",
+    "Queue",
+    "Docker Compose",
+    "CI",
+]
+P01_T02_ALLOWED_STATES = {
+    "implementation available",
+    "partial implementation available",
+    "measurement blocked",
+    "quality not yet proven",
+    "target_not_current",
+    "blocked",
+    "needs_evidence",
+}
 
 
 def _read(path: Path) -> str:
@@ -131,9 +175,10 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
             errors.append(f"P01-T01 runtime inventory missing explicit dynamic-entry coverage: {phrase}")
 
     persistence = _read(INVENTORY_FILES["P01-T02"])
-    for phrase in ["runtime/integration evidence", "Backup", "Restore", "PITR", "real environment"]:
+    for phrase in ["runtime/integration evidence", "Backup", "Restore", "PITR", "Environment Matrix"]:
         if phrase not in persistence:
             errors.append(f"P01-T02 persistence inventory missing required evidence boundary: {phrase}")
+    _verify_p01_t02_contract(persistence, errors)
 
     frontend = _read(INVENTORY_FILES["P01-T04"])
     for phrase in ["Desktop", "Browser E2E", "SSE resume", "reauthorization", "UNKNOWN"]:
@@ -193,6 +238,49 @@ def _verify_requirement_ledger(errors: list[str]) -> None:
         errors.append(f"requirement ledger entries with empty evidence_refs: {empty_evidence_refs}")
 
 
+def _verify_p01_t02_contract(text: str, errors: list[str]) -> None:
+    for field in P01_T02_REQUIRED_FIELDS:
+        if field not in text:
+            errors.append(f"P01-T02 persistence inventory missing required contract field: {field}")
+
+    for capability in P01_T02_REQUIRED_CAPABILITIES:
+        if capability not in text:
+            errors.append(f"P01-T02 persistence inventory missing required capability coverage: {capability}")
+
+    for state in re.findall(r"\|\s*([^|\n]+?)\s*\|", text):
+        normalized = state.strip()
+        if normalized in {
+            "status",
+            "---",
+            "environment",
+            "capability",
+            "code",
+            "test",
+            "runtime/integration evidence",
+            "known limitation",
+            "physical owner",
+            "domain owner",
+            "transaction boundary",
+            "recovery owner",
+            "target phase",
+        }:
+            continue
+        if normalized in P01_T02_ALLOWED_STATES:
+            continue
+        if normalized.endswith("available") or normalized in {"target_current", "production ready"}:
+            errors.append(f"P01-T02 persistence inventory uses non-program status value: {normalized}")
+
+    for phrase in [
+        "PostgreSQL default domain store | needs_evidence",
+        "RabbitMQ durable queue | target_not_current",
+        "MinIO / S3-compatible object store | target_not_current",
+        "Official LangGraph PostgreSQL Checkpointer | target_not_current",
+        "Backup / Restore / PITR | target_not_current",
+    ]:
+        if phrase not in text:
+            errors.append(f"P01-T02 persistence inventory missing fail-closed target boundary: {phrase}")
+
+
 def _verify_readiness(errors: list[str]) -> None:
     readiness = _read(PHASE_READINESS)
     for task_id in [f"P01-T{index:02d}" for index in range(1, 7)]:
@@ -220,6 +308,15 @@ def _verify_phase01_evidence(errors: list[str]) -> None:
     for phrase in ["commit", "environment", "command", "result", "artifact hash"]:
         if phrase not in combined.lower():
             errors.append(f"PHASE01 evidence bundle missing reproducibility field: {phrase}")
+    p01_t02_evidence = evidence_dir / "phase01-persistence-infrastructure-inventory.md"
+    if not p01_t02_evidence.exists():
+        errors.append("P01-T02 missing docs/evidence/phase01-persistence-infrastructure-inventory.md")
+    else:
+        evidence_text = _read(p01_t02_evidence)
+        evidence_text_lower = evidence_text.lower()
+        for phrase in ["not-run real dependency checks", "rabbitmq", "minio", "milvus", "neo4j", "backup"]:
+            if phrase not in evidence_text_lower:
+                errors.append(f"P01-T02 evidence missing dependency disclosure: {phrase}")
 
 
 def verify_phase01_complete_baseline() -> list[str]:

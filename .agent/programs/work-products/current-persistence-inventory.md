@@ -1,54 +1,98 @@
-# PHASE01 Current Persistence and Infrastructure Inventory
+# PHASE01 Persistence and Infrastructure Current Inventory
 
 phase_id: PHASE01
 task_id: P01-T02
-start_commit: 9d10f71cc10ea1880a4a738f4500982d6684ede7
-status_boundary: "Compose、配置和 Target Adapter 声明不能单独证明 Server Product Current；Current 至少需要代码与测试或运行证据。"
+audit_baseline_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+requested_start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
+actual_start_commit: 688a50fa5730f8815b2f09050f01eeb42633ae1d
+branch: codex/P01-T02-persistence-infrastructure-inventory
+status: completion_candidate
+status_boundary: "Compose, configuration, class names and adapter declarations do not by themselves prove Current. A Current claim must have code, test or runtime/integration evidence, environment, known limitation, physical owner, domain owner, transaction boundary, recovery owner and target phase."
 
-Server Product Target present does not mean server capability is proven; PostgreSQL, RabbitMQ, MinIO/S3 and external index capabilities are not proven Current until real integration evidence exists.
+## Current
 
-## 1. Developer / CI Current
+- 已存在代码：Developer / CI 主路径以 SQLite、SQLModel、SQLAlchemy local engine、LocalObjectStore、LocalQueueBackend、SQLiteAgentRunStore、RuntimeGraphCheckpointer bridge、SQLiteLocalTraceStore 和 in-process KnowledgeIndexRuntime 为可执行 baseline。
+- 已存在数据：SQLModel metadata、本地 SQLite runtime tables、PHASE04 PostgreSQL primitive tables、local filesystem object root、local queue in-memory message/dead-letter/outbox state。
+- 已存在测试：SQLite ingestion/runtime、local queue、local object、local index、workspace recovery、runtime restart、PHASE04 PostgreSQL primitive integration tests。
+- 已存在证据：`docs/evidence/phase04-postgres-foundation.md` 证明 PostgreSQL 16 + Alembic + UoW/Outbox/Inbox/Idempotency/Lease/ObjectManifest/Checkpoint primitive 的部分真实集成；本文件和 `docs/evidence/phase01-persistence-infrastructure-inventory.md` 固定 PHASE01 审计证据。
 
-| capability | path | symbol | current evidence | boundary |
-| --- | --- | --- | --- | --- |
-| SQLite durable ingestion store | `src/backend/zuno/knowledge/storage/durable_ingestion_store.py` | `SQLiteDurableIngestionStore` | `tests/knowledge/test_enterprise_ingestion_storage_contract.py`, `tests/api/test_workspace_durable_ingest_runtime.py` | uses `create_engine("sqlite:///...")` and `SQLModel.metadata.create_all()`; not PostgreSQL Current |
-| Ingestion SQLModel tables | `src/backend/zuno/knowledge/storage/sqlmodel_models.py` | `SourceObjectTable`, `WorkspaceFileTable`, `ParseJobTable`, `ParseSnapshotTable`, `DocumentVersionTable`, `DocumentBlockTable`, `IndexManifestTable`, `IndexChunkTable`, `WorkspaceTaskTable`, `TaskEventTable`, `ArtifactTable`, `FeedbackTable` | storage and workspace tests | local schema surface only |
-| Local object store | `src/backend/zuno/knowledge/storage/local_object_store.py` | `LocalObjectStore` | `tests/knowledge/test_ingestion_async_infrastructure.py` | writes local `file:` URI and validates sha256 |
-| Local in-process queue | `src/backend/zuno/knowledge/ingestion/async_runtime.py` | `LocalQueueBackend` | `tests/knowledge/test_ingestion_async_infrastructure.py` | supports enqueue/consume/ack/fail/dead letter/replay locally |
-| Local parser/index workers | `src/backend/zuno/knowledge/ingestion/async_runtime.py` | `ParserWorker`, `IndexWorker`, `IngestionReconciler` | `tests/knowledge/test_ingestion_async_infrastructure.py` | worker evidence is local queue + local store |
-| SQLite agent runtime store | `src/backend/zuno/agent/runtime/sqlite_store.py` | `SQLiteAgentRunStore` | `tests/agent/runtime/test_runtime_store.py`, `tests/api/test_workspace_runtime_recovery.py` | stores runs/checkpoints/events/interrupts/plan versions/observations/tool claims in SQLite |
-| Runtime checkpointer bridge | `src/backend/zuno/agent/runtime/checkpointer.py` | `RuntimeGraphCheckpointer` | `tests/agent/runtime/test_runtime_restart_persistence.py` | not LangGraph PostgreSQL checkpointer |
-| Local trace store | `src/backend/zuno/platform/observability/local_trace_store.py` | `SQLiteLocalTraceStore` | observability/repo tests | local append store, not server observability pipeline |
-| Local BM25/vector/graph-shaped index | `src/backend/zuno/knowledge/indexing/runtime.py`, `src/backend/zuno/knowledge/indexing/adapters.py` | `KnowledgeIndexRuntime`, `INDEX_ADAPTER_CONTRACTS` | `tests/knowledge/test_index_jobs_runtime.py`, `tests/e2e/test_pdf_agent_answer.py` | deterministic in-process local adapters; external indexes remain Target |
+## Gap
 
-## 2. Server Product Target Present But Not Proven Current
+- 目标 Contract 与 Current 的差异：Canonical Server Product Target 要求 PostgreSQL、RabbitMQ、S3-compatible Object Store / MinIO、LangGraph PostgreSQL Checkpointer、Milvus、Neo4j、BM25/Search、Redis、Backup/Restore/PITR、Secret Lease、Worker/Queue recovery 和 Docker/CI 环境证据；当前只有 local baseline 和 PostgreSQL primitive partial evidence。
+- 缺失状态转换：真实 RabbitMQ ACK/redelivery/DLQ/replay、MinIO object staging/commit/visibility/delete/restore/legal hold、LangGraph checkpoint/domain generation reconciliation、Redis fail-fast/non-authoritative cache、index publish/cutover/delete/rebuild、backup/restore terminal state 未有完整 Current。
+- 缺失失败/恢复语义：RabbitMQ duplicate/out-of-order/crash、MinIO partial commit、PostgreSQL serialization/deadlock/pool loss、checkpoint ahead/behind domain、Milvus/Neo4j/Elasticsearch visibility deadline、PITR with stale derived indexes、secret rotation/revocation、worker lease loss 和 combined-service recovery 未被证明。
+- 缺失测试与证据：除 PHASE04 PostgreSQL primitive 外，没有真实依赖 integration/fault/e2e/trace/runbook evidence；Compose healthcheck 和配置样例只登记 Target 或 environment surface。
 
-| capability | path | symbol | status | missing evidence |
-| --- | --- | --- | --- | --- |
-| PostgreSQL config | `src/backend/zuno/platform/config/config.example.yaml` | `database.sync_endpoint`, `database.async_endpoint` | target declared | real integration run, isolation/lock/fault tests |
-| PostgreSQL engine | `src/backend/zuno/platform/database/__init__.py` | `engine`, `async_engine`, `ensure_database` | implementation surface present | domain UoW integration and recovery evidence |
-| Alembic | `infra/db/alembic/env.py`, `infra/db/alembic/versions/20260417_01_init_postgresql.py` | `target_metadata`, `upgrade`, `downgrade` | migration surface present | fine-grained migration, backfill/cutover/rollback proof |
-| PostgreSQL runtime tables | `src/backend/zuno/platform/database/models/agent_runtime.py` | `AgentRuntimeRunTable`, `AgentRuntimeCheckpointTable`, `AgentRuntimeEventTable`, `AgentRuntimeInterruptTable` | target table models present | real runtime path writing PostgreSQL |
-| RabbitMQ | `src/backend/zuno/platform/services/queue/client.py`, `runner.py`, `workers.py` | `QueueClient`, `consume_forever`, `ParseWorker`, `IndexWorker`, `GraphWorker` | target client/worker surface | real ACK/redelivery/duplicate/out-of-order/crash tests |
-| RabbitMQ boundary | `src/backend/zuno/knowledge/ingestion/async_runtime.py` | `RabbitMQQueueBackend` | explicit local target-blocked boundary | actual server adapter evidence |
-| Redis | `src/backend/zuno/platform/services/redis.py` | `RedisClient`, `redis_client` | lazy client surface | real connection and recovery tests |
-| Redis boundary | `src/backend/zuno/knowledge/ingestion/async_runtime.py` | `RedisRuntimeStateBoundary` | explicit target-blocked boundary | proof that Redis is non-authoritative |
-| MinIO/S3 | `src/backend/zuno/platform/services/storage/minio.py`, `storage/__init__.py` | `MinioClient`, `LazyStorageClient` | target surface | bucket, permission, lifecycle and recovery evidence |
-| External vector/graph/search | `src/backend/zuno/knowledge/indexing/adapters.py`, `infra/docker/docker-compose.yml` | `elasticsearch`, `milvus`, `neo4j` | target-blocked adapters / compose services | real index publish, visibility, delete and rebuild evidence |
-| Backup/restore | `infra/docker/docker-compose.yml` volumes | `postgres_data`, `redis_data`, `rabbitmq_data`, `minio_data`, `backend_vector_db` | storage volumes declared | backup, restore, PITR and cutover validation not found |
+## Plan
 
-## 3. Environment and Secrets
+- 本任务修改的精确文件：`.agent/programs/work-products/current-persistence-inventory.md`、`.agent/programs/work-products/phase-readiness.yaml`、`docs/evidence/phase01-persistence-infrastructure-inventory.md`、`tools/scripts/verify_phase01_complete_baseline.py`、`tests/repo/test_phase01_complete_baseline.py`。
+- Expand：扩展 inventory 为机器可检查的 Current/Gap/Plan、Current Claim Matrix、Target/Blocked Matrix 和 Environment Matrix。
+- Migrate：不迁移 Runtime；仅把旧部分盘点迁移为 P01-T02 证据边界。
+- Verify：新增 verifier 对 P01-T02 必填字段、状态词、环境和证据链接检查；运行指定验证命令。
+- Contract：不关闭 PHASE01；Implementer 只提交 `completion_candidate`。Coordinator 复核后才能改成 `completed`。
+- 回滚方式：回退本分支对允许路径的文档与 verifier/test 修改即可，不涉及 Runtime、Migration 或外部依赖。
 
-- `src/backend/zuno/platform/settings.py` loads `ZUNO_CONFIG` / `AGENTCHAT_CONFIG` and local config fallback paths through `Settings`, `resolve_app_config_path`, and `initialize_app_settings`.
-- `infra/docker/docker-compose.yml` declares `postgres`, `redis`, `rabbitmq`, `neo4j`, `elasticsearch`, `minio`, `etcd`, `milvus`, `backend`, `worker`, and `frontend`.
-- `src/backend/zuno/platform/config/config.example.yaml` contains secret-shaped configuration fields for model providers, tools, object storage, WeChat, Langfuse and LangSmith. These are configuration surfaces, not secret governance Current.
+## State Vocabulary
 
-## 4. Unproven Capabilities
+本 inventory 只使用 Program 边界允许的状态值：
 
-- PostgreSQL concurrency, locks, isolation, crash recovery, upgrade/downgrade execution and real domain UoW evidence are not Current.
-- RabbitMQ real ACK, lease loss, duplicate/out-of-order delivery and worker crash recovery are not Current.
-- Redis is not proven as a non-authoritative cache under eviction/clear/recovery.
-- MinIO/S3 object write, read authorization, lifecycle and restore are not Current.
-- Milvus/Neo4j/Elasticsearch are not Current runtime indexes.
-- Backup/restore and PITR are not implemented evidence.
-- Alembic currently has a metadata-wide initial revision; PHASE04 must not treat `create_all()` style surfaces as mature migration evidence.
+```text
+implementation available
+partial implementation available
+measurement blocked
+quality not yet proven
+target_not_current
+blocked
+needs_evidence
+```
+
+## Current Claim Matrix
+
+| capability | status | code | test | runtime/integration evidence | environment | known limitation | physical owner | domain owner | transaction boundary | recovery owner | target phase |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SQLite durable ingestion store | implementation available | `src/backend/zuno/knowledge/storage/durable_ingestion_store.py` `SQLiteDurableIngestionStore`; `src/backend/zuno/knowledge/storage/sqlmodel_models.py` SQLModel tables | `tests/knowledge/test_enterprise_ingestion_storage_contract.py`; `tests/api/test_workspace_durable_ingest_runtime.py`; `tests/storage/test_database_schema.py` | local runtime tests persist and reopen workspace/source/parse/index records | Developer / CI local SQLite file | uses `SQLModel.metadata.create_all()` and SQLite semantics; not PostgreSQL isolation, lock or PITR evidence | Infrastructure local adapter | Input / Knowledge consumers | per-call SQLModel `Session` commit in local SQLite | Input / Knowledge local recovery through reopening the same SQLite path | PHASE01 baseline; PHASE04 target migration |
+| SQLModel / SQLAlchemy local schema surface | implementation available | `src/backend/zuno/knowledge/storage/sqlmodel_models.py`; `src/backend/zuno/platform/database/session.py`; `src/backend/zuno/platform/database/models/**` | `tests/storage/test_sqlmodel.py`; `tests/storage/test_database_schema.py`; focused API/runtime tests | unit/schema tests and local app path tests | Developer / CI local Python process | metadata presence does not prove server migration or production transaction semantics | Infrastructure database surface | Product, Knowledge, Memory, Agent, Tool consumers | SQLModel/SQLAlchemy session boundary | owning domain module plus local store reopen | PHASE01 baseline; PHASE03/04 migration |
+| SQLite agent runtime store | implementation available | `src/backend/zuno/agent/runtime/sqlite_store.py` `SQLiteAgentRunStore` | `tests/agent/runtime/test_runtime_store.py`; `tests/api/test_workspace_runtime_recovery.py`; `tests/e2e/test_unified_agent_product_scenario.py` | local runtime recovery tests reopen SQLite runtime DB | Developer / CI local SQLite file | not PostgreSQL domain store; no distributed lock, lease, generation reconciliation or PITR | Infrastructure local adapter | Agent Core | SQLite transaction per store operation | Agent Core local restart recovery | PHASE01 baseline; PHASE04/06 target migration |
+| Runtime checkpointer bridge | partial implementation available | `src/backend/zuno/agent/runtime/checkpointer.py` `RuntimeGraphCheckpointer`; `src/backend/zuno/agent/runtime/service.py` | `tests/agent/runtime/test_runtime_restart_persistence.py`; runtime store tests | local checkpoint/control state persisted through `SQLiteAgentRunStore` | Developer / CI local SQLite | bridge is not official LangGraph PostgreSQL Checkpointer and does not prove domain/checkpoint generation reconciliation | Infrastructure local checkpoint adapter | Agent Core | same local runtime store boundary | Agent Core local replay/restart | PHASE01 baseline; PHASE04 Checkpointer target |
+| Local object store | implementation available | `src/backend/zuno/knowledge/storage/local_object_store.py` `LocalObjectStore` | `tests/knowledge/test_ingestion_async_infrastructure.py`; `tests/api/test_workspace_durable_ingest_runtime.py` | local tests write/read bytes and validate sha256-backed source records | Developer / CI local filesystem | not S3/MinIO staging, bucket policy, version, lifecycle, restore or authorization evidence | Infrastructure local object adapter | Input / Knowledge | filesystem write before local DB metadata reference | Input / Knowledge local replay from object path and source record | PHASE01 baseline; PHASE04/11 object target |
+| Local in-process queue and worker runtime | implementation available | `src/backend/zuno/knowledge/ingestion/async_runtime.py` `LocalQueueBackend`, `ParserWorker`, `IndexWorker`, `IngestionReconciler` | `tests/knowledge/test_ingestion_async_infrastructure.py`; workspace durable ingest tests | local tests cover enqueue, consume, ack, fail, dead-letter, replay and reconciler findings | Developer / CI single process | in-memory queue has no broker ACK, publisher confirm, network partition, durable quorum, delayed redelivery or real worker crash proof | Infrastructure local queue adapter | Input / Knowledge | in-memory message state plus local SQLite domain writes | Input / Knowledge local reconciler | PHASE01 baseline; PHASE04/11 RabbitMQ target |
+| Local BM25/vector/graph-shaped index runtime | implementation available | `src/backend/zuno/knowledge/indexing/runtime.py` `KnowledgeIndexRuntime`; `src/backend/zuno/knowledge/indexing/adapters.py` `INDEX_ADAPTER_CONTRACTS` | `tests/knowledge/test_index_jobs_runtime.py`; `tests/e2e/test_pdf_agent_answer.py`; retrieval/graphrag tests | local deterministic index and retrieval payload tests | Developer / CI local memory/process | does not prove Milvus, Neo4j or Elasticsearch physical write, visibility, delete, rebuild or cutover | Infrastructure local index adapter | Knowledge | in-process index state plus SQLite manifest/chunk persistence where used | Knowledge local rebuild/reindex path | PHASE01 baseline; PHASE11/12 target |
+| Local trace store | implementation available | `src/backend/zuno/platform/observability/local_trace_store.py` `SQLiteLocalTraceStore` | observability and product baseline tests | local trace append/read tests | Developer / CI local SQLite | not durable telemetry/audit pipeline or external sink evidence | Infrastructure local observability adapter | Observability & Eval | SQLite append boundary | Observability local replay | PHASE01 baseline; PHASE10 target |
+| PostgreSQL foundation primitives | partial implementation available | `src/backend/zuno/platform/database/foundation.py`; `infra/db/alembic/versions/20260715_04_infrastructure_foundation.py` | `tests/integration/test_phase04_postgres_foundation.py` | `docs/evidence/phase04-postgres-foundation.md`: PostgreSQL 16, Alembic upgrade/downgrade, 5 integration tests passed | Local Docker PostgreSQL 16 via `ZUNO_TEST_POSTGRES_URL` / `infra/db/alembic.ini` | primitive-only; default domain paths not cut over; no RabbitMQ, MinIO, official Checkpointer, backup/restore, combined fault, pool/deadlock/tenant evidence | Infrastructure PostgreSQL primitive | all domain modules as future consumers | SQLAlchemy `engine.begin()` UoW; infra tables only | Infrastructure | PHASE04 |
+| Alembic migration surface | partial implementation available | `infra/db/alembic/env.py`; `infra/db/alembic/versions/20260417_01_init_postgresql.py`; `infra/db/alembic/versions/20260715_04_infrastructure_foundation.py` | `tests/integration/test_phase04_postgres_foundation.py`; migration commands recorded in PHASE04 evidence | PHASE04 evidence records upgrade/downgrade for infrastructure foundation revision | Local Docker PostgreSQL 16 | migration evidence is partial; no complete data backfill, cutover, compatibility matrix or rollback drill for all domains | Infrastructure database migration | all domain modules as future consumers | Alembic transactional DDL where supported by PostgreSQL | Infrastructure | PHASE04 |
+
+## Target Or Blocked Matrix
+
+| capability | status | code | test | runtime/integration evidence | environment | known limitation | physical owner | domain owner | transaction boundary | recovery owner | target phase |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PostgreSQL default domain store | needs_evidence | `src/backend/zuno/platform/database/**`; `src/backend/zuno/platform/database/models/**` | PHASE04 primitive integration only | no evidence that default Product/Agent/Knowledge/Memory paths write PostgreSQL | Docker Compose declares `postgres`; config has PostgreSQL URLs | table/model/migration presence is not domain Current | Infrastructure | all domain owners | target is domain fact + outbox in one PostgreSQL transaction | Infrastructure plus domain owner | PHASE04 |
+| RabbitMQ durable queue | target_not_current | `src/backend/zuno/platform/services/queue/client.py`; `src/backend/zuno/platform/services/queue/runner.py`; `src/backend/zuno/platform/services/queue/workers.py`; `src/backend/zuno/knowledge/ingestion/async_runtime.py` `RabbitMQQueueBackend` | launcher/compose tests only; local queue tests do not count | no real broker ACK/redelivery/DLQ/fault evidence found | Docker Compose declares `rabbitmq`; config has AMQP URL | `QueueClient.publish/consume_once` is adapter surface without failure/recovery proof | Infrastructure Queue | Input / Knowledge and future workers | target outbox publish then broker delivery; consumer inbox + domain transaction before ACK | Infrastructure Queue / Worker | PHASE04 |
+| MinIO / S3-compatible object store | target_not_current | `src/backend/zuno/platform/services/storage/minio.py`; `src/backend/zuno/platform/storage/__init__.py` | no real MinIO integration/fault tests found | no bucket, permission, lifecycle, restore or object commit evidence found | Docker Compose declares `minio`; config has minio fields | `MinioClient` sets public read policy and logs errors; no canonical ObjectCommit protocol proof | Infrastructure Object Store | Input / Knowledge / Artifact owners | target reserve/upload/metadata commit boundary | Infrastructure Object Store | PHASE04/11 |
+| Redis cache/runtime state | target_not_current | `src/backend/zuno/platform/services/redis.py`; `src/backend/zuno/knowledge/ingestion/async_runtime.py` `RedisRuntimeStateBoundary`; legacy imports in `src/backend/zuno/platform/common/**` and API services | no Redis integration/fault tests found | no connection, eviction, clear, failover or non-authoritative recovery evidence found | Docker Compose declares `redis`; settings include redis dict | Redis must remain optional/non-authoritative; existing usage surfaces need owner review | Infrastructure Cache | Product/Security/Knowledge consumers depending on call site | target cache write outside authoritative fact transaction | Infrastructure Cache plus consuming owner | PHASE09/11 |
+| Elasticsearch / lexical search service | target_not_current | `infra/docker/docker-compose.yml`; `src/backend/zuno/api/dto/common.py`; local lexical adapters | retrieval planner unit tests only | no real Elasticsearch write/visibility/delete/rebuild evidence found | Docker Compose declares `elasticsearch`; config has enable flag | local BM25 tests do not prove external search service | Infrastructure Search Adapter | Knowledge | target physical write then visibility/verification before manifest acceptance | Infrastructure Index / Knowledge | PHASE11/12 |
+| Milvus vector service | target_not_current | `src/backend/zuno/platform/services/memory/vector_stores/milvus.py`; `infra/docker/docker-compose.yml`; DTO defaults mention `milvus` | storage smoke/import style tests only; local vector tests do not count | no real Milvus collection, insert, visibility, delete, rebuild or cutover evidence found | Docker Compose declares `milvus` with MinIO/etcd dependencies | provider SDK import/client presence is not Current | Infrastructure Vector Adapter | Knowledge / Memory | target physical write receipt then domain manifest acceptance | Infrastructure Index / Knowledge / Memory | PHASE11/12 |
+| Neo4j graph service | target_not_current | `src/backend/zuno/platform/services/graphrag/client.py`; `tools/migrations/migrate_domain_pack_id_to_graphrag_project_id.py`; `infra/docker/docker-compose.yml` | graph tests mostly local/contract; launcher compose tests only | no real Neo4j integration, constraint, visibility, delete or rebuild evidence found | Docker Compose declares `neo4j` | GraphRAG domain semantics are not proven by service declaration | Infrastructure Graph Adapter | Knowledge | target physical graph write then manifest/cutover | Infrastructure Index / Knowledge | PHASE11/12 |
+| Official LangGraph PostgreSQL Checkpointer | target_not_current | local `RuntimeGraphCheckpointer`; PHASE04 primitive `infra_checkpoints` | local restart tests and PHASE04 primitive checkpoint hash test | no official LangGraph PostgreSQL saver integration evidence found | PostgreSQL primitive environment only | local bridge and infra table do not prove LangGraph interrupt/resume/channel semantics | Infrastructure Checkpoint Adapter | Agent Core | target checkpoint generation must reconcile with domain generation | Infrastructure / Agent Core | PHASE04/06 |
+| Backup / Restore / PITR | target_not_current | Docker volumes in `infra/docker/docker-compose.yml`; PHASE04 readiness mentions remaining scope | no restore/PITR tests found | no backup artifact, restore rehearsal, PITR, recovery set or cutover validation found | Compose volumes for postgres/redis/rabbitmq/minio/milvus/neo4j/elasticsearch | volume declaration is not backup or disaster recovery evidence | Infrastructure Operations | all domain owners as recovery consumers | target backup metadata commit and isolated restore validation before cutover | Infrastructure Operations | PHASE04/21 |
+| Secret / Credential / KMS delivery | needs_evidence | `src/backend/zuno/platform/config/config.example.yaml`; `infra/docker/docker_config.example.yaml`; `src/backend/zuno/platform/settings.py` | config tests only | no SecretLease, rotation, revocation or redaction evidence found | env/config files | secret-shaped fields are configuration, not secret governance Current | Infrastructure Secret primitive / Security | Security and provider consumers | target lease delivery outside persistent secret material | Security / Infrastructure | PHASE09 |
+| Object lifecycle / deletion / legal hold | target_not_current | local object store and PHASE04 object manifest primitive | local hash tests and PHASE04 object manifest conflict test | no lifecycle, retention, legal hold, delete, restore or orphan reconciliation evidence found | local filesystem and PostgreSQL primitive | object hash/manifest is partial, not lifecycle Current | Infrastructure Object Store | Input / Knowledge / Security policy consumers | target tombstone/visibility/purge across DB/object/index | Infrastructure / Security / domain owner | PHASE04/11/21 |
+| Docker Compose environment | partial implementation available | `infra/docker/docker-compose.yml`; `infra/docker/docker_config.example.yaml`; `infra/docker/README.md`; launcher tests | `tests/tools/test_launcher_scripts.py` checks compose surfaces | no full stack integration run recorded for P01-T02 | local Docker target environment | Compose healthchecks prove service declaration only, not domain Current | Infrastructure deployment surface | all modules as consumers | no domain transaction boundary | Infrastructure Operations | PHASE04/21 |
+| CI environment for real dependencies | blocked | tests and scripts list focused commands; no CI workflow evidence in this task | repository tests can run locally; real dependency checks not run in P01-T02 | not-run checks documented in evidence | current Codex worktree; no guaranteed running Docker services for P01-T02 | real dependency checks require Coordinator-provided environment and are not faked | Infrastructure / CI | all domain owners as consumers | N/A | Coordinator / Infrastructure | PHASE01 handoff; PHASE04/21 |
+
+## Environment Matrix
+
+| environment | status | evidence | boundary |
+| --- | --- | --- | --- |
+| Developer / CI local SQLite | implementation available | SQLite ingestion/runtime tests and local workspace recovery tests | single-process/local-file semantics only |
+| Developer / CI local filesystem object store | implementation available | local object store tests | not S3/MinIO |
+| Developer / CI local queue | implementation available | local queue, worker and reconciler tests | not RabbitMQ |
+| Local Docker PostgreSQL 16 | partial implementation available | `docs/evidence/phase04-postgres-foundation.md` | primitive-only, not full domain Current |
+| Local Docker RabbitMQ / Redis / MinIO / Milvus / Neo4j / Elasticsearch | needs_evidence | Compose service declarations and config examples | not Current without real integration/fault evidence |
+| CI real dependency matrix | blocked | no P01-T02 CI artifact found | must be provided by later Phase/Coordinator closure |
+
+## Current Boundary Summary
+
+- Developer/CI adapter baseline: `implementation available` for SQLite, local object store, local queue, local indexes and local checkpoint bridge.
+- PostgreSQL/Alembic foundation: `partial implementation available`; it may be reused by PHASE04 but does not close RabbitMQ, MinIO/S3, Checkpointer, Backup/Restore or domain cutover.
+- RabbitMQ, MinIO/S3, Redis, Elasticsearch, Milvus, Neo4j, official LangGraph PostgreSQL Checkpointer, Backup/Restore/PITR, Secret Lease and Object Lifecycle: `target_not_current` or `needs_evidence` until real integration/fault/recovery evidence exists.
+- Product readiness remains `measurement blocked` and `quality not yet proven`.

@@ -25,7 +25,7 @@ def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
     errors = "\n".join(verifier.verify_phase01_complete_baseline())
     assert "coordinator approval is not approved" in errors
     assert "PHASE02 start gate remains closed" in errors
-    assert "docs/evidence has no phase01-*.md reproducible evidence bundle" in errors
+    assert "P01-T02 is not completed in phase-readiness.yaml" in errors
 
 
 def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None:
@@ -35,3 +35,28 @@ def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None
     assert "requirement ledger entries missing reverse_trace_refs" in errors
     assert "requirement ledger entries with empty test_ids" in errors
     assert "requirement ledger entries with empty evidence_refs" in errors
+
+
+def test_phase01_persistence_inventory_has_required_contract_fields() -> None:
+    verifier = _load_verifier()
+    inventory = (
+        REPO_ROOT / ".agent" / "programs" / "work-products" / "current-persistence-inventory.md"
+    ).read_text(encoding="utf-8")
+    errors: list[str] = []
+    verifier._verify_p01_t02_contract(inventory, errors)
+    assert not errors
+
+
+def test_phase01_persistence_evidence_discloses_not_run_real_dependencies() -> None:
+    evidence = (
+        REPO_ROOT / "docs" / "evidence" / "phase01-persistence-infrastructure-inventory.md"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "Not-Run Real Dependency Checks",
+        "RabbitMQ",
+        "MinIO/S3",
+        "Milvus",
+        "Neo4j",
+        "Backup / Restore / PITR",
+    ]:
+        assert phrase in evidence
