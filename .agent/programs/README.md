@@ -6,16 +6,19 @@
 zuno-canonical-architecture-runtime-realization-v1
 ```
 
-该 Program 负责把十一模块 Target 架构从现有本地实现和旧路径完整迁移为新架构 Runtime Current，包括后端、数据库、队列、对象存储、LangGraph、Security、Observability、Agentic GraphRAG、Tool Effect、Web 和 Desktop 适配、故障恢复、Benchmark、切流和旧路径删除。
+该 Program 负责把十一模块 Target 架构完整迁移为 Runtime Current，包括后端、PostgreSQL、RabbitMQ、Object Store、LangGraph Checkpointer、Security、Observability、Agent Core、Agentic GraphRAG、Tool Effect、Web/Desktop、故障恢复、Benchmark、切流和旧路径删除。
 
 ## 当前状态
 
 - State: active
-- Current phase: `PHASE05`
+- Current phase: `PHASE01`
+- Program version: 2
 - Phase count: 22
 - Atomic Work Packages: 163
-- Execution mode: runtime-first / vertical-slice-first / evidence-gated
+- Execution mode: full-scope / runtime-first / vertical-slice checkpoints / evidence-gated
 - Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
+
+2026-07-16 已撤回 PHASE01–04 的旧 `completed` 状态。已有 Inventory、Contract 和 PostgreSQL Primitive 作为部分实现保留，但不构成 Phase Completion。四个 Phase 必须按完整范围重新验证和实现；PHASE05 在它们关闭前不得启动。
 
 ## 必读文件
 
@@ -37,8 +40,10 @@ closure-checklist.md
 2. Codex 只读取 Runbook 指定的最小文件集，不重新推导整个架构。
 3. 每个任务使用独立 Worktree 和 `codex/<task-id>-<slug>` Branch。
 4. Implementer 只能提交 `completion_candidate`；Phase `completed` 由 Coordinator 审核后更新。
-5. 架构能力不得为了节省 Token、时间或测试而删减。
-6. 只新增接口、类型、Mock、README 或未来目录不能关闭 Runtime Task。
-7. blocked、unavailable、incomparable 和未运行验证必须如实报告。
-8. 兼容桥只允许存在于迁移期；PHASE22 后生产源码零 Legacy 文件夹、零 alias registry、零永久双路径。
-9. Program 完成后整体归档到 `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`，不得拆成多个竞争的 active Program。
+5. 最小 Vertical Slice 只能作为中间检查点，不能代替当前 Phase 的完整范围、失败恢复和真实依赖证明。
+6. 架构能力不得为了节省 Token、时间或测试而删减，也不得把剩余范围无条件推给后续 Phase。
+7. 只新增接口、类型、表、Mock、README、Fixture 或未来目录不能关闭 Runtime Task。
+8. Readiness/Evidence 仍为 `completion_candidate` 或 Coordinator Approval 仍为 `pending` 时，Manifest 不得写 `completed`。
+9. blocked、unavailable、incomparable 和未运行验证必须如实报告。
+10. 兼容桥只允许存在于迁移期；PHASE22 后生产源码零 Legacy 文件夹、零 alias registry、零永久双路径。
+11. Program 完成后整体归档到 `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`，不得拆成多个竞争的 active Program。
