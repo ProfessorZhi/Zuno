@@ -11,6 +11,8 @@ PHASE04_READINESS = WORK_PRODUCTS / "phase04-readiness.yaml"
 PHASE04_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
 PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
+RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
+RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -99,6 +101,30 @@ def verify_phase04_complete_infrastructure() -> list[str]:
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
+
+    if not RABBITMQ_TRANSPORT_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ transport verifier")
+    else:
+        rabbit_errors = _load_verifier(
+            RABBITMQ_TRANSPORT_VERIFIER,
+            "verify_phase04_rabbitmq_transport",
+            "verify_phase04_rabbitmq_transport",
+        )()
+        for rabbit_error in rabbit_errors:
+            errors.append(f"PHASE04 RabbitMQ transport verification failed: {rabbit_error}")
+
+    if not RABBITMQ_EVIDENCE.exists():
+        errors.append("missing PHASE04 RabbitMQ transport evidence")
+    else:
+        rabbit_evidence = _read(RABBITMQ_EVIDENCE)
+        for phrase in [
+            "publisher_confirm: passed",
+            "redelivery: passed",
+            "dlq: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in rabbit_evidence:
+                errors.append(f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}")
 
     if not PARTIAL_EVIDENCE.exists():
         errors.append("missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md")
