@@ -13,6 +13,8 @@ PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundatio
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
+MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
+MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -125,6 +127,31 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in rabbit_evidence:
                 errors.append(f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}")
+
+    if not MINIO_OBJECT_VERIFIER.exists():
+        errors.append("missing PHASE04 MinIO object store verifier")
+    else:
+        minio_errors = _load_verifier(
+            MINIO_OBJECT_VERIFIER,
+            "verify_phase04_minio_object_store",
+            "verify_phase04_minio_object_store",
+        )()
+        for minio_error in minio_errors:
+            errors.append(f"PHASE04 MinIO object store verification failed: {minio_error}")
+
+    if not MINIO_OBJECT_EVIDENCE.exists():
+        errors.append("missing PHASE04 MinIO object store evidence")
+    else:
+        minio_evidence = _read(MINIO_OBJECT_EVIDENCE)
+        for phrase in [
+            "object_staging: passed",
+            "hash_mismatch_fail_closed: passed",
+            "delete: passed",
+            "restore: passed",
+            "Object Commit != Domain Success",
+        ]:
+            if phrase not in minio_evidence:
+                errors.append(f"PHASE04 MinIO object store evidence missing phrase: {phrase}")
 
     if not PARTIAL_EVIDENCE.exists():
         errors.append("missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md")

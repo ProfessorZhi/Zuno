@@ -4,6 +4,11 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from zuno.platform.storage.object_store import (
+        MinioObjectStore,
+        ObjectHashMismatchError,
+        ObjectStoreReceipt,
+    )
     from zuno.platform.services.storage import (
         LazyStorageClient,
         MinioClient,
@@ -14,14 +19,20 @@ if TYPE_CHECKING:
 
 _EXPORT_TO_MODULE = {
     "LazyStorageClient": "zuno.platform.services.storage",
+    "MinioObjectStore": "zuno.platform.storage.object_store",
     "MinioClient": "zuno.platform.services.storage",
+    "ObjectHashMismatchError": "zuno.platform.storage.object_store",
+    "ObjectStoreReceipt": "zuno.platform.storage.object_store",
     "OSSClient": "zuno.platform.services.storage",
     "storage_client": "zuno.platform.services.storage",
 }
 
 __all__ = [
     "LazyStorageClient",
+    "MinioObjectStore",
     "MinioClient",
+    "ObjectHashMismatchError",
+    "ObjectStoreReceipt",
     "OSSClient",
     "storage_client",
 ]

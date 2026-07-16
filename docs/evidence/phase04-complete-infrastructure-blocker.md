@@ -12,6 +12,7 @@ rabbitmq_fault_evidence: missing
 minio_restore_evidence: missing
 combined_dependency_fault: missing
 rabbitmq_transport_subset: passed
+minio_object_store_subset: passed
 
 ## Stop Condition
 
@@ -31,12 +32,12 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` | passed, `5 passed` against real PostgreSQL on localhost:5432 |
 | `python tools/scripts/verify_phase04_real_services_smoke.py` | passed; PostgreSQL schema dump contains infrastructure tables, RabbitMQ publish/get succeeds, MinIO put/get/delete hash check succeeds |
 | `python tools/scripts/verify_phase04_rabbitmq_transport.py` | passed; durable exchange/queue/DLQ, publisher confirm path, redelivery and DLQ routing verified against real RabbitMQ |
+| `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, hash mismatch fail-closed, commit cleanup, delete and restore verified against real MinIO |
 
 ## Missing Required Proof
 
 - RabbitMQ replay / broker restart / partition recovery
-- MinIO/S3 object staging
-- MinIO/S3 restore
+- MinIO/S3 retention, legal hold, lifecycle, authorization and storage restart
 - MinIO/S3 visibility, authorization, delete and legal hold evidence
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay
@@ -54,8 +55,10 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - RabbitMQ DLQ：Reject `requeue=False` 后 poison message 进入 durable DLQ；
 - RabbitMQ transport subset：`aio_pika` adapter 声明 durable exchange/queue/DLQ，启用 publisher confirms，验证 NACK redelivery 和 reject-to-DLQ；
 - MinIO/S3 smoke：创建临时 bucket，写入对象，读回并校验 SHA-256，删除对象和 bucket。
+- MinIO/S3 object staging：`MinioObjectStore` 写入 `_staging/<sha256>/...` 并记录 content hash；
+- MinIO/S3 restore：commit 后创建 restore point，删除 visible object，再从 restore point 恢复并校验 hash/bytes；
 
-这些结果只证明三类服务已经可用，并证明 RabbitMQ transport 的 confirm/redelivery/DLQ 子集；仍不能证明 transactional outbox/inbox recovery、broker restart/partition、official Checkpointer、restore、PITR 或组合故障恢复。
+这些结果只证明三类服务已经可用，并证明 RabbitMQ transport 的 confirm/redelivery/DLQ 子集与 MinIO object staging/delete/restore 子集；仍不能证明 transactional outbox/inbox recovery、broker restart/partition、official Checkpointer、retention/legal hold/lifecycle、PITR 或组合故障恢复。
 
 ## Existing Partial Evidence
 
