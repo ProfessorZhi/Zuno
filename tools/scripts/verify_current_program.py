@@ -379,15 +379,16 @@ def verify_current_program() -> list[str]:
         expected_fragments = [
             "PHASE04 coordinator approval is not approved",
             "PHASE05 start gate remains closed",
-            "RabbitMQ real service is not reachable",
-            "MinIO/S3 real service is not reachable",
+            "official LangGraph PostgreSQL Checkpointer is not importable/proven",
+            "PHASE04 evidence missing completion proof marker: langgraph_postgres_checkpointer: proven",
+            "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven",
         ]
         combined = "\n".join(complete_errors)
         for fragment in expected_fragments:
             if fragment not in combined:
                 errors.append(f"PHASE04 complete infrastructure gate missing blocker: {fragment}")
         blocker_text = _read(phase04_blocker)
-        for phrase in ["status: blocked", "Docker Desktop Linux engine", "TcpTestSucceeded: False"]:
+        for phrase in ["status: blocked", "Docker engine `29.4.0`", "real_services_smoke: passed"]:
             if phrase not in blocker_text:
                 errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")
     return errors
