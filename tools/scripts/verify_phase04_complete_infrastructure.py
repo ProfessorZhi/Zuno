@@ -152,6 +152,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "rabbitmq_publish_confirm: passed",
             "outbox_published_receipt: passed",
             "inbox_dedup_receipt: passed",
+            "commit_after_publish_before_complete_crash: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in outbox_evidence:

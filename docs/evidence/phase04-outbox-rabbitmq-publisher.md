@@ -8,7 +8,7 @@ outbox_claim: passed
 rabbitmq_publish_confirm: passed
 outbox_published_receipt: passed
 inbox_dedup_receipt: passed
-commit_after_publish_before_complete_crash: not_yet_proven
+commit_after_publish_before_complete_crash: passed
 broker_restart: not_yet_proven
 partition_recovery: not_yet_proven
 
@@ -39,6 +39,11 @@ Queue ACK != Domain Success. The outbox row and inbox row are infrastructure rec
 - Marks the outbox row `published` only after RabbitMQ publish returns.
 - Consumes the RabbitMQ message and records a real `infra_inbox_messages` receipt.
 - ACKs RabbitMQ after the inbox receipt is written.
+- Simulates crash after RabbitMQ publish but before `complete_outbox`.
+- Reclaims the stale claimed outbox row using `claimed_at` timeout.
+- Republishes the same event id through RabbitMQ.
+- Records the duplicate delivery into the same inbox row with the same payload hash.
+- Leaves exactly one inbox receipt row and final outbox status `published`.
 - Deletes temporary RabbitMQ topology after verification.
 
 ## Commands And Results
@@ -55,7 +60,6 @@ pytest -q tests/integration/test_phase04_outbox_rabbitmq_publisher.py -p no:cach
 
 ## Remaining Gap
 
-- Commit-after-publish-before-complete crash recovery is not yet proven.
 - Broker restart, network partition, backlog, retry exhaustion and DLQ replay are not yet proven for the outbox publisher.
 - Consumer domain transaction plus inbox `COMMITTED` state is not yet proven.
 - P04-T03 remains `ready`, not completed.

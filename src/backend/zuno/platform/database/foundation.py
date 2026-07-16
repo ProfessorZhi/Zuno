@@ -119,6 +119,21 @@ class InfrastructureRepository:
         ).all()
         return [str(row.event_id) for row in rows]
 
+    def reclaim_stale_outbox_claims(self, *, older_than_seconds: int) -> list[str]:
+        rows = self.connection.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET status = 'pending', claim_owner = NULL, claimed_at = NULL
+                WHERE status = 'claimed'
+                  AND claimed_at < now() - (:older_than_seconds * interval '1 second')
+                RETURNING event_id
+                """
+            ),
+            {"older_than_seconds": older_than_seconds},
+        ).all()
+        return [str(row.event_id) for row in rows]
+
     def complete_outbox(self, *, event_id: str, worker_id: str) -> None:
         result = self.connection.execute(
             text(

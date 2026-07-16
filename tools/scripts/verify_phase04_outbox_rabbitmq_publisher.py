@@ -99,8 +99,128 @@ async def _verify() -> list[str]:
     return errors
 
 
+async def _verify_publish_crash_recovery() -> list[str]:
+    engine = create_foundation_engine(DATABASE_URL)
+    topology = _topology()
+    payload = {"kind": "phase04-outbox-crash", "marker": uuid4().hex}
+    errors: list[str] = []
+    try:
+        with InfrastructureUnitOfWork(engine) as repo:
+            event_id = repo.enqueue_outbox(
+                aggregate_id="phase04-run-crash",
+                topic="phase04.outbox.publisher",
+                payload=payload,
+                idempotency_key=f"phase04-outbox-crash-{payload['marker']}",
+            )
+            claimed = repo.claim_outbox(worker_id="crashed-publisher", limit=1)
+            if claimed != [event_id]:
+                return [f"initial outbox claim mismatch: {claimed!r}"]
+            record = repo.load_claimed_outbox_event(event_id=event_id, worker_id="crashed-publisher")
+
+        async with RabbitMQTransport(RABBITMQ_URL) as transport:
+            await transport.declare_topology(topology)
+            try:
+                await transport.publish(
+                    topology,
+                    message_id=record.event_id,
+                    payload={
+                        "aggregate_id": record.aggregate_id,
+                        "event_id": record.event_id,
+                        "idempotency_key": record.idempotency_key,
+                        "payload": record.payload,
+                        "payload_hash": record.payload_hash,
+                        "topic": record.topic,
+                    },
+                    tenant_id="tenant-phase04",
+                    trace_id="trace-phase04-crash-before-complete",
+                )
+                first_delivery = await transport.get(topology.queue)
+                if first_delivery is None:
+                    errors.append("first publish before simulated crash was not delivered")
+                else:
+                    with InfrastructureUnitOfWork(engine) as repo:
+                        first_hash = repo.record_inbox(
+                            consumer="phase04-crash-consumer",
+                            message_id=first_delivery.message_id,
+                            payload=first_delivery.payload,
+                        )
+                    await first_delivery.ack()
+
+                    with engine.begin() as conn:
+                        conn.execute(
+                            text(
+                                """
+                                UPDATE infra_outbox_events
+                                SET claimed_at = now() - interval '5 minutes'
+                                WHERE event_id = :event_id
+                                """
+                            ),
+                            {"event_id": event_id},
+                        )
+                    with InfrastructureUnitOfWork(engine) as repo:
+                        reclaimed = repo.reclaim_stale_outbox_claims(older_than_seconds=1)
+                    if reclaimed != [event_id]:
+                        errors.append(f"stale outbox reclaim mismatch: {reclaimed!r}")
+
+                    publisher = PostgresOutboxRabbitMQPublisher(
+                        engine=engine,
+                        transport=transport,
+                        topology=topology,
+                        worker_id="recovery-publisher",
+                        tenant_id="tenant-phase04",
+                        trace_id="trace-phase04-recovery",
+                    )
+                    published = await publisher.publish_pending(limit=1)
+                    if [item.event_id for item in published] != [event_id]:
+                        errors.append("recovery publisher did not republish reclaimed event")
+                    duplicate_delivery = await transport.get(topology.queue)
+                    if duplicate_delivery is None:
+                        errors.append("duplicate recovery delivery was not received")
+                    else:
+                        with InfrastructureUnitOfWork(engine) as repo:
+                            duplicate_hash = repo.record_inbox(
+                                consumer="phase04-crash-consumer",
+                                message_id=duplicate_delivery.message_id,
+                                payload=duplicate_delivery.payload,
+                            )
+                        if duplicate_hash != first_hash:
+                            errors.append("duplicate inbox receipt hash changed")
+                        await duplicate_delivery.ack()
+
+                with engine.connect() as conn:
+                    outbox_status = conn.execute(
+                        text("SELECT status FROM infra_outbox_events WHERE event_id = :event_id"),
+                        {"event_id": event_id},
+                    ).scalar_one()
+                    if outbox_status != "published":
+                        errors.append(f"recovered outbox status is {outbox_status!r}")
+                    inbox_count = conn.execute(
+                        text(
+                            """
+                            SELECT count(*)
+                            FROM infra_inbox_messages
+                            WHERE consumer = 'phase04-crash-consumer' AND message_id = :event_id
+                            """
+                        ),
+                        {"event_id": event_id},
+                    ).scalar_one()
+                    if inbox_count != 1:
+                        errors.append(f"inbox dedup row count after duplicate delivery is {inbox_count!r}")
+            finally:
+                await transport.delete_topology(topology)
+    finally:
+        engine.dispose()
+    return errors
+
+
 def verify_phase04_outbox_rabbitmq_publisher() -> list[str]:
-    return asyncio.run(_verify())
+    async def _run_all() -> list[str]:
+        errors: list[str] = []
+        errors.extend(await _verify())
+        errors.extend(await _verify_publish_crash_recovery())
+        return errors
+
+    return asyncio.run(_run_all())
 
 
 def main() -> int:

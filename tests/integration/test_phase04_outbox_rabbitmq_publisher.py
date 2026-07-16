@@ -76,6 +76,10 @@ def test_postgres_outbox_publishes_to_rabbitmq_and_records_inbox(engine) -> None
     asyncio.run(_verify_outbox_publisher(engine))
 
 
+def test_outbox_publish_crash_before_complete_is_reclaimed_and_deduped(engine) -> None:
+    asyncio.run(_verify_publish_crash_before_complete_recovery(engine))
+
+
 async def _verify_outbox_publisher(engine) -> None:
     topology = _topology()
     payload = {"kind": "phase04-outbox", "sequence": 1}
@@ -131,5 +135,103 @@ async def _verify_outbox_publisher(engine) -> None:
                     ),
                     {"event_id": event_id},
                 ).scalar_one() == "received"
+        finally:
+            await transport.delete_topology(topology)
+
+
+async def _verify_publish_crash_before_complete_recovery(engine) -> None:
+    topology = _topology()
+    payload = {"kind": "phase04-outbox-crash", "sequence": 2}
+    with InfrastructureUnitOfWork(engine) as repo:
+        event_id = repo.enqueue_outbox(
+            aggregate_id="phase04-run-crash",
+            topic="phase04.outbox.publisher",
+            payload=payload,
+            idempotency_key="phase04-outbox-crash-idem",
+        )
+        claimed = repo.claim_outbox(worker_id="crashed-publisher", limit=1)
+        assert claimed == [event_id]
+        record = repo.load_claimed_outbox_event(event_id=event_id, worker_id="crashed-publisher")
+
+    async with RabbitMQTransport(RABBITMQ_URL) as transport:
+        await transport.declare_topology(topology)
+        try:
+            await transport.publish(
+                topology,
+                message_id=record.event_id,
+                payload={
+                    "aggregate_id": record.aggregate_id,
+                    "event_id": record.event_id,
+                    "idempotency_key": record.idempotency_key,
+                    "payload": record.payload,
+                    "payload_hash": record.payload_hash,
+                    "topic": record.topic,
+                },
+                tenant_id="tenant-phase04",
+                trace_id="trace-phase04-crash-before-complete",
+            )
+
+            first_delivery = await transport.get(topology.queue)
+            assert first_delivery is not None
+            with InfrastructureUnitOfWork(engine) as repo:
+                first_hash = repo.record_inbox(
+                    consumer="phase04-crash-consumer",
+                    message_id=first_delivery.message_id,
+                    payload=first_delivery.payload,
+                )
+            await first_delivery.ack()
+
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE infra_outbox_events
+                        SET claimed_at = now() - interval '5 minutes'
+                        WHERE event_id = :event_id
+                        """
+                    ),
+                    {"event_id": event_id},
+                )
+            with InfrastructureUnitOfWork(engine) as repo:
+                assert repo.reclaim_stale_outbox_claims(older_than_seconds=1) == [event_id]
+
+            publisher = PostgresOutboxRabbitMQPublisher(
+                engine=engine,
+                transport=transport,
+                topology=topology,
+                worker_id="recovery-publisher",
+                tenant_id="tenant-phase04",
+                trace_id="trace-phase04-recovery",
+            )
+            assert [item.event_id for item in await publisher.publish_pending(limit=1)] == [event_id]
+
+            duplicate_delivery = await transport.get(topology.queue)
+            assert duplicate_delivery is not None
+            with InfrastructureUnitOfWork(engine) as repo:
+                assert (
+                    repo.record_inbox(
+                        consumer="phase04-crash-consumer",
+                        message_id=duplicate_delivery.message_id,
+                        payload=duplicate_delivery.payload,
+                    )
+                    == first_hash
+                )
+            await duplicate_delivery.ack()
+
+            with engine.connect() as conn:
+                assert conn.execute(
+                    text("SELECT status FROM infra_outbox_events WHERE event_id = :event_id"),
+                    {"event_id": event_id},
+                ).scalar_one() == "published"
+                assert conn.execute(
+                    text(
+                        """
+                        SELECT count(*)
+                        FROM infra_inbox_messages
+                        WHERE consumer = 'phase04-crash-consumer' AND message_id = :event_id
+                        """
+                    ),
+                    {"event_id": event_id},
+                ).scalar_one() == 1
         finally:
             await transport.delete_topology(topology)
