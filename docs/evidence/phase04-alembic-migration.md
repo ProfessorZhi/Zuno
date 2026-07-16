@@ -1,0 +1,60 @@
+# PHASE04 Alembic Migration Evidence
+
+phase_id: PHASE04
+task_id: P04-T02
+date: 2026-07-16
+status: partial_implementation_available
+temporary_database_upgrade_head: passed
+repeated_upgrade_head: passed
+downgrade_base: passed
+reupgrade_head: passed
+infra_table_roundtrip: passed
+schema_drift_detection: not_yet_proven
+data_backfill_framework: not_yet_proven
+online_migration_lock: not_yet_proven
+
+## 边界
+
+本证据证明 Alembic 在真实 PostgreSQL 临时数据库上的迁移往返子集：空库 upgrade head、重复 upgrade head、downgrade base、再次 upgrade head，以及 PHASE04 infra tables 的创建/移除/重建。
+
+这不关闭 P04-T02，也不关闭 PHASE04。当前 migration chain 仍未证明完整 schema drift detection、data backfill framework、online migration lock、forward-fix 策略和所有领域 schema 的 cutover 集成。
+
+## 环境
+
+| 项目 | 值 |
+| --- | --- |
+| PostgreSQL service | `zuno-postgres`, image `postgres:16` |
+| Admin URL | `postgresql+psycopg://postgres:postgres@localhost:5432/postgres` |
+| Temporary DB pattern | `zuno_phase04_alembic_<uuid>` |
+| Verification command | `python tools/scripts/verify_phase04_alembic_migration.py` |
+| Integration test | `pytest -q tests/integration/test_phase04_alembic_migration.py -p no:cacheprovider` |
+
+## 已验证行为
+
+- Verifier 创建隔离的真实 PostgreSQL 临时数据库，不修改当前 `zuno` 数据库。
+- 通过临时 `ZUNO_CONFIG` 驱动 `infra/db/alembic/env.py` 指向临时数据库。
+- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260715_04`。
+- 重复 `upgrade head` 保持 revision `20260715_04`，不产生重复对象错误。
+- PHASE04 infra tables 在 upgrade 后存在。
+- `alembic downgrade base` 移除 PHASE04 infra tables。
+- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260715_04`。
+- Verifier 结束时终止临时数据库连接并删除临时数据库。
+
+## 命令与结果
+
+```text
+python tools/scripts/verify_phase04_alembic_migration.py
+PHASE04 Alembic migration verification passed.
+```
+
+```text
+pytest -q tests/integration/test_phase04_alembic_migration.py -p no:cacheprovider
+1 passed
+```
+
+## 剩余缺口
+
+- `20260417_01` 仍使用 `metadata.create_all()`；这不满足完整产品 migration governance。
+- Schema drift detection、module ownership matrix、data backfill framework、online migration lock 和 forward-fix runbook 仍未证明。
+- Existing production-like DB upgrade 和 parallel deploy migration lock 尚未证明。
+- P04-T02 仍是 `ready`，不是 completed。

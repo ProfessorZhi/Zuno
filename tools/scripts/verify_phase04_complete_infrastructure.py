@@ -10,6 +10,8 @@ WORK_PRODUCTS = REPO_ROOT / ".agent" / "programs" / "work-products"
 PHASE04_READINESS = WORK_PRODUCTS / "phase04-readiness.yaml"
 PHASE04_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
 PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md"
+ALEMBIC_MIGRATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_alembic_migration.py"
+ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -111,6 +113,32 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         )()
         for smoke_error in smoke_errors:
             errors.append(f"PHASE04 real service smoke failed: {smoke_error}")
+
+    if not ALEMBIC_MIGRATION_VERIFIER.exists():
+        errors.append("missing PHASE04 Alembic migration verifier")
+    else:
+        alembic_errors = _load_verifier(
+            ALEMBIC_MIGRATION_VERIFIER,
+            "verify_phase04_alembic_migration",
+            "verify_phase04_alembic_migration",
+        )()
+        for alembic_error in alembic_errors:
+            errors.append(f"PHASE04 Alembic migration verification failed: {alembic_error}")
+
+    if not ALEMBIC_MIGRATION_EVIDENCE.exists():
+        errors.append("missing PHASE04 Alembic migration evidence")
+    else:
+        alembic_evidence = _read(ALEMBIC_MIGRATION_EVIDENCE)
+        for phrase in [
+            "temporary_database_upgrade_head: passed",
+            "repeated_upgrade_head: passed",
+            "downgrade_base: passed",
+            "reupgrade_head: passed",
+            "infra_table_roundtrip: passed",
+            "不关闭 P04-T02",
+        ]:
+            if phrase not in alembic_evidence:
+                errors.append(f"PHASE04 Alembic migration evidence missing phrase: {phrase}")
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
