@@ -18,6 +18,7 @@ idempotency_claim_lifecycle_subset: passed
 idempotency_high_concurrency_single_winner_subset: passed
 lease_fencing_subset: passed
 minio_object_store_subset: passed
+minio_storage_restart_subset: passed
 backup_restore_replay_subset: passed
 
 ## Stop Condition
@@ -43,12 +44,13 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_idempotency_claim.py` | passed; same-hash replay, different-hash conflict, renew, expiry, stale generation reject, result replay and high-concurrency single-winner verified |
 | `python tools/scripts/verify_phase04_lease_fencing.py` | passed; lease acquire, heartbeat renew, duplicate worker reject, expiry transfer, cancel transfer and late fencing token reject verified |
 | `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, hash mismatch fail-closed, commit cleanup, delete and restore verified against real MinIO |
+| `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`, infra outbox/inbox/object manifest/checkpoint rows and MinIO restore point verified |
 
 ## Missing Required Proof
 
 - RabbitMQ replay, network partition, retry exhaustion and full recovery
-- MinIO/S3 retention, legal hold, lifecycle, authorization and storage restart
+- MinIO/S3 retention, legal hold, lifecycle and authorization
 - MinIO/S3 visibility, authorization, delete and legal hold evidence
 - Idempotency owner crash and tenant isolation
 - Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
@@ -75,9 +77,10 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 smoke：创建临时 bucket，写入对象，读回并校验 SHA-256，删除对象和 bucket。
 - MinIO/S3 object staging：`MinioObjectStore` 写入 `_staging/<sha256>/...` 并记录 content hash；
 - MinIO/S3 restore：commit 后创建 restore point，删除 visible object，再从 restore point 恢复并校验 hash/bytes；
+- MinIO/S3 storage restart subset：committed object 与 restore point 经真实 `docker restart zuno-minio` 后仍可读取且 bytes/hash receipt 不变；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 
-这些结果只证明三类服务已经可用，并证明 RabbitMQ transport 的 confirm/redelivery/DLQ 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期与高并发单赢家子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/delete/restore 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 idempotency owner crash、tenant isolation、network partition、retry exhaustion、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
+这些结果只证明三类服务已经可用，并证明 RabbitMQ transport 的 confirm/redelivery/DLQ 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期与高并发单赢家子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 idempotency owner crash、tenant isolation、network partition、retry exhaustion、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
 
 ## Existing Partial Evidence
 

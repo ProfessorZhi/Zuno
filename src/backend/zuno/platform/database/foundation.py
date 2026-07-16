@@ -244,22 +244,33 @@ class InfrastructureRepository:
     ) -> IdempotencyClaimReceipt:
         request_hash = canonical_sha256(request)
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        self.connection.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:scope || ':' || :key, 0))"),
+            {"scope": scope, "key": key},
+        )
         row = self.connection.execute(
             text(
                 """
-                WITH claim_lock AS (
-                    SELECT pg_advisory_xact_lock(hashtextextended(:scope || ':' || :key, 0))
-                ),
-                inserted AS (
-                    INSERT INTO infra_idempotency_claims(
-                        scope, idempotency_key, owner, request_hash, status, generation, expires_at
-                    )
-                    SELECT :scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at
-                    FROM claim_lock
-                    ON CONFLICT (scope, idempotency_key) DO NOTHING
-                    RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
-                ),
-                reclaimed AS (
+                INSERT INTO infra_idempotency_claims(
+                    scope, idempotency_key, owner, request_hash, status, generation, expires_at
+                )
+                VALUES (:scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at)
+                ON CONFLICT (scope, idempotency_key) DO NOTHING
+                RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
+                """
+            ),
+            {
+                "scope": scope,
+                "key": key,
+                "owner": owner,
+                "request_hash": request_hash,
+                "expires_at": expires_at,
+            },
+        ).first()
+        if row is None:
+            row = self.connection.execute(
+                text(
+                    """
                     UPDATE infra_idempotency_claims
                     SET generation = infra_idempotency_claims.generation + 1,
                         owner = :owner,
@@ -271,37 +282,28 @@ class InfrastructureRepository:
                       AND request_hash = :request_hash
                       AND status in ('in_progress','expired')
                       AND expires_at < now()
-                      AND NOT EXISTS (SELECT 1 FROM inserted)
-                      AND EXISTS (SELECT 1 FROM claim_lock)
                     RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
+                    """
                 ),
-                current_claim AS (
+                {
+                    "scope": scope,
+                    "key": key,
+                    "owner": owner,
+                    "request_hash": request_hash,
+                    "expires_at": expires_at,
+                },
+            ).first()
+        if row is None:
+            row = self.connection.execute(
+                text(
+                    """
                     SELECT owner, request_hash, status, generation, result_ref, false AS acquired
                     FROM infra_idempotency_claims
-                    WHERE scope = :scope
-                      AND idempotency_key = :key
-                      AND NOT EXISTS (SELECT 1 FROM inserted)
-                      AND NOT EXISTS (SELECT 1 FROM reclaimed)
-                      AND EXISTS (SELECT 1 FROM claim_lock)
-                )
-                SELECT owner, request_hash, status, generation, result_ref, acquired
-                FROM inserted
-                UNION ALL
-                SELECT owner, request_hash, status, generation, result_ref, acquired
-                FROM reclaimed
-                UNION ALL
-                SELECT owner, request_hash, status, generation, result_ref, acquired
-                FROM current_claim
-                """
-            ),
-            {
-                "scope": scope,
-                "key": key,
-                "owner": owner,
-                "request_hash": request_hash,
-                "expires_at": expires_at,
-            },
-        ).one()
+                    WHERE scope = :scope AND idempotency_key = :key
+                    """
+                ),
+                {"scope": scope, "key": key},
+            ).one()
         if row.request_hash != request_hash:
             raise InfrastructureConflictError("idempotency key was reused with a different request hash")
         return IdempotencyClaimReceipt(

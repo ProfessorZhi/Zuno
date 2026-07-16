@@ -19,6 +19,7 @@ RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_ra
 RABBITMQ_RESTART_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
 MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
+MINIO_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
 BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
 BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
 IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
@@ -208,10 +209,22 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "hash_mismatch_fail_closed: passed",
             "delete: passed",
             "restore: passed",
+            "storage_restart: passed",
             "Object Commit != Domain Success",
         ]:
             if phrase not in minio_evidence:
                 errors.append(f"PHASE04 MinIO object store evidence missing phrase: {phrase}")
+
+    if not MINIO_RESTART_VERIFIER.exists():
+        errors.append("missing PHASE04 MinIO storage restart verifier")
+    else:
+        minio_restart_errors = _load_verifier(
+            MINIO_RESTART_VERIFIER,
+            "verify_phase04_minio_storage_restart",
+            "verify_phase04_minio_storage_restart",
+        )()
+        for minio_restart_error in minio_restart_errors:
+            errors.append(f"PHASE04 MinIO storage restart verification failed: {minio_restart_error}")
 
     if not IDEMPOTENCY_VERIFIER.exists():
         errors.append("missing PHASE04 idempotency claim verifier")
