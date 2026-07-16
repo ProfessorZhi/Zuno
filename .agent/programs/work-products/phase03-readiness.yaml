@@ -1,46 +1,56 @@
 # PHASE03 Completion State
 phase_id: PHASE03
 task_id: P03-T07
-start_commit: f8469bb5fb2a119b36695e989663dcf807417b19
-current_phase_status: completion_candidate
+original_start_commit: f8469bb5fb2a119b36695e989663dcf807417b19
+correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
+current_phase_status: planned
+prior_completion_candidate: superseded
+status_boundary: "Existing Wave 1 shared contract kernel is partial implementation. PHASE03 completion requires all eleven-module cross-owner contracts, real producer/consumer adoption, multi-client types and duplicate-definition removal."
 work_packages:
   P03-T01:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/registry.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/registry.py"
+    remaining_scope: "complete eleven-module registry, ownership and adoption index"
   P03-T02:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/shared.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/shared.py"
+    remaining_scope: "complete transport-neutral envelope and all required references"
   P03-T03:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/shared.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/shared.py"
+    remaining_scope: "complete identity, security, information-flow, failure and control contracts"
   P03-T04:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/shared.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/shared.py"
+    remaining_scope: "complete Product/Agent/Knowledge/Memory/Model contract families and adoption"
   P03-T05:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/shared.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/shared.py"
+    remaining_scope: "complete Capability/Tool/Observability/Infrastructure contract families"
   P03-T06:
-    state: completion_candidate
-    output: "src/backend/zuno/platform/contracts/canonical.py"
+    state: planned
+    existing_output: "src/backend/zuno/platform/contracts/canonical.py"
+    remaining_scope: "cross-language canonical hash, bundle manifest and Web/Desktop type pipeline"
   P03-T07:
-    state: completion_candidate
-    outputs:
+    state: planned
+    existing_outputs:
       - "tests/contracts/test_wave1_contract_bundle.py"
       - "tests/contracts/fixtures/CrossModuleEnvelopeV1.json"
       - "tests/contracts/fixtures/FailureCodeV1.json"
       - "tools/scripts/verify_phase03_contract_bundle.py"
       - "tests/repo/test_phase03_contract_bundle.py"
+    remaining_scope: "complete producer/consumer fixtures, compatibility matrix, real integration and adoption guard"
 phase_dependencies:
   PHASE04:
     depends_on: [PHASE03]
-    readiness: ready_after_phase03_closure
+    readiness: blocked_until_corrected_phase03_closure
     required_inputs:
-      - contract_bundle_registry
-      - cross_module_envelope_v1
-      - shared_security_identity_failure_contracts
-      - shared_action_observation_effect_receipts
-      - canonical_serialization_and_hash
-      - producer_consumer_fixtures
+      - complete_contract_bundle_registry
+      - complete_cross_module_envelope
+      - all_shared_contract_families
+      - canonical_multi_language_serialization_and_hash
+      - producer_consumer_adoption
+      - duplicate_definition_guard
     p0_risks:
       unassigned: []
 validation:
@@ -49,7 +59,8 @@ validation:
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_wave1_contract_freeze.py"
     - "python tools/scripts/verify_phase03_contract_bundle.py"
-    - "pytest -q tests/contracts tests/repo/test_current_program_contract.py tests/repo/test_phase03_contract_bundle.py tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider"
+    - "python tools/scripts/verify_complete_contract_adoption.py"
+    - "pytest -q tests/contracts tests/integration tests/repo -k 'contract or schema or fixture or compatibility or canonical' -p no:cacheprovider"
 closure_decision:
   coordinator_approval: pending
-  may_start_phase04_after_validation: true
+  may_start_phase04_after_validation: false
