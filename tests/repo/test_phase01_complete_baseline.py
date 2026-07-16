@@ -27,6 +27,7 @@ def test_phase01_current_partial_outputs_do_not_satisfy_closure_gate() -> None:
     assert "PHASE02 start gate remains closed" in errors
     assert "P01-T01 is not completed in phase-readiness.yaml" in errors
     assert "P01-T06 is not completed in phase-readiness.yaml" in errors
+    assert "P01-T05 is not completed in phase-readiness.yaml" not in errors
 
 
 def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None:
@@ -36,3 +37,14 @@ def test_phase01_requirement_ledger_still_lacks_bidirectional_evidence() -> None
     assert "requirement ledger entries missing reverse_trace_refs" in errors
     assert "requirement ledger entries with empty test_ids" in errors
     assert "requirement ledger entries with empty evidence_refs" in errors
+
+
+def test_p01_t05_legacy_bypass_inventory_and_evidence_are_registered() -> None:
+    verifier = _load_verifier()
+    errors = "\n".join(verifier.verify_phase01_complete_baseline())
+    assert "P01-T05 legacy paths missing from PHASE02 temporary allowlist" not in errors
+    assert "PHASE02 temporary allowlist has paths not in P01-T05 inventory" not in errors
+    assert "P01-T05 legacy inventory missing bypass categories" not in errors
+    assert "P01-T05 legacy inventory still has placeholder current_callers" not in errors
+    assert "P01-T05 evidence missing" not in errors
+    assert "P01-T05 evidence missing reproducibility field" not in errors

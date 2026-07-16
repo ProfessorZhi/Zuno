@@ -1,16 +1,31 @@
-# PHASE01 Legacy, Alias and Bypass Inventory
+﻿# PHASE01 Legacy, Alias and Bypass Inventory
 phase_id: PHASE01
 task_id: P01-T05
 start_commit: c01420e915db19a3b0d6f979ca4450c8d5de0c85
-status_boundary: "所有条目是迁移期登记，不是允许永久保留；生产路径含 legacy 或直接旁路的条目必须进入 PHASE22 删除门。"
+status_boundary: "所有条目是迁移期 Current 登记，不是永久例外；生产路径含 legacy、直接 SDK、直接工具执行、HTTP side effect、subprocess、跨 owner DB 写或动态旁路的条目必须进入后续迁移和 PHASE22 删除门。"
+current:
+  summary: "静态扫描已覆盖 provider SDK、Tool execute、MCP direct call、HTTP side effect、subprocess、跨模块 Repository/DB 写、root alias、legacy directory、旧 DTO/Store/Runtime 和动态旁路。"
+  evidence: "docs/evidence/phase01-legacy-bypass-inventory.md"
+gap:
+  - "PHASE02 仍需把本 inventory 转成 fail-closed guard，新增未登记旁路默认失败。"
+  - "动态 registry/factory/monkey-patch 仍需 runtime sampling；本文件只登记当前静态事实。"
+  - "PHASE07/09/10/12/15/22 仍需按 owner 完成迁移、冻结和删除。"
+plan:
+  - "PHASE02 建立 static/dynamic bypass guard，并以 temporary allowlist 为唯一迁移期例外源。"
+  - "PHASE07 收口 Model Gateway provider SDK 和 direct HTTP provider。"
+  - "PHASE09/10 收口 Product Surface route/frontend legacy adapter。"
+  - "PHASE12 收口 Knowledge/RAG provider、vector store 和 retrieval side effect。"
+  - "PHASE15 收口 Tool Runtime MCP、CLI、OpenAPI、subprocess 和 direct execute。"
+  - "PHASE22 删除 legacy alias、legacy directory 和 temporary allowlist。"
 inventory:
   - path: "src/backend/zuno/platform/compatibility/legacy_aliases.py"
     symbol: "register_legacy_aliases / _LegacyAliasFinder / _PACKAGE_ALIASES / _MODULE_ALIASES"
     owner: "Repository Governance"
+    category: "root_alias"
     risk: "legacy root import registry keeps zuno.core/services/schema/database/tools/resources/config/mcp_servers aliases alive"
     target_gateway: "canonical module imports only"
+    current_callers: ["src/backend/zuno/__init__.py import hook", "tests/legacy_guards/test_zuno_alias_imports.py", "tools/scripts/verify_repo_structure.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE02 legacy-runtime-compatibility-and-cutover-map"
     removal_task: "P22-T03 Legacy-free Canonical Directory Cleanup"
     deadline: "PHASE22"
@@ -19,10 +34,11 @@ inventory:
   - path: "src/backend/zuno/__init__.py"
     symbol: "_load_legacy_alias_registry"
     owner: "Repository Governance"
+    category: "root_alias"
     risk: "package import auto-registers legacy alias finder"
     target_gateway: "no implicit legacy import hook"
+    current_callers: ["import zuno package bootstrap", "tests/legacy_guards/test_zuno_alias_imports.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE02 legacy alias cutover"
     removal_task: "P22-T03"
     deadline: "PHASE22"
@@ -31,10 +47,11 @@ inventory:
   - path: "src/backend/zuno/platform/compatibility/legacy/__init__.py"
     symbol: "legacy compatibility package"
     owner: "Repository Governance"
+    category: "legacy_directory"
     risk: "production path contains legacy namespace"
     target_gateway: "owner adapters/versioned only"
+    current_callers: ["platform compatibility package scan", "tools/scripts/verify_repo_structure.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE02 compatibility matrix"
     removal_task: "P22-T03"
     deadline: "PHASE22"
@@ -43,10 +60,11 @@ inventory:
   - path: "tests/legacy_guards/**"
     symbol: "legacy_guards test suite"
     owner: "Repository Governance"
-    risk: "temporary legacy guard suite under canonical directory contract"
+    category: "legacy_directory"
+    risk: "temporary legacy guard suite remains in active test tree"
     target_gateway: "PHASE22 closure guard tests"
+    current_callers: ["pytest legacy guard collection", "tools/scripts/verify_repo_structure.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE01/P02 inventory guards"
     removal_task: "P22-T03"
     deadline: "PHASE22"
@@ -55,10 +73,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/manager.py"
     symbol: "ModelManager.get_tool_invocation_model / get_conversation_model / get_qwen_vl_model / get_user_model"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct ChatOpenAI provider construction and LLMDao read outside Model Gateway"
     target_gateway: "platform/model_gateway"
+    current_callers: ["src/backend/zuno/agent/core/agents/plan_execute_agent.py", "tools/evals/zuno/rag_eval/run_eval.py", "legacy zuno.core.models.manager alias"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07 Model Gateway migration"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -67,10 +86,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/usage_model.py"
     symbol: "UsageModel / OpenAI / AsyncOpenAI"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct OpenAI SDK client in Agent Core model path"
     target_gateway: "platform/model_gateway"
+    current_callers: ["src/backend/zuno/agent/core/models/manager.py", "legacy zuno.core.models usage path"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -79,10 +99,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/tool_call.py"
     symbol: "ToolCallModel"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct AsyncOpenAI tool-call client"
     target_gateway: "platform/model_gateway"
+    current_callers: ["src/backend/zuno/agent/core/agents/plan_execute_agent.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -91,10 +112,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/reason_model.py"
     symbol: "ReasoningModel"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct AsyncOpenAI reasoning client"
     target_gateway: "platform/model_gateway"
+    current_callers: ["src/backend/zuno/agent/core/models/manager.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -103,10 +125,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/embedding.py"
     symbol: "EmbeddingModel"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct OpenAI embedding client"
     target_gateway: "platform/model_gateway"
+    current_callers: ["src/backend/zuno/agent/core/models/manager.py", "legacy embedding model path"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -115,10 +138,11 @@ inventory:
   - path: "src/backend/zuno/agent/core/models/anthropic.py"
     symbol: "DeepAnthropic / DeepAsyncAnthropic"
     owner: "04 Model Gateway"
+    category: "direct_provider_sdk"
     risk: "direct Anthropic SDK subclass provider path"
     target_gateway: "platform/model_gateway"
+    current_callers: ["legacy anthropic model path", "static provider SDK scan"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07"
     removal_task: "P22-T03"
     deadline: "PHASE07"
@@ -127,10 +151,11 @@ inventory:
   - path: "src/backend/zuno/platform/services/rag/embedding.py"
     symbol: "_get_embedding_client / AsyncOpenAI"
     owner: "04 Model Gateway / 03 Knowledge"
+    category: "direct_provider_sdk"
     risk: "RAG embedding bypasses Model Gateway"
     target_gateway: "platform/model_gateway embedding adapter"
+    current_callers: ["src/backend/zuno/platform/services/rag/handler.py", "tools/evals/zuno/rag_eval/run_eval.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07 + PHASE12 Knowledge cutover"
     removal_task: "P22-T03"
     deadline: "PHASE12"
@@ -139,10 +164,11 @@ inventory:
   - path: "src/backend/zuno/platform/services/rag/rerank.py"
     symbol: "Reranker.rerank_documents"
     owner: "04 Model Gateway / 03 Knowledge"
+    category: "http_side_effect"
     risk: "direct aiohttp POST to rerank endpoint"
     target_gateway: "platform/model_gateway rerank adapter"
+    current_callers: ["src/backend/zuno/platform/services/retrieval/orchestrator.py", "src/backend/zuno/platform/services/rag/handler.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07 + PHASE12"
     removal_task: "P22-T03"
     deadline: "PHASE12"
@@ -151,22 +177,63 @@ inventory:
   - path: "src/backend/zuno/platform/services/rag/vl_embedding.py"
     symbol: "get_vl_image_embedding / get_vl_text_embedding"
     owner: "04 Model Gateway / 03 Knowledge"
+    category: "http_side_effect"
     risk: "direct DashScope multimodal embedding HTTP call"
     target_gateway: "platform/model_gateway embedding adapter"
+    current_callers: ["src/backend/zuno/platform/services/rag/handler.py", "tests/storage/test_vl_embedding.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE07 + PHASE12"
     removal_task: "P22-T03"
     deadline: "PHASE12"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/storage/test_pipeline.py"
+  - path: "src/backend/zuno/platform/services/autobuild/client.py"
+    symbol: "AutoBuildClient / ChatOpenAI"
+    owner: "04 Model Gateway / 07 Capability"
+    category: "direct_provider_sdk"
+    risk: "autobuild service constructs ChatOpenAI outside Model Gateway"
+    target_gateway: "platform/model_gateway plus Capability control plane"
+    current_callers: ["src/backend/zuno/platform/services/autobuild/**", "legacy zuno.services.autobuild alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE07 + PHASE14"
+    removal_task: "P22-T03"
+    deadline: "PHASE14"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/platform/common/extract.py"
+    symbol: "extract / ChatOpenAI"
+    owner: "04 Model Gateway / 11 Infrastructure"
+    category: "direct_provider_sdk"
+    risk: "common helper constructs ChatOpenAI outside Model Gateway"
+    target_gateway: "platform/model_gateway extraction adapter"
+    current_callers: ["legacy zuno.utils/common extraction imports", "static provider SDK scan"]
+    temporary_allowlist: true
+    migration_task: "PHASE07"
+    removal_task: "P22-T03"
+    deadline: "PHASE07"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tools/scripts/verify_model_gateway_boundaries.py"
+  - path: "src/backend/zuno/capability/tools/resume_optimizer/action.py"
+    symbol: "OpenAI client in ResumeOptimizer"
+    owner: "04 Model Gateway / 08 Tool Runtime"
+    category: "direct_provider_sdk"
+    risk: "tool action owns provider SDK client and bypasses Model Gateway/Tool Runtime request policy"
+    target_gateway: "Tool Runtime action adapter plus platform/model_gateway"
+    current_callers: ["configured resume optimizer tool action", "static provider SDK scan"]
+    temporary_allowlist: true
+    migration_task: "PHASE07 + PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_zuno_config_system_tool_metadata.py"
   - path: "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
     symbol: "load_mcp_tools / call_tool"
     owner: "08 Tool Runtime"
+    category: "direct_mcp_call"
     risk: "direct MCP session.call_tool converted to LangChain tool"
     target_gateway: "capability/tool_runtime Invocation Gateway"
+    current_callers: ["src/backend/zuno/platform/services/mcp/manager.py", "src/backend/zuno/agent/core/agents/general_agent.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15 Tool Runtime migration"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -175,10 +242,11 @@ inventory:
   - path: "src/backend/zuno/platform/services/mcp/multi_client.py"
     symbol: "MultiServerMCPClient"
     owner: "08 Tool Runtime"
+    category: "direct_mcp_call"
     risk: "direct MCP client/session lifecycle outside canonical tool invocation gateway"
     target_gateway: "capability/tool_runtime MCP adapter"
+    current_callers: ["src/backend/zuno/platform/services/mcp/manager.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -187,10 +255,11 @@ inventory:
   - path: "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py"
     symbol: "request_mcp_call_tools / request_mcp_list_tools"
     owner: "08 Tool Runtime / 04 Model Gateway"
+    category: "direct_mcp_call"
     risk: "httpx POST to MCP call/list endpoints bypasses Tool Runtime and Model Gateway"
     target_gateway: "capability/tool_runtime + platform/model_gateway"
+    current_callers: ["src/backend/zuno/platform/services/mcp_openai/**", "legacy zuno.services.mcp_openai alias"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -199,10 +268,37 @@ inventory:
   - path: "src/backend/zuno/platform/services/mcp_openai/mcp_client.py"
     symbol: "MCPClient.call_tool / MCPClient.list_tools"
     owner: "08 Tool Runtime"
+    category: "direct_mcp_call"
     risk: "direct MCP call/list surface"
     target_gateway: "capability/tool_runtime Invocation Gateway"
+    current_callers: ["src/backend/zuno/platform/services/mcp_openai/mcp_manager.py", "src/backend/zuno/platform/services/mcp_openai/mcp_util.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
+    migration_task: "PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py"
+    symbol: "MCPManager / OpenAI / Anthropic / MCPClient"
+    owner: "04 Model Gateway / 08 Tool Runtime"
+    category: "direct_provider_sdk"
+    risk: "MCP manager imports provider SDK clients and manages MCP clients outside gateways"
+    target_gateway: "platform/model_gateway + capability/tool_runtime MCP adapter"
+    current_callers: ["src/backend/zuno/platform/services/mcp_openai/**", "legacy zuno.services.mcp_openai alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE07 + PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/platform/services/mcp_openai/mcp_util.py"
+    symbol: "MCPClient utility bridge"
+    owner: "08 Tool Runtime"
+    category: "direct_mcp_call"
+    risk: "utility layer depends on legacy zuno.services.mcp_openai MCPClient path"
+    target_gateway: "capability/tool_runtime MCP adapter"
+    current_callers: ["src/backend/zuno/platform/services/mcp_openai/mcp_manager.py"]
+    temporary_allowlist: true
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -211,10 +307,11 @@ inventory:
   - path: "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py"
     symbol: "_register_proxy_tools / generated_tool / create_session / session.call_tool"
     owner: "08 Tool Runtime"
+    category: "direct_mcp_call"
     risk: "remote MCP proxy dynamically generates direct tool call functions"
     target_gateway: "capability/tool_runtime MCP adapter"
+    current_callers: ["remote MCP proxy server startup", "capability MCP server registry"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -223,22 +320,37 @@ inventory:
   - path: "src/backend/zuno/agent/core/agents/general_agent.py"
     symbol: "GeneralAgent.setup_plugin_tools"
     owner: "06 Agent Core / 08 Tool Runtime"
+    category: "old_runtime"
     risk: "GeneralAgent builds LangChain tools from AgentToolsWithName and user-defined runtime"
     target_gateway: "Single Controller + Tool Runtime"
+    current_callers: ["src/backend/zuno/api/services/completion.py", "legacy general_agent rollback flag"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE08 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/agent/test_generalagent_context_memory_runtime.py"
+  - path: "src/backend/zuno/agent/core/agents/codeact_agent.py"
+    symbol: "CodeActAgent sandbox.execute"
+    owner: "06 Agent Core / 08 Tool Runtime / 09 Security"
+    category: "direct_tool_execute"
+    risk: "Agent Core invokes sandbox execute directly outside Tool Runtime reconciliation"
+    target_gateway: "Tool Runtime sandbox adapter with Security policy"
+    current_callers: ["legacy CodeAct agent path", "static .execute scan"]
+    temporary_allowlist: true
+    migration_task: "PHASE08 + PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/runtime/test_runtime_real_execution.py"
   - path: "src/backend/zuno/platform/services/workspace/simple_agent.py"
     symbol: "WorkSpaceSimpleAgent.setup_plugin_tools"
     owner: "01 Product Surface / 06 Agent Core / 08 Tool Runtime"
+    category: "old_runtime"
     risk: "workspace service directly selects WorkSpacePlugins and user-defined LangChain tools"
     target_gateway: "Product Command Port + Single Controller + Tool Runtime"
+    current_callers: ["workspace simple chat service", "legacy zuno.services.workspace alias"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE10"
@@ -247,22 +359,37 @@ inventory:
   - path: "src/backend/zuno/api/services/workspace_task_runtime.py"
     symbol: "WorkspaceTaskRuntimeService._run_workspace_tools_until_interrupt / approve_task"
     owner: "01 Product Surface / 08 Tool Runtime"
+    category: "direct_tool_execute"
     risk: "API service owns task orchestration and calls _tool_runtime.execute directly"
     target_gateway: "Product Surface command + Tool Runtime invocation gateway"
+    current_callers: ["src/backend/zuno/api/v1/workspace.py", "tests/api/test_workspace_task_runtime.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/api/test_workspace_task_runtime.py"
+  - path: "src/backend/zuno/platform/services/user_defined_tool_runtime.py"
+    symbol: "execute_user_defined_tool / tool_adapter.execute"
+    owner: "08 Tool Runtime"
+    category: "direct_tool_execute"
+    risk: "platform service executes user-defined tool adapters before canonical Tool Runtime cutover"
+    target_gateway: "capability/tool_runtime Invocation Gateway"
+    current_callers: ["src/backend/zuno/api/v1/tool.py", "src/backend/zuno/platform/services/workspace/simple_agent.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_user_defined_tool_runtime.py"
   - path: "src/backend/zuno/capability/tools/cli_tool/adapter.py"
     symbol: "CLIToolAdapter.execute"
     owner: "08 Tool Runtime"
+    category: "subprocess"
     risk: "direct subprocess execution for CLI tools"
     target_gateway: "Tool Runtime sandboxed CLI adapter"
+    current_callers: ["src/backend/zuno/platform/services/user_defined_tool_runtime.py", "tests/tools/test_cli_tool_adapter.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -271,10 +398,50 @@ inventory:
   - path: "src/backend/zuno/capability/tools/openapi_tool/adapter.py"
     symbol: "OpenAPIToolAdapter.execute / test_connectivity"
     owner: "08 Tool Runtime"
+    category: "http_side_effect"
     risk: "direct httpx API execution"
     target_gateway: "Tool Runtime HTTP/OpenAPI adapter"
+    current_callers: ["src/backend/zuno/platform/services/user_defined_tool_runtime.py", "tests/tools/test_openapi_tool_adapter.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
+    migration_task: "PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/platform/services/tool_connectivity_service.py"
+    symbol: "ToolConnectivityService / httpx.AsyncClient"
+    owner: "08 Tool Runtime / 01 Product Surface"
+    category: "http_side_effect"
+    risk: "platform service performs connectivity HTTP POST directly"
+    target_gateway: "Tool Runtime control-plane connectivity probe"
+    current_callers: ["src/backend/zuno/api/v1/tool.py", "tests/tools/test_tool_connectivity.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE15"
+    removal_task: "P22-T03"
+    deadline: "PHASE15"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/platform/services/workspace/attachment_service.py"
+    symbol: "AttachmentService / requests.get"
+    owner: "01 Product Surface / 11 Infrastructure"
+    category: "http_side_effect"
+    risk: "workspace attachment service performs remote HTTP download directly"
+    target_gateway: "Product attachment command + Infrastructure fetch adapter"
+    current_callers: ["src/backend/zuno/platform/services/workspace/simple_agent.py", "workspace attachment flow"]
+    temporary_allowlist: true
+    migration_task: "PHASE09 + PHASE16"
+    removal_task: "P22-T03"
+    deadline: "PHASE16"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/api/test_workspace_task_runtime.py"
+  - path: "src/backend/zuno/platform/services/simple_api_tool.py"
+    symbol: "requests.get / dynamic API tool execution"
+    owner: "08 Tool Runtime"
+    category: "http_side_effect"
+    risk: "legacy simple API tool path performs direct HTTP side effects"
+    target_gateway: "Tool Runtime HTTP/OpenAPI adapter"
+    current_callers: ["src/backend/zuno/platform/services/workspace/simple_agent.py", "legacy zuno.services.simple_api_tool alias"]
+    temporary_allowlist: true
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -283,10 +450,11 @@ inventory:
   - path: "src/backend/zuno/platform/services/sandbox/pyodide.py"
     symbol: "PyodideSandbox / SyncPyodideSandbox / subprocess.run / create_subprocess_exec"
     owner: "09 Security / 08 Tool Runtime"
+    category: "subprocess"
     risk: "subprocess-based sandbox execution path"
     target_gateway: "Security sandbox policy + Tool Runtime execution adapter"
+    current_callers: ["src/backend/zuno/agent/core/agents/codeact_agent.py", "workspace sandbox tool path"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE05 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -295,10 +463,11 @@ inventory:
   - path: "src/backend/zuno/capability/tools/convert_to_pdf/action.py"
     symbol: "convert_to_pdf"
     owner: "08 Tool Runtime"
+    category: "subprocess"
     risk: "direct LibreOffice subprocess in tool action"
     target_gateway: "Tool Runtime document conversion adapter"
+    current_callers: ["configured convert_to_pdf tool action", "tests/tools/test_zuno_config_system_tool_metadata.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -307,22 +476,102 @@ inventory:
   - path: "src/backend/zuno/platform/services/convert_files/convert_pdf.py"
     symbol: "convert_to_pdf / get_libreoffice_command"
     owner: "08 Tool Runtime / 11 Infrastructure"
+    category: "subprocess"
     risk: "platform service runs LibreOffice subprocess"
     target_gateway: "Tool Runtime conversion adapter"
+    current_callers: ["src/backend/zuno/platform/services/pipeline/**", "legacy zuno.services.convert_files alias"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/tools/test_zuno_config_system_tool_metadata.py"
+  - path: "src/backend/zuno/platform/services/rag/vector_db/chroma_client.py"
+    symbol: "ChromaClient.add / delete"
+    owner: "03 Knowledge / 11 Infrastructure"
+    category: "cross_owner_db_write"
+    risk: "legacy RAG vector store writes directly from platform service path"
+    target_gateway: "Knowledge index repository + Infrastructure storage adapter"
+    current_callers: ["src/backend/zuno/platform/services/rag/**", "legacy zuno.services.rag alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE12"
+    removal_task: "P22-T03"
+    deadline: "PHASE12"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/retrieval/test_enhanced_retrieval_composition.py"
+  - path: "src/backend/zuno/platform/services/rag/vector_db/milvus_lite_client.py"
+    symbol: "MilvusLiteClient.delete / loaded collection mutation"
+    owner: "03 Knowledge / 11 Infrastructure"
+    category: "cross_owner_db_write"
+    risk: "legacy RAG vector store mutates Milvus collection state outside Knowledge index repository"
+    target_gateway: "Knowledge index repository + Infrastructure storage adapter"
+    current_callers: ["src/backend/zuno/platform/services/rag/**", "legacy zuno.services.rag alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE12"
+    removal_task: "P22-T03"
+    deadline: "PHASE12"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/retrieval/test_enhanced_retrieval_composition.py"
+  - path: "src/backend/zuno/platform/services/memory/vector_stores/chroma.py"
+    symbol: "Memory Chroma vector store add/delete"
+    owner: "05 Memory / 11 Infrastructure"
+    category: "cross_owner_db_write"
+    risk: "legacy memory vector store writes from platform service path"
+    target_gateway: "Memory Store Port + Infrastructure storage adapter"
+    current_callers: ["src/backend/zuno/platform/services/memory/**", "legacy zuno.services.memory alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE13"
+    removal_task: "P22-T03"
+    deadline: "PHASE13"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/test_memory_layer_surfaces.py"
+  - path: "src/backend/zuno/memory/store.py"
+    symbol: "SqlAlchemyMemoryStore session.add/delete"
+    owner: "05 Memory"
+    category: "cross_owner_db_write"
+    risk: "Memory owns current SQL store writes but PHASE04/13 still need durable transaction and repository guard proof"
+    target_gateway: "Memory Store Port with governed transaction boundary"
+    current_callers: ["src/backend/zuno/memory/engine.py", "tests/agent/test_memory_layers.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE13"
+    removal_task: "P22-T03"
+    deadline: "PHASE13"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/test_memory_layers.py"
+  - path: "src/backend/zuno/platform/database/dao/**"
+    symbol: "legacy DAO session.add / commit / delete"
+    owner: "11 Infrastructure / affected module owners"
+    category: "cross_owner_db_write"
+    risk: "legacy DAO layer remains under platform/database and serves multiple module use cases"
+    target_gateway: "owner repository ports plus Infrastructure transaction adapter"
+    current_callers: ["src/backend/zuno/api/services/**", "src/backend/zuno/platform/services/**", "legacy zuno.database.* alias"]
+    temporary_allowlist: true
+    migration_task: "PHASE04 + affected owner migration phases"
+    removal_task: "P22-T03"
+    deadline: "PHASE22"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/storage/test_postgres_repository_adapters.py"
+  - path: "src/backend/zuno/agent/runtime/sqlite_store.py"
+    symbol: "SQLite runtime store conn.execute"
+    owner: "06 Agent Core / 11 Infrastructure"
+    category: "old_store"
+    risk: "Agent runtime local SQLite store remains while PostgreSQL/checkpointer target is not complete"
+    target_gateway: "Agent runtime repository + PostgreSQL/LangGraph checkpointer"
+    current_callers: ["src/backend/zuno/agent/runtime/**", "tests/agent/runtime/test_runtime_store.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE04 + PHASE08"
+    removal_task: "P22-T03"
+    deadline: "PHASE08"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/runtime/test_runtime_store.py"
   - path: "src/backend/zuno/api/v1/workspace.py"
     symbol: "create_workspace_task / approve_workspace_task / cancel_workspace_task"
     owner: "01 Product Surface"
+    category: "deprecated_endpoint"
     risk: "route invokes WorkspaceTaskRuntimeService orchestration directly"
     target_gateway: "api/product command/query port"
+    current_callers: ["apps/web workspace task UI", "tests/api/test_workspace_task_runtime.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE09 Product Surface migration"
     removal_task: "P22-T03"
     deadline: "PHASE09"
@@ -331,10 +580,11 @@ inventory:
   - path: "src/backend/zuno/api/v1/tool.py"
     symbol: "create_user_defined_tool / test_tool_connectivity / update_user_defined_tool"
     owner: "01 Product Surface / 08 Tool Runtime"
+    category: "deprecated_endpoint"
     risk: "route exposes tool creation/connectivity and delegates to legacy service surface"
     target_gateway: "api/product + Tool Runtime control plane"
+    current_callers: ["apps/web tool configuration UI", "tests/tools/test_tool_connectivity.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -343,22 +593,50 @@ inventory:
   - path: "src/backend/zuno/api/v1/mcp_server.py"
     symbol: "create_mcp_server / delete_mcp_server / update_mcp_server"
     owner: "01 Product Surface / 08 Tool Runtime"
+    category: "deprecated_endpoint"
     risk: "route manages MCP server lifecycle through service orchestration"
     target_gateway: "Product Contract + Capability/Tool Runtime MCP control plane"
+    current_callers: ["apps/web MCP server UI", "tests/tools/test_tool_connectivity.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/tools/test_tool_connectivity.py"
+  - path: "src/backend/zuno/api/dto/agent.py"
+    symbol: "domain_pack_id compatibility fields"
+    owner: "01 Product Surface"
+    category: "old_dto"
+    risk: "DTO still accepts legacy domain_pack_id migration input"
+    target_gateway: "versioned Product DTO adapter"
+    current_callers: ["tests/agent/test_agent_api_project_contract.py", "legacy API clients"]
+    temporary_allowlist: true
+    migration_task: "PHASE09"
+    removal_task: "P22-T03"
+    deadline: "PHASE09"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/test_agent_api_project_contract.py"
+  - path: "src/backend/zuno/api/dto/knowledge.py"
+    symbol: "legacy knowledge config compatibility fields"
+    owner: "01 Product Surface / 03 Knowledge"
+    category: "old_dto"
+    risk: "DTO accepts legacy knowledge/retrieval configuration during migration"
+    target_gateway: "versioned Product DTO adapter + Knowledge query contract"
+    current_callers: ["tests/api/test_knowledge_api_contract.py", "apps/web/src/utils/knowledge-config.ts"]
+    temporary_allowlist: true
+    migration_task: "PHASE09 + PHASE12"
+    removal_task: "P22-T03"
+    deadline: "PHASE12"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/api/test_knowledge_api_contract.py"
   - path: "apps/web/src/utils/retrieval.ts"
     symbol: "legacyModeMap"
     owner: "01 Product Surface"
+    category: "old_dto"
     risk: "frontend maps legacy retrieval mode strings"
     target_gateway: "apps/web/src/product/contracts"
+    current_callers: ["apps/web workspace retrieval settings", "tests/frontend/test_product_wiring_v1_api_contract.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE10 Web Product Contract migration"
     removal_task: "P22-T03"
     deadline: "PHASE10"
@@ -367,12 +645,52 @@ inventory:
   - path: "apps/web/src/utils/knowledge-config.ts"
     symbol: "LegacyKnowledgeProductMode / LegacyKnowledgeConfigInput / legacyMap"
     owner: "01 Product Surface"
+    category: "old_dto"
     risk: "frontend accepts legacy knowledge config fields"
     target_gateway: "apps/web/src/product/contracts"
+    current_callers: ["apps/web knowledge settings", "tests/frontend/test_product_wiring_v1_api_contract.py"]
     temporary_allowlist: true
-    current_callers: ["static inventory requires owner review"]
     migration_task: "PHASE10"
     removal_task: "P22-T03"
     deadline: "PHASE10"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/frontend/test_product_wiring_v1_api_contract.py"
+  - path: "apps/web/src/utils/user-avatars.ts"
+    symbol: "isLegacyRemoteUserAvatar"
+    owner: "01 Product Surface"
+    category: "old_dto"
+    risk: "frontend keeps legacy remote avatar compatibility"
+    target_gateway: "versioned Product DTO adapter or current asset contract"
+    current_callers: ["apps/web profile/avatar UI", "tests/repo/test_history_overview_and_branding.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE10"
+    removal_task: "P22-T03"
+    deadline: "PHASE10"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/repo/test_history_overview_and_branding.py"
+  - path: "src/backend/zuno/knowledge/{__init__,citation,evidence,trace,retrieval/__init__}.py"
+    symbol: "lazy import facade / import_module / getattr"
+    owner: "03 Knowledge"
+    category: "dynamic_bypass"
+    risk: "dynamic lazy import can hide owner drift during Knowledge migration"
+    target_gateway: "explicit Knowledge facade exports with boundary tests"
+    current_callers: ["zuno.knowledge public facade imports", "tests/agent/test_knowledge_layer_surfaces.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE12"
+    removal_task: "P22-T03"
+    deadline: "PHASE12"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/test_knowledge_layer_surfaces.py"
+  - path: "src/backend/zuno/platform/__init__.py"
+    symbol: "lazy import facade / import_module / getattr"
+    owner: "11 Infrastructure"
+    category: "dynamic_bypass"
+    risk: "platform dynamic facade can hide cross-owner imports during migration"
+    target_gateway: "explicit platform facade exports with boundary tests"
+    current_callers: ["zuno.platform public facade imports", "tests/agent/test_platform_layer_surfaces.py"]
+    temporary_allowlist: true
+    migration_task: "PHASE04 + PHASE05"
+    removal_task: "P22-T03"
+    deadline: "PHASE05"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/agent/test_platform_layer_surfaces.py"

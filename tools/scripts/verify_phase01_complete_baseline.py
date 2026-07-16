@@ -19,6 +19,7 @@ INVENTORY_FILES = {
     "P01-T05": WORK_PRODUCTS / "legacy-bypass-inventory.yaml",
 }
 TEMPORARY_ALLOWLIST = WORK_PRODUCTS / "temporary-allowlist.yaml"
+P01_T05_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase01-legacy-bypass-inventory.md"
 
 RISK_REGISTER = WORK_PRODUCTS / "program-risk-register.md"
 
@@ -100,6 +101,10 @@ def _path_values(text: str) -> set[str]:
     return set(re.findall(r'(?m)^\s+- path: "([^"]+)"', text))
 
 
+def _field_values(text: str, field: str) -> set[str]:
+    return set(re.findall(rf'(?m)^\s+{field}:\s+"([^"]+)"', text))
+
+
 def _field_list_is_empty(block: str, field: str) -> bool:
     return re.search(rf"(?m)^\s+{field}:\s*\[\]\s*$", block) is not None
 
@@ -168,6 +173,30 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
     missing_from_allowlist = sorted(legacy_paths - allowlist_paths)
     if missing_from_allowlist:
         errors.append(f"P01-T05 legacy paths missing from PHASE02 temporary allowlist: {missing_from_allowlist[:10]}")
+    allowlist_only = sorted(allowlist_paths - legacy_paths)
+    if allowlist_only:
+        errors.append(f"PHASE02 temporary allowlist has paths not in P01-T05 inventory: {allowlist_only[:10]}")
+
+    required_categories = {
+        "root_alias",
+        "legacy_directory",
+        "direct_provider_sdk",
+        "direct_tool_execute",
+        "direct_mcp_call",
+        "http_side_effect",
+        "subprocess",
+        "cross_owner_db_write",
+        "deprecated_endpoint",
+        "old_dto",
+        "old_store",
+        "old_runtime",
+        "dynamic_bypass",
+    }
+    categories = _field_values(legacy, "category")
+    missing_categories = sorted(required_categories - categories)
+    if missing_categories:
+        errors.append(f"P01-T05 legacy inventory missing bypass categories: {missing_categories}")
+
     for block in _yaml_list_blocks(legacy):
         first_line = block.splitlines()[0]
         for field in required_fields:
@@ -177,6 +206,8 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
                 has_field = re.search(rf"(?m)^\s+{field}:", block) is not None
             if not has_field:
                 errors.append(f"P01-T05 legacy inventory entry missing {field}: {first_line}")
+        if "static inventory requires owner review" in block:
+            errors.append(f"P01-T05 legacy inventory still has placeholder current_callers: {first_line}")
 
 
 def _verify_requirement_ledger(errors: list[str]) -> None:
@@ -249,6 +280,24 @@ def _verify_phase01_evidence(errors: list[str]) -> None:
     if not phase01_evidence:
         errors.append("docs/evidence has no phase01-*.md reproducible evidence bundle")
         return
+    if not P01_T05_EVIDENCE.exists():
+        errors.append("P01-T05 evidence missing: docs/evidence/phase01-legacy-bypass-inventory.md")
+    else:
+        p01_t05 = _read(P01_T05_EVIDENCE).lower()
+        for phrase in [
+            "current",
+            "gap",
+            "plan",
+            "search commands",
+            "result counts",
+            "sample findings",
+            "artifact hash",
+            "guard gaps",
+            "provider sdk",
+            "cross-owner db writes",
+        ]:
+            if phrase not in p01_t05:
+                errors.append(f"P01-T05 evidence missing reproducibility field: {phrase}")
     combined = "\n".join(_read(path) for path in phase01_evidence)
     for phrase in ["commit", "environment", "command", "result", "artifact hash"]:
         if phrase not in combined.lower():

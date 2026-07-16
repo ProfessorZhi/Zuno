@@ -28,9 +28,11 @@ work_packages:
     remaining_scope: "complete Web/Desktop build, contract, disconnect, authorization and E2E inventory"
     reviewer: Coordinator
   P01-T05:
-    state: ready
+    state: completed
     existing_output: ".agent/programs/work-products/legacy-bypass-inventory.yaml"
-    remaining_scope: "complete dynamic registry/factory/monkey-patch and removal-gate coverage"
+    evidence: "docs/evidence/phase01-legacy-bypass-inventory.md"
+    completed_scope: "Current/Gap/Plan, legacy-bypass inventory, temporary allowlist, evidence, verifier and test updated for static legacy/bypass coverage"
+    remaining_scope: "PHASE02 must turn inventory into fail-closed static/dynamic guard; owner phases must migrate/remove registered bypasses"
     reviewer: Coordinator
   P01-T06:
     state: ready
