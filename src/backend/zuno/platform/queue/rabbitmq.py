@@ -166,3 +166,7 @@ class RabbitMQTransport:
             redelivered=bool(message.redelivered),
             _message=message,
         )
+
+    async def queue_depth(self, queue_name: str) -> int:
+        queue = await self.channel.declare_queue(queue_name, passive=True)
+        return int(queue.declaration_result.message_count)

@@ -15,6 +15,7 @@ minio_restore_evidence: missing
 combined_dependency_fault: missing
 rabbitmq_transport_subset: passed
 rabbitmq_dlq_replay_subset: passed
+rabbitmq_backlog_depth_subset: passed
 outbox_rabbitmq_publisher_subset: passed
 rabbitmq_broker_restart_subset: passed
 idempotency_claim_lifecycle_subset: passed
@@ -44,6 +45,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` | passed, `9 passed` against real PostgreSQL on localhost:5432 |
 | `python tools/scripts/verify_phase04_real_services_smoke.py` | passed; PostgreSQL schema dump contains infrastructure tables, RabbitMQ publish/get succeeds, MinIO put/get/delete hash check succeeds |
 | `python tools/scripts/verify_phase04_rabbitmq_transport.py` | passed; durable exchange/queue/DLQ, publisher confirm path, redelivery, DLQ routing and DLQ replay verified against real RabbitMQ |
+| `python tools/scripts/verify_phase04_rabbitmq_backlog.py` | passed; queue depth grows after publish and drains after ACK |
 | `python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py` | passed; PostgreSQL outbox claim, RabbitMQ publish-confirm, outbox published receipt and inbox receipt verified |
 | `python tools/scripts/verify_phase04_rabbitmq_broker_restart.py` | passed; persistent RabbitMQ message survived real `docker restart zuno-rabbitmq` |
 | `python tools/scripts/verify_phase04_idempotency_claim.py` | passed; same-hash replay, different-hash conflict, renew, expiry, stale generation reject, result replay and high-concurrency single-winner verified |
@@ -78,6 +80,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - RabbitMQ redelivery：NACK `requeue=True` 后重新消费到 `redelivered=True` 的同一 message；
 - RabbitMQ DLQ：Reject `requeue=False` 后 poison message 进入 durable DLQ；
 - RabbitMQ DLQ replay：DLQ message 以相同 message id/payload replay 回主队列，并带 `replayed_from_dlq` receipt header；
+- RabbitMQ backlog depth：passive queue depth 在 publish 后增长、ACK 后归零，证明 backlog 可观测；
 - RabbitMQ transport subset：`aio_pika` adapter 声明 durable exchange/queue/DLQ，启用 publisher confirms，验证 NACK redelivery 和 reject-to-DLQ；
 - Outbox/RabbitMQ publisher subset：PostgreSQL `infra_outbox_events` claim 后发布到 RabbitMQ，publish 返回后标记 `published`，消费端写入 `infra_inbox_messages` 后 ACK；
 - Outbox crash recovery subset：模拟 publish 后、complete 前崩溃，超时 reclaim claimed row，重新发布同一 event，并由 inbox dedup 保持单行 receipt；
@@ -90,7 +93,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 storage restart subset：committed object 与 restore point 经真实 `docker restart zuno-minio` 后仍可读取且 bytes/hash receipt 不变；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 
-这些结果只证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout 子集、Alembic 临时库往返子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期与高并发单赢家子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 idempotency owner crash、tenant isolation、network partition、retry exhaustion、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
+这些结果只证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout 子集、Alembic 临时库往返子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期与高并发单赢家子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 idempotency owner crash、tenant isolation、network partition、retry exhaustion、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
 
 ## Existing Partial Evidence
 

@@ -17,6 +17,7 @@ POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
+RABBITMQ_BACKLOG_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_backlog.py"
 OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
 RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
@@ -191,10 +192,22 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "redelivery: passed",
             "dlq: passed",
             "dlq_replay: passed",
+            "backlog_depth: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in rabbit_evidence:
                 errors.append(f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}")
+
+    if not RABBITMQ_BACKLOG_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ backlog verifier")
+    else:
+        backlog_errors = _load_verifier(
+            RABBITMQ_BACKLOG_VERIFIER,
+            "verify_phase04_rabbitmq_backlog",
+            "verify_phase04_rabbitmq_backlog",
+        )()
+        for backlog_error in backlog_errors:
+            errors.append(f"PHASE04 RabbitMQ backlog verification failed: {backlog_error}")
 
     if not OUTBOX_RABBITMQ_VERIFIER.exists():
         errors.append("missing PHASE04 outbox RabbitMQ publisher verifier")
