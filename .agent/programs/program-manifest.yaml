@@ -1,11 +1,13 @@
 program:
   id: zuno-canonical-architecture-runtime-realization-v1
-  version: 1
+  version: 2
   state: active
-  current_phase: PHASE05
+  current_phase: PHASE01
   phase_count: 22
   atomic_work_package_count: 163
   architecture_baseline_commit: 249f1c95855043627cedd289a5de1fd3719f6cd0
+  correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
+  corrected_at: 2026-07-16
   execution_contract: .agent/programs/task-execution-contract.md
   codex_runbook: .agent/programs/codex-medium-runbook.md
   migration_map: .agent/programs/legacy-to-target-migration-map.md
@@ -19,6 +21,28 @@ status_policy:
   current_requires: [code, tests, runtime_or_integration_evidence]
   measured_requires: [fixed_dataset, complete_profiles, comparable_runs, metric_results]
   quality_proven_requires: [measured, release_gate_passed, evidence_available]
+  minimum_vertical_slice_is_phase_completion: false
+  phase_completion_requires:
+    - all_mandatory_work_packages_completed
+    - full_phase_scope_implemented
+    - real_default_path_adopted
+    - failure_recovery_and_security_tests
+    - migration_and_rollback_or_recovery
+    - requirement_ledger_current_evidence
+    - evidence_bundle_reproducible
+    - coordinator_approval
+  completion_forbidden_when:
+    - readiness_completion_candidate
+    - coordinator_approval_pending
+    - in_scope_target_not_current
+    - real_dependency_replaced_by_mock
+    - validation_not_run_but_claimed_passed
+
+correction:
+  decision: reopen_phase01_through_phase04
+  reason: prior_closure_proved_partial_or_minimum_foundations_not_complete_target_scope
+  prior_outputs: retained_as_partial_evidence
+  phase05_start: blocked_until_phase03_and_phase04_complete_after_correction
 
 final_tree_policy:
   production_legacy_directories: forbidden
@@ -29,11 +53,11 @@ final_tree_policy:
   enforcement_task: P22-T03
 
 phases:
-  - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}
-  - {id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed, depends_on: [PHASE01], tasks: [P02-T01,P02-T02,P02-T03,P02-T04,P02-T05,P02-T06]}
-  - {id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed, depends_on: [PHASE02], tasks: [P03-T01,P03-T02,P03-T03,P03-T04,P03-T05,P03-T06,P03-T07]}
-  - {id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed, depends_on: [PHASE03], tasks: [P04-T01,P04-T02,P04-T03,P04-T04,P04-T05,P04-T06,P04-T07]}
-  - {id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready, depends_on: [PHASE03,PHASE04], tasks: [P05-T01,P05-T02,P05-T03,P05-T04,P05-T05,P05-T06,P05-T07]}
+  - {id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: ready, depends_on: [], tasks: [P01-T01,P01-T02,P01-T03,P01-T04,P01-T05,P01-T06]}
+  - {id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: planned, depends_on: [PHASE01], tasks: [P02-T01,P02-T02,P02-T03,P02-T04,P02-T05,P02-T06]}
+  - {id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: planned, depends_on: [PHASE02], tasks: [P03-T01,P03-T02,P03-T03,P03-T04,P03-T05,P03-T06,P03-T07]}
+  - {id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: planned, depends_on: [PHASE03], tasks: [P04-T01,P04-T02,P04-T03,P04-T04,P04-T05,P04-T06,P04-T07]}
+  - {id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: planned, depends_on: [PHASE03,PHASE04], tasks: [P05-T01,P05-T02,P05-T03,P05-T04,P05-T05,P05-T06,P05-T07]}
   - {id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: planned, depends_on: [PHASE03,PHASE04], tasks: [P06-T01,P06-T02,P06-T03,P06-T04,P06-T05,P06-T06,P06-T07]}
   - {id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: planned, depends_on: [PHASE05,PHASE06], tasks: [P07-T01,P07-T02,P07-T03,P07-T04,P07-T05,P07-T06,P07-T07]}
   - {id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: planned, depends_on: [PHASE04,PHASE05,PHASE06,PHASE07], tasks: [P08-T01,P08-T02,P08-T03,P08-T04,P08-T05,P08-T06,P08-T07,P08-T08]}
