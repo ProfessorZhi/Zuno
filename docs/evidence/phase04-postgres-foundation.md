@@ -4,7 +4,7 @@
 phase_completion: `withdrawn`
 correction_date: 2026-07-16
 
-## 订正结论
+## 真实边界
 
 本 Evidence 曾作为 PHASE04 completion candidate。架构审查确认，它只证明 PostgreSQL 16、Alembic、基础 UoW、Outbox/Inbox、IdempotencyClaim、Lease/Fencing、Object Manifest 和 Checkpoint primitive 的最小真实集成，不足以证明完整耐久基础设施 Phase。
 
