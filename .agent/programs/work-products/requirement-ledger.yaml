@@ -4780,76 +4780,88 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Lease 使用权威 Clock"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1899"
-    gap: "?????Lease 使用权威 Clock???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/lease.py"
+      - "tools/scripts/verify_phase04_lease_fencing.py"
+      - "tools/scripts/verify_phase04_lease_worker_coordination.py"
+    gap: "none within P04-T05; lease deadlines, heartbeat loss and clock tolerance are evaluated against PostgreSQL time"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T05 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-018 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: database_clock_deadline, heartbeat_renew, network_partition_heartbeat_loss and clock_tolerance pass against real PostgreSQL"
     test_ids:
-      - "INFRA-018-UT"
-      - "INFRA-018-IT"
+      - "tests/integration/test_phase04_lease_worker_coordination.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-018"
+      - "docs/evidence/phase04-lease-fencing.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1899"
-      - "planned_test:INFRA-018-UT"
-      - "planned_test:INFRA-018-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-018"
+      - "current:src/backend/zuno/platform/database/lease.py"
+      - "test:tests/integration/test_phase04_lease_worker_coordination.py"
+      - "evidence:docs/evidence/phase04-lease-fencing.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-019
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Fencing Token 单调拒绝旧 Worker"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1900"
-    gap: "?????Fencing Token 单调拒绝旧 Worker???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/lease.py"
+      - "tools/scripts/verify_phase04_lease_fencing.py"
+      - "tools/scripts/verify_phase04_lease_worker_coordination.py"
+    gap: "none within P04-T05; stale lease ids/epochs are rejected before result commit"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T05 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-019 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: transfer, expiry handoff, crash handoff and late fencing token commit attempts fail closed"
     test_ids:
-      - "INFRA-019-UT"
-      - "INFRA-019-IT"
+      - "tests/integration/test_phase04_lease_worker_coordination.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-019"
+      - "docs/evidence/phase04-lease-fencing.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1900"
-      - "planned_test:INFRA-019-UT"
-      - "planned_test:INFRA-019-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-019"
+      - "current:src/backend/zuno/platform/database/lease.py"
+      - "test:tests/integration/test_phase04_lease_worker_coordination.py"
+      - "evidence:docs/evidence/phase04-lease-fencing.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-020
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Clock/Deadline/Timeout/Skew 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1901"
-    gap: "?????Clock/Deadline/Timeout/Skew 分离???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/runtime.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/lease.py"
+      - "tools/scripts/verify_phase04_postgres_session_runtime.py"
+      - "tools/scripts/verify_phase04_lease_worker_coordination.py"
+    gap: "none within P04-T01/P04-T05; statement/lock timeouts, DB lease deadlines and clock tolerance are separately verified"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T01 and P04-T05 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-020 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: transaction timeouts fail closed separately from lease deadlines and skew tolerance"
     test_ids:
-      - "INFRA-020-UT"
-      - "INFRA-020-IT"
+      - "tests/integration/test_phase04_postgres_session_runtime.py"
+      - "tests/integration/test_phase04_lease_worker_coordination.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-020"
+      - "docs/evidence/phase04-postgres-session-runtime.md"
+      - "docs/evidence/phase04-lease-fencing.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1901"
-      - "planned_test:INFRA-020-UT"
-      - "planned_test:INFRA-020-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-020"
+      - "current:src/backend/zuno/platform/database/runtime.py"
+      - "current:src/backend/zuno/platform/database/lease.py"
+      - "test:tests/integration/test_phase04_postgres_session_runtime.py"
+      - "test:tests/integration/test_phase04_lease_worker_coordination.py"
+      - "evidence:docs/evidence/phase04-postgres-session-runtime.md"
+      - "evidence:docs/evidence/phase04-lease-fencing.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-021
     module: "11 Infrastructure"
@@ -4930,51 +4942,68 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Migration Expand/Contract"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1905"
-    gap: "?????Migration Expand/Contract???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "infra/db/alembic/env.py"
+      - "infra/db/alembic/versions/20260417_01_init_postgresql.py"
+      - "infra/db/alembic/versions/20260717_08_migration_backfill_control.py"
+      - "infra/db/alembic/versions/20260717_09_workspace_session_online_index.py"
+      - "infra/db/alembic/versions/20260717_10_backfill_owner_online_constraint.py"
+      - "tools/scripts/verify_phase04_alembic_migration.py"
+      - "tools/scripts/verify_phase04_migration_control.py"
+    gap: "none within P04-T02; schema expansion, online DDL, downgrade/re-upgrade and contract/drift gates are verified"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T02 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-024 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: single Alembic revision chain supports expand/online DDL, full drift detection, downgrade base and re-upgrade"
     test_ids:
-      - "INFRA-024-UT"
-      - "INFRA-024-IT"
+      - "tests/integration/test_phase04_alembic_migration.py"
+      - "tests/integration/test_phase04_migration_control.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-024"
+      - "docs/evidence/phase04-alembic-migration.md"
+      - "docs/evidence/phase04-migration-control.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1905"
-      - "planned_test:INFRA-024-UT"
-      - "planned_test:INFRA-024-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-024"
+      - "current:infra/db/alembic/env.py"
+      - "current:infra/db/alembic/versions/20260717_08_migration_backfill_control.py"
+      - "test:tests/integration/test_phase04_alembic_migration.py"
+      - "test:tests/integration/test_phase04_migration_control.py"
+      - "evidence:docs/evidence/phase04-alembic-migration.md"
+      - "evidence:docs/evidence/phase04-migration-control.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-025
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Migration 可 Resume/Rollback/Forward-fix"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1906"
-    gap: "?????Migration 可 Resume/Rollback/Forward-fix???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/migration.py"
+      - "infra/db/alembic/versions/20260717_08_migration_backfill_control.py"
+      - "tools/scripts/verify_phase04_existing_database_upgrade.py"
+      - "tools/scripts/verify_phase04_migration_control.py"
+    gap: "none within P04-T02 framework; individual domain data cutovers must still provide their own migration proofs"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T02 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-025 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: pause/restart/resume, stale generation reject, forward-fix lineage, repeated upgrade and downgrade/re-upgrade pass against real PostgreSQL"
     test_ids:
-      - "INFRA-025-UT"
-      - "INFRA-025-IT"
+      - "tests/integration/test_phase04_existing_database_upgrade.py"
+      - "tests/integration/test_phase04_migration_control.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-025"
+      - "docs/evidence/phase04-alembic-migration.md"
+      - "docs/evidence/phase04-migration-control.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1906"
-      - "planned_test:INFRA-025-UT"
-      - "planned_test:INFRA-025-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-025"
+      - "current:src/backend/zuno/platform/database/migration.py"
+      - "current:infra/db/alembic/versions/20260717_08_migration_backfill_control.py"
+      - "test:tests/integration/test_phase04_existing_database_upgrade.py"
+      - "test:tests/integration/test_phase04_migration_control.py"
+      - "evidence:docs/evidence/phase04-alembic-migration.md"
+      - "evidence:docs/evidence/phase04-migration-control.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-026
     module: "11 Infrastructure"
