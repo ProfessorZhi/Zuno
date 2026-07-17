@@ -348,7 +348,10 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         minio_evidence = _read(MINIO_OBJECT_EVIDENCE)
         for phrase in [
             "object_staging: passed",
+            "visibility_lag: passed",
+            "duplicate_upload: passed",
             "hash_mismatch_fail_closed: passed",
+            "missing_object: passed",
             "delete: passed",
             "restore: passed",
             "storage_restart: passed",

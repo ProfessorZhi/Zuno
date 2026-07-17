@@ -7,7 +7,10 @@ status: partial_implementation_available
 object_staging: passed
 hash_mismatch_fail_closed: passed
 commit_visibility: passed
+visibility_lag: passed
+duplicate_upload: passed
 delete: passed
+missing_object: passed
 restore: passed
 storage_restart: passed
 retention: not_yet_proven
@@ -35,6 +38,9 @@ Object Commit != Domain Success. Object visibility is a physical receipt; Produc
 
 - Creates an isolated real MinIO bucket for each run.
 - Stages object content under `_staging/<sha256>/...` with SHA-256 metadata.
+- Re-staging the same object content converges on the same deterministic staged object name and hash receipt.
+- Keeps the future visible object key unreadable until commit succeeds.
+- Fails closed when reading a missing object.
 - Fails closed when commit receives an expected hash that does not match staged bytes.
 - Commits by copying staged content to the visible object key and deleting the staged object.
 - Reads the committed object and verifies the exact bytes.
@@ -64,6 +70,6 @@ pytest -q tests/integration/test_phase04_minio_object_store.py -p no:cacheprovid
 ## Remaining Gap
 
 - Retention, legal hold, authorization hooks and lifecycle are not yet proven.
-- Multipart/partial upload, visibility lag, lost response and reconciliation are not yet proven.
+- Multipart/partial upload, lost response and reconciliation are not yet proven.
 - Object Manifest is not yet integrated with PostgreSQL domain transaction and backup/restore recovery set.
 - P04-T06 remains `ready`, not completed.

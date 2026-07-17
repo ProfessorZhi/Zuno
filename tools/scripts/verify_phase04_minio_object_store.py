@@ -21,6 +21,21 @@ def verify_phase04_minio_object_store() -> list[str]:
     bucket = f"phase04-verify-object-{uuid4().hex}"
     try:
         staged = store.stage_object(bucket=bucket, object_name="workspace/a.txt", content=b"phase04-object")
+        duplicate_staged = store.stage_object(bucket=bucket, object_name="workspace/a.txt", content=b"phase04-object")
+        if duplicate_staged.object_name != staged.object_name:
+            errors.append("MinIO duplicate stage did not converge on deterministic staged object name")
+        if duplicate_staged.content_hash != staged.content_hash:
+            errors.append("MinIO duplicate stage did not preserve content hash")
+        try:
+            store.read_object(bucket=bucket, object_name="committed/a.txt")
+            errors.append("MinIO visible object was readable before commit")
+        except S3Error:
+            pass
+        try:
+            store.read_object(bucket=bucket, object_name="missing/a.txt")
+            errors.append("MinIO missing object read did not fail closed")
+        except S3Error:
+            pass
         try:
             store.commit_object(
                 bucket=bucket,
