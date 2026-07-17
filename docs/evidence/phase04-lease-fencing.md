@@ -1,58 +1,78 @@
-# PHASE04 Lease/Fencing Evidence
+# PHASE04 Lease/Fencing 证据
 
 phase_id: PHASE04
 task_id: P04-T05
-date: 2026-07-16
-status: partial_implementation_available
+date: 2026-07-17
+status: implementation_available
+P04-T05: completed
 lease_acquire: passed
 heartbeat_renew: passed
 duplicate_worker_reject: passed
 expiry_transfer: passed
 cancel_transfer: passed
 late_fencing_token_reject: passed
+database_clock_deadline: passed
+same_owner_idempotent_acquire: passed
+explicit_transfer: passed
+fenced_commit_same_transaction: passed
+worker_heartbeat_scheduler: passed
+crash_handoff: passed
+network_partition_heartbeat_loss: passed
+pause_gc_delay: passed
+cancel_transfer_race: passed
+clock_tolerance: passed
 
 ## 边界
 
-本证据证明真实 PostgreSQL 上的 Lease/Fencing 子集：worker 可以获取 lease、续租、取消 lease；重复 worker 不能接管未过期 lease；lease 过期或取消后，新 worker 接管会递增 epoch；旧 worker 的 fencing token 在转移后不能再通过写入前检查。
+本证据关闭 P04-T05，但不关闭 PHASE04。Lease/Fencing 只拥有 worker 对 resource 的临时执行权、epoch 与 fencing token；不能代表领域结果成功。
 
-这不关闭 P04-T05，也不关闭 PHASE04。Lease/Fencing 只证明基础设施所有权和 epoch 边界，不能代表领域结果成功。
+领域 Owner 必须通过 `LeaseWorkerCoordinator.commit()` 在同一个 PostgreSQL 事务内先执行 `assert_fence(... FOR UPDATE)` 再写结果。只在业务写之前的另一个事务检查 token 不能满足本证据边界。
 
 ## 环境
 
 | 项目 | 值 |
 | --- | --- |
-| PostgreSQL service | `zuno-postgres`, image `postgres:16` |
+| PostgreSQL | `zuno-postgres`，镜像 `postgres:16` |
 | Database URL | `postgresql+psycopg://postgres:postgres@localhost:5432/zuno` |
-| Verification command | `python tools/scripts/verify_phase04_lease_fencing.py` |
-| Integration test | `pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` |
+| Network fault | 本地 TCP blackhole proxy 阻断 worker 到 PostgreSQL 的双向流量 |
+| Primitive verifier | `python tools/scripts/verify_phase04_lease_fencing.py` |
+| Coordination verifier | `python tools/scripts/verify_phase04_lease_worker_coordination.py` |
+| 集成测试 | `pytest -q tests/integration/test_phase04_lease_worker_coordination.py tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` |
 
 ## 已验证行为
 
-- `acquire_lease()` 为资源创建 `FencingToken`，并能通过 `assert_fence()`。
-- `renew_lease()` 只允许当前 owner、lease_id 和 epoch 续租，且保持 token identity 不变。
-- 另一个 worker 不能接管未过期 lease。
-- lease 过期后，新 worker 接管同一资源并递增 epoch。
-- 旧 token 在转移后被 `assert_fence()` 拒绝，不能代表 late result 写入权限。
-- 旧 token 在转移后不能续租。
-- `cancel_lease()` 让当前 token 立即失效，后续接管递增 epoch。
-- 已取消 token 不能重复取消。
+- acquire、renew、expiry、cancel 与 transfer 的 deadline 全部由 PostgreSQL `now()` 计算，不依赖 worker 本地时钟。
+- 同 owner 对 live lease 的 reacquire 保持 lease id/epoch，只延长 deadline；其他 owner 不能获取 live lease。
+- 显式 `transfer_lease()` 校验完整旧 token，切换 owner/lease id 并把 epoch 加一；旧 token 随即失效。
+- `assert_fence()` 校验 resource/owner/lease id/epoch/数据库 deadline/clock tolerance，并用 `FOR UPDATE` 将 fence 与后续业务写锁在同一事务。
+- clock tolerance 大于剩余 lease lifetime 时提前 fail closed。
+- `LeaseWorkerCoordinator` 用独立 heartbeat 跨越初始 TTL，期间 contender 不能接管，最终 fenced Outbox 写入提交。
+- worker 暂停超过 TTL 后 replacement 接管并递增 epoch，旧 worker late result 被拒绝。
+- worker 子进程持久化 lease 后退出；deadline 后 replacement 接管，崩溃 worker token 不能提交。
+- cancel 与 transfer 并发竞争只有一个 PostgreSQL row-lock winner，最终收敛到新 owner 和下一 epoch。
+- TCP blackhole 阻断 PostgreSQL heartbeat 后，partitioned worker 在有界时间内 fail closed；恢复并 handoff 后旧 token 不能提交，新 token 可以 fenced commit。
+- verifier 重复运行后删除临时 lease/outbox rows，不遗留测试事实。
 
 ## 命令与结果
 
 ```text
 python tools/scripts/verify_phase04_lease_fencing.py
 PHASE04 lease/fencing verification passed.
+
+python tools/scripts/verify_phase04_lease_worker_coordination.py
+PHASE04 lease worker coordination verification passed.
 ```
 
 ```text
+pytest -q tests/integration/test_phase04_lease_worker_coordination.py -p no:cacheprovider
+1 passed
+
 pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider
-8 passed
+10 passed
 ```
 
-## 剩余缺口
+## 状态结论
 
-- 尚未证明真实 worker 进程崩溃后的 handoff。
-- 尚未证明 network partition、pause/GC delay 和 cancel race。
-- 尚未实现独立 heartbeat scheduler 或 worker coordination runtime。
-- 尚未证明跨模块业务写入在所有路径都强制调用 `assert_fence()`。
-- P04-T05 仍是 `ready`，不是 completed。
+- P04-T05 Mandatory Scope 的代码、真实 PostgreSQL concurrency/fault tests 与可复现 Evidence 已齐全。
+- P04-T05 状态为 `completed`。
+- PHASE04 仍由其他 Work Package、官方 Checkpointer、完整 Backup/Restore/Replay、组合故障和 Coordinator approval 阻塞。

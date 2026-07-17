@@ -1245,20 +1245,36 @@ class InfrastructureRepository:
             raise FencingRejectedError("idempotency claim cannot be aborted by this owner/generation")
 
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
+        if ttl_seconds < 1:
+            raise ValueError("lease ttl_seconds must be positive")
         lease_id = f"lease:{uuid4()}"
-        expires_at = utcnow() + timedelta(seconds=ttl_seconds)
         row = self.connection.execute(
             text(
                 """
                 INSERT INTO infra_worker_leases(resource_id, owner_id, lease_id, epoch, expires_at)
-                VALUES (:resource_id, :owner_id, :lease_id, 1, :expires_at)
+                VALUES (
+                    :resource_id, :owner_id, :lease_id, 1,
+                    now() + (:ttl_seconds * interval '1 second')
+                )
                 ON CONFLICT (resource_id) DO UPDATE
-                SET owner_id = EXCLUDED.owner_id,
-                    lease_id = EXCLUDED.lease_id,
-                    epoch = infra_worker_leases.epoch + 1,
-                    expires_at = EXCLUDED.expires_at,
+                SET owner_id = CASE
+                        WHEN infra_worker_leases.expires_at <= now() THEN EXCLUDED.owner_id
+                        ELSE infra_worker_leases.owner_id
+                    END,
+                    lease_id = CASE
+                        WHEN infra_worker_leases.expires_at <= now() THEN EXCLUDED.lease_id
+                        ELSE infra_worker_leases.lease_id
+                    END,
+                    epoch = CASE
+                        WHEN infra_worker_leases.expires_at <= now() THEN infra_worker_leases.epoch + 1
+                        ELSE infra_worker_leases.epoch
+                    END,
+                    expires_at = CASE
+                        WHEN infra_worker_leases.expires_at <= now() THEN EXCLUDED.expires_at
+                        ELSE GREATEST(infra_worker_leases.expires_at, EXCLUDED.expires_at)
+                    END,
                     updated_at = now()
-                WHERE infra_worker_leases.expires_at < now()
+                WHERE infra_worker_leases.expires_at <= now()
                    OR infra_worker_leases.owner_id = EXCLUDED.owner_id
                 RETURNING resource_id, owner_id, lease_id, epoch, expires_at
                 """
@@ -1267,7 +1283,7 @@ class InfrastructureRepository:
                 "resource_id": resource_id,
                 "owner_id": owner_id,
                 "lease_id": lease_id,
-                "expires_at": expires_at,
+                "ttl_seconds": ttl_seconds,
             },
         ).first()
         if row is None:
@@ -1280,27 +1296,45 @@ class InfrastructureRepository:
             expires_at=row.expires_at,
         )
 
-    def assert_fence(self, token: FencingToken) -> None:
+    def assert_fence(self, token: FencingToken, *, clock_tolerance_seconds: float = 0) -> None:
+        if not math.isfinite(clock_tolerance_seconds) or clock_tolerance_seconds < 0:
+            raise ValueError("clock_tolerance_seconds must be finite and non-negative")
         row = self.connection.execute(
             text(
                 """
-                SELECT epoch, lease_id, expires_at
+                SELECT resource_id
                 FROM infra_worker_leases
-                WHERE resource_id = :resource_id AND owner_id = :owner_id
+                WHERE resource_id = :resource_id
+                  AND owner_id = :owner_id
+                  AND lease_id = :lease_id
+                  AND epoch = :epoch
+                  AND expires_at >= now() + (:clock_tolerance_seconds * interval '1 second')
+                FOR UPDATE
                 """
             ),
-            {"resource_id": token.resource_id, "owner_id": token.owner_id},
+            {
+                "resource_id": token.resource_id,
+                "owner_id": token.owner_id,
+                "lease_id": token.lease_id,
+                "epoch": token.epoch,
+                "clock_tolerance_seconds": clock_tolerance_seconds,
+            },
         ).first()
-        if row is None or int(row.epoch) != token.epoch or row.lease_id != token.lease_id or row.expires_at < utcnow():
+        if row is None:
             raise FencingRejectedError("fencing token is stale")
 
     def renew_lease(self, token: FencingToken, *, ttl_seconds: int = 30) -> FencingToken:
-        expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        if ttl_seconds < 1:
+            raise ValueError("lease ttl_seconds must be positive")
         row = self.connection.execute(
             text(
                 """
                 UPDATE infra_worker_leases
-                SET expires_at = :expires_at, updated_at = now()
+                SET expires_at = GREATEST(
+                        expires_at,
+                        now() + (:ttl_seconds * interval '1 second')
+                    ),
+                    updated_at = now()
                 WHERE resource_id = :resource_id
                   AND owner_id = :owner_id
                   AND lease_id = :lease_id
@@ -1314,11 +1348,60 @@ class InfrastructureRepository:
                 "owner_id": token.owner_id,
                 "lease_id": token.lease_id,
                 "epoch": token.epoch,
-                "expires_at": expires_at,
+                "ttl_seconds": ttl_seconds,
             },
         ).first()
         if row is None:
             raise FencingRejectedError("lease cannot be renewed by this fencing token")
+        return FencingToken(
+            resource_id=str(row.resource_id),
+            owner_id=str(row.owner_id),
+            lease_id=str(row.lease_id),
+            epoch=int(row.epoch),
+            expires_at=row.expires_at,
+        )
+
+    def transfer_lease(
+        self,
+        token: FencingToken,
+        *,
+        new_owner_id: str,
+        ttl_seconds: int = 30,
+    ) -> FencingToken:
+        if not new_owner_id or new_owner_id == token.owner_id:
+            raise ValueError("new_owner_id must identify a different owner")
+        if ttl_seconds < 1:
+            raise ValueError("lease ttl_seconds must be positive")
+        new_lease_id = f"lease:{uuid4()}"
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_worker_leases
+                SET owner_id = :new_owner_id,
+                    lease_id = :new_lease_id,
+                    epoch = epoch + 1,
+                    expires_at = now() + (:ttl_seconds * interval '1 second'),
+                    updated_at = now()
+                WHERE resource_id = :resource_id
+                  AND owner_id = :owner_id
+                  AND lease_id = :lease_id
+                  AND epoch = :epoch
+                  AND expires_at >= now()
+                RETURNING resource_id, owner_id, lease_id, epoch, expires_at
+                """
+            ),
+            {
+                "resource_id": token.resource_id,
+                "owner_id": token.owner_id,
+                "lease_id": token.lease_id,
+                "epoch": token.epoch,
+                "new_owner_id": new_owner_id,
+                "new_lease_id": new_lease_id,
+                "ttl_seconds": ttl_seconds,
+            },
+        ).first()
+        if row is None:
+            raise FencingRejectedError("lease cannot be transferred by this fencing token")
         return FencingToken(
             resource_id=str(row.resource_id),
             owner_id=str(row.owner_id),

@@ -37,6 +37,7 @@ idempotency_owner_crash_process_exit_subset: passed
 idempotency_tenant_isolation_subset: passed
 idempotency_worker_supervision: passed
 lease_fencing_subset: passed
+lease_worker_coordination: passed
 minio_object_store_subset: passed
 minio_visibility_duplicate_missing_subset: passed
 minio_multipart_reconciliation_subset: passed
@@ -84,18 +85,18 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_idempotency_tenant_isolation.py` | passed; transaction tenant context participates in the idempotency uniqueness boundary and same scope/key can safely exist in two tenants with distinct request hashes/results |
 | `python tools/scripts/verify_phase04_idempotency_supervision.py` | passed; owner/generation/expiry fencing、heartbeat、busy-owner reject、abort/reclaim、进程级取消传播、进程退出后的 durable effect reconciliation 与 no-reexecution 通过 |
 | `python tools/scripts/verify_phase04_lease_fencing.py` | passed; lease acquire, heartbeat renew, duplicate worker reject, expiry transfer, cancel transfer and late fencing token reject verified |
+| `python tools/scripts/verify_phase04_lease_worker_coordination.py` | passed; database clock、同 owner 幂等 acquire、显式 transfer、heartbeat、同事务 fenced commit、crash/pause/cancel race、clock tolerance 与 PostgreSQL TCP partition 通过 |
 | `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, duplicate staging, multipart/partial upload, orphan cleanup, lost-response/duplicate-complete reconciliation, authorization deny-before-I/O, Object Lock version、retention、legal hold、lifecycle、pre-commit visibility、missing/hash fail-closed、commit cleanup、delete 和 restore 均在真实 MinIO 验证 |
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
 | `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest 与 checkpoint primitive 对账通过 |
-| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T04 已完成，最终仍由 P04-T01–T03、P04-T05–T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
+| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T04/T05 已完成，最终仍由 P04-T01–T03、P04-T06/T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
 
 - 真实领域 handler adoption 与完整运维指标出口
 - Alembic full domain schema drift、production-like existing DB upgrade、online index/constraint 策略与不可逆 migration 独立 runbook
 - PostgreSQL domain service 默认路径接入显式 Runtime Factory/UoW，并收缩旧全局 engine/session compatibility surface
-- Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - PITR
@@ -136,6 +137,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Idempotency tenant isolation subset：`app.tenant_id` 参与唯一键边界，同一 scope/key 在不同 tenant 下可保存不同 request hash/result，同 tenant hash conflict 仍 fail closed；
 - Idempotency worker supervision：长任务由 heartbeat 跨 TTL 保持 owner；错误 owner、过期 owner 与 stale generation 均不能 complete/abort；确定无 effect 的失败立即 abort 并由下一 generation 接管；worker 子进程提交 Outbox effect 后退出时，replacement 通过 reconciliation 完成 Claim 且不重复执行 operation；
 - Lease/Fencing subset：lease acquire、heartbeat renew、duplicate worker reject、expiry transfer、cancel transfer 和 late fencing token reject 经真实 PostgreSQL 验证；
+- Lease/Fencing Worker Coordinator：deadline/renew 使用 PostgreSQL 时钟；同 owner live reacquire 保持 lease identity；显式 transfer 递增 epoch；`FOR UPDATE` fence 与业务写同事务；heartbeat 跨 TTL 保持 owner；crash handoff、pause/GC delay、cancel/transfer race、clock tolerance、PostgreSQL TCP blackhole 与恢复后的旧 token late commit reject 均通过；
 - MinIO/S3 smoke：创建临时 bucket，写入对象，读回并校验 SHA-256，删除对象和 bucket。
 - MinIO/S3 object staging：`MinioObjectStore` 写入 `_staging/<sha256>/...` 并记录 content hash；
 - MinIO/S3 duplicate and visibility subset：相同 content/object re-stage 收敛到同 staged key/hash，commit 前 visible key 不可读，missing object read fail closed；
@@ -147,7 +149,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Restore Runtime restart subset：`pg_restore` 后针对临时恢复库新建 sync/async `PostgresRuntime`，两类 health/readiness 和 read-only UoW 均能读取对应恢复事实；
 - 三服务组合故障 subset：PostgreSQL、RabbitMQ、MinIO 同时停止期间新连接/读取 fail closed；恢复后新建 Runtime 与 Adapter 对账 durable RabbitMQ marker、Outbox→Inbox、MinIO bytes/hash、Object Manifest 和 checkpoint primitive；
 
-这些结果证明三类服务已经可用，并证明 PostgreSQL sync/async Session Runtime、context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、完整 Idempotency Claim Service、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集、基础设施表的 PostgreSQL backup/restore 与恢复库 Runtime restart，以及三服务组合停机恢复子集；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
+这些结果证明三类服务已经可用，并证明 PostgreSQL sync/async Session Runtime、context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、完整 Idempotency Claim Service、完整 Lease/Fencing Worker Coordinator、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集、基础设施表的 PostgreSQL backup/restore 与恢复库 Runtime restart，以及三服务组合停机恢复子集；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 ## Existing Partial Evidence
 

@@ -51,6 +51,7 @@ IDEMPOTENCY_TENANT_ISOLATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verif
 IDEMPOTENCY_SUPERVISION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_supervision.py"
 LEASE_FENCING_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
 LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencing.md"
+LEASE_COORDINATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_worker_coordination.py"
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -693,6 +694,17 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         for lease_error in lease_errors:
             errors.append(f"PHASE04 lease/fencing verification failed: {lease_error}")
 
+    if not LEASE_COORDINATION_VERIFIER.exists():
+        errors.append("missing PHASE04 lease worker coordination verifier")
+    else:
+        coordination_errors = _load_verifier(
+            LEASE_COORDINATION_VERIFIER,
+            "verify_phase04_lease_worker_coordination",
+            "verify_phase04_lease_worker_coordination",
+        )()
+        for coordination_error in coordination_errors:
+            errors.append(f"PHASE04 lease worker coordination verification failed: {coordination_error}")
+
     if not LEASE_FENCING_EVIDENCE.exists():
         errors.append("missing PHASE04 lease/fencing evidence")
     else:
@@ -704,7 +716,18 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "expiry_transfer: passed",
             "cancel_transfer: passed",
             "late_fencing_token_reject: passed",
+            "database_clock_deadline: passed",
+            "same_owner_idempotent_acquire: passed",
+            "explicit_transfer: passed",
+            "fenced_commit_same_transaction: passed",
+            "worker_heartbeat_scheduler: passed",
+            "crash_handoff: passed",
+            "network_partition_heartbeat_loss: passed",
+            "pause_gc_delay: passed",
+            "cancel_transfer_race: passed",
+            "clock_tolerance: passed",
             "不能代表领域结果成功",
+            "P04-T05: completed",
         ]:
             if phrase not in lease_evidence:
                 errors.append(f"PHASE04 lease/fencing evidence missing phrase: {phrase}")
