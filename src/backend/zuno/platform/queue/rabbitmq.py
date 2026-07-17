@@ -9,10 +9,10 @@ from typing import Any
 import aio_pika
 from aiormq.exceptions import AMQPConnectionError
 from aio_pika.abc import (
+    AbstractChannel,
+    AbstractConnection,
+    AbstractExchange,
     AbstractIncomingMessage,
-    AbstractRobustChannel,
-    AbstractRobustConnection,
-    AbstractRobustExchange,
 )
 
 
@@ -45,11 +45,12 @@ class RabbitMQDelivery:
 
 
 class RabbitMQTransport:
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, *, robust: bool = True) -> None:
         self.url = url
-        self._connection: AbstractRobustConnection | None = None
-        self._channel: AbstractRobustChannel | None = None
-        self._exchanges: dict[str, AbstractRobustExchange] = {}
+        self.robust = robust
+        self._connection: AbstractConnection | None = None
+        self._channel: AbstractChannel | None = None
+        self._exchanges: dict[str, AbstractExchange] = {}
 
     async def __aenter__(self) -> RabbitMQTransport:
         await self.connect()
@@ -63,7 +64,8 @@ class RabbitMQTransport:
         last_error: Exception | None = None
         while time.time() < deadline:
             try:
-                self._connection = await aio_pika.connect_robust(self.url)
+                connect = aio_pika.connect_robust if self.robust else aio_pika.connect
+                self._connection = await connect(self.url)
                 self._channel = await self._connection.channel(publisher_confirms=True)
                 return
             except (AMQPConnectionError, ConnectionError, OSError) as exc:
@@ -80,7 +82,7 @@ class RabbitMQTransport:
             await self._connection.close()
 
     @property
-    def channel(self) -> AbstractRobustChannel:
+    def channel(self) -> AbstractChannel:
         if self._channel is None:
             raise RuntimeError("RabbitMQTransport is not connected")
         return self._channel
@@ -137,6 +139,9 @@ class RabbitMQTransport:
         version: str = "v1",
         ordering_key: str | None = None,
         ordering_sequence: int | None = None,
+        outbox_publish_attempt: int | None = None,
+        outbox_retry_count: int | None = None,
+        outbox_replay_count: int | None = None,
     ) -> None:
         exchange = await self._exchange(topology.exchange)
         headers: dict[str, Any] = {
@@ -149,6 +154,28 @@ class RabbitMQTransport:
                 raise ValueError("ordering_key and positive ordering_sequence must be provided together")
             headers["ordering_key"] = ordering_key
             headers["ordering_sequence"] = ordering_sequence
+        delivery_counters = {
+            "outbox_publish_attempt": outbox_publish_attempt,
+            "outbox_retry_count": outbox_retry_count,
+            "outbox_replay_count": outbox_replay_count,
+        }
+        if any(value is not None for value in delivery_counters.values()):
+            if (
+                outbox_publish_attempt is None
+                or outbox_retry_count is None
+                or outbox_replay_count is None
+                or outbox_publish_attempt < 1
+                or outbox_retry_count < 0
+                or outbox_replay_count < 0
+            ):
+                raise ValueError("outbox attempt must be positive and all delivery counters must be provided together")
+            headers.update(
+                {
+                    "outbox_publish_attempt": outbox_publish_attempt,
+                    "outbox_retry_count": outbox_retry_count,
+                    "outbox_replay_count": outbox_replay_count,
+                }
+            )
         message = aio_pika.Message(
             body=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             content_type="application/json",
@@ -225,7 +252,7 @@ class RabbitMQTransport:
         queue = await self.channel.declare_queue(queue_name, passive=True)
         return int(queue.declaration_result.message_count)
 
-    async def _exchange(self, exchange_name: str) -> AbstractRobustExchange:
+    async def _exchange(self, exchange_name: str) -> AbstractExchange:
         exchange = self._exchanges.get(exchange_name)
         if exchange is None:
             exchange = await self.channel.get_exchange(exchange_name)

@@ -22,7 +22,7 @@ REQUIRED_INFRA_TABLES = {
     "infra_outbox_sequences",
     "infra_delivery_watermarks",
 }
-EXPECTED_HEAD_REVISION = "20260717_06"
+EXPECTED_HEAD_REVISION = "20260717_07"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -39,6 +39,15 @@ REQUIRED_TABLE_COLUMNS = {
         "tenant_id",
         "ordering_key",
         "ordering_sequence",
+        "publish_attempts",
+        "retry_count",
+        "next_attempt_at",
+        "last_error_code",
+        "last_failed_at",
+        "dead_lettered_at",
+        "replay_count",
+        "last_replay_owner",
+        "replayed_at",
     },
     "infra_inbox_messages": {
         "consumer",
@@ -113,6 +122,9 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_inbox_messages_ordering_pair",
     "uq_infra_inbox_messages_tenant_consumer_ordering_sequence",
     "ck_infra_delivery_watermarks_sequence",
+    "ck_infra_outbox_events_delivery_counts",
+    "ck_infra_outbox_events_claim_state",
+    "ck_infra_outbox_events_dead_letter_state",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -121,6 +133,7 @@ REQUIRED_INDEXES = {
     "ix_infra_checkpoints_thread_generation",
     "ix_infra_outbox_events_tenant_ordering",
     "ix_infra_inbox_messages_buffered",
+    "ix_infra_outbox_events_delivery_ready",
 }
 
 

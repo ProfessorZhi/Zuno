@@ -9,12 +9,15 @@ rabbitmq_publish_confirm: passed
 outbox_published_receipt: passed
 inbox_dedup_receipt: passed
 commit_after_publish_before_complete_crash: passed
-broker_restart: not_yet_proven
+broker_restart: passed_in_phase04-rabbitmq-broker-restart.md
 partition_recovery: passed_in_phase04-rabbitmq-network-partition.md
 confirm_unknown_reclaim_republish: passed
 consumer_crash_redelivery: passed
 inbox_first_seen_dedup: passed
 out_of_order_delivery: passed_in_phase04-rabbitmq-out-of-order.md
+durable_retry_backoff: passed_in_phase04-outbox-delivery-policy.md
+outbox_dead_letter_replay: passed_in_phase04-outbox-delivery-policy.md
+outbox_backlog_visibility: passed_in_phase04-outbox-delivery-policy.md
 
 ## Boundary
 
@@ -52,6 +55,7 @@ Queue ACK != Domain Success. The outbox row and inbox row are infrastructure rec
 - Consumer 在 Inbox + follow-up Outbox 事务提交前崩溃时两者都 rollback；未 ACK delivery 在新连接中 redeliver。
 - `InboxReceipt.first_seen` 区分首次处理与同 hash duplicate，duplicate 只 ACK，不重复 follow-up 写入。
 - Tenant-scoped ordering metadata、乱序持久缓冲、delivery watermark、restart reconciliation、连续释放和 sequence duplicate 收敛由 `phase04-rabbitmq-out-of-order.md` 证明。
+- Outbox 发布 Owner 的持久 retry/backoff、重试耗尽 dead-letter、人工 replay 审计、delivery attempt header 和 backlog visibility 由 `phase04-outbox-delivery-policy.md` 证明。
 - Deletes temporary RabbitMQ topology after verification.
 
 ## Commands And Results
@@ -76,8 +80,12 @@ python tools/scripts/verify_phase04_rabbitmq_out_of_order.py
 PHASE04 RabbitMQ out-of-order verification passed.
 ```
 
+```text
+python tools/scripts/verify_phase04_outbox_delivery_policy.py
+PHASE04 outbox delivery policy verification passed.
+```
+
 ## Remaining Gap
 
-- Broker restart、backlog、retry exhaustion 和 DLQ replay 尚未在 Outbox publisher owner 路径独立证明。
-- Out-of-order 基础设施 runtime 已完成真实 RabbitMQ/PostgreSQL 证明；真实领域 handler adoption 尚未完成。
+- Outbox/Inbox 基础设施 runtime 已完成 broker restart、partition、consumer crash、backlog、retry exhaustion、dead-letter/replay 和 out-of-order 的真实 RabbitMQ/PostgreSQL 证明；真实领域 handler adoption 尚未完成。
 - P04-T03 remains `ready`, not completed.

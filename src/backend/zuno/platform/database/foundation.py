@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -43,6 +44,36 @@ class OutboxEventRecord:
     tenant_id: str
     ordering_key: str | None
     ordering_sequence: int | None
+    publish_attempts: int
+    retry_count: int
+    replay_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class OutboxFailureReceipt:
+    event_id: str
+    status: str
+    publish_attempts: int
+    retry_count: int
+    next_attempt_at: datetime
+    error_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class OutboxReplayReceipt:
+    event_id: str
+    status: str
+    replay_count: int
+    replay_owner: str
+
+
+@dataclass(frozen=True, slots=True)
+class OutboxBacklogReceipt:
+    ready: int
+    delayed: int
+    claimed: int
+    dead_letter: int
+    oldest_pending_at: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,6 +301,7 @@ class InfrastructureRepository:
                     SELECT event_id
                     FROM infra_outbox_events
                     WHERE status = 'pending'
+                      AND next_attempt_at <= now()
                     ORDER BY created_at, event_id
                     FOR UPDATE SKIP LOCKED
                     LIMIT :limit
@@ -291,7 +323,9 @@ class InfrastructureRepository:
                 """
                 UPDATE infra_outbox_events
                 SET status = 'claimed', claim_owner = :worker_id, claimed_at = now()
-                WHERE event_id = :event_id AND status = 'pending'
+                WHERE event_id = :event_id
+                  AND status = 'pending'
+                  AND next_attempt_at <= now()
                 RETURNING event_id
                 """
             ),
@@ -304,7 +338,8 @@ class InfrastructureRepository:
             text(
                 """
                 UPDATE infra_outbox_events
-                SET status = 'pending', claim_owner = NULL, claimed_at = NULL
+                SET status = 'pending', claim_owner = NULL, claimed_at = NULL,
+                    next_attempt_at = now()
                 WHERE status = 'claimed'
                   AND claimed_at < now() - (:older_than_seconds * interval '1 second')
                 RETURNING event_id
@@ -319,7 +354,8 @@ class InfrastructureRepository:
             text(
                 """
                 UPDATE infra_outbox_events
-                SET status = 'pending', claim_owner = NULL, claimed_at = NULL
+                SET status = 'pending', claim_owner = NULL, claimed_at = NULL,
+                    next_attempt_at = now()
                 WHERE event_id = :event_id
                   AND status = 'claimed'
                   AND claimed_at < now() - (:older_than_seconds * interval '1 second')
@@ -335,7 +371,11 @@ class InfrastructureRepository:
             text(
                 """
                 UPDATE infra_outbox_events
-                SET status = 'published', published_at = now()
+                SET status = 'published',
+                    publish_attempts = publish_attempts + 1,
+                    published_at = now(),
+                    claim_owner = NULL,
+                    claimed_at = NULL
                 WHERE event_id = :event_id AND claim_owner = :worker_id AND status = 'claimed'
                 """
             ),
@@ -349,7 +389,8 @@ class InfrastructureRepository:
             text(
                 """
                 SELECT event_id, aggregate_id, topic, payload, payload_hash, idempotency_key,
-                       claim_owner, tenant_id, ordering_key, ordering_sequence
+                       claim_owner, tenant_id, ordering_key, ordering_sequence,
+                       publish_attempts, retry_count, replay_count
                 FROM infra_outbox_events
                 WHERE event_id = :event_id AND claim_owner = :worker_id AND status = 'claimed'
                 """
@@ -372,6 +413,151 @@ class InfrastructureRepository:
             tenant_id=str(row.tenant_id),
             ordering_key=None if row.ordering_key is None else str(row.ordering_key),
             ordering_sequence=None if row.ordering_sequence is None else int(row.ordering_sequence),
+            publish_attempts=int(row.publish_attempts),
+            retry_count=int(row.retry_count),
+            replay_count=int(row.replay_count),
+        )
+
+    def record_outbox_publish_failure(
+        self,
+        *,
+        event_id: str,
+        worker_id: str,
+        error_code: str,
+        max_attempts: int,
+        base_backoff_seconds: float,
+        max_backoff_seconds: float,
+    ) -> OutboxFailureReceipt:
+        if max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1")
+        if not math.isfinite(base_backoff_seconds) or not math.isfinite(max_backoff_seconds):
+            raise ValueError("outbox backoff seconds must be finite")
+        if base_backoff_seconds < 0 or max_backoff_seconds < 0:
+            raise ValueError("outbox backoff seconds must not be negative")
+        if max_backoff_seconds < base_backoff_seconds:
+            raise ValueError("max_backoff_seconds must be greater than or equal to base_backoff_seconds")
+        normalized_error_code = error_code.strip()
+        if not normalized_error_code or len(normalized_error_code) > 128:
+            raise ValueError("error_code must contain between 1 and 128 characters")
+
+        row = self.connection.execute(
+            text(
+                """
+                SELECT retry_count
+                FROM infra_outbox_events
+                WHERE event_id = :event_id
+                  AND claim_owner = :worker_id
+                  AND status = 'claimed'
+                FOR UPDATE
+                """
+            ),
+            {"event_id": event_id, "worker_id": worker_id},
+        ).first()
+        if row is None:
+            raise FencingRejectedError("outbox event is not claimed by this worker")
+
+        next_retry_count = int(row.retry_count) + 1
+        exhausted = next_retry_count >= max_attempts
+        delay_seconds = 0.0
+        if base_backoff_seconds:
+            exponent = min(max(0, next_retry_count - 1), 62)
+            delay_seconds = min(max_backoff_seconds, base_backoff_seconds * (2**exponent))
+        next_attempt_at = utcnow() + timedelta(seconds=0 if exhausted else delay_seconds)
+        receipt = self.connection.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET status = CASE WHEN :exhausted THEN 'dead_letter' ELSE 'pending' END,
+                    publish_attempts = publish_attempts + 1,
+                    retry_count = retry_count + 1,
+                    next_attempt_at = :next_attempt_at,
+                    last_error_code = :error_code,
+                    last_failed_at = now(),
+                    dead_lettered_at = CASE WHEN :exhausted THEN now() ELSE NULL END,
+                    claim_owner = NULL,
+                    claimed_at = NULL
+                WHERE event_id = :event_id
+                  AND claim_owner = :worker_id
+                  AND status = 'claimed'
+                RETURNING event_id, status, publish_attempts, retry_count,
+                          next_attempt_at, last_error_code
+                """
+            ),
+            {
+                "event_id": event_id,
+                "worker_id": worker_id,
+                "exhausted": exhausted,
+                "next_attempt_at": next_attempt_at,
+                "error_code": normalized_error_code,
+            },
+        ).one()
+        return OutboxFailureReceipt(
+            event_id=str(receipt.event_id),
+            status=str(receipt.status),
+            publish_attempts=int(receipt.publish_attempts),
+            retry_count=int(receipt.retry_count),
+            next_attempt_at=receipt.next_attempt_at,
+            error_code=str(receipt.last_error_code),
+        )
+
+    def replay_dead_letter_outbox(self, *, event_id: str, replay_owner: str) -> OutboxReplayReceipt:
+        normalized_owner = replay_owner.strip()
+        if not normalized_owner or len(normalized_owner) > 128:
+            raise ValueError("replay_owner must contain between 1 and 128 characters")
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET status = 'pending',
+                    retry_count = 0,
+                    next_attempt_at = now(),
+                    replay_count = replay_count + 1,
+                    last_replay_owner = :replay_owner,
+                    replayed_at = now(),
+                    dead_lettered_at = NULL,
+                    claim_owner = NULL,
+                    claimed_at = NULL
+                WHERE event_id = :event_id
+                  AND status = 'dead_letter'
+                RETURNING event_id, status, replay_count, last_replay_owner
+                """
+            ),
+            {"event_id": event_id, "replay_owner": normalized_owner},
+        ).first()
+        if row is None:
+            raise InfrastructureConflictError("outbox event is not dead-lettered")
+        return OutboxReplayReceipt(
+            event_id=str(row.event_id),
+            status=str(row.status),
+            replay_count=int(row.replay_count),
+            replay_owner=str(row.last_replay_owner),
+        )
+
+    def outbox_backlog(self, *, topic: str | None = None) -> OutboxBacklogReceipt:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    count(*) FILTER (WHERE status = 'pending' AND next_attempt_at <= now()) AS ready,
+                    count(*) FILTER (WHERE status = 'pending' AND next_attempt_at > now()) AS delayed,
+                    count(*) FILTER (WHERE status = 'claimed') AS claimed,
+                    count(*) FILTER (WHERE status = 'dead_letter') AS dead_letter,
+                    min(created_at) FILTER (WHERE status IN ('pending', 'claimed')) AS oldest_pending_at
+                FROM infra_outbox_events
+                WHERE (
+                    CAST(:topic AS varchar) IS NULL
+                    OR topic = CAST(:topic AS varchar)
+                )
+                """
+            ),
+            {"topic": topic},
+        ).one()
+        return OutboxBacklogReceipt(
+            ready=int(row.ready),
+            delayed=int(row.delayed),
+            claimed=int(row.claimed),
+            dead_letter=int(row.dead_letter),
+            oldest_pending_at=row.oldest_pending_at,
         )
 
     def record_inbox(self, *, consumer: str, message_id: str, payload: dict[str, Any]) -> str:
@@ -1201,7 +1387,10 @@ __all__ = [
     "InfrastructureConflictError",
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",
+    "OutboxBacklogReceipt",
     "OutboxEventRecord",
+    "OutboxFailureReceipt",
+    "OutboxReplayReceipt",
     "TransactionRetryReceipt",
     "create_foundation_engine",
     "run_transaction_with_retry",

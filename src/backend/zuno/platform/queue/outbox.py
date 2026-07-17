@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+import math
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import Engine
 
@@ -16,6 +19,42 @@ class PublishedOutboxEvent:
     idempotency_key: str
 
 
+@dataclass(frozen=True, slots=True)
+class OutboxPublishPolicy:
+    max_attempts: int = 5
+    base_backoff_seconds: float = 1.0
+    max_backoff_seconds: float = 300.0
+    publish_timeout_seconds: float = 30.0
+
+    def __post_init__(self) -> None:
+        if self.max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1")
+        if not math.isfinite(self.base_backoff_seconds) or not math.isfinite(self.max_backoff_seconds):
+            raise ValueError("outbox backoff seconds must be finite")
+        if self.base_backoff_seconds < 0:
+            raise ValueError("base_backoff_seconds must not be negative")
+        if self.max_backoff_seconds < self.base_backoff_seconds:
+            raise ValueError("max_backoff_seconds must be greater than or equal to base_backoff_seconds")
+        if not math.isfinite(self.publish_timeout_seconds) or self.publish_timeout_seconds <= 0:
+            raise ValueError("publish_timeout_seconds must be finite and positive")
+
+
+@dataclass(frozen=True, slots=True)
+class FailedOutboxEvent:
+    event_id: str
+    status: str
+    publish_attempts: int
+    retry_count: int
+    next_attempt_at: datetime
+    error_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class OutboxPublishBatch:
+    published: tuple[PublishedOutboxEvent, ...]
+    failed: tuple[FailedOutboxEvent, ...]
+
+
 class PostgresOutboxRabbitMQPublisher:
     def __init__(
         self,
@@ -26,6 +65,7 @@ class PostgresOutboxRabbitMQPublisher:
         worker_id: str,
         tenant_id: str,
         trace_id: str,
+        policy: OutboxPublishPolicy | None = None,
     ) -> None:
         self.engine = engine
         self.transport = transport
@@ -33,9 +73,15 @@ class PostgresOutboxRabbitMQPublisher:
         self.worker_id = worker_id
         self.tenant_id = tenant_id
         self.trace_id = trace_id
+        self.policy = policy or OutboxPublishPolicy()
 
     async def publish_pending(self, *, limit: int = 10) -> list[PublishedOutboxEvent]:
+        batch = await self.publish_batch(limit=limit)
+        return list(batch.published)
+
+    async def publish_batch(self, *, limit: int = 10) -> OutboxPublishBatch:
         published: list[PublishedOutboxEvent] = []
+        failed: list[FailedOutboxEvent] = []
         with InfrastructureUnitOfWork(self.engine) as repo:
             event_ids = repo.claim_outbox(worker_id=self.worker_id, limit=limit)
             records = [
@@ -44,27 +90,58 @@ class PostgresOutboxRabbitMQPublisher:
             ]
 
         for record in records:
-            await self._publish_record(record)
+            try:
+                await self._publish_record(record)
+            except Exception as exc:
+                with InfrastructureUnitOfWork(self.engine) as repo:
+                    receipt = repo.record_outbox_publish_failure(
+                        event_id=record.event_id,
+                        worker_id=self.worker_id,
+                        error_code=type(exc).__name__,
+                        max_attempts=self.policy.max_attempts,
+                        base_backoff_seconds=self.policy.base_backoff_seconds,
+                        max_backoff_seconds=self.policy.max_backoff_seconds,
+                    )
+                failed.append(
+                    FailedOutboxEvent(
+                        event_id=receipt.event_id,
+                        status=receipt.status,
+                        publish_attempts=receipt.publish_attempts,
+                        retry_count=receipt.retry_count,
+                        next_attempt_at=receipt.next_attempt_at,
+                        error_code=receipt.error_code,
+                    )
+                )
+                continue
             with InfrastructureUnitOfWork(self.engine) as repo:
                 repo.complete_outbox(event_id=record.event_id, worker_id=self.worker_id)
-            published.append(
-                PublishedOutboxEvent(
-                    event_id=record.event_id,
-                    topic=record.topic,
-                    payload_hash=record.payload_hash,
-                    idempotency_key=record.idempotency_key,
-                )
-            )
-        return published
+            published.append(self._published_event(record))
+        return OutboxPublishBatch(published=tuple(published), failed=tuple(failed))
 
     async def publish_event(self, *, event_id: str) -> PublishedOutboxEvent:
         with InfrastructureUnitOfWork(self.engine) as repo:
             if not repo.claim_outbox_event(event_id=event_id, worker_id=self.worker_id):
                 raise RuntimeError("outbox event is not pending")
             record = repo.load_claimed_outbox_event(event_id=event_id, worker_id=self.worker_id)
-        await self._publish_record(record)
+        try:
+            await self._publish_record(record)
+        except Exception as exc:
+            with InfrastructureUnitOfWork(self.engine) as repo:
+                repo.record_outbox_publish_failure(
+                    event_id=record.event_id,
+                    worker_id=self.worker_id,
+                    error_code=type(exc).__name__,
+                    max_attempts=self.policy.max_attempts,
+                    base_backoff_seconds=self.policy.base_backoff_seconds,
+                    max_backoff_seconds=self.policy.max_backoff_seconds,
+                )
+            raise
         with InfrastructureUnitOfWork(self.engine) as repo:
             repo.complete_outbox(event_id=record.event_id, worker_id=self.worker_id)
+        return self._published_event(record)
+
+    @staticmethod
+    def _published_event(record: OutboxEventRecord) -> PublishedOutboxEvent:
         return PublishedOutboxEvent(
             event_id=record.event_id,
             topic=record.topic,
@@ -75,25 +152,34 @@ class PostgresOutboxRabbitMQPublisher:
     async def _publish_record(self, record: OutboxEventRecord) -> None:
         if record.tenant_id and record.tenant_id != self.tenant_id:
             raise RuntimeError("outbox publisher tenant does not match the claimed event tenant")
-        await self.transport.publish(
-            self.topology,
-            message_id=record.event_id,
-            payload={
-                "aggregate_id": record.aggregate_id,
-                "event_id": record.event_id,
-                "idempotency_key": record.idempotency_key,
-                "payload": record.payload,
-                "payload_hash": record.payload_hash,
-                "topic": record.topic,
-            },
-            tenant_id=record.tenant_id or self.tenant_id,
-            trace_id=self.trace_id,
-            ordering_key=record.ordering_key,
-            ordering_sequence=record.ordering_sequence,
+        await asyncio.wait_for(
+            self.transport.publish(
+                self.topology,
+                message_id=record.event_id,
+                payload={
+                    "aggregate_id": record.aggregate_id,
+                    "event_id": record.event_id,
+                    "idempotency_key": record.idempotency_key,
+                    "payload": record.payload,
+                    "payload_hash": record.payload_hash,
+                    "topic": record.topic,
+                },
+                tenant_id=record.tenant_id or self.tenant_id,
+                trace_id=self.trace_id,
+                ordering_key=record.ordering_key,
+                ordering_sequence=record.ordering_sequence,
+                outbox_publish_attempt=record.publish_attempts + 1,
+                outbox_retry_count=record.retry_count,
+                outbox_replay_count=record.replay_count,
+            ),
+            timeout=self.policy.publish_timeout_seconds,
         )
 
 
 __all__ = [
+    "FailedOutboxEvent",
+    "OutboxPublishBatch",
+    "OutboxPublishPolicy",
     "PostgresOutboxRabbitMQPublisher",
     "PublishedOutboxEvent",
 ]

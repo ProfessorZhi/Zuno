@@ -9,7 +9,7 @@ repeated_upgrade_head: passed
 downgrade_base: passed
 reupgrade_head: passed
 infra_table_roundtrip: passed
-head_revision: 20260717_06
+head_revision: 20260717_07
 schema_drift_detection: passed_infra_schema_subset
 delivery_ordering_schema: passed
 data_backfill_framework: not_yet_proven
@@ -35,13 +35,14 @@ online_migration_lock: not_yet_proven
 
 - Verifier 创建隔离的真实 PostgreSQL 临时数据库，不修改当前 `zuno` 数据库。
 - 通过临时 `ZUNO_CONFIG` 驱动 `infra/db/alembic/env.py` 指向临时数据库。
-- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260717_06`。
-- 重复 `upgrade head` 保持 revision `20260717_06`，不产生重复对象错误。
+- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260717_07`。
+- 重复 `upgrade head` 保持 revision `20260717_07`，不产生重复对象错误。
 - PHASE04 infra tables 在 upgrade 后存在，且 verifier 从真实数据库读取 `information_schema.columns`、`pg_constraint` 和 `pg_indexes` 校验关键列、约束和索引。
 - `alembic downgrade base` 移除 PHASE04 infra tables。
-- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260717_06`。
+- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260717_07`。
 - Revision `20260716_05` 为 `infra_idempotency_claims` 增加 `tenant_id`，并将唯一约束从 `scope/idempotency_key` 扩展为 `tenant_id/scope/idempotency_key`。
 - Revision `20260717_06` 增加 tenant-scoped Outbox sequence、Outbox/Inbox ordering metadata、`buffered` Inbox 状态和 delivery watermark，并提供可逆 downgrade；downgrade 前将 `buffered` 行 fail closed 为 `quarantined`。
+- Revision `20260717_07` 增加 Outbox 发布次数、当前重试轮次、持久退避时间、dead-letter、replay 审计字段，以及 claim/dead-letter 状态约束和可领取 backlog 索引。
 - Schema drift 子集校验 ordering tables、columns、pair/sequence constraints、tenant-scoped unique constraints 和 buffered lookup index。
 - Schema drift 子集会检查 `tenant_id` 为 NOT NULL 且无持久 server default、旧 `uq_infra_idempotency_claims_scope_key` 不再存在、新 `uq_infra_idempotency_claims_tenant_scope_key` 存在。
 - Verifier 结束时终止临时数据库连接并删除临时数据库。

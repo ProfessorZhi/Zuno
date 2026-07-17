@@ -25,6 +25,8 @@ RABBITMQ_BACKLOG_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_ra
 RABBITMQ_RETRY_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_retry_exhaustion.py"
 OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
+OUTBOX_DELIVERY_POLICY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_delivery_policy.py"
+OUTBOX_DELIVERY_POLICY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-delivery-policy.md"
 RABBITMQ_OUT_OF_ORDER_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_out_of_order.py"
 RABBITMQ_OUT_OF_ORDER_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-out-of-order.md"
 RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
@@ -314,6 +316,33 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in outbox_evidence:
                 errors.append(f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}")
+
+    if not OUTBOX_DELIVERY_POLICY_VERIFIER.exists():
+        errors.append("missing PHASE04 outbox delivery policy verifier")
+    else:
+        delivery_policy_errors = _load_verifier(
+            OUTBOX_DELIVERY_POLICY_VERIFIER,
+            "verify_phase04_outbox_delivery_policy",
+            "verify_phase04_outbox_delivery_policy",
+        )()
+        for delivery_policy_error in delivery_policy_errors:
+            errors.append(f"PHASE04 outbox delivery policy verification failed: {delivery_policy_error}")
+
+    if not OUTBOX_DELIVERY_POLICY_EVIDENCE.exists():
+        errors.append("missing PHASE04 outbox delivery policy evidence")
+    else:
+        delivery_policy_evidence = _read(OUTBOX_DELIVERY_POLICY_EVIDENCE)
+        for phrase in [
+            "durable_backoff: passed",
+            "retry_exhaustion_dead_letter: passed",
+            "manual_replay_audit: passed",
+            "broker_outage_recovery: passed",
+            "outbox_backlog_visibility: passed",
+            "delivery_attempt_headers: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in delivery_policy_evidence:
+                errors.append(f"PHASE04 outbox delivery policy evidence missing phrase: {phrase}")
 
     if not RABBITMQ_OUT_OF_ORDER_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ out-of-order verifier")
