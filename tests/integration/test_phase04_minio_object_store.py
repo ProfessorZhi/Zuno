@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
 from minio.error import S3Error
+from minio.retention import GOVERNANCE
 
-from zuno.platform.storage import MinioObjectStore, ObjectHashMismatchError
+from zuno.platform.storage import MinioObjectStore, ObjectAuthorizationError, ObjectHashMismatchError
 
 MINIO_ENDPOINT = "localhost:9000"
 MINIO_ACCESS_KEY = "minioadmin"
@@ -137,5 +139,93 @@ def test_minio_multipart_partial_abort_and_lost_response_reconciliation(
         )
         assert committed.size_bytes == len(content)
         assert store.read_object(bucket=bucket, object_name=committed.object_name) == content
+    finally:
+        store.remove_bucket_tree(bucket)
+
+
+def test_minio_authorization_retention_legal_hold_and_lifecycle() -> None:
+    store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    bucket = f"phase04-governance-{uuid4().hex}"
+    retain_until = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(hours=1)
+    try:
+        store.ensure_bucket(bucket, object_lock=True)
+        staged = store.stage_object(
+            bucket=bucket,
+            object_name="workspace/governed.txt",
+            content=b"phase04-governed-object",
+        )
+        committed = store.commit_object(
+            bucket=bucket,
+            staged_object_name=staged.object_name,
+            committed_object_name="committed/governed.txt",
+            expected_hash=staged.content_hash,
+        )
+        assert committed.version_id is not None
+
+        governance = store.apply_object_governance(
+            bucket=bucket,
+            object_name=committed.object_name,
+            version_id=committed.version_id,
+            retain_until=retain_until,
+            legal_hold=True,
+        )
+        assert governance.retention_mode == GOVERNANCE
+        assert governance.retain_until == retain_until
+        assert governance.legal_hold is True
+
+        lifecycle = store.configure_staging_lifecycle(
+            bucket=bucket,
+            expire_after_days=7,
+        )
+        assert lifecycle.prefix == "_staging/"
+        assert lifecycle.expire_after_days == 7
+        assert store.staging_lifecycle(bucket=bucket) == lifecycle
+
+        denied_store = MinioObjectStore(
+            endpoint=MINIO_ENDPOINT,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            authorization_hook=lambda action, _bucket, _object_name: action != "object:read",
+        )
+        with pytest.raises(ObjectAuthorizationError):
+            denied_store.read_object(bucket=bucket, object_name=committed.object_name)
+
+        def broken_authorization_hook(_action: str, _bucket: str, _object_name: str | None) -> bool:
+            raise RuntimeError("authorization dependency unavailable")
+
+        broken_auth_store = MinioObjectStore(
+            endpoint=MINIO_ENDPOINT,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            authorization_hook=broken_authorization_hook,
+        )
+        with pytest.raises(ObjectAuthorizationError):
+            broken_auth_store.read_object(bucket=bucket, object_name=committed.object_name)
+
+        with pytest.raises(S3Error):
+            store.purge_object_version(
+                bucket=bucket,
+                object_name=committed.object_name,
+                version_id=committed.version_id,
+            )
+        governance = store.apply_object_governance(
+            bucket=bucket,
+            object_name=committed.object_name,
+            version_id=committed.version_id,
+            retain_until=retain_until,
+            legal_hold=False,
+        )
+        assert governance.legal_hold is False
+        with pytest.raises(S3Error):
+            store.purge_object_version(
+                bucket=bucket,
+                object_name=committed.object_name,
+                version_id=committed.version_id,
+            )
+        assert store.read_object(bucket=bucket, object_name=committed.object_name) == b"phase04-governed-object"
     finally:
         store.remove_bucket_tree(bucket)

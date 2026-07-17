@@ -360,6 +360,11 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "delete: passed",
             "restore: passed",
             "storage_restart: passed",
+            "authorization_hook: passed_fail_closed",
+            "permission_deny: passed",
+            "retention: passed_governance",
+            "legal_hold: passed",
+            "lifecycle: passed_staging_expiration",
             "Object Commit != Domain Success",
         ]:
             if phrase not in minio_evidence:

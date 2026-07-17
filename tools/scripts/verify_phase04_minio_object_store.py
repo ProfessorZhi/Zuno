@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 from minio.error import S3Error
+from minio.retention import GOVERNANCE
 
-from zuno.platform.storage import MinioObjectStore, ObjectHashMismatchError
+from zuno.platform.storage import MinioObjectStore, ObjectAuthorizationError, ObjectHashMismatchError
 
 MINIO_ENDPOINT = "localhost:9000"
 MINIO_ACCESS_KEY = "minioadmin"
@@ -20,6 +22,7 @@ def verify_phase04_minio_object_store() -> list[str]:
         secret_key=MINIO_SECRET_KEY,
     )
     bucket = f"phase04-verify-object-{uuid4().hex}"
+    governance_bucket = f"phase04-verify-governance-{uuid4().hex}"
     try:
         staged = store.stage_object(bucket=bucket, object_name="workspace/a.txt", content=b"phase04-object")
         duplicate_staged = store.stage_object(bucket=bucket, object_name="workspace/a.txt", content=b"phase04-object")
@@ -155,8 +158,97 @@ def verify_phase04_minio_object_store() -> list[str]:
         )
         if store.read_object(bucket=bucket, object_name=multipart_committed.object_name) != multipart_content:
             errors.append("MinIO multipart committed object returned unexpected bytes")
+
+        store.ensure_bucket(governance_bucket, object_lock=True)
+        governed_staged = store.stage_object(
+            bucket=governance_bucket,
+            object_name="workspace/governed.txt",
+            content=b"phase04-governed-object",
+        )
+        governed = store.commit_object(
+            bucket=governance_bucket,
+            staged_object_name=governed_staged.object_name,
+            committed_object_name="committed/governed.txt",
+            expected_hash=governed_staged.content_hash,
+        )
+        if governed.version_id is None:
+            errors.append("MinIO object-lock bucket did not return a committed version id")
+        else:
+            retain_until = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(hours=1)
+            governance = store.apply_object_governance(
+                bucket=governance_bucket,
+                object_name=governed.object_name,
+                version_id=governed.version_id,
+                retain_until=retain_until,
+                legal_hold=True,
+            )
+            if governance.retention_mode != GOVERNANCE or governance.retain_until != retain_until:
+                errors.append("MinIO retention receipt did not preserve mode/deadline")
+            if not governance.legal_hold:
+                errors.append("MinIO legal hold was not enabled")
+            try:
+                store.purge_object_version(
+                    bucket=governance_bucket,
+                    object_name=governed.object_name,
+                    version_id=governed.version_id,
+                )
+                errors.append("MinIO legal hold did not reject exact-version purge")
+            except S3Error:
+                pass
+            governance = store.apply_object_governance(
+                bucket=governance_bucket,
+                object_name=governed.object_name,
+                version_id=governed.version_id,
+                retain_until=retain_until,
+                legal_hold=False,
+            )
+            if governance.legal_hold:
+                errors.append("MinIO legal hold disable did not persist")
+            try:
+                store.purge_object_version(
+                    bucket=governance_bucket,
+                    object_name=governed.object_name,
+                    version_id=governed.version_id,
+                )
+                errors.append("MinIO governance retention did not reject exact-version purge")
+            except S3Error:
+                pass
+
+        lifecycle = store.configure_staging_lifecycle(
+            bucket=governance_bucket,
+            expire_after_days=7,
+        )
+        if lifecycle.prefix != "_staging/" or lifecycle.expire_after_days != 7:
+            errors.append("MinIO staging lifecycle configuration did not round-trip")
+        denied_store = MinioObjectStore(
+            endpoint=MINIO_ENDPOINT,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            authorization_hook=lambda action, _bucket, _object_name: action != "object:read",
+        )
+        try:
+            denied_store.read_object(bucket=governance_bucket, object_name=governed.object_name)
+            errors.append("MinIO authorization hook did not fail closed")
+        except ObjectAuthorizationError:
+            pass
+
+        def broken_authorization_hook(_action: str, _bucket: str, _object_name: str | None) -> bool:
+            raise RuntimeError("authorization dependency unavailable")
+
+        broken_auth_store = MinioObjectStore(
+            endpoint=MINIO_ENDPOINT,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            authorization_hook=broken_authorization_hook,
+        )
+        try:
+            broken_auth_store.read_object(bucket=governance_bucket, object_name=governed.object_name)
+            errors.append("MinIO authorization hook exception did not fail closed")
+        except ObjectAuthorizationError:
+            pass
     finally:
         store.remove_bucket_tree(bucket)
+        store.remove_bucket_tree(governance_bucket)
     return errors
 
 

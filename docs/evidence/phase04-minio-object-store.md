@@ -18,9 +18,11 @@ delete: passed
 missing_object: passed
 restore: passed
 storage_restart: passed
-retention: not_yet_proven
-legal_hold: not_yet_proven
-lifecycle: not_yet_proven
+authorization_hook: passed_fail_closed
+permission_deny: passed
+retention: passed_governance
+legal_hold: passed
+lifecycle: passed_staging_expiration
 
 ## Boundary
 
@@ -49,6 +51,10 @@ Object Commit != Domain Success. Object visibility is a physical receipt; Produc
 - 模拟 MinIO 已完成 multipart upload、但 transport 响应丢失；Adapter 通过对象 size 与 SHA-256 恢复 staged receipt，不盲目重传。
 - 服务端已完成后重复 complete，仍收敛到同一个 staged receipt。
 - 持久 upload-session registry 提供对账候选；MinIO 只证明物理 upload/object 状态，不拥有 session liveness。
+- 在 Object Lock bucket 中保存 committed version id，并为精确 version 写入 `GOVERNANCE` retention 与 legal hold。
+- legal hold 启用时 exact-version purge 被真实 MinIO 拒绝；解除 legal hold 后，未到期 retention 仍继续拒绝 purge。
+- `_staging/` lifecycle expiration rule 写入真实 MinIO 并读回相同 prefix 与 7 天期限；旧 MinIO 不支持的 incomplete-upload lifecycle action 不被伪造，partial upload 继续由显式 reconciler 清理。
+- authorization hook 在发起 S3 I/O 前拒绝 `object:read`，hook 异常或非 `True` 结果均 fail closed。
 - Keeps the future visible object key unreadable until commit succeeds.
 - Fails closed when reading a missing object.
 - Fails closed when commit receives an expected hash that does not match staged bytes.
@@ -74,11 +80,11 @@ PHASE04 MinIO storage restart verification passed.
 
 ```text
 pytest -q tests/integration/test_phase04_minio_object_store.py -p no:cacheprovider
-2 passed
+3 passed
 ```
 
 ## Remaining Gap
 
-- Retention, legal hold, authorization hooks and lifecycle are not yet proven.
 - Object Manifest is not yet integrated with PostgreSQL domain transaction and backup/restore recovery set.
+- Security Policy 决策仍归 PHASE05 Security Owner；本证据只证明 Infrastructure authorization hook 的 fail-closed 执行边界。
 - P04-T06 remains `ready`, not completed.
