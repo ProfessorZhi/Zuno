@@ -139,6 +139,9 @@ OPERATOR_READINESS_EVIDENCE = (
 OPERATOR_RUNBOOK = (
     REPO_ROOT / "docs" / "governance" / "infrastructure-operations-runbook.md"
 )
+DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
+DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
+DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1033,6 +1036,54 @@ def verify_phase04_complete_infrastructure() -> list[str]:
                 errors.append(
                     f"PHASE04 infrastructure operations runbook missing phrase: {phrase}"
                 )
+
+    if not DR_PROFILE_VERIFIER.exists():
+        errors.append("missing PHASE04 DR profile verifier")
+    else:
+        dr_profile_errors = _load_verifier(
+            DR_PROFILE_VERIFIER,
+            "verify_phase04_dr_profile",
+            "verify_phase04_dr_profile",
+        )()
+        for dr_profile_error in dr_profile_errors:
+            errors.append(f"PHASE04 DR profile verification failed: {dr_profile_error}")
+
+    if not DR_PROFILE.exists():
+        errors.append("missing PHASE04 infrastructure DR profile")
+    else:
+        dr_profile = _read(DR_PROFILE)
+        for phrase in [
+            "profile_id: zuno-server-product-dr-profile",
+            "phase04_completion_claim: false",
+            "phase05_ready: false",
+            "component: langgraph_postgres_checkpointer",
+            "current_status: blocked",
+            "component: pitr",
+            "current_status: target_not_current",
+            "explicit_cutover_required: true",
+            "cutover_allowed_by_default: false",
+        ]:
+            if phrase not in dr_profile:
+                errors.append(
+                    f"PHASE04 infrastructure DR profile missing phrase: {phrase}"
+                )
+
+    if not DR_PROFILE_EVIDENCE.exists():
+        errors.append("missing PHASE04 DR profile evidence")
+    else:
+        dr_profile_evidence = _read(DR_PROFILE_EVIDENCE)
+        for phrase in [
+            "dr_profile_schema: passed",
+            "rpo_rto_owner_coverage: passed",
+            "explicit_cutover_policy: passed",
+            "blocked_checkpointer_boundary: passed",
+            "pitr_target_not_current_boundary: passed",
+            "projection_replay_target_not_current_boundary: passed",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "It does not prove full Backup/Restore/PITR/Projection Replay",
+        ]:
+            if phrase not in dr_profile_evidence:
+                errors.append(f"PHASE04 DR profile evidence missing phrase: {phrase}")
 
     if not REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER.exists():
         errors.append("missing requirement ledger evidence gate verifier")

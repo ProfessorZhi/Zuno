@@ -103,6 +103,14 @@ python tools/scripts/verify_phase04_operator_readiness.py
 
 缺少 owner、trace 或 evidence ref 的 snapshot 不能作为 PHASE04 evidence。
 
+## DR Profile
+
+`docs/governance/infrastructure-dr-profile.yaml` 是 PHASE04 当前唯一 DR Profile。它必须声明每个恢复组件的 RPO、RTO、owner、recovery owner、verification command、evidence ref 和 current boundary。
+
+DR Profile 只证明恢复策略、owner 和 cutover policy 已机器可验证；它不能替代真实 Restore、PITR、Projection Replay 或 official LangGraph PostgreSQL Checkpointer 恢复证据。
+
+Cutover 默认 fail closed：`explicit_cutover_required=true` 且 `cutover_allowed_by_default=false`。缺少 Coordinator approval 时，不得把 isolated restore target 切为生产。
+
 ## 证据更新规则
 
 - 只有真实依赖 verifier 通过，才能更新 `docs/evidence/`。

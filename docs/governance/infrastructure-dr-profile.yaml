@@ -1,0 +1,93 @@
+# PHASE04 Infrastructure DR Profile
+
+status: implementation_available_for_phase04_dr_profile_subscope
+phase: PHASE04
+task_id: P04-T07
+owner: Infrastructure
+last_verified: 2026-07-17
+profile_id: zuno-server-product-dr-profile
+profile_version: 1
+deployment_class: SERVER_PRODUCT
+phase04_completion_claim: false
+phase05_ready: false
+boundary: "This profile defines RPO/RTO/Owner and cutover policy only; it does not prove full Backup/Restore/PITR/Projection Replay or official LangGraph PostgreSQL Checkpointer recovery."
+
+cutover_policy:
+  explicit_cutover_required: true
+  cutover_allowed_by_default: false
+  approval_owner: Coordinator
+  rollback_owner: Infrastructure
+  forbidden_auto_cutover_reason: "Restore validation and owner acceptance are required before production cutover."
+
+recovery_profiles:
+  - component: postgresql_domain_store
+    authority: authoritative
+    owner: Infrastructure/PostgreSQL Runtime
+    recovery_owner: Infrastructure Restore Owner
+    rpo: "last verified pg_dump artifact or PITR target when WAL archive is enabled"
+    rto: "documented per restore run; local PHASE04 subset is measured by verify_phase04_backup_restore_replay.py"
+    backup_method: "pg_dump schema/data subset for PHASE04 local proof; PITR remains target_not_current"
+    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
+    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
+    current_status: implementation_available_subset
+    current_boundary: "PostgreSQL backup/isolated restore/runtime restart subset is proven; PITR and full product recovery are not proven."
+
+  - component: object_manifest_and_minio
+    authority: authoritative_manifest_with_object_receipts
+    owner: Infrastructure/Object Store
+    recovery_owner: Infrastructure Object Restore Owner
+    rpo: "last committed manifest generation and content hash"
+    rto: "documented per restore run; local PHASE04 object restore is measured by MinIO verifiers"
+    backup_method: "object restore point plus PostgreSQL manifest reconciliation"
+    verification_command: "python tools/scripts/verify_phase04_minio_object_store.py"
+    evidence_ref: "docs/evidence/phase04-minio-object-store.md"
+    current_status: implementation_available_subset
+    current_boundary: "Object restore and manifest reconciliation are proven against MinIO; full cross-domain recovery set is not proven."
+
+  - component: rabbitmq_outbox_inbox_delivery
+    authority: infrastructure_receipt
+    owner: Infrastructure/RabbitMQ Transport
+    recovery_owner: Outbox Publisher Owner
+    rpo: "last durable outbox/inbox watermark"
+    rto: "documented per replay run; local PHASE04 delivery recovery is measured by RabbitMQ and outbox verifiers"
+    backup_method: "PostgreSQL outbox/inbox rows plus RabbitMQ durable delivery receipts"
+    verification_command: "python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py"
+    evidence_ref: "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
+    current_status: implementation_available_subset
+    current_boundary: "Transactional outbox/inbox and RabbitMQ recovery subsets are proven; queue ACK is not domain success."
+
+  - component: langgraph_postgres_checkpointer
+    authority: control_checkpoint
+    owner: Infrastructure/Checkpointer Adapter
+    recovery_owner: Agent Core Recovery Owner
+    rpo: "checkpoint generation aligned with domain RecoveryWatermark"
+    rto: "must be measured after official Checkpointer adapter approval and implementation"
+    backup_method: "official LangGraph PostgreSQL Checkpointer backup/restore path"
+    verification_command: "blocked: official dependency approval required"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    current_status: blocked
+    current_boundary: "Official LangGraph PostgreSQL Checkpointer is not installed or proven; this blocks PHASE04 closure."
+
+  - component: product_projection_replay
+    authority: derived_projection
+    owner: Product/Domain Projection Owners
+    recovery_owner: Product Projection Replay Owner
+    rpo: "source domain fact recovery point"
+    rto: "must be measured by full projection replay"
+    backup_method: "rebuild from authoritative PostgreSQL facts and object manifests"
+    verification_command: "target_not_current: full product/cross-domain projection replay"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    current_status: target_not_current
+    current_boundary: "PHASE04 local subset has no full product/cross-domain projection replay proof."
+
+  - component: pitr
+    authority: recovery_window
+    owner: Infrastructure/PostgreSQL Runtime
+    recovery_owner: Infrastructure Restore Owner
+    rpo: "WAL archive target once enabled"
+    rto: "must be measured by PITR drill"
+    backup_method: "PostgreSQL WAL archive and point-in-time restore"
+    verification_command: "target_not_current: PITR drill"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    current_status: target_not_current
+    current_boundary: "PITR is not enabled or proven in the local PHASE04 evidence set."

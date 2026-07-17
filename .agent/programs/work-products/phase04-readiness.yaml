@@ -84,19 +84,27 @@ work_packages:
       - "tools/scripts/verify_phase04_backup_restore_replay.py"
       - "tools/scripts/verify_phase04_combined_service_fault.py"
       - "tools/scripts/verify_phase04_operator_readiness.py"
+      - "tools/scripts/verify_phase04_dr_profile.py"
       - "tools/scripts/verify_requirement_ledger_evidence_gate.py"
       - "tests/integration/test_phase04_operator_readiness.py"
+      - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_requirement_ledger_evidence_gate.py"
       - "docs/evidence/phase04-backup-restore-replay.md"
       - "docs/evidence/phase04-combined-service-fault.md"
       - "docs/evidence/phase04-operator-readiness.md"
+      - "docs/evidence/phase04-dr-profile.md"
       - "docs/evidence/phase04-requirement-ledger-evidence-gate.md"
       - "docs/governance/infrastructure-operations-runbook.md"
+      - "docs/governance/infrastructure-dr-profile.yaml"
     completed_scope:
       operator_readiness:
         state: completed
         evidence:
           - "docs/evidence/phase04-operator-readiness.md"
+      dr_profile:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-dr-profile.md"
       requirement_ledger_evidence_gate:
         state: completed
         evidence:

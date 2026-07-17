@@ -37,7 +37,7 @@ p04_t06_completion: blocked_official_checkpointer
 
 本证据完整证明 P04-T06 的真实 MinIO/S3-compatible Object Store 子范围达到 `implementation available`。P04-T06 仍不能关闭，因为官方 LangGraph PostgreSQL Checkpointer 是同一 Work Package 的另一项强制子范围，当前受关键依赖 Stop Condition 阻塞；PHASE04 因此仍未关闭。
 
-Object Commit 不等于 Domain Success。Object visibility 只是物理 receipt；Product、Input、Knowledge、Agent Core 或 Tool 的领域成功仍由对应领域事务与 Final Gate 持有。
+Object Commit != Domain Success。Object Commit 不等于 Domain Success。Object visibility 只是物理 receipt；Product、Input、Knowledge、Agent Core 或 Tool 的领域成功仍由对应领域事务与 Final Gate 持有。
 
 ## Environment
 
