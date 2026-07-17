@@ -49,6 +49,7 @@ minio_postgres_manifest_adoption: proven
 backup_restore_replay_subset: passed
 backup_restore_runtime_restart_subset: passed
 combined_postgres_rabbitmq_minio_fault_subset: passed
+operator_readiness_subset: proven
 
 ## Stop Condition
 
@@ -97,11 +98,11 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
 | `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest 与 checkpoint primitive 对账通过 |
+| `python tools/scripts/verify_phase04_operator_readiness.py` | passed; Operator readiness snapshot 聚合 PostgreSQL health/readiness/pool metrics、Outbox backlog、RabbitMQ queue depth、MinIO object read probe、trace correlation、failure owner/retry owner/recovery owner，并明确 telemetry 不产生 Eval verdict |
 | `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
 
-- 完整运维指标出口
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - PITR
@@ -156,8 +157,9 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 - Restore Runtime restart subset：`pg_restore` 后针对临时恢复库新建 sync/async `PostgresRuntime`，两类 health/readiness 和 read-only UoW 均能读取对应恢复事实；
 - 三服务组合故障 subset：PostgreSQL、RabbitMQ、MinIO 同时停止期间新连接/读取 fail closed；恢复后新建 Runtime 与 Adapter 对账 durable RabbitMQ marker、Outbox→Inbox、MinIO bytes/hash、Object Manifest 和 checkpoint primitive；
+- Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
 
-这些结果证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
+Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 ## Existing Partial Evidence
 

@@ -22,6 +22,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T02：PostgreSQL Schema 迁移已达到 `implementation available`，使用唯一 Alembic revision chain 和冻结显式 baseline，覆盖 31 张领域表与 10 张基础设施表的 ownership/drift、空库往返、既有库接管、重复迁移、迁移锁、在线 index、渐进约束验证、持久 backfill 与 forward-fix；它不代表领域数据已 cutover，也不代表 PHASE04 已关闭。
 - PHASE04 P04-T03：Transactional Outbox/Inbox 与真实 RabbitMQ transport 已达到 `implementation available`，Product 领域事实与 Outbox、Inbox 与 Memory 领域事实分别同事务提交，覆盖 confirm、ACK/NACK、redelivery、duplicate、不同 hash quarantine、ordering watermark、retry/backoff、DLQ/replay、backlog、broker restart 与 network partition；Queue receipt 不等于领域成功，也不代表 PHASE04 已关闭。
 - PHASE04 P04-T06 MinIO 子范围：真实 S3-compatible Object Store 已达到 `implementation available`，覆盖 staging/multipart/hash/commit/visibility、PostgreSQL Manifest、commit 后失联对账、只读 committed gate、delete/restore、authorization、retention/legal hold、lifecycle、storage restart 与篡改 quarantine；Object receipt 不等于领域成功，P04-T06 仍被官方 LangGraph PostgreSQL Checkpointer 关键依赖阻塞。
+- PHASE04 P04-T07 Operator 子范围：PostgreSQL/RabbitMQ/MinIO 的 health、readiness、capacity、backlog、trace correlation、failure owner/retry owner/recovery owner 和结构化 operator snapshot 已达到 `implementation available`；该 telemetry 不产生 Eval verdict，也不代表官方 Checkpointer、PITR、完整 Projection Replay 或 PHASE04 已关闭。
 
 ## Short-term Closure Gap
 

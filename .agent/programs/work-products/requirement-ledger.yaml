@@ -5230,76 +5230,79 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Health/Readiness/Degraded 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1917"
-    gap: "?????Health/Readiness/Degraded 分离???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/runtime.py"
+      - "src/backend/zuno/platform/queue/rabbitmq.py"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "tools/scripts/verify_phase04_operator_readiness.py"
+      - "docs/governance/infrastructure-operations-runbook.md"
+    gap: "none within PostgreSQL/RabbitMQ/MinIO operator readiness; official Checkpointer health/readiness remains blocked with the Checkpointer dependency"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 operator readiness subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-036 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: operator snapshot separates health/readiness/capacity/backlog and keeps degraded handling in the runbook boundary"
     test_ids:
-      - "INFRA-036-UT"
-      - "INFRA-036-IT"
+      - "tests/integration/test_phase04_operator_readiness.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-036"
+      - "docs/evidence/phase04-operator-readiness.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1917"
-      - "planned_test:INFRA-036-UT"
-      - "planned_test:INFRA-036-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-036"
+      - "current:tools/scripts/verify_phase04_operator_readiness.py"
+      - "test:tests/integration/test_phase04_operator_readiness.py"
+      - "evidence:docs/evidence/phase04-operator-readiness.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-037
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Telemetry Hook 不伪造 Eval"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1918"
-    gap: "?????Telemetry Hook 不伪造 Eval???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_operator_readiness.py"
+      - "docs/governance/infrastructure-operations-runbook.md"
+    gap: "none within operator telemetry; snapshot explicitly keeps eval_verdict null and does not score domain quality"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 operator readiness subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-037 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: structured operator snapshot is telemetry only and does not produce Eval verdicts or domain success"
     test_ids:
-      - "INFRA-037-UT"
-      - "INFRA-037-IT"
+      - "tests/integration/test_phase04_operator_readiness.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-037"
+      - "docs/evidence/phase04-operator-readiness.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1918"
-      - "planned_test:INFRA-037-UT"
-      - "planned_test:INFRA-037-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-037"
+      - "current:tools/scripts/verify_phase04_operator_readiness.py"
+      - "test:tests/integration/test_phase04_operator_readiness.py"
+      - "evidence:docs/evidence/phase04-operator-readiness.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-038
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Failure 含 Owner/Retry/Recovery/Evidence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1919"
-    gap: "?????Failure 含 Owner/Retry/Recovery/Evidence???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_operator_readiness.py"
+      - "docs/governance/infrastructure-operations-runbook.md"
+    gap: "none within PostgreSQL/RabbitMQ/MinIO operator snapshot; official Checkpointer owner/retry/recovery evidence remains blocked with that subscope"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 operator readiness subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-038 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: every dependency snapshot includes failure_owner, retry_owner, recovery_owner and evidence_ref"
     test_ids:
-      - "INFRA-038-UT"
-      - "INFRA-038-IT"
+      - "tests/integration/test_phase04_operator_readiness.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-038"
+      - "docs/evidence/phase04-operator-readiness.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1919"
-      - "planned_test:INFRA-038-UT"
-      - "planned_test:INFRA-038-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-038"
+      - "current:tools/scripts/verify_phase04_operator_readiness.py"
+      - "test:tests/integration/test_phase04_operator_readiness.py"
+      - "evidence:docs/evidence/phase04-operator-readiness.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-039
     module: "11 Infrastructure"

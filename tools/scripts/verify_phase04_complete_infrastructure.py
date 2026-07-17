@@ -130,6 +130,15 @@ COMBINED_SERVICE_FAULT_VERIFIER = (
 COMBINED_SERVICE_FAULT_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-combined-service-fault.md"
 )
+OPERATOR_READINESS_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_operator_readiness.py"
+)
+OPERATOR_READINESS_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-operator-readiness.md"
+)
+OPERATOR_RUNBOOK = (
+    REPO_ROOT / "docs" / "governance" / "infrastructure-operations-runbook.md"
+)
 IDEMPOTENCY_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
 )
@@ -164,6 +173,7 @@ REQUIRED_EVIDENCE_PHRASES = [
     "RabbitMQ network partition",
     "MinIO/S3 object staging",
     "MinIO/S3 restore",
+    "Operator readiness",
     "LangGraph PostgreSQL Checkpointer",
     "Backup/Restore/Replay",
     "PITR",
@@ -966,6 +976,56 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in combined_fault_evidence:
                 errors.append(
                     f"PHASE04 combined service fault evidence missing phrase: {phrase}"
+                )
+
+    if not OPERATOR_READINESS_VERIFIER.exists():
+        errors.append("missing PHASE04 operator readiness verifier")
+    else:
+        operator_errors = _load_verifier(
+            OPERATOR_READINESS_VERIFIER,
+            "verify_phase04_operator_readiness",
+            "verify_phase04_operator_readiness",
+        )()
+        for operator_error in operator_errors:
+            errors.append(
+                f"PHASE04 operator readiness verification failed: {operator_error}"
+            )
+
+    if not OPERATOR_READINESS_EVIDENCE.exists():
+        errors.append("missing PHASE04 operator readiness evidence")
+    else:
+        operator_evidence = _read(OPERATOR_READINESS_EVIDENCE)
+        for phrase in [
+            "operator_readiness_snapshot: passed",
+            "postgres_health_readiness_metrics: passed",
+            "rabbitmq_capacity_backlog_probe: passed",
+            "minio_readiness_probe: passed",
+            "structured_operator_log: passed",
+            "trace_correlation: passed",
+            "telemetry_not_eval_verdict: passed",
+            "failure_owner_retry_recovery: passed",
+            "p04_t07_operator_subscope: proven",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+        ]:
+            if phrase not in operator_evidence:
+                errors.append(
+                    f"PHASE04 operator readiness evidence missing phrase: {phrase}"
+                )
+
+    if not OPERATOR_RUNBOOK.exists():
+        errors.append("missing PHASE04 infrastructure operations runbook")
+    else:
+        operator_runbook = _read(OPERATOR_RUNBOOK)
+        for phrase in [
+            "Health 表示依赖可连接且基础操作成功",
+            "Readiness 表示依赖可承接当前产品流量或恢复演练",
+            "Capacity/Backlog 是运维指标，不是 Eval verdict",
+            "Queue ACK、Object Commit、Checkpoint Commit、HTTP 2xx 和 Audit Receipt 都不能解释为领域成功",
+            "缺少 owner、trace 或 evidence ref 的 snapshot 不能作为 PHASE04 evidence",
+        ]:
+            if phrase not in operator_runbook:
+                errors.append(
+                    f"PHASE04 infrastructure operations runbook missing phrase: {phrase}"
                 )
 
     if not LEASE_FENCING_VERIFIER.exists():
