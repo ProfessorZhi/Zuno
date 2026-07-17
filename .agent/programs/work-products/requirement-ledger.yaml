@@ -5109,26 +5109,26 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Retention/LegalHold 优先级"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1911"
-    gap: "?????Retention/LegalHold 优先级???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "tools/scripts/verify_phase04_minio_object_store.py"
+    gap: "none within P04-T06 MinIO subscope; Object Lock governance retention and legal hold are verified against real MinIO"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-030 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: exact-version purge is rejected while legal hold is active and remains rejected by governance retention after legal hold is disabled"
     test_ids:
-      - "INFRA-030-UT"
-      - "INFRA-030-IT"
+      - "tests/integration/test_phase04_minio_object_store.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-030"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1911"
-      - "planned_test:INFRA-030-UT"
-      - "planned_test:INFRA-030-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-030"
+      - "current:src/backend/zuno/platform/storage/object_store.py"
+      - "test:tests/integration/test_phase04_minio_object_store.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-031
     module: "11 Infrastructure"
@@ -5612,51 +5612,55 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "删除先撤销可见性再 Purge"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1931"
-    gap: "?????删除先撤销可见性再 Purge???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+    gap: "none within P04-T06 MinIO subscope; PostgreSQL Manifest visibility is revoked before physical object purge"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-050 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: deleted Manifest is unreadable through committed gate before MinIO physical deletion and restore re-verifies bytes/hash"
     test_ids:
-      - "INFRA-050-UT"
-      - "INFRA-050-IT"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-050"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1931"
-      - "planned_test:INFRA-050-UT"
-      - "planned_test:INFRA-050-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-050"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-051
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "删除有跨服务 Verification"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1932"
-    gap: "?????删除有跨服务 Verification???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+    gap: "none within P04-T06 MinIO subscope; delete/restore checks PostgreSQL Manifest visibility and MinIO bytes/hash together"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-051 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: logical delete, physical delete, restore point copy and restored Manifest hash are verified across PostgreSQL and MinIO"
     test_ids:
-      - "INFRA-051-UT"
-      - "INFRA-051-IT"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "tests/integration/test_phase04_minio_object_store.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-051"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1932"
-      - "planned_test:INFRA-051-UT"
-      - "planned_test:INFRA-051-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-051"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "current:src/backend/zuno/platform/storage/object_store.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-052
     module: "11 Infrastructure"
@@ -5837,26 +5841,29 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Visibility Consistency 不静默假设"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1940"
-    gap: "?????Visibility Consistency 不静默假设???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+    gap: "none within P04-T06 MinIO subscope; physical object visibility never bypasses PostgreSQL committed Manifest gate"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-059 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: visibility lag, post-physical-commit crash recovery, committed read gate and hash quarantine fail closed"
     test_ids:
-      - "INFRA-059-UT"
-      - "INFRA-059-IT"
+      - "tests/integration/test_phase04_minio_object_store.py"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-059"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1940"
-      - "planned_test:INFRA-059-UT"
-      - "planned_test:INFRA-059-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-059"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-060
     module: "11 Infrastructure"
