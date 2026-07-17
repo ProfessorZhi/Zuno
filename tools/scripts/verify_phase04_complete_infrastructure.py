@@ -163,6 +163,12 @@ TYPED_PORTS_VERIFIER = (
 TYPED_PORTS_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-typed-ports.md"
 )
+TENANT_ISOLATION_PROFILE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_tenant_isolation_profiles.py"
+)
+TENANT_ISOLATION_PROFILE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-tenant-isolation-profiles.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1203,6 +1209,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in typed_ports_evidence:
                 errors.append(
                     "PHASE04 infrastructure typed ports evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not TENANT_ISOLATION_PROFILE_VERIFIER.exists():
+        errors.append("missing PHASE04 tenant isolation profile verifier")
+    else:
+        tenant_profile_errors = _load_verifier(
+            TENANT_ISOLATION_PROFILE_VERIFIER,
+            "verify_phase04_tenant_isolation_profiles",
+            "verify_phase04_tenant_isolation_profiles",
+        )()
+        for tenant_profile_error in tenant_profile_errors:
+            errors.append(
+                "PHASE04 tenant isolation profile verification failed: "
+                f"{tenant_profile_error}"
+            )
+
+    if not TENANT_ISOLATION_PROFILE_EVIDENCE.exists():
+        errors.append("missing PHASE04 tenant isolation profile evidence")
+    else:
+        tenant_profile_evidence = _read(TENANT_ISOLATION_PROFILE_EVIDENCE)
+        for phrase in [
+            "tenant_isolation_profile_contract: passed",
+            "every_typed_service_has_profile: passed",
+            "tenant_id_scope_required: passed",
+            "application_end_filter_only_rejected: passed",
+            "cross_tenant_hit_action_fail_closed: passed",
+            "profile_evidence_refs_exist: passed",
+            "It does not prove full runtime cross-tenant hit quarantine/fail-closed behavior",
+        ]:
+            if phrase not in tenant_profile_evidence:
+                errors.append(
+                    "PHASE04 tenant isolation profile evidence missing phrase: "
                     f"{phrase}"
                 )
 

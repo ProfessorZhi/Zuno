@@ -212,6 +212,44 @@ class DataServiceCapabilityV1(StrictContract):
         return self
 
 
+class TenantIsolationProfileV1(StrictContract):
+    profile_id: str
+    service_kind: Literal[
+        "RELATIONAL",
+        "QUEUE",
+        "OBJECT",
+        "CHECKPOINT",
+        "VECTOR",
+        "GRAPH",
+        "LEXICAL",
+        "CACHE",
+        "TRACE_AUDIT",
+        "SECRET_KMS",
+    ]
+    isolation_mode: str
+    scope_fields: tuple[str, ...]
+    strong_isolation_option: str
+    mandatory_filter_required: bool
+    application_end_filter_only_allowed: bool = False
+    cross_tenant_hit_action: Literal["QUARANTINE", "FAIL_CLOSED", "MANDATORY_AUDIT"]
+    evidence_ref: str
+    current_runtime_status: Literal["PROVEN", "PROFILE_ONLY", "BLOCKED"]
+
+    @model_validator(mode="after")
+    def _tenant_isolation_boundary(self) -> "TenantIsolationProfileV1":
+        if "tenant_id" not in self.scope_fields:
+            raise ValueError("tenant isolation profile must include tenant_id")
+        if self.application_end_filter_only_allowed:
+            raise ValueError("application-end filtering cannot be the only isolation")
+        if self.cross_tenant_hit_action not in {
+            "QUARANTINE",
+            "FAIL_CLOSED",
+            "MANDATORY_AUDIT",
+        }:
+            raise ValueError("cross tenant hit action must fail closed")
+        return self
+
+
 class InfrastructureCapabilityProfileV1(StrictContract):
     profile_id: str
     profile_version: str

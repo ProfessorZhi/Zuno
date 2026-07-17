@@ -37,6 +37,7 @@ from zuno.platform.contracts.shared import (
     SecurityApprovalDecisionV1,
     SecurityContextRefV1,
     SourceObjectRefV1,
+    TenantIsolationProfileV1,
     ToolObservationV1,
     WriteVisibilityReceiptV1,
 )
@@ -72,6 +73,7 @@ __all__ = [
     "SecurityApprovalDecisionV1",
     "SecurityContextRefV1",
     "SourceObjectRefV1",
+    "TenantIsolationProfileV1",
     "ToolObservationV1",
     "WriteVisibilityReceiptV1",
     "build_wave1_contract_registry",

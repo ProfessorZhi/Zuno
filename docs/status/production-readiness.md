@@ -27,6 +27,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T07 Infrastructure Capability Profile 子范围：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 已达到 `implementation available`，profile frozen、显式 versioned、canonical hash 校验，Developer CI 与 Server Product 共用 typed contract，并声明每个 Data Service 的 config hash、supported/unsupported semantics 和 authoritative/rebuildable 边界；它不代表 official Checkpointer、PITR、完整 RecoverySet 或企业 index adapter 已完成。
 - PHASE04 P04-T07 Infrastructure / Domain Boundary 子范围：基础设施 receipt 边界已达到 `implementation available`，Queue ACK、RabbitMQ delivery、Object Commit、Idempotency Claim、Object Manifest visibility 和 operator telemetry 均被 verifier 固定为不能解释成领域成功；领域终局仍由 Product、Input、Knowledge、Agent Core、Memory、Tool 等 owner 持有。
 - PHASE04 P04-T07 Infrastructure Typed Port 子范围：Local/Developer CI 与 Server Product 已共用同一 `InfrastructureCapabilityProfileV1` / `DataServiceCapabilityV1` typed port surface，并覆盖 PostgreSQL、RabbitMQ、Object、Checkpoint、Vector、Graph、Lexical、Cache、Secret 和 Telemetry service kind；unknown service kind fail closed，但 official Checkpointer 等 target adapter 仍未完成。
+- PHASE04 P04-T07 Tenant Isolation Profile 子范围：`TenantIsolationProfileV1` 已达到 `implementation available`，Infrastructure Capability Profile 中每个 service kind 都有 tenant scope、默认 target、强隔离选项、cross-tenant action 和 evidence ref；它不证明 `ARCH-INFRA-058` 的全服务运行时 cross-tenant hit quarantine/fail-closed。
 
 ## Short-term Closure Gap
 
