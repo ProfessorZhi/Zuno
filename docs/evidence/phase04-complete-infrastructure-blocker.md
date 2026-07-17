@@ -24,6 +24,7 @@ rabbitmq_backlog_depth_subset: passed
 rabbitmq_retry_exhaustion_subset: passed
 outbox_rabbitmq_publisher_subset: passed
 rabbitmq_broker_restart_subset: passed
+rabbitmq_network_partition_subset: passed
 idempotency_claim_lifecycle_subset: passed
 idempotency_high_concurrency_single_winner_subset: passed
 idempotency_owner_crash_process_exit_subset: passed
@@ -64,6 +65,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_rabbitmq_retry_exhaustion.py` | passed; retry attempts are recorded in headers, tenant context is preserved, persistent retry republishes drain the main queue and exhausted message reaches DLQ |
 | `python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py` | passed; PostgreSQL outbox claim, RabbitMQ publish-confirm, outbox published receipt and inbox receipt verified |
 | `python tools/scripts/verify_phase04_rabbitmq_broker_restart.py` | passed; persistent RabbitMQ message survived real `docker restart zuno-rabbitmq` |
+| `python tools/scripts/verify_phase04_rabbitmq_network_partition.py` | passed; TCP blackhole 阻断 publisher confirm，恢复后对账 UNKNOWN publish、重连 transport，并消费 partition 前与恢复后消息 |
 | `python tools/scripts/verify_phase04_idempotency_claim.py` | passed; same-hash replay, different-hash conflict, renew, expiry, stale generation reject, result replay and high-concurrency single-winner verified |
 | `python tools/scripts/verify_phase04_idempotency_owner_crash.py` | passed; subprocess committed an in-progress claim, exited before completion, replacement owner reclaimed after expiry, stale generation completion was rejected and replacement result replayed |
 | `python tools/scripts/verify_phase04_idempotency_tenant_isolation.py` | passed; transaction tenant context participates in the idempotency uniqueness boundary and same scope/key can safely exist in two tenants with distinct request hashes/results |
@@ -74,7 +76,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 ## Missing Required Proof
 
-- RabbitMQ network partition and full recovery
+- Outbox publisher network partition、confirm-UNKNOWN reconciliation 和 consumer transaction crash
 - Alembic full domain schema drift detection, data backfill framework, online migration lock and forward-fix governance
 - PostgreSQL async engine, full session factory and connection rotation
 - Idempotency full worker runtime crash supervision
@@ -107,6 +109,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Outbox/RabbitMQ publisher subset：PostgreSQL `infra_outbox_events` claim 后发布到 RabbitMQ，publish 返回后标记 `published`，消费端写入 `infra_inbox_messages` 后 ACK；
 - Outbox crash recovery subset：模拟 publish 后、complete 前崩溃，超时 reclaim claimed row，重新发布同一 event，并由 inbox dedup 保持单行 receipt；
 - RabbitMQ broker restart subset：durable topology 和 persistent message 经真实 `docker restart zuno-rabbitmq` 后仍可重新连接消费；
+- RabbitMQ network partition subset：fault proxy 暂停 client/broker 双向转发；partition 中 publish deadline fail closed，恢复后 confirm/message-id 对账 UNKNOWN delivery，新 transport 重连并消费 partition 前与恢复后消息；
 - Idempotency Claim lifecycle subset：same hash replay、different hash fail-closed、renew、expiry reclaim、stale generation reject、result replay 和 12-thread high-concurrency single-winner 经真实 PostgreSQL 验证；
 - Idempotency owner crash subset：worker 子进程提交 in-progress claim 后退出，replacement owner 在 expiry 后接管，旧 generation 完成被拒绝，replacement result 可 replay；
 - Idempotency tenant isolation subset：`app.tenant_id` 参与唯一键边界，同一 scope/key 在不同 tenant 下可保存不同 request hash/result，同 tenant hash conflict 仍 fail closed；

@@ -8,7 +8,12 @@ from typing import Any
 
 import aio_pika
 from aiormq.exceptions import AMQPConnectionError
-from aio_pika.abc import AbstractIncomingMessage, AbstractRobustChannel, AbstractRobustConnection
+from aio_pika.abc import (
+    AbstractIncomingMessage,
+    AbstractRobustChannel,
+    AbstractRobustConnection,
+    AbstractRobustExchange,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +49,7 @@ class RabbitMQTransport:
         self.url = url
         self._connection: AbstractRobustConnection | None = None
         self._channel: AbstractRobustChannel | None = None
+        self._exchanges: dict[str, AbstractRobustExchange] = {}
 
     async def __aenter__(self) -> RabbitMQTransport:
         await self.connect()
@@ -67,6 +73,7 @@ class RabbitMQTransport:
         raise TimeoutError(f"RabbitMQTransport did not connect before deadline: {last_error}")
 
     async def close(self) -> None:
+        self._exchanges.clear()
         if self._channel is not None and not self._channel.is_closed:
             await self._channel.close()
         if self._connection is not None and not self._connection.is_closed:
@@ -80,13 +87,20 @@ class RabbitMQTransport:
 
     async def declare_topology(self, topology: RabbitMQTopology) -> None:
         channel = self.channel
-        await channel.declare_exchange(topology.dead_letter_exchange, aio_pika.ExchangeType.DIRECT, durable=True)
+        dead_letter_exchange = await channel.declare_exchange(
+            topology.dead_letter_exchange,
+            aio_pika.ExchangeType.DIRECT,
+            durable=True,
+        )
         await channel.declare_queue(topology.dead_letter_queue, durable=True)
-        dead_letter_exchange = await channel.get_exchange(topology.dead_letter_exchange)
         dead_letter_queue = await channel.get_queue(topology.dead_letter_queue)
         await dead_letter_queue.bind(dead_letter_exchange, routing_key=topology.dead_letter_routing_key)
 
-        await channel.declare_exchange(topology.exchange, aio_pika.ExchangeType.DIRECT, durable=True)
+        exchange = await channel.declare_exchange(
+            topology.exchange,
+            aio_pika.ExchangeType.DIRECT,
+            durable=True,
+        )
         await channel.declare_queue(
             topology.queue,
             durable=True,
@@ -95,9 +109,10 @@ class RabbitMQTransport:
                 "x-dead-letter-routing-key": topology.dead_letter_routing_key,
             },
         )
-        exchange = await channel.get_exchange(topology.exchange)
         queue = await channel.get_queue(topology.queue)
         await queue.bind(exchange, routing_key=topology.routing_key)
+        self._exchanges[topology.dead_letter_exchange] = dead_letter_exchange
+        self._exchanges[topology.exchange] = exchange
 
     async def delete_topology(self, topology: RabbitMQTopology) -> None:
         channel = self.channel
@@ -109,6 +124,7 @@ class RabbitMQTransport:
             exchange = await channel.get_exchange(exchange_name, ensure=False)
             if exchange is not None:
                 await exchange.delete(if_unused=False)
+            self._exchanges.pop(exchange_name, None)
 
     async def publish(
         self,
@@ -120,7 +136,7 @@ class RabbitMQTransport:
         trace_id: str,
         version: str = "v1",
     ) -> None:
-        exchange = await self.channel.get_exchange(topology.exchange)
+        exchange = await self._exchange(topology.exchange)
         message = aio_pika.Message(
             body=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             content_type="application/json",
@@ -141,7 +157,7 @@ class RabbitMQTransport:
         *,
         replay_trace_id: str,
     ) -> None:
-        exchange = await self.channel.get_exchange(topology.exchange)
+        exchange = await self._exchange(topology.exchange)
         headers = dict(delivery.headers)
         headers["trace_id"] = replay_trace_id
         headers["replayed_from_dlq"] = True
@@ -175,10 +191,10 @@ class RabbitMQTransport:
             headers=headers,
         )
         if attempt >= max_attempts:
-            exchange = await self.channel.get_exchange(topology.dead_letter_exchange)
+            exchange = await self._exchange(topology.dead_letter_exchange)
             routing_key = topology.dead_letter_routing_key
         else:
-            exchange = await self.channel.get_exchange(topology.exchange)
+            exchange = await self._exchange(topology.exchange)
             routing_key = topology.routing_key
         await exchange.publish(message, routing_key=routing_key)
         await delivery.ack()
@@ -200,3 +216,10 @@ class RabbitMQTransport:
     async def queue_depth(self, queue_name: str) -> int:
         queue = await self.channel.declare_queue(queue_name, passive=True)
         return int(queue.declaration_result.message_count)
+
+    async def _exchange(self, exchange_name: str) -> AbstractRobustExchange:
+        exchange = self._exchanges.get(exchange_name)
+        if exchange is None:
+            exchange = await self.channel.get_exchange(exchange_name)
+            self._exchanges[exchange_name] = exchange
+        return exchange

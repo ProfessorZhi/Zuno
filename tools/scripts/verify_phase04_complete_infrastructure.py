@@ -27,6 +27,8 @@ OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_out
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
 RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
 RABBITMQ_RESTART_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
+RABBITMQ_PARTITION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_network_partition.py"
+RABBITMQ_PARTITION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-network-partition.md"
 MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
 MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
 MINIO_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
@@ -49,6 +51,7 @@ REQUIRED_EVIDENCE_PHRASES = [
     "RabbitMQ publisher confirm",
     "RabbitMQ redelivery",
     "RabbitMQ DLQ",
+    "RabbitMQ network partition",
     "MinIO/S3 object staging",
     "MinIO/S3 restore",
     "LangGraph PostgreSQL Checkpointer",
@@ -330,6 +333,33 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in restart_evidence:
                 errors.append(f"PHASE04 RabbitMQ broker restart evidence missing phrase: {phrase}")
+
+    if not RABBITMQ_PARTITION_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ network partition verifier")
+    else:
+        partition_errors = _load_verifier(
+            RABBITMQ_PARTITION_VERIFIER,
+            "verify_phase04_rabbitmq_network_partition",
+            "verify_phase04_rabbitmq_network_partition",
+        )()
+        for partition_error in partition_errors:
+            errors.append(f"PHASE04 RabbitMQ network partition verification failed: {partition_error}")
+
+    if not RABBITMQ_PARTITION_EVIDENCE.exists():
+        errors.append("missing PHASE04 RabbitMQ network partition evidence")
+    else:
+        partition_evidence = _read(RABBITMQ_PARTITION_EVIDENCE)
+        for phrase in [
+            "network_partition: passed",
+            "partition_publish_fail_closed: passed",
+            "partition_unknown_reconciled: passed",
+            "transport_reconnect: passed",
+            "pre_partition_persistent_delivery: passed",
+            "post_recovery_confirmed_delivery: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in partition_evidence:
+                errors.append(f"PHASE04 RabbitMQ network partition evidence missing phrase: {phrase}")
 
     if not MINIO_OBJECT_VERIFIER.exists():
         errors.append("missing PHASE04 MinIO object store verifier")

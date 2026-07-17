@@ -2,13 +2,13 @@
 
 phase_id: PHASE04
 task_id: P04-T03
-date: 2026-07-16
+date: 2026-07-17
 status: partial_implementation_available
 broker_restart: passed
 durable_topology: passed
 persistent_message_survived_restart: passed
 tenant_trace_headers_survived_restart: passed
-network_partition: not_yet_proven
+network_partition: proven_in_phase04-rabbitmq-network-partition.md
 retry_exhaustion: not_yet_proven
 
 ## Boundary
@@ -54,7 +54,7 @@ pytest -q tests/integration/test_phase04_rabbitmq_broker_restart.py -p no:cachep
 
 ## Remaining Gap
 
-- Network partition is not yet proven.
+- Network partition 与恢复已由 `docs/evidence/phase04-rabbitmq-network-partition.md` 独立证明。
 - Retry exhaustion and DLQ replay are not yet proven.
 - Consumer crash during domain transaction is not yet proven.
 - P04-T03 remains `ready`, not completed.

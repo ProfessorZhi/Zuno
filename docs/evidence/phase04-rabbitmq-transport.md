@@ -2,7 +2,7 @@
 
 phase_id: PHASE04
 task_id: P04-T03
-date: 2026-07-16
+date: 2026-07-17
 status: partial_implementation_available
 publisher_confirm: passed
 redelivery: passed
@@ -11,7 +11,7 @@ dlq_replay: passed
 backlog_depth: passed
 retry_exhaustion: passed
 broker_restart: not_yet_proven
-network_partition: not_yet_proven
+network_partition: proven_in_phase04-rabbitmq-network-partition.md
 outbox_inbox_atomicity: not_yet_proven
 
 ## Boundary
@@ -75,5 +75,5 @@ pytest -q tests/integration/test_phase04_rabbitmq_retry_exhaustion.py -p no:cach
 
 - Transactional outbox publisher claim and RabbitMQ publish are not yet integrated as one recovery flow.
 - Consumer inbox dedup and ACK-after-commit are not yet proven against RabbitMQ redelivery.
-- Broker restart, connection loss, partition and full recovery are still missing in this evidence file.
+- Broker restart 与 network partition/recovery 由独立 PHASE04 evidence 证明；本文件不重复冒充这些 fault 证据。
 - P04-T03 remains `ready`, not completed.
