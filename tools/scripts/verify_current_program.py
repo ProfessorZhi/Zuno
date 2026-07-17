@@ -81,7 +81,9 @@ def _read(path: Path) -> str:
 
 
 def _require_phrases(text: str, phrases: list[str], label: str) -> list[str]:
-    return [f"{label} missing phrase: {phrase}" for phrase in phrases if phrase not in text]
+    return [
+        f"{label} missing phrase: {phrase}" for phrase in phrases if phrase not in text
+    ]
 
 
 def _extract_requirement_ids_from_source(path: Path) -> set[str]:
@@ -114,7 +116,9 @@ def _load_verifier(path: Path, module_name: str, function_name: str) -> list[str
 def _load_verifier_function(path: Path, module_name: str, function_name: str):
     spec = spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}")
+        raise RuntimeError(
+            f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"
+        )
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     return getattr(module, function_name)
@@ -124,23 +128,35 @@ def _verify_requirement_ledger() -> list[str]:
     errors: list[str] = []
     ledger_path = WORK_PRODUCTS / "requirement-ledger.yaml"
     if not ledger_path.exists():
-        return ["missing PHASE01 work product: .agent/programs/work-products/requirement-ledger.yaml"]
+        return [
+            "missing PHASE01 work product: .agent/programs/work-products/requirement-ledger.yaml"
+        ]
     ledger = _read(ledger_path)
     source_ids: set[str] = set()
     for path in MODULE_REQUIREMENT_SOURCES:
         if not path.exists():
-            errors.append(f"missing requirement source: {path.relative_to(REPO_ROOT).as_posix()}")
+            errors.append(
+                f"missing requirement source: {path.relative_to(REPO_ROOT).as_posix()}"
+            )
             continue
         source_ids.update(_extract_requirement_ids_from_source(path))
     ledger_ids = set(
-        re.findall(r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3})$", ledger, re.MULTILINE)
+        re.findall(
+            r"^\s+- requirement_id: (ARCH-[A-Z]+(?:-[A-Z]+)*-\d{3})$",
+            ledger,
+            re.MULTILINE,
+        )
     )
     missing = sorted(source_ids - ledger_ids)
     extra = sorted(ledger_ids - source_ids)
     if missing:
-        errors.append(f"requirement-ledger.yaml missing requirement ids: {missing[:10]}")
+        errors.append(
+            f"requirement-ledger.yaml missing requirement ids: {missing[:10]}"
+        )
     if extra:
-        errors.append(f"requirement-ledger.yaml has extra requirement ids: {extra[:10]}")
+        errors.append(
+            f"requirement-ledger.yaml has extra requirement ids: {extra[:10]}"
+        )
     count_match = re.search(r"^requirement_count: (\d+)$", ledger, re.MULTILINE)
     if not count_match:
         errors.append("requirement-ledger.yaml missing requirement_count")
@@ -156,7 +172,9 @@ def _verify_requirement_ledger() -> list[str]:
         "evidence_refs:",
     ]:
         if phrase not in ledger:
-            errors.append(f"requirement-ledger.yaml missing required field phrase: {phrase}")
+            errors.append(
+                f"requirement-ledger.yaml missing required field phrase: {phrase}"
+            )
     return errors
 
 
@@ -198,10 +216,15 @@ def _verify_correction_states() -> list[str]:
     for filename, phrases in readiness_checks.items():
         path = WORK_PRODUCTS / filename
         if not path.exists():
-            errors.append(f"missing corrected readiness file: {path.relative_to(REPO_ROOT).as_posix()}")
+            errors.append(
+                f"missing corrected readiness file: {path.relative_to(REPO_ROOT).as_posix()}"
+            )
             continue
         errors.extend(_require_phrases(_read(path), phrases, filename))
-    for evidence_name in ["phase03-contract-bundle.md", "phase04-postgres-foundation.md"]:
+    for evidence_name in [
+        "phase03-contract-bundle.md",
+        "phase04-postgres-foundation.md",
+    ]:
         path = REPO_ROOT / "docs" / "evidence" / evidence_name
         if not path.exists():
             errors.append(f"missing partial evidence: docs/evidence/{evidence_name}")
@@ -209,7 +232,11 @@ def _verify_correction_states() -> list[str]:
         errors.extend(
             _require_phrases(
                 _read(path),
-                ["partial_implementation_available", "phase_completion: `withdrawn`", "2026-07-16"],
+                [
+                    "partial_implementation_available",
+                    "phase_completion: `withdrawn`",
+                    "2026-07-16",
+                ],
                 evidence_name,
             )
         )
@@ -234,13 +261,17 @@ def verify_current_program() -> list[str]:
     errors: list[str] = []
     for path in REQUIRED_SHARED:
         if not path.exists():
-            errors.append(f"missing active program file: {path.relative_to(REPO_ROOT).as_posix()}")
+            errors.append(
+                f"missing active program file: {path.relative_to(REPO_ROOT).as_posix()}"
+            )
     for name in PHASE_FILES:
         if not (PROGRAM_ROOT / name).exists():
             errors.append(f"missing phase file: .agent/programs/{name}")
     for path in REQUIRED_PHASE01_WORK_PRODUCTS:
         if not path.exists():
-            errors.append(f"missing PHASE01 work product: {path.relative_to(REPO_ROOT).as_posix()}")
+            errors.append(
+                f"missing PHASE01 work product: {path.relative_to(REPO_ROOT).as_posix()}"
+            )
     if errors:
         return errors
 
@@ -309,24 +340,51 @@ def verify_current_program() -> list[str]:
         "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
     ]:
         if forbidden in manifest:
-            errors.append(f"program-manifest.yaml retains withdrawn phase state: {forbidden}")
+            errors.append(
+                f"program-manifest.yaml retains withdrawn phase state: {forbidden}"
+            )
 
     errors.extend(_verify_correction_states())
     errors.extend(_verify_requirement_ledger())
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT
+            / "tools"
+            / "scripts"
+            / "verify_requirement_ledger_evidence_gate.py",
+            "verify_requirement_ledger_evidence_gate",
+            "verify_requirement_ledger_evidence_gate",
+        )
+    )
 
     task_count = 0
     for phase_file in PHASE_FILES:
-        task_count += len(set(re.findall(r"P\d{2}-T\d{2}", _read(PROGRAM_ROOT / phase_file))))
+        task_count += len(
+            set(re.findall(r"P\d{2}-T\d{2}", _read(PROGRAM_ROOT / phase_file)))
+        )
     if task_count != ATOMIC_TASK_COUNT:
-        errors.append(f"phase files contain {task_count} atomic tasks, expected {ATOMIC_TASK_COUNT}")
+        errors.append(
+            f"phase files contain {task_count} atomic tasks, expected {ATOMIC_TASK_COUNT}"
+        )
 
-    for phrase in ["GPT-5.5 medium", "一次只执行一个 Work Package", "不降低架构能力", "Minimal Read Set"]:
+    for phrase in [
+        "GPT-5.5 medium",
+        "一次只执行一个 Work Package",
+        "不降低架构能力",
+        "Minimal Read Set",
+    ]:
         if phrase not in runbook:
             errors.append(f"Codex medium runbook missing phrase: {phrase}")
     for phrase in ["只有接口或 Stub", "只有 Mock Test", "Coordinator 合并前必须确认"]:
         if phrase not in task_contract:
             errors.append(f"task execution contract missing phrase: {phrase}")
-    for phrase in ["apps/web/src/product", "apps/desktop/src/product", "GeneralAgent", "EffectReconciliation", "Feature Flag"]:
+    for phrase in [
+        "apps/web/src/product",
+        "apps/desktop/src/product",
+        "GeneralAgent",
+        "EffectReconciliation",
+        "Feature Flag",
+    ]:
         if phrase not in migration:
             errors.append(f"migration map missing required surface: {phrase}")
     for phrase in [
@@ -339,13 +397,20 @@ def verify_current_program() -> list[str]:
     ]:
         if phrase not in directory_contract:
             errors.append(f"canonical directory contract missing phrase: {phrase}")
-    for phrase in ["Legacy-free Canonical Directory Cleanup", "生产源码树零 Legacy 文件夹", "legacy_aliases.py"]:
+    for phrase in [
+        "Legacy-free Canonical Directory Cleanup",
+        "生产源码树零 Legacy 文件夹",
+        "legacy_aliases.py",
+    ]:
         if phrase not in phase22:
             errors.append(f"PHASE22 missing final cleanup phrase: {phrase}")
 
     errors.extend(
         _load_verifier(
-            REPO_ROOT / "tools" / "scripts" / "verify_phase02_compatibility_boundaries.py",
+            REPO_ROOT
+            / "tools"
+            / "scripts"
+            / "verify_phase02_compatibility_boundaries.py",
             "verify_phase02_compatibility_boundaries",
             "verify_phase02_compatibility_boundaries",
         )
@@ -364,8 +429,12 @@ def verify_current_program() -> list[str]:
             "verify_phase04_postgres_foundation",
         )
     )
-    phase04_complete_path = REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
-    phase04_blocker = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+    phase04_complete_path = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
+    )
+    phase04_blocker = (
+        REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+    )
     if not phase04_complete_path.exists():
         errors.append("missing PHASE04 complete infrastructure verifier")
     elif not phase04_blocker.exists():
@@ -386,9 +455,15 @@ def verify_current_program() -> list[str]:
         combined = "\n".join(complete_errors)
         for fragment in expected_fragments:
             if fragment not in combined:
-                errors.append(f"PHASE04 complete infrastructure gate missing blocker: {fragment}")
+                errors.append(
+                    f"PHASE04 complete infrastructure gate missing blocker: {fragment}"
+                )
         blocker_text = _read(phase04_blocker)
-        for phrase in ["status: blocked", "Docker engine `29.4.0`", "real_services_smoke: passed"]:
+        for phrase in [
+            "status: blocked",
+            "Docker engine `29.4.0`",
+            "real_services_smoke: passed",
+        ]:
             if phrase not in blocker_text:
                 errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")
     return errors

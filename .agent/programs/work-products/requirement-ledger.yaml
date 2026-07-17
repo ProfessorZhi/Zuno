@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 732
-  implementation_available: 24
+  target_not_current: 731
+  implementation_available: 25
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5993,27 +5993,28 @@ requirements:
   - requirement_id: ARCH-INFRA-064
     module: "11 Infrastructure"
     mandatory: true
-    target_statement: "Target→Current 需要完整工程证据"
-    current_status: target_not_current
+    target_statement: "Target to Current requires complete engineering evidence"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1945"
-    gap: "?????Target→Current 需要完整工程证据???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_requirement_ledger_evidence_gate.py"
+      - "tests/repo/test_requirement_ledger_evidence_gate.py"
+      - "docs/evidence/phase04-requirement-ledger-evidence-gate.md"
+    gap: "none for the ledger promotion gate; individual requirements still need their own code/test/evidence before being promoted"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 requirement ledger evidence gate completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-064 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: implementation_available entries fail the gate when current paths, tests, evidence refs, reverse trace refs, or current_status_counts are incomplete"
     test_ids:
-      - "INFRA-064-UT"
-      - "INFRA-064-IT"
+      - "tests/repo/test_requirement_ledger_evidence_gate.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-064"
+      - "docs/evidence/phase04-requirement-ledger-evidence-gate.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1945"
-      - "planned_test:INFRA-064-UT"
-      - "planned_test:INFRA-064-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-064"
+      - "current:tools/scripts/verify_requirement_ledger_evidence_gate.py"
+      - "test:tests/repo/test_requirement_ledger_evidence_gate.py"
+      - "evidence:docs/evidence/phase04-requirement-ledger-evidence-gate.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-001
     module: "02 Input / Document Ingestion"

@@ -139,6 +139,12 @@ OPERATOR_READINESS_EVIDENCE = (
 OPERATOR_RUNBOOK = (
     REPO_ROOT / "docs" / "governance" / "infrastructure-operations-runbook.md"
 )
+REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
+)
+REQUIREMENT_LEDGER_EVIDENCE_GATE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-requirement-ledger-evidence-gate.md"
+)
 IDEMPOTENCY_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
 )
@@ -1026,6 +1032,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in operator_runbook:
                 errors.append(
                     f"PHASE04 infrastructure operations runbook missing phrase: {phrase}"
+                )
+
+    if not REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER.exists():
+        errors.append("missing requirement ledger evidence gate verifier")
+    else:
+        ledger_gate_errors = _load_verifier(
+            REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER,
+            "verify_requirement_ledger_evidence_gate",
+            "verify_requirement_ledger_evidence_gate",
+        )()
+        for ledger_gate_error in ledger_gate_errors:
+            errors.append(
+                f"Requirement ledger evidence gate verification failed: {ledger_gate_error}"
+            )
+
+    if not REQUIREMENT_LEDGER_EVIDENCE_GATE_EVIDENCE.exists():
+        errors.append("missing PHASE04 requirement ledger evidence gate evidence")
+    else:
+        ledger_gate_evidence = _read(REQUIREMENT_LEDGER_EVIDENCE_GATE_EVIDENCE)
+        for phrase in [
+            "target_to_current_evidence_gate: passed",
+            "current_status_count_reconciliation: passed",
+            "current_path_existence: passed",
+            "current_test_path_existence: passed",
+            "current_evidence_path_existence: passed",
+            "reverse_trace_completeness: passed",
+            "placeholder_evidence_reject: passed",
+            "This evidence only proves the Requirement Ledger promotion gate",
+        ]:
+            if phrase not in ledger_gate_evidence:
+                errors.append(
+                    f"PHASE04 requirement ledger evidence gate evidence missing phrase: {phrase}"
                 )
 
     if not LEASE_FENCING_VERIFIER.exists():
