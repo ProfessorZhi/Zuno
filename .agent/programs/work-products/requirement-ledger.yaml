@@ -4595,76 +4595,79 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "ObjectCommit Staging/Hash/Metadata"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1892"
-    gap: "?????ObjectCommit Staging/Hash/Metadata???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+    gap: "none within the MinIO subscope; staging receipt raw SHA-256/size/owner/visibility is persisted in PostgreSQL before committed reads are allowed"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-011 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: pre-transaction crash rolls back domain and Manifest; post-physical-commit crash leaves staged Manifest for reconciliation"
     test_ids:
-      - "INFRA-011-UT"
-      - "INFRA-011-IT"
+      - "tests/integration/test_phase04_minio_object_store.py"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-011"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1892"
-      - "planned_test:INFRA-011-UT"
-      - "planned_test:INFRA-011-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-011"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-012
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Orphan Object 可 Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1893"
-    gap: "?????Orphan Object 可 Reconcile???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/object_store.py"
+      - "src/backend/zuno/platform/storage/durable.py"
+    gap: "none within the MinIO subscope; multipart orphans abort and physically committed/DB-staged objects reconcile by raw hash and size"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-012 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: active multipart sessions are retained, inactive uploads abort, lost responses and post-commit crashes converge without blind overwrite"
     test_ids:
-      - "INFRA-012-UT"
-      - "INFRA-012-IT"
+      - "tests/integration/test_phase04_minio_object_store.py"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-012"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1893"
-      - "planned_test:INFRA-012-UT"
-      - "planned_test:INFRA-012-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-012"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-013
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "只读 COMMITTED Object"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1894"
-    gap: "?????只读 COMMITTED Object???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+    gap: "none within the MinIO subscope; read_committed requires visible/restored PostgreSQL Manifest and re-verifies physical bytes"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T06 MinIO subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-013 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: staged/deleted/quarantined objects fail closed; physical hash or size mismatch is durably quarantined"
     test_ids:
-      - "INFRA-013-UT"
-      - "INFRA-013-IT"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-013"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1894"
-      - "planned_test:INFRA-013-UT"
-      - "planned_test:INFRA-013-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-013"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-014
     module: "11 Infrastructure"

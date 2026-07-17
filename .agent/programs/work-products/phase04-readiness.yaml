@@ -59,9 +59,22 @@ work_packages:
       - "docs/evidence/phase04-lease-fencing.md"
     remaining_scope: "none within P04-T05; domain owners must use coordinator fenced commit for result writes"
   P04-T06:
-    state: ready
-    existing_output: "src/backend/zuno/platform/database/foundation.py"
-    remaining_scope: "real S3/MinIO object adapter and official LangGraph PostgreSQL checkpointer integration"
+    state: blocked
+    completed_scope:
+      minio_object_store:
+        state: completed
+        outputs:
+          - "src/backend/zuno/platform/storage/object_store.py"
+          - "src/backend/zuno/platform/storage/durable.py"
+          - "tools/scripts/verify_phase04_minio_object_store.py"
+          - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+          - "tools/scripts/verify_phase04_minio_storage_restart.py"
+          - "docs/evidence/phase04-minio-object-store.md"
+    blocked_scope:
+      official_langgraph_postgres_checkpointer:
+        state: blocked
+        reason: "adding the official critical dependency requires an explicit Coordinator decision under the Program Stop Conditions"
+    remaining_scope: "official LangGraph PostgreSQL Checkpointer adapter, interrupt/resume/thread isolation/generation/schema/retention/reconciliation and real recovery evidence"
   P04-T07:
     state: ready
     existing_outputs:
@@ -94,6 +107,7 @@ validation:
     - "python tools/scripts/verify_phase04_existing_database_upgrade.py"
     - "python tools/scripts/verify_phase04_migration_control.py"
     - "python tools/scripts/verify_phase04_domain_event_adoption.py"
+    - "python tools/scripts/verify_phase04_minio_manifest_adoption.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"

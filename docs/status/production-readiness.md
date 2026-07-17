@@ -21,6 +21,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T01：默认数据库路径已达到 `implementation available`，应用由唯一 `PostgresRuntime` 提供 sync/async SQLModel Session Factory，DAO 写入由 Domain UoW 统一提交，并通过真实 PostgreSQL 的跨 Repository 回滚、tenant 隔离、timeout、取消、deadlock/serialization retry boundary、pool exhaustion 与 connection-loss recovery；它不代表 PHASE04 已关闭。
 - PHASE04 P04-T02：PostgreSQL Schema 迁移已达到 `implementation available`，使用唯一 Alembic revision chain 和冻结显式 baseline，覆盖 31 张领域表与 10 张基础设施表的 ownership/drift、空库往返、既有库接管、重复迁移、迁移锁、在线 index、渐进约束验证、持久 backfill 与 forward-fix；它不代表领域数据已 cutover，也不代表 PHASE04 已关闭。
 - PHASE04 P04-T03：Transactional Outbox/Inbox 与真实 RabbitMQ transport 已达到 `implementation available`，Product 领域事实与 Outbox、Inbox 与 Memory 领域事实分别同事务提交，覆盖 confirm、ACK/NACK、redelivery、duplicate、不同 hash quarantine、ordering watermark、retry/backoff、DLQ/replay、backlog、broker restart 与 network partition；Queue receipt 不等于领域成功，也不代表 PHASE04 已关闭。
+- PHASE04 P04-T06 MinIO 子范围：真实 S3-compatible Object Store 已达到 `implementation available`，覆盖 staging/multipart/hash/commit/visibility、PostgreSQL Manifest、commit 后失联对账、只读 committed gate、delete/restore、authorization、retention/legal hold、lifecycle、storage restart 与篡改 quarantine；Object receipt 不等于领域成功，P04-T06 仍被官方 LangGraph PostgreSQL Checkpointer 关键依赖阻塞。
 
 ## Short-term Closure Gap
 
@@ -101,4 +102,4 @@ blocked、prepared、runtime observed 和 measured 必须严格区分。缺 trac
 - 大量 parser/provider 并行接入、OCR/VLM enrichment 平台化。
 - Single Controller 下多 Agent Role 协作是未来可兼容方向；产品级自治 Multi-Agent runtime 仍是更长期 Future Optional。
 
-PostgreSQL、RabbitMQ 和 MinIO / S3-compatible Object Store 已是当前 Canonical Server Product Target；但它们还不是 Current。Current 仍以 SQLite、本地对象存储、本地队列和本地 adapter 为本地实现基线，直到 PHASE04 及后续集成证据完成。
+PostgreSQL、RabbitMQ 和 MinIO / S3-compatible Object Store 的 canonical integration path 已有真实本地 Docker 证据并达到 `implementation available`；SQLite、本地对象存储和本地队列仍只作为 Developer/CI adapter 保留。官方 LangGraph PostgreSQL Checkpointer 与完整恢复闭环尚未完成，因此 PHASE04 和整个产品仍不能声明完成或 production ready。

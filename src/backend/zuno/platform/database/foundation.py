@@ -51,6 +51,16 @@ class OutboxEventRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class ObjectManifestRecord:
+    object_ref: str
+    owner: str
+    content_hash: str
+    size_bytes: int
+    visibility: str
+    conflict_hash: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class OutboxFailureReceipt:
     event_id: str
     status: str
@@ -1445,6 +1455,34 @@ class InfrastructureRepository:
         visibility: str = "staged",
     ) -> str:
         content_hash = canonical_sha256({"bytes": content.hex()})
+        self.record_object_manifest(
+            object_ref=object_ref,
+            content_hash=content_hash,
+            size_bytes=len(content),
+            owner=owner,
+            visibility=visibility,
+        )
+        return content_hash
+
+    def record_object_manifest(
+        self,
+        *,
+        object_ref: str,
+        content_hash: str,
+        size_bytes: int,
+        owner: str,
+        visibility: str = "staged",
+    ) -> ObjectManifestRecord:
+        if not object_ref.strip() or not owner.strip():
+            raise ValueError("object_ref and owner must not be empty")
+        if len(content_hash) != 64 or any(
+            char not in "0123456789abcdef" for char in content_hash
+        ):
+            raise ValueError("content_hash must be a lowercase SHA-256 digest")
+        if size_bytes < 0:
+            raise ValueError("size_bytes must be non-negative")
+        if visibility not in {"staged", "visible", "deleted", "restored"}:
+            raise ValueError("unsupported object manifest visibility")
         self.connection.execute(
             text(
                 """
@@ -1452,12 +1490,18 @@ class InfrastructureRepository:
                 VALUES (:object_ref, :owner, :content_hash, :size_bytes, :visibility)
                 ON CONFLICT (object_ref) DO UPDATE
                 SET conflict_hash = CASE
-                    WHEN infra_object_manifests.content_hash = EXCLUDED.content_hash
+                    WHEN infra_object_manifests.visibility <> 'quarantined'
+                     AND infra_object_manifests.owner = EXCLUDED.owner
+                     AND infra_object_manifests.content_hash = EXCLUDED.content_hash
+                     AND infra_object_manifests.size_bytes = EXCLUDED.size_bytes
                     THEN infra_object_manifests.conflict_hash
                     ELSE EXCLUDED.content_hash
                 END,
                 visibility = CASE
-                    WHEN infra_object_manifests.content_hash = EXCLUDED.content_hash
+                    WHEN infra_object_manifests.visibility <> 'quarantined'
+                     AND infra_object_manifests.owner = EXCLUDED.owner
+                     AND infra_object_manifests.content_hash = EXCLUDED.content_hash
+                     AND infra_object_manifests.size_bytes = EXCLUDED.size_bytes
                     THEN EXCLUDED.visibility
                     ELSE 'quarantined'
                 END
@@ -1467,17 +1511,40 @@ class InfrastructureRepository:
                 "object_ref": object_ref,
                 "owner": owner,
                 "content_hash": content_hash,
-                "size_bytes": len(content),
+                "size_bytes": size_bytes,
                 "visibility": visibility,
             },
         )
+        manifest = self.object_manifest(object_ref=object_ref)
+        if manifest is None:
+            raise RuntimeError("object manifest was not persisted")
+        if manifest.visibility == "quarantined":
+            raise InfrastructureConflictError(
+                "object ref reused across owner, hash, or size boundary"
+            )
+        return manifest
+
+    def object_manifest(self, *, object_ref: str) -> ObjectManifestRecord | None:
         row = self.connection.execute(
-            text("SELECT visibility FROM infra_object_manifests WHERE object_ref = :object_ref"),
+            text(
+                """
+                SELECT object_ref, owner, content_hash, size_bytes, visibility, conflict_hash
+                FROM infra_object_manifests
+                WHERE object_ref = :object_ref
+                """
+            ),
             {"object_ref": object_ref},
-        ).one()
-        if row.visibility == "quarantined":
-            raise InfrastructureConflictError("object ref reused with different content hash")
-        return content_hash
+        ).one_or_none()
+        if row is None:
+            return None
+        return ObjectManifestRecord(
+            object_ref=row.object_ref,
+            owner=row.owner,
+            content_hash=row.content_hash,
+            size_bytes=int(row.size_bytes),
+            visibility=row.visibility,
+            conflict_hash=row.conflict_hash,
+        )
 
     def save_checkpoint(
         self,
@@ -1555,6 +1622,7 @@ __all__ = [
     "InfrastructureConflictError",
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",
+    "ObjectManifestRecord",
     "OutboxBacklogReceipt",
     "OutboxEventRecord",
     "OutboxFailureReceipt",

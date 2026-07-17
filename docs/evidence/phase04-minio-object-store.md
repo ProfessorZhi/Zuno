@@ -3,7 +3,7 @@
 phase_id: PHASE04
 task_id: P04-T06
 date: 2026-07-17
-status: partial_implementation_available
+status: minio_subscope_implementation_available
 object_staging: passed
 hash_mismatch_fail_closed: passed
 commit_visibility: passed
@@ -23,12 +23,21 @@ permission_deny: passed
 retention: passed_governance
 legal_hold: passed
 lifecycle: passed_staging_expiration
+postgres_manifest_receipt_adoption: passed
+raw_content_sha256_reconciliation: passed
+domain_manifest_atomicity: passed
+post_physical_commit_crash_recovery: passed
+committed_read_gate: passed
+object_hash_quarantine: passed
+logical_delete_before_physical_purge: passed
+minio_subscope_completion: proven
+p04_t06_completion: blocked_official_checkpointer
 
-## Boundary
+## 边界
 
-This evidence proves a real MinIO object store subset only. It does not close P04-T06 and does not close PHASE04.
+本证据完整证明 P04-T06 的真实 MinIO/S3-compatible Object Store 子范围达到 `implementation available`。P04-T06 仍不能关闭，因为官方 LangGraph PostgreSQL Checkpointer 是同一 Work Package 的另一项强制子范围，当前受关键依赖 Stop Condition 阻塞；PHASE04 因此仍未关闭。
 
-Object Commit != Domain Success. Object visibility is a physical receipt; Product, Input, Knowledge, Agent Core or Tool domain success remains owned by the relevant domain transaction and final gate.
+Object Commit 不等于 Domain Success。Object visibility 只是物理 receipt；Product、Input、Knowledge、Agent Core 或 Tool 的领域成功仍由对应领域事务与 Final Gate 持有。
 
 ## Environment
 
@@ -40,6 +49,11 @@ Object Commit != Domain Success. Object visibility is a physical receipt; Produc
 | Verification command | `python tools/scripts/verify_phase04_minio_object_store.py` |
 | Storage restart verification | `python tools/scripts/verify_phase04_minio_storage_restart.py` |
 | Integration test | `pytest -q tests/integration/test_phase04_minio_object_store.py -p no:cacheprovider` |
+| Manifest adoption command | `python tools/scripts/verify_phase04_minio_manifest_adoption.py` |
+| Durable adapter SHA-256 | `6e4009b4d29ac4d6decc02adac0b2f60a3c9e3584b1f2740ce54a26eecfb0b71` |
+| PostgreSQL repository SHA-256 | `453040efb5d690aa338df4c6bcdc72545eafe63bc7e3a334e33e81dd5b3df8e5` |
+| Manifest verifier SHA-256 | `b73a6591f4a4da6f247a04b93f619ff8a15dc995efccb4a5690bcef81899a7aa` |
+| Compose SHA-256 | `fb53082b499ec5363591562d8a67d663c4430e13bd26903a136f4677df9e1d23` |
 
 ## Verified Behavior
 
@@ -65,6 +79,11 @@ Object Commit != Domain Success. Object visibility is a physical receipt; Produc
 - Restores the object from the restore point and verifies content hash and bytes.
 - Restarts the real `zuno-minio` container and verifies both committed object bytes and restore point bytes remain readable with unchanged hash receipts.
 - Removes temporary objects and bucket after the run.
+- `SessionObjectManifest` 把 MinIO receipt 的原始 bytes SHA-256、size、owner 和 visibility 与真实 Input `knowledge_file` 领域行写入同一个 Domain UoW；commit 前 crash 时两者共同回滚。
+- MinIO 已提交可见对象、但 PostgreSQL 更新前 crash 时，Manifest 保持 `staged`，`read_committed` 继续拒绝读取；reconciler 重新读取真实 bytes 并按 SHA-256/size 收敛到 `visible`。
+- 领域 `success` 与 `visible` Manifest 的最终事务在 commit 前 crash 时共同回滚；物理 Object receipt 不会自动推进领域成功。
+- 同 object ref 跨 owner/hash/size 边界时持久进入 `quarantined`；篡改真实 MinIO bytes 后 committed read fail closed，且 quarantine 不因普通重试自动解除。
+- 删除流程先把 PostgreSQL Manifest 改为 `deleted`、撤销逻辑可见性，再执行 MinIO 物理删除；恢复后 Manifest 为 `restored` 并重新校验 bytes/hash。
 
 ## Commands And Results
 
@@ -83,8 +102,17 @@ pytest -q tests/integration/test_phase04_minio_object_store.py -p no:cacheprovid
 3 passed
 ```
 
+```text
+python tools/scripts/verify_phase04_minio_manifest_adoption.py
+PHASE04 MinIO manifest adoption verification passed.
+```
+
+```text
+pytest -q tests/integration/test_phase04_postgres_foundation.py tests/integration/test_phase04_minio_object_store.py tests/integration/test_phase04_minio_manifest_adoption.py -p no:cacheprovider
+14 passed in 6.70s
+```
+
 ## Remaining Gap
 
-- Object Manifest is not yet integrated with PostgreSQL domain transaction and backup/restore recovery set.
 - Security Policy 决策仍归 PHASE05 Security Owner；本证据只证明 Infrastructure authorization hook 的 fail-closed 执行边界。
-- P04-T06 remains `ready`, not completed.
+- 官方 LangGraph PostgreSQL Checkpointer 依赖尚未批准并接入；P04-T06 保持 `blocked`，不以自定义 `infra_checkpoints` primitive 冒充完成。

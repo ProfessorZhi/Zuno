@@ -115,6 +115,9 @@ MINIO_OBJECT_EVIDENCE = (
 MINIO_RESTART_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
 )
+MINIO_MANIFEST_ADOPTION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_manifest_adoption.py"
+)
 BACKUP_RESTORE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
 )
@@ -779,6 +782,15 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "retention: passed_governance",
             "legal_hold: passed",
             "lifecycle: passed_staging_expiration",
+            "postgres_manifest_receipt_adoption: passed",
+            "raw_content_sha256_reconciliation: passed",
+            "domain_manifest_atomicity: passed",
+            "post_physical_commit_crash_recovery: passed",
+            "committed_read_gate: passed",
+            "object_hash_quarantine: passed",
+            "logical_delete_before_physical_purge: passed",
+            "minio_subscope_completion: proven",
+            "p04_t06_completion: blocked_official_checkpointer",
             "Object Commit != Domain Success",
         ]:
             if phrase not in minio_evidence:
@@ -797,6 +809,20 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         for minio_restart_error in minio_restart_errors:
             errors.append(
                 f"PHASE04 MinIO storage restart verification failed: {minio_restart_error}"
+            )
+
+    if not MINIO_MANIFEST_ADOPTION_VERIFIER.exists():
+        errors.append("missing PHASE04 MinIO manifest adoption verifier")
+    else:
+        minio_manifest_errors = _load_verifier(
+            MINIO_MANIFEST_ADOPTION_VERIFIER,
+            "verify_phase04_minio_manifest_adoption",
+            "verify_phase04_minio_manifest_adoption",
+        )()
+        for minio_manifest_error in minio_manifest_errors:
+            errors.append(
+                "PHASE04 MinIO manifest adoption verification failed: "
+                f"{minio_manifest_error}"
             )
 
     if not IDEMPOTENCY_VERIFIER.exists():
