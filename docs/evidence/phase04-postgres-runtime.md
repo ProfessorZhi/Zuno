@@ -13,12 +13,17 @@ connection_loss_recovery: passed
 deadlock_retry_boundary: passed
 serialization_retry_boundary: passed
 pool_exhaustion: passed
+sync_session_factory: passed_in_phase04-postgres-session-runtime.md
+async_session_factory: passed_in_phase04-postgres-session-runtime.md
+read_only_transaction: passed_in_phase04-postgres-session-runtime.md
+async_cancellation_recovery: passed_in_phase04-postgres-session-runtime.md
+connection_rotation: passed_in_phase04-postgres-session-runtime.md
 
 ## 边界
 
 本证据证明真实 PostgreSQL 上的 runtime transaction 子集：UoW 可以设置事务级 tenant context、statement timeout 和 lock timeout；tenant context 不泄漏到后续事务；慢查询会被 statement timeout 取消；等待已被其他事务持有的 row lock 会被 lock timeout 拒绝；受限连接池耗尽会 fail closed 并在释放连接后恢复；被终止 backend connection 会 fail closed，engine 可重新 checkout 恢复。
 
-这不关闭 P04-T01，也不关闭 PHASE04。当前尚未证明 async engine、完整 session factory、connection rotation 和 production domain service cutover。
+这不关闭 P04-T01，也不关闭 PHASE04。sync/async Session Factory、read-only、cancellation 和 connection rotation 已由 `phase04-postgres-session-runtime.md` 证明；production domain service 默认路径 cutover 尚未完成。
 
 ## 环境
 
@@ -31,6 +36,7 @@ pool_exhaustion: passed
 | Serialization retry verification | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` |
 | Pool exhaustion verification | `python tools/scripts/verify_phase04_postgres_pool_exhaustion.py` |
 | Connection loss verification | `python tools/scripts/verify_phase04_postgres_connection_loss.py` |
+| Session runtime verification | `python tools/scripts/verify_phase04_postgres_session_runtime.py` |
 | Integration test | `pytest -q tests/integration/test_phase04_postgres_runtime.py -p no:cacheprovider` |
 
 ## 已验证行为
@@ -45,6 +51,7 @@ pool_exhaustion: passed
 - `run_transaction_with_retry(..., isolation_level="SERIALIZABLE")` 在真实写偏斜冲突触发 `40001` 后重跑完整事务，两个 worker 最终都提交。
 - `create_foundation_engine(..., pool_size=1, max_overflow=0, pool_timeout=1)` 在唯一连接被占用时会对第二个 checkout 抛出 SQLAlchemy `TimeoutError`，释放连接后同一 pool 可恢复执行 `SELECT 1`。
 - `pg_terminate_backend()` 终止 engine 持有的 backend 后，旧 connection fail closed；关闭旧 connection 后，同一 engine 可重新 checkout 并执行 `SELECT 1`。
+- `PostgresRuntime` 通过显式配置创建 sync/async Engine 与 Session Factory；commit/rollback、nested misuse、并发 tenant isolation、read-only、async timeout/cancel、backend terminate recovery 和 connection rotation 已通过。
 
 ## 命令与结果
 
@@ -98,8 +105,12 @@ pytest -q tests/integration/test_phase04_postgres_connection_loss.py -p no:cache
 1 passed
 ```
 
+```text
+python tools/scripts/verify_phase04_postgres_session_runtime.py
+PHASE04 PostgreSQL session runtime verification passed.
+```
+
 ## 剩余缺口
 
-- Async engine、session factory、pool health/readiness 和 connection rotation 尚未证明。
-- Tenant context 尚未接入所有 domain service 默认路径。
+- Tenant context 与显式 Session UoW 尚未接入所有 domain service 默认路径。
 - P04-T01 仍是 `ready`，不是 completed。

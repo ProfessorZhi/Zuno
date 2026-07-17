@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -150,38 +151,63 @@ class InfrastructureUnitOfWork:
         self.statement_timeout_ms = statement_timeout_ms
         self.lock_timeout_ms = lock_timeout_ms
         self.isolation_level = isolation_level
+        self._active = False
 
     def __enter__(self) -> InfrastructureRepository:
-        if self.isolation_level is None:
-            self._context = self.engine.begin()
-            self.connection = self._context.__enter__()
-            self._transaction = None
-        else:
-            self._context = self.engine.connect()
-            self.connection = self._context.__enter__().execution_options(isolation_level=self.isolation_level)
-            self._transaction = self.connection.begin()
-        if self.tenant_id is not None:
-            self.connection.execute(text("SELECT set_config('app.tenant_id', :tenant_id, true)"), {"tenant_id": self.tenant_id})
-        if self.statement_timeout_ms is not None:
-            self.connection.execute(
-                text("SELECT set_config('statement_timeout', :timeout_ms, true)"),
-                {"timeout_ms": str(self.statement_timeout_ms)},
-            )
-        if self.lock_timeout_ms is not None:
-            self.connection.execute(
-                text("SELECT set_config('lock_timeout', :timeout_ms, true)"),
-                {"timeout_ms": str(self.lock_timeout_ms)},
-            )
-        return InfrastructureRepository(self.connection)
+        if self._active:
+            raise RuntimeError("InfrastructureUnitOfWork cannot be nested or entered concurrently")
+        self._active = True
+        self._context = None
+        self._transaction = None
+        try:
+            if self.isolation_level is None:
+                self._context = self.engine.begin()
+                self.connection = self._context.__enter__()
+            else:
+                self._context = self.engine.connect()
+                self.connection = self._context.__enter__().execution_options(isolation_level=self.isolation_level)
+                self._transaction = self.connection.begin()
+            if self.tenant_id is not None:
+                self.connection.execute(
+                    text("SELECT set_config('app.tenant_id', :tenant_id, true)"),
+                    {"tenant_id": self.tenant_id},
+                )
+            if self.statement_timeout_ms is not None:
+                self.connection.execute(
+                    text("SELECT set_config('statement_timeout', :timeout_ms, true)"),
+                    {"timeout_ms": str(self.statement_timeout_ms)},
+                )
+            if self.lock_timeout_ms is not None:
+                self.connection.execute(
+                    text("SELECT set_config('lock_timeout', :timeout_ms, true)"),
+                    {"timeout_ms": str(self.lock_timeout_ms)},
+                )
+            return InfrastructureRepository(self.connection)
+        except BaseException:
+            exc_info = sys.exc_info()
+            try:
+                if self._transaction is not None:
+                    try:
+                        self._transaction.__exit__(*exc_info)
+                    finally:
+                        self._context.__exit__(*exc_info)
+                elif self._context is not None:
+                    self._context.__exit__(*exc_info)
+            finally:
+                self._active = False
+            raise
 
     def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
-        if self._transaction is not None:
-            try:
-                self._transaction.__exit__(exc_type, exc, tb)
-            finally:
-                self._context.__exit__(exc_type, exc, tb)
-            return
-        self._context.__exit__(exc_type, exc, tb)
+        try:
+            if self._transaction is not None:
+                try:
+                    self._transaction.__exit__(exc_type, exc, tb)
+                finally:
+                    self._context.__exit__(exc_type, exc, tb)
+                return
+            self._context.__exit__(exc_type, exc, tb)
+        finally:
+            self._active = False
 
 
 def run_transaction_with_retry(

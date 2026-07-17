@@ -16,6 +16,8 @@ MIGRATION_CONTROL_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_m
 MIGRATION_CONTROL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-migration-control.md"
 POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
+POSTGRES_SESSION_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_session_runtime.py"
+POSTGRES_SESSION_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-session-runtime.md"
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
 POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
 POSTGRES_POOL_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
@@ -223,6 +225,42 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in postgres_runtime_evidence:
                 errors.append(f"PHASE04 PostgreSQL runtime evidence missing phrase: {phrase}")
+
+    if not POSTGRES_SESSION_RUNTIME_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL session runtime verifier")
+    else:
+        session_runtime_errors = _load_verifier(
+            POSTGRES_SESSION_RUNTIME_VERIFIER,
+            "verify_phase04_postgres_session_runtime",
+            "verify_phase04_postgres_session_runtime",
+        )()
+        for session_runtime_error in session_runtime_errors:
+            errors.append(f"PHASE04 PostgreSQL session runtime verification failed: {session_runtime_error}")
+
+    if not POSTGRES_SESSION_RUNTIME_EVIDENCE.exists():
+        errors.append("missing PHASE04 PostgreSQL session runtime evidence")
+    else:
+        session_runtime_evidence = _read(POSTGRES_SESSION_RUNTIME_EVIDENCE)
+        for phrase in [
+            "sync_session_factory: passed",
+            "async_session_factory: passed",
+            "explicit_transaction_scope: passed",
+            "commit_rollback: passed",
+            "nested_misuse_reject: passed",
+            "failed_entry_connection_cleanup: passed",
+            "tenant_concurrency_isolation: passed",
+            "tenant_context_no_leak: passed",
+            "read_only_transaction: passed",
+            "transaction_isolation: passed",
+            "async_statement_timeout: passed",
+            "async_cancellation_recovery: passed",
+            "async_connection_loss_recovery: passed",
+            "connection_rotation: passed",
+            "pool_health_metrics: passed",
+            "不关闭 P04-T01",
+        ]:
+            if phrase not in session_runtime_evidence:
+                errors.append(f"PHASE04 PostgreSQL session runtime evidence missing phrase: {phrase}")
 
     if not POSTGRES_DEADLOCK_RETRY_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL deadlock retry verifier")

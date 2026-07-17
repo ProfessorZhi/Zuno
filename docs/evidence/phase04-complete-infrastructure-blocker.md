@@ -10,6 +10,7 @@ alembic_migration_roundtrip_subset: passed
 alembic_schema_drift_infra_subset: passed
 migration_lock_backfill_control_subset: passed
 postgres_runtime_context_timeout_subset: passed
+postgres_session_runtime_subset: passed
 postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
 postgres_pool_exhaustion_subset: passed
@@ -60,6 +61,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_alembic_migration.py` | passed; temporary PostgreSQL DB upgrade head, repeated upgrade, downgrade base, re-upgrade and infra schema drift subset verified |
 | `python tools/scripts/verify_phase04_migration_control.py` | passed; PostgreSQL advisory lock 阻止并行 Alembic deploy，Backfill ledger 的 matrix adoption、chunk 幂等/hash conflict、pause/restart/resume、generation fencing 与 forward-fix lineage 通过 |
 | `python tools/scripts/verify_phase04_postgres_runtime.py` | passed; readiness, transaction-local tenant context, statement timeout and lock timeout verified |
+| `python tools/scripts/verify_phase04_postgres_session_runtime.py` | passed; sync/async Session Factory、显式 UoW、commit/rollback、nested reject、failed-entry cleanup、read-only、tenant 并发隔离、async timeout/cancel、connection loss recovery 与 rotation 通过 |
 | `python tools/scripts/verify_phase04_postgres_deadlock_retry.py` | passed; two real concurrent PostgreSQL transactions deadlocked on opposite row locks, one received transient `40P01`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` | passed; two real `SERIALIZABLE` PostgreSQL transactions conflicted on a shared invariant, one received transient `40001`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_pool_exhaustion.py` | passed; real PostgreSQL engine with `pool_size=1`, `max_overflow=0`, `pool_timeout=1` rejected a second checkout while the only connection was held and recovered after release |
@@ -87,7 +89,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 - 真实领域 handler adoption 与完整运维指标出口
 - Alembic full domain schema drift、production-like existing DB upgrade、online index/constraint 策略与不可逆 migration 独立 runbook
-- PostgreSQL async engine, full session factory and connection rotation
+- PostgreSQL domain service 默认路径接入显式 Runtime Factory/UoW，并收缩旧全局 engine/session compatibility surface
 - Idempotency full worker runtime crash supervision
 - Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
@@ -101,6 +103,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 - PostgreSQL schema backup smoke：`pg_dump --schema-only` 可运行，且包含 `infra_outbox_events` 和 `infra_checkpoints`；
 - PostgreSQL runtime context/timeout subset：readiness、transaction-local tenant context、tenant no-leak、statement timeout 和 lock timeout 经真实 PostgreSQL 验证；
+- PostgreSQL session runtime subset：显式配置创建 sync/async Engine 与 Session Factory；两类 UoW 的 commit/rollback、nested reject、isolation/read-only、并发 tenant no-leak、async timeout/cancel、backend termination recovery、pool metrics 和 connection rotation 均通过；
 - PostgreSQL deadlock retry subset：真实双事务 row-lock deadlock 触发 `40P01`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL serialization retry subset：真实 `SERIALIZABLE` 写偏斜冲突触发 `40001`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL pool exhaustion subset：真实 PostgreSQL engine 在 `pool_size=1/max_overflow=0/pool_timeout=1` 下拒绝第二个 checkout，释放后恢复；
@@ -137,7 +140,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 governance subset：Object Lock committed version、GOVERNANCE retention、legal hold、exact-version purge deny、`_staging/` expiration lifecycle 与 authorization hook deny-before-I/O 均经真实 MinIO 验证；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 
-这些结果证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 official Checkpointer、PITR、runtime restart after restore 或组合故障恢复。
+这些结果证明三类服务已经可用，并证明 PostgreSQL sync/async Session Runtime、context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 official Checkpointer、PITR、runtime restart after restore 或组合故障恢复。
 
 ## Existing Partial Evidence
 
