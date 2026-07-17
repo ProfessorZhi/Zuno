@@ -332,22 +332,24 @@ class InfrastructureRepository:
     ) -> IdempotencyClaimReceipt:
         request_hash = canonical_sha256(request)
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        tenant_id = self.current_tenant_id()
         self.connection.execute(
-            text("SELECT pg_advisory_xact_lock(hashtextextended(:scope || ':' || :key, 0))"),
-            {"scope": scope, "key": key},
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:tenant_id || ':' || :scope || ':' || :key, 0))"),
+            {"tenant_id": tenant_id, "scope": scope, "key": key},
         )
         row = self.connection.execute(
             text(
                 """
                 INSERT INTO infra_idempotency_claims(
-                    scope, idempotency_key, owner, request_hash, status, generation, expires_at
+                    tenant_id, scope, idempotency_key, owner, request_hash, status, generation, expires_at
                 )
-                VALUES (:scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at)
-                ON CONFLICT (scope, idempotency_key) DO NOTHING
+                VALUES (:tenant_id, :scope, :key, :owner, :request_hash, 'in_progress', 1, :expires_at)
+                ON CONFLICT (tenant_id, scope, idempotency_key) DO NOTHING
                 RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
                 """
             ),
             {
+                "tenant_id": tenant_id,
                 "scope": scope,
                 "key": key,
                 "owner": owner,
@@ -365,7 +367,8 @@ class InfrastructureRepository:
                         status = 'in_progress',
                         result_ref = NULL,
                         expires_at = :expires_at
-                    WHERE scope = :scope
+                    WHERE tenant_id = :tenant_id
+                      AND scope = :scope
                       AND idempotency_key = :key
                       AND request_hash = :request_hash
                       AND status in ('in_progress','expired')
@@ -374,6 +377,7 @@ class InfrastructureRepository:
                     """
                 ),
                 {
+                    "tenant_id": tenant_id,
                     "scope": scope,
                     "key": key,
                     "owner": owner,
@@ -387,10 +391,10 @@ class InfrastructureRepository:
                     """
                     SELECT owner, request_hash, status, generation, result_ref, false AS acquired
                     FROM infra_idempotency_claims
-                    WHERE scope = :scope AND idempotency_key = :key
+                    WHERE tenant_id = :tenant_id AND scope = :scope AND idempotency_key = :key
                     """
                 ),
-                {"scope": scope, "key": key},
+                {"tenant_id": tenant_id, "scope": scope, "key": key},
             ).one()
         if row.request_hash != request_hash:
             raise InfrastructureConflictError("idempotency key was reused with a different request hash")
@@ -412,12 +416,14 @@ class InfrastructureRepository:
         ttl_seconds: int = 60,
     ) -> datetime:
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
+        tenant_id = self.current_tenant_id()
         row = self.connection.execute(
             text(
                 """
                 UPDATE infra_idempotency_claims
                 SET expires_at = :expires_at
-                WHERE scope = :scope
+                WHERE tenant_id = :tenant_id
+                  AND scope = :scope
                   AND idempotency_key = :key
                   AND owner = :owner
                   AND generation = :generation
@@ -427,6 +433,7 @@ class InfrastructureRepository:
                 """
             ),
             {
+                "tenant_id": tenant_id,
                 "scope": scope,
                 "key": key,
                 "owner": owner,
@@ -452,18 +459,20 @@ class InfrastructureRepository:
         return [str(row.claim_key) for row in rows]
 
     def complete_idempotency(self, *, scope: str, key: str, generation: int, result_ref: str) -> None:
+        tenant_id = self.current_tenant_id()
         result = self.connection.execute(
             text(
                 """
                 UPDATE infra_idempotency_claims
                 SET status = 'completed', result_ref = :result_ref, completed_at = now()
-                WHERE scope = :scope
+                WHERE tenant_id = :tenant_id
+                  AND scope = :scope
                   AND idempotency_key = :key
                   AND generation = :generation
                   AND status = 'in_progress'
                 """
             ),
-            {"scope": scope, "key": key, "generation": generation, "result_ref": result_ref},
+            {"tenant_id": tenant_id, "scope": scope, "key": key, "generation": generation, "result_ref": result_ref},
         )
         if result.rowcount != 1:
             raise FencingRejectedError("idempotency generation is stale")

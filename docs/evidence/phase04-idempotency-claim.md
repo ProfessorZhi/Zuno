@@ -11,6 +11,7 @@ expiry: passed
 stale_generation_reject: passed
 result_replay: passed
 owner_crash: passed_process_exit_reclaim
+tenant_isolation: passed
 high_concurrency_single_winner: passed
 
 ## Boundary
@@ -26,6 +27,7 @@ Idempotency Claim != Domain Success. A completed claim only records that the sam
 | PostgreSQL service | `zuno-postgres`, image `postgres:16` |
 | Database URL | `postgresql+psycopg://postgres:postgres@localhost:5432/zuno` |
 | Verification command | `python tools/scripts/verify_phase04_idempotency_claim.py` |
+| Tenant isolation verification | `python tools/scripts/verify_phase04_idempotency_tenant_isolation.py` |
 | Integration test | `pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider` |
 
 ## Verified Behavior
@@ -39,6 +41,7 @@ Idempotency Claim != Domain Success. A completed claim only records that the sam
 - Stale generation cannot complete after a newer generation exists.
 - Completed claim replays the stored `result_ref`.
 - A worker subprocess can commit an in-progress claim and exit before completion; after expiry, a replacement owner can reclaim the same request at the next generation, stale generation completion is rejected, and the replacement result is replayed.
+- `tenant_id` from the PostgreSQL transaction context participates in the idempotency uniqueness boundary; two tenants can use the same scope/key with different request hashes and receive separate result replays, while same-tenant hash conflicts still fail closed.
 - Twelve concurrent contenders for the same scope/key/request converge on one PostgreSQL claim row, one `acquired: true` winner, one owner and one generation.
 
 ## Commands And Results
@@ -54,6 +57,11 @@ PHASE04 idempotency owner crash verification passed.
 ```
 
 ```text
+python tools/scripts/verify_phase04_idempotency_tenant_isolation.py
+PHASE04 idempotency tenant isolation verification passed.
+```
+
+```text
 pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovider
 9 passed
 ```
@@ -63,8 +71,13 @@ pytest -q tests/integration/test_phase04_idempotency_owner_crash.py -p no:cachep
 1 passed
 ```
 
+```text
+pytest -q tests/integration/test_phase04_idempotency_tenant_isolation.py -p no:cacheprovider
+1 passed
+```
+
 ## Remaining Gap
 
 - Owner crash has process-exit-plus-expiry reclaim evidence; full worker runtime crash supervision remains missing.
-- Cross-tenant idempotency isolation is not yet proven.
+- Tenant isolation is proven for transaction-scoped `app.tenant_id`; full worker runtime crash supervision remains missing.
 - P04-T04 remains `ready`, not completed.

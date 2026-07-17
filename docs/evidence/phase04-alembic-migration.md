@@ -9,6 +9,7 @@ repeated_upgrade_head: passed
 downgrade_base: passed
 reupgrade_head: passed
 infra_table_roundtrip: passed
+head_revision: 20260716_05
 schema_drift_detection: not_yet_proven
 data_backfill_framework: not_yet_proven
 online_migration_lock: not_yet_proven
@@ -33,11 +34,12 @@ online_migration_lock: not_yet_proven
 
 - Verifier 创建隔离的真实 PostgreSQL 临时数据库，不修改当前 `zuno` 数据库。
 - 通过临时 `ZUNO_CONFIG` 驱动 `infra/db/alembic/env.py` 指向临时数据库。
-- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260715_04`。
-- 重复 `upgrade head` 保持 revision `20260715_04`，不产生重复对象错误。
+- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260716_05`。
+- 重复 `upgrade head` 保持 revision `20260716_05`，不产生重复对象错误。
 - PHASE04 infra tables 在 upgrade 后存在。
 - `alembic downgrade base` 移除 PHASE04 infra tables。
-- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260715_04`。
+- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260716_05`。
+- Revision `20260716_05` 为 `infra_idempotency_claims` 增加 `tenant_id`，并将唯一约束从 `scope/idempotency_key` 扩展为 `tenant_id/scope/idempotency_key`。
 - Verifier 结束时终止临时数据库连接并删除临时数据库。
 
 ## 命令与结果

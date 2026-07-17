@@ -20,6 +20,7 @@ REQUIRED_INFRA_TABLES = {
     "infra_object_manifests",
     "infra_checkpoints",
 }
+EXPECTED_HEAD_REVISION = "20260716_05"
 
 
 def _run_alembic(config_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -127,7 +128,7 @@ def verify_phase04_alembic_migration() -> list[str]:
             if upgrade.returncode != 0:
                 errors.append("alembic upgrade head failed: " + (upgrade.stderr or upgrade.stdout).strip())
                 return errors
-            if _current_revision(database_url) != "20260715_04":
+            if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
                 errors.append(f"unexpected head revision after upgrade: {_current_revision(database_url)!r}")
             missing_tables = REQUIRED_INFRA_TABLES - _table_names(database_url)
             if missing_tables:
@@ -136,7 +137,7 @@ def verify_phase04_alembic_migration() -> list[str]:
             repeated = _run_alembic(config_path, "upgrade", "head")
             if repeated.returncode != 0:
                 errors.append("repeated alembic upgrade head failed: " + (repeated.stderr or repeated.stdout).strip())
-            if _current_revision(database_url) != "20260715_04":
+            if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
                 errors.append(f"unexpected head revision after repeated upgrade: {_current_revision(database_url)!r}")
 
             downgrade = _run_alembic(config_path, "downgrade", "base")
@@ -149,7 +150,7 @@ def verify_phase04_alembic_migration() -> list[str]:
             reupgrade = _run_alembic(config_path, "upgrade", "head")
             if reupgrade.returncode != 0:
                 errors.append("alembic re-upgrade head failed: " + (reupgrade.stderr or reupgrade.stdout).strip())
-            if _current_revision(database_url) != "20260715_04":
+            if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
                 errors.append(f"unexpected head revision after re-upgrade: {_current_revision(database_url)!r}")
             missing_after_reupgrade = REQUIRED_INFRA_TABLES - _table_names(database_url)
             if missing_after_reupgrade:
