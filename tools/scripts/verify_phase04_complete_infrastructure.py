@@ -16,6 +16,7 @@ POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_po
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
 POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
+POSTGRES_POOL_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -172,6 +173,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "lock_timeout: passed",
             "deadlock_retry_boundary: passed",
             "serialization_retry_boundary: passed",
+            "pool_exhaustion: passed",
             "不关闭 P04-T01",
         ]:
             if phrase not in postgres_runtime_evidence:
@@ -200,6 +202,17 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             errors.append(
                 f"PHASE04 PostgreSQL serialization retry verification failed: {postgres_serialization_error}"
             )
+
+    if not POSTGRES_POOL_EXHAUSTION_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL pool exhaustion verifier")
+    else:
+        postgres_pool_errors = _load_verifier(
+            POSTGRES_POOL_EXHAUSTION_VERIFIER,
+            "verify_phase04_postgres_pool_exhaustion",
+            "verify_phase04_postgres_pool_exhaustion",
+        )()
+        for postgres_pool_error in postgres_pool_errors:
+            errors.append(f"PHASE04 PostgreSQL pool exhaustion verification failed: {postgres_pool_error}")
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
