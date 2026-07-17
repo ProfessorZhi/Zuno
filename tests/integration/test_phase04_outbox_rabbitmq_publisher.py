@@ -44,6 +44,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    infra_delivery_watermarks,
+                    infra_outbox_sequences,
                     infra_outbox_events,
                     infra_inbox_messages,
                     infra_idempotency_claims,

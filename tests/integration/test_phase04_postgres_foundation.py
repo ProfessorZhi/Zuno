@@ -44,6 +44,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    infra_delivery_watermarks,
+                    infra_outbox_sequences,
                     infra_outbox_events,
                     infra_inbox_messages,
                     infra_idempotency_claims,
@@ -160,6 +162,125 @@ def test_outbox_claim_and_inbox_hash_conflict(engine) -> None:
         assert duplicate_receipt.payload_hash == first_receipt.payload_hash
         with pytest.raises(InfrastructureConflictError):
             repo.record_inbox(consumer="consumer-a", message_id="msg-1", payload={"a": 2})
+
+
+def test_outbox_ordering_watermark_buffers_and_releases_contiguous_messages(engine) -> None:
+    tenant_id = "tenant-ordering"
+    consumer = "consumer-ordering"
+    ordering_key = "run:ordering"
+    uow = InfrastructureUnitOfWork(engine, tenant_id=tenant_id)
+    with InfrastructureUnitOfWork(engine) as repo:
+        with pytest.raises(ValueError, match="tenant_id is required"):
+            repo.enqueue_outbox(
+                aggregate_id="run-ordering",
+                topic="agent.step",
+                payload={"sequence": 0},
+                idempotency_key="ordering-without-tenant",
+                ordering_key=ordering_key,
+            )
+        with pytest.raises(ValueError, match="tenant_id is required"):
+            repo.record_inbox_receipt(
+                consumer=consumer,
+                message_id="ordering-without-tenant",
+                payload={"sequence": 0},
+                ordering_key=ordering_key,
+                ordering_sequence=1,
+            )
+    with uow as repo:
+        event_ids = [
+            repo.enqueue_outbox(
+                aggregate_id="run-ordering",
+                topic="agent.step",
+                payload={"sequence": sequence},
+                idempotency_key=f"ordering-{sequence}",
+                ordering_key=ordering_key,
+            )
+            for sequence in (1, 2, 3)
+        ]
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text(
+                """
+                SELECT ordering_sequence
+                FROM infra_outbox_events
+                WHERE event_id = ANY(CAST(:event_ids AS text[]))
+                ORDER BY ordering_sequence
+                """
+            ),
+            {"event_ids": event_ids},
+        ).scalars().all() == [1, 2, 3]
+
+    with uow as repo:
+        third = repo.record_inbox_receipt(
+            consumer=consumer,
+            message_id=event_ids[2],
+            payload={"sequence": 3},
+            ordering_key=ordering_key,
+            ordering_sequence=3,
+        )
+        assert (third.status, third.processable, third.contiguous_sequence) == ("buffered", False, 0)
+
+    with uow as repo:
+        first = repo.record_inbox_receipt(
+            consumer=consumer,
+            message_id=event_ids[0],
+            payload={"sequence": 1},
+            ordering_key=ordering_key,
+            ordering_sequence=1,
+        )
+        assert (first.status, first.processable, first.contiguous_sequence) == ("received", True, 1)
+        repo.mark_inbox_processed(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            message_id=event_ids[0],
+        )
+
+    with uow as repo:
+        second = repo.record_inbox_receipt(
+            consumer=consumer,
+            message_id=event_ids[1],
+            payload={"sequence": 2},
+            ordering_key=ordering_key,
+            ordering_sequence=2,
+        )
+        assert second.released_message_ids == (event_ids[2],)
+        assert second.contiguous_sequence == 3
+        released = repo.load_processable_inbox_messages(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            message_ids=second.released_message_ids,
+        )
+        assert [(item.message_id, item.payload) for item in released] == [
+            (event_ids[2], {"sequence": 3})
+        ]
+        repo.mark_inbox_processed(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            message_id=event_ids[1],
+        )
+        repo.mark_inbox_processed(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            message_id=event_ids[2],
+        )
+        watermark = repo.delivery_watermark(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            ordering_key=ordering_key,
+        )
+        assert (watermark.contiguous_sequence, watermark.max_seen_sequence) == (3, 3)
+
+    with uow as repo:
+        duplicate = repo.record_inbox_receipt(
+            consumer=consumer,
+            message_id=event_ids[1],
+            payload={"sequence": 2},
+            ordering_key=ordering_key,
+            ordering_sequence=2,
+        )
+        assert duplicate.first_seen is False
+        assert duplicate.processable is False
 
 
 def test_idempotency_claim_reuses_result_and_rejects_hash_conflict(engine) -> None:

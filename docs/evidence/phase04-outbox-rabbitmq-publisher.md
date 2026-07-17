@@ -14,6 +14,7 @@ partition_recovery: passed_in_phase04-rabbitmq-network-partition.md
 confirm_unknown_reclaim_republish: passed
 consumer_crash_redelivery: passed
 inbox_first_seen_dedup: passed
+out_of_order_delivery: passed_in_phase04-rabbitmq-out-of-order.md
 
 ## Boundary
 
@@ -50,6 +51,7 @@ Queue ACK != Domain Success. The outbox row and inbox row are infrastructure rec
 - Network blackhole 中 publisher confirm 超过 deadline 时 Outbox 保持 `claimed`；恢复后对账 confirm，stale owner reclaim 并按同 event id republish。
 - Consumer 在 Inbox + follow-up Outbox 事务提交前崩溃时两者都 rollback；未 ACK delivery 在新连接中 redeliver。
 - `InboxReceipt.first_seen` 区分首次处理与同 hash duplicate，duplicate 只 ACK，不重复 follow-up 写入。
+- Tenant-scoped ordering metadata、乱序持久缓冲、delivery watermark、restart reconciliation、连续释放和 sequence duplicate 收敛由 `phase04-rabbitmq-out-of-order.md` 证明。
 - Deletes temporary RabbitMQ topology after verification.
 
 ## Commands And Results
@@ -69,8 +71,13 @@ python tools/scripts/verify_phase04_rabbitmq_network_partition.py
 PHASE04 RabbitMQ network partition verification passed.
 ```
 
+```text
+python tools/scripts/verify_phase04_rabbitmq_out_of_order.py
+PHASE04 RabbitMQ out-of-order verification passed.
+```
+
 ## Remaining Gap
 
 - Broker restart、backlog、retry exhaustion 和 DLQ replay 尚未在 Outbox publisher owner 路径独立证明。
-- Out-of-order consumer runtime 与真实领域 handler adoption 尚未完成。
+- Out-of-order 基础设施 runtime 已完成真实 RabbitMQ/PostgreSQL 证明；真实领域 handler adoption 尚未完成。
 - P04-T03 remains `ready`, not completed.

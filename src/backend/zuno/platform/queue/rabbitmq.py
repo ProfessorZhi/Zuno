@@ -135,18 +135,26 @@ class RabbitMQTransport:
         tenant_id: str,
         trace_id: str,
         version: str = "v1",
+        ordering_key: str | None = None,
+        ordering_sequence: int | None = None,
     ) -> None:
         exchange = await self._exchange(topology.exchange)
+        headers: dict[str, Any] = {
+            "tenant_id": tenant_id,
+            "trace_id": trace_id,
+            "message_version": version,
+        }
+        if ordering_key is not None or ordering_sequence is not None:
+            if not ordering_key or ordering_sequence is None or ordering_sequence < 1:
+                raise ValueError("ordering_key and positive ordering_sequence must be provided together")
+            headers["ordering_key"] = ordering_key
+            headers["ordering_sequence"] = ordering_sequence
         message = aio_pika.Message(
             body=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             content_type="application/json",
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
             message_id=message_id,
-            headers={
-                "tenant_id": tenant_id,
-                "trace_id": trace_id,
-                "message_version": version,
-            },
+            headers=headers,
         )
         await exchange.publish(message, routing_key=topology.routing_key)
 

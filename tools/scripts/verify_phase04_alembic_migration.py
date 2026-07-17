@@ -19,8 +19,10 @@ REQUIRED_INFRA_TABLES = {
     "infra_worker_leases",
     "infra_object_manifests",
     "infra_checkpoints",
+    "infra_outbox_sequences",
+    "infra_delivery_watermarks",
 }
-EXPECTED_HEAD_REVISION = "20260716_05"
+EXPECTED_HEAD_REVISION = "20260717_06"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -34,6 +36,9 @@ REQUIRED_TABLE_COLUMNS = {
         "claimed_at",
         "published_at",
         "created_at",
+        "tenant_id",
+        "ordering_key",
+        "ordering_sequence",
     },
     "infra_inbox_messages": {
         "consumer",
@@ -43,6 +48,9 @@ REQUIRED_TABLE_COLUMNS = {
         "payload",
         "status",
         "received_at",
+        "tenant_id",
+        "ordering_key",
+        "ordering_sequence",
     },
     "infra_idempotency_claims": {
         "claim_id",
@@ -77,6 +85,20 @@ REQUIRED_TABLE_COLUMNS = {
         "state_payload",
         "created_at",
     },
+    "infra_outbox_sequences": {
+        "tenant_id",
+        "ordering_key",
+        "last_sequence",
+        "updated_at",
+    },
+    "infra_delivery_watermarks": {
+        "tenant_id",
+        "consumer",
+        "ordering_key",
+        "contiguous_sequence",
+        "max_seen_sequence",
+        "updated_at",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -85,12 +107,20 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_object_manifests_visibility",
     "uq_infra_idempotency_claims_tenant_scope_key",
     "uq_infra_checkpoints_thread_generation",
+    "ck_infra_outbox_sequences_positive",
+    "ck_infra_outbox_events_ordering_pair",
+    "uq_infra_outbox_events_tenant_ordering_sequence",
+    "ck_infra_inbox_messages_ordering_pair",
+    "uq_infra_inbox_messages_tenant_consumer_ordering_sequence",
+    "ck_infra_delivery_watermarks_sequence",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
     "ix_infra_outbox_events_pending",
     "ix_infra_outbox_events_idempotency_key",
     "ix_infra_checkpoints_thread_generation",
+    "ix_infra_outbox_events_tenant_ordering",
+    "ix_infra_inbox_messages_buffered",
 }
 
 

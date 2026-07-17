@@ -25,6 +25,8 @@ RABBITMQ_BACKLOG_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_ra
 RABBITMQ_RETRY_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_retry_exhaustion.py"
 OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
 OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
+RABBITMQ_OUT_OF_ORDER_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_out_of_order.py"
+RABBITMQ_OUT_OF_ORDER_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-out-of-order.md"
 RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
 RABBITMQ_RESTART_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
 RABBITMQ_PARTITION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_network_partition.py"
@@ -312,6 +314,34 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in outbox_evidence:
                 errors.append(f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}")
+
+    if not RABBITMQ_OUT_OF_ORDER_VERIFIER.exists():
+        errors.append("missing PHASE04 RabbitMQ out-of-order verifier")
+    else:
+        ordering_errors = _load_verifier(
+            RABBITMQ_OUT_OF_ORDER_VERIFIER,
+            "verify_phase04_rabbitmq_out_of_order",
+            "verify_phase04_rabbitmq_out_of_order",
+        )()
+        for ordering_error in ordering_errors:
+            errors.append(f"PHASE04 RabbitMQ out-of-order verification failed: {ordering_error}")
+
+    if not RABBITMQ_OUT_OF_ORDER_EVIDENCE.exists():
+        errors.append("missing PHASE04 RabbitMQ out-of-order evidence")
+    else:
+        ordering_evidence = _read(RABBITMQ_OUT_OF_ORDER_EVIDENCE)
+        for phrase in [
+            "ordering_metadata_headers: passed",
+            "out_of_order_buffered: passed",
+            "delivery_watermark: passed",
+            "restart_reconciliation: passed",
+            "contiguous_release: passed",
+            "duplicate_sequence_delivery: passed",
+            "tenant_ordering_isolation: passed",
+            "Queue ACK != Domain Success",
+        ]:
+            if phrase not in ordering_evidence:
+                errors.append(f"PHASE04 RabbitMQ out-of-order evidence missing phrase: {phrase}")
 
     if not RABBITMQ_RESTART_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ broker restart verifier")

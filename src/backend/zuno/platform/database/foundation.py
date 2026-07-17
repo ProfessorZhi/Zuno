@@ -40,6 +40,9 @@ class OutboxEventRecord:
     payload_hash: str
     idempotency_key: str
     claim_owner: str
+    tenant_id: str
+    ordering_key: str | None
+    ordering_sequence: int | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +61,32 @@ class InboxReceipt:
     payload_hash: str
     status: str
     first_seen: bool
+    processable: bool = True
+    ordering_key: str | None = None
+    ordering_sequence: int | None = None
+    contiguous_sequence: int | None = None
+    released_message_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class InboxMessageRecord:
+    tenant_id: str
+    consumer: str
+    message_id: str
+    payload: dict[str, Any]
+    payload_hash: str
+    status: str
+    ordering_key: str | None
+    ordering_sequence: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryWatermarkReceipt:
+    tenant_id: str
+    consumer: str
+    ordering_key: str
+    contiguous_sequence: int
+    max_seen_sequence: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,17 +206,45 @@ class InfrastructureRepository:
         topic: str,
         payload: dict[str, Any],
         idempotency_key: str,
+        tenant_id: str | None = None,
+        ordering_key: str | None = None,
     ) -> str:
         event_id = f"outbox:{uuid4()}"
         payload_hash = canonical_sha256(payload)
+        resolved_tenant_id = self.current_tenant_id() if tenant_id is None else tenant_id
+        ordering_sequence: int | None = None
+        if ordering_key is not None:
+            if not ordering_key:
+                raise ValueError("ordering_key must not be empty")
+            if not resolved_tenant_id:
+                raise ValueError("tenant_id is required for ordered outbox events")
+            ordering_sequence = int(
+                self.connection.execute(
+                    text(
+                        """
+                        INSERT INTO infra_outbox_sequences(
+                            tenant_id, ordering_key, last_sequence
+                        ) VALUES (
+                            :tenant_id, :ordering_key, 1
+                        )
+                        ON CONFLICT (tenant_id, ordering_key) DO UPDATE
+                        SET last_sequence = infra_outbox_sequences.last_sequence + 1,
+                            updated_at = now()
+                        RETURNING last_sequence
+                        """
+                    ),
+                    {"tenant_id": resolved_tenant_id, "ordering_key": ordering_key},
+                ).scalar_one()
+            )
         self.connection.execute(
             text(
                 """
                 INSERT INTO infra_outbox_events(
-                    event_id, aggregate_id, topic, payload, payload_hash, idempotency_key, status
+                    event_id, aggregate_id, topic, payload, payload_hash, idempotency_key,
+                    status, tenant_id, ordering_key, ordering_sequence
                 ) VALUES (
                     :event_id, :aggregate_id, :topic, CAST(:payload AS jsonb), :payload_hash,
-                    :idempotency_key, 'pending'
+                    :idempotency_key, 'pending', :tenant_id, :ordering_key, :ordering_sequence
                 )
                 """
             ),
@@ -198,6 +255,9 @@ class InfrastructureRepository:
                 "payload": _json(payload),
                 "payload_hash": payload_hash,
                 "idempotency_key": idempotency_key,
+                "tenant_id": resolved_tenant_id,
+                "ordering_key": ordering_key,
+                "ordering_sequence": ordering_sequence,
             },
         )
         return event_id
@@ -288,7 +348,8 @@ class InfrastructureRepository:
         row = self.connection.execute(
             text(
                 """
-                SELECT event_id, aggregate_id, topic, payload, payload_hash, idempotency_key, claim_owner
+                SELECT event_id, aggregate_id, topic, payload, payload_hash, idempotency_key,
+                       claim_owner, tenant_id, ordering_key, ordering_sequence
                 FROM infra_outbox_events
                 WHERE event_id = :event_id AND claim_owner = :worker_id AND status = 'claimed'
                 """
@@ -308,6 +369,9 @@ class InfrastructureRepository:
             payload_hash=str(row.payload_hash),
             idempotency_key=str(row.idempotency_key),
             claim_owner=str(row.claim_owner),
+            tenant_id=str(row.tenant_id),
+            ordering_key=None if row.ordering_key is None else str(row.ordering_key),
+            ordering_sequence=None if row.ordering_sequence is None else int(row.ordering_sequence),
         )
 
     def record_inbox(self, *, consumer: str, message_id: str, payload: dict[str, Any]) -> str:
@@ -323,7 +387,17 @@ class InfrastructureRepository:
         consumer: str,
         message_id: str,
         payload: dict[str, Any],
+        tenant_id: str | None = None,
+        ordering_key: str | None = None,
+        ordering_sequence: int | None = None,
     ) -> InboxReceipt:
+        if (ordering_key is None) != (ordering_sequence is None):
+            raise ValueError("ordering_key and ordering_sequence must be provided together")
+        if ordering_sequence is not None and ordering_sequence < 1:
+            raise ValueError("ordering_sequence must be positive")
+        resolved_tenant_id = self.current_tenant_id() if tenant_id is None else tenant_id
+        if ordering_key is not None and not resolved_tenant_id:
+            raise ValueError("tenant_id is required for ordered inbox messages")
         payload_hash = canonical_sha256(payload)
         self.connection.execute(
             text(
@@ -338,64 +412,395 @@ class InfrastructureRepository:
         existing = self.connection.execute(
             text(
                 """
-                SELECT status, payload_hash
+                SELECT tenant_id, status, payload_hash, ordering_key, ordering_sequence
                 FROM infra_inbox_messages
                 WHERE consumer = :consumer AND message_id = :message_id
                 """
             ),
             {"consumer": consumer, "message_id": message_id},
         ).first()
-        if existing is None:
+        if existing is not None:
+            if existing.tenant_id != resolved_tenant_id:
+                raise InfrastructureConflictError("inbox message id crossed the tenant boundary")
+            if existing.status == "quarantined":
+                raise InfrastructureConflictError("inbox message is quarantined")
+            if existing.payload_hash != payload_hash:
+                self.connection.execute(
+                    text(
+                        """
+                        UPDATE infra_inbox_messages
+                        SET conflict_hash = :payload_hash, status = 'quarantined'
+                        WHERE tenant_id = :tenant_id
+                          AND consumer = :consumer
+                          AND message_id = :message_id
+                        """
+                    ),
+                    {
+                        "tenant_id": resolved_tenant_id,
+                        "consumer": consumer,
+                        "message_id": message_id,
+                        "payload_hash": payload_hash,
+                    },
+                )
+                raise InfrastructureConflictError(
+                    "same inbox message id received with a different payload hash"
+                )
+            if existing.ordering_key != ordering_key or existing.ordering_sequence != ordering_sequence:
+                raise InfrastructureConflictError("duplicate inbox message changed ordering metadata")
+            return InboxReceipt(
+                consumer=consumer,
+                message_id=message_id,
+                payload_hash=str(existing.payload_hash),
+                status=str(existing.status),
+                first_seen=False,
+                processable=False,
+                ordering_key=None if existing.ordering_key is None else str(existing.ordering_key),
+                ordering_sequence=(
+                    None if existing.ordering_sequence is None else int(existing.ordering_sequence)
+                ),
+            )
+
+        status = "received"
+        contiguous_sequence: int | None = None
+        released_message_ids: tuple[str, ...] = ()
+        if ordering_key is not None and ordering_sequence is not None:
             self.connection.execute(
                 text(
                     """
-                    INSERT INTO infra_inbox_messages(
-                        consumer, message_id, payload_hash, payload, status
-                    ) VALUES (
-                        :consumer, :message_id, :payload_hash, CAST(:payload AS jsonb), 'received'
+                    SELECT pg_advisory_xact_lock(
+                        hashtextextended(
+                            :tenant_id || ':' || :consumer || ':' || :ordering_key,
+                            0
+                        )
                     )
                     """
                 ),
                 {
+                    "tenant_id": resolved_tenant_id,
                     "consumer": consumer,
-                    "message_id": message_id,
-                    "payload_hash": payload_hash,
-                    "payload": _json(payload),
+                    "ordering_key": ordering_key,
                 },
             )
-            return InboxReceipt(
-                consumer=consumer,
-                message_id=message_id,
-                payload_hash=payload_hash,
-                status="received",
-                first_seen=True,
+            sequence_owner = self.connection.execute(
+                text(
+                    """
+                    SELECT message_id
+                    FROM infra_inbox_messages
+                    WHERE tenant_id = :tenant_id
+                      AND consumer = :consumer
+                      AND ordering_key = :ordering_key
+                      AND ordering_sequence = :ordering_sequence
+                    """
+                ),
+                {
+                    "tenant_id": resolved_tenant_id,
+                    "consumer": consumer,
+                    "ordering_key": ordering_key,
+                    "ordering_sequence": ordering_sequence,
+                },
+            ).first()
+            if sequence_owner is not None:
+                self.connection.execute(
+                    text(
+                        """
+                        UPDATE infra_inbox_messages
+                        SET conflict_hash = :payload_hash, status = 'quarantined'
+                        WHERE tenant_id = :tenant_id
+                          AND consumer = :consumer
+                          AND ordering_key = :ordering_key
+                          AND ordering_sequence = :ordering_sequence
+                        """
+                    ),
+                    {
+                        "tenant_id": resolved_tenant_id,
+                        "consumer": consumer,
+                        "ordering_key": ordering_key,
+                        "ordering_sequence": ordering_sequence,
+                        "payload_hash": payload_hash,
+                    },
+                )
+                raise InfrastructureConflictError("ordering sequence is already owned by another message")
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO infra_delivery_watermarks(
+                        tenant_id, consumer, ordering_key, contiguous_sequence, max_seen_sequence
+                    ) VALUES (
+                        :tenant_id, :consumer, :ordering_key, 0, 0
+                    )
+                    ON CONFLICT (tenant_id, consumer, ordering_key) DO NOTHING
+                    """
+                ),
+                {
+                    "tenant_id": resolved_tenant_id,
+                    "consumer": consumer,
+                    "ordering_key": ordering_key,
+                },
             )
+            watermark = self.connection.execute(
+                text(
+                    """
+                    SELECT contiguous_sequence, max_seen_sequence
+                    FROM infra_delivery_watermarks
+                    WHERE tenant_id = :tenant_id
+                      AND consumer = :consumer
+                      AND ordering_key = :ordering_key
+                    FOR UPDATE
+                    """
+                ),
+                {
+                    "tenant_id": resolved_tenant_id,
+                    "consumer": consumer,
+                    "ordering_key": ordering_key,
+                },
+            ).one()
+            contiguous_sequence = int(watermark.contiguous_sequence)
+            if ordering_sequence <= contiguous_sequence:
+                status = "quarantined"
+            elif ordering_sequence > contiguous_sequence + 1:
+                status = "buffered"
 
-        if existing.status == "quarantined":
-            raise InfrastructureConflictError("inbox message is quarantined")
-        if existing.payload_hash != payload_hash:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_inbox_messages(
+                    consumer, message_id, payload_hash, payload, status,
+                    tenant_id, ordering_key, ordering_sequence
+                ) VALUES (
+                    :consumer, :message_id, :payload_hash, CAST(:payload AS jsonb), :status,
+                    :tenant_id, :ordering_key, :ordering_sequence
+                )
+                """
+            ),
+            {
+                "consumer": consumer,
+                "message_id": message_id,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+                "status": status,
+                "tenant_id": resolved_tenant_id,
+                "ordering_key": ordering_key,
+                "ordering_sequence": ordering_sequence,
+            },
+        )
+        if ordering_key is not None and ordering_sequence is not None:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE infra_delivery_watermarks
+                    SET max_seen_sequence = GREATEST(max_seen_sequence, :ordering_sequence),
+                        updated_at = now()
+                    WHERE tenant_id = :tenant_id
+                      AND consumer = :consumer
+                      AND ordering_key = :ordering_key
+                    """
+                ),
+                {
+                    "tenant_id": resolved_tenant_id,
+                    "consumer": consumer,
+                    "ordering_key": ordering_key,
+                    "ordering_sequence": ordering_sequence,
+                },
+            )
+            if status == "received":
+                contiguous_sequence, released_message_ids = self._advance_delivery_watermark(
+                    tenant_id=resolved_tenant_id,
+                    consumer=consumer,
+                    ordering_key=ordering_key,
+                    starting_sequence=ordering_sequence,
+                )
+
+        return InboxReceipt(
+            consumer=consumer,
+            message_id=message_id,
+            payload_hash=payload_hash,
+            status=status,
+            first_seen=True,
+            processable=status == "received",
+            ordering_key=ordering_key,
+            ordering_sequence=ordering_sequence,
+            contiguous_sequence=contiguous_sequence,
+            released_message_ids=released_message_ids,
+        )
+
+    def _advance_delivery_watermark(
+        self,
+        *,
+        tenant_id: str,
+        consumer: str,
+        ordering_key: str,
+        starting_sequence: int,
+    ) -> tuple[int, tuple[str, ...]]:
+        contiguous_sequence = starting_sequence
+        released: list[str] = []
+        while True:
+            buffered = self.connection.execute(
+                text(
+                    """
+                    SELECT message_id
+                    FROM infra_inbox_messages
+                    WHERE tenant_id = :tenant_id
+                      AND consumer = :consumer
+                      AND ordering_key = :ordering_key
+                      AND ordering_sequence = :next_sequence
+                      AND status = 'buffered'
+                    """
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "consumer": consumer,
+                    "ordering_key": ordering_key,
+                    "next_sequence": contiguous_sequence + 1,
+                },
+            ).first()
+            if buffered is None:
+                break
+            contiguous_sequence += 1
+            released.append(str(buffered.message_id))
             self.connection.execute(
                 text(
                     """
                     UPDATE infra_inbox_messages
-                    SET conflict_hash = :payload_hash, status = 'quarantined'
-                    WHERE consumer = :consumer AND message_id = :message_id
+                    SET status = 'received'
+                    WHERE tenant_id = :tenant_id
+                      AND consumer = :consumer
+                      AND message_id = :message_id
                     """
                 ),
                 {
+                    "tenant_id": tenant_id,
                     "consumer": consumer,
-                    "message_id": message_id,
-                    "payload_hash": payload_hash,
+                    "message_id": buffered.message_id,
                 },
             )
-            raise InfrastructureConflictError("same inbox message id received with a different payload hash")
-        return InboxReceipt(
-            consumer=consumer,
-            message_id=message_id,
-            payload_hash=str(existing.payload_hash),
-            status=str(existing.status),
-            first_seen=False,
+        self.connection.execute(
+            text(
+                """
+                UPDATE infra_delivery_watermarks
+                SET contiguous_sequence = :contiguous_sequence,
+                    updated_at = now()
+                WHERE tenant_id = :tenant_id
+                  AND consumer = :consumer
+                  AND ordering_key = :ordering_key
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "consumer": consumer,
+                "ordering_key": ordering_key,
+                "contiguous_sequence": contiguous_sequence,
+            },
         )
+        return contiguous_sequence, tuple(released)
+
+    def delivery_watermark(
+        self,
+        *,
+        tenant_id: str,
+        consumer: str,
+        ordering_key: str,
+    ) -> DeliveryWatermarkReceipt:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT contiguous_sequence, max_seen_sequence
+                FROM infra_delivery_watermarks
+                WHERE tenant_id = :tenant_id
+                  AND consumer = :consumer
+                  AND ordering_key = :ordering_key
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "consumer": consumer,
+                "ordering_key": ordering_key,
+            },
+        ).first()
+        return DeliveryWatermarkReceipt(
+            tenant_id=tenant_id,
+            consumer=consumer,
+            ordering_key=ordering_key,
+            contiguous_sequence=0 if row is None else int(row.contiguous_sequence),
+            max_seen_sequence=0 if row is None else int(row.max_seen_sequence),
+        )
+
+    def mark_inbox_processed(
+        self,
+        *,
+        tenant_id: str,
+        consumer: str,
+        message_id: str,
+    ) -> None:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_inbox_messages
+                SET status = 'processed'
+                WHERE tenant_id = :tenant_id
+                  AND consumer = :consumer
+                  AND message_id = :message_id
+                  AND status = 'received'
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "consumer": consumer,
+                "message_id": message_id,
+            },
+        )
+        if result.rowcount != 1:
+            raise InfrastructureConflictError("inbox message is not ready for processing")
+
+    def load_processable_inbox_messages(
+        self,
+        *,
+        tenant_id: str,
+        consumer: str,
+        message_ids: tuple[str, ...],
+    ) -> tuple[InboxMessageRecord, ...]:
+        if not message_ids:
+            return ()
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id, consumer, message_id, payload, payload_hash, status,
+                       ordering_key, ordering_sequence
+                FROM infra_inbox_messages
+                WHERE tenant_id = :tenant_id
+                  AND consumer = :consumer
+                  AND message_id = ANY(CAST(:message_ids AS text[]))
+                  AND status = 'received'
+                ORDER BY ordering_key NULLS FIRST, ordering_sequence NULLS FIRST, message_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "consumer": consumer,
+                "message_ids": list(message_ids),
+            },
+        ).all()
+        records: list[InboxMessageRecord] = []
+        for row in rows:
+            payload = dict(row.payload)
+            if canonical_sha256(payload) != row.payload_hash:
+                raise InfrastructureConflictError("inbox payload hash mismatch")
+            records.append(
+                InboxMessageRecord(
+                    tenant_id=str(row.tenant_id),
+                    consumer=str(row.consumer),
+                    message_id=str(row.message_id),
+                    payload=payload,
+                    payload_hash=str(row.payload_hash),
+                    status=str(row.status),
+                    ordering_key=None if row.ordering_key is None else str(row.ordering_key),
+                    ordering_sequence=(
+                        None if row.ordering_sequence is None else int(row.ordering_sequence)
+                    ),
+                )
+            )
+        if len(records) != len(set(message_ids)):
+            raise InfrastructureConflictError("not every inbox message is ready for processing")
+        return tuple(records)
 
     def claim_idempotency(
         self,
@@ -787,9 +1192,11 @@ def _sqlstate(exc: DBAPIError) -> str:
 
 
 __all__ = [
+    "DeliveryWatermarkReceipt",
     "FencingRejectedError",
     "FencingToken",
     "IdempotencyClaimReceipt",
+    "InboxMessageRecord",
     "InboxReceipt",
     "InfrastructureConflictError",
     "InfrastructureRepository",
