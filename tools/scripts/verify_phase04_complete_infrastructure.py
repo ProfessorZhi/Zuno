@@ -142,6 +142,15 @@ OPERATOR_RUNBOOK = (
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
+CAPABILITY_PROFILE_VERIFIER = (
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_infrastructure_capability_profile.py"
+)
+CAPABILITY_PROFILE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-capability-profile.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1084,6 +1093,41 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         ]:
             if phrase not in dr_profile_evidence:
                 errors.append(f"PHASE04 DR profile evidence missing phrase: {phrase}")
+
+    if not CAPABILITY_PROFILE_VERIFIER.exists():
+        errors.append("missing PHASE04 infrastructure capability profile verifier")
+    else:
+        capability_profile_errors = _load_verifier(
+            CAPABILITY_PROFILE_VERIFIER,
+            "verify_phase04_infrastructure_capability_profile",
+            "verify_phase04_infrastructure_capability_profile",
+        )()
+        for capability_profile_error in capability_profile_errors:
+            errors.append(
+                "PHASE04 infrastructure capability profile verification failed: "
+                f"{capability_profile_error}"
+            )
+
+    if not CAPABILITY_PROFILE_EVIDENCE.exists():
+        errors.append("missing PHASE04 infrastructure capability profile evidence")
+    else:
+        capability_profile_evidence = _read(CAPABILITY_PROFILE_EVIDENCE)
+        for phrase in [
+            "infrastructure_capability_profile_contract: passed",
+            "data_service_capability_contract: passed",
+            "profile_immutable: passed",
+            "profile_versioned_hash: passed",
+            "invalid_content_hash_reject: passed",
+            "developer_ci_and_server_product_share_typed_contract: passed",
+            "derived_services_non_authoritative: passed",
+            "unsupported_semantics_explicit: passed",
+            "It does not prove official LangGraph PostgreSQL Checkpointer integration",
+        ]:
+            if phrase not in capability_profile_evidence:
+                errors.append(
+                    "PHASE04 infrastructure capability profile evidence missing phrase: "
+                    f"{phrase}"
+                )
 
     if not REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER.exists():
         errors.append("missing requirement ledger evidence gate verifier")

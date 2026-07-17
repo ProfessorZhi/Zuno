@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 730
-  implementation_available: 26
+  target_not_current: 729
+  implementation_available: 27
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -4396,26 +4396,31 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Capability Profile immutable/versioned"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "docs/evidence/phase04-infrastructure-capability-profile.md"
       - "docs/modules/11-infrastructure.md:1884"
-    gap: "?????Capability Profile immutable/versioned???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Infrastructure Capability Profile contract is immutable/versioned/current; blocked adapters such as official Checkpointer, PITR, enterprise indexes and secret rotation remain separate target_not_current requirements."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-003 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "profile semantic changes require a new version/content_hash and cannot silently mutate at runtime"
     test_ids:
-      - "INFRA-003-UT"
-      - "INFRA-003-IT"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "tests/repo/test_phase04_infrastructure_capability_profile.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-003"
+      - "docs/evidence/phase04-infrastructure-capability-profile.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1884"
-      - "planned_test:INFRA-003-UT"
-      - "planned_test:INFRA-003-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-003"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "test:tests/repo/test_phase04_infrastructure_capability_profile.py"
+      - "evidence:docs/evidence/phase04-infrastructure-capability-profile.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-004
     module: "11 Infrastructure"

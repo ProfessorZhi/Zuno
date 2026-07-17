@@ -123,7 +123,10 @@ class CrossModuleEnvelopeV1(StrictContract):
     def _payload_boundary(self) -> "CrossModuleEnvelopeV1":
         if (self.payload is None) == (self.payload_ref is None):
             raise ValueError("exactly one of payload or payload_ref must be present")
-        if self.payload is not None and canonical_sha256(self.payload) != self.payload_hash:
+        if (
+            self.payload is not None
+            and canonical_sha256(self.payload) != self.payload_hash
+        ):
             raise ValueError("payload_hash does not match canonical payload")
         return self
 
@@ -163,7 +166,78 @@ class FailureCodeV1(StrictContract):
     def _owner_prefix(self) -> "FailureCodeV1":
         expected = _PREFIX_BY_OWNER[self.owner]
         if not self.code.startswith(expected):
-            raise ValueError(f"failure code {self.code} does not match owner prefix {expected}")
+            raise ValueError(
+                f"failure code {self.code} does not match owner prefix {expected}"
+            )
+        return self
+
+
+class DataServiceCapabilityV1(StrictContract):
+    service_kind: Literal[
+        "RELATIONAL",
+        "QUEUE",
+        "OBJECT",
+        "CHECKPOINT",
+        "VECTOR",
+        "GRAPH",
+        "LEXICAL",
+        "CACHE",
+        "TRACE_AUDIT",
+        "SECRET_KMS",
+    ]
+    adapter_name: str
+    adapter_version: str
+    deployment_profile: str
+    authoritative: bool
+    rebuildable: bool
+    consistency_model: str
+    tenant_isolation_mode: str
+    backup_restore_class: str
+    schema_or_contract_version: str
+    config_hash: str
+    supported_semantics: tuple[str, ...]
+    unsupported_semantics: tuple[str, ...]
+
+    @model_validator(mode="after")
+    def _capability_boundary(self) -> "DataServiceCapabilityV1":
+        if not self.supported_semantics:
+            raise ValueError("supported_semantics must be explicit")
+        if self.authoritative and self.rebuildable:
+            raise ValueError("authoritative services cannot be marked rebuildable")
+        if (
+            self.service_kind in {"VECTOR", "GRAPH", "LEXICAL", "CACHE"}
+            and self.authoritative
+        ):
+            raise ValueError(f"{self.service_kind} cannot be authoritative by default")
+        return self
+
+
+class InfrastructureCapabilityProfileV1(StrictContract):
+    profile_id: str
+    profile_version: str
+    deployment_class: Literal["DEVELOPER_CI", "SERVER_PRODUCT"]
+    database: DataServiceCapabilityV1
+    object_store: DataServiceCapabilityV1
+    checkpoint_store: DataServiceCapabilityV1
+    queue: DataServiceCapabilityV1
+    vector_index: DataServiceCapabilityV1 | None = None
+    graph_index: DataServiceCapabilityV1 | None = None
+    lexical_index: DataServiceCapabilityV1 | None = None
+    cache: DataServiceCapabilityV1 | None = None
+    secret_delivery: DataServiceCapabilityV1
+    telemetry: DataServiceCapabilityV1
+    limits: dict[str, int | str | bool]
+    content_hash: str
+
+    def hash_inputs(self) -> dict[str, Any]:
+        data = self.model_dump(mode="json", exclude_none=False)
+        data.pop("content_hash", None)
+        return data
+
+    @model_validator(mode="after")
+    def _profile_hash_matches(self) -> "InfrastructureCapabilityProfileV1":
+        if canonical_sha256(self.hash_inputs()) != self.content_hash:
+            raise ValueError("content_hash does not match capability profile")
         return self
 
 
@@ -287,7 +361,9 @@ class IndexWriteReceiptV1(StrictContract):
 class WriteVisibilityReceiptV1(StrictContract):
     receipt_id: str
     write_receipt_ref: str
-    consistency_class: Literal["IMMEDIATE", "READ_YOUR_WRITE", "BOUNDED_EVENTUAL", "EVENTUAL"]
+    consistency_class: Literal[
+        "IMMEDIATE", "READ_YOUR_WRITE", "BOUNDED_EVENTUAL", "EVENTUAL"
+    ]
     visible_at: datetime | None = None
     visibility_deadline_at: datetime
     serving_watermark_ref: str | None = None
@@ -339,7 +415,14 @@ class PreparedToolActionV1(StrictContract):
     deadline_at: datetime
     canonical_hash_version: str
     prepared_action_hash: str
-    status: Literal["PREPARED", "WAITING_APPROVAL", "AUTHORIZED", "EXECUTING", "TERMINAL", "OBSOLETE"]
+    status: Literal[
+        "PREPARED",
+        "WAITING_APPROVAL",
+        "AUTHORIZED",
+        "EXECUTING",
+        "TERMINAL",
+        "OBSOLETE",
+    ]
 
     def hash_inputs(self) -> dict[str, Any]:
         return {
@@ -363,7 +446,9 @@ class PreparedToolActionV1(StrictContract):
     @model_validator(mode="after")
     def _hash_matches(self) -> "PreparedToolActionV1":
         if canonical_sha256(self.hash_inputs()) != self.prepared_action_hash:
-            raise ValueError("prepared_action_hash does not match canonical hash inputs")
+            raise ValueError(
+                "prepared_action_hash does not match canonical hash inputs"
+            )
         return self
 
 
@@ -381,7 +466,9 @@ class EffectReceiptV1(StrictContract):
     effect_receipt_id: str
     prepared_tool_action_ref: str
     attempt_ref: str
-    effect_state: Literal["CONFIRMED", "CONFIRMED_NOT_EXECUTED", "DUPLICATE_BLOCKED", "FAILED"]
+    effect_state: Literal[
+        "CONFIRMED", "CONFIRMED_NOT_EXECUTED", "DUPLICATE_BLOCKED", "FAILED"
+    ]
     provider_receipt_ref: str | None = None
     observed_at: datetime
     idempotency_key: str
@@ -391,7 +478,15 @@ class EffectReconciliationV1(StrictContract):
     effect_reconciliation_id: str
     prepared_tool_action_ref: str
     attempt_ref: str
-    state: Literal["PENDING", "CHECKING_EXTERNAL_FACT", "CONFIRMED", "CONFIRMED_NOT_EXECUTED", "COMPENSATED", "ESCALATED", "FAILED"]
+    state: Literal[
+        "PENDING",
+        "CHECKING_EXTERNAL_FACT",
+        "CONFIRMED",
+        "CONFIRMED_NOT_EXECUTED",
+        "COMPENSATED",
+        "ESCALATED",
+        "FAILED",
+    ]
     reason: str
     next_check_at: datetime | None = None
     concluded_receipt_ref: str | None = None

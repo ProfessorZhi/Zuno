@@ -24,6 +24,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T06 MinIO 子范围：真实 S3-compatible Object Store 已达到 `implementation available`，覆盖 staging/multipart/hash/commit/visibility、PostgreSQL Manifest、commit 后失联对账、只读 committed gate、delete/restore、authorization、retention/legal hold、lifecycle、storage restart 与篡改 quarantine；Object receipt 不等于领域成功，P04-T06 仍被官方 LangGraph PostgreSQL Checkpointer 关键依赖阻塞。
 - PHASE04 P04-T07 Operator 子范围：PostgreSQL/RabbitMQ/MinIO 的 health、readiness、capacity、backlog、trace correlation、failure owner/retry owner/recovery owner 和结构化 operator snapshot 已达到 `implementation available`；该 telemetry 不产生 Eval verdict，也不代表官方 Checkpointer、PITR、完整 Projection Replay 或 PHASE04 已关闭。
 - PHASE04 P04-T07 DR Profile 子范围：`docs/governance/infrastructure-dr-profile.yaml` 已达到 `implementation available`，明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO/RTO/Owner/Recovery Owner、验证命令、evidence ref 与 cutover fail-closed policy；它不证明完整恢复演练，official Checkpointer 仍 blocked，PITR 与 Projection Replay 仍是 `target_not_current`。
+- PHASE04 P04-T07 Infrastructure Capability Profile 子范围：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 已达到 `implementation available`，profile frozen、显式 versioned、canonical hash 校验，Developer CI 与 Server Product 共用 typed contract，并声明每个 Data Service 的 config hash、supported/unsupported semantics 和 authoritative/rebuildable 边界；它不代表 official Checkpointer、PITR、完整 RecoverySet 或企业 index adapter 已完成。
 
 ## Short-term Closure Gap
 

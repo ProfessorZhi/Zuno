@@ -1,4 +1,8 @@
-from zuno.platform.contracts.canonical import canonical_json, canonical_sha256, schema_sha256
+from zuno.platform.contracts.canonical import (
+    canonical_json,
+    canonical_sha256,
+    schema_sha256,
+)
 from zuno.platform.contracts.registry import (
     ContractBundleManifest,
     ContractRegistry,
@@ -13,6 +17,7 @@ from zuno.platform.contracts.shared import (
     CapabilityInvocationRefV1,
     ContractRef,
     CrossModuleEnvelopeV1,
+    DataServiceCapabilityV1,
     EffectiveSecurityEpochRefV1,
     EffectReceiptV1,
     EffectReconciliationV1,
@@ -20,6 +25,7 @@ from zuno.platform.contracts.shared import (
     FailureOwner,
     IndexWriteBatchV1,
     IndexWriteReceiptV1,
+    InfrastructureCapabilityProfileV1,
     InfrastructureLeaseRefV1,
     KnowledgeVersionRefV1,
     MemoryContextRefV1,
@@ -46,6 +52,7 @@ __all__ = [
     "ContractRegistryEntry",
     "ContractVersion",
     "CrossModuleEnvelopeV1",
+    "DataServiceCapabilityV1",
     "EffectiveSecurityEpochRefV1",
     "EffectReceiptV1",
     "EffectReconciliationV1",
@@ -53,6 +60,7 @@ __all__ = [
     "FailureOwner",
     "IndexWriteBatchV1",
     "IndexWriteReceiptV1",
+    "InfrastructureCapabilityProfileV1",
     "InfrastructureLeaseRefV1",
     "KnowledgeVersionRefV1",
     "MemoryContextRefV1",
