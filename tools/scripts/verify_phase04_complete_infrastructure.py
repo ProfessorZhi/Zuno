@@ -8,51 +8,139 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WORK_PRODUCTS = REPO_ROOT / ".agent" / "programs" / "work-products"
 PHASE04_READINESS = WORK_PRODUCTS / "phase04-readiness.yaml"
-PHASE04_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+PHASE04_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
+)
 PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md"
-ALEMBIC_MIGRATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_alembic_migration.py"
-ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
-MIGRATION_CONTROL_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_migration_control.py"
-MIGRATION_CONTROL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-migration-control.md"
-POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
-POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
-POSTGRES_SESSION_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_session_runtime.py"
-POSTGRES_SESSION_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-session-runtime.md"
-DOMAIN_UOW_ADOPTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_domain_uow_adoption.py"
-POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
-POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
-POSTGRES_POOL_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
-POSTGRES_CONNECTION_LOSS_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_connection_loss.py"
-REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
-RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
+ALEMBIC_MIGRATION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_alembic_migration.py"
+)
+ALEMBIC_MIGRATION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
+)
+EXISTING_DATABASE_UPGRADE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_existing_database_upgrade.py"
+)
+MIGRATION_CONTROL_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_migration_control.py"
+)
+MIGRATION_CONTROL_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-migration-control.md"
+)
+MIGRATION_RUNBOOK = (
+    REPO_ROOT / "docs" / "governance" / "postgresql-migration-runbook.md"
+)
+POSTGRES_RUNTIME_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
+)
+POSTGRES_RUNTIME_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
+)
+POSTGRES_SESSION_RUNTIME_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_session_runtime.py"
+)
+POSTGRES_SESSION_RUNTIME_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-postgres-session-runtime.md"
+)
+DOMAIN_UOW_ADOPTION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_domain_uow_adoption.py"
+)
+POSTGRES_DEADLOCK_RETRY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
+)
+POSTGRES_SERIALIZATION_RETRY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
+)
+POSTGRES_POOL_EXHAUSTION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
+)
+POSTGRES_CONNECTION_LOSS_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_connection_loss.py"
+)
+REAL_SERVICES_SMOKE = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
+)
+RABBITMQ_TRANSPORT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
+)
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
-RABBITMQ_BACKLOG_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_backlog.py"
-RABBITMQ_RETRY_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_retry_exhaustion.py"
-OUTBOX_RABBITMQ_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
-OUTBOX_RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
-OUTBOX_DELIVERY_POLICY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_delivery_policy.py"
-OUTBOX_DELIVERY_POLICY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-outbox-delivery-policy.md"
-RABBITMQ_OUT_OF_ORDER_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_out_of_order.py"
-RABBITMQ_OUT_OF_ORDER_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-out-of-order.md"
-RABBITMQ_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
-RABBITMQ_RESTART_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
-RABBITMQ_PARTITION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_network_partition.py"
-RABBITMQ_PARTITION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-network-partition.md"
-MINIO_OBJECT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
-MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
-MINIO_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
-BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
-BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
-COMBINED_SERVICE_FAULT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_combined_service_fault.py"
-COMBINED_SERVICE_FAULT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-combined-service-fault.md"
-IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
+RABBITMQ_BACKLOG_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_backlog.py"
+)
+RABBITMQ_RETRY_EXHAUSTION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_retry_exhaustion.py"
+)
+OUTBOX_RABBITMQ_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_rabbitmq_publisher.py"
+)
+OUTBOX_RABBITMQ_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
+)
+OUTBOX_DELIVERY_POLICY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_delivery_policy.py"
+)
+OUTBOX_DELIVERY_POLICY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-outbox-delivery-policy.md"
+)
+RABBITMQ_OUT_OF_ORDER_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_out_of_order.py"
+)
+RABBITMQ_OUT_OF_ORDER_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-out-of-order.md"
+)
+RABBITMQ_RESTART_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_broker_restart.py"
+)
+RABBITMQ_RESTART_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-broker-restart.md"
+)
+RABBITMQ_PARTITION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_network_partition.py"
+)
+RABBITMQ_PARTITION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-network-partition.md"
+)
+MINIO_OBJECT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_object_store.py"
+)
+MINIO_OBJECT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-store.md"
+)
+MINIO_RESTART_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
+)
+BACKUP_RESTORE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
+)
+BACKUP_RESTORE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
+)
+COMBINED_SERVICE_FAULT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_combined_service_fault.py"
+)
+COMBINED_SERVICE_FAULT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-combined-service-fault.md"
+)
+IDEMPOTENCY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
+)
 IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
-IDEMPOTENCY_OWNER_CRASH_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_owner_crash.py"
-IDEMPOTENCY_TENANT_ISOLATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_tenant_isolation.py"
-IDEMPOTENCY_SUPERVISION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_supervision.py"
-LEASE_FENCING_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
+IDEMPOTENCY_OWNER_CRASH_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_owner_crash.py"
+)
+IDEMPOTENCY_TENANT_ISOLATION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_tenant_isolation.py"
+)
+IDEMPOTENCY_SUPERVISION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_supervision.py"
+)
+LEASE_FENCING_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
+)
 LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencing.md"
-LEASE_COORDINATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_worker_coordination.py"
+LEASE_COORDINATION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_worker_coordination.py"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -98,7 +186,9 @@ def _tcp_open(host: str, port: int, timeout: float = 1.0) -> bool:
 def _load_verifier(path: Path, module_name: str, function_name: str):
     spec = spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}")
+        raise RuntimeError(
+            f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"
+        )
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     return getattr(module, function_name)
@@ -114,7 +204,9 @@ def _official_langgraph_postgres_checkpointer_available() -> bool:
 def verify_phase04_complete_infrastructure() -> list[str]:
     errors: list[str] = []
     if not PHASE04_READINESS.exists():
-        return ["missing PHASE04 readiness: .agent/programs/work-products/phase04-readiness.yaml"]
+        return [
+            "missing PHASE04 readiness: .agent/programs/work-products/phase04-readiness.yaml"
+        ]
 
     readiness = _read(PHASE04_READINESS)
     for task_id in [f"P04-T{index:02d}" for index in range(1, 8)]:
@@ -149,7 +241,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_alembic_migration",
         )()
         for alembic_error in alembic_errors:
-            errors.append(f"PHASE04 Alembic migration verification failed: {alembic_error}")
+            errors.append(
+                f"PHASE04 Alembic migration verification failed: {alembic_error}"
+            )
 
     if not ALEMBIC_MIGRATION_EVIDENCE.exists():
         errors.append("missing PHASE04 Alembic migration evidence")
@@ -161,14 +255,50 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "downgrade_base: passed",
             "reupgrade_head: passed",
             "infra_table_roundtrip: passed",
-            "schema_drift_detection: passed_infra_schema_subset",
+            "single_revision_chain: passed",
+            "frozen_explicit_baseline: passed",
+            "module_ownership_registry: passed",
+            "schema_drift_detection: passed_full_domain_and_infra",
+            "existing_database_upgrade: passed",
+            "online_index_concurrently: passed",
+            "online_constraint_validation: passed",
             "data_backfill_framework: passed",
             "online_migration_lock: passed",
             "forward_fix_lineage: passed",
-            "不关闭 P04-T02",
+            "p04_t02_completion: proven",
         ]:
             if phrase not in alembic_evidence:
-                errors.append(f"PHASE04 Alembic migration evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 Alembic migration evidence missing phrase: {phrase}"
+                )
+
+    if not EXISTING_DATABASE_UPGRADE_VERIFIER.exists():
+        errors.append("missing PHASE04 existing database upgrade verifier")
+    else:
+        existing_database_errors = _load_verifier(
+            EXISTING_DATABASE_UPGRADE_VERIFIER,
+            "verify_phase04_existing_database_upgrade",
+            "verify_phase04_existing_database_upgrade",
+        )()
+        for existing_database_error in existing_database_errors:
+            errors.append(
+                "PHASE04 existing database upgrade verification failed: "
+                f"{existing_database_error}"
+            )
+
+    if not MIGRATION_RUNBOOK.exists():
+        errors.append("missing PostgreSQL migration runbook")
+    else:
+        migration_runbook = _read(MIGRATION_RUNBOOK)
+        for phrase in [
+            "Alembic revision 是服务器产品 Schema 的唯一变更入口",
+            "发现 drift 时禁止 stamp",
+            "CREATE INDEX CONCURRENTLY",
+            "NOT VALID",
+            "默认 forward-fix",
+        ]:
+            if phrase not in migration_runbook:
+                errors.append(f"PostgreSQL migration runbook missing phrase: {phrase}")
 
     if not MIGRATION_CONTROL_VERIFIER.exists():
         errors.append("missing PHASE04 migration control verifier")
@@ -179,7 +309,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_migration_control",
         )()
         for migration_control_error in migration_control_errors:
-            errors.append(f"PHASE04 migration control verification failed: {migration_control_error}")
+            errors.append(
+                f"PHASE04 migration control verification failed: {migration_control_error}"
+            )
 
     if not MIGRATION_CONTROL_EVIDENCE.exists():
         errors.append("missing PHASE04 migration control evidence")
@@ -196,10 +328,12 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "pause_restart_resume: passed",
             "stale_generation_reject: passed",
             "forward_fix_lineage: passed",
-            "不关闭 P04-T02",
+            "migration_control_completion_input: proven",
         ]:
             if phrase not in migration_control_evidence:
-                errors.append(f"PHASE04 migration control evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 migration control evidence missing phrase: {phrase}"
+                )
 
     if not POSTGRES_RUNTIME_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL runtime verifier")
@@ -210,7 +344,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_postgres_runtime",
         )()
         for postgres_runtime_error in postgres_runtime_errors:
-            errors.append(f"PHASE04 PostgreSQL runtime verification failed: {postgres_runtime_error}")
+            errors.append(
+                f"PHASE04 PostgreSQL runtime verification failed: {postgres_runtime_error}"
+            )
 
     if not POSTGRES_RUNTIME_EVIDENCE.exists():
         errors.append("missing PHASE04 PostgreSQL runtime evidence")
@@ -229,7 +365,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "不关闭 P04-T01",
         ]:
             if phrase not in postgres_runtime_evidence:
-                errors.append(f"PHASE04 PostgreSQL runtime evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 PostgreSQL runtime evidence missing phrase: {phrase}"
+                )
 
     if not POSTGRES_SESSION_RUNTIME_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL session runtime verifier")
@@ -240,7 +378,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_postgres_session_runtime",
         )()
         for session_runtime_error in session_runtime_errors:
-            errors.append(f"PHASE04 PostgreSQL session runtime verification failed: {session_runtime_error}")
+            errors.append(
+                f"PHASE04 PostgreSQL session runtime verification failed: {session_runtime_error}"
+            )
 
     if not POSTGRES_SESSION_RUNTIME_EVIDENCE.exists():
         errors.append("missing PHASE04 PostgreSQL session runtime evidence")
@@ -270,7 +410,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "p04_t01_completion: proven",
         ]:
             if phrase not in session_runtime_evidence:
-                errors.append(f"PHASE04 PostgreSQL session runtime evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 PostgreSQL session runtime evidence missing phrase: {phrase}"
+                )
 
     if not DOMAIN_UOW_ADOPTION_VERIFIER.exists():
         errors.append("missing PHASE04 Domain UoW adoption verifier")
@@ -281,7 +423,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_domain_uow_adoption",
         )()
         for domain_uow_error in domain_uow_errors:
-            errors.append(f"PHASE04 Domain UoW adoption verification failed: {domain_uow_error}")
+            errors.append(
+                f"PHASE04 Domain UoW adoption verification failed: {domain_uow_error}"
+            )
 
     if not POSTGRES_DEADLOCK_RETRY_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL deadlock retry verifier")
@@ -292,7 +436,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_postgres_deadlock_retry",
         )()
         for postgres_deadlock_error in postgres_deadlock_errors:
-            errors.append(f"PHASE04 PostgreSQL deadlock retry verification failed: {postgres_deadlock_error}")
+            errors.append(
+                f"PHASE04 PostgreSQL deadlock retry verification failed: {postgres_deadlock_error}"
+            )
 
     if not POSTGRES_SERIALIZATION_RETRY_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL serialization retry verifier")
@@ -316,7 +462,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_postgres_pool_exhaustion",
         )()
         for postgres_pool_error in postgres_pool_errors:
-            errors.append(f"PHASE04 PostgreSQL pool exhaustion verification failed: {postgres_pool_error}")
+            errors.append(
+                f"PHASE04 PostgreSQL pool exhaustion verification failed: {postgres_pool_error}"
+            )
 
     if not POSTGRES_CONNECTION_LOSS_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL connection loss verifier")
@@ -332,7 +480,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             )
 
     if not _official_langgraph_postgres_checkpointer_available():
-        errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
+        errors.append(
+            "official LangGraph PostgreSQL Checkpointer is not importable/proven"
+        )
 
     if not RABBITMQ_TRANSPORT_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ transport verifier")
@@ -343,7 +493,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_transport",
         )()
         for rabbit_error in rabbit_errors:
-            errors.append(f"PHASE04 RabbitMQ transport verification failed: {rabbit_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ transport verification failed: {rabbit_error}"
+            )
 
     if not RABBITMQ_EVIDENCE.exists():
         errors.append("missing PHASE04 RabbitMQ transport evidence")
@@ -359,7 +511,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in rabbit_evidence:
-                errors.append(f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 RabbitMQ transport evidence missing phrase: {phrase}"
+                )
 
     if not RABBITMQ_BACKLOG_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ backlog verifier")
@@ -370,7 +524,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_backlog",
         )()
         for backlog_error in backlog_errors:
-            errors.append(f"PHASE04 RabbitMQ backlog verification failed: {backlog_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ backlog verification failed: {backlog_error}"
+            )
 
     if not RABBITMQ_RETRY_EXHAUSTION_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ retry exhaustion verifier")
@@ -381,7 +537,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_retry_exhaustion",
         )()
         for retry_exhaustion_error in retry_exhaustion_errors:
-            errors.append(f"PHASE04 RabbitMQ retry exhaustion verification failed: {retry_exhaustion_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ retry exhaustion verification failed: {retry_exhaustion_error}"
+            )
 
     if not OUTBOX_RABBITMQ_VERIFIER.exists():
         errors.append("missing PHASE04 outbox RabbitMQ publisher verifier")
@@ -392,7 +550,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_outbox_rabbitmq_publisher",
         )()
         for outbox_error in outbox_errors:
-            errors.append(f"PHASE04 outbox RabbitMQ publisher verification failed: {outbox_error}")
+            errors.append(
+                f"PHASE04 outbox RabbitMQ publisher verification failed: {outbox_error}"
+            )
 
     if not OUTBOX_RABBITMQ_EVIDENCE.exists():
         errors.append("missing PHASE04 outbox RabbitMQ publisher evidence")
@@ -410,7 +570,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in outbox_evidence:
-                errors.append(f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}"
+                )
 
     if not OUTBOX_DELIVERY_POLICY_VERIFIER.exists():
         errors.append("missing PHASE04 outbox delivery policy verifier")
@@ -421,7 +583,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_outbox_delivery_policy",
         )()
         for delivery_policy_error in delivery_policy_errors:
-            errors.append(f"PHASE04 outbox delivery policy verification failed: {delivery_policy_error}")
+            errors.append(
+                f"PHASE04 outbox delivery policy verification failed: {delivery_policy_error}"
+            )
 
     if not OUTBOX_DELIVERY_POLICY_EVIDENCE.exists():
         errors.append("missing PHASE04 outbox delivery policy evidence")
@@ -437,7 +601,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in delivery_policy_evidence:
-                errors.append(f"PHASE04 outbox delivery policy evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 outbox delivery policy evidence missing phrase: {phrase}"
+                )
 
     if not RABBITMQ_OUT_OF_ORDER_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ out-of-order verifier")
@@ -448,7 +614,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_out_of_order",
         )()
         for ordering_error in ordering_errors:
-            errors.append(f"PHASE04 RabbitMQ out-of-order verification failed: {ordering_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ out-of-order verification failed: {ordering_error}"
+            )
 
     if not RABBITMQ_OUT_OF_ORDER_EVIDENCE.exists():
         errors.append("missing PHASE04 RabbitMQ out-of-order evidence")
@@ -465,7 +633,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in ordering_evidence:
-                errors.append(f"PHASE04 RabbitMQ out-of-order evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 RabbitMQ out-of-order evidence missing phrase: {phrase}"
+                )
 
     if not RABBITMQ_RESTART_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ broker restart verifier")
@@ -476,7 +646,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_broker_restart",
         )()
         for restart_error in restart_errors:
-            errors.append(f"PHASE04 RabbitMQ broker restart verification failed: {restart_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ broker restart verification failed: {restart_error}"
+            )
 
     if not RABBITMQ_RESTART_EVIDENCE.exists():
         errors.append("missing PHASE04 RabbitMQ broker restart evidence")
@@ -489,7 +661,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in restart_evidence:
-                errors.append(f"PHASE04 RabbitMQ broker restart evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 RabbitMQ broker restart evidence missing phrase: {phrase}"
+                )
 
     if not RABBITMQ_PARTITION_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ network partition verifier")
@@ -500,7 +674,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_rabbitmq_network_partition",
         )()
         for partition_error in partition_errors:
-            errors.append(f"PHASE04 RabbitMQ network partition verification failed: {partition_error}")
+            errors.append(
+                f"PHASE04 RabbitMQ network partition verification failed: {partition_error}"
+            )
 
     if not RABBITMQ_PARTITION_EVIDENCE.exists():
         errors.append("missing PHASE04 RabbitMQ network partition evidence")
@@ -523,7 +699,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Queue ACK != Domain Success",
         ]:
             if phrase not in partition_evidence:
-                errors.append(f"PHASE04 RabbitMQ network partition evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 RabbitMQ network partition evidence missing phrase: {phrase}"
+                )
 
     if not MINIO_OBJECT_VERIFIER.exists():
         errors.append("missing PHASE04 MinIO object store verifier")
@@ -534,7 +712,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_minio_object_store",
         )()
         for minio_error in minio_errors:
-            errors.append(f"PHASE04 MinIO object store verification failed: {minio_error}")
+            errors.append(
+                f"PHASE04 MinIO object store verification failed: {minio_error}"
+            )
 
     if not MINIO_OBJECT_EVIDENCE.exists():
         errors.append("missing PHASE04 MinIO object store evidence")
@@ -562,7 +742,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Object Commit != Domain Success",
         ]:
             if phrase not in minio_evidence:
-                errors.append(f"PHASE04 MinIO object store evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 MinIO object store evidence missing phrase: {phrase}"
+                )
 
     if not MINIO_RESTART_VERIFIER.exists():
         errors.append("missing PHASE04 MinIO storage restart verifier")
@@ -573,7 +755,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_minio_storage_restart",
         )()
         for minio_restart_error in minio_restart_errors:
-            errors.append(f"PHASE04 MinIO storage restart verification failed: {minio_restart_error}")
+            errors.append(
+                f"PHASE04 MinIO storage restart verification failed: {minio_restart_error}"
+            )
 
     if not IDEMPOTENCY_VERIFIER.exists():
         errors.append("missing PHASE04 idempotency claim verifier")
@@ -584,7 +768,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_idempotency_claim",
         )()
         for idempotency_error in idempotency_errors:
-            errors.append(f"PHASE04 idempotency claim verification failed: {idempotency_error}")
+            errors.append(
+                f"PHASE04 idempotency claim verification failed: {idempotency_error}"
+            )
 
     if not IDEMPOTENCY_EVIDENCE.exists():
         errors.append("missing PHASE04 idempotency claim evidence")
@@ -610,7 +796,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "P04-T04: completed",
         ]:
             if phrase not in idempotency_evidence:
-                errors.append(f"PHASE04 idempotency claim evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 idempotency claim evidence missing phrase: {phrase}"
+                )
 
     if not IDEMPOTENCY_OWNER_CRASH_VERIFIER.exists():
         errors.append("missing PHASE04 idempotency owner crash verifier")
@@ -621,7 +809,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_idempotency_owner_crash",
         )()
         for owner_crash_error in owner_crash_errors:
-            errors.append(f"PHASE04 idempotency owner crash verification failed: {owner_crash_error}")
+            errors.append(
+                f"PHASE04 idempotency owner crash verification failed: {owner_crash_error}"
+            )
 
     if not IDEMPOTENCY_TENANT_ISOLATION_VERIFIER.exists():
         errors.append("missing PHASE04 idempotency tenant isolation verifier")
@@ -632,7 +822,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_idempotency_tenant_isolation",
         )()
         for tenant_isolation_error in tenant_isolation_errors:
-            errors.append(f"PHASE04 idempotency tenant isolation verification failed: {tenant_isolation_error}")
+            errors.append(
+                f"PHASE04 idempotency tenant isolation verification failed: {tenant_isolation_error}"
+            )
 
     if not IDEMPOTENCY_SUPERVISION_VERIFIER.exists():
         errors.append("missing PHASE04 idempotency supervision verifier")
@@ -643,7 +835,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_idempotency_supervision",
         )()
         for supervision_error in supervision_errors:
-            errors.append(f"PHASE04 idempotency supervision verification failed: {supervision_error}")
+            errors.append(
+                f"PHASE04 idempotency supervision verification failed: {supervision_error}"
+            )
 
     if not BACKUP_RESTORE_VERIFIER.exists():
         errors.append("missing PHASE04 backup/restore/replay verifier")
@@ -654,7 +848,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_backup_restore_replay",
         )()
         for backup_error in backup_errors:
-            errors.append(f"PHASE04 backup/restore/replay verification failed: {backup_error}")
+            errors.append(
+                f"PHASE04 backup/restore/replay verification failed: {backup_error}"
+            )
 
     if not BACKUP_RESTORE_EVIDENCE.exists():
         errors.append("missing PHASE04 backup/restore/replay evidence")
@@ -670,7 +866,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "Backup/Restore/Replay subset != PHASE04 completion",
         ]:
             if phrase not in backup_evidence:
-                errors.append(f"PHASE04 backup/restore/replay evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 backup/restore/replay evidence missing phrase: {phrase}"
+                )
 
     if not COMBINED_SERVICE_FAULT_VERIFIER.exists():
         errors.append("missing PHASE04 combined service fault verifier")
@@ -681,7 +879,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_combined_service_fault",
         )()
         for combined_fault_error in combined_fault_errors:
-            errors.append(f"PHASE04 combined service fault verification failed: {combined_fault_error}")
+            errors.append(
+                f"PHASE04 combined service fault verification failed: {combined_fault_error}"
+            )
 
     if not COMBINED_SERVICE_FAULT_EVIDENCE.exists():
         errors.append("missing PHASE04 combined service fault evidence")
@@ -698,7 +898,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "不关闭 P04-T07",
         ]:
             if phrase not in combined_fault_evidence:
-                errors.append(f"PHASE04 combined service fault evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 combined service fault evidence missing phrase: {phrase}"
+                )
 
     if not LEASE_FENCING_VERIFIER.exists():
         errors.append("missing PHASE04 lease/fencing verifier")
@@ -720,7 +922,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "verify_phase04_lease_worker_coordination",
         )()
         for coordination_error in coordination_errors:
-            errors.append(f"PHASE04 lease worker coordination verification failed: {coordination_error}")
+            errors.append(
+                f"PHASE04 lease worker coordination verification failed: {coordination_error}"
+            )
 
     if not LEASE_FENCING_EVIDENCE.exists():
         errors.append("missing PHASE04 lease/fencing evidence")
@@ -747,15 +951,24 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "P04-T05: completed",
         ]:
             if phrase not in lease_evidence:
-                errors.append(f"PHASE04 lease/fencing evidence missing phrase: {phrase}")
+                errors.append(
+                    f"PHASE04 lease/fencing evidence missing phrase: {phrase}"
+                )
 
     if not PARTIAL_EVIDENCE.exists():
-        errors.append("missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md")
+        errors.append(
+            "missing partial PHASE04 evidence: docs/evidence/phase04-postgres-foundation.md"
+        )
     else:
         partial = _read(PARTIAL_EVIDENCE)
-        for phrase in ["partial_implementation_available", "phase_completion: `withdrawn`"]:
+        for phrase in [
+            "partial_implementation_available",
+            "phase_completion: `withdrawn`",
+        ]:
             if phrase not in partial:
-                errors.append(f"partial PHASE04 evidence missing boundary phrase: {phrase}")
+                errors.append(
+                    f"partial PHASE04 evidence missing boundary phrase: {phrase}"
+                )
 
     if not PHASE04_EVIDENCE.exists():
         errors.append("missing PHASE04 complete infrastructure evidence/blocker file")
@@ -763,12 +976,21 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         evidence = _read(PHASE04_EVIDENCE)
         for phrase in REQUIRED_EVIDENCE_PHRASES:
             if phrase not in evidence:
-                errors.append(f"PHASE04 evidence missing required real dependency proof: {phrase}")
+                errors.append(
+                    f"PHASE04 evidence missing required real dependency proof: {phrase}"
+                )
         for marker in REQUIRED_COMPLETION_PROOF_MARKERS:
             if marker not in evidence:
-                errors.append(f"PHASE04 evidence missing completion proof marker: {marker}")
-        if "status: blocked" not in evidence and "coordinator_decision: approved" not in evidence:
-            errors.append("PHASE04 evidence must explicitly record blocked status or approved closure")
+                errors.append(
+                    f"PHASE04 evidence missing completion proof marker: {marker}"
+                )
+        if (
+            "status: blocked" not in evidence
+            and "coordinator_decision: approved" not in evidence
+        ):
+            errors.append(
+                "PHASE04 evidence must explicitly record blocked status or approved closure"
+            )
     return errors
 
 

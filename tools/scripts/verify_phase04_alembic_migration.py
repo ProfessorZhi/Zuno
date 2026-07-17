@@ -7,24 +7,26 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+from alembic.autogenerate import compare_metadata
+from alembic.config import Config
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
+
+from zuno.platform.database.metadata import metadata
+from zuno.platform.database.schema_registry import (
+    DOMAIN_TABLE_OWNERS,
+    INFRASTRUCTURE_TABLES,
+    ONLINE_SCHEMA_OBJECTS,
+    REVISION_OWNERS,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
-REQUIRED_INFRA_TABLES = {
-    "infra_outbox_events",
-    "infra_inbox_messages",
-    "infra_idempotency_claims",
-    "infra_worker_leases",
-    "infra_object_manifests",
-    "infra_checkpoints",
-    "infra_outbox_sequences",
-    "infra_delivery_watermarks",
-    "infra_migration_backfills",
-    "infra_migration_backfill_chunks",
-}
-EXPECTED_HEAD_REVISION = "20260717_08"
+REQUIRED_INFRA_TABLES = INFRASTRUCTURE_TABLES
+REQUIRED_DOMAIN_TABLES = set(DOMAIN_TABLE_OWNERS)
+EXPECTED_HEAD_REVISION = "20260717_10"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -77,7 +79,14 @@ REQUIRED_TABLE_COLUMNS = {
         "completed_at",
         "created_at",
     },
-    "infra_worker_leases": {"resource_id", "owner_id", "lease_id", "epoch", "expires_at", "updated_at"},
+    "infra_worker_leases": {
+        "resource_id",
+        "owner_id",
+        "lease_id",
+        "epoch",
+        "expires_at",
+        "updated_at",
+    },
     "infra_object_manifests": {
         "object_ref",
         "owner",
@@ -171,6 +180,7 @@ REQUIRED_CONSTRAINTS = {
     "fk_infra_migration_backfill_chunks_backfill",
     "pk_infra_migration_backfill_chunks",
     "ck_infra_migration_backfill_chunks_counts",
+    "ck_infra_migration_backfills_owner_nonempty",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -183,6 +193,7 @@ REQUIRED_INDEXES = {
     "ix_infra_migration_backfills_state_lease",
     "ix_infra_migration_backfills_owner",
     "ix_infra_migration_backfill_chunks_applied",
+    "ix_workspace_session_user_update_time",
 }
 
 
@@ -214,13 +225,11 @@ def _drop_database(database: str) -> None:
     try:
         with engine.connect() as conn:
             conn.execute(
-                text(
-                    """
+                text("""
                     SELECT pg_terminate_backend(pid)
                     FROM pg_stat_activity
                     WHERE datname = :database AND pid <> pg_backend_pid()
-                    """
-                ),
+                    """),
                 {"database": database},
             )
             conn.execute(text(f'DROP DATABASE IF EXISTS "{database}"'))
@@ -254,7 +263,9 @@ def _current_revision(database_url: str) -> str | None:
             ).scalar_one()
             if not exists:
                 return None
-            return conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none()
+            return conn.execute(
+                text("SELECT version_num FROM alembic_version")
+            ).scalar_one_or_none()
     finally:
         engine.dispose()
 
@@ -263,15 +274,11 @@ def _table_names(database_url: str) -> set[str]:
     engine = create_engine(database_url, future=True)
     try:
         with engine.connect() as conn:
-            rows = conn.execute(
-                text(
-                    """
+            rows = conn.execute(text("""
                     SELECT tablename
                     FROM pg_tables
                     WHERE schemaname = 'public'
-                    """
-                )
-            ).all()
+                    """)).all()
             return {str(row.tablename) for row in rows}
     finally:
         engine.dispose()
@@ -282,76 +289,67 @@ def _schema_drift_errors(database_url: str) -> list[str]:
     errors: list[str] = []
     try:
         with engine.connect() as conn:
-            column_rows = conn.execute(
-                text(
-                    """
+            column_rows = conn.execute(text("""
                     SELECT table_name, column_name
                     FROM information_schema.columns
                     WHERE table_schema = 'public'
-                    """
-                )
-            ).all()
+                    """)).all()
             columns_by_table: dict[str, set[str]] = {}
             for row in column_rows:
-                columns_by_table.setdefault(str(row.table_name), set()).add(str(row.column_name))
+                columns_by_table.setdefault(str(row.table_name), set()).add(
+                    str(row.column_name)
+                )
             for table_name, expected_columns in REQUIRED_TABLE_COLUMNS.items():
                 actual_columns = columns_by_table.get(table_name, set())
                 missing_columns = expected_columns - actual_columns
                 extra_columns = actual_columns - expected_columns
                 if missing_columns:
-                    errors.append(f"{table_name} missing columns: {sorted(missing_columns)!r}")
+                    errors.append(
+                        f"{table_name} missing columns: {sorted(missing_columns)!r}"
+                    )
                 if extra_columns:
-                    errors.append(f"{table_name} unexpected columns: {sorted(extra_columns)!r}")
+                    errors.append(
+                        f"{table_name} unexpected columns: {sorted(extra_columns)!r}"
+                    )
 
-            tenant_row = conn.execute(
-                text(
-                    """
+            tenant_row = conn.execute(text("""
                     SELECT is_nullable, column_default
                     FROM information_schema.columns
                     WHERE table_schema = 'public'
                       AND table_name = 'infra_idempotency_claims'
                       AND column_name = 'tenant_id'
-                    """
-                )
-            ).first()
+                    """)).first()
             if tenant_row is None:
                 errors.append("infra_idempotency_claims.tenant_id column missing")
-            elif str(tenant_row.is_nullable) != "NO" or tenant_row.column_default is not None:
+            elif (
+                str(tenant_row.is_nullable) != "NO"
+                or tenant_row.column_default is not None
+            ):
                 errors.append(
                     "infra_idempotency_claims.tenant_id must be NOT NULL without a persistent server default"
                 )
 
-            constraint_names = {
-                str(row.conname)
-                for row in conn.execute(
-                    text(
-                        """
+            constraint_names = {str(row.conname) for row in conn.execute(text("""
                         SELECT conname
                         FROM pg_constraint
                         WHERE connamespace = 'public'::regnamespace
-                        """
-                    )
-                ).all()
-            }
+                        """)).all()}
             missing_constraints = REQUIRED_CONSTRAINTS - constraint_names
             forbidden_constraints = FORBIDDEN_CONSTRAINTS & constraint_names
             if missing_constraints:
-                errors.append(f"missing schema constraints: {sorted(missing_constraints)!r}")
+                errors.append(
+                    f"missing schema constraints: {sorted(missing_constraints)!r}"
+                )
             if forbidden_constraints:
-                errors.append(f"forbidden legacy constraints still present: {sorted(forbidden_constraints)!r}")
+                errors.append(
+                    f"forbidden legacy constraints still present: {sorted(forbidden_constraints)!r}"
+                )
 
-            index_names = {
-                str(row.indexname)
-                for row in conn.execute(
-                    text(
-                        """
+            index_names = {str(row.indexname) for row in conn.execute(text("""
                         SELECT indexname
                         FROM pg_indexes
                         WHERE schemaname = 'public'
-                        """
-                    )
-                ).all()
-            }
+                        """)).all()}
             missing_indexes = REQUIRED_INDEXES - index_names
             if missing_indexes:
                 errors.append(f"missing schema indexes: {sorted(missing_indexes)!r}")
@@ -360,8 +358,129 @@ def _schema_drift_errors(database_url: str) -> list[str]:
     return errors
 
 
-def verify_phase04_alembic_migration() -> list[str]:
+def _domain_schema_drift_errors(database_url: str) -> list[str]:
+    def include_object(obj, name, type_, reflected, compare_to):
+        if type_ == "table":
+            return name in REQUIRED_DOMAIN_TABLES
+        table = getattr(obj, "table", None)
+        table_name = getattr(table, "name", None)
+        if table_name not in REQUIRED_DOMAIN_TABLES:
+            return False
+        if type_ in {"index", "unique_constraint", "check_constraint"}:
+            return name not in ONLINE_SCHEMA_OBJECTS
+        return True
+
+    engine = create_engine(database_url, future=True)
+    try:
+        with engine.connect() as connection:
+            context = MigrationContext.configure(
+                connection,
+                opts={
+                    "compare_type": True,
+                    "compare_server_default": True,
+                    "include_object": include_object,
+                },
+            )
+            differences = compare_metadata(context, metadata)
+    finally:
+        engine.dispose()
+    return [f"domain schema drift: {difference!r}" for difference in differences]
+
+
+def _revision_chain_errors() -> list[str]:
     errors: list[str] = []
+    config = Config(str(REPO_ROOT / "infra" / "db" / "alembic.ini"))
+    script = ScriptDirectory.from_config(config)
+    heads = script.get_heads()
+    if heads != [EXPECTED_HEAD_REVISION]:
+        errors.append(f"Alembic must have exactly one expected head, found: {heads!r}")
+        return errors
+    revisions = list(script.walk_revisions(base="base", head=EXPECTED_HEAD_REVISION))
+    revision_ids = {str(item.revision) for item in revisions}
+    if revision_ids != set(REVISION_OWNERS):
+        errors.append(
+            "revision ownership registry mismatch: "
+            f"chain={sorted(revision_ids)!r}, registry={sorted(REVISION_OWNERS)!r}"
+        )
+    if set(metadata.tables) != REQUIRED_DOMAIN_TABLES:
+        errors.append(
+            "domain table ownership registry does not match SQLModel metadata"
+        )
+    for item in revisions:
+        source = Path(item.path).read_text(encoding="utf-8")
+        if "create_all(" in source or "drop_all(" in source:
+            errors.append(
+                f"revision {item.revision} uses runtime metadata create_all/drop_all"
+            )
+        if item.branch_labels:
+            errors.append(
+                f"revision {item.revision} introduces an unsupported branch label"
+            )
+    return errors
+
+
+def _online_schema_errors(database_url: str) -> list[str]:
+    engine = create_engine(database_url, future=True)
+    errors: list[str] = []
+    try:
+        with engine.connect() as connection:
+            index_row = connection.execute(text("""
+                    SELECT i.indisready, i.indisvalid
+                    FROM pg_index i
+                    JOIN pg_class c ON c.oid = i.indexrelid
+                    WHERE c.relname = 'ix_workspace_session_user_update_time'
+                    """)).first()
+            if (
+                index_row is None
+                or not index_row.indisready
+                or not index_row.indisvalid
+            ):
+                errors.append(
+                    "concurrent workspace session index is missing or invalid"
+                )
+            constraint_row = connection.execute(text("""
+                    SELECT convalidated
+                    FROM pg_constraint
+                    WHERE conname = 'ck_infra_migration_backfills_owner_nonempty'
+                    """)).first()
+            if constraint_row is None or not constraint_row.convalidated:
+                errors.append(
+                    "online backfill owner constraint is missing or not validated"
+                )
+    finally:
+        engine.dispose()
+    revision_09 = (
+        REPO_ROOT
+        / "infra"
+        / "db"
+        / "alembic"
+        / "versions"
+        / "20260717_09_workspace_session_online_index.py"
+    ).read_text(encoding="utf-8")
+    revision_10 = (
+        REPO_ROOT
+        / "infra"
+        / "db"
+        / "alembic"
+        / "versions"
+        / "20260717_10_backfill_owner_online_constraint.py"
+    ).read_text(encoding="utf-8")
+    if (
+        "CREATE INDEX CONCURRENTLY" not in revision_09
+        or "autocommit_block" not in revision_09
+    ):
+        errors.append(
+            "workspace session index revision does not use concurrent autocommit DDL"
+        )
+    if "NOT VALID" not in revision_10 or "VALIDATE CONSTRAINT" not in revision_10:
+        errors.append(
+            "backfill owner constraint revision does not use add-then-validate DDL"
+        )
+    return errors
+
+
+def verify_phase04_alembic_migration() -> list[str]:
+    errors = _revision_chain_errors()
     database = f"zuno_phase04_alembic_{uuid4().hex}"
     database_url = DB_URL_TEMPLATE.format(database=database)
     _create_database(database)
@@ -372,36 +491,77 @@ def verify_phase04_alembic_migration() -> list[str]:
 
             upgrade = _run_alembic(config_path, "upgrade", "head")
             if upgrade.returncode != 0:
-                errors.append("alembic upgrade head failed: " + (upgrade.stderr or upgrade.stdout).strip())
+                errors.append(
+                    "alembic upgrade head failed: "
+                    + (upgrade.stderr or upgrade.stdout).strip()
+                )
                 return errors
             if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
-                errors.append(f"unexpected head revision after upgrade: {_current_revision(database_url)!r}")
+                errors.append(
+                    f"unexpected head revision after upgrade: {_current_revision(database_url)!r}"
+                )
             missing_tables = REQUIRED_INFRA_TABLES - _table_names(database_url)
             if missing_tables:
-                errors.append(f"missing infra tables after upgrade: {sorted(missing_tables)!r}")
+                errors.append(
+                    f"missing infra tables after upgrade: {sorted(missing_tables)!r}"
+                )
             errors.extend(_schema_drift_errors(database_url))
+            missing_domain_tables = REQUIRED_DOMAIN_TABLES - _table_names(database_url)
+            if missing_domain_tables:
+                errors.append(
+                    f"missing domain tables after upgrade: {sorted(missing_domain_tables)!r}"
+                )
+            errors.extend(_domain_schema_drift_errors(database_url))
+            errors.extend(_online_schema_errors(database_url))
 
             repeated = _run_alembic(config_path, "upgrade", "head")
             if repeated.returncode != 0:
-                errors.append("repeated alembic upgrade head failed: " + (repeated.stderr or repeated.stdout).strip())
+                errors.append(
+                    "repeated alembic upgrade head failed: "
+                    + (repeated.stderr or repeated.stdout).strip()
+                )
             if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
-                errors.append(f"unexpected head revision after repeated upgrade: {_current_revision(database_url)!r}")
+                errors.append(
+                    f"unexpected head revision after repeated upgrade: {_current_revision(database_url)!r}"
+                )
 
             downgrade = _run_alembic(config_path, "downgrade", "base")
             if downgrade.returncode != 0:
-                errors.append("alembic downgrade base failed: " + (downgrade.stderr or downgrade.stdout).strip())
-            remaining_after_downgrade = REQUIRED_INFRA_TABLES & _table_names(database_url)
+                errors.append(
+                    "alembic downgrade base failed: "
+                    + (downgrade.stderr or downgrade.stdout).strip()
+                )
+            remaining_after_downgrade = (
+                REQUIRED_INFRA_TABLES | REQUIRED_DOMAIN_TABLES
+            ) & _table_names(database_url)
             if remaining_after_downgrade:
-                errors.append(f"infra tables remained after downgrade base: {sorted(remaining_after_downgrade)!r}")
+                errors.append(
+                    f"managed tables remained after downgrade base: {sorted(remaining_after_downgrade)!r}"
+                )
 
             reupgrade = _run_alembic(config_path, "upgrade", "head")
             if reupgrade.returncode != 0:
-                errors.append("alembic re-upgrade head failed: " + (reupgrade.stderr or reupgrade.stdout).strip())
+                errors.append(
+                    "alembic re-upgrade head failed: "
+                    + (reupgrade.stderr or reupgrade.stdout).strip()
+                )
             if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
-                errors.append(f"unexpected head revision after re-upgrade: {_current_revision(database_url)!r}")
+                errors.append(
+                    f"unexpected head revision after re-upgrade: {_current_revision(database_url)!r}"
+                )
             missing_after_reupgrade = REQUIRED_INFRA_TABLES - _table_names(database_url)
             if missing_after_reupgrade:
-                errors.append(f"missing infra tables after re-upgrade: {sorted(missing_after_reupgrade)!r}")
+                errors.append(
+                    f"missing infra tables after re-upgrade: {sorted(missing_after_reupgrade)!r}"
+                )
+            missing_domain_after_reupgrade = REQUIRED_DOMAIN_TABLES - _table_names(
+                database_url
+            )
+            if missing_domain_after_reupgrade:
+                errors.append(
+                    "missing domain tables after re-upgrade: "
+                    f"{sorted(missing_domain_after_reupgrade)!r}"
+                )
     finally:
         _drop_database(database)
     return errors

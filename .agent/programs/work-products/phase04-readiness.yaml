@@ -17,9 +17,18 @@ work_packages:
       - "docs/evidence/phase04-postgres-session-runtime.md"
     remaining_scope: "none within P04-T01; transaction retry remains separate from business retry"
   P04-T02:
-    state: ready
-    existing_output: "infra/db/alembic/versions/20260715_04_infrastructure_foundation.py"
-    remaining_scope: "complete Alembic ownership, drift, online migration, rollback/forward-fix and data cutover integration"
+    state: completed
+    existing_outputs:
+      - "infra/db/alembic/versions/20260417_01_init_postgresql.py"
+      - "infra/db/alembic/versions/20260717_09_workspace_session_online_index.py"
+      - "infra/db/alembic/versions/20260717_10_backfill_owner_online_constraint.py"
+      - "src/backend/zuno/platform/database/schema_registry.py"
+      - "tools/scripts/verify_phase04_alembic_migration.py"
+      - "tools/scripts/verify_phase04_existing_database_upgrade.py"
+      - "tools/scripts/verify_phase04_migration_control.py"
+      - "docs/governance/postgresql-migration-runbook.md"
+      - "docs/evidence/phase04-alembic-migration.md"
+    remaining_scope: "none within P04-T02; actual domain data cutovers remain owned and proven by each domain"
   P04-T03:
     state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
@@ -72,6 +81,9 @@ validation:
     - "alembic -c infra/db/alembic.ini upgrade head"
     - "alembic -c infra/db/alembic.ini downgrade <verified_revision>"
     - "alembic -c infra/db/alembic.ini upgrade head"
+    - "python tools/scripts/verify_phase04_alembic_migration.py"
+    - "python tools/scripts/verify_phase04_existing_database_upgrade.py"
+    - "python tools/scripts/verify_phase04_migration_control.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"

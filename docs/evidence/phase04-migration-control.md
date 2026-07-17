@@ -3,7 +3,7 @@
 phase_id: PHASE04
 task_id: P04-T02
 date: 2026-07-17
-status: partial_implementation_available
+status: implementation_available
 migration_advisory_lock: passed
 parallel_deploy_fail_closed: passed
 lock_release_recovery: passed
@@ -14,12 +14,13 @@ chunk_hash_conflict: passed_fail_closed
 pause_restart_resume: passed
 stale_generation_reject: passed
 forward_fix_lineage: passed
+migration_control_completion_input: proven
 
 ## 边界
 
 本证据证明 Alembic online execution 已具备 PostgreSQL session advisory lock，并证明 PHASE02 Data Cutover Matrix 可以进入持久 Backfill ledger，支持 chunk 幂等、cursor/watermark、pause/restart/resume、lease generation fencing、验证 hash 和 forward-fix lineage。
 
-本证据不关闭 P04-T02，也不关闭 PHASE04。Backfill receipt 只证明迁移控制事实，不证明任一模块的目标领域数据已经迁移或 cutover。
+本证据与 `phase04-alembic-migration.md` 的 frozen baseline、完整 drift、既有库升级和在线 DDL 证据共同关闭 P04-T02，但不关闭 PHASE04。Backfill receipt 只证明迁移控制事实，不证明任一模块的目标领域数据已经迁移或 cutover。
 
 ## 环境
 
@@ -27,7 +28,7 @@ forward_fix_lineage: passed
 | --- | --- |
 | PostgreSQL | `zuno-postgres`，镜像 `postgres:16` |
 | 数据库 | `postgresql+psycopg://postgres:postgres@localhost:5432/zuno` |
-| Alembic revision | `20260717_08` |
+| Alembic revision | `20260717_10` |
 | Advisory lock namespace | `zuno:alembic:migration:v1` |
 | Cutover 输入 | `.agent/programs/work-products/data-cutover-matrix.yaml` |
 | 验证命令 | `python tools/scripts/verify_phase04_migration_control.py` |
@@ -67,8 +68,8 @@ pytest -q tests/integration/test_phase04_alembic_migration.py tests/integration/
 2 passed
 ```
 
-## 剩余缺口
+## 剩余边界
 
-- 全量领域 schema drift、module ownership matrix 与 production-like existing DB upgrade 尚未证明。
-- 长事务规避、在线 index/constraint 策略和不可逆 migration 的独立 forward-fix runbook 尚未完成。
-- 各领域实际数据迁移与 cutover 仍由其目标 Phase 负责，并必须复用本 ledger；当前不能把 framework 存在解释为领域迁移完成。
+- 全量领域 schema drift、module ownership matrix、production-like existing DB upgrade 与在线 DDL 已由 `phase04-alembic-migration.md` 聚合证明。
+- 各领域实际数据迁移与 cutover 仍由其目标 Phase 负责，并必须复用本 ledger；不能把 framework 存在解释为领域迁移完成。
+- 不可逆数据变换必须遵守 `docs/governance/postgresql-migration-runbook.md` 的 Stop Condition、备份、隔离恢复和 forward-fix 规则。
