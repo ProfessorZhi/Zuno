@@ -42,6 +42,8 @@ minio_multipart_reconciliation_subset: passed
 minio_governance_subset: passed
 minio_storage_restart_subset: passed
 backup_restore_replay_subset: passed
+backup_restore_runtime_restart_subset: passed
+combined_postgres_rabbitmq_minio_fault_subset: passed
 
 ## Stop Condition
 
@@ -82,8 +84,9 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_lease_fencing.py` | passed; lease acquire, heartbeat renew, duplicate worker reject, expiry transfer, cancel transfer and late fencing token reject verified |
 | `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, duplicate staging, multipart/partial upload, orphan cleanup, lost-response/duplicate-complete reconciliation, authorization deny-before-I/O, Object Lock version、retention、legal hold、lifecycle、pre-commit visibility、missing/hash fail-closed、commit cleanup、delete 和 restore 均在真实 MinIO 验证 |
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
-| `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`, infra outbox/inbox/object manifest/checkpoint rows and MinIO restore point verified |
-| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier（含乱序交付与 Outbox 发布策略）执行通过，最终仍由 P04-T01–T07/审批/PHASE05 gate、official Checkpointer、完整恢复与组合故障 marker 阻止关闭 |
+| `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
+| `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest 与 checkpoint primitive 对账通过 |
+| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，最终仍由 P04-T01–T07/审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
 
@@ -93,9 +96,9 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Idempotency full worker runtime crash supervision
 - Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
-- Backup/Restore/Replay for official Checkpointer, product projections, runtime restart and full recovery set
+- Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - PITR
-- combined dependency fault evidence
+- 包含官方 Checkpointer 的完整 combined dependency fault evidence
 
 ## Current Verified Subset
 
@@ -139,8 +142,10 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 multipart recovery subset：真实两段 multipart upload 完成后 bytes/hash 一致；partial upload 在完成前不可读，active upload 不被误清理，orphan upload 可 abort；服务端已完成但响应丢失及重复 complete 均通过 size/hash 对账收敛到同 staged receipt；
 - MinIO/S3 governance subset：Object Lock committed version、GOVERNANCE retention、legal hold、exact-version purge deny、`_staging/` expiration lifecycle 与 authorization hook deny-before-I/O 均经真实 MinIO 验证；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
+- Restore Runtime restart subset：`pg_restore` 后针对临时恢复库新建 sync/async `PostgresRuntime`，两类 health/readiness 和 read-only UoW 均能读取对应恢复事实；
+- 三服务组合故障 subset：PostgreSQL、RabbitMQ、MinIO 同时停止期间新连接/读取 fail closed；恢复后新建 Runtime 与 Adapter 对账 durable RabbitMQ marker、Outbox→Inbox、MinIO bytes/hash、Object Manifest 和 checkpoint primitive；
 
-这些结果证明三类服务已经可用，并证明 PostgreSQL sync/async Session Runtime、context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 official Checkpointer、PITR、runtime restart after restore 或组合故障恢复。
+这些结果证明三类服务已经可用，并证明 PostgreSQL sync/async Session Runtime、context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集、基础设施表的 PostgreSQL backup/restore 与恢复库 Runtime restart，以及三服务组合停机恢复子集；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 ## Existing Partial Evidence
 

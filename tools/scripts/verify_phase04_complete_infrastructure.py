@@ -42,6 +42,8 @@ MINIO_OBJECT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-minio-object-
 MINIO_RESTART_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_storage_restart.py"
 BACKUP_RESTORE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_restore_replay.py"
 BACKUP_RESTORE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-backup-restore-replay.md"
+COMBINED_SERVICE_FAULT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_combined_service_fault.py"
+COMBINED_SERVICE_FAULT_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-combined-service-fault.md"
 IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_claim.py"
 IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
 IDEMPOTENCY_OWNER_CRASH_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_owner_crash.py"
@@ -627,10 +629,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "object_manifest_restore: passed",
             "checkpoint_table_restore: passed",
             "outbox_inbox_watermark: passed",
+            "runtime_restart_after_restore: passed",
             "Backup/Restore/Replay subset != PHASE04 completion",
         ]:
             if phrase not in backup_evidence:
                 errors.append(f"PHASE04 backup/restore/replay evidence missing phrase: {phrase}")
+
+    if not COMBINED_SERVICE_FAULT_VERIFIER.exists():
+        errors.append("missing PHASE04 combined service fault verifier")
+    else:
+        combined_fault_errors = _load_verifier(
+            COMBINED_SERVICE_FAULT_VERIFIER,
+            "verify_phase04_combined_service_fault",
+            "verify_phase04_combined_service_fault",
+        )()
+        for combined_fault_error in combined_fault_errors:
+            errors.append(f"PHASE04 combined service fault verification failed: {combined_fault_error}")
+
+    if not COMBINED_SERVICE_FAULT_EVIDENCE.exists():
+        errors.append("missing PHASE04 combined service fault evidence")
+    else:
+        combined_fault_evidence = _read(COMBINED_SERVICE_FAULT_EVIDENCE)
+        for phrase in [
+            "postgres_rabbitmq_minio_combined_outage: passed",
+            "dependency_calls_fail_closed: passed",
+            "durable_rabbitmq_message_recovered: passed",
+            "outbox_to_inbox_after_restart: passed",
+            "minio_hash_after_restart: passed",
+            "new_postgres_runtime_after_restart: passed",
+            "official_checkpointer_in_combined_fault: not_yet_proven",
+            "不关闭 P04-T07",
+        ]:
+            if phrase not in combined_fault_evidence:
+                errors.append(f"PHASE04 combined service fault evidence missing phrase: {phrase}")
 
     if not LEASE_FENCING_VERIFIER.exists():
         errors.append("missing PHASE04 lease/fencing verifier")
