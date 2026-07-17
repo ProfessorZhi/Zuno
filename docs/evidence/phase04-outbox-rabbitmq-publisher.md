@@ -2,7 +2,7 @@
 
 phase_id: PHASE04
 task_id: P04-T03
-date: 2026-07-16
+date: 2026-07-17
 status: partial_implementation_available
 outbox_claim: passed
 rabbitmq_publish_confirm: passed
@@ -10,7 +10,10 @@ outbox_published_receipt: passed
 inbox_dedup_receipt: passed
 commit_after_publish_before_complete_crash: passed
 broker_restart: not_yet_proven
-partition_recovery: not_yet_proven
+partition_recovery: passed_in_phase04-rabbitmq-network-partition.md
+confirm_unknown_reclaim_republish: passed
+consumer_crash_redelivery: passed
+inbox_first_seen_dedup: passed
 
 ## Boundary
 
@@ -44,6 +47,9 @@ Queue ACK != Domain Success. The outbox row and inbox row are infrastructure rec
 - Republishes the same event id through RabbitMQ.
 - Records the duplicate delivery into the same inbox row with the same payload hash.
 - Leaves exactly one inbox receipt row and final outbox status `published`.
+- Network blackhole 中 publisher confirm 超过 deadline 时 Outbox 保持 `claimed`；恢复后对账 confirm，stale owner reclaim 并按同 event id republish。
+- Consumer 在 Inbox + follow-up Outbox 事务提交前崩溃时两者都 rollback；未 ACK delivery 在新连接中 redeliver。
+- `InboxReceipt.first_seen` 区分首次处理与同 hash duplicate，duplicate 只 ACK，不重复 follow-up 写入。
 - Deletes temporary RabbitMQ topology after verification.
 
 ## Commands And Results
@@ -55,11 +61,16 @@ PHASE04 outbox RabbitMQ publisher verification passed.
 
 ```text
 pytest -q tests/integration/test_phase04_outbox_rabbitmq_publisher.py -p no:cacheprovider
-1 passed
+2 passed
+```
+
+```text
+python tools/scripts/verify_phase04_rabbitmq_network_partition.py
+PHASE04 RabbitMQ network partition verification passed.
 ```
 
 ## Remaining Gap
 
-- Broker restart, network partition, backlog, retry exhaustion and DLQ replay are not yet proven for the outbox publisher.
-- Consumer domain transaction plus inbox `COMMITTED` state is not yet proven.
+- Broker restart、backlog、retry exhaustion 和 DLQ replay 尚未在 Outbox publisher owner 路径独立证明。
+- Out-of-order consumer runtime 与真实领域 handler adoption 尚未完成。
 - P04-T03 remains `ready`, not completed.

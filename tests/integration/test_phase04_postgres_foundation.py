@@ -145,8 +145,19 @@ def test_outbox_claim_and_inbox_hash_conflict(engine) -> None:
         repo.complete_outbox(event_id=event_id, worker_id="worker-a")
 
     with uow as repo:
-        first_hash = repo.record_inbox(consumer="consumer-a", message_id="msg-1", payload={"a": 1})
-        assert repo.record_inbox(consumer="consumer-a", message_id="msg-1", payload={"a": 1}) == first_hash
+        first_receipt = repo.record_inbox_receipt(
+            consumer="consumer-a",
+            message_id="msg-1",
+            payload={"a": 1},
+        )
+        assert first_receipt.first_seen is True
+        duplicate_receipt = repo.record_inbox_receipt(
+            consumer="consumer-a",
+            message_id="msg-1",
+            payload={"a": 1},
+        )
+        assert duplicate_receipt.first_seen is False
+        assert duplicate_receipt.payload_hash == first_receipt.payload_hash
         with pytest.raises(InfrastructureConflictError):
             repo.record_inbox(consumer="consumer-a", message_id="msg-1", payload={"a": 2})
 

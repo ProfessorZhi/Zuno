@@ -11,6 +11,13 @@ transport_reconnect: passed
 pre_partition_persistent_delivery: passed
 post_recovery_confirmed_delivery: passed
 tenant_trace_context_after_recovery: passed
+outbox_partition_confirm_unknown: passed
+outbox_reclaim_republish: passed
+outbox_inbox_dedup_after_partition: passed
+consumer_crash_before_transaction_commit: passed
+consumer_unacked_redelivery: passed
+consumer_inbox_first_seen: passed
+consumer_duplicate_no_followup_rewrite: passed
 
 ## 边界
 
@@ -24,6 +31,7 @@ Queue ACK != Domain Success。Partition 期间未取得 publisher confirm 的操
 | --- | --- |
 | RabbitMQ 服务 | `zuno-rabbitmq` |
 | Image | `rabbitmq:3.13-management-alpine` |
+| PostgreSQL 服务 | `zuno-postgres`, image `postgres:16` |
 | Broker endpoint | `localhost:5672` |
 | Fault mechanism | 本地 ephemeral TCP proxy 暂停双向转发，形成无断链、无响应的 network blackhole；broker 进程保持 healthy |
 | Verification | `python tools/scripts/verify_phase04_rabbitmq_network_partition.py` |
@@ -38,6 +46,9 @@ Queue ACK != Domain Success。Partition 期间未取得 publisher confirm 的操
 - 超时不取消底层 receipt future；恢复后等待 publisher confirm，并按 message id 对账该次 UNKNOWN delivery。
 - 恢复 proxy 后关闭旧 transport，新的 `aio_pika.connect_robust` transport 成功重连并发布新消息。
 - 恢复后消费 partition 前持久消息和恢复后 confirmed 消息，并校验 message id、tenant 与 trace header。
+- Outbox row 在 partition confirm-UNKNOWN 期间保持 `claimed`，恢复 confirm 后模拟 owner 未 complete；stale reclaim 使用同 event id republish，最终 Outbox 为 `published`，Inbox 仍单行。
+- Consumer 首次 delivery 在 Inbox + follow-up Outbox 同一事务内模拟崩溃，二者均 rollback；关闭未 ACK 连接后 RabbitMQ 以 `redelivered=true` 重投。
+- Redelivery 事务提交后才 ACK；随后同 message id duplicate 得到 `InboxReceipt.first_seen=false`，不重复写 follow-up Outbox。
 - 清理临时 topology；RabbitMQ 容器在整个 fault 中保持运行。
 
 ## 命令与结果
@@ -54,6 +65,6 @@ pytest -q tests/integration/test_phase04_rabbitmq_network_partition.py -p no:cac
 
 ## 剩余缺口
 
-- Outbox publisher 自身的 partition/reconnect、confirm-UNKNOWN reconciliation 与 consumer crash transaction 仍需独立证明。
 - Out-of-order delivery/consumer ownership 的完整运行时处理仍未收口。
+- 本证据使用 Infrastructure follow-up Outbox 证明 consumer transaction 原子性；真实领域 handler adoption 仍由后续 Runtime Phase 接入。
 - P04-T03 保持 `ready`，不是 completed。

@@ -52,6 +52,15 @@ class IdempotencyClaimReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class InboxReceipt:
+    consumer: str
+    message_id: str
+    payload_hash: str
+    status: str
+    first_seen: bool
+
+
+@dataclass(frozen=True, slots=True)
 class TransactionRetryReceipt:
     result: Any
     attempts: int
@@ -216,6 +225,20 @@ class InfrastructureRepository:
         ).all()
         return [str(row.event_id) for row in rows]
 
+    def claim_outbox_event(self, *, event_id: str, worker_id: str) -> bool:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET status = 'claimed', claim_owner = :worker_id, claimed_at = now()
+                WHERE event_id = :event_id AND status = 'pending'
+                RETURNING event_id
+                """
+            ),
+            {"event_id": event_id, "worker_id": worker_id},
+        ).first()
+        return row is not None
+
     def reclaim_stale_outbox_claims(self, *, older_than_seconds: int) -> list[str]:
         rows = self.connection.execute(
             text(
@@ -230,6 +253,22 @@ class InfrastructureRepository:
             {"older_than_seconds": older_than_seconds},
         ).all()
         return [str(row.event_id) for row in rows]
+
+    def reclaim_stale_outbox_event(self, *, event_id: str, older_than_seconds: int) -> bool:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET status = 'pending', claim_owner = NULL, claimed_at = NULL
+                WHERE event_id = :event_id
+                  AND status = 'claimed'
+                  AND claimed_at < now() - (:older_than_seconds * interval '1 second')
+                RETURNING event_id
+                """
+            ),
+            {"event_id": event_id, "older_than_seconds": older_than_seconds},
+        ).first()
+        return row is not None
 
     def complete_outbox(self, *, event_id: str, worker_id: str) -> None:
         result = self.connection.execute(
@@ -272,36 +311,91 @@ class InfrastructureRepository:
         )
 
     def record_inbox(self, *, consumer: str, message_id: str, payload: dict[str, Any]) -> str:
+        return self.record_inbox_receipt(
+            consumer=consumer,
+            message_id=message_id,
+            payload=payload,
+        ).payload_hash
+
+    def record_inbox_receipt(
+        self,
+        *,
+        consumer: str,
+        message_id: str,
+        payload: dict[str, Any],
+    ) -> InboxReceipt:
         payload_hash = canonical_sha256(payload)
-        row = self.connection.execute(
+        self.connection.execute(
             text(
                 """
-                INSERT INTO infra_inbox_messages(consumer, message_id, payload_hash, payload, status)
-                VALUES (:consumer, :message_id, :payload_hash, CAST(:payload AS jsonb), 'received')
-                ON CONFLICT (consumer, message_id) DO UPDATE
-                SET conflict_hash = CASE
-                    WHEN infra_inbox_messages.payload_hash = EXCLUDED.payload_hash
-                    THEN infra_inbox_messages.conflict_hash
-                    ELSE EXCLUDED.payload_hash
-                END,
-                status = CASE
-                    WHEN infra_inbox_messages.payload_hash = EXCLUDED.payload_hash
-                    THEN infra_inbox_messages.status
-                    ELSE 'quarantined'
-                END
-                RETURNING status, payload_hash, conflict_hash
+                SELECT pg_advisory_xact_lock(
+                    hashtextextended(:consumer || ':' || :message_id, 0)
+                )
                 """
             ),
-            {
-                "consumer": consumer,
-                "message_id": message_id,
-                "payload_hash": payload_hash,
-                "payload": _json(payload),
-            },
-        ).one()
-        if row.status == "quarantined":
+            {"consumer": consumer, "message_id": message_id},
+        )
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT status, payload_hash
+                FROM infra_inbox_messages
+                WHERE consumer = :consumer AND message_id = :message_id
+                """
+            ),
+            {"consumer": consumer, "message_id": message_id},
+        ).first()
+        if existing is None:
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO infra_inbox_messages(
+                        consumer, message_id, payload_hash, payload, status
+                    ) VALUES (
+                        :consumer, :message_id, :payload_hash, CAST(:payload AS jsonb), 'received'
+                    )
+                    """
+                ),
+                {
+                    "consumer": consumer,
+                    "message_id": message_id,
+                    "payload_hash": payload_hash,
+                    "payload": _json(payload),
+                },
+            )
+            return InboxReceipt(
+                consumer=consumer,
+                message_id=message_id,
+                payload_hash=payload_hash,
+                status="received",
+                first_seen=True,
+            )
+
+        if existing.status == "quarantined":
+            raise InfrastructureConflictError("inbox message is quarantined")
+        if existing.payload_hash != payload_hash:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE infra_inbox_messages
+                    SET conflict_hash = :payload_hash, status = 'quarantined'
+                    WHERE consumer = :consumer AND message_id = :message_id
+                    """
+                ),
+                {
+                    "consumer": consumer,
+                    "message_id": message_id,
+                    "payload_hash": payload_hash,
+                },
+            )
             raise InfrastructureConflictError("same inbox message id received with a different payload hash")
-        return str(row.payload_hash)
+        return InboxReceipt(
+            consumer=consumer,
+            message_id=message_id,
+            payload_hash=str(existing.payload_hash),
+            status=str(existing.status),
+            first_seen=False,
+        )
 
     def claim_idempotency(
         self,
@@ -696,6 +790,7 @@ __all__ = [
     "FencingRejectedError",
     "FencingToken",
     "IdempotencyClaimReceipt",
+    "InboxReceipt",
     "InfrastructureConflictError",
     "InfrastructureRepository",
     "InfrastructureUnitOfWork",

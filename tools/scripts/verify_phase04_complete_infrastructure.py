@@ -305,6 +305,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "outbox_published_receipt: passed",
             "inbox_dedup_receipt: passed",
             "commit_after_publish_before_complete_crash: passed",
+            "confirm_unknown_reclaim_republish: passed",
+            "consumer_crash_redelivery: passed",
+            "inbox_first_seen_dedup: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in outbox_evidence:
@@ -356,6 +359,13 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "transport_reconnect: passed",
             "pre_partition_persistent_delivery: passed",
             "post_recovery_confirmed_delivery: passed",
+            "outbox_partition_confirm_unknown: passed",
+            "outbox_reclaim_republish: passed",
+            "outbox_inbox_dedup_after_partition: passed",
+            "consumer_crash_before_transaction_commit: passed",
+            "consumer_unacked_redelivery: passed",
+            "consumer_inbox_first_seen: passed",
+            "consumer_duplicate_no_followup_rewrite: passed",
             "Queue ACK != Domain Success",
         ]:
             if phrase not in partition_evidence:

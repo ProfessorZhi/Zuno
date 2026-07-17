@@ -57,6 +57,21 @@ class PostgresOutboxRabbitMQPublisher:
             )
         return published
 
+    async def publish_event(self, *, event_id: str) -> PublishedOutboxEvent:
+        with InfrastructureUnitOfWork(self.engine) as repo:
+            if not repo.claim_outbox_event(event_id=event_id, worker_id=self.worker_id):
+                raise RuntimeError("outbox event is not pending")
+            record = repo.load_claimed_outbox_event(event_id=event_id, worker_id=self.worker_id)
+        await self._publish_record(record)
+        with InfrastructureUnitOfWork(self.engine) as repo:
+            repo.complete_outbox(event_id=record.event_id, worker_id=self.worker_id)
+        return PublishedOutboxEvent(
+            event_id=record.event_id,
+            topic=record.topic,
+            payload_hash=record.payload_hash,
+            idempotency_key=record.idempotency_key,
+        )
+
     async def _publish_record(self, record: OutboxEventRecord) -> None:
         await self.transport.publish(
             self.topology,
