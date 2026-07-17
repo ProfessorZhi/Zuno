@@ -50,6 +50,7 @@ backup_restore_replay_subset: passed
 backup_restore_runtime_restart_subset: passed
 combined_postgres_rabbitmq_minio_fault_subset: passed
 operator_readiness_subset: proven
+infra_requirement_006_010_ledger_subset: proven
 
 ## Stop Condition
 
@@ -160,6 +161,8 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
 
 Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
+
+Infrastructure requirement ledger subset `ARCH-INFRA-006` through `ARCH-INFRA-010` is now proven by the same real-service verifier set: PostgreSQL authoritative fact storage, Repository no-commit ownership, external I/O / DB transaction boundary, Generation/Epoch/Fencing conditional writes, and PostgreSQL role-specific pool/timeout/leak evidence are marked `implementation_available`. This subset does not include the official LangGraph PostgreSQL Checkpointer, PITR, complete Projection Replay, or the full recovery set.
 
 ## Existing Partial Evidence
 

@@ -18,7 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 756
+  target_not_current: 732
+  implementation_available: 24
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -4469,127 +4470,151 @@ requirements:
   - requirement_id: ARCH-INFRA-006
     module: "11 Infrastructure"
     mandatory: true
-    target_statement: "PostgreSQL 权威结构化事实能力"
-    current_status: target_not_current
+    target_statement: "PostgreSQL authoritative structured fact capability"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1887"
-    gap: "?????PostgreSQL 权威结构化事实能力???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/runtime.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/session.py"
+    gap: "none within PostgreSQL domain fact storage/UoW scope; official LangGraph Checkpointer remains separate"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T01 PostgreSQL Session Runtime completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-006 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: real PostgreSQL commit/rollback, transaction-local tenant context, read-only fail-closed, retry boundary, connection loss recovery, and schema ownership evidence"
     test_ids:
-      - "INFRA-006-UT"
-      - "INFRA-006-IT"
+      - "tests/integration/test_phase04_postgres_foundation.py"
+      - "tests/integration/test_phase04_postgres_session_runtime.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-006"
+      - "docs/evidence/phase04-postgres-session-runtime.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1887"
-      - "planned_test:INFRA-006-UT"
-      - "planned_test:INFRA-006-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-006"
+      - "current:src/backend/zuno/platform/database/runtime.py"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "test:tests/integration/test_phase04_postgres_session_runtime.py"
+      - "evidence:docs/evidence/phase04-postgres-session-runtime.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-007
     module: "11 Infrastructure"
     mandatory: true
-    target_statement: "Repository 不自行 Commit"
-    current_status: target_not_current
+    target_statement: "Repository does not own commit"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1888"
-    gap: "?????Repository 不自行 Commit???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/session.py"
+      - "src/backend/zuno/platform/database/dao"
+      - "tools/scripts/verify_phase04_domain_uow_adoption.py"
+    gap: "none for migrated platform database DAO scope; DAO static scan rejects legacy imports and session commit/rollback ownership"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T01 Domain UoW adoption completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-007 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: cross-repository write failure rolls back atomically under the outer Domain UoW; direct repository session commit is rejected"
     test_ids:
-      - "INFRA-007-UT"
-      - "INFRA-007-IT"
+      - "tests/integration/test_phase04_domain_uow_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-007"
+      - "docs/evidence/phase04-postgres-session-runtime.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1888"
-      - "planned_test:INFRA-007-UT"
-      - "planned_test:INFRA-007-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-007"
+      - "current:src/backend/zuno/platform/database/session.py"
+      - "current:src/backend/zuno/platform/database/dao"
+      - "test:tests/integration/test_phase04_domain_uow_adoption.py"
+      - "evidence:docs/evidence/phase04-postgres-session-runtime.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-008
     module: "11 Infrastructure"
     mandatory: true
-    target_statement: "外部调用不进入 DB Transaction"
-    current_status: target_not_current
+    target_statement: "External I/O does not run inside DB Transaction"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1889"
-    gap: "?????外部调用不进入 DB Transaction???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/queue/outbox.py"
+      - "src/backend/zuno/platform/storage/durable.py"
+      - "tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py"
+      - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+    gap: "none within proven RabbitMQ outbox publisher and MinIO manifest adoption paths; external receipts remain infrastructure facts, not domain success"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T03/P04-T06 external I/O boundary completed for RabbitMQ and MinIO"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-008 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: domain fact + outbox are committed before RabbitMQ publish; MinIO physical commit before DB update keeps the manifest staged and requires reconciliation"
     test_ids:
-      - "INFRA-008-UT"
-      - "INFRA-008-IT"
+      - "tests/integration/test_phase04_domain_event_adoption.py"
+      - "tests/integration/test_phase04_minio_manifest_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-008"
+      - "docs/evidence/phase04-domain-event-adoption.md"
+      - "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
+      - "docs/evidence/phase04-minio-object-store.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1889"
-      - "planned_test:INFRA-008-UT"
-      - "planned_test:INFRA-008-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-008"
+      - "current:src/backend/zuno/platform/queue/outbox.py"
+      - "current:src/backend/zuno/platform/storage/durable.py"
+      - "test:tests/integration/test_phase04_domain_event_adoption.py"
+      - "test:tests/integration/test_phase04_minio_manifest_adoption.py"
+      - "evidence:docs/evidence/phase04-domain-event-adoption.md"
+      - "evidence:docs/evidence/phase04-minio-object-store.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-009
     module: "11 Infrastructure"
     mandatory: true
-    target_statement: "Generation/Epoch/Fencing 条件写"
-    current_status: target_not_current
+    target_statement: "Generation/Epoch/Fencing conditional writes"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1890"
-    gap: "?????Generation/Epoch/Fencing 条件写???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/lease.py"
+      - "src/backend/zuno/platform/database/idempotency.py"
+    gap: "none for PHASE04 idempotency and lease/fencing primitives; domain owners must still call fenced commit at their result-write boundary"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T04/P04-T05 generation and fencing completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-009 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: stale generation completion is rejected, expired/cancelled lease tokens cannot commit, and late worker fencing fails after transfer"
     test_ids:
-      - "INFRA-009-UT"
-      - "INFRA-009-IT"
+      - "tests/integration/test_phase04_idempotency_owner_crash.py"
+      - "tests/integration/test_phase04_lease_worker_coordination.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-009"
+      - "docs/evidence/phase04-idempotency-claim.md"
+      - "docs/evidence/phase04-lease-fencing.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1890"
-      - "planned_test:INFRA-009-UT"
-      - "planned_test:INFRA-009-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-009"
+      - "current:src/backend/zuno/platform/database/idempotency.py"
+      - "current:src/backend/zuno/platform/database/lease.py"
+      - "test:tests/integration/test_phase04_idempotency_owner_crash.py"
+      - "test:tests/integration/test_phase04_lease_worker_coordination.py"
+      - "evidence:docs/evidence/phase04-idempotency-claim.md"
+      - "evidence:docs/evidence/phase04-lease-fencing.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-010
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Role-specific Pool/Timeout/Leak Evidence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1891"
-    gap: "?????Role-specific Pool/Timeout/Leak Evidence???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/runtime.py"
+      - "tools/scripts/verify_phase04_postgres_session_runtime.py"
+      - "tools/scripts/verify_phase04_postgres_pool_exhaustion.py"
+    gap: "none for PostgreSQL runtime role-specific pool/timeout/leak evidence; broader non-PostgreSQL capacity reservations remain separate target requirements"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T01 PostgreSQL role-specific runtime completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-010 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: invalid transaction-local timeout cleans up the failed checkout, pool exhaustion rejects bounded capacity, and the pool recovers after timeout/cancel/connection loss"
     test_ids:
-      - "INFRA-010-UT"
-      - "INFRA-010-IT"
+      - "tests/integration/test_phase04_postgres_session_runtime.py"
+      - "tests/integration/test_phase04_postgres_foundation.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-010"
+      - "docs/evidence/phase04-postgres-session-runtime.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1891"
-      - "planned_test:INFRA-010-UT"
-      - "planned_test:INFRA-010-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-010"
+      - "current:src/backend/zuno/platform/database/runtime.py"
+      - "test:tests/integration/test_phase04_postgres_session_runtime.py"
+      - "test:tests/integration/test_phase04_postgres_foundation.py"
+      - "evidence:docs/evidence/phase04-postgres-session-runtime.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-011
     module: "11 Infrastructure"
