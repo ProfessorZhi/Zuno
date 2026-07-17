@@ -143,6 +143,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "downgrade_base: passed",
             "reupgrade_head: passed",
             "infra_table_roundtrip: passed",
+            "schema_drift_detection: passed_infra_schema_subset",
             "不关闭 P04-T02",
         ]:
             if phrase not in alembic_evidence:

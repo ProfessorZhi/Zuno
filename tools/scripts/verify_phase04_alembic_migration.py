@@ -21,6 +21,77 @@ REQUIRED_INFRA_TABLES = {
     "infra_checkpoints",
 }
 EXPECTED_HEAD_REVISION = "20260716_05"
+REQUIRED_TABLE_COLUMNS = {
+    "infra_outbox_events": {
+        "event_id",
+        "aggregate_id",
+        "topic",
+        "payload",
+        "payload_hash",
+        "idempotency_key",
+        "status",
+        "claim_owner",
+        "claimed_at",
+        "published_at",
+        "created_at",
+    },
+    "infra_inbox_messages": {
+        "consumer",
+        "message_id",
+        "payload_hash",
+        "conflict_hash",
+        "payload",
+        "status",
+        "received_at",
+    },
+    "infra_idempotency_claims": {
+        "claim_id",
+        "tenant_id",
+        "scope",
+        "idempotency_key",
+        "owner",
+        "request_hash",
+        "status",
+        "generation",
+        "result_ref",
+        "expires_at",
+        "completed_at",
+        "created_at",
+    },
+    "infra_worker_leases": {"resource_id", "owner_id", "lease_id", "epoch", "expires_at", "updated_at"},
+    "infra_object_manifests": {
+        "object_ref",
+        "owner",
+        "content_hash",
+        "conflict_hash",
+        "size_bytes",
+        "visibility",
+        "created_at",
+    },
+    "infra_checkpoints": {
+        "checkpoint_id",
+        "thread_id",
+        "generation",
+        "owner",
+        "state_hash",
+        "state_payload",
+        "created_at",
+    },
+}
+REQUIRED_CONSTRAINTS = {
+    "ck_infra_outbox_events_status",
+    "ck_infra_inbox_messages_status",
+    "ck_infra_idempotency_claims_status",
+    "ck_infra_object_manifests_visibility",
+    "uq_infra_idempotency_claims_tenant_scope_key",
+    "uq_infra_checkpoints_thread_generation",
+}
+FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
+REQUIRED_INDEXES = {
+    "ix_infra_outbox_events_pending",
+    "ix_infra_outbox_events_idempotency_key",
+    "ix_infra_checkpoints_thread_generation",
+}
 
 
 def _run_alembic(config_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -114,6 +185,89 @@ def _table_names(database_url: str) -> set[str]:
         engine.dispose()
 
 
+def _schema_drift_errors(database_url: str) -> list[str]:
+    engine = create_engine(database_url, future=True)
+    errors: list[str] = []
+    try:
+        with engine.connect() as conn:
+            column_rows = conn.execute(
+                text(
+                    """
+                    SELECT table_name, column_name
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                    """
+                )
+            ).all()
+            columns_by_table: dict[str, set[str]] = {}
+            for row in column_rows:
+                columns_by_table.setdefault(str(row.table_name), set()).add(str(row.column_name))
+            for table_name, expected_columns in REQUIRED_TABLE_COLUMNS.items():
+                actual_columns = columns_by_table.get(table_name, set())
+                missing_columns = expected_columns - actual_columns
+                extra_columns = actual_columns - expected_columns
+                if missing_columns:
+                    errors.append(f"{table_name} missing columns: {sorted(missing_columns)!r}")
+                if extra_columns:
+                    errors.append(f"{table_name} unexpected columns: {sorted(extra_columns)!r}")
+
+            tenant_row = conn.execute(
+                text(
+                    """
+                    SELECT is_nullable, column_default
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                      AND table_name = 'infra_idempotency_claims'
+                      AND column_name = 'tenant_id'
+                    """
+                )
+            ).first()
+            if tenant_row is None:
+                errors.append("infra_idempotency_claims.tenant_id column missing")
+            elif str(tenant_row.is_nullable) != "NO" or tenant_row.column_default is not None:
+                errors.append(
+                    "infra_idempotency_claims.tenant_id must be NOT NULL without a persistent server default"
+                )
+
+            constraint_names = {
+                str(row.conname)
+                for row in conn.execute(
+                    text(
+                        """
+                        SELECT conname
+                        FROM pg_constraint
+                        WHERE connamespace = 'public'::regnamespace
+                        """
+                    )
+                ).all()
+            }
+            missing_constraints = REQUIRED_CONSTRAINTS - constraint_names
+            forbidden_constraints = FORBIDDEN_CONSTRAINTS & constraint_names
+            if missing_constraints:
+                errors.append(f"missing schema constraints: {sorted(missing_constraints)!r}")
+            if forbidden_constraints:
+                errors.append(f"forbidden legacy constraints still present: {sorted(forbidden_constraints)!r}")
+
+            index_names = {
+                str(row.indexname)
+                for row in conn.execute(
+                    text(
+                        """
+                        SELECT indexname
+                        FROM pg_indexes
+                        WHERE schemaname = 'public'
+                        """
+                    )
+                ).all()
+            }
+            missing_indexes = REQUIRED_INDEXES - index_names
+            if missing_indexes:
+                errors.append(f"missing schema indexes: {sorted(missing_indexes)!r}")
+    finally:
+        engine.dispose()
+    return errors
+
+
 def verify_phase04_alembic_migration() -> list[str]:
     errors: list[str] = []
     database = f"zuno_phase04_alembic_{uuid4().hex}"
@@ -133,6 +287,7 @@ def verify_phase04_alembic_migration() -> list[str]:
             missing_tables = REQUIRED_INFRA_TABLES - _table_names(database_url)
             if missing_tables:
                 errors.append(f"missing infra tables after upgrade: {sorted(missing_tables)!r}")
+            errors.extend(_schema_drift_errors(database_url))
 
             repeated = _run_alembic(config_path, "upgrade", "head")
             if repeated.returncode != 0:

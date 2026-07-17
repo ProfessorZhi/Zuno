@@ -7,6 +7,7 @@ status: blocked
 coordinator_decision: not_approved
 real_services_smoke: passed
 alembic_migration_roundtrip_subset: passed
+alembic_schema_drift_infra_subset: passed
 postgres_runtime_context_timeout_subset: passed
 postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
@@ -45,7 +46,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `Test-NetConnection localhost -Port 5432` | initial `TcpTestSucceeded: False`; after Docker start `TcpTestSucceeded: True` |
 | `Test-NetConnection localhost -Port 5672` | after Docker start `TcpTestSucceeded: True` |
 | `Test-NetConnection localhost -Port 9000` | after Docker start `TcpTestSucceeded: True` |
-| `python tools/scripts/verify_phase04_alembic_migration.py` | passed; temporary PostgreSQL DB upgrade head, repeated upgrade, downgrade base and re-upgrade verified |
+| `python tools/scripts/verify_phase04_alembic_migration.py` | passed; temporary PostgreSQL DB upgrade head, repeated upgrade, downgrade base, re-upgrade and infra schema drift subset verified |
 | `python tools/scripts/verify_phase04_postgres_runtime.py` | passed; readiness, transaction-local tenant context, statement timeout and lock timeout verified |
 | `python tools/scripts/verify_phase04_postgres_deadlock_retry.py` | passed; two real concurrent PostgreSQL transactions deadlocked on opposite row locks, one received transient `40P01`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` | passed; two real `SERIALIZABLE` PostgreSQL transactions conflicted on a shared invariant, one received transient `40001`, retried the whole transaction and both workers committed |
@@ -67,7 +68,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 ## Missing Required Proof
 
 - RabbitMQ network partition and full recovery
-- Alembic schema drift detection, data backfill framework, online migration lock and forward-fix governance
+- Alembic full domain schema drift detection, data backfill framework, online migration lock and forward-fix governance
 - PostgreSQL async engine, connection loss recovery and pool exhaustion
 - MinIO/S3 retention, legal hold, lifecycle and authorization
 - MinIO/S3 visibility, authorization, delete and legal hold evidence
@@ -87,6 +88,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - PostgreSQL deadlock retry subset：真实双事务 row-lock deadlock 触发 `40P01`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL serialization retry subset：真实 `SERIALIZABLE` 写偏斜冲突触发 `40001`，retry boundary 重跑完整事务并最终提交；
 - Alembic migration roundtrip subset：临时 PostgreSQL DB 上 `upgrade head`、重复 `upgrade head`、`downgrade base`、再次 `upgrade head` 均通过，并验证 PHASE04 infra tables 创建/移除/重建；
+- Alembic schema drift subset：从真实临时库读取 `information_schema.columns`、`pg_constraint` 和 `pg_indexes`，校验 PHASE04 infra tables 关键 columns、constraints、indexes 和 idempotency tenant unique boundary；
 - RabbitMQ smoke：使用 `rabbitmqadmin` 声明临时 durable queue，发布 JSON payload，再以 `ackmode=ack_requeue_false` 读取并删除队列；
 - RabbitMQ publisher confirm：`RabbitMQTransport` 使用 `aio_pika` publisher confirm channel 发布 persistent message；
 - RabbitMQ redelivery：NACK `requeue=True` 后重新消费到 `redelivered=True` 的同一 message；
