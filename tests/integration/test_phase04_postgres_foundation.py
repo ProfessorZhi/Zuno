@@ -293,7 +293,13 @@ def test_idempotency_claim_reuses_result_and_rejects_hash_conflict(engine) -> No
             request={"operation": "send", "target": "x"},
         )
         assert (status, generation, result_ref) == ("in_progress", 1, "")
-        repo.complete_idempotency(scope="tool", key="idem-1", generation=generation, result_ref="effect:1")
+        repo.complete_idempotency(
+            scope="tool",
+            key="idem-1",
+            owner="worker-a",
+            generation=generation,
+            result_ref="effect:1",
+        )
 
     with uow as repo:
         status, generation, result_ref = repo.claim_idempotency(
@@ -365,12 +371,14 @@ def test_idempotency_claim_expiry_renew_and_stale_generation(engine) -> None:
             repo.complete_idempotency(
                 scope="tool",
                 key="idem-expiry",
+                owner="worker-a",
                 generation=generation,
                 result_ref="effect:stale",
             )
         repo.complete_idempotency(
             scope="tool",
             key="idem-expiry",
+            owner="worker-b",
             generation=replacement_generation,
             result_ref="effect:new",
         )
@@ -434,6 +442,7 @@ def test_idempotency_claim_concurrent_single_winner(engine) -> None:
         repo.complete_idempotency(
             scope="tool",
             key="idem-concurrent",
+            owner=winners[0].owner,
             generation=winners[0].generation,
             result_ref="effect:concurrent",
         )

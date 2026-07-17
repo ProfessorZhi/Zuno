@@ -1041,6 +1041,8 @@ class InfrastructureRepository:
         request: dict[str, Any],
         ttl_seconds: int = 60,
     ) -> IdempotencyClaimReceipt:
+        if ttl_seconds < 1:
+            raise ValueError("idempotency ttl_seconds must be positive")
         request_hash = canonical_sha256(request)
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
         tenant_id = self.current_tenant_id()
@@ -1083,7 +1085,7 @@ class InfrastructureRepository:
                       AND idempotency_key = :key
                       AND request_hash = :request_hash
                       AND status in ('in_progress','expired')
-                      AND expires_at < now()
+                      AND expires_at <= now()
                     RETURNING owner, request_hash, status, generation, result_ref, true AS acquired
                     """
                 ),
@@ -1126,6 +1128,8 @@ class InfrastructureRepository:
         generation: int,
         ttl_seconds: int = 60,
     ) -> datetime:
+        if ttl_seconds < 1:
+            raise ValueError("idempotency ttl_seconds must be positive")
         expires_at = utcnow() + timedelta(seconds=ttl_seconds)
         tenant_id = self.current_tenant_id()
         row = self.connection.execute(
@@ -1169,7 +1173,17 @@ class InfrastructureRepository:
         ).all()
         return [str(row.claim_key) for row in rows]
 
-    def complete_idempotency(self, *, scope: str, key: str, generation: int, result_ref: str) -> None:
+    def complete_idempotency(
+        self,
+        *,
+        scope: str,
+        key: str,
+        owner: str,
+        generation: int,
+        result_ref: str,
+    ) -> None:
+        if not result_ref:
+            raise ValueError("idempotency result_ref must not be empty")
         tenant_id = self.current_tenant_id()
         result = self.connection.execute(
             text(
@@ -1179,14 +1193,56 @@ class InfrastructureRepository:
                 WHERE tenant_id = :tenant_id
                   AND scope = :scope
                   AND idempotency_key = :key
+                  AND owner = :owner
+                  AND generation = :generation
+                  AND status = 'in_progress'
+                  AND expires_at >= now()
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "scope": scope,
+                "key": key,
+                "owner": owner,
+                "generation": generation,
+                "result_ref": result_ref,
+            },
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("idempotency owner/generation is stale or expired")
+
+    def abort_idempotency(
+        self,
+        *,
+        scope: str,
+        key: str,
+        owner: str,
+        generation: int,
+    ) -> None:
+        tenant_id = self.current_tenant_id()
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_idempotency_claims
+                SET status = 'expired', expires_at = now(), result_ref = NULL
+                WHERE tenant_id = :tenant_id
+                  AND scope = :scope
+                  AND idempotency_key = :key
+                  AND owner = :owner
                   AND generation = :generation
                   AND status = 'in_progress'
                 """
             ),
-            {"tenant_id": tenant_id, "scope": scope, "key": key, "generation": generation, "result_ref": result_ref},
+            {
+                "tenant_id": tenant_id,
+                "scope": scope,
+                "key": key,
+                "owner": owner,
+                "generation": generation,
+            },
         )
         if result.rowcount != 1:
-            raise FencingRejectedError("idempotency generation is stale")
+            raise FencingRejectedError("idempotency claim cannot be aborted by this owner/generation")
 
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         lease_id = f"lease:{uuid4()}"

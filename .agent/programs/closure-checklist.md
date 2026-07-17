@@ -94,7 +94,7 @@ program_version: 2
 - [ ] PostgreSQL 事务、约束、并发、隔离、连接丢失和恢复验证。
 - [ ] Outbox/Inbox Duplicate、Gap、Redelivery、Hash Conflict 和 Crash 验证。
 - [ ] 真实 RabbitMQ Confirm、Reconnect、DLQ、Replay 和 Partition 验证。
-- [ ] Idempotency Claim 并发、冲突、过期、续租和结果丢失验证。
+- [x] Idempotency Claim 并发、冲突、过期、续租和结果丢失验证。
 - [ ] Lease/Fencing 拒绝晚到结果和旧 Worker 提交。
 - [ ] 真实 S3/MinIO Hash、Commit、Visibility、Delete、Restore、Legal Hold 验证。
 - [ ] 真实 LangGraph PostgreSQL Checkpointer Restart/Resume/Generation/Schema Upgrade 验证。

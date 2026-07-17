@@ -34,7 +34,13 @@ def verify_phase04_idempotency_tenant_isolation() -> list[str]:
             )
             if (status, generation, result_ref) != ("in_progress", 1, ""):
                 errors.append(f"tenant-a initial claim mismatch: {(status, generation, result_ref)!r}")
-            repo.complete_idempotency(scope=scope, key=key, generation=generation, result_ref="effect:tenant-a")
+            repo.complete_idempotency(
+                scope=scope,
+                key=key,
+                owner="worker-a",
+                generation=generation,
+                result_ref="effect:tenant-a",
+            )
 
         with InfrastructureUnitOfWork(engine, tenant_id="tenant-b") as repo:
             status, generation, result_ref = repo.claim_idempotency(
@@ -45,7 +51,13 @@ def verify_phase04_idempotency_tenant_isolation() -> list[str]:
             )
             if (status, generation, result_ref) != ("in_progress", 1, ""):
                 errors.append(f"tenant-b isolated claim mismatch: {(status, generation, result_ref)!r}")
-            repo.complete_idempotency(scope=scope, key=key, generation=generation, result_ref="effect:tenant-b")
+            repo.complete_idempotency(
+                scope=scope,
+                key=key,
+                owner="worker-b",
+                generation=generation,
+                result_ref="effect:tenant-b",
+            )
 
         with InfrastructureUnitOfWork(engine, tenant_id="tenant-a") as repo:
             status, generation, result_ref = repo.claim_idempotency(

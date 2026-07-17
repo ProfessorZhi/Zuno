@@ -48,6 +48,7 @@ IDEMPOTENCY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempot
 IDEMPOTENCY_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-idempotency-claim.md"
 IDEMPOTENCY_OWNER_CRASH_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_owner_crash.py"
 IDEMPOTENCY_TENANT_ISOLATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_tenant_isolation.py"
+IDEMPOTENCY_SUPERVISION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_idempotency_supervision.py"
 LEASE_FENCING_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_fencing.py"
 LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencing.md"
 
@@ -581,7 +582,14 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "owner_crash: passed_process_exit_reclaim",
             "tenant_isolation: passed",
             "high_concurrency_single_winner: passed",
+            "owner_generation_expiry_fencing: passed",
+            "abort_reclaim: passed",
+            "worker_heartbeat_supervision: passed",
+            "effect_reconciliation_after_process_exit: passed",
+            "lost_completion_no_reexecution: passed",
+            "process_cancellation_propagates: passed",
             "Idempotency Claim != Domain Success",
+            "P04-T04: completed",
         ]:
             if phrase not in idempotency_evidence:
                 errors.append(f"PHASE04 idempotency claim evidence missing phrase: {phrase}")
@@ -607,6 +615,17 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         )()
         for tenant_isolation_error in tenant_isolation_errors:
             errors.append(f"PHASE04 idempotency tenant isolation verification failed: {tenant_isolation_error}")
+
+    if not IDEMPOTENCY_SUPERVISION_VERIFIER.exists():
+        errors.append("missing PHASE04 idempotency supervision verifier")
+    else:
+        supervision_errors = _load_verifier(
+            IDEMPOTENCY_SUPERVISION_VERIFIER,
+            "verify_phase04_idempotency_supervision",
+            "verify_phase04_idempotency_supervision",
+        )()
+        for supervision_error in supervision_errors:
+            errors.append(f"PHASE04 idempotency supervision verification failed: {supervision_error}")
 
     if not BACKUP_RESTORE_VERIFIER.exists():
         errors.append("missing PHASE04 backup/restore/replay verifier")

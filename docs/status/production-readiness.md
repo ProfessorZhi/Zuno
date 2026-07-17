@@ -16,6 +16,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - Capability & Tool：capability registry/control plane、tool adapters、MCP/tool surfaces、approval/resume/idempotency trace baseline。
 - Governance & Observability：local trace/eval helpers、EnterpriseRAG paired eval runner、failure bucket diagnostics、profile completeness diagnostics 和 release gate output surface。
 - Local Infrastructure：SQLite/SQLModel、local object store、config、database/storage surfaces。
+- PHASE04 P04-T04：PostgreSQL Idempotency Claim Service 已达到 `implementation available`，包含 tenant-scoped canonical hash、owner/generation/expiry fencing、并发单赢家、heartbeat、abort、进程退出后的 effect reconciliation 与 result replay；它不等于领域成功，也不代表 PHASE04 已关闭。
 
 ## Short-term Closure Gap
 

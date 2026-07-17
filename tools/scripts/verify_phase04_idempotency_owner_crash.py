@@ -136,6 +136,7 @@ def verify_phase04_idempotency_owner_crash() -> list[str]:
                 repo.complete_idempotency(
                     scope=scope,
                     key=key,
+                    owner="worker-crashed",
                     generation=1,
                     result_ref="effect:stale-crashed-owner",
                 )
@@ -145,6 +146,7 @@ def verify_phase04_idempotency_owner_crash() -> list[str]:
             repo.complete_idempotency(
                 scope=scope,
                 key=key,
+                owner="worker-replacement",
                 generation=replacement.generation,
                 result_ref="effect:replacement-owner",
             )

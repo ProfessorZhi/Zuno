@@ -88,13 +88,20 @@ def verify_phase04_idempotency_claim() -> list[str]:
             if (status, replacement_generation, result_ref) != ("in_progress", generation + 1, ""):
                 errors.append(f"replacement claim mismatch: {(status, replacement_generation, result_ref)!r}")
             try:
-                repo.complete_idempotency(scope=scope, key=key, generation=generation, result_ref="effect:stale")
+                repo.complete_idempotency(
+                    scope=scope,
+                    key=key,
+                    owner="worker-a",
+                    generation=generation,
+                    result_ref="effect:stale",
+                )
                 errors.append("stale generation completed idempotency claim")
             except FencingRejectedError:
                 pass
             repo.complete_idempotency(
                 scope=scope,
                 key=key,
+                owner="worker-b",
                 generation=replacement_generation,
                 result_ref="effect:new",
             )

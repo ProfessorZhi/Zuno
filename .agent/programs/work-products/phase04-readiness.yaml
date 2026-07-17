@@ -20,9 +20,13 @@ work_packages:
     existing_output: "src/backend/zuno/platform/database/foundation.py"
     remaining_scope: "transactional outbox/inbox plus real RabbitMQ confirm, redelivery, DLQ, replay and partition handling"
   P04-T04:
-    state: ready
-    existing_output: "src/backend/zuno/platform/database/foundation.py"
-    remaining_scope: "complete idempotency lifecycle, high-concurrency claim, renew, crash and result-loss semantics"
+    state: completed
+    existing_outputs:
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/database/idempotency.py"
+      - "tools/scripts/verify_phase04_idempotency_supervision.py"
+      - "docs/evidence/phase04-idempotency-claim.md"
+    remaining_scope: "none within P04-T04; Idempotency Claim remains an infrastructure receipt and not domain success"
   P04-T05:
     state: ready
     existing_output: "src/backend/zuno/platform/database/foundation.py"
