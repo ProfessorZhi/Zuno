@@ -17,6 +17,7 @@ POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
 POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
 POSTGRES_POOL_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
+POSTGRES_CONNECTION_LOSS_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_connection_loss.py"
 REAL_SERVICES_SMOKE = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 RABBITMQ_TRANSPORT_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_rabbitmq_transport.py"
 RABBITMQ_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-rabbitmq-transport.md"
@@ -171,6 +172,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "tenant_context_no_leak: passed",
             "statement_timeout: passed",
             "lock_timeout: passed",
+            "connection_loss_recovery: passed",
             "deadlock_retry_boundary: passed",
             "serialization_retry_boundary: passed",
             "pool_exhaustion: passed",
@@ -213,6 +215,19 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         )()
         for postgres_pool_error in postgres_pool_errors:
             errors.append(f"PHASE04 PostgreSQL pool exhaustion verification failed: {postgres_pool_error}")
+
+    if not POSTGRES_CONNECTION_LOSS_VERIFIER.exists():
+        errors.append("missing PHASE04 PostgreSQL connection loss verifier")
+    else:
+        postgres_connection_loss_errors = _load_verifier(
+            POSTGRES_CONNECTION_LOSS_VERIFIER,
+            "verify_phase04_postgres_connection_loss",
+            "verify_phase04_postgres_connection_loss",
+        )()
+        for postgres_connection_loss_error in postgres_connection_loss_errors:
+            errors.append(
+                f"PHASE04 PostgreSQL connection loss verification failed: {postgres_connection_loss_error}"
+            )
 
     if not _official_langgraph_postgres_checkpointer_available():
         errors.append("official LangGraph PostgreSQL Checkpointer is not importable/proven")
