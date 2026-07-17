@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from zuno.platform.storage.object_store import (
         MinioObjectStore,
+        MultipartCleanupReceipt,
+        MultipartPartReceipt,
+        MultipartUploadSession,
         ObjectHashMismatchError,
         ObjectStoreReceipt,
     )
@@ -21,6 +24,9 @@ _EXPORT_TO_MODULE = {
     "LazyStorageClient": "zuno.platform.services.storage",
     "MinioObjectStore": "zuno.platform.storage.object_store",
     "MinioClient": "zuno.platform.services.storage",
+    "MultipartCleanupReceipt": "zuno.platform.storage.object_store",
+    "MultipartPartReceipt": "zuno.platform.storage.object_store",
+    "MultipartUploadSession": "zuno.platform.storage.object_store",
     "ObjectHashMismatchError": "zuno.platform.storage.object_store",
     "ObjectStoreReceipt": "zuno.platform.storage.object_store",
     "OSSClient": "zuno.platform.services.storage",
@@ -31,6 +37,9 @@ __all__ = [
     "LazyStorageClient",
     "MinioObjectStore",
     "MinioClient",
+    "MultipartCleanupReceipt",
+    "MultipartPartReceipt",
+    "MultipartUploadSession",
     "ObjectHashMismatchError",
     "ObjectStoreReceipt",
     "OSSClient",

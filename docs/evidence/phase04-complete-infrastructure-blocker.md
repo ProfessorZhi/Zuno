@@ -2,7 +2,7 @@
 
 phase_id: PHASE04
 task_id: P04-T07
-date: 2026-07-16
+date: 2026-07-17
 status: blocked
 coordinator_decision: not_approved
 real_services_smoke: passed
@@ -16,7 +16,7 @@ postgres_connection_loss_recovery_subset: passed
 langgraph_postgres_checkpointer: missing
 backup_restore_replay: missing
 rabbitmq_fault_evidence: missing
-minio_restore_evidence: missing
+minio_restore_evidence: proven
 combined_dependency_fault: missing
 rabbitmq_transport_subset: passed
 rabbitmq_dlq_replay_subset: passed
@@ -31,6 +31,7 @@ idempotency_tenant_isolation_subset: passed
 lease_fencing_subset: passed
 minio_object_store_subset: passed
 minio_visibility_duplicate_missing_subset: passed
+minio_multipart_reconciliation_subset: passed
 minio_storage_restart_subset: passed
 backup_restore_replay_subset: passed
 
@@ -66,7 +67,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_idempotency_owner_crash.py` | passed; subprocess committed an in-progress claim, exited before completion, replacement owner reclaimed after expiry, stale generation completion was rejected and replacement result replayed |
 | `python tools/scripts/verify_phase04_idempotency_tenant_isolation.py` | passed; transaction tenant context participates in the idempotency uniqueness boundary and same scope/key can safely exist in two tenants with distinct request hashes/results |
 | `python tools/scripts/verify_phase04_lease_fencing.py` | passed; lease acquire, heartbeat renew, duplicate worker reject, expiry transfer, cancel transfer and late fencing token reject verified |
-| `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, duplicate staging, pre-commit visibility boundary, missing object fail-closed, hash mismatch fail-closed, commit cleanup, delete and restore verified against real MinIO |
+| `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, duplicate staging, multipart/partial upload, orphan cleanup, lost-response/duplicate-complete reconciliation, pre-commit visibility boundary, missing object fail-closed, hash mismatch fail-closed, commit cleanup, delete and restore verified against real MinIO |
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`, infra outbox/inbox/object manifest/checkpoint rows and MinIO restore point verified |
 
@@ -75,8 +76,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - RabbitMQ network partition and full recovery
 - Alembic full domain schema drift detection, data backfill framework, online migration lock and forward-fix governance
 - PostgreSQL async engine, full session factory and connection rotation
-- MinIO/S3 retention, legal hold, lifecycle and authorization
-- MinIO/S3 visibility, authorization, delete and legal hold evidence
+- MinIO/S3 retention、legal hold、lifecycle 和 authorization evidence
 - Idempotency full worker runtime crash supervision
 - Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
@@ -116,9 +116,10 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 duplicate and visibility subset：相同 content/object re-stage 收敛到同 staged key/hash，commit 前 visible key 不可读，missing object read fail closed；
 - MinIO/S3 restore：commit 后创建 restore point，删除 visible object，再从 restore point 恢复并校验 hash/bytes；
 - MinIO/S3 storage restart subset：committed object 与 restore point 经真实 `docker restart zuno-minio` 后仍可读取且 bytes/hash receipt 不变；
+- MinIO/S3 multipart recovery subset：真实两段 multipart upload 完成后 bytes/hash 一致；partial upload 在完成前不可读，active upload 不被误清理，orphan upload 可 abort；服务端已完成但响应丢失及重复 complete 均通过 size/hash 对账收敛到同 staged receipt；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 
-这些结果只证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 network partition、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
+这些结果只证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion 子集、outbox-to-RabbitMQ publisher 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 network partition、official Checkpointer、retention/legal hold/lifecycle、PITR、runtime restart after restore 或组合故障恢复。
 
 ## Existing Partial Evidence
 
