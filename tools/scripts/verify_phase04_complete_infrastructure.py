@@ -157,6 +157,12 @@ DOMAIN_BOUNDARY_VERIFIER = (
 DOMAIN_BOUNDARY_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-domain-boundary.md"
 )
+TYPED_PORTS_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_infrastructure_typed_ports.py"
+)
+TYPED_PORTS_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-typed-ports.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1165,6 +1171,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in domain_boundary_evidence:
                 errors.append(
                     "PHASE04 infrastructure domain boundary evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not TYPED_PORTS_VERIFIER.exists():
+        errors.append("missing PHASE04 infrastructure typed ports verifier")
+    else:
+        typed_ports_errors = _load_verifier(
+            TYPED_PORTS_VERIFIER,
+            "verify_phase04_infrastructure_typed_ports",
+            "verify_phase04_infrastructure_typed_ports",
+        )()
+        for typed_ports_error in typed_ports_errors:
+            errors.append(
+                f"PHASE04 infrastructure typed ports verification failed: {typed_ports_error}"
+            )
+
+    if not TYPED_PORTS_EVIDENCE.exists():
+        errors.append("missing PHASE04 infrastructure typed ports evidence")
+    else:
+        typed_ports_evidence = _read(TYPED_PORTS_EVIDENCE)
+        for phrase in [
+            "local_server_same_profile_contract: passed",
+            "data_service_capability_typed_fields: passed",
+            "required_service_kind_coverage: passed",
+            "local_server_service_kind_parity: passed",
+            "unknown_service_kind_fail_closed: passed",
+            "Developer CI and Server Product infrastructure profiles share the same typed",
+            "It does not prove that every target adapter is implemented",
+        ]:
+            if phrase not in typed_ports_evidence:
+                errors.append(
+                    "PHASE04 infrastructure typed ports evidence missing phrase: "
                     f"{phrase}"
                 )
 

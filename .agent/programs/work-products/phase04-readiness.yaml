@@ -87,11 +87,13 @@ work_packages:
       - "tools/scripts/verify_phase04_dr_profile.py"
       - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
       - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
+      - "tools/scripts/verify_phase04_infrastructure_typed_ports.py"
       - "tools/scripts/verify_requirement_ledger_evidence_gate.py"
       - "tests/integration/test_phase04_operator_readiness.py"
       - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_phase04_infrastructure_capability_profile.py"
       - "tests/repo/test_phase04_infrastructure_domain_boundary.py"
+      - "tests/repo/test_phase04_infrastructure_typed_ports.py"
       - "tests/repo/test_requirement_ledger_evidence_gate.py"
       - "docs/evidence/phase04-backup-restore-replay.md"
       - "docs/evidence/phase04-combined-service-fault.md"
@@ -99,6 +101,7 @@ work_packages:
       - "docs/evidence/phase04-dr-profile.md"
       - "docs/evidence/phase04-infrastructure-capability-profile.md"
       - "docs/evidence/phase04-infrastructure-domain-boundary.md"
+      - "docs/evidence/phase04-infrastructure-typed-ports.md"
       - "docs/evidence/phase04-requirement-ledger-evidence-gate.md"
       - "docs/governance/infrastructure-operations-runbook.md"
       - "docs/governance/infrastructure-dr-profile.yaml"
@@ -119,6 +122,10 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-infrastructure-domain-boundary.md"
+      infrastructure_typed_ports:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-infrastructure-typed-ports.md"
       requirement_ledger_evidence_gate:
         state: completed
         evidence:
