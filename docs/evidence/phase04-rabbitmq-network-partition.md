@@ -21,7 +21,7 @@ consumer_duplicate_no_followup_rewrite: passed
 
 ## 边界
 
-本证据证明真实 RabbitMQ 的 client/broker network partition 与恢复子集，不关闭 P04-T03，也不关闭 PHASE04。
+本证据证明真实 RabbitMQ 的 client/broker network partition 与恢复子集，作为 P04-T03 聚合证明输入；它不单独关闭 P04-T03，也不关闭 PHASE04。
 
 Queue ACK != Domain Success。Partition 期间未取得 publisher confirm 的操作不得解释为领域成功；恢复后消息被消费和 ACK，也只证明 transport delivery。
 
@@ -67,4 +67,4 @@ pytest -q tests/integration/test_phase04_rabbitmq_network_partition.py -p no:cac
 
 - Out-of-order delivery/consumer ownership 的完整运行时处理仍未收口。
 - 本证据使用 Infrastructure follow-up Outbox 证明 consumer transaction 原子性；真实领域 handler adoption 仍由后续 Runtime Phase 接入。
-- P04-T03 保持 `ready`，不是 completed。
+- P04-T03 已由领域采用与 RabbitMQ 聚合证据关闭；本子集自身不是完成证明。

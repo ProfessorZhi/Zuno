@@ -62,5 +62,5 @@ pytest -q tests/integration/test_phase04_outbox_delivery_policy.py -p no:cachepr
 
 ## 剩余缺口
 
-- P04-T03 仍需与完整领域 Handler adoption、运维指标出口和组合依赖故障总 Gate 一起审查，当前保持 `ready`。
+- P04-T03 已由完整领域 Handler adoption 与 RabbitMQ 聚合证据关闭；运维总指标和组合依赖故障仍属于 P04-T07/PHASE04 总 Gate。
 - PHASE04 仍缺 official LangGraph PostgreSQL Checkpointer、完整恢复集和组合依赖故障闭环，不能标记 completed。

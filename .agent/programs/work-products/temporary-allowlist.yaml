@@ -422,6 +422,14 @@ allowlist:
     test: "tests/agent/test_platform_layer_surfaces.py"
     removal_task: "P22-T03"
     deadline_phase: "PHASE05"
+  - path: "src/backend/zuno/platform/services/queue/{client,runner,workers}.py"
+    symbol: "QueueClient direct publish/consume compatibility worker chain"
+    category: "direct_queue_bypass"
+    reason: "legacy Knowledge worker bypasses Transactional Outbox and ACK-after-domain-commit"
+    owner: "11 Infrastructure / 03 Knowledge"
+    test: "tests/integration/test_phase04_domain_event_adoption.py"
+    removal_task: "P22-T03"
+    deadline_phase: "PHASE11"
 rules:
   new_bypass_default: "fail"
   path_must_exist_or_glob: true

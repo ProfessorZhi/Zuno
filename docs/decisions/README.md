@@ -5,6 +5,8 @@
 当前有效决策：
 
 - [ADR 0002：退休 compat namespace](0002-retire-compat-namespace.md)
+- [ADR 0004：补登记既有 QueueClient 旁路](0004-corrective-queue-bypass-registration.md)
+  - 当前状态：`accepted`；只纠正 PHASE01 遗漏的 pre-existing bypass，不授权新增 caller 或延长 removal deadline。
 
 正式 Target 决议：
 

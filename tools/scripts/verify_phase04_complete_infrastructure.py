@@ -76,6 +76,12 @@ OUTBOX_RABBITMQ_VERIFIER = (
 OUTBOX_RABBITMQ_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-outbox-rabbitmq-publisher.md"
 )
+DOMAIN_EVENT_ADOPTION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_domain_event_adoption.py"
+)
+DOMAIN_EVENT_ADOPTION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-domain-event-adoption.md"
+)
 OUTBOX_DELIVERY_POLICY_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_outbox_delivery_policy.py"
 )
@@ -572,6 +578,40 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in outbox_evidence:
                 errors.append(
                     f"PHASE04 outbox RabbitMQ publisher evidence missing phrase: {phrase}"
+                )
+
+    if not DOMAIN_EVENT_ADOPTION_VERIFIER.exists():
+        errors.append("missing PHASE04 domain event adoption verifier")
+    else:
+        domain_event_errors = _load_verifier(
+            DOMAIN_EVENT_ADOPTION_VERIFIER,
+            "verify_phase04_domain_event_adoption",
+            "verify_phase04_domain_event_adoption",
+        )()
+        for domain_event_error in domain_event_errors:
+            errors.append(
+                f"PHASE04 domain event adoption verification failed: {domain_event_error}"
+            )
+
+    if not DOMAIN_EVENT_ADOPTION_EVIDENCE.exists():
+        errors.append("missing PHASE04 domain event adoption evidence")
+    else:
+        domain_event_evidence = _read(DOMAIN_EVENT_ADOPTION_EVIDENCE)
+        for phrase in [
+            "domain_write_outbox_atomic: passed",
+            "producer_precommit_crash_rollback: passed",
+            "rabbitmq_consumer_redelivery: passed",
+            "inbox_domain_write_atomic: passed",
+            "consumer_precommit_crash_rollback: passed",
+            "same_hash_duplicate_no_domain_reexecution: passed",
+            "different_hash_quarantine: passed",
+            "queue_ack_after_domain_commit: passed",
+            "unknown_message_version_fail_closed: passed",
+            "p04_t03_completion: proven",
+        ]:
+            if phrase not in domain_event_evidence:
+                errors.append(
+                    f"PHASE04 domain event adoption evidence missing phrase: {phrase}"
                 )
 
     if not OUTBOX_DELIVERY_POLICY_VERIFIER.exists():

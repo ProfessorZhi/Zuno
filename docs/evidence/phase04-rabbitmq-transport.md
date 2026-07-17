@@ -16,7 +16,7 @@ outbox_inbox_atomicity: not_yet_proven
 
 ## Boundary
 
-This evidence proves a real RabbitMQ transport subset only. It does not close P04-T03 and does not close PHASE04.
+This evidence proves a real RabbitMQ transport subset. It contributes to the P04-T03 aggregate proof but does not close P04-T03 by itself or close PHASE04.
 
 Queue ACK != Domain Success. RabbitMQ delivery, ACK, NACK, reject and DLQ are transport receipts; domain commit remains owned by the PostgreSQL transaction and inbox/outbox boundary.
 
@@ -73,7 +73,7 @@ pytest -q tests/integration/test_phase04_rabbitmq_retry_exhaustion.py -p no:cach
 
 ## Remaining Gap
 
-- Transactional outbox publisher claim and RabbitMQ publish are not yet integrated as one recovery flow.
-- Consumer inbox dedup and ACK-after-commit are not yet proven against RabbitMQ redelivery.
+- Transactional Outbox publisher claim、RabbitMQ confirm 与恢复流程已由 `phase04-outbox-rabbitmq-publisher.md` 聚合证明。
+- Consumer Inbox dedup、领域同事务与 ACK-after-commit 已由 `phase04-domain-event-adoption.md` 聚合证明。
 - Broker restart 与 network partition/recovery 由独立 PHASE04 evidence 证明；本文件不重复冒充这些 fault 证据。
-- P04-T03 remains `ready`, not completed.
+- P04-T03 is completed by the aggregate domain adoption and RabbitMQ evidence; this subset alone is not completion proof.

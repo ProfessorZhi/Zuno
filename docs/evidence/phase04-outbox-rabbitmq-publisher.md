@@ -3,7 +3,7 @@
 phase_id: PHASE04
 task_id: P04-T03
 date: 2026-07-17
-status: partial_implementation_available
+status: implementation_available
 outbox_claim: passed
 rabbitmq_publish_confirm: passed
 outbox_published_receipt: passed
@@ -18,10 +18,12 @@ out_of_order_delivery: passed_in_phase04-rabbitmq-out-of-order.md
 durable_retry_backoff: passed_in_phase04-outbox-delivery-policy.md
 outbox_dead_letter_replay: passed_in_phase04-outbox-delivery-policy.md
 outbox_backlog_visibility: passed_in_phase04-outbox-delivery-policy.md
+domain_handler_adoption: passed_in_phase04-domain-event-adoption.md
+p04_t03_completion: proven
 
 ## Boundary
 
-This evidence proves a real PostgreSQL outbox to RabbitMQ publisher subset. It does not close P04-T03 and does not close PHASE04.
+本证据与 `phase04-domain-event-adoption.md` 及 RabbitMQ fault evidence 共同关闭 P04-T03，但不关闭 PHASE04。
 
 Queue ACK != Domain Success. The outbox row and inbox row are infrastructure receipts around transport; domain success remains owned by the producing and consuming domain transactions.
 
@@ -85,7 +87,7 @@ python tools/scripts/verify_phase04_outbox_delivery_policy.py
 PHASE04 outbox delivery policy verification passed.
 ```
 
-## Remaining Gap
+## Remaining Boundary
 
-- Outbox/Inbox 基础设施 runtime 已完成 broker restart、partition、consumer crash、backlog、retry exhaustion、dead-letter/replay 和 out-of-order 的真实 RabbitMQ/PostgreSQL 证明；真实领域 handler adoption 尚未完成。
-- P04-T03 remains `ready`, not completed.
+- Product 领域事实 + Outbox 与 Inbox + Memory 领域事实的同事务采用由 `phase04-domain-event-adoption.md` 证明。
+- PHASE04 仍受 P04-T06、P04-T07、官方 Checkpointer、完整恢复集与最终审批阻止，不能从 P04-T03 完成状态推导整个 Phase 完成。

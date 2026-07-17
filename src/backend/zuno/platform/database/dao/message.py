@@ -12,8 +12,10 @@ class MessageLikeDao:
     @classmethod
     def create_message_like(cls, user_input: str, agent_output: str):
         with session_getter() as session:
-            session.add(cls._get_message_like_sql(user_input, agent_output))
+            record = cls._get_message_like_sql(user_input, agent_output)
+            session.add(record)
             session.flush()
+            return record
 
     @classmethod
     def get_message_like(cls):

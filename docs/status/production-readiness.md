@@ -20,6 +20,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T05：PostgreSQL Lease/Fencing Worker Coordinator 已达到 `implementation available`，使用数据库时钟、epoch/fencing token、heartbeat、显式 handoff 与同事务 fenced commit，并通过进程崩溃、暂停、cancel race 和 TCP network partition；它不等于领域结果成功，也不代表 PHASE04 已关闭。
 - PHASE04 P04-T01：默认数据库路径已达到 `implementation available`，应用由唯一 `PostgresRuntime` 提供 sync/async SQLModel Session Factory，DAO 写入由 Domain UoW 统一提交，并通过真实 PostgreSQL 的跨 Repository 回滚、tenant 隔离、timeout、取消、deadlock/serialization retry boundary、pool exhaustion 与 connection-loss recovery；它不代表 PHASE04 已关闭。
 - PHASE04 P04-T02：PostgreSQL Schema 迁移已达到 `implementation available`，使用唯一 Alembic revision chain 和冻结显式 baseline，覆盖 31 张领域表与 10 张基础设施表的 ownership/drift、空库往返、既有库接管、重复迁移、迁移锁、在线 index、渐进约束验证、持久 backfill 与 forward-fix；它不代表领域数据已 cutover，也不代表 PHASE04 已关闭。
+- PHASE04 P04-T03：Transactional Outbox/Inbox 与真实 RabbitMQ transport 已达到 `implementation available`，Product 领域事实与 Outbox、Inbox 与 Memory 领域事实分别同事务提交，覆盖 confirm、ACK/NACK、redelivery、duplicate、不同 hash quarantine、ordering watermark、retry/backoff、DLQ/replay、backlog、broker restart 与 network partition；Queue receipt 不等于领域成功，也不代表 PHASE04 已关闭。
 
 ## Short-term Closure Gap
 

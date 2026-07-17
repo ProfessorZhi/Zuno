@@ -14,7 +14,7 @@ tenant_ordering_isolation: passed
 
 ## 边界
 
-本证据证明 PostgreSQL Transactional Outbox/Inbox 与真实 RabbitMQ 之间的 tenant-scoped ordering 子集。它不证明真实领域 handler 已采用该入口，也不独立覆盖 Outbox owner 路径的 broker restart、retry/backoff 和 DLQ 组合，因此不关闭 P04-T03，也不关闭 PHASE04。
+本证据证明 PostgreSQL Transactional Outbox/Inbox 与真实 RabbitMQ 之间的 tenant-scoped ordering 子集。真实领域 handler 采用、broker restart、retry/backoff 和 DLQ 由其他聚合证据证明；本子集不单独关闭 P04-T03，也不关闭 PHASE04。
 
 Queue ACK != Domain Success。ACK 只在乱序消息已经持久写入 Inbox，或顺序消息及被释放消息完成本次模拟 handler 事务后执行；delivery watermark 只表示已连续收到，不表示领域结果成功。
 
@@ -63,4 +63,4 @@ pytest -q tests/integration/test_phase04_postgres_foundation.py -p no:cacheprovi
 
 - 真实领域 handler 尚未接入 `released_message_ids` 的 reconciliation 处理入口。
 - Outbox owner 路径仍需 broker restart、backoff/retry exhaustion、DLQ/replay 的组合验证。
-- P04-T03 保持 `ready`，不是 completed。
+- P04-T03 已由领域采用与 RabbitMQ 聚合证据关闭；本子集自身不是完成证明。

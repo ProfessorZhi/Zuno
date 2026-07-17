@@ -694,3 +694,16 @@ inventory:
     deadline: "PHASE05"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/agent/test_platform_layer_surfaces.py"
+  - path: "src/backend/zuno/platform/services/queue/{client,runner,workers}.py"
+    symbol: "QueueClient direct publish/consume compatibility worker chain"
+    owner: "11 Infrastructure / 03 Knowledge"
+    category: "direct_queue_bypass"
+    risk: "legacy Knowledge worker publishes outside Transactional Outbox and consume_once ACKs before the domain handler returns"
+    target_gateway: "zuno.platform.queue PostgresOutboxRabbitMQPublisher plus SessionInbox and ACK-after-domain-commit consumer"
+    current_callers: ["src/backend/zuno/api/services/knowledge_file.py", "python -m zuno.services.queue.runner"]
+    temporary_allowlist: true
+    migration_task: "PHASE11 Knowledge ingestion canonical queue cutover"
+    removal_task: "P22-T03"
+    deadline: "PHASE11"
+    guard: "PHASE02 static/dynamic bypass guard; canonical P04-T03 completion verifier excludes this path from evidence"
+    test: "tests/integration/test_phase04_domain_event_adoption.py"

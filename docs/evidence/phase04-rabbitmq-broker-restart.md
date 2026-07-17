@@ -13,7 +13,7 @@ retry_exhaustion: not_yet_proven
 
 ## Boundary
 
-This evidence proves a real RabbitMQ broker restart subset. It does not close P04-T03 and does not close PHASE04.
+This evidence proves a real RabbitMQ broker restart subset. It contributes to the P04-T03 aggregate proof but does not close P04-T03 by itself or close PHASE04.
 
 Queue ACK != Domain Success. A persistent RabbitMQ message surviving restart proves transport durability for this subset; it does not prove consuming domain success or full outbox/inbox recovery.
 
@@ -57,4 +57,4 @@ pytest -q tests/integration/test_phase04_rabbitmq_broker_restart.py -p no:cachep
 - Network partition 与恢复已由 `docs/evidence/phase04-rabbitmq-network-partition.md` 独立证明。
 - Retry exhaustion and DLQ replay are not yet proven.
 - Consumer crash during domain transaction is not yet proven.
-- P04-T03 remains `ready`, not completed.
+- P04-T03 is completed by the aggregate domain adoption and RabbitMQ evidence; this subset alone is not completion proof.

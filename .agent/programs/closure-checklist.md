@@ -92,8 +92,8 @@ program_version: 2
 
 - [x] Alembic Upgrade/Downgrade、既有库接管、在线 DDL、drift 与 forward-fix 策略验证。
 - [x] PostgreSQL 事务、约束、并发、隔离、连接丢失和恢复验证。
-- [ ] Outbox/Inbox Duplicate、Gap、Redelivery、Hash Conflict 和 Crash 验证。
-- [ ] 真实 RabbitMQ Confirm、Reconnect、DLQ、Replay 和 Partition 验证。
+- [x] Outbox/Inbox 领域同事务、Duplicate、Gap、Redelivery、Hash Conflict 和 Crash 验证。
+- [x] 真实 RabbitMQ Confirm、Reconnect、DLQ、Replay、Backpressure 和 Partition 验证。
 - [x] Idempotency Claim 并发、冲突、过期、续租和结果丢失验证。
 - [x] Lease/Fencing 拒绝晚到结果和旧 Worker 提交。
 - [ ] 真实 S3/MinIO Hash、Commit、Visibility、Delete、Restore、Legal Hold 验证。

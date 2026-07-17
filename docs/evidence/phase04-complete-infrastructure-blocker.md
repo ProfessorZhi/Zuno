@@ -12,6 +12,7 @@ migration_lock_backfill_control: proven
 postgres_runtime_context_timeout_subset: passed
 postgres_session_runtime_subset: passed
 domain_uow_adoption: passed
+domain_outbox_inbox_adoption: proven
 postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
 postgres_pool_exhaustion_subset: passed
@@ -69,6 +70,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_postgres_runtime.py` | passed; readiness, transaction-local tenant context, statement timeout and lock timeout verified |
 | `python tools/scripts/verify_phase04_postgres_session_runtime.py` | passed; sync/async Session Factory、显式 UoW、commit/rollback、nested reject、failed-entry cleanup、read-only、tenant 并发隔离、async timeout/cancel、connection loss recovery 与 rotation 通过 |
 | `python tools/scripts/verify_phase04_domain_uow_adoption.py` | passed; 唯一默认 `PostgresRuntime`、DAO UoW-owned commit、跨两个 Repository 原子回滚、sync/async Session 复用、tenant no-leak 与 async task isolation 通过 |
+| `python tools/scripts/verify_phase04_domain_event_adoption.py` | passed; Product 领域事实 + Outbox、Inbox + Memory 领域事实分别同事务，producer/consumer pre-commit crash 回滚，consumer redelivery、same-hash dedup、different-hash quarantine 与 commit 后 ACK 通过 |
 | `python tools/scripts/verify_phase04_postgres_deadlock_retry.py` | passed; two real concurrent PostgreSQL transactions deadlocked on opposite row locks, one received transient `40P01`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` | passed; two real `SERIALIZABLE` PostgreSQL transactions conflicted on a shared invariant, one received transient `40001`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_pool_exhaustion.py` | passed; real PostgreSQL engine with `pool_size=1`, `max_overflow=0`, `pool_timeout=1` rejected a second checkout while the only connection was held and recovered after release |
@@ -93,11 +95,11 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
 | `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest 与 checkpoint primitive 对账通过 |
-| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T04/T05 已完成，最终仍由 P04-T03/T06/T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
+| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 已完成，最终仍由 P04-T06/T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
 
-- 真实领域 handler adoption 与完整运维指标出口
+- 完整运维指标出口
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - PITR
@@ -115,6 +117,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - PostgreSQL serialization retry subset：真实 `SERIALIZABLE` 写偏斜冲突触发 `40001`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL pool exhaustion subset：真实 PostgreSQL engine 在 `pool_size=1/max_overflow=0/pool_timeout=1` 下拒绝第二个 checkout，释放后恢复；
 - PostgreSQL connection loss recovery subset：真实 `pg_terminate_backend` 终止旧 connection，旧 connection fail closed，同一 engine 重新 checkout 后恢复；
+- Domain Outbox/Inbox adoption：Product `MessageLikeDao` 与 canonical Outbox 共享 Domain UoW；Memory consumer 的 Inbox 与 `MemoryRawEventTable` 共享 Domain UoW，consumer crash 时共同回滚并由 RabbitMQ redeliver，commit 后才 ACK；
 - Alembic migration foundation：单一 revision chain 以显式冻结 base 管理 31 张领域表和 10 张基础设施表；空库 upgrade/repeated upgrade/downgrade/re-upgrade 与 production-like 既有库接管、数据保持均通过；
 - Alembic schema drift 与 online DDL：领域 metadata 完整比较，基础设施 columns/constraints/indexes 精确比较；concurrent index ready/valid，`NOT VALID` constraint 独立验证为 validated；
 - Migration control：Alembic online execution 使用 PostgreSQL session advisory lock；并行 deploy 在 timeout 后 fail closed，释放后恢复。PHASE02 matrix 输入进入持久 Backfill ledger，chunk replay 幂等、hash conflict、pause/restart/resume、stale generation reject 与 forward-fix lineage 均通过；
@@ -155,8 +158,8 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 ## Existing Partial Evidence
 
-`docs/evidence/phase04-postgres-foundation.md` remains valid only as partial evidence. It records PostgreSQL 16 primitive integration, Alembic upgrade/downgrade and five focused integration tests, and the PostgreSQL focused integration test was re-run successfully after Docker was started. It explicitly remains `partial_implementation_available` with `phase_completion: withdrawn` because RabbitMQ fault semantics, MinIO/S3 restore semantics, official LangGraph PostgreSQL Checkpointer and Backup/Restore/Replay evidence are still missing.
+`docs/evidence/phase04-postgres-foundation.md` remains valid only as historical partial evidence for its original primitive scope. Current aggregate evidence now separately proves PostgreSQL Domain UoW、Alembic、RabbitMQ Outbox/Inbox 与 MinIO 子能力；该旧文件不能被回写成完整 Phase 证据，PHASE04 仍受 official LangGraph PostgreSQL Checkpointer 和完整恢复闭环阻止。
 
 ## Gate Decision
 
-PHASE04 remains not completed. PHASE05 must remain blocked until P04-T03/T06/T07 are completed, the official LangGraph PostgreSQL Checkpointer path is proven, full Backup/Restore/Projection Replay and Checkpointer recovery evidence exists, combined dependency fault evidence includes the Checkpointer, and the Coordinator approval gate is explicit.
+PHASE04 remains not completed. PHASE05 must remain blocked until P04-T06/T07 are completed, the official LangGraph PostgreSQL Checkpointer path is proven, full Backup/Restore/Projection Replay and Checkpointer recovery evidence exists, combined dependency fault evidence includes the Checkpointer, and the Coordinator approval gate is explicit.

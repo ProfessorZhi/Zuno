@@ -9,7 +9,7 @@ unassigned P0: none
 | risk_id | severity | owner | source | risk | dependency / next phase | status |
 | --- | --- | --- | --- | --- | --- | --- |
 | P01-R001 | P0 | Infrastructure | `current-persistence-inventory.md` | PostgreSQL is Target but real PostgreSQL domain UoW, lock/isolation, migration upgrade/downgrade and crash recovery evidence are missing. | PHASE04 | needs-evidence |
-| P01-R002 | P0 | Infrastructure | `current-persistence-inventory.md` | RabbitMQ and Outbox/Inbox are Target; current evidence is local queue/fake worker chain. | PHASE04 | needs-evidence |
+| P01-R002 | P0 | Infrastructure | `current-persistence-inventory.md` | RabbitMQ and Outbox/Inbox lacked real domain transaction and fault evidence. | PHASE04 P04-T03 | mitigated by `docs/evidence/phase04-domain-event-adoption.md` and RabbitMQ fault evidence |
 | P01-R003 | P0 | Infrastructure / Knowledge | `current-persistence-inventory.md` | MinIO/S3, external vector/graph/search and backup/restore are declared but not proven Current. | PHASE04, PHASE11, PHASE12 | needs-evidence |
 | P01-R004 | P0 | Repository Governance | `legacy-bypass-inventory.yaml` | `legacy_aliases.py` and production `legacy` path remain active; final canonical tree cannot close until removed. | PHASE02, P22-T03 | assigned |
 | P01-R005 | P0 | Model Gateway | `legacy-bypass-inventory.yaml` | Direct OpenAI/Anthropic/DashScope/provider calls still bypass Model Gateway. | PHASE07 | assigned |

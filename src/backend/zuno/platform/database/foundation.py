@@ -263,10 +263,13 @@ class InfrastructureRepository:
         topic: str,
         payload: dict[str, Any],
         idempotency_key: str,
+        event_id: str | None = None,
         tenant_id: str | None = None,
         ordering_key: str | None = None,
     ) -> str:
-        event_id = f"outbox:{uuid4()}"
+        event_id = event_id or f"outbox:{uuid4()}"
+        if not event_id.strip():
+            raise ValueError("event_id must not be empty")
         payload_hash = canonical_sha256(payload)
         resolved_tenant_id = self.current_tenant_id() if tenant_id is None else tenant_id
         ordering_sequence: int | None = None

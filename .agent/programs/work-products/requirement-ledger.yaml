@@ -4670,101 +4670,108 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Producer Domain + Outbox 同事务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1895"
-    gap: "?????Producer Domain + Outbox 同事务???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/api/services/message_events.py"
+      - "src/backend/zuno/platform/queue/domain.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+    gap: "none within P04-T03; Product domain fact and Outbox share the canonical Domain UoW"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T03 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-014 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: producer pre-commit crash rolls back domain fact and Outbox together"
     test_ids:
-      - "INFRA-014-UT"
-      - "INFRA-014-IT"
+      - "tests/integration/test_phase04_domain_event_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-014"
+      - "docs/evidence/phase04-domain-event-adoption.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1895"
-      - "planned_test:INFRA-014-UT"
-      - "planned_test:INFRA-014-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-014"
+      - "current:src/backend/zuno/api/services/message_events.py"
+      - "test:tests/integration/test_phase04_domain_event_adoption.py"
+      - "evidence:docs/evidence/phase04-domain-event-adoption.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-015
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Consumer Inbox + Domain 同事务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1896"
-    gap: "?????Consumer Inbox + Domain 同事务???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/memory/feedback_consumer.py"
+      - "src/backend/zuno/platform/queue/domain.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+    gap: "none within P04-T03; Inbox and Memory domain fact commit before RabbitMQ ACK"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T03 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-015 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: consumer pre-commit crash rolls back Inbox and domain fact and NACKs for redelivery"
     test_ids:
-      - "INFRA-015-UT"
-      - "INFRA-015-IT"
+      - "tests/integration/test_phase04_domain_event_adoption.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-015"
+      - "docs/evidence/phase04-domain-event-adoption.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1896"
-      - "planned_test:INFRA-015-UT"
-      - "planned_test:INFRA-015-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-015"
+      - "current:src/backend/zuno/memory/feedback_consumer.py"
+      - "test:tests/integration/test_phase04_domain_event_adoption.py"
+      - "evidence:docs/evidence/phase04-domain-event-adoption.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-016
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "RabbitMQ Redelivery 不重复 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1897"
-    gap: "?????RabbitMQ Redelivery 不重复 Effect???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/memory/feedback_consumer.py"
+      - "src/backend/zuno/platform/queue/rabbitmq.py"
+    gap: "none within P04-T03; same-hash duplicate is ACKed without repeating the Memory effect"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T03 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-016 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: RabbitMQ redelivery and duplicate publish converge through Inbox dedup"
     test_ids:
-      - "INFRA-016-UT"
-      - "INFRA-016-IT"
+      - "tests/integration/test_phase04_domain_event_adoption.py"
+      - "tests/integration/test_phase04_rabbitmq_network_partition.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-016"
+      - "docs/evidence/phase04-domain-event-adoption.md"
+      - "docs/evidence/phase04-rabbitmq-network-partition.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1897"
-      - "planned_test:INFRA-016-UT"
-      - "planned_test:INFRA-016-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-016"
+      - "current:src/backend/zuno/memory/feedback_consumer.py"
+      - "test:tests/integration/test_phase04_domain_event_adoption.py"
+      - "evidence:docs/evidence/phase04-domain-event-adoption.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-017
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "DLQ/Expiry/Retry 有 Owner"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1898"
-    gap: "?????DLQ/Expiry/Retry 有 Owner???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/queue/outbox.py"
+      - "src/backend/zuno/platform/queue/rabbitmq.py"
+      - "src/backend/zuno/platform/database/foundation.py"
+    gap: "none within P04-T03; Publisher owns durable retry/backoff and operator-owned replay, consumer owns reject-to-DLQ"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T03 completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-017 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: retry exhaustion dead-letters, manual replay is audited, backlog is observable"
     test_ids:
-      - "INFRA-017-UT"
-      - "INFRA-017-IT"
+      - "tests/integration/test_phase04_outbox_delivery_policy.py"
+      - "tests/integration/test_phase04_rabbitmq_retry_exhaustion.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-017"
+      - "docs/evidence/phase04-outbox-delivery-policy.md"
+      - "docs/evidence/phase04-rabbitmq-transport.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1898"
-      - "planned_test:INFRA-017-UT"
-      - "planned_test:INFRA-017-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-017"
+      - "current:src/backend/zuno/platform/queue/outbox.py"
+      - "test:tests/integration/test_phase04_outbox_delivery_policy.py"
+      - "evidence:docs/evidence/phase04-outbox-delivery-policy.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-018
     module: "11 Infrastructure"

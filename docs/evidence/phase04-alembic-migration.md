@@ -84,4 +84,4 @@ pytest -q tests/integration/test_phase04_alembic_migration.py tests/integration/
 
 - 各领域的实际数据迁移与读写 cutover 必须由领域 Owner 独立证明，不能从 framework 完成状态推导。
 - 不可逆数据变换仍是 Stop Condition；必须先备份、隔离恢复与对账，再由 Coordinator 决定 forward-fix 或恢复。
-- P04-T03、P04-T06、P04-T07 与 PHASE04 总关闭闸门仍未完成。
+- P04-T06、P04-T07 与 PHASE04 总关闭闸门仍未完成。

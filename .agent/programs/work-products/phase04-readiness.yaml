@@ -30,9 +30,18 @@ work_packages:
       - "docs/evidence/phase04-alembic-migration.md"
     remaining_scope: "none within P04-T02; actual domain data cutovers remain owned and proven by each domain"
   P04-T03:
-    state: ready
-    existing_output: "src/backend/zuno/platform/database/foundation.py"
-    remaining_scope: "transactional outbox/inbox plus real RabbitMQ confirm, redelivery, DLQ, replay and partition handling"
+    state: completed
+    existing_outputs:
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "src/backend/zuno/platform/queue/rabbitmq.py"
+      - "src/backend/zuno/platform/queue/outbox.py"
+      - "src/backend/zuno/platform/queue/domain.py"
+      - "src/backend/zuno/api/services/message_events.py"
+      - "src/backend/zuno/memory/feedback_consumer.py"
+      - "tools/scripts/verify_phase04_domain_event_adoption.py"
+      - "docs/evidence/phase04-domain-event-adoption.md"
+      - "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
+    remaining_scope: "none within P04-T03; Queue receipts remain infrastructure facts and not domain success"
   P04-T04:
     state: completed
     existing_outputs:
@@ -84,6 +93,7 @@ validation:
     - "python tools/scripts/verify_phase04_alembic_migration.py"
     - "python tools/scripts/verify_phase04_existing_database_upgrade.py"
     - "python tools/scripts/verify_phase04_migration_control.py"
+    - "python tools/scripts/verify_phase04_domain_event_adoption.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"
