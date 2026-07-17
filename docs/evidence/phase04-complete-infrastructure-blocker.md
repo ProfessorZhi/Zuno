@@ -52,6 +52,7 @@ combined_postgres_rabbitmq_minio_fault_subset: passed
 operator_readiness_subset: proven
 dr_profile_rpo_rto_owner: proven
 infrastructure_capability_profile: proven
+infrastructure_domain_boundary: proven
 infra_requirement_006_010_ledger_subset: proven
 infra_requirement_064_evidence_gate: proven
 
@@ -105,6 +106,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_operator_readiness.py` | passed; Operator readiness snapshot 聚合 PostgreSQL health/readiness/pool metrics、Outbox backlog、RabbitMQ queue depth、MinIO object read probe、trace correlation、failure owner/retry owner/recovery owner，并明确 telemetry 不产生 Eval verdict |
 | `python tools/scripts/verify_phase04_dr_profile.py` | passed; `docs/governance/infrastructure-dr-profile.yaml` 覆盖 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO/RTO/Owner/Recovery Owner/验证命令/evidence ref，并保持 cutover fail closed |
 | `python tools/scripts/verify_phase04_infrastructure_capability_profile.py` | passed; `InfrastructureCapabilityProfileV1` 与 `DataServiceCapabilityV1` immutable、versioned、canonical-hash、Developer CI / Server Product typed contract 共用、派生服务非权威和 unsupported semantics 显式声明均通过 |
+| `python tools/scripts/verify_phase04_infrastructure_domain_boundary.py` | passed; 基础设施 receipt contract 和 PHASE04 evidence 均明确 Queue ACK、Object Commit、Idempotency Claim、Object Manifest visibility 与 operator telemetry 不代表领域成功 |
 | `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
@@ -166,10 +168,13 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
 - DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；其中 official Checkpointer 仍为 blocked，PITR 与 product projection replay 仍为 target_not_current。
 - Infrastructure Capability Profile subset：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 提供 frozen Pydantic contract、canonical content hash、profile version、deployment class、typed service capability、config hash、supported/unsupported semantics 和派生服务非权威校验；这只证明 profile contract 本身 current，不证明 blocked adapters 已实现。
+- Infrastructure/domain boundary subset：`tools/scripts/verify_phase04_infrastructure_domain_boundary.py` 固化 Queue ACK、RabbitMQ delivery、Object Commit、Idempotency Claim、Object Manifest visibility 和 operator telemetry 都不能解释为 product/domain success；MinIO manifest adoption verifier 同时证明 object receipt 不会在 crash path 推进领域成功。
 
 Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 Infrastructure requirement `ARCH-INFRA-003` is now proven by `tools/scripts/verify_phase04_infrastructure_capability_profile.py`: the capability profile contract is immutable, versioned, canonical-hashed, and shared by Developer CI and Server Product deployment classes. This does not prove official Checkpointer, PITR, complete recovery set, or enterprise index adapters.
+
+Infrastructure requirement `ARCH-INFRA-004` is now proven by `tools/scripts/verify_phase04_infrastructure_domain_boundary.py`: infrastructure receipts are checked against domain-success boundary evidence and the MinIO manifest crash guard. This does not prove any domain terminal state; it proves Infrastructure does not own one.
 
 Infrastructure requirement ledger subset `ARCH-INFRA-006` through `ARCH-INFRA-010` is now proven by the same real-service verifier set: PostgreSQL authoritative fact storage, Repository no-commit ownership, external I/O / DB transaction boundary, Generation/Epoch/Fencing conditional writes, and PostgreSQL role-specific pool/timeout/leak evidence are marked `implementation_available`. This subset does not include the official LangGraph PostgreSQL Checkpointer, PITR, complete Projection Replay, or the full recovery set.
 

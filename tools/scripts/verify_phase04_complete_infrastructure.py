@@ -151,6 +151,12 @@ CAPABILITY_PROFILE_VERIFIER = (
 CAPABILITY_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-capability-profile.md"
 )
+DOMAIN_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_infrastructure_domain_boundary.py"
+)
+DOMAIN_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-domain-boundary.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1126,6 +1132,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in capability_profile_evidence:
                 errors.append(
                     "PHASE04 infrastructure capability profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not DOMAIN_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 infrastructure domain boundary verifier")
+    else:
+        domain_boundary_errors = _load_verifier(
+            DOMAIN_BOUNDARY_VERIFIER,
+            "verify_phase04_infrastructure_domain_boundary",
+            "verify_phase04_infrastructure_domain_boundary",
+        )()
+        for domain_boundary_error in domain_boundary_errors:
+            errors.append(
+                "PHASE04 infrastructure domain boundary verification failed: "
+                f"{domain_boundary_error}"
+            )
+
+    if not DOMAIN_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 infrastructure domain boundary evidence")
+    else:
+        domain_boundary_evidence = _read(DOMAIN_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "infrastructure_receipt_contract_scan: passed",
+            "queue_ack_not_domain_success: passed",
+            "object_commit_not_domain_success: passed",
+            "idempotency_claim_not_domain_success: passed",
+            "operator_telemetry_not_domain_success: passed",
+            "minio_manifest_domain_success_rollback_guard: passed",
+            "Queue ACK, RabbitMQ delivery, Object Commit, Idempotency Claim, Object Manifest visibility and operator telemetry do not mean product/domain success",
+        ]:
+            if phrase not in domain_boundary_evidence:
+                errors.append(
+                    "PHASE04 infrastructure domain boundary evidence missing phrase: "
                     f"{phrase}"
                 )
 

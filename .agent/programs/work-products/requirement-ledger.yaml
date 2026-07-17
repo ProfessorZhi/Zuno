@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 729
-  implementation_available: 27
+  target_not_current: 728
+  implementation_available: 28
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -4426,26 +4426,31 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Infrastructure 不拥有领域终局"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
+      - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
+      - "docs/evidence/phase04-infrastructure-domain-boundary.md"
       - "docs/modules/11-infrastructure.md:1885"
-    gap: "?????Infrastructure 不拥有领域终局???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "none within current PHASE04 infrastructure receipt boundary; domain terminal states remain owned by their domain modules"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-004 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "Infrastructure receipts must not be interpreted as product/domain success; crash guards preserve domain owner rollback"
     test_ids:
-      - "INFRA-004-UT"
-      - "INFRA-004-IT"
+      - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
+      - "tests/repo/test_phase04_infrastructure_domain_boundary.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-004"
+      - "docs/evidence/phase04-infrastructure-domain-boundary.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1885"
-      - "planned_test:INFRA-004-UT"
-      - "planned_test:INFRA-004-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-004"
+      - "current:tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
+      - "current:tools/scripts/verify_phase04_minio_manifest_adoption.py"
+      - "test:tests/repo/test_phase04_infrastructure_domain_boundary.py"
+      - "evidence:docs/evidence/phase04-infrastructure-domain-boundary.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-005
     module: "11 Infrastructure"
