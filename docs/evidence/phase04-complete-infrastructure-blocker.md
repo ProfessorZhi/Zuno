@@ -8,6 +8,7 @@ coordinator_decision: not_approved
 real_services_smoke: passed
 alembic_migration_roundtrip_subset: passed
 alembic_schema_drift_infra_subset: passed
+migration_lock_backfill_control_subset: passed
 postgres_runtime_context_timeout_subset: passed
 postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
@@ -57,6 +58,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `Test-NetConnection localhost -Port 5672` | after Docker start `TcpTestSucceeded: True` |
 | `Test-NetConnection localhost -Port 9000` | after Docker start `TcpTestSucceeded: True` |
 | `python tools/scripts/verify_phase04_alembic_migration.py` | passed; temporary PostgreSQL DB upgrade head, repeated upgrade, downgrade base, re-upgrade and infra schema drift subset verified |
+| `python tools/scripts/verify_phase04_migration_control.py` | passed; PostgreSQL advisory lock 阻止并行 Alembic deploy，Backfill ledger 的 matrix adoption、chunk 幂等/hash conflict、pause/restart/resume、generation fencing 与 forward-fix lineage 通过 |
 | `python tools/scripts/verify_phase04_postgres_runtime.py` | passed; readiness, transaction-local tenant context, statement timeout and lock timeout verified |
 | `python tools/scripts/verify_phase04_postgres_deadlock_retry.py` | passed; two real concurrent PostgreSQL transactions deadlocked on opposite row locks, one received transient `40P01`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` | passed; two real `SERIALIZABLE` PostgreSQL transactions conflicted on a shared invariant, one received transient `40001`, retried the whole transaction and both workers committed |
@@ -84,7 +86,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 ## Missing Required Proof
 
 - 真实领域 handler adoption 与完整运维指标出口
-- Alembic full domain schema drift detection, data backfill framework, online migration lock and forward-fix governance
+- Alembic full domain schema drift、production-like existing DB upgrade、online index/constraint 策略与不可逆 migration 独立 runbook
 - PostgreSQL async engine, full session factory and connection rotation
 - Idempotency full worker runtime crash supervision
 - Lease/Fencing worker crash handoff, network partition, pause/GC delay, cancel race and full worker coordination runtime
@@ -105,6 +107,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - PostgreSQL connection loss recovery subset：真实 `pg_terminate_backend` 终止旧 connection，旧 connection fail closed，同一 engine 重新 checkout 后恢复；
 - Alembic migration roundtrip subset：临时 PostgreSQL DB 上 `upgrade head`、重复 `upgrade head`、`downgrade base`、再次 `upgrade head` 均通过，并验证 PHASE04 infra tables 创建/移除/重建；
 - Alembic schema drift subset：从真实临时库读取 `information_schema.columns`、`pg_constraint` 和 `pg_indexes`，校验 PHASE04 infra tables 关键 columns、constraints、indexes 和 idempotency tenant unique boundary；
+- Migration control subset：Alembic online execution 使用 PostgreSQL session advisory lock；并行 deploy 在 timeout 后 fail closed，释放后恢复。PHASE02 matrix 输入进入持久 Backfill ledger，chunk replay 幂等、hash conflict、pause/restart/resume、stale generation reject 与 forward-fix lineage 均通过；
 - RabbitMQ smoke：使用 `rabbitmqadmin` 声明临时 durable queue，发布 JSON payload，再以 `ackmode=ack_requeue_false` 读取并删除队列；
 - RabbitMQ publisher confirm：`RabbitMQTransport` 使用 `aio_pika` publisher confirm channel 发布 persistent message；
 - RabbitMQ redelivery：NACK `requeue=True` 后重新消费到 `redelivered=True` 的同一 message；
@@ -134,7 +137,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 governance subset：Object Lock committed version、GOVERNANCE retention、legal hold、exact-version purge deny、`_staging/` expiration lifecycle 与 authorization hook deny-before-I/O 均经真实 MinIO 验证；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker，并清理临时 DB 和 dump；
 
-这些结果证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 official Checkpointer、PITR、runtime restart after restore 或组合故障恢复。
+这些结果证明三类服务已经可用，并证明 PostgreSQL runtime context/timeout/deadlock retry/serialization retry/pool exhaustion/connection loss recovery 子集、Alembic 临时库往返、advisory lock 与可恢复 Backfill control 子集、RabbitMQ transport 的 confirm/redelivery/DLQ/replay/backlog depth/retry exhaustion/network partition/out-of-order 子集、Outbox Publisher 的持久 backoff/dead-letter/manual replay 与 publish-before-complete crash recovery 子集、RabbitMQ broker restart 子集、Idempotency Claim 生命周期、高并发单赢家、tenant isolation 与 owner process-exit reclaim 子集、Lease/Fencing acquire/renew/cancel/late-token reject 子集、MinIO object staging/multipart/partial-abort/lost-response reconciliation/authorization/retention/legal-hold/lifecycle/duplicate/visibility/missing/delete/restore/storage restart 子集与基础设施表的 PostgreSQL backup/restore 子集；仍不能证明 official Checkpointer、PITR、runtime restart after restore 或组合故障恢复。
 
 ## Existing Partial Evidence
 

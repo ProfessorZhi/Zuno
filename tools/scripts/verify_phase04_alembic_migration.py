@@ -21,8 +21,10 @@ REQUIRED_INFRA_TABLES = {
     "infra_checkpoints",
     "infra_outbox_sequences",
     "infra_delivery_watermarks",
+    "infra_migration_backfills",
+    "infra_migration_backfill_chunks",
 }
-EXPECTED_HEAD_REVISION = "20260717_07"
+EXPECTED_HEAD_REVISION = "20260717_08"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -108,6 +110,42 @@ REQUIRED_TABLE_COLUMNS = {
         "max_seen_sequence",
         "updated_at",
     },
+    "infra_migration_backfills": {
+        "backfill_id",
+        "module_owner",
+        "source_ref",
+        "target_ref",
+        "transform_version",
+        "state",
+        "cursor",
+        "cursor_hash",
+        "source_watermark",
+        "processed_count",
+        "conflict_count",
+        "chunk_size",
+        "generation",
+        "lease_owner",
+        "lease_expires_at",
+        "verification_hash",
+        "error_code",
+        "forward_fix_of",
+        "created_at",
+        "updated_at",
+        "completed_at",
+    },
+    "infra_migration_backfill_chunks": {
+        "backfill_id",
+        "chunk_id",
+        "start_cursor",
+        "end_cursor",
+        "start_cursor_hash",
+        "end_cursor_hash",
+        "payload_hash",
+        "source_watermark",
+        "row_count",
+        "applied_generation",
+        "applied_at",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -125,6 +163,14 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_delivery_counts",
     "ck_infra_outbox_events_claim_state",
     "ck_infra_outbox_events_dead_letter_state",
+    "fk_infra_migration_backfills_forward_fix_of",
+    "ck_infra_migration_backfills_state",
+    "ck_infra_migration_backfills_counts",
+    "ck_infra_migration_backfills_lease_state",
+    "ck_infra_migration_backfills_completed_state",
+    "fk_infra_migration_backfill_chunks_backfill",
+    "pk_infra_migration_backfill_chunks",
+    "ck_infra_migration_backfill_chunks_counts",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -134,6 +180,9 @@ REQUIRED_INDEXES = {
     "ix_infra_outbox_events_tenant_ordering",
     "ix_infra_inbox_messages_buffered",
     "ix_infra_outbox_events_delivery_ready",
+    "ix_infra_migration_backfills_state_lease",
+    "ix_infra_migration_backfills_owner",
+    "ix_infra_migration_backfill_chunks_applied",
 }
 
 

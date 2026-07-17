@@ -9,17 +9,18 @@ repeated_upgrade_head: passed
 downgrade_base: passed
 reupgrade_head: passed
 infra_table_roundtrip: passed
-head_revision: 20260717_07
+head_revision: 20260717_08
 schema_drift_detection: passed_infra_schema_subset
 delivery_ordering_schema: passed
-data_backfill_framework: not_yet_proven
-online_migration_lock: not_yet_proven
+data_backfill_framework: passed
+online_migration_lock: passed
+forward_fix_lineage: passed
 
 ## 边界
 
 本证据证明 Alembic 在真实 PostgreSQL 临时数据库上的迁移往返子集：空库 upgrade head、重复 upgrade head、downgrade base、再次 upgrade head、PHASE04 infra tables 的创建/移除/重建，以及基础设施表关键列、唯一约束、check constraint 和 index 的 schema drift 检查。
 
-这不关闭 P04-T02，也不关闭 PHASE04。当前 migration chain 仍未证明完整 schema drift detection、data backfill framework、online migration lock、forward-fix 策略和所有领域 schema 的 cutover 集成。
+这不关闭 P04-T02，也不关闭 PHASE04。当前 migration chain 仍未证明全量领域 schema drift、production-like existing DB upgrade、完整 online index/constraint 策略和所有领域 schema 的 cutover 集成。
 
 ## 环境
 
@@ -35,14 +36,17 @@ online_migration_lock: not_yet_proven
 
 - Verifier 创建隔离的真实 PostgreSQL 临时数据库，不修改当前 `zuno` 数据库。
 - 通过临时 `ZUNO_CONFIG` 驱动 `infra/db/alembic/env.py` 指向临时数据库。
-- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260717_07`。
-- 重复 `upgrade head` 保持 revision `20260717_07`，不产生重复对象错误。
+- `alembic -c infra/db/alembic.ini upgrade head` 在空库上到达 revision `20260717_08`。
+- 重复 `upgrade head` 保持 revision `20260717_08`，不产生重复对象错误。
 - PHASE04 infra tables 在 upgrade 后存在，且 verifier 从真实数据库读取 `information_schema.columns`、`pg_constraint` 和 `pg_indexes` 校验关键列、约束和索引。
 - `alembic downgrade base` 移除 PHASE04 infra tables。
-- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260717_07`。
+- 再次 `upgrade head` 重建 PHASE04 infra tables，并回到 revision `20260717_08`。
 - Revision `20260716_05` 为 `infra_idempotency_claims` 增加 `tenant_id`，并将唯一约束从 `scope/idempotency_key` 扩展为 `tenant_id/scope/idempotency_key`。
 - Revision `20260717_06` 增加 tenant-scoped Outbox sequence、Outbox/Inbox ordering metadata、`buffered` Inbox 状态和 delivery watermark，并提供可逆 downgrade；downgrade 前将 `buffered` 行 fail closed 为 `quarantined`。
 - Revision `20260717_07` 增加 Outbox 发布次数、当前重试轮次、持久退避时间、dead-letter、replay 审计字段，以及 claim/dead-letter 状态约束和可领取 backlog 索引。
+- Revision `20260717_08` 增加持久 Backfill 与 chunk receipt，包含状态、cursor/hash、watermark、lease generation、verification hash、conflict count 和 forward-fix lineage。
+- Alembic online execution 在 revision 前获取 PostgreSQL session advisory lock；并行 deploy 超时 fail closed，lock 释放后可恢复执行。
+- `phase04-migration-control.md` 证明 PHASE02 matrix 输入、chunk 幂等/hash conflict、pause/restart/resume、stale generation reject 与 forward-fix。
 - Schema drift 子集校验 ordering tables、columns、pair/sequence constraints、tenant-scoped unique constraints 和 buffered lookup index。
 - Schema drift 子集会检查 `tenant_id` 为 NOT NULL 且无持久 server default、旧 `uq_infra_idempotency_claims_scope_key` 不再存在、新 `uq_infra_idempotency_claims_tenant_scope_key` 存在。
 - Verifier 结束时终止临时数据库连接并删除临时数据库。
@@ -62,6 +66,6 @@ pytest -q tests/integration/test_phase04_alembic_migration.py -p no:cacheprovide
 ## 剩余缺口
 
 - `20260417_01` 仍使用 `metadata.create_all()`；这不满足完整产品 migration governance。
-- Schema drift detection 已覆盖 PHASE04 基础设施表关键列、约束和索引子集；全量 domain schema drift、module ownership matrix、data backfill framework、online migration lock 和 forward-fix runbook 仍未证明。
-- Existing production-like DB upgrade 和 parallel deploy migration lock 尚未证明。
+- Schema drift detection 已覆盖 PHASE04 基础设施表关键列、约束和索引子集；全量 domain schema drift、module ownership matrix、online index/constraint 策略和不可逆 migration 独立 runbook 仍未证明。
+- Existing production-like DB upgrade 尚未证明。
 - P04-T02 仍是 `ready`，不是 completed。

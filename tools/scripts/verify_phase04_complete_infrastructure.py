@@ -12,6 +12,8 @@ PHASE04_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastru
 PARTIAL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-foundation.md"
 ALEMBIC_MIGRATION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_alembic_migration.py"
 ALEMBIC_MIGRATION_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-alembic-migration.md"
+MIGRATION_CONTROL_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_migration_control.py"
+MIGRATION_CONTROL_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-migration-control.md"
 POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_runtime.py"
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
@@ -153,10 +155,44 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "reupgrade_head: passed",
             "infra_table_roundtrip: passed",
             "schema_drift_detection: passed_infra_schema_subset",
+            "data_backfill_framework: passed",
+            "online_migration_lock: passed",
+            "forward_fix_lineage: passed",
             "不关闭 P04-T02",
         ]:
             if phrase not in alembic_evidence:
                 errors.append(f"PHASE04 Alembic migration evidence missing phrase: {phrase}")
+
+    if not MIGRATION_CONTROL_VERIFIER.exists():
+        errors.append("missing PHASE04 migration control verifier")
+    else:
+        migration_control_errors = _load_verifier(
+            MIGRATION_CONTROL_VERIFIER,
+            "verify_phase04_migration_control",
+            "verify_phase04_migration_control",
+        )()
+        for migration_control_error in migration_control_errors:
+            errors.append(f"PHASE04 migration control verification failed: {migration_control_error}")
+
+    if not MIGRATION_CONTROL_EVIDENCE.exists():
+        errors.append("missing PHASE04 migration control evidence")
+    else:
+        migration_control_evidence = _read(MIGRATION_CONTROL_EVIDENCE)
+        for phrase in [
+            "migration_advisory_lock: passed",
+            "parallel_deploy_fail_closed: passed",
+            "lock_release_recovery: passed",
+            "phase02_cutover_input_adoption: passed",
+            "durable_backfill_ledger: passed",
+            "chunk_idempotency: passed",
+            "chunk_hash_conflict: passed_fail_closed",
+            "pause_restart_resume: passed",
+            "stale_generation_reject: passed",
+            "forward_fix_lineage: passed",
+            "不关闭 P04-T02",
+        ]:
+            if phrase not in migration_control_evidence:
+                errors.append(f"PHASE04 migration control evidence missing phrase: {phrase}")
 
     if not POSTGRES_RUNTIME_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL runtime verifier")
