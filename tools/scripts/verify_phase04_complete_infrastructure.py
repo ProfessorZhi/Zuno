@@ -18,6 +18,7 @@ POSTGRES_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_po
 POSTGRES_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-runtime.md"
 POSTGRES_SESSION_RUNTIME_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_session_runtime.py"
 POSTGRES_SESSION_RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-postgres-session-runtime.md"
+DOMAIN_UOW_ADOPTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_domain_uow_adoption.py"
 POSTGRES_DEADLOCK_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_deadlock_retry.py"
 POSTGRES_SERIALIZATION_RETRY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_serialization_retry.py"
 POSTGRES_POOL_EXHAUSTION_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_postgres_pool_exhaustion.py"
@@ -261,10 +262,26 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "async_connection_loss_recovery: passed",
             "connection_rotation: passed",
             "pool_health_metrics: passed",
-            "不关闭 P04-T01",
+            "default_runtime_owner: passed",
+            "dao_uow_adoption: passed",
+            "cross_repository_rollback: passed",
+            "uow_owned_commit: passed",
+            "async_task_isolation: passed",
+            "p04_t01_completion: proven",
         ]:
             if phrase not in session_runtime_evidence:
                 errors.append(f"PHASE04 PostgreSQL session runtime evidence missing phrase: {phrase}")
+
+    if not DOMAIN_UOW_ADOPTION_VERIFIER.exists():
+        errors.append("missing PHASE04 Domain UoW adoption verifier")
+    else:
+        domain_uow_errors = _load_verifier(
+            DOMAIN_UOW_ADOPTION_VERIFIER,
+            "verify_phase04_domain_uow_adoption",
+            "verify_phase04_domain_uow_adoption",
+        )()
+        for domain_uow_error in domain_uow_errors:
+            errors.append(f"PHASE04 Domain UoW adoption verification failed: {domain_uow_error}")
 
     if not POSTGRES_DEADLOCK_RETRY_VERIFIER.exists():
         errors.append("missing PHASE04 PostgreSQL deadlock retry verifier")

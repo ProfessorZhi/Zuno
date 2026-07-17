@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import func, select, update
 
 from zuno.database.models.user import UserTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class UserDao:
@@ -36,7 +36,7 @@ class UserDao:
                     user_password=user_password,
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     def filter_users(
@@ -77,7 +77,7 @@ class UserDao:
                     user_password=user_password,
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     def add_user_and_default_role(
@@ -98,7 +98,7 @@ class UserDao:
                     user_password=user_password,
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     def add_user_and_admin_role(
@@ -119,7 +119,7 @@ class UserDao:
                     user_password=user_password,
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_all_users(cls, page: int = 0, limit: int = 0) -> List[UserTable]:
@@ -151,7 +151,7 @@ class UserDao:
                 update_values["user_description"] = user_description
             statement = update(UserTable).where(UserTable.user_id == user_id).values(**update_values)
             session.exec(statement)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["UserDao"]

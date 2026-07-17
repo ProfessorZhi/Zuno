@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlmodel import select, update
 
 from zuno.database.models.knowledge_task import KnowledgeTaskEventTable, KnowledgeTaskTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class KnowledgeTaskDao:
@@ -23,7 +23,7 @@ class KnowledgeTaskDao:
         )
         with session_getter() as session:
             session.add(task)
-            session.commit()
+            session.flush()
             return task.id
 
     @classmethod
@@ -45,7 +45,7 @@ class KnowledgeTaskDao:
                     detail=detail or {},
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     async def select_task_by_id(cls, task_id: str):
@@ -80,7 +80,7 @@ class KnowledgeTaskDao:
         with session_getter() as session:
             sql = update(KnowledgeTaskTable).where(KnowledgeTaskTable.id == task_id).values(**kwargs)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def mark_task_started(cls, task_id: str, stage: str):

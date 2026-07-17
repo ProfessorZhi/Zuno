@@ -1,7 +1,7 @@
 from sqlmodel import delete, select, update
 
 from zuno.database.models.knowledge_file import KnowledgeFileTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class KnowledgeFileDao:
@@ -27,14 +27,14 @@ class KnowledgeFileDao:
                     status="process",
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     async def delete_knowledge_file(cls, knowledge_file_id):
         with session_getter() as session:
             sql = delete(KnowledgeFileTable).where(KnowledgeFileTable.id == knowledge_file_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def select_knowledge_file(cls, knowledge_id):
@@ -61,7 +61,7 @@ class KnowledgeFileDao:
         with session_getter() as session:
             sql = update(KnowledgeFileTable).where(KnowledgeFileTable.id == knowledge_file_id).values(**kwargs)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["KnowledgeFileDao"]

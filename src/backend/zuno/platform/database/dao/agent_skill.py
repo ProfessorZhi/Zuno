@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import delete, select
 
 from zuno.database.models.agent_skill import AgentSkill
-from zuno.database.session import async_session_getter
+from zuno.platform.database.session import async_session_getter
 
 
 class AgentSkillDao:
@@ -11,7 +11,7 @@ class AgentSkillDao:
     async def create_agent_skill(cls, agent_skill: AgentSkill):
         async with async_session_getter() as session:
             session.add(agent_skill)
-            await session.commit()
+            await session.flush()
             await session.refresh(agent_skill)
             return agent_skill
 
@@ -20,7 +20,7 @@ class AgentSkillDao:
         async with async_session_getter() as session:
             statement = delete(AgentSkill).where(AgentSkill.id == agent_skill_id)
             await session.exec(statement)
-            await session.commit()
+            await session.flush()
 
     @classmethod
     async def get_agent_skills(cls, user_id):
@@ -50,6 +50,6 @@ class AgentSkillDao:
     async def update_agent_skill(cls, agent_skill: AgentSkill):
         async with async_session_getter() as session:
             merged = await session.merge(agent_skill)
-            await session.commit()
+            await session.flush()
             await session.refresh(merged)
             return merged

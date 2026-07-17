@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlmodel import delete, desc, select, update
 
 from zuno.database.models.dialog import DialogTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class DialogDao:
@@ -16,7 +16,7 @@ class DialogDao:
         with session_getter() as session:
             dialog = await cls._get_dialog_sql(name, agent_id, agent_type, user_id)
             session.add(dialog)
-            session.commit()
+            session.flush()
             session.refresh(dialog)
             return dialog
 
@@ -43,14 +43,14 @@ class DialogDao:
         with session_getter() as session:
             sql = update(DialogTable).where(DialogTable.dialog_id == dialog_id).values(update_time=datetime.now(timezone.utc))
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def delete_dialog_by_id(cls, dialog_id: str):
         with session_getter() as session:
             sql = delete(DialogTable).where(DialogTable.dialog_id == dialog_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def check_dialog_iscustom(cls, dialog_id: str):
@@ -63,14 +63,14 @@ class DialogDao:
         with session_getter() as session:
             sql = delete(DialogTable).where(DialogTable.agent_id == agent_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def reassign_agent_id(cls, source_agent_id: str, target_agent_id: str):
         with session_getter() as session:
             sql = update(DialogTable).where(DialogTable.agent_id == source_agent_id).values(agent_id=target_agent_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["DialogDao"]

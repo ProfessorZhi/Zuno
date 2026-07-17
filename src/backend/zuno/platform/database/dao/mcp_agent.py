@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import and_, delete, desc, select, update
 
 from zuno.database.models.mcp_agent import MCPAgentTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 from zuno.utils.helpers import delete_img
 
 
@@ -60,7 +60,7 @@ class MCPAgentDao:
                     enable_memory,
                 )
             )
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_mcp_agent(cls):
@@ -93,7 +93,7 @@ class MCPAgentDao:
             sql = delete(MCPAgentTable).where(MCPAgentTable.id == id)
             session.exec(sql)
             delete_img(logo=agent_logo)
-            session.commit()
+            session.flush()
 
     @classmethod
     def _get_logo_by_id(cls, id: str):
@@ -162,7 +162,7 @@ class MCPAgentDao:
 
             sql = update(MCPAgentTable).where(MCPAgentTable.id == id).values(**update_values)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["MCPAgentDao"]

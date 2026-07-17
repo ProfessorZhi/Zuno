@@ -2,7 +2,7 @@ from sqlmodel import and_, or_, select, update, delete
 
 from zuno.database.models.llm import LLMTable
 from zuno.database.models.user import SystemUser
-from zuno.database.session import async_session_getter, session_getter
+from zuno.platform.database.session import async_session_getter, session_getter
 
 UNSET = object()
 
@@ -30,14 +30,14 @@ class LLMDao:
                 model_slot=model_slot,
             )
             session.add(llm)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def delete_llm(cls, llm_id: str):
         with session_getter() as session:
             sql = delete(LLMTable).where(LLMTable.llm_id == llm_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def update_llm(
@@ -71,14 +71,14 @@ class LLMDao:
         with session_getter() as session:
             sql = update(LLMTable).where(LLMTable.llm_id == llm_id).values(**update_values)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def clear_model_slot(cls, model_slot: str):
         with session_getter() as session:
             sql = update(LLMTable).where(LLMTable.model_slot == model_slot).values(model_slot=None)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def get_llm_by_user(cls, user_id: str):

@@ -4,7 +4,7 @@ import re
 from sqlmodel import and_, delete, or_, select
 
 from zuno.database.models.workspace_session import WorkSpaceSession
-from zuno.database.session import async_session_getter
+from zuno.platform.database.session import async_session_getter
 
 
 class WorkSpaceSessionDao:
@@ -44,7 +44,7 @@ class WorkSpaceSessionDao:
 
                 workspace_session.session_id = uuid4().hex
             session.add(workspace_session)
-            await session.commit()
+            await session.flush()
             await session.refresh(workspace_session)
         return workspace_session
 
@@ -55,7 +55,7 @@ class WorkSpaceSessionDao:
                 and_(WorkSpaceSession.session_id.in_(session_ids), WorkSpaceSession.user_id == user_id)
             )
             await session.exec(statement)
-            await session.commit()
+            await session.flush()
 
     @classmethod
     async def update_workspace_session_contexts(cls, session_id, session_context, title: str | None = None):
@@ -70,7 +70,7 @@ class WorkSpaceSessionDao:
             if title and (not had_contexts or cls.is_placeholder_title(workspace_session.title)):
                 workspace_session.title = title
 
-            await session.commit()
+            await session.flush()
             await session.refresh(workspace_session)
 
         return workspace_session
@@ -96,7 +96,7 @@ class WorkSpaceSessionDao:
             workspace_session = await session.get(WorkSpaceSession, session_id)
             workspace_session.contexts = []
 
-            await session.commit()
+            await session.flush()
             await session.refresh(workspace_session)
 
         return workspace_session

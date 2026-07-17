@@ -1,7 +1,7 @@
 from sqlmodel import select
 
 from zuno.database.models.message import MessageDownTable, MessageLikeTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class MessageLikeDao:
@@ -13,7 +13,7 @@ class MessageLikeDao:
     def create_message_like(cls, user_input: str, agent_output: str):
         with session_getter() as session:
             session.add(cls._get_message_like_sql(user_input, agent_output))
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_message_like(cls):
@@ -31,7 +31,7 @@ class MessageDownDao:
     def create_message_down(cls, user_input: str, agent_output: str):
         with session_getter() as session:
             session.add(cls._get_message_down_sql(user_input, agent_output))
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_message_down(cls):

@@ -4,7 +4,7 @@ from sqlmodel import delete, select
 
 from zuno.database.models.role import AdminRole
 from zuno.database.models.user_role import UserRole, UserRoleBase
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class UserRoleDao(UserRoleBase):
@@ -32,7 +32,7 @@ class UserRoleDao(UserRoleBase):
         with session_getter() as session:
             user_role = UserRole(user_id=user_id, role_id=AdminRole)
             session.add(user_role)
-            session.commit()
+            session.flush()
             session.refresh(user_role)
             return user_role
 
@@ -41,7 +41,7 @@ class UserRoleDao(UserRoleBase):
         with session_getter() as session:
             user_roles = [UserRole(user_id=user_id, role_id=role_id) for role_id in role_ids]
             session.add_all(user_roles)
-            session.commit()
+            session.flush()
             return user_roles
 
     @classmethod
@@ -49,7 +49,7 @@ class UserRoleDao(UserRoleBase):
         with session_getter() as session:
             statement = delete(UserRole).where(UserRole.user_id == user_id).where(UserRole.role_id.in_(role_ids))
             session.exec(statement)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["UserRoleDao"]

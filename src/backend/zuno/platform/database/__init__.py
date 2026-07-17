@@ -5,8 +5,9 @@ import yaml
 import zuno as zuno_package
 from loguru import logger
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import SQLModel, create_engine
+from sqlmodel import SQLModel
+
+from zuno.platform.database.runtime import PostgresRuntime, PostgresRuntimeConfig
 
 __path__ = extend_path(__path__, __name__)
 
@@ -73,19 +74,21 @@ def _load_database_config() -> dict:
 database_config = _load_database_config()
 
 
-engine = create_engine(
-    url=database_config.get("sync_endpoint"),
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=database_config.get("echo", False),
+postgres_runtime = PostgresRuntime(
+    PostgresRuntimeConfig(
+        sync_url=str(database_config.get("sync_endpoint") or ""),
+        async_url=str(database_config.get("async_endpoint") or ""),
+        pool_size=int(database_config.get("pool_size", 10)),
+        max_overflow=int(database_config.get("max_overflow", 20)),
+        pool_timeout_seconds=float(database_config.get("pool_timeout_seconds", 30)),
+        pool_recycle_seconds=int(database_config.get("pool_recycle_seconds", 3600)),
+        statement_timeout_ms=int(database_config.get("statement_timeout_ms", 30_000)),
+        lock_timeout_ms=int(database_config.get("lock_timeout_ms", 5_000)),
+        echo=bool(database_config.get("echo", False)),
+    )
 )
-
-async_engine = create_async_engine(
-    url=database_config.get("async_endpoint"),
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=database_config.get("echo", False),
-)
+engine = postgres_runtime.sync_engine
+async_engine = postgres_runtime.async_engine
 
 
 def ensure_database(endpoint: str | None = None) -> None:
@@ -159,4 +162,5 @@ __all__ = [
     "database_config",
     "ensure_database",
     "engine",
+    "postgres_runtime",
 ]

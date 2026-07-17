@@ -8,11 +8,12 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
-    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +26,7 @@ class PostgresRuntimeConfig:
     pool_recycle_seconds: int = 1800
     statement_timeout_ms: int = 30_000
     lock_timeout_ms: int = 5_000
+    echo: bool = False
 
     def __post_init__(self) -> None:
         if not self.sync_url.startswith("postgresql+"):
@@ -54,6 +56,16 @@ class PostgresHealthReceipt:
     checked_out: int
     overflow: int
     error_code: str | None = None
+
+
+class UnitOfWorkSession(Session):
+    def commit(self) -> None:
+        raise RuntimeError("transaction commit is owned by the Unit of Work")
+
+
+class AsyncUnitOfWorkSession(AsyncSession):
+    async def commit(self) -> None:
+        raise RuntimeError("transaction commit is owned by the Unit of Work")
 
 
 class SyncSessionUnitOfWork:
@@ -207,18 +219,19 @@ class PostgresRuntime:
             "max_overflow": config.max_overflow,
             "pool_timeout": config.pool_timeout_seconds,
             "pool_recycle": config.pool_recycle_seconds,
+            "echo": config.echo,
         }
         self.sync_engine = create_engine(config.sync_url, future=True, **engine_options)
         self.async_engine = create_async_engine(config.async_url, **engine_options)
         self.sync_session_factory = sessionmaker(
             bind=self.sync_engine,
-            class_=Session,
+            class_=UnitOfWorkSession,
             expire_on_commit=False,
             autoflush=False,
         )
         self.async_session_factory = async_sessionmaker(
             bind=self.async_engine,
-            class_=AsyncSession,
+            class_=AsyncUnitOfWorkSession,
             expire_on_commit=False,
             autoflush=False,
         )
@@ -368,9 +381,11 @@ class PostgresRuntime:
 
 
 __all__ = [
+    "AsyncUnitOfWorkSession",
     "AsyncSessionUnitOfWork",
     "PostgresHealthReceipt",
     "PostgresRuntime",
     "PostgresRuntimeConfig",
     "SyncSessionUnitOfWork",
+    "UnitOfWorkSession",
 ]

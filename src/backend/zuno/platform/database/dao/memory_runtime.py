@@ -6,7 +6,7 @@ from typing import Iterator
 
 from sqlmodel import Session
 
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class MemoryRuntimeDao:
@@ -21,11 +21,8 @@ class MemoryRuntimeDao:
             return
         session = session_factory()
         try:
-            yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
+            with session.begin():
+                yield session
         finally:
             session.close()
 

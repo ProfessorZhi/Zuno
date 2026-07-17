@@ -1,7 +1,7 @@
 from sqlmodel import delete, select, update
 
 from zuno.database.models.mcp_server import MCPServerStdioTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class MCPServerStdioDao:
@@ -23,7 +23,7 @@ class MCPServerStdioDao:
                 mcp_server_command=mcp_server_command,
             )
             session.add(mcp_server)
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_mcp_servers(cls, user_id: str):
@@ -40,7 +40,7 @@ class MCPServerStdioDao:
         with session_getter() as session:
             sql = delete(MCPServerStdioTable).where(MCPServerStdioTable.mcp_server_id == mcp_server_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     def update_mcp_server(
@@ -68,7 +68,7 @@ class MCPServerStdioDao:
                 .values(**update_values)
             )
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     def get_mcp_server_by_id(cls, mcp_server_id: str):

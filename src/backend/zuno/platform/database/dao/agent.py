@@ -1,7 +1,7 @@
 from sqlmodel import and_, delete, desc, select, update
 
 from zuno.database.models.agent import AgentTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class AgentDao:
@@ -9,7 +9,7 @@ class AgentDao:
     async def create_agent(cls, agent: AgentTable):
         with session_getter() as session:
             session.add(agent)
-            session.commit()
+            session.flush()
             session.refresh(agent)
             return agent
 
@@ -53,7 +53,7 @@ class AgentDao:
         with session_getter() as session:
             statement = delete(AgentTable).where(AgentTable.id == id)
             session.exec(statement)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def _get_logo_by_id(cls, id: str):
@@ -101,7 +101,7 @@ class AgentDao:
         with session_getter() as session:
             statement = update(AgentTable).where(AgentTable.id == agent_id).values(**update_values)
             session.exec(statement)
-            session.commit()
+            session.flush()
 
 
 __all__ = ["AgentDao"]

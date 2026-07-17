@@ -11,6 +11,7 @@ alembic_schema_drift_infra_subset: passed
 migration_lock_backfill_control_subset: passed
 postgres_runtime_context_timeout_subset: passed
 postgres_session_runtime_subset: passed
+domain_uow_adoption: passed
 postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
 postgres_pool_exhaustion_subset: passed
@@ -66,6 +67,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_migration_control.py` | passed; PostgreSQL advisory lock 阻止并行 Alembic deploy，Backfill ledger 的 matrix adoption、chunk 幂等/hash conflict、pause/restart/resume、generation fencing 与 forward-fix lineage 通过 |
 | `python tools/scripts/verify_phase04_postgres_runtime.py` | passed; readiness, transaction-local tenant context, statement timeout and lock timeout verified |
 | `python tools/scripts/verify_phase04_postgres_session_runtime.py` | passed; sync/async Session Factory、显式 UoW、commit/rollback、nested reject、failed-entry cleanup、read-only、tenant 并发隔离、async timeout/cancel、connection loss recovery 与 rotation 通过 |
+| `python tools/scripts/verify_phase04_domain_uow_adoption.py` | passed; 唯一默认 `PostgresRuntime`、DAO UoW-owned commit、跨两个 Repository 原子回滚、sync/async Session 复用、tenant no-leak 与 async task isolation 通过 |
 | `python tools/scripts/verify_phase04_postgres_deadlock_retry.py` | passed; two real concurrent PostgreSQL transactions deadlocked on opposite row locks, one received transient `40P01`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_serialization_retry.py` | passed; two real `SERIALIZABLE` PostgreSQL transactions conflicted on a shared invariant, one received transient `40001`, retried the whole transaction and both workers committed |
 | `python tools/scripts/verify_phase04_postgres_pool_exhaustion.py` | passed; real PostgreSQL engine with `pool_size=1`, `max_overflow=0`, `pool_timeout=1` rejected a second checkout while the only connection was held and recovered after release |
@@ -90,13 +92,12 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
 | `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
 | `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest 与 checkpoint primitive 对账通过 |
-| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T04/T05 已完成，最终仍由 P04-T01–T03、P04-T06/T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
+| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T04/T05 已完成，最终仍由 P04-T02/T03/T06/T07、审批/PHASE05 gate、official Checkpointer、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
 
 - 真实领域 handler adoption 与完整运维指标出口
 - Alembic full domain schema drift、production-like existing DB upgrade、online index/constraint 策略与不可逆 migration 独立 runbook
-- PostgreSQL domain service 默认路径接入显式 Runtime Factory/UoW，并收缩旧全局 engine/session compatibility surface
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - PITR
@@ -109,6 +110,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - PostgreSQL schema backup smoke：`pg_dump --schema-only` 可运行，且包含 `infra_outbox_events` 和 `infra_checkpoints`；
 - PostgreSQL runtime context/timeout subset：readiness、transaction-local tenant context、tenant no-leak、statement timeout 和 lock timeout 经真实 PostgreSQL 验证；
 - PostgreSQL session runtime subset：显式配置创建 sync/async Engine 与 Session Factory；两类 UoW 的 commit/rollback、nested reject、isolation/read-only、并发 tenant no-leak、async timeout/cancel、backend termination recovery、pool metrics 和 connection rotation 均通过；
+- PostgreSQL 默认 Domain UoW：应用只构造一个 `PostgresRuntime`；旧 Engine 导出指向同一 Runtime；DAO 不再拥有 commit/rollback；跨 `MessageLikeDao` 与 `MessageDownDao` 的事务失败后原子回滚，async DAO 与 task isolation 通过；
 - PostgreSQL deadlock retry subset：真实双事务 row-lock deadlock 触发 `40P01`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL serialization retry subset：真实 `SERIALIZABLE` 写偏斜冲突触发 `40001`，retry boundary 重跑完整事务并最终提交；
 - PostgreSQL pool exhaustion subset：真实 PostgreSQL engine 在 `pool_size=1/max_overflow=0/pool_timeout=1` 下拒绝第二个 checkout，释放后恢复；
@@ -157,4 +159,4 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 ## Gate Decision
 
-PHASE04 remains not completed. PHASE05 must remain blocked until the official LangGraph PostgreSQL Checkpointer path is proven, Backup/Restore/Replay evidence exists, RabbitMQ and MinIO/S3 fault/restore evidence exists, combined dependency fault evidence exists, `phase04-readiness.yaml` marks P04-T01 through P04-T07 completed, and the Coordinator approval gate is explicit.
+PHASE04 remains not completed. PHASE05 must remain blocked until P04-T02/T03/T06/T07 are completed, the official LangGraph PostgreSQL Checkpointer path is proven, full Backup/Restore/Projection Replay and Checkpointer recovery evidence exists, combined dependency fault evidence includes the Checkpointer, and the Coordinator approval gate is explicit.

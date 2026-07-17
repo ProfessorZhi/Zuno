@@ -91,7 +91,7 @@ program_version: 2
 ## 数据与基础设施
 
 - [ ] Alembic Upgrade/Downgrade 或恢复策略验证。
-- [ ] PostgreSQL 事务、约束、并发、隔离、连接丢失和恢复验证。
+- [x] PostgreSQL 事务、约束、并发、隔离、连接丢失和恢复验证。
 - [ ] Outbox/Inbox Duplicate、Gap、Redelivery、Hash Conflict 和 Crash 验证。
 - [ ] 真实 RabbitMQ Confirm、Reconnect、DLQ、Replay 和 Partition 验证。
 - [x] Idempotency Claim 并发、冲突、过期、续租和结果丢失验证。

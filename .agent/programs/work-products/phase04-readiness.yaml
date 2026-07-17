@@ -8,9 +8,14 @@ prior_completion_candidate: superseded
 status_boundary: "Existing PostgreSQL primitive implementation and five integration tests are partial evidence only. PHASE04 requires complete PostgreSQL, RabbitMQ, S3-compatible Object Store, LangGraph PostgreSQL Checkpointer, backup/restore, concurrency and fault evidence."
 work_packages:
   P04-T01:
-    state: ready
-    existing_output: "src/backend/zuno/platform/database/foundation.py"
-    remaining_scope: "production sync/async sessions, tenant context, timeout, pool, connection-loss and UoW semantics"
+    state: completed
+    existing_outputs:
+      - "src/backend/zuno/platform/database/runtime.py"
+      - "src/backend/zuno/platform/database/session.py"
+      - "tools/scripts/verify_phase04_postgres_session_runtime.py"
+      - "tools/scripts/verify_phase04_domain_uow_adoption.py"
+      - "docs/evidence/phase04-postgres-session-runtime.md"
+    remaining_scope: "none within P04-T01; transaction retry remains separate from business retry"
   P04-T02:
     state: ready
     existing_output: "infra/db/alembic/versions/20260715_04_infrastructure_foundation.py"

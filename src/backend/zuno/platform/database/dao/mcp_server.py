@@ -1,7 +1,7 @@
 from sqlmodel import and_, delete, func, select, update
 
 from zuno.database.models.mcp_server import MCPServerTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class MCPServerDao:
@@ -39,7 +39,7 @@ class MCPServerDao:
                 description=description,
             )
             session.add(mcp_server)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def get_mcp_server_from_id(cls, mcp_server_id):
@@ -52,14 +52,14 @@ class MCPServerDao:
         with session_getter() as session:
             sql = delete(MCPServerTable).where(MCPServerTable.mcp_server_id == mcp_server_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def update_mcp_server(cls, mcp_server_id: str, update_data: dict):
         with session_getter() as session:
             sql = update(MCPServerTable).where(MCPServerTable.mcp_server_id == mcp_server_id).values(**update_data)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def get_first_mcp_server(cls):

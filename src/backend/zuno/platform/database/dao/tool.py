@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import and_, delete, or_, select, update
 
 from zuno.database.models.tool import ToolTable
-from zuno.database.session import async_session_getter, session_getter
+from zuno.platform.database.session import async_session_getter, session_getter
 
 
 class ToolDao:
@@ -22,7 +22,7 @@ class ToolDao:
         async with async_session_getter() as session:
             statement = delete(ToolTable).where(ToolTable.tool_id == tool_id)
             await session.exec(statement)
-            await session.commit()
+            await session.flush()
 
     @classmethod
     async def update_tool_by_id(
@@ -46,7 +46,7 @@ class ToolDao:
 
             sql = update(ToolTable).where(ToolTable.tool_id == tool_id).values(**update_values)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def get_tool_by_user_id(cls, user_id: str):
@@ -112,7 +112,7 @@ class ToolDao:
     async def create_user_defined_tool(cls, tool: ToolTable):
         async with async_session_getter() as session:
             session.add(tool)
-            await session.commit()
+            await session.flush()
             await session.refresh(tool)
             return tool
 
@@ -120,7 +120,7 @@ class ToolDao:
     async def create_default_tool(cls, tool):
         async with async_session_getter() as session:
             session.add(tool)
-            await session.commit()
+            await session.flush()
             await session.refresh(tool)
             return tool
 
@@ -129,7 +129,7 @@ class ToolDao:
         async with async_session_getter() as session:
             statement = delete(ToolTable).where(ToolTable.tool_id == tool_id)
             await session.exec(statement)
-            await session.commit()
+            await session.flush()
 
     @classmethod
     async def get_user_defined_tools(cls, user_id):
@@ -143,7 +143,7 @@ class ToolDao:
         async with async_session_getter() as session:
             statement = update(ToolTable).where(ToolTable.tool_id == tool_id).values(**update_values)
             await session.exec(statement)
-            await session.commit()
+            await session.flush()
 
 
 __all__ = ["ToolDao"]

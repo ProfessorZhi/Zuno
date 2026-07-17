@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from sqlmodel import delete, select
 
 from zuno.database.models.memory_history import MemoryHistoryTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class MemoryHistoryDao:
                     role=role,
                 )
                 session.add(history_record)
-                session.commit()
+                session.flush()
                 logger.info(f"Successfully added memory history record for memory_id: {memory_id}")
 
     @classmethod
@@ -86,7 +86,7 @@ class MemoryHistoryDao:
             with session_getter() as session:
                 sql = delete(MemoryHistoryTable).where(MemoryHistoryTable.memory_id == memory_id)
                 session.exec(sql)
-                session.commit()
+                session.flush()
                 logger.info(f"Successfully deleted history records for memory_id: {memory_id}")
 
     @classmethod
@@ -95,7 +95,7 @@ class MemoryHistoryDao:
             with session_getter() as session:
                 sql = delete(MemoryHistoryTable).where(MemoryHistoryTable.id == history_id)
                 session.exec(sql)
-                session.commit()
+                session.flush()
                 logger.info(f"Successfully deleted history record with id: {history_id}")
 
     @classmethod
@@ -104,7 +104,7 @@ class MemoryHistoryDao:
             with session_getter() as session:
                 sql = delete(MemoryHistoryTable)
                 session.exec(sql)
-                session.commit()
+                session.flush()
                 logger.info("Successfully reset memory_history table")
 
     @classmethod
@@ -122,7 +122,7 @@ class MemoryHistoryDao:
 
                 record.updated_at = datetime.now()
                 session.add(record)
-                session.commit()
+                session.flush()
                 logger.info(f"Successfully updated history record with id: {history_id}")
 
     @classmethod

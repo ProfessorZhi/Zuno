@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import and_, delete, func, select
 
 from zuno.database.models.role import AdminRole, Role, RoleBase, RoleCreate
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class RoleDao(RoleBase):
@@ -34,7 +34,7 @@ class RoleDao(RoleBase):
     def insert_role(cls, role: RoleCreate):
         with session_getter() as session:
             session.add(role)
-            session.commit()
+            session.flush()
             session.refresh(role)
             return role
 
@@ -60,7 +60,7 @@ class RoleDao(RoleBase):
             all_user = session.exec(all_user).all()
             session.exec(delete(UserRole).where(UserRole.id.in_([one.id for one in all_user])))
             session.exec(delete(Role).where(Role.group_id == group_id))
-            session.commit()
+            session.flush()
 
 
 __all__ = ["RoleDao"]

@@ -4,7 +4,7 @@ from typing import Optional
 from sqlmodel import select
 
 from zuno.database.models.usage_stats import UsageStats
-from zuno.database.session import async_session_getter, session_getter
+from zuno.platform.database.session import async_session_getter, session_getter
 
 
 class UsageStatsDao:
@@ -12,7 +12,7 @@ class UsageStatsDao:
     async def create_usage_stats(cls, usage_stats: UsageStats):
         async with async_session_getter() as session:
             session.add(usage_stats)
-            await session.commit()
+            await session.flush()
             await session.refresh(usage_stats)
             return usage_stats
 
@@ -20,7 +20,7 @@ class UsageStatsDao:
     def sync_create_usage_stats(cls, usage_stats: UsageStats):
         with session_getter() as session:
             session.add(usage_stats)
-            session.commit()
+            session.flush()
             session.refresh(usage_stats)
             return usage_stats
 

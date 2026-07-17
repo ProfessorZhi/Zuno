@@ -23,7 +23,7 @@ connection_rotation: passed_in_phase04-postgres-session-runtime.md
 
 本证据证明真实 PostgreSQL 上的 runtime transaction 子集：UoW 可以设置事务级 tenant context、statement timeout 和 lock timeout；tenant context 不泄漏到后续事务；慢查询会被 statement timeout 取消；等待已被其他事务持有的 row lock 会被 lock timeout 拒绝；受限连接池耗尽会 fail closed 并在释放连接后恢复；被终止 backend connection 会 fail closed，engine 可重新 checkout 恢复。
 
-这不关闭 P04-T01，也不关闭 PHASE04。sync/async Session Factory、read-only、cancellation 和 connection rotation 已由 `phase04-postgres-session-runtime.md` 证明；production domain service 默认路径 cutover 尚未完成。
+本文件单独不关闭 P04-T01，也不关闭 PHASE04。P04-T01 的 sync/async Session Factory、默认 Domain UoW 接入、read-only、cancellation 和 connection rotation 已由 `phase04-postgres-session-runtime.md` 与对应真实 verifier 补齐，聚合状态现为 completed。
 
 ## 环境
 
@@ -112,5 +112,4 @@ PHASE04 PostgreSQL session runtime verification passed.
 
 ## 剩余缺口
 
-- Tenant context 与显式 Session UoW 尚未接入所有 domain service 默认路径。
-- P04-T01 仍是 `ready`，不是 completed。
+- P04-T01 范围内没有剩余缺口；PHASE04 的其他 Work Package 仍按各自 Gate 管理。

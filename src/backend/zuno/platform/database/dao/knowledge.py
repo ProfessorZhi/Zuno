@@ -1,7 +1,7 @@
 from sqlmodel import and_, delete, select, update
 
 from zuno.database.models.knowledge import KnowledgeTable
-from zuno.database.session import session_getter
+from zuno.platform.database.session import session_getter
 
 
 class KnowledgeDao:
@@ -23,7 +23,7 @@ class KnowledgeDao:
                 knowledge_config=knowledge_config or {},
             )
             session.add(knowledge)
-            session.commit()
+            session.flush()
             session.refresh(knowledge)
             return knowledge
 
@@ -44,7 +44,7 @@ class KnowledgeDao:
         with session_getter() as session:
             sql = delete(KnowledgeTable).where(KnowledgeTable.id == knowledge_id)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def update_knowledge_by_id(
@@ -67,7 +67,7 @@ class KnowledgeDao:
                 update_values["knowledge_config"] = knowledge_config
             sql = update(KnowledgeTable).where(KnowledgeTable.id == knowledge_id).values(**update_values)
             session.exec(sql)
-            session.commit()
+            session.flush()
 
     @classmethod
     async def select_user_by_id(cls, knowledge_id):
