@@ -53,10 +53,12 @@ def verify_phase04_dr_profile() -> list[str]:
         errors.append("DR profile must not claim PHASE04 completion")
     if data.get("phase05_ready") is not False:
         errors.append("DR profile must keep PHASE05 not ready")
-    if "does not prove full Backup/Restore/PITR/Projection Replay" not in _as_text(
-        data.get("boundary")
+    boundary = _as_text(data.get("boundary"))
+    if (
+        "PITR alignment is proven" not in boundary
+        or "official LangGraph PostgreSQL Checkpointer recovery remain" not in boundary
     ):
-        errors.append("DR profile boundary must reject full recovery proof claims")
+        errors.append("DR profile boundary must separate proven PITR from remaining recovery blockers")
 
     cutover_policy = data.get("cutover_policy") or {}
     if cutover_policy.get("explicit_cutover_required") is not True:
@@ -115,8 +117,10 @@ def verify_phase04_dr_profile() -> list[str]:
         errors.append("official Checkpointer block reason is missing")
 
     pitr = by_component.get("pitr") or {}
-    if pitr.get("current_status") != "target_not_current":
-        errors.append("PITR DR profile must remain target_not_current")
+    if pitr.get("current_status") != "implementation_available_subset":
+        errors.append("PITR DR profile must reference the proven PITR alignment subset")
+    if pitr.get("verification_command") != "python tools/scripts/verify_phase04_pitr_alignment.py":
+        errors.append("PITR DR profile must use the PITR alignment verifier")
 
     projection = by_component.get("product_projection_replay") or {}
     if projection.get("current_status") != "target_not_current":

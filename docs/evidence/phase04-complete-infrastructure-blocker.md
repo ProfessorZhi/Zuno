@@ -55,6 +55,7 @@ mandatory_audit: proven
 cutover_snapshot: proven
 recovery_watermark: proven
 secret_rotation_tenant_hit: proven
+pitr_alignment: proven
 dr_profile_rpo_rto_owner: proven
 infrastructure_capability_profile: proven
 backup_service_boundaries: proven
@@ -128,6 +129,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_cutover_snapshot.py` | passed; PostgreSQL cutover snapshot schema、Generation/CAS activation、stale generation reject、active snapshot ref、current/active-ref retirement reject 与 ref release 后 retirement 均通过 |
 | `python tools/scripts/verify_phase04_recovery_watermark.py` | passed; PostgreSQL recovery watermark schema、权威/派生 watermark 记录、derived mismatch reject、RecoverySet 对齐和 verification hash 均通过 |
 | `python tools/scripts/verify_phase04_secret_rotation_tenant_hit.py` | passed; PostgreSQL secret version activation、secret material reject、active-generation lease、rollback、stale generation reject、cross-tenant fail-closed/quarantine receipt 均通过 |
+| `python tools/scripts/verify_phase04_pitr_alignment.py` | passed; 临时真实 PostgreSQL primary/recovery 容器启用 WAL archive、`pg_basebackup`、recovery target time，恢复后 DB/Object/Checkpoint/Index RecoverySet 保持对齐，target 后 derived index watermark 未混入 |
 | `python tools/scripts/verify_phase04_dr_profile.py` | passed; `docs/governance/infrastructure-dr-profile.yaml` 覆盖 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO/RTO/Owner/Recovery Owner/验证命令/evidence ref，并保持 cutover fail closed |
 | `python tools/scripts/verify_phase04_infrastructure_capability_profile.py` | passed; `InfrastructureCapabilityProfileV1` 与 `DataServiceCapabilityV1` immutable、versioned、canonical-hash、Developer CI / Server Product typed contract 共用、派生服务非权威和 unsupported semantics 显式声明均通过 |
 | `python tools/scripts/verify_phase04_backup_service_boundaries.py` | passed; Backup Scope/RPO/Encryption/Verify profile 与 PostgreSQL/RabbitMQ/Object/Checkpoint typed service boundary 均通过，其中 official Checkpointer 保持 blocked boundary |
@@ -151,7 +153,6 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 
 - LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
-- PITR
 - 包含官方 Checkpointer 的完整 combined dependency fault evidence
 
 ## Current Verified Subset
@@ -209,7 +210,8 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Cutover snapshot subset：PostgreSQL `infra_cutover_targets` / `infra_cutover_snapshots` / `infra_active_snapshot_refs` 提供 target generation、CAS cutover activation、active snapshot reference 和 retirement guard；stale generation 被拒绝，当前 active snapshot 不能退休，带 active ref 的 superseded snapshot 不能退休。
 - Recovery watermark subset：PostgreSQL `infra_recovery_watermarks` / `infra_recovery_sets` / `infra_recovery_set_members` 提供 authoritative/derived component watermark、RecoverySet alignment、mismatch fail-closed 和 verification hash；derived index watermark 落后时 RecoverySet 创建被拒绝，对齐后才 verified。
 - Secret rotation / tenant hit subset：PostgreSQL `infra_secret_versions` / `infra_secret_rotation_heads` / `infra_secret_leases` 提供 generation-fenced secret activation、active-version lease receipt、secret material reject 和 rollback；`infra_cross_tenant_hits` 持久化跨租户命中的 FAIL_CLOSED / QUARANTINE 证据，并在运行时拒绝继续服务。
-- DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；其中 official Checkpointer 仍为 blocked，PITR 与 product projection replay 仍为 target_not_current。
+- PITR alignment subset：临时真实 PostgreSQL primary/recovery 容器启用 WAL archive、`pg_basebackup` 和 recovery target time；恢复库中 verified RecoverySet 的 PostgreSQL/Object/Checkpoint/Index watermark 均对齐，target time 之后写入的 derived index ahead watermark 未进入恢复结果。
+- DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；其中 official Checkpointer 仍为 blocked，product projection replay 仍为 target_not_current。
 - Infrastructure Capability Profile subset：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 提供 frozen Pydantic contract、canonical content hash、profile version、deployment class、typed service capability、config hash、supported/unsupported semantics 和派生服务非权威校验；这只证明 profile contract 本身 current，不证明 blocked adapters 已实现。
 - Backup/Service Boundary subset：`tools/scripts/verify_phase04_backup_service_boundaries.py` 固化 Backup Scope/RPO/Encryption/Verify profile，并把 PostgreSQL、RabbitMQ、Object Store 和 Checkpoint Store 的 typed service boundary 纳入同一 gate；该 gate 不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore。
 - Infrastructure docs governance subset：`tools/scripts/verify_phase04_infrastructure_docs_governance.py` 固化 Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Infrastructure Target 文档、Agent 镜像、architecture canonical 四文件集合和文档入口；该 gate 不替代任何 runtime 证据。
@@ -222,7 +224,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Checkpoint boundary/version subset：`tools/scripts/verify_phase04_checkpoint_boundary_version.py` 固化 `agent_runtime_checkpoints` 归 Agent Core、`infra_checkpoints` 为 Infrastructure receipt、Checkpoint Commit 不等于 Domain Commit，以及 CHECKPOINT adapter/schema unknown version fail-closed；该 gate 不证明 official Checkpointer runtime 已安装或可恢复。
 - Restore/cutover completion gate subset：`tools/scripts/verify_phase04_restore_cutover_completion_gates.py` 固化 backup/restore/replay marker、isolated restore target、Coordinator approval 和 cutover fail-closed policy；该 gate 不证明完整 Backup/Restore/PITR、RecoverySet 或 official Checkpointer restore。
 
-Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
+Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing、PITR alignment，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 Infrastructure requirement `ARCH-INFRA-003` is now proven by `tools/scripts/verify_phase04_infrastructure_capability_profile.py`: the capability profile contract is immutable, versioned, canonical-hashed, and shared by Developer CI and Server Product deployment classes. This does not prove official Checkpointer, PITR, complete recovery set, or enterprise index adapters.
 
@@ -253,6 +255,8 @@ Infrastructure requirements `ARCH-INFRA-048` and `ARCH-INFRA-049` are now proven
 Infrastructure requirements `ARCH-INFRA-022` and `ARCH-INFRA-052` are now proven by `tools/scripts/verify_phase04_recovery_watermark.py`: authoritative and derived component watermarks must align to the requested recovery point before a verified RecoverySet can be created. This does not prove PITR, Product Projection Replay, or official Checkpointer restore.
 
 Infrastructure requirements `ARCH-INFRA-035` and `ARCH-INFRA-058` are now proven by `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`: secret rotation is generation-fenced and rollbackable without persisting secret material, and cross-tenant hits are durably fail-closed or quarantined. This does not prove production KMS, PITR, Product Projection Replay, or official Checkpointer restore.
+
+Infrastructure requirement `ARCH-INFRA-029` is now proven by `tools/scripts/verify_phase04_pitr_alignment.py`: WAL archive/basebackup/PITR restores to a verified DB/Object/Checkpoint/Index RecoverySet and excludes post-target derived index writes. This does not prove official Checkpointer restore or full Product Projection Replay.
 
 Infrastructure requirements `ARCH-INFRA-026` and `ARCH-INFRA-041` are now proven by `tools/scripts/verify_phase04_backup_service_boundaries.py`: Backup Scope/RPO/Encryption/Verify is explicitly defined for each recovery component, and PostgreSQL/RabbitMQ/Object/Checkpoint service boundaries are machine-verifiable through the typed capability profile. This does not prove production encrypted backup, PITR, complete RecoverySet, or official Checkpointer restore.
 

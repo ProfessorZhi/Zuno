@@ -169,6 +169,12 @@ SECRET_ROTATION_TENANT_HIT_VERIFIER = (
 SECRET_ROTATION_TENANT_HIT_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-secret-rotation-tenant-hit.md"
 )
+PITR_ALIGNMENT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_pitr_alignment.py"
+)
+PITR_ALIGNMENT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-pitr-alignment.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -1325,7 +1331,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "relational_cross_tenant_hit_fail_closed: passed",
             "object_cross_tenant_hit_quarantined: passed",
             "cross_tenant_hit_receipt_durable: passed",
-            "phase_completion: blocked_official_checkpointer_pitr_and_full_recovery",
+            "phase_completion: blocked_official_checkpointer_and_product_projection_replay",
             "`ARCH-INFRA-035`",
             "`ARCH-INFRA-058`",
         ]:
@@ -1334,6 +1340,36 @@ def verify_phase04_complete_infrastructure() -> list[str]:
                     "PHASE04 secret rotation tenant hit evidence missing phrase: "
                     f"{phrase}"
                 )
+
+    if not PITR_ALIGNMENT_VERIFIER.exists():
+        errors.append("missing PHASE04 PITR alignment verifier")
+    else:
+        pitr_alignment_errors = _load_verifier(
+            PITR_ALIGNMENT_VERIFIER,
+            "verify_phase04_pitr_alignment",
+            "verify_phase04_pitr_alignment",
+        )()
+        for pitr_alignment_error in pitr_alignment_errors:
+            errors.append(
+                f"PHASE04 PITR alignment verification failed: {pitr_alignment_error}"
+            )
+
+    if not PITR_ALIGNMENT_EVIDENCE.exists():
+        errors.append("missing PHASE04 PITR alignment evidence")
+    else:
+        pitr_alignment_evidence = _read(PITR_ALIGNMENT_EVIDENCE)
+        for phrase in [
+            "pitr_primary_archive_mode: passed",
+            "pg_basebackup_taken: passed",
+            "recovery_container_to_target_time: passed",
+            "restored_recovery_set_verified: passed",
+            "restored_authoritative_and_derived_watermarks_aligned: passed",
+            "post_target_derived_index_watermark_excluded: passed",
+            "phase_completion: blocked_official_checkpointer_and_product_projection_replay",
+            "`ARCH-INFRA-029`",
+        ]:
+            if phrase not in pitr_alignment_evidence:
+                errors.append(f"PHASE04 PITR alignment evidence missing phrase: {phrase}")
 
     if not DR_PROFILE_VERIFIER.exists():
         errors.append("missing PHASE04 DR profile verifier")
@@ -1357,7 +1393,8 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "component: langgraph_postgres_checkpointer",
             "current_status: blocked",
             "component: pitr",
-            "current_status: target_not_current",
+            "current_status: implementation_available_subset",
+            "python tools/scripts/verify_phase04_pitr_alignment.py",
             "explicit_cutover_required: true",
             "cutover_allowed_by_default: false",
         ]:
@@ -1375,10 +1412,10 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "rpo_rto_owner_coverage: passed",
             "explicit_cutover_policy: passed",
             "blocked_checkpointer_boundary: passed",
-            "pitr_target_not_current_boundary: passed",
+            "pitr_alignment_boundary: passed",
             "projection_replay_target_not_current_boundary: passed",
             "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
-            "It does not prove full Backup/Restore/PITR/Projection Replay",
+            "PITR alignment is proven separately",
         ]:
             if phrase not in dr_profile_evidence:
                 errors.append(f"PHASE04 DR profile evidence missing phrase: {phrase}")

@@ -112,6 +112,7 @@ work_packages:
       - "tools/scripts/verify_phase04_cutover_snapshot.py"
       - "tools/scripts/verify_phase04_recovery_watermark.py"
       - "tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+      - "tools/scripts/verify_phase04_pitr_alignment.py"
       - "tests/integration/test_phase04_operator_readiness.py"
       - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_phase04_infrastructure_capability_profile.py"
@@ -136,6 +137,7 @@ work_packages:
       - "tests/integration/test_phase04_cutover_snapshot.py"
       - "tests/integration/test_phase04_recovery_watermark.py"
       - "tests/integration/test_phase04_secret_rotation_tenant_hit.py"
+      - "tests/integration/test_phase04_pitr_alignment.py"
       - "docs/evidence/phase04-backup-restore-replay.md"
       - "docs/evidence/phase04-combined-service-fault.md"
       - "docs/evidence/phase04-operator-readiness.md"
@@ -162,6 +164,7 @@ work_packages:
       - "docs/evidence/phase04-cutover-snapshot.md"
       - "docs/evidence/phase04-recovery-watermark.md"
       - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
+      - "docs/evidence/phase04-pitr-alignment.md"
       - "docs/governance/infrastructure-operations-runbook.md"
       - "docs/governance/infrastructure-dr-profile.yaml"
     completed_scope:
@@ -261,7 +264,11 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
-    remaining_scope: "official Checkpointer restore, PITR, product/cross-domain projection replay, complete recovery set, and combined-service fault including the official Checkpointer"
+      pitr_alignment:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-pitr-alignment.md"
+    remaining_scope: "official Checkpointer restore, product/cross-domain projection replay, and combined-service fault including the official Checkpointer"
 phase_dependencies:
   PHASE05:
     depends_on: [PHASE03, PHASE04]
@@ -297,6 +304,7 @@ validation:
     - "python tools/scripts/verify_phase04_cutover_snapshot.py"
     - "python tools/scripts/verify_phase04_recovery_watermark.py"
     - "python tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+    - "python tools/scripts/verify_phase04_pitr_alignment.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"

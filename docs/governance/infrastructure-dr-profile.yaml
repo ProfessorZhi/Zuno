@@ -10,7 +10,7 @@ profile_version: 1
 deployment_class: SERVER_PRODUCT
 phase04_completion_claim: false
 phase05_ready: false
-boundary: "This profile defines RPO/RTO/Owner and cutover policy only; it does not prove full Backup/Restore/PITR/Projection Replay or official LangGraph PostgreSQL Checkpointer recovery."
+boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment is proven by the local WAL archive drill, while full Product Projection Replay and official LangGraph PostgreSQL Checkpointer recovery remain outside the proven subset."
 
 backup_scope_profile_version: 1
 backup_scope_boundary: "Backup scope profile defines backup scope, RPO source, encryption requirement, verification command and evidence ref only; it does not claim production encrypted backup completion, PITR, full RecoverySet or official Checkpointer restore."
@@ -23,7 +23,7 @@ backup_scope_profiles:
     encryption_current_boundary: "The PHASE04 local pg_dump artifact is transient inside the PostgreSQL container and is not promoted as a production encrypted backup."
     verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
     evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
-    completion_boundary: "implementation_available_subset; PITR and full product recovery remain target_not_current"
+    completion_boundary: "implementation_available_subset; PITR alignment is proven separately; full product recovery remains target_not_current"
 
   - component: object_manifest_and_minio
     backup_scope: "Committed object manifests, object restore points, content hash receipts and MinIO object bytes for the PHASE04 object-store subset"
@@ -65,10 +65,10 @@ backup_scope_profiles:
     backup_scope: "PostgreSQL WAL archive and point-in-time restore window"
     rpo_source: "WAL archive target once enabled"
     encryption_requirement: "Production WAL archive requires encrypted storage and key reference/version metadata."
-    encryption_current_boundary: "PITR and WAL archive encryption are not enabled or proven in PHASE04 local evidence."
-    verification_command: "target_not_current: PITR drill"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    completion_boundary: "target_not_current"
+    encryption_current_boundary: "Local PITR alignment is proven with transient WAL archive; production encrypted WAL archive custody remains outside the local evidence boundary."
+    verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
+    evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
+    completion_boundary: "implementation_available_subset; official Checkpointer restore and full Product Projection Replay remain Phase-level blockers"
 
 cutover_policy:
   explicit_cutover_required: true
@@ -84,11 +84,11 @@ recovery_profiles:
     recovery_owner: Infrastructure Restore Owner
     rpo: "last verified pg_dump artifact or PITR target when WAL archive is enabled"
     rto: "documented per restore run; local PHASE04 subset is measured by verify_phase04_backup_restore_replay.py"
-    backup_method: "pg_dump schema/data subset for PHASE04 local proof; PITR remains target_not_current"
+    backup_method: "pg_dump schema/data subset plus separate WAL archive PITR alignment drill"
     verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
     evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
     current_status: implementation_available_subset
-    current_boundary: "PostgreSQL backup/isolated restore/runtime restart subset is proven; PITR and full product recovery are not proven."
+    current_boundary: "PostgreSQL backup/isolated restore/runtime restart and PITR alignment subsets are proven; full product recovery is not proven."
 
   - component: object_manifest_and_minio
     authority: authoritative_manifest_with_object_receipts
@@ -143,9 +143,9 @@ recovery_profiles:
     owner: Infrastructure/PostgreSQL Runtime
     recovery_owner: Infrastructure Restore Owner
     rpo: "WAL archive target once enabled"
-    rto: "must be measured by PITR drill"
+    rto: "measured by local PITR drill runtime"
     backup_method: "PostgreSQL WAL archive and point-in-time restore"
-    verification_command: "target_not_current: PITR drill"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    current_status: target_not_current
-    current_boundary: "PITR is not enabled or proven in the local PHASE04 evidence set."
+    verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
+    evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
+    current_status: implementation_available_subset
+    current_boundary: "Local PITR alignment is proven with transient WAL archive/basebackup/recovery containers; production encrypted WAL archive custody and official Checkpointer restore are not proven."
