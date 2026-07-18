@@ -99,6 +99,20 @@ class ModelProviderLifecycleState(StrEnum):
     RETIRED = "RETIRED"
 
 
+class ModelAdmissionLayer(StrEnum):
+    GLOBAL = "GLOBAL"
+    PROVIDER = "PROVIDER"
+    MODEL = "MODEL"
+    OPERATION = "OPERATION"
+    ROLE = "ROLE"
+
+
+class ModelOverloadState(StrEnum):
+    NORMAL = "NORMAL"
+    BACKPRESSURE = "BACKPRESSURE"
+    LOAD_SHEDDING = "LOAD_SHEDDING"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -404,6 +418,48 @@ class ModelEmergencyDisableDecision:
     blocks_new_dispatch: bool
     late_results_isolated: bool
     quarantine_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelAdmissionLayerCheck:
+    layer: ModelAdmissionLayer
+    capacity_key: str
+    requested_units: int
+    available_units: int
+    accepted: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelAdmissionDecision:
+    admission_id: str
+    tenant_id: str
+    role: ModelRole
+    accepted: bool
+    reason: str
+    layer_checks: tuple[ModelAdmissionLayerCheck, ...]
+    reserved_capacity_used: int
+    fairness_limited: bool
+    starvation_prevention_applied: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelQueuedRequestBinding:
+    queue_entry_id: str
+    call_id: str
+    deadline_at: float
+    security_epoch_ref: str
+    budget_verdict: BudgetVerdict
+    config_binding: ModelCallConfigBinding
+
+
+@dataclass(frozen=True, slots=True)
+class ModelOverloadDecision:
+    state: ModelOverloadState
+    backpressure: bool
+    load_shedding: bool
+    reason: str
+    preserved_gates: tuple[str, ...]
+    bypass_allowed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1739,6 +1795,130 @@ class ModelGateway:
             quarantine_ref="provider_disable_quarantine_" + _stable_hash([provider_id, model_id, generation, reason])[:16],
         )
 
+    def evaluate_admission(
+        self,
+        *,
+        tenant_id: str,
+        role: ModelRole | str,
+        provider_id: str,
+        model_id: str,
+        operation: ModelOperation | str,
+        requested_units: int,
+        capacity_by_key: dict[str, int],
+        tenant_inflight: int,
+        tenant_fairness_limit: int,
+        reserved_capacity_units: int,
+        waiting_age_ms: int,
+        starvation_threshold_ms: int,
+    ) -> ModelAdmissionDecision:
+        normalized_role = ModelRole(role)
+        normalized_operation = ModelOperation(operation)
+        keys = {
+            ModelAdmissionLayer.GLOBAL: "global",
+            ModelAdmissionLayer.PROVIDER: f"provider:{provider_id}",
+            ModelAdmissionLayer.MODEL: f"model:{provider_id}:{model_id}",
+            ModelAdmissionLayer.OPERATION: f"operation:{normalized_operation.value}",
+            ModelAdmissionLayer.ROLE: f"role:{normalized_role.value}",
+        }
+        checks = tuple(
+            ModelAdmissionLayerCheck(
+                layer=layer,
+                capacity_key=key,
+                requested_units=requested_units,
+                available_units=int(capacity_by_key.get(key, 0)),
+                accepted=int(capacity_by_key.get(key, 0)) >= requested_units,
+            )
+            for layer, key in keys.items()
+        )
+        if any(not check.accepted for check in checks):
+            return ModelAdmissionDecision(
+                admission_id="admission_" + _stable_hash([tenant_id, normalized_role.value, provider_id, model_id, requested_units, "capacity"])[:16],
+                tenant_id=tenant_id,
+                role=normalized_role,
+                accepted=False,
+                reason="capacity_exhausted",
+                layer_checks=checks,
+                reserved_capacity_used=0,
+                fairness_limited=False,
+                starvation_prevention_applied=False,
+            )
+        starvation_prevention = waiting_age_ms >= starvation_threshold_ms
+        fairness_limited = tenant_inflight >= tenant_fairness_limit and reserved_capacity_units <= 0 and not starvation_prevention
+        if fairness_limited:
+            return ModelAdmissionDecision(
+                admission_id="admission_" + _stable_hash([tenant_id, normalized_role.value, provider_id, model_id, requested_units, "fairness"])[:16],
+                tenant_id=tenant_id,
+                role=normalized_role,
+                accepted=False,
+                reason="tenant_fairness_limited",
+                layer_checks=checks,
+                reserved_capacity_used=0,
+                fairness_limited=True,
+                starvation_prevention_applied=False,
+            )
+        reserved_used = min(requested_units, reserved_capacity_units) if tenant_inflight >= tenant_fairness_limit else 0
+        return ModelAdmissionDecision(
+            admission_id="admission_" + _stable_hash([tenant_id, normalized_role.value, provider_id, model_id, requested_units, reserved_used, waiting_age_ms])[:16],
+            tenant_id=tenant_id,
+            role=normalized_role,
+            accepted=True,
+            reason="reserved_capacity" if reserved_used else "admitted",
+            layer_checks=checks,
+            reserved_capacity_used=reserved_used,
+            fairness_limited=False,
+            starvation_prevention_applied=starvation_prevention,
+        )
+
+    def queue_request_binding(
+        self,
+        *,
+        call_id: str,
+        deadline_at: float,
+        security_epoch_ref: str,
+        budget_verdict: BudgetVerdict,
+        config_binding: ModelCallConfigBinding,
+    ) -> ModelQueuedRequestBinding:
+        return ModelQueuedRequestBinding(
+            queue_entry_id="model_queue_" + _stable_hash([call_id, deadline_at, security_epoch_ref, config_binding.config_snapshot_id])[:16],
+            call_id=call_id,
+            deadline_at=deadline_at,
+            security_epoch_ref=security_epoch_ref,
+            budget_verdict=budget_verdict,
+            config_binding=config_binding,
+        )
+
+    def evaluate_overload(
+        self,
+        *,
+        current_load_units: int,
+        capacity_units: int,
+        required_gates: Iterable[str] = ("security", "validation", "usage", "audit", "budget"),
+    ) -> ModelOverloadDecision:
+        gate_tuple = tuple(str(gate) for gate in required_gates)
+        if current_load_units <= capacity_units:
+            return ModelOverloadDecision(
+                state=ModelOverloadState.NORMAL,
+                backpressure=False,
+                load_shedding=False,
+                reason="within_capacity",
+                preserved_gates=gate_tuple,
+            )
+        if current_load_units <= capacity_units * 2:
+            return ModelOverloadDecision(
+                state=ModelOverloadState.BACKPRESSURE,
+                backpressure=True,
+                load_shedding=False,
+                reason="over_capacity_backpressure",
+                preserved_gates=gate_tuple,
+            )
+        return ModelOverloadDecision(
+            state=ModelOverloadState.LOAD_SHEDDING,
+            backpressure=True,
+            load_shedding=True,
+            reason="over_capacity_load_shedding",
+            preserved_gates=gate_tuple,
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -2197,6 +2377,9 @@ __all__ = [
     "BudgetPolicy",
     "BudgetVerdict",
     "MockModelProvider",
+    "ModelAdmissionDecision",
+    "ModelAdmissionLayer",
+    "ModelAdmissionLayerCheck",
     "ModelAttemptReceipt",
     "ModelAttemptState",
     "ModelCallRequest",
@@ -2229,6 +2412,8 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "ModelOverloadDecision",
+    "ModelOverloadState",
     "ModelClassificationResult",
     "ModelJudgeResult",
     "ModelOutputCandidate",
@@ -2239,6 +2424,7 @@ __all__ = [
     "ModelProviderSignalVerdict",
     "ModelProviderHealthStatus",
     "ModelProviderHealthWindow",
+    "ModelQueuedRequestBinding",
     "ModelQuotaPolicy",
     "ModelQuotaReservation",
     "ModelRepairRecord",

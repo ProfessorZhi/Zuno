@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 from zuno.platform.model_gateway import (
     BudgetPolicy,
+    BudgetVerdict,
+    ModelAdmissionLayer,
     ModelAttemptState,
     ModelCallRequest,
     ModelCallState,
@@ -17,6 +19,7 @@ from zuno.platform.model_gateway import (
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelOverloadState,
     ModelProviderHealthStatus,
     ModelProviderLifecycleState,
     ModelProviderSignalStatus,
@@ -719,3 +722,113 @@ def test_model_gateway_provider_signal_config_and_lifecycle_boundaries() -> None
     assert emergency.late_results_isolated is True
     assert emergency.quarantine_ref.startswith("provider_disable_quarantine_")
     assert retired.preserves_history is True
+
+
+def test_model_gateway_admission_queue_and_overload_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+    capacity = {
+        "global": 10,
+        "provider:primary": 10,
+        "model:primary:mock-chat": 10,
+        "operation:generate": 10,
+        "role:executor": 10,
+    }
+
+    admitted = gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=1,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    fair_limited = gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    reserved = gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=2,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    anti_starvation = gateway.evaluate_admission(
+        tenant_id="tenant-b",
+        role=ModelRole.EXECUTOR,
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=1500,
+        starvation_threshold_ms=1000,
+    )
+
+    assert admitted.accepted is True
+    assert [check.layer for check in admitted.layer_checks] == [
+        ModelAdmissionLayer.GLOBAL,
+        ModelAdmissionLayer.PROVIDER,
+        ModelAdmissionLayer.MODEL,
+        ModelAdmissionLayer.OPERATION,
+        ModelAdmissionLayer.ROLE,
+    ]
+    assert fair_limited.accepted is False and fair_limited.fairness_limited is True
+    assert reserved.accepted is True and reserved.reserved_capacity_used == 2
+    assert anti_starvation.accepted is True and anti_starvation.starvation_prevention_applied is True
+
+    snapshot = gateway.create_config_snapshot(
+        config_version="config:v2",
+        generation=1,
+        payload={"routing": {"executor": "primary"}},
+    )
+    config_binding = gateway.bind_call_config_snapshot(call_id="model_call_queued", snapshot=snapshot)
+    queued = gateway.queue_request_binding(
+        call_id="model_call_queued",
+        deadline_at=1234.5,
+        security_epoch_ref="security:tenant:2",
+        budget_verdict=BudgetVerdict(allowed=True, reason="within_budget", estimated_cost=0.01),
+        config_binding=config_binding,
+    )
+
+    assert queued.deadline_at == 1234.5
+    assert queued.security_epoch_ref == "security:tenant:2"
+    assert queued.budget_verdict.allowed is True
+    assert queued.config_binding.config_snapshot_id == snapshot.snapshot_id
+
+    normal = gateway.evaluate_overload(current_load_units=5, capacity_units=10)
+    backpressure = gateway.evaluate_overload(current_load_units=15, capacity_units=10)
+    shedding = gateway.evaluate_overload(current_load_units=25, capacity_units=10)
+    required = ("security", "validation", "usage", "audit", "budget")
+
+    assert normal.state == ModelOverloadState.NORMAL
+    assert backpressure.state == ModelOverloadState.BACKPRESSURE and backpressure.backpressure is True
+    assert shedding.state == ModelOverloadState.LOAD_SHEDDING and shedding.load_shedding is True
+    assert shedding.preserved_gates == required
+    assert shedding.bypass_allowed is False

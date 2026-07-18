@@ -11,6 +11,8 @@ if str(SRC_ROOT) not in sys.path:
 
 from zuno.platform.model_gateway import (  # noqa: E402
     BudgetPolicy,
+    BudgetVerdict,
+    ModelAdmissionLayer,
     ModelAttemptState,
     ModelCallState,
     ModelCategory,
@@ -23,6 +25,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelOverloadState,
     ModelProviderHealthStatus,
     ModelProviderLifecycleState,
     ModelProviderSignalStatus,
@@ -34,7 +37,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 53))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 58))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -569,6 +572,115 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("emergency disable did not block new dispatch and isolate late results")
     if not emergency.quarantine_ref.startswith("provider_disable_quarantine_"):
         errors.append("emergency disable did not create quarantine ref for late results")
+
+    capacity = {
+        "global": 10,
+        "provider:usage_fallback": 10,
+        "model:usage_fallback:mock-fallback": 10,
+        "operation:generate": 10,
+        "role:executor": 10,
+    }
+    admitted = usage_gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=1,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    fair_limited = usage_gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    reserved = usage_gateway.evaluate_admission(
+        tenant_id="tenant-a",
+        role=ModelRole.EXECUTOR,
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=2,
+        waiting_age_ms=10,
+        starvation_threshold_ms=1000,
+    )
+    anti_starvation = usage_gateway.evaluate_admission(
+        tenant_id="tenant-b",
+        role=ModelRole.EXECUTOR,
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        operation=ModelOperation.GENERATE,
+        requested_units=2,
+        capacity_by_key=capacity,
+        tenant_inflight=3,
+        tenant_fairness_limit=3,
+        reserved_capacity_units=0,
+        waiting_age_ms=1500,
+        starvation_threshold_ms=1000,
+    )
+    if not admitted.accepted:
+        errors.append("admission did not accept available global/provider/model/operation/role capacity")
+    if [check.layer for check in admitted.layer_checks] != [
+        ModelAdmissionLayer.GLOBAL,
+        ModelAdmissionLayer.PROVIDER,
+        ModelAdmissionLayer.MODEL,
+        ModelAdmissionLayer.OPERATION,
+        ModelAdmissionLayer.ROLE,
+    ]:
+        errors.append("admission did not evaluate capacity from global through role")
+    if fair_limited.accepted or not fair_limited.fairness_limited:
+        errors.append("admission did not enforce tenant fairness")
+    if not reserved.accepted or reserved.reserved_capacity_used != 2:
+        errors.append("admission did not apply reserved capacity")
+    if not anti_starvation.accepted or not anti_starvation.starvation_prevention_applied:
+        errors.append("admission did not prevent starvation for old queued work")
+
+    queued_binding = usage_gateway.bind_call_config_snapshot(call_id="model_call_queued", snapshot=snapshot_a)
+    queued = usage_gateway.queue_request_binding(
+        call_id="model_call_queued",
+        deadline_at=1234.5,
+        security_epoch_ref="security:tenant:2",
+        budget_verdict=BudgetVerdict(allowed=True, reason="within_budget", estimated_cost=0.01),
+        config_binding=queued_binding,
+    )
+    if (
+        queued.deadline_at != 1234.5
+        or queued.security_epoch_ref != "security:tenant:2"
+        or not queued.budget_verdict.allowed
+        or queued.config_binding.config_snapshot_id != snapshot_a.snapshot_id
+    ):
+        errors.append("queued request did not preserve deadline/security/budget/config binding")
+
+    normal = usage_gateway.evaluate_overload(current_load_units=5, capacity_units=10)
+    backpressure = usage_gateway.evaluate_overload(current_load_units=15, capacity_units=10)
+    shedding = usage_gateway.evaluate_overload(current_load_units=25, capacity_units=10)
+    required_gates = ("security", "validation", "usage", "audit", "budget")
+    if normal.state != ModelOverloadState.NORMAL:
+        errors.append("normal load did not produce explicit normal state")
+    if backpressure.state != ModelOverloadState.BACKPRESSURE or not backpressure.backpressure:
+        errors.append("overload did not produce explicit backpressure state")
+    if shedding.state != ModelOverloadState.LOAD_SHEDDING or not shedding.load_shedding:
+        errors.append("severe overload did not produce explicit load shedding state")
+    if shedding.preserved_gates != required_gates or shedding.bypass_allowed:
+        errors.append("overload bypassed security/validation/usage/audit/budget gates")
 
     split_action_result = ModelGateway(
         providers=[
