@@ -86,6 +86,7 @@ work_packages:
       - "tools/scripts/verify_phase04_operator_readiness.py"
       - "tools/scripts/verify_phase04_dr_profile.py"
       - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "tools/scripts/verify_phase04_backup_service_boundaries.py"
       - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
       - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
       - "tools/scripts/verify_phase04_infrastructure_typed_ports.py"
@@ -101,6 +102,7 @@ work_packages:
       - "tests/integration/test_phase04_operator_readiness.py"
       - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_phase04_infrastructure_capability_profile.py"
+      - "tests/repo/test_phase04_backup_service_boundaries.py"
       - "tests/repo/test_phase04_infrastructure_docs_governance.py"
       - "tests/repo/test_phase04_infrastructure_domain_boundary.py"
       - "tests/repo/test_phase04_infrastructure_typed_ports.py"
@@ -118,6 +120,7 @@ work_packages:
       - "docs/evidence/phase04-operator-readiness.md"
       - "docs/evidence/phase04-dr-profile.md"
       - "docs/evidence/phase04-infrastructure-capability-profile.md"
+      - "docs/evidence/phase04-backup-service-boundaries.md"
       - "docs/evidence/phase04-infrastructure-docs-governance.md"
       - "docs/evidence/phase04-infrastructure-domain-boundary.md"
       - "docs/evidence/phase04-infrastructure-typed-ports.md"
@@ -145,6 +148,10 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-infrastructure-capability-profile.md"
+      backup_service_boundaries:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-backup-service-boundaries.md"
       infrastructure_docs_governance:
         state: completed
         evidence:
@@ -220,6 +227,7 @@ validation:
     - "python tools/scripts/verify_phase04_migration_control.py"
     - "python tools/scripts/verify_phase04_domain_event_adoption.py"
     - "python tools/scripts/verify_phase04_minio_manifest_adoption.py"
+    - "python tools/scripts/verify_phase04_backup_service_boundaries.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"

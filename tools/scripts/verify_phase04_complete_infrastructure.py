@@ -151,6 +151,12 @@ CAPABILITY_PROFILE_VERIFIER = (
 CAPABILITY_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-capability-profile.md"
 )
+BACKUP_SERVICE_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_backup_service_boundaries.py"
+)
+BACKUP_SERVICE_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-backup-service-boundaries.md"
+)
 INFRASTRUCTURE_DOCS_GOVERNANCE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_infrastructure_docs_governance.py"
 )
@@ -1192,6 +1198,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in capability_profile_evidence:
                 errors.append(
                     "PHASE04 infrastructure capability profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not BACKUP_SERVICE_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 backup/service boundary verifier")
+    else:
+        backup_service_boundary_errors = _load_verifier(
+            BACKUP_SERVICE_BOUNDARY_VERIFIER,
+            "verify_phase04_backup_service_boundaries",
+            "verify_phase04_backup_service_boundaries",
+        )()
+        for backup_service_boundary_error in backup_service_boundary_errors:
+            errors.append(
+                "PHASE04 backup/service boundary verification failed: "
+                f"{backup_service_boundary_error}"
+            )
+
+    if not BACKUP_SERVICE_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 backup/service boundary evidence")
+    else:
+        backup_service_boundary_evidence = _read(BACKUP_SERVICE_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "backup_scope_profile: passed",
+            "backup_rpo_source_coverage: passed",
+            "backup_encryption_requirement_defined: passed",
+            "service_boundary_profile: passed",
+            "postgresql_rabbitmq_object_checkpoint_boundary: passed",
+            "checkpoint_boundary_blocked_not_completed: passed",
+            "不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore",
+        ]:
+            if phrase not in backup_service_boundary_evidence:
+                errors.append(
+                    "PHASE04 backup/service boundary evidence missing phrase: "
                     f"{phrase}"
                 )
 

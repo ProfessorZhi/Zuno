@@ -52,6 +52,7 @@ combined_postgres_rabbitmq_minio_fault_subset: passed
 operator_readiness_subset: proven
 dr_profile_rpo_rto_owner: proven
 infrastructure_capability_profile: proven
+backup_service_boundaries: proven
 infrastructure_docs_governance: proven
 infrastructure_domain_boundary: proven
 infrastructure_typed_ports: proven
@@ -116,6 +117,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_operator_readiness.py` | passed; Operator readiness snapshot 聚合 PostgreSQL health/readiness/pool metrics、Outbox backlog、RabbitMQ queue depth、MinIO object read probe、trace correlation、failure owner/retry owner/recovery owner，并明确 telemetry 不产生 Eval verdict |
 | `python tools/scripts/verify_phase04_dr_profile.py` | passed; `docs/governance/infrastructure-dr-profile.yaml` 覆盖 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO/RTO/Owner/Recovery Owner/验证命令/evidence ref，并保持 cutover fail closed |
 | `python tools/scripts/verify_phase04_infrastructure_capability_profile.py` | passed; `InfrastructureCapabilityProfileV1` 与 `DataServiceCapabilityV1` immutable、versioned、canonical-hash、Developer CI / Server Product typed contract 共用、派生服务非权威和 unsupported semantics 显式声明均通过 |
+| `python tools/scripts/verify_phase04_backup_service_boundaries.py` | passed; Backup Scope/RPO/Encryption/Verify profile 与 PostgreSQL/RabbitMQ/Object/Checkpoint typed service boundary 均通过，其中 official Checkpointer 保持 blocked boundary |
 | `python tools/scripts/verify_phase04_infrastructure_docs_governance.py` | passed; Infrastructure Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Target 文档、Agent 镜像、architecture canonical 四文件集合和 entrypoint verifier 均通过 |
 | `python tools/scripts/verify_phase04_infrastructure_domain_boundary.py` | passed; 基础设施 receipt contract 和 PHASE04 evidence 均明确 Queue ACK、Object Commit、Idempotency Claim、Object Manifest visibility 与 operator telemetry 不代表领域成功 |
 | `python tools/scripts/verify_phase04_infrastructure_typed_ports.py` | passed; Developer CI 与 Server Product profile 使用同一 `InfrastructureCapabilityProfileV1` / `DataServiceCapabilityV1` typed port，覆盖全部 required service kind，并对 unknown service kind fail closed |
@@ -188,6 +190,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
 - DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；其中 official Checkpointer 仍为 blocked，PITR 与 product projection replay 仍为 target_not_current。
 - Infrastructure Capability Profile subset：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 提供 frozen Pydantic contract、canonical content hash、profile version、deployment class、typed service capability、config hash、supported/unsupported semantics 和派生服务非权威校验；这只证明 profile contract 本身 current，不证明 blocked adapters 已实现。
+- Backup/Service Boundary subset：`tools/scripts/verify_phase04_backup_service_boundaries.py` 固化 Backup Scope/RPO/Encryption/Verify profile，并把 PostgreSQL、RabbitMQ、Object Store 和 Checkpoint Store 的 typed service boundary 纳入同一 gate；该 gate 不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore。
 - Infrastructure docs governance subset：`tools/scripts/verify_phase04_infrastructure_docs_governance.py` 固化 Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Infrastructure Target 文档、Agent 镜像、architecture canonical 四文件集合和文档入口；该 gate 不替代任何 runtime 证据。
 - Infrastructure/domain boundary subset：`tools/scripts/verify_phase04_infrastructure_domain_boundary.py` 固化 Queue ACK、RabbitMQ delivery、Object Commit、Idempotency Claim、Object Manifest visibility 和 operator telemetry 都不能解释为 product/domain success；MinIO manifest adoption verifier 同时证明 object receipt 不会在 crash path 推进领域成功。
 - Infrastructure typed-port subset：`tools/scripts/verify_phase04_infrastructure_typed_ports.py` 固化 Developer CI 与 Server Product profile 共用同一 typed contract surface，并覆盖 PostgreSQL、RabbitMQ、Object、Checkpoint、Vector、Graph、Lexical、Cache、Secret 和 Telemetry service kind；unknown service kind fail closed。
@@ -216,6 +219,8 @@ Infrastructure requirement ledger subset `ARCH-INFRA-006` through `ARCH-INFRA-01
 Infrastructure requirement `ARCH-INFRA-064` is now proven by `tools/scripts/verify_requirement_ledger_evidence_gate.py`: every ledger item promoted to `implementation_available` must have existing current paths, current tests, current evidence refs, and complete reverse trace refs. This gate protects Target-to-Current promotion only; it does not prove any still-target runtime capability.
 
 Infrastructure requirement `ARCH-INFRA-040` is now proven by `tools/scripts/verify_phase04_dr_profile.py`: the DR Profile has explicit RPO/RTO/Owner/Recovery Owner, bounded verification commands, existing evidence refs, and fail-closed cutover policy. This does not prove full Backup/Restore/PITR/Projection Replay or official Checkpointer recovery.
+
+Infrastructure requirements `ARCH-INFRA-026` and `ARCH-INFRA-041` are now proven by `tools/scripts/verify_phase04_backup_service_boundaries.py`: Backup Scope/RPO/Encryption/Verify is explicitly defined for each recovery component, and PostgreSQL/RabbitMQ/Object/Checkpoint service boundaries are machine-verifiable through the typed capability profile. This does not prove production encrypted backup, PITR, complete RecoverySet, or official Checkpointer restore.
 
 ## Existing Partial Evidence
 

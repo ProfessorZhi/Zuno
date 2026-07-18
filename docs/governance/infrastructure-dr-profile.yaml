@@ -12,6 +12,64 @@ phase04_completion_claim: false
 phase05_ready: false
 boundary: "This profile defines RPO/RTO/Owner and cutover policy only; it does not prove full Backup/Restore/PITR/Projection Replay or official LangGraph PostgreSQL Checkpointer recovery."
 
+backup_scope_profile_version: 1
+backup_scope_boundary: "Backup scope profile defines backup scope, RPO source, encryption requirement, verification command and evidence ref only; it does not claim production encrypted backup completion, PITR, full RecoverySet or official Checkpointer restore."
+
+backup_scope_profiles:
+  - component: postgresql_domain_store
+    backup_scope: "PostgreSQL PHASE04 infrastructure tables and domain-owned authoritative facts covered by the bounded restore rehearsal"
+    rpo_source: "last verified pg_dump artifact or PITR target when WAL archive is enabled"
+    encryption_requirement: "Production backup artifacts require at-rest encryption and key reference/version metadata before storage outside the local restore rehearsal boundary."
+    encryption_current_boundary: "The PHASE04 local pg_dump artifact is transient inside the PostgreSQL container and is not promoted as a production encrypted backup."
+    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
+    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
+    completion_boundary: "implementation_available_subset; PITR and full product recovery remain target_not_current"
+
+  - component: object_manifest_and_minio
+    backup_scope: "Committed object manifests, object restore points, content hash receipts and MinIO object bytes for the PHASE04 object-store subset"
+    rpo_source: "last committed manifest generation and content hash"
+    encryption_requirement: "Production object backups require object-store encryption metadata or KMS key reference/version metadata bound to the manifest."
+    encryption_current_boundary: "PHASE04 proves object restore and manifest reconciliation, not production KMS-backed backup encryption."
+    verification_command: "python tools/scripts/verify_phase04_minio_object_store.py"
+    evidence_ref: "docs/evidence/phase04-minio-object-store.md"
+    completion_boundary: "implementation_available_subset; full cross-domain RecoverySet remains target_not_current"
+
+  - component: rabbitmq_outbox_inbox_delivery
+    backup_scope: "Durable PostgreSQL outbox/inbox rows, delivery watermarks and RabbitMQ delivery receipts used for replay"
+    rpo_source: "last durable outbox/inbox watermark"
+    encryption_requirement: "Production replay backups inherit PostgreSQL backup encryption requirements for durable outbox/inbox rows and must not persist secret material in queue payloads."
+    encryption_current_boundary: "PHASE04 proves durable replay rows and RabbitMQ receipts, not a production encrypted backup vault."
+    verification_command: "python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py"
+    evidence_ref: "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
+    completion_boundary: "implementation_available_subset; queue receipt is not domain success"
+
+  - component: langgraph_postgres_checkpointer
+    backup_scope: "Official LangGraph PostgreSQL Checkpointer schema, checkpoints, thread state and resume metadata"
+    rpo_source: "checkpoint generation aligned with domain RecoveryWatermark"
+    encryption_requirement: "Production Checkpointer backups require the same encrypted PostgreSQL backup policy plus checkpoint schema/version compatibility checks."
+    encryption_current_boundary: "Official LangGraph PostgreSQL Checkpointer backup/restore remains blocked by dependency approval."
+    verification_command: "blocked: official dependency approval required"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    completion_boundary: "blocked; not PHASE04 completion evidence"
+
+  - component: product_projection_replay
+    backup_scope: "Derived product projections rebuilt from authoritative PostgreSQL facts and object manifests"
+    rpo_source: "source domain fact recovery point"
+    encryption_requirement: "Projection replay artifacts must derive from encrypted authoritative backups or be rebuilt after restore without becoming a new fact source."
+    encryption_current_boundary: "Full product/cross-domain projection replay remains target_not_current."
+    verification_command: "target_not_current: full product/cross-domain projection replay"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    completion_boundary: "target_not_current"
+
+  - component: pitr
+    backup_scope: "PostgreSQL WAL archive and point-in-time restore window"
+    rpo_source: "WAL archive target once enabled"
+    encryption_requirement: "Production WAL archive requires encrypted storage and key reference/version metadata."
+    encryption_current_boundary: "PITR and WAL archive encryption are not enabled or proven in PHASE04 local evidence."
+    verification_command: "target_not_current: PITR drill"
+    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
+    completion_boundary: "target_not_current"
+
 cutover_policy:
   explicit_cutover_required: true
   cutover_allowed_by_default: false
