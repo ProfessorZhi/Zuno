@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 647
-  implementation_available: 109
+  target_not_current: 640
+  implementation_available: 116
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -12194,211 +12194,211 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "未知 Provider Enum/Event/Error 不得默认为成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2332"
-    gap: "?????未知 Provider Enum/Event/Error 不得默认为成功???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-046."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-046 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-046 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-046-UT"
-      - "MODEL-046-IT"
-      - "MODEL-046-FT"
-      - "MODEL-046-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-046"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2332"
-      - "planned_test:MODEL-046-UT"
-      - "planned_test:MODEL-046-IT"
-      - "planned_test:MODEL-046-FT"
-      - "planned_test:MODEL-046-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-046"
+      - "target:docs/modules/04-model-gateway.md:2372"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-047
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Gateway Config 必须不可变、版本化和内容寻址"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2333"
-    gap: "?????Gateway Config 必须不可变、版本化和内容寻址???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-047."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-047 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-047 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-047-UT"
-      - "MODEL-047-IT"
-      - "MODEL-047-FT"
-      - "MODEL-047-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-047"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2333"
-      - "planned_test:MODEL-047-UT"
-      - "planned_test:MODEL-047-IT"
-      - "planned_test:MODEL-047-FT"
-      - "planned_test:MODEL-047-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-047"
+      - "target:docs/modules/04-model-gateway.md:2373"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-048
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Config Activation 必须经过 Validation、Replay、Canary、CAS 和 Rollback"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2334"
-    gap: "?????Config Activation 必须经过 Validation、Replay、Canary、CAS 和 Rollback???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-048."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-048 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-048 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-048-UT"
-      - "MODEL-048-IT"
-      - "MODEL-048-FT"
-      - "MODEL-048-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-048"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2334"
-      - "planned_test:MODEL-048-UT"
-      - "planned_test:MODEL-048-IT"
-      - "planned_test:MODEL-048-FT"
-      - "planned_test:MODEL-048-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-048"
+      - "target:docs/modules/04-model-gateway.md:2374"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-049
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个 Call 必须固定 Config Snapshot"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2335"
-    gap: "?????每个 Call 必须固定 Config Snapshot???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-049."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-049 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-049 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-049-UT"
-      - "MODEL-049-IT"
-      - "MODEL-049-FT"
-      - "MODEL-049-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-049"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2335"
-      - "planned_test:MODEL-049-UT"
-      - "planned_test:MODEL-049-IT"
-      - "planned_test:MODEL-049-FT"
-      - "planned_test:MODEL-049-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-049"
+      - "target:docs/modules/04-model-gateway.md:2375"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-050
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider/Model 必须有 Probe、Enable、Deprecate、Drain、Disable、Retire 生命周期"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2336"
-    gap: "?????Provider/Model 必须有 Probe、Enable、Deprecate、Drain、Disable、Retire 生命周期???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-050."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-050 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-050 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-050-UT"
-      - "MODEL-050-IT"
-      - "MODEL-050-FT"
-      - "MODEL-050-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-050"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2336"
-      - "planned_test:MODEL-050-UT"
-      - "planned_test:MODEL-050-IT"
-      - "planned_test:MODEL-050-FT"
-      - "planned_test:MODEL-050-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-050"
+      - "target:docs/modules/04-model-gateway.md:2376"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-051
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Emergency Disable 必须阻止新 Dispatch 并隔离迟到结果"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2337"
-    gap: "?????Emergency Disable 必须阻止新 Dispatch 并隔离迟到结果???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-051."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-051 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-051 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-051-UT"
-      - "MODEL-051-IT"
-      - "MODEL-051-FT"
-      - "MODEL-051-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-051"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2337"
-      - "planned_test:MODEL-051-UT"
-      - "planned_test:MODEL-051-IT"
-      - "planned_test:MODEL-051-FT"
-      - "planned_test:MODEL-051-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-051"
+      - "target:docs/modules/04-model-gateway.md:2377"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-052
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Retirement 不得删除历史 Attempt、Usage 和 Audit"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/04-model-gateway.md:2338"
-    gap: "?????Retirement 不得删除历史 Attempt、Usage 和 Audit???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "Model Gateway runtime batch has code, tests, verifier, and evidence for ARCH-MODEL-052."
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-052 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-052 covered by focused Model Gateway runtime batch tests and verifier."
     test_ids:
-      - "MODEL-052-UT"
-      - "MODEL-052-IT"
-      - "MODEL-052-FT"
-      - "MODEL-052-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-052"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
-      - "target:docs/modules/04-model-gateway.md:2338"
-      - "planned_test:MODEL-052-UT"
-      - "planned_test:MODEL-052-IT"
-      - "planned_test:MODEL-052-FT"
-      - "planned_test:MODEL-052-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-052"
+      - "target:docs/modules/04-model-gateway.md:2378"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-053
     module: "04 Model Gateway"

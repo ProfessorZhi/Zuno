@@ -77,6 +77,28 @@ class ModelCapabilityStatus(StrEnum):
     REVOKED = "REVOKED"
 
 
+class ModelProviderSignalStatus(StrEnum):
+    ACCEPTED = "ACCEPTED"
+    UNKNOWN_FAIL_CLOSED = "UNKNOWN_FAIL_CLOSED"
+
+
+class ModelConfigActivationGate(StrEnum):
+    VALIDATION = "VALIDATION"
+    REPLAY = "REPLAY"
+    CANARY = "CANARY"
+    CAS = "CAS"
+    ROLLBACK = "ROLLBACK"
+
+
+class ModelProviderLifecycleState(StrEnum):
+    PROBE = "PROBE"
+    ENABLED = "ENABLED"
+    DEPRECATED = "DEPRECATED"
+    DRAINING = "DRAINING"
+    DISABLED = "DISABLED"
+    RETIRED = "RETIRED"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -320,6 +342,68 @@ class ModelAdapterConformanceVerdict:
     valid: bool
     requires_revalidation: bool
     reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelProviderSignalVerdict:
+    signal_kind: Literal["enum", "event", "error"]
+    raw_value: str
+    status: ModelProviderSignalStatus
+    success: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelGatewayConfigSnapshot:
+    config_version: str
+    generation: int
+    content_sha256: str
+    payload_canonical_json: str
+
+    @property
+    def snapshot_id(self) -> str:
+        return "config_snapshot_" + _stable_hash([self.config_version, self.generation, self.content_sha256])[:16]
+
+
+@dataclass(frozen=True, slots=True)
+class ModelConfigActivationDecision:
+    snapshot: ModelGatewayConfigSnapshot
+    expected_generation: int
+    committed_generation: int
+    accepted: bool
+    completed_gates: tuple[ModelConfigActivationGate, ...]
+    rollback_snapshot_ref: str | None
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCallConfigBinding:
+    call_id: str
+    config_snapshot_id: str
+    config_version: str
+    config_hash: str
+    immutable: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class ModelProviderLifecycleRecord:
+    provider_id: str
+    model_id: str
+    state: ModelProviderLifecycleState
+    generation: int
+    evidence_ref: str
+    accepts_new_dispatch: bool
+    preserves_history: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class ModelEmergencyDisableDecision:
+    provider_id: str
+    model_id: str
+    generation: int
+    blocks_new_dispatch: bool
+    late_results_isolated: bool
+    quarantine_ref: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -1524,6 +1608,137 @@ class ModelGateway:
             reason="current",
         )
 
+    def interpret_provider_signal(
+        self,
+        *,
+        signal_kind: Literal["enum", "event", "error"],
+        raw_value: str,
+        known_values: Iterable[str],
+    ) -> ModelProviderSignalVerdict:
+        normalized_known = {str(value) for value in known_values}
+        if raw_value not in normalized_known:
+            return ModelProviderSignalVerdict(
+                signal_kind=signal_kind,
+                raw_value=raw_value,
+                status=ModelProviderSignalStatus.UNKNOWN_FAIL_CLOSED,
+                success=False,
+                reason="unknown_provider_signal",
+            )
+        return ModelProviderSignalVerdict(
+            signal_kind=signal_kind,
+            raw_value=raw_value,
+            status=ModelProviderSignalStatus.ACCEPTED,
+            success=True,
+            reason="known_provider_signal",
+        )
+
+    def create_config_snapshot(
+        self,
+        *,
+        config_version: str,
+        generation: int,
+        payload: dict[str, Any],
+    ) -> ModelGatewayConfigSnapshot:
+        canonical_json = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        return ModelGatewayConfigSnapshot(
+            config_version=config_version,
+            generation=generation,
+            content_sha256=hashlib.sha256(canonical_json.encode("utf-8")).hexdigest(),
+            payload_canonical_json=canonical_json,
+        )
+
+    def activate_config_snapshot(
+        self,
+        snapshot: ModelGatewayConfigSnapshot,
+        *,
+        expected_generation: int,
+        active_generation: int,
+        validation_passed: bool,
+        replay_passed: bool,
+        canary_passed: bool,
+        rollback_snapshot_ref: str | None,
+    ) -> ModelConfigActivationDecision:
+        completed: list[ModelConfigActivationGate] = []
+        if validation_passed:
+            completed.append(ModelConfigActivationGate.VALIDATION)
+        else:
+            return _config_activation_rejected(snapshot, expected_generation, active_generation, tuple(completed), rollback_snapshot_ref, "validation_failed")
+        if replay_passed:
+            completed.append(ModelConfigActivationGate.REPLAY)
+        else:
+            return _config_activation_rejected(snapshot, expected_generation, active_generation, tuple(completed), rollback_snapshot_ref, "replay_failed")
+        if canary_passed:
+            completed.append(ModelConfigActivationGate.CANARY)
+        else:
+            return _config_activation_rejected(snapshot, expected_generation, active_generation, tuple(completed), rollback_snapshot_ref, "canary_failed")
+        if expected_generation != active_generation:
+            return _config_activation_rejected(snapshot, expected_generation, active_generation, tuple(completed), rollback_snapshot_ref, "generation_mismatch")
+        completed.append(ModelConfigActivationGate.CAS)
+        if rollback_snapshot_ref is None:
+            return _config_activation_rejected(snapshot, expected_generation, active_generation, tuple(completed), rollback_snapshot_ref, "missing_rollback_snapshot")
+        completed.append(ModelConfigActivationGate.ROLLBACK)
+        return ModelConfigActivationDecision(
+            snapshot=snapshot,
+            expected_generation=expected_generation,
+            committed_generation=active_generation + 1,
+            accepted=True,
+            completed_gates=tuple(completed),
+            rollback_snapshot_ref=rollback_snapshot_ref,
+            reason="activated",
+        )
+
+    def bind_call_config_snapshot(
+        self,
+        *,
+        call_id: str,
+        snapshot: ModelGatewayConfigSnapshot,
+    ) -> ModelCallConfigBinding:
+        return ModelCallConfigBinding(
+            call_id=call_id,
+            config_snapshot_id=snapshot.snapshot_id,
+            config_version=snapshot.config_version,
+            config_hash=snapshot.content_sha256,
+        )
+
+    def provider_lifecycle_record(
+        self,
+        *,
+        provider_id: str,
+        model_id: str,
+        state: ModelProviderLifecycleState | str,
+        generation: int,
+        evidence_ref: str,
+    ) -> ModelProviderLifecycleRecord:
+        normalized_state = ModelProviderLifecycleState(state)
+        return ModelProviderLifecycleRecord(
+            provider_id=provider_id,
+            model_id=model_id,
+            state=normalized_state,
+            generation=generation,
+            evidence_ref=evidence_ref,
+            accepts_new_dispatch=normalized_state in {
+                ModelProviderLifecycleState.ENABLED,
+                ModelProviderLifecycleState.DEPRECATED,
+            },
+        )
+
+    def emergency_disable_provider(
+        self,
+        *,
+        provider_id: str,
+        model_id: str,
+        generation: int,
+        reason: str,
+    ) -> ModelEmergencyDisableDecision:
+        return ModelEmergencyDisableDecision(
+            provider_id=provider_id,
+            model_id=model_id,
+            generation=generation,
+            blocks_new_dispatch=True,
+            late_results_isolated=True,
+            quarantine_ref="provider_disable_quarantine_" + _stable_hash([provider_id, model_id, generation, reason])[:16],
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -1786,6 +2001,25 @@ def _stable_hash(payload: Any) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _config_activation_rejected(
+    snapshot: ModelGatewayConfigSnapshot,
+    expected_generation: int,
+    active_generation: int,
+    completed_gates: tuple[ModelConfigActivationGate, ...],
+    rollback_snapshot_ref: str | None,
+    reason: str,
+) -> ModelConfigActivationDecision:
+    return ModelConfigActivationDecision(
+        snapshot=snapshot,
+        expected_generation=expected_generation,
+        committed_generation=active_generation,
+        accepted=False,
+        completed_gates=completed_gates,
+        rollback_snapshot_ref=rollback_snapshot_ref,
+        reason=reason,
+    )
+
+
 def _error_ref(exc: BaseException) -> str:
     return "error_" + _stable_hash({"type": type(exc).__name__, "message": str(exc)})[:16]
 
@@ -1974,6 +2208,7 @@ __all__ = [
     "ModelAdapterConformanceSuite",
     "ModelAdapterConformanceVerdict",
     "ModelCompressedContext",
+    "ModelCallConfigBinding",
     "ModelControlAction",
     "ModelControlActionType",
     "ModelCapabilityProfile",
@@ -1981,10 +2216,13 @@ __all__ = [
     "ModelCircuitDecision",
     "ModelCircuitKey",
     "ModelCircuitStatus",
+    "ModelConfigActivationDecision",
+    "ModelConfigActivationGate",
     "ModelDomainWrite",
     "ModelEmbeddingResult",
     "ModelGateway",
     "ModelGatewayBinding",
+    "ModelGatewayConfigSnapshot",
     "ModelGatewayCancellationError",
     "ModelGatewayProviderError",
     "ModelGatewayRequest",
@@ -1994,6 +2232,11 @@ __all__ = [
     "ModelClassificationResult",
     "ModelJudgeResult",
     "ModelOutputCandidate",
+    "ModelEmergencyDisableDecision",
+    "ModelProviderLifecycleRecord",
+    "ModelProviderLifecycleState",
+    "ModelProviderSignalStatus",
+    "ModelProviderSignalVerdict",
     "ModelProviderHealthStatus",
     "ModelProviderHealthWindow",
     "ModelQuotaPolicy",

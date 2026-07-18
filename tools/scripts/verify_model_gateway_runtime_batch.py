@@ -15,6 +15,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelCallState,
     ModelCategory,
     ModelCapabilityStatus,
+    ModelConfigActivationGate,
     ModelCircuitStatus,
     ModelControlActionType,
     ModelDomainWrite,
@@ -23,6 +24,8 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelGatewayRequest,
     ModelOperation,
     ModelProviderHealthStatus,
+    ModelProviderLifecycleState,
+    ModelProviderSignalStatus,
     ModelRepairRecord,
     ModelQuotaPolicy,
     ModelUsageKind,
@@ -31,7 +34,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 46))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 53))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -456,6 +459,116 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         model_mapping_version="mapping:v2",
     ).requires_revalidation:
         errors.append("model mapping change did not invalidate conformance")
+
+    unknown_signal = usage_gateway.interpret_provider_signal(
+        signal_kind="event",
+        raw_value="provider_future_success",
+        known_values=("provider_success", "provider_failure"),
+    )
+    known_signal = usage_gateway.interpret_provider_signal(
+        signal_kind="event",
+        raw_value="provider_success",
+        known_values=("provider_success", "provider_failure"),
+    )
+    if unknown_signal.status != ModelProviderSignalStatus.UNKNOWN_FAIL_CLOSED or unknown_signal.success:
+        errors.append("unknown provider signal did not fail closed")
+    if known_signal.status != ModelProviderSignalStatus.ACCEPTED or not known_signal.success:
+        errors.append("known provider signal did not remain accepted")
+
+    snapshot_a = usage_gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=7,
+        payload={"routing": {"planner": "primary"}, "limits": {"max_tokens": 128}},
+    )
+    snapshot_b = usage_gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=7,
+        payload={"limits": {"max_tokens": 128}, "routing": {"planner": "primary"}},
+    )
+    changed_snapshot = usage_gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=8,
+        payload={"routing": {"planner": "fallback"}, "limits": {"max_tokens": 128}},
+    )
+    if snapshot_a.content_sha256 != snapshot_b.content_sha256 or snapshot_a.snapshot_id != snapshot_b.snapshot_id:
+        errors.append("gateway config snapshot is not canonical/content-addressed")
+    if snapshot_a.snapshot_id == changed_snapshot.snapshot_id:
+        errors.append("gateway config snapshot id did not change when config content/generation changed")
+
+    rejected_activation = usage_gateway.activate_config_snapshot(
+        snapshot_a,
+        expected_generation=6,
+        active_generation=7,
+        validation_passed=True,
+        replay_passed=True,
+        canary_passed=True,
+        rollback_snapshot_ref="config_snapshot_previous",
+    )
+    accepted_activation = usage_gateway.activate_config_snapshot(
+        snapshot_a,
+        expected_generation=7,
+        active_generation=7,
+        validation_passed=True,
+        replay_passed=True,
+        canary_passed=True,
+        rollback_snapshot_ref="config_snapshot_previous",
+    )
+    if rejected_activation.accepted or rejected_activation.reason != "generation_mismatch":
+        errors.append("config activation did not enforce CAS generation")
+    if not accepted_activation.accepted:
+        errors.append("valid config activation was not accepted")
+    if accepted_activation.completed_gates != (
+        ModelConfigActivationGate.VALIDATION,
+        ModelConfigActivationGate.REPLAY,
+        ModelConfigActivationGate.CANARY,
+        ModelConfigActivationGate.CAS,
+        ModelConfigActivationGate.ROLLBACK,
+    ):
+        errors.append("config activation did not record validation/replay/canary/CAS/rollback gates")
+
+    call_binding = usage_gateway.bind_call_config_snapshot(call_id="model_call_1", snapshot=snapshot_a)
+    if (
+        call_binding.config_snapshot_id != snapshot_a.snapshot_id
+        or call_binding.config_hash != snapshot_a.content_sha256
+        or not call_binding.immutable
+    ):
+        errors.append("model call did not bind an immutable config snapshot")
+
+    states = {
+        state: usage_gateway.provider_lifecycle_record(
+            provider_id="usage_fallback",
+            model_id="mock-fallback",
+            state=state,
+            generation=index,
+            evidence_ref=f"ev:lifecycle:{state.value.lower()}",
+        )
+        for index, state in enumerate(ModelProviderLifecycleState, start=1)
+    }
+    if states[ModelProviderLifecycleState.PROBE].accepts_new_dispatch:
+        errors.append("provider probe state accepts new dispatch")
+    if not states[ModelProviderLifecycleState.ENABLED].accepts_new_dispatch:
+        errors.append("provider enabled state blocks dispatch")
+    if not states[ModelProviderLifecycleState.DEPRECATED].accepts_new_dispatch:
+        errors.append("provider deprecated state did not allow controlled dispatch")
+    if states[ModelProviderLifecycleState.DRAINING].accepts_new_dispatch:
+        errors.append("provider draining state accepts new dispatch")
+    if states[ModelProviderLifecycleState.DISABLED].accepts_new_dispatch:
+        errors.append("provider disabled state accepts new dispatch")
+    if states[ModelProviderLifecycleState.RETIRED].accepts_new_dispatch:
+        errors.append("provider retired state accepts new dispatch")
+    if not all(record.preserves_history for record in states.values()):
+        errors.append("provider lifecycle does not preserve historical attempt/usage/audit")
+
+    emergency = usage_gateway.emergency_disable_provider(
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        generation=9,
+        reason="provider_key_leak",
+    )
+    if not emergency.blocks_new_dispatch or not emergency.late_results_isolated:
+        errors.append("emergency disable did not block new dispatch and isolate late results")
+    if not emergency.quarantine_ref.startswith("provider_disable_quarantine_"):
+        errors.append("emergency disable did not create quarantine ref for late results")
 
     split_action_result = ModelGateway(
         providers=[

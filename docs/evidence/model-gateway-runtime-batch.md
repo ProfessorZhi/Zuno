@@ -6,7 +6,7 @@
 
 覆盖需求：
 
-- `ARCH-MODEL-001` 到 `ARCH-MODEL-045`
+- `ARCH-MODEL-001` 到 `ARCH-MODEL-052`
 
 范围说明：
 
@@ -43,11 +43,18 @@
 - 已证明 Capability 生命周期支持 `DEGRADED`、`STALE` 和 `REVOKED`，撤销能力禁止 dispatch，异常状态需要 operator review。
 - 已证明 Adapter Conformance Suite 按 Operation-specific 生成，Generate 与 Embed 不共享 conformance hash。
 - 已证明 SDK/API version 或 Model Mapping version 变化会使既有 Conformance Verdict 失效并要求重验。
+- 已证明未知 Provider enum/event/error signal fail closed，不能默认为 success。
+- 已证明 Gateway Config Snapshot 使用 canonical JSON 内容寻址，版本和 generation 一起固定 snapshot id。
+- 已证明 Config Activation 必须经过 Validation、Replay、Canary、CAS 和 Rollback snapshot gate，generation mismatch 不会激活。
+- 已证明每个 Call 可以绑定不可变 Config Snapshot，保留 snapshot id、version 和 content hash。
+- 已证明 Provider/Model 生命周期覆盖 Probe、Enable、Deprecate、Drain、Disable 和 Retire，Drain/Disable/Retire 不接受新 dispatch。
+- 已证明 Emergency Disable 阻止新 dispatch，并为迟到结果生成 quarantine ref。
+- 已证明 Retirement 保留历史 Attempt、Usage 和 Audit 语义，不删除历史记录。
 - 已证明 Gateway 源文件不直接导入 OpenAI/Anthropic Provider SDK。
 
 未覆盖：
 
-- `ARCH-MODEL-046` 以后仍需后续批次证明。
+- `ARCH-MODEL-053` 以后仍需后续批次证明。
 
 验证命令：
 
@@ -60,7 +67,7 @@ pytest -q tests/platform/test_model_gateway.py tests/evals/test_model_gateway_co
 结果：
 
 ```text
-Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020, ARCH-MODEL-021, ARCH-MODEL-022, ARCH-MODEL-023, ARCH-MODEL-024, ARCH-MODEL-025, ARCH-MODEL-026, ARCH-MODEL-027, ARCH-MODEL-028, ARCH-MODEL-029, ARCH-MODEL-030, ARCH-MODEL-031, ARCH-MODEL-032, ARCH-MODEL-033, ARCH-MODEL-034, ARCH-MODEL-035, ARCH-MODEL-036, ARCH-MODEL-037, ARCH-MODEL-038, ARCH-MODEL-039, ARCH-MODEL-040, ARCH-MODEL-041, ARCH-MODEL-042, ARCH-MODEL-043, ARCH-MODEL-044, ARCH-MODEL-045.
-16 passed in 22.40s
-26 passed in 24.58s
+Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020, ARCH-MODEL-021, ARCH-MODEL-022, ARCH-MODEL-023, ARCH-MODEL-024, ARCH-MODEL-025, ARCH-MODEL-026, ARCH-MODEL-027, ARCH-MODEL-028, ARCH-MODEL-029, ARCH-MODEL-030, ARCH-MODEL-031, ARCH-MODEL-032, ARCH-MODEL-033, ARCH-MODEL-034, ARCH-MODEL-035, ARCH-MODEL-036, ARCH-MODEL-037, ARCH-MODEL-038, ARCH-MODEL-039, ARCH-MODEL-040, ARCH-MODEL-041, ARCH-MODEL-042, ARCH-MODEL-043, ARCH-MODEL-044, ARCH-MODEL-045, ARCH-MODEL-046, ARCH-MODEL-047, ARCH-MODEL-048, ARCH-MODEL-049, ARCH-MODEL-050, ARCH-MODEL-051, ARCH-MODEL-052.
+17 passed in 23.40s
+27 passed in 27.72s
 ```

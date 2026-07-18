@@ -9,6 +9,7 @@ from zuno.platform.model_gateway import (
     ModelCallState,
     ModelCategory,
     ModelCapabilityStatus,
+    ModelConfigActivationGate,
     ModelCircuitStatus,
     ModelControlActionType,
     ModelDomainWrite,
@@ -17,6 +18,8 @@ from zuno.platform.model_gateway import (
     ModelGatewayRequest,
     ModelOperation,
     ModelProviderHealthStatus,
+    ModelProviderLifecycleState,
+    ModelProviderSignalStatus,
     ModelQuotaPolicy,
     ModelRepairRecord,
     ModelUsageKind,
@@ -612,3 +615,107 @@ def test_model_gateway_health_circuit_capability_and_conformance_boundaries() ->
         sdk_api_version="sdk:v1",
         model_mapping_version="mapping:v2",
     ).requires_revalidation is True
+
+
+def test_model_gateway_provider_signal_config_and_lifecycle_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    unknown_signal = gateway.interpret_provider_signal(
+        signal_kind="event",
+        raw_value="provider_future_success",
+        known_values=("provider_success", "provider_failure"),
+    )
+    known_signal = gateway.interpret_provider_signal(
+        signal_kind="event",
+        raw_value="provider_success",
+        known_values=("provider_success", "provider_failure"),
+    )
+    assert unknown_signal.status == ModelProviderSignalStatus.UNKNOWN_FAIL_CLOSED
+    assert unknown_signal.success is False
+    assert known_signal.status == ModelProviderSignalStatus.ACCEPTED
+    assert known_signal.success is True
+
+    snapshot_a = gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=7,
+        payload={"routing": {"planner": "primary"}, "limits": {"max_tokens": 128}},
+    )
+    snapshot_b = gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=7,
+        payload={"limits": {"max_tokens": 128}, "routing": {"planner": "primary"}},
+    )
+    changed_snapshot = gateway.create_config_snapshot(
+        config_version="config:v1",
+        generation=8,
+        payload={"routing": {"planner": "fallback"}, "limits": {"max_tokens": 128}},
+    )
+
+    assert snapshot_a.content_sha256 == snapshot_b.content_sha256
+    assert snapshot_a.snapshot_id == snapshot_b.snapshot_id
+    assert snapshot_a.snapshot_id != changed_snapshot.snapshot_id
+
+    rejected_activation = gateway.activate_config_snapshot(
+        snapshot_a,
+        expected_generation=6,
+        active_generation=7,
+        validation_passed=True,
+        replay_passed=True,
+        canary_passed=True,
+        rollback_snapshot_ref="config_snapshot_previous",
+    )
+    accepted_activation = gateway.activate_config_snapshot(
+        snapshot_a,
+        expected_generation=7,
+        active_generation=7,
+        validation_passed=True,
+        replay_passed=True,
+        canary_passed=True,
+        rollback_snapshot_ref="config_snapshot_previous",
+    )
+
+    assert rejected_activation.accepted is False
+    assert rejected_activation.reason == "generation_mismatch"
+    assert accepted_activation.accepted is True
+    assert accepted_activation.completed_gates == (
+        ModelConfigActivationGate.VALIDATION,
+        ModelConfigActivationGate.REPLAY,
+        ModelConfigActivationGate.CANARY,
+        ModelConfigActivationGate.CAS,
+        ModelConfigActivationGate.ROLLBACK,
+    )
+
+    call_binding = gateway.bind_call_config_snapshot(call_id="model_call_1", snapshot=snapshot_a)
+    assert call_binding.config_snapshot_id == snapshot_a.snapshot_id
+    assert call_binding.config_hash == snapshot_a.content_sha256
+    assert call_binding.immutable is True
+
+    states = {
+        state: gateway.provider_lifecycle_record(
+            provider_id="primary",
+            model_id="mock-chat",
+            state=state,
+            generation=index,
+            evidence_ref=f"ev:lifecycle:{state.value.lower()}",
+        )
+        for index, state in enumerate(ModelProviderLifecycleState, start=1)
+    }
+    assert states[ModelProviderLifecycleState.PROBE].accepts_new_dispatch is False
+    assert states[ModelProviderLifecycleState.ENABLED].accepts_new_dispatch is True
+    assert states[ModelProviderLifecycleState.DEPRECATED].accepts_new_dispatch is True
+    assert states[ModelProviderLifecycleState.DRAINING].accepts_new_dispatch is False
+    assert states[ModelProviderLifecycleState.DISABLED].accepts_new_dispatch is False
+    assert states[ModelProviderLifecycleState.RETIRED].accepts_new_dispatch is False
+    assert all(record.preserves_history for record in states.values())
+
+    emergency = gateway.emergency_disable_provider(
+        provider_id="primary",
+        model_id="mock-chat",
+        generation=9,
+        reason="provider_key_leak",
+    )
+    retired = states[ModelProviderLifecycleState.RETIRED]
+    assert emergency.blocks_new_dispatch is True
+    assert emergency.late_results_isolated is True
+    assert emergency.quarantine_ref.startswith("provider_disable_quarantine_")
+    assert retired.preserves_history is True
