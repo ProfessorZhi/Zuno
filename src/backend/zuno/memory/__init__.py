@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from zuno.memory.entity import EntityMemoryFact, EntityMemoryStore
     from zuno.memory.policy import RetentionPolicy
     from zuno.memory.reflexion import ReflexionCandidateBuilder
+    from zuno.memory.runtime_batch import MemoryRuntimeBatch
     from zuno.memory.store import (
         DatabaseMemoryStore,
         DurableMemoryStore,
@@ -42,6 +43,7 @@ _EXPORT_TO_MODULE = {
     "MemoryProcessingPolicy": "zuno.memory.policy",
     "MemoryReviewDecision": "zuno.memory.review",
     "MemoryReviewStatus": "zuno.memory.review",
+    "MemoryRuntimeBatch": "zuno.memory.runtime_batch",
     "MemoryScope": "zuno.memory.contracts",
     "RawMemoryEvent": "zuno.memory.contracts",
     "RetentionPolicy": "zuno.memory.policy",
@@ -64,6 +66,7 @@ __all__ = [
     "MemoryProcessingPolicy",
     "MemoryReviewDecision",
     "MemoryReviewStatus",
+    "MemoryRuntimeBatch",
     "MemoryScope",
     "RawMemoryEvent",
     "RetentionPolicy",

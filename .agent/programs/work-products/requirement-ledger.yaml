@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 340
-  implementation_available: 416
+  target_not_current: 280
+  implementation_available: 476
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -9554,1561 +9554,1981 @@ requirements:
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Working、Session、Long-term 三层生命周期明确"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2228"
-    gap: "?????Working、Session、Long-term 三层生命周期明确???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-001 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-001 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-001 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-001-UT"
-      - "MEM-001-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-001"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2228"
-      - "planned_test:MEM-001-UT"
-      - "planned_test:MEM-001-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-001"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-002
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "长期仅 Episodic、Semantic、Procedural 三种"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2229"
-    gap: "?????长期仅 Episodic、Semantic、Procedural 三种???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-002 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-002 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-002 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-002-UT"
-      - "MEM-002-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-002"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2229"
-      - "planned_test:MEM-002-UT"
-      - "planned_test:MEM-002-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-002"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-003
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Entity/Vector/Graph/Lexical 仅为 Projection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2230"
-    gap: "?????Entity/Vector/Graph/Lexical 仅为 Projection???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-003 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-003 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-003 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-003-UT"
-      - "MEM-003-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-003"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2230"
-      - "planned_test:MEM-003-UT"
-      - "planned_test:MEM-003-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-003"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-004
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "ContextPack 是不可变 read view"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2231"
-    gap: "?????ContextPack 是不可变 read view???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-004 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-004 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-004 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-004-UT"
-      - "MEM-004-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-004"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2231"
-      - "planned_test:MEM-004-UT"
-      - "planned_test:MEM-004-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-004"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-005
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Working State 归 Agent Core"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2232"
-    gap: "?????Working State 归 Agent Core???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-005 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-005 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-005 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-005-UT"
-      - "MEM-005-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-005"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2232"
-      - "planned_test:MEM-005-UT"
-      - "planned_test:MEM-005-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-005"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-006
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Session Summary 与原始消息分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2233"
-    gap: "?????Session Summary 与原始消息分离???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-006 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-006 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-006 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-006-UT"
-      - "MEM-006-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-006"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2233"
-      - "planned_test:MEM-006-UT"
-      - "planned_test:MEM-006-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-006"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-007
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "长期写入必须 Candidate/Governance"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2234"
-    gap: "?????长期写入必须 Candidate/Governance???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-007 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-007 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-007 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-007-UT"
-      - "MEM-007-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-007"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2234"
-      - "planned_test:MEM-007-UT"
-      - "planned_test:MEM-007-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-007"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-008
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "MemoryVersion 不可变版本化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2235"
-    gap: "?????MemoryVersion 不可变版本化???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-008 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-008 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-008 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-008-UT"
-      - "MEM-008-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-008"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2235"
-      - "planned_test:MEM-008-UT"
-      - "planned_test:MEM-008-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-008"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-009
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "ContextPackVersion 不可变"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2236"
-    gap: "?????ContextPackVersion 不可变???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-009 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-009 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-009 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-009-UT"
-      - "MEM-009-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-009"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2236"
-      - "planned_test:MEM-009-UT"
-      - "planned_test:MEM-009-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-009"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-010
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Source Fact 与 Memory Fact 可追溯"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2237"
-    gap: "?????Source Fact 与 Memory Fact 可追溯???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-010 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-010 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-010 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-010-UT"
-      - "MEM-010-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-010"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2237"
-      - "planned_test:MEM-010-UT"
-      - "planned_test:MEM-010-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-010"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-011
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Session Summary 增量更新"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2238"
-    gap: "?????Session Summary 增量更新???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-011 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-011 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-011 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-011-UT"
-      - "MEM-011-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-011"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2238"
-      - "planned_test:MEM-011-UT"
-      - "planned_test:MEM-011-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-011"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-012
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Summary 有 Coverage 和 Source Hash"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2239"
-    gap: "?????Summary 有 Coverage 和 Source Hash???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-012 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-012 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-012 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-012-UT"
-      - "MEM-012-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-012"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2239"
-      - "planned_test:MEM-012-UT"
-      - "planned_test:MEM-012-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-012"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-013
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Recent Raw Tail 保留 Atomic Group"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2240"
-    gap: "?????Recent Raw Tail 保留 Atomic Group???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-013 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-013 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-013 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-013-UT"
-      - "MEM-013-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-013"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2240"
-      - "planned_test:MEM-013-UT"
-      - "planned_test:MEM-013-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-013"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-014
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Manifest 小型化和懒加载"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2241"
-    gap: "?????Manifest 小型化和懒加载???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-014 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-014 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-014 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-014-UT"
-      - "MEM-014-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-014"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2241"
-      - "planned_test:MEM-014-UT"
-      - "planned_test:MEM-014-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-014"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-015
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "按类型检索"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2242"
-    gap: "?????按类型检索???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-015 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-015 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-015 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-015-UT"
-      - "MEM-015-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-015"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2242"
-      - "planned_test:MEM-015-UT"
-      - "planned_test:MEM-015-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-015"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-016
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Scope/ACL 在召回前执行"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2243"
-    gap: "?????Scope/ACL 在召回前执行???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-016 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-016 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-016 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-016-UT"
-      - "MEM-016-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-016"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2243"
-      - "planned_test:MEM-016-UT"
-      - "planned_test:MEM-016-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-016"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-017
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Security 先于模型摘要"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2244"
-    gap: "?????Security 先于模型摘要???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-017 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-017 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-017 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-017-UT"
-      - "MEM-017-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-017"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2244"
-      - "planned_test:MEM-017-UT"
-      - "planned_test:MEM-017-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-017"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-018
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "C0–C3 压缩语义明确"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2245"
-    gap: "?????C0–C3 压缩语义明确???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-018 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-018 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-018 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-018-UT"
-      - "MEM-018-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-018"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2245"
-      - "planned_test:MEM-018-UT"
-      - "planned_test:MEM-018-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-018"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-019
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "F0–F4 Context Fidelity"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2246"
-    gap: "?????F0–F4 Context Fidelity???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-019 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-019 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-019 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-019-UT"
-      - "MEM-019-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-019"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2246"
-      - "planned_test:MEM-019-UT"
-      - "planned_test:MEM-019-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-019"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-020
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Tool Payload 优先压缩"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2247"
-    gap: "?????Tool Payload 优先压缩???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-020 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-020 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-020 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-020-UT"
-      - "MEM-020-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-020"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2247"
-      - "planned_test:MEM-020-UT"
-      - "planned_test:MEM-020-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-020"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-021
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Protected Set 不可静默删除"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2248"
-    gap: "?????Protected Set 不可静默删除???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-021 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-021 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-021 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-021-UT"
-      - "MEM-021-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-021"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2248"
-      - "planned_test:MEM-021-UT"
-      - "planned_test:MEM-021-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-021"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-022
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Context Budget 可解释和确定性"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2249"
-    gap: "?????Context Budget 可解释和确定性???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-022 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-022 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-022 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-022-UT"
-      - "MEM-022-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-022"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2249"
-      - "planned_test:MEM-022-UT"
-      - "planned_test:MEM-022-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-022"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-023
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Exact Token Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2250"
-    gap: "?????Exact Token Validation???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-023 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-023 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-023 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-023-UT"
-      - "MEM-023-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-023"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2250"
-      - "planned_test:MEM-023-UT"
-      - "planned_test:MEM-023-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-023"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-024
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Compact 后 Rehydration"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2251"
-    gap: "?????Compact 后 Rehydration???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-024 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-024 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-024 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-024-UT"
-      - "MEM-024-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-024"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2251"
-      - "planned_test:MEM-024-UT"
-      - "planned_test:MEM-024-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-024"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-025
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Summary 不是唯一恢复源"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2252"
-    gap: "?????Summary 不是唯一恢复源???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-025 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-025 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-025 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-025-UT"
-      - "MEM-025-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-025"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2252"
-      - "planned_test:MEM-025-UT"
-      - "planned_test:MEM-025-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-025"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-026
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Reflexion 单次默认 Episodic"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2253"
-    gap: "?????Reflexion 单次默认 Episodic???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-026 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-026 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-026 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-026-UT"
-      - "MEM-026-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-026"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2253"
-      - "planned_test:MEM-026-UT"
-      - "planned_test:MEM-026-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-026"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-027
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Procedural 晋升有证据门槛"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2254"
-    gap: "?????Procedural 晋升有证据门槛???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-027 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-027 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-027 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-027-UT"
-      - "MEM-027-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-027"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2254"
-      - "planned_test:MEM-027-UT"
-      - "planned_test:MEM-027-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-027"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-028
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Procedural 仅 Strategy Hint"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2255"
-    gap: "?????Procedural 仅 Strategy Hint???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-028 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-028 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-028 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-028-UT"
-      - "MEM-028-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-028"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2255"
-      - "planned_test:MEM-028-UT"
-      - "planned_test:MEM-028-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-028"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-029
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Consolidation 不直接删除 Source"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2256"
-    gap: "?????Consolidation 不直接删除 Source???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-029 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-029 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-029 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-029-UT"
-      - "MEM-029-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-029"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2256"
-      - "planned_test:MEM-029-UT"
-      - "planned_test:MEM-029-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-029"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-030
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Utility Projection 与 Fact 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2257"
-    gap: "?????Utility Projection 与 Fact 分离???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-030 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-030 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-030 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-030-UT"
-      - "MEM-030-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-030"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2257"
-      - "planned_test:MEM-030-UT"
-      - "planned_test:MEM-030-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-030"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-031
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Negative Transfer 可 Suspend"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2258"
-    gap: "?????Negative Transfer 可 Suspend???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-031 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-031 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-031 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-031-UT"
-      - "MEM-031-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-031"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2258"
-      - "planned_test:MEM-031-UT"
-      - "planned_test:MEM-031-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-031"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-032
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Freshness 使用前验证"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2259"
-    gap: "?????Freshness 使用前验证???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-032 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-032 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-032 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-032-UT"
-      - "MEM-032-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-032"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2259"
-      - "planned_test:MEM-032-UT"
-      - "planned_test:MEM-032-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-032"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-033
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Effective Time 与 Observed Time 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2260"
-    gap: "?????Effective Time 与 Observed Time 分离???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-033 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-033 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-033 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-033-UT"
-      - "MEM-033-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-033"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2260"
-      - "planned_test:MEM-033-UT"
-      - "planned_test:MEM-033-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-033"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-034
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "冲突不静默覆盖"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2261"
-    gap: "?????冲突不静默覆盖???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-034 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-034 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-034 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-034-UT"
-      - "MEM-034-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-034"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2261"
-      - "planned_test:MEM-034-UT"
-      - "planned_test:MEM-034-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-034"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-035
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Candidate 状态闭合"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2262"
-    gap: "?????Candidate 状态闭合???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-035 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-035 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-035 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-035-UT"
-      - "MEM-035-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-035"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2262"
-      - "planned_test:MEM-035-UT"
-      - "planned_test:MEM-035-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-035"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-036
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Version 状态闭合"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2263"
-    gap: "?????Version 状态闭合???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-036 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-036 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-036 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-036-UT"
-      - "MEM-036-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-036"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2263"
-      - "planned_test:MEM-036-UT"
-      - "planned_test:MEM-036-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-036"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-037
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Summary 状态闭合"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2264"
-    gap: "?????Summary 状态闭合???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-037 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-037 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-037 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-037-UT"
-      - "MEM-037-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-037"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2264"
-      - "planned_test:MEM-037-UT"
-      - "planned_test:MEM-037-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-037"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-038
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Context Build 状态闭合"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2265"
-    gap: "?????Context Build 状态闭合???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-038 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-038 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-038 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-038-UT"
-      - "MEM-038-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-038"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2265"
-      - "planned_test:MEM-038-UT"
-      - "planned_test:MEM-038-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-038"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-039
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Projection 发布顺序不可跳过"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2266"
-    gap: "?????Projection 发布顺序不可跳过???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-039 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-039 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-039 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-039-UT"
-      - "MEM-039-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-039"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2266"
-      - "planned_test:MEM-039-UT"
-      - "planned_test:MEM-039-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-039"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-040
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Index Receipt 不等于 Active"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2267"
-    gap: "?????Index Receipt 不等于 Active???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-040 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-040 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-040 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-040-UT"
-      - "MEM-040-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-040"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2267"
-      - "planned_test:MEM-040-UT"
-      - "planned_test:MEM-040-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-040"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-041
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Commit Intent 可幂等重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2268"
-    gap: "?????Commit Intent 可幂等重放???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-041 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-041 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-041 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-041-UT"
-      - "MEM-041-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-041"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2268"
-      - "planned_test:MEM-041-UT"
-      - "planned_test:MEM-041-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-041"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-042
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Checkpoint 与 Domain Commit 可协调恢复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2269"
-    gap: "?????Checkpoint 与 Domain Commit 可协调恢复???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-042 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-042 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-042 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-042-UT"
-      - "MEM-042-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-042"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2269"
-      - "planned_test:MEM-042-UT"
-      - "planned_test:MEM-042-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-042"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-043
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "并发更新使用 Generation/CAS"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2270"
-    gap: "?????并发更新使用 Generation/CAS???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-043 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-043 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-043 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-043-UT"
-      - "MEM-043-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-043"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2270"
-      - "planned_test:MEM-043-UT"
-      - "planned_test:MEM-043-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-043"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-044
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "UNKNOWN 先 Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2271"
-    gap: "?????UNKNOWN 先 Reconcile???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-044 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-044 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-044 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-044-UT"
-      - "MEM-044-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-044"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2271"
-      - "planned_test:MEM-044-UT"
-      - "planned_test:MEM-044-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-044"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-045
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Privacy Delete 全投影传播"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2272"
-    gap: "?????Privacy Delete 全投影传播???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-045 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-045 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-045 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-045-UT"
-      - "MEM-045-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-045"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2272"
-      - "planned_test:MEM-045-UT"
-      - "planned_test:MEM-045-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-045"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-046
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Legal Hold 阻断删除"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2273"
-    gap: "?????Legal Hold 阻断删除???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-046 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-046 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-046 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-046-UT"
-      - "MEM-046-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-046"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2273"
-      - "planned_test:MEM-046-UT"
-      - "planned_test:MEM-046-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-046"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-047
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Prompt Injection 不获得权威"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2274"
-    gap: "?????Prompt Injection 不获得权威???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-047 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-047 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-047 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-047-UT"
-      - "MEM-047-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-047"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2274"
-      - "planned_test:MEM-047-UT"
-      - "planned_test:MEM-047-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-047"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-048
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "隐藏思维链不持久化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2275"
-    gap: "?????隐藏思维链不持久化???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-048 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-048 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-048 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-048-UT"
-      - "MEM-048-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-048"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2275"
-      - "planned_test:MEM-048-UT"
-      - "planned_test:MEM-048-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-048"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-049
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "模型只产生 Proposal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2276"
-    gap: "?????模型只产生 Proposal???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-049 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-049 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-049 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-049-UT"
-      - "MEM-049-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-049"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2276"
-      - "planned_test:MEM-049-UT"
-      - "planned_test:MEM-049-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-049"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-050
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "弱模型默认摘要、强模型复杂整合"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2277"
-    gap: "?????弱模型默认摘要、强模型复杂整合???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-050 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-050 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-050 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-050-UT"
-      - "MEM-050-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-050"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2277"
-      - "planned_test:MEM-050-UT"
-      - "planned_test:MEM-050-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-050"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-051
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Model Upgrade 有明确链路"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2278"
-    gap: "?????Model Upgrade 有明确链路???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-051 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-051 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-051 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-051-UT"
-      - "MEM-051-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-051"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2278"
-      - "planned_test:MEM-051-UT"
-      - "planned_test:MEM-051-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-051"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-052
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Context 选择全量 Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2279"
-    gap: "?????Context 选择全量 Trace???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-052 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-052 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-052 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-052-UT"
-      - "MEM-052-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-052"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2279"
-      - "planned_test:MEM-052-UT"
-      - "planned_test:MEM-052-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-052"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-053
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "MemoryUseTrace 关联 Outcome/Eval"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2280"
-    gap: "?????MemoryUseTrace 关联 Outcome/Eval???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-053 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-053 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-053 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-053-UT"
-      - "MEM-053-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-053"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2280"
-      - "planned_test:MEM-053-UT"
-      - "planned_test:MEM-053-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-053"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-054
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "固定 Eval 覆盖长期和压缩质量"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2281"
-    gap: "?????固定 Eval 覆盖长期和压缩质量???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-054 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-054 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-054 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-054-UT"
-      - "MEM-054-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-054"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2281"
-      - "planned_test:MEM-054-UT"
-      - "planned_test:MEM-054-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-054"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-055
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Canonical Store 使用 PostgreSQL"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2282"
-    gap: "?????Canonical Store 使用 PostgreSQL???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-055 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-055 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-055 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-055-UT"
-      - "MEM-055-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-055"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2282"
-      - "planned_test:MEM-055-UT"
-      - "planned_test:MEM-055-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-055"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-056
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "大 Payload 使用 Object Store Ref"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2283"
-    gap: "?????大 Payload 使用 Object Store Ref???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-056 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-056 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-056 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-056-UT"
-      - "MEM-056-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-056"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2283"
-      - "planned_test:MEM-056-UT"
-      - "planned_test:MEM-056-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-056"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-057
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Vector/Graph/Lexical 可重建"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2284"
-    gap: "?????Vector/Graph/Lexical 可重建???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-057 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-057 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-057 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-057-UT"
-      - "MEM-057-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-057"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2284"
-      - "planned_test:MEM-057-UT"
-      - "planned_test:MEM-057-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-057"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-058
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "CrossModuleEnvelope 字段贯通"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2285"
-    gap: "?????CrossModuleEnvelope 字段贯通???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-058 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-058 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-058 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-058-UT"
-      - "MEM-058-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-058"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2285"
-      - "planned_test:MEM-058-UT"
-      - "planned_test:MEM-058-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-058"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-059
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Target 与 Current 状态源分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2286"
-    gap: "?????Target 与 Current 状态源分离???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-059 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-059 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-059 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-059-UT"
-      - "MEM-059-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-059"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2286"
-      - "planned_test:MEM-059-UT"
-      - "planned_test:MEM-059-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-059"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MEM-060
     module: "05 Memory / Context"
     mandatory: true
     target_statement: "Production Ready 需要完整工程证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/memory/runtime_batch.py"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
+      - "tools/scripts/verify_memory_runtime_batch.py"
+      - "docs/evidence/memory-runtime-batch.md"
       - "docs/modules/05-memory-context.md:2287"
-    gap: "?????Production Ready 需要完整工程证据???? Current ????????????????? PHASE13 ?????????/??????????????? Current?"
+    gap: "ARCH-MEM-060 已由 Memory Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE13 或全 Program 关闭。"
     owner: "Memory / Context"
     target_phase: "PHASE13"
     planned_work_package: "P13 memory and context governance runtime"
     dependencies:
       - "PHASE08"
       - "PHASE12"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MEM-060 ??????????????????????? PHASE13 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MEM-060 covered by Memory runtime batch tests and verifier."
     test_ids:
-      - "MEM-060-UT"
-      - "MEM-060-IT"
+      - "tests/memory/test_memory_runtime_batch.py"
+      - "tests/agent/test_memory_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-MEM-060"
+      - "docs/evidence/memory-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/05-memory-context.md:2287"
-      - "planned_test:MEM-060-UT"
-      - "planned_test:MEM-060-IT"
-      - "planned_evidence:needs_evidence:EV-MEM-060"
+      - "current:src/backend/zuno/memory/runtime_batch.py"
+      - "test:tests/memory/test_memory_runtime_batch.py"
+      - "test:tests/agent/test_memory_layer_surfaces.py"
+      - "evidence:docs/evidence/memory-runtime-batch.md"
+      - "verifier:tools/scripts/verify_memory_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-001
     module: "04 Model Gateway"

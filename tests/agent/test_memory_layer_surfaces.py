@@ -53,6 +53,34 @@ def test_memory_layer_modules_expose_target_boundaries() -> None:
             "SemanticMemorySearchResult",
             "TaskMemorySummary",
         },
+        "zuno.memory.runtime_batch": {
+            "CandidateStatus",
+            "CompressionDecision",
+            "CompressionLevel",
+            "ConflictRecord",
+            "ConsolidationRecord",
+            "ContextPackVersion",
+            "FreshnessRecord",
+            "LongTermMemoryKind",
+            "MemoryCandidateRecord",
+            "MemoryEnvelope",
+            "MemoryLifecycleRecord",
+            "MemoryReadinessEvidence",
+            "MemoryRuntimeBatch",
+            "MemorySafetyRecord",
+            "MemoryStorageRecord",
+            "MemoryTraceRecord",
+            "MemoryVersionRecord",
+            "ModelMemoryRouting",
+            "PrivacyDeleteRecord",
+            "ProjectionPublicationRecord",
+            "ReflexionGovernanceRecord",
+            "RehydrationRecord",
+            "RetrievalGateRecord",
+            "SessionSummaryRecord",
+            "StateMachineRecord",
+            "VersionStatus",
+        },
     }
 
     for module_name, exports in expected_exports.items():
@@ -92,8 +120,10 @@ def test_memory_package_facade_points_at_layer_modules() -> None:
     from zuno.memory.policy import RetentionPolicy
     from zuno.memory.store import InMemoryLayerStore
     from zuno.memory.engine import MemoryEngine
+    from zuno.memory.runtime_batch import MemoryRuntimeBatch
 
     assert memory.MemoryLayer is MemoryLayer
     assert memory.RetentionPolicy is RetentionPolicy
     assert memory.InMemoryLayerStore is InMemoryLayerStore
     assert memory.MemoryEngine is MemoryEngine
+    assert memory.MemoryRuntimeBatch is MemoryRuntimeBatch
