@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 722
-  implementation_available: 34
+  target_not_current: 721
+  implementation_available: 35
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5532,26 +5532,28 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Redis Optional/Non-authoritative"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1926"
-    gap: "?????Redis Optional/Non-authoritative???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_redis_optional_boundary.py"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "docs/evidence/phase04-redis-optional-boundary.md"
+    gap: "Redis optional/non-authoritative boundary is current; Redis HA, failover, rate-limit acceleration and enterprise cache deployment remain future optional or later-phase scopes."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Redis optional boundary subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-045 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: Redis cache is optional, non-authoritative, rebuildable from source, and excluded from PHASE04 required real services and release adapter provenance"
     test_ids:
-      - "INFRA-045-UT"
-      - "INFRA-045-IT"
+      - "tests/repo/test_phase04_redis_optional_boundary.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-045"
+      - "docs/evidence/phase04-redis-optional-boundary.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1926"
-      - "planned_test:INFRA-045-UT"
-      - "planned_test:INFRA-045-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-045"
+      - "current:tools/scripts/verify_phase04_redis_optional_boundary.py"
+      - "current:tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "test:tests/repo/test_phase04_redis_optional_boundary.py"
+      - "evidence:docs/evidence/phase04-redis-optional-boundary.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-046
     module: "11 Infrastructure"

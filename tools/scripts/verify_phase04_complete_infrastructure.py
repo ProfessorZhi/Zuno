@@ -187,6 +187,12 @@ RELEASE_PROVENANCE_MANIFEST_VERIFIER = (
 RELEASE_PROVENANCE_MANIFEST_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-release-provenance-manifest.md"
 )
+REDIS_OPTIONAL_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_redis_optional_boundary.py"
+)
+REDIS_OPTIONAL_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-redis-optional-boundary.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1358,6 +1364,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in release_provenance_evidence:
                 errors.append(
                     "PHASE04 release provenance manifest evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not REDIS_OPTIONAL_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 Redis optional boundary verifier")
+    else:
+        redis_optional_errors = _load_verifier(
+            REDIS_OPTIONAL_BOUNDARY_VERIFIER,
+            "verify_phase04_redis_optional_boundary",
+            "verify_phase04_redis_optional_boundary",
+        )()
+        for redis_optional_error in redis_optional_errors:
+            errors.append(
+                "PHASE04 Redis optional boundary verification failed: "
+                f"{redis_optional_error}"
+            )
+
+    if not REDIS_OPTIONAL_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 Redis optional boundary evidence")
+    else:
+        redis_optional_evidence = _read(REDIS_OPTIONAL_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "redis_cache_capability_present: passed",
+            "redis_cache_non_authoritative: passed",
+            "redis_cache_rebuildable: passed",
+            "redis_not_required_real_service: passed",
+            "redis_not_required_release_adapter: passed",
+            "It does not prove Redis high availability",
+        ]:
+            if phrase not in redis_optional_evidence:
+                errors.append(
+                    "PHASE04 Redis optional boundary evidence missing phrase: "
                     f"{phrase}"
                 )
 

@@ -31,6 +31,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T07 Upgrade Compatibility Profile 子范围：`UpgradeCompatibilityProfileV1` 已达到 `implementation available`，Infrastructure Capability Profile 中每个 service kind 都有显式 adapter/schema version、read/write/rollback compatible versions、unknown-version fail-closed action 和 canonical content hash；它不证明 live rolling upgrade、official Checkpointer integration 或完整 recovery replay。
 - PHASE04 P04-T07 Adapter Conformance Profile 子范围：`AdapterConformanceProfileV1` 已达到 `implementation available`，Developer CI 与 Server Product 对每个 service kind 共用 conformance suite version、supported/unsupported semantics、required test refs 和 evidence ref，并对 unsupported local semantic fail-fast；它不证明所有未来 enterprise adapter 已实现。
 - PHASE04 P04-T07 Release Provenance Manifest 子范围：`ReleaseManifestV1` 已达到 `implementation available`，本地真实 PostgreSQL/RabbitMQ/MinIO 的 source commit、运行中 image id bundle、Compose network/port refs、config hash、migration versions、adapter versions、compatibility evidence 与 provenance refs 可机器验证；它不证明 production application image release、外部 SBOM/signing、official Checkpointer 或完整 recovery replay。
+- PHASE04 P04-T07 Redis Optional Boundary 子范围：`DataServiceCapabilityV1` 中 Redis/CACHE boundary 已达到 `implementation available`，Redis 只作为 optional acceleration cache，非权威、可从来源重建，且不进入 PHASE04 required real services 或 release adapter provenance；它不证明 Redis HA、failover、rate-limit acceleration 或 enterprise deployment。
 
 ## Short-term Closure Gap
 
