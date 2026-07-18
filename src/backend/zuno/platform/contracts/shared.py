@@ -250,6 +250,93 @@ class TenantIsolationProfileV1(StrictContract):
         return self
 
 
+class UpgradeCompatibilityProfileV1(StrictContract):
+    profile_id: str
+    service_kind: Literal[
+        "RELATIONAL",
+        "QUEUE",
+        "OBJECT",
+        "CHECKPOINT",
+        "VECTOR",
+        "GRAPH",
+        "LEXICAL",
+        "CACHE",
+        "TRACE_AUDIT",
+        "SECRET_KMS",
+    ]
+    profile_version: str
+    current_adapter_version: str
+    current_schema_or_contract_version: str
+    read_compatible_adapter_versions: tuple[str, ...]
+    write_compatible_adapter_versions: tuple[str, ...]
+    rollback_compatible_adapter_versions: tuple[str, ...]
+    read_compatible_schema_or_contract_versions: tuple[str, ...]
+    write_compatible_schema_or_contract_versions: tuple[str, ...]
+    rollback_compatible_schema_or_contract_versions: tuple[str, ...]
+    unsupported_adapter_versions: tuple[str, ...] = ()
+    unsupported_schema_or_contract_versions: tuple[str, ...] = ()
+    unknown_adapter_version_action: Literal["FAIL_CLOSED"]
+    unknown_schema_or_contract_version_action: Literal["FAIL_CLOSED"]
+    evidence_ref: str
+    current_runtime_status: Literal["PROVEN", "PROFILE_ONLY", "BLOCKED"]
+    content_hash: str
+
+    def hash_inputs(self) -> dict[str, Any]:
+        data = self.model_dump(mode="json", exclude_none=False)
+        data.pop("content_hash", None)
+        return data
+
+    @model_validator(mode="after")
+    def _compatibility_window_is_explicit(self) -> "UpgradeCompatibilityProfileV1":
+        adapter_windows = {
+            "read": self.read_compatible_adapter_versions,
+            "write": self.write_compatible_adapter_versions,
+            "rollback": self.rollback_compatible_adapter_versions,
+        }
+        schema_windows = {
+            "read": self.read_compatible_schema_or_contract_versions,
+            "write": self.write_compatible_schema_or_contract_versions,
+            "rollback": self.rollback_compatible_schema_or_contract_versions,
+        }
+        for name, versions in adapter_windows.items():
+            if not versions:
+                raise ValueError(f"{name} adapter compatibility window is empty")
+        for name, versions in schema_windows.items():
+            if not versions:
+                raise ValueError(f"{name} schema compatibility window is empty")
+        if self.current_adapter_version not in self.read_compatible_adapter_versions:
+            raise ValueError("current adapter version must be read compatible")
+        if self.current_adapter_version not in self.write_compatible_adapter_versions:
+            raise ValueError("current adapter version must be write compatible")
+        if (
+            self.current_schema_or_contract_version
+            not in self.read_compatible_schema_or_contract_versions
+        ):
+            raise ValueError("current schema version must be read compatible")
+        if (
+            self.current_schema_or_contract_version
+            not in self.write_compatible_schema_or_contract_versions
+        ):
+            raise ValueError("current schema version must be write compatible")
+        if set(self.unsupported_adapter_versions).intersection(
+            self.read_compatible_adapter_versions
+            + self.write_compatible_adapter_versions
+            + self.rollback_compatible_adapter_versions
+        ):
+            raise ValueError("unsupported adapter versions cannot be compatible")
+        if set(self.unsupported_schema_or_contract_versions).intersection(
+            self.read_compatible_schema_or_contract_versions
+            + self.write_compatible_schema_or_contract_versions
+            + self.rollback_compatible_schema_or_contract_versions
+        ):
+            raise ValueError("unsupported schema versions cannot be compatible")
+        if canonical_sha256(self.hash_inputs()) != self.content_hash:
+            raise ValueError(
+                "content_hash does not match upgrade compatibility profile"
+            )
+        return self
+
+
 class InfrastructureCapabilityProfileV1(StrictContract):
     profile_id: str
     profile_version: str

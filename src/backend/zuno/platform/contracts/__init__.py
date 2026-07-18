@@ -39,6 +39,7 @@ from zuno.platform.contracts.shared import (
     SourceObjectRefV1,
     TenantIsolationProfileV1,
     ToolObservationV1,
+    UpgradeCompatibilityProfileV1,
     WriteVisibilityReceiptV1,
 )
 
@@ -75,6 +76,7 @@ __all__ = [
     "SourceObjectRefV1",
     "TenantIsolationProfileV1",
     "ToolObservationV1",
+    "UpgradeCompatibilityProfileV1",
     "WriteVisibilityReceiptV1",
     "build_wave1_contract_registry",
     "canonical_json",

@@ -169,6 +169,12 @@ TENANT_ISOLATION_PROFILE_VERIFIER = (
 TENANT_ISOLATION_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-tenant-isolation-profiles.md"
 )
+UPGRADE_COMPATIBILITY_PROFILE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_upgrade_compatibility_profiles.py"
+)
+UPGRADE_COMPATIBILITY_PROFILE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-upgrade-compatibility-profiles.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1242,6 +1248,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in tenant_profile_evidence:
                 errors.append(
                     "PHASE04 tenant isolation profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not UPGRADE_COMPATIBILITY_PROFILE_VERIFIER.exists():
+        errors.append("missing PHASE04 upgrade compatibility profile verifier")
+    else:
+        upgrade_profile_errors = _load_verifier(
+            UPGRADE_COMPATIBILITY_PROFILE_VERIFIER,
+            "verify_phase04_upgrade_compatibility_profiles",
+            "verify_phase04_upgrade_compatibility_profiles",
+        )()
+        for upgrade_profile_error in upgrade_profile_errors:
+            errors.append(
+                "PHASE04 upgrade compatibility profile verification failed: "
+                f"{upgrade_profile_error}"
+            )
+
+    if not UPGRADE_COMPATIBILITY_PROFILE_EVIDENCE.exists():
+        errors.append("missing PHASE04 upgrade compatibility profile evidence")
+    else:
+        upgrade_profile_evidence = _read(UPGRADE_COMPATIBILITY_PROFILE_EVIDENCE)
+        for phrase in [
+            "upgrade_compatibility_profile_contract: passed",
+            "every_typed_service_has_upgrade_profile: passed",
+            "adapter_and_schema_versions_explicit: passed",
+            "read_write_rollback_windows_explicit: passed",
+            "unknown_version_fail_closed: passed",
+            "profile_version_hash_changes: passed",
+            "It does not prove live rolling upgrade, official Checkpointer integration, or full recovery replay",
+        ]:
+            if phrase not in upgrade_profile_evidence:
+                errors.append(
+                    "PHASE04 upgrade compatibility profile evidence missing phrase: "
                     f"{phrase}"
                 )
 

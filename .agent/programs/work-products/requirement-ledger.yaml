@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 726
-  implementation_available: 30
+  target_not_current: 725
+  implementation_available: 31
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5919,26 +5919,28 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Upgrade Compatibility 显式版本化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1941"
-    gap: "?????Upgrade Compatibility 显式版本化???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_upgrade_compatibility_profiles.py"
+      - "docs/evidence/phase04-upgrade-compatibility-profiles.md"
+    gap: "Upgrade Compatibility profile is current for every typed Infrastructure Capability Profile service kind; live rolling upgrade, official Checkpointer integration and full recovery replay remain separate target_not_current scopes."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 upgrade compatibility profile subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-060 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: explicit adapter/schema versions, read/write/rollback compatibility windows, unknown-version fail-closed action and canonical hash drift on version change"
     test_ids:
-      - "INFRA-060-UT"
-      - "INFRA-060-IT"
+      - "tests/repo/test_phase04_upgrade_compatibility_profiles.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-060"
+      - "docs/evidence/phase04-upgrade-compatibility-profiles.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1941"
-      - "planned_test:INFRA-060-UT"
-      - "planned_test:INFRA-060-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-060"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_upgrade_compatibility_profiles.py"
+      - "test:tests/repo/test_phase04_upgrade_compatibility_profiles.py"
+      - "evidence:docs/evidence/phase04-upgrade-compatibility-profiles.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-061
     module: "11 Infrastructure"
