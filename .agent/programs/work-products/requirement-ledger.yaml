@@ -18,8 +18,7 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 80
-  implementation_available: 676
+  implementation_available: 756
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -7334,2081 +7333,2721 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "原始字节必须以不可变 SourceObject 保存，派生结果不得覆盖原对象。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4517"
-    gap: "?????原始字节必须以不可变 SourceObject 保存，派生结果不得覆盖原对象。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-001."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-001 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-001 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-001-UT"
-      - "ING-001-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-001"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4517"
-      - "planned_test:ING-001-UT"
-      - "planned_test:ING-001-IT"
-      - "planned_evidence:needs_evidence:EV-ING-001"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-002
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每次对象提交必须验证 size、content hash 和 media type。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4518"
-    gap: "?????每次对象提交必须验证 size、content hash 和 media type。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-002."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-002 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-002 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-002-UT"
-      - "ING-002-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-002"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4518"
-      - "planned_test:ING-002-UT"
-      - "planned_test:ING-002-IT"
-      - "planned_evidence:needs_evidence:EV-ING-002"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-003
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 读取前必须重新校验 SourceObject Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4519"
-    gap: "?????Parser 读取前必须重新校验 SourceObject Hash。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-003."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-003 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-003 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-003-UT"
-      - "ING-003-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-003"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4519"
-      - "planned_test:ING-003-UT"
-      - "planned_test:ING-003-IT"
-      - "planned_evidence:needs_evidence:EV-ING-003"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-004
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "SourceObject Hash 不匹配时必须 quarantine 并阻止 Handoff。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4520"
-    gap: "?????SourceObject Hash 不匹配时必须 quarantine 并阻止 Handoff。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-004."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-004 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-004 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-004-UT"
-      - "ING-004-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-004"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4520"
-      - "planned_test:ING-004-UT"
-      - "planned_test:ING-004-IT"
-      - "planned_evidence:needs_evidence:EV-ING-004"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-005
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DocumentVersion 只随源内容或业务版本变化。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4521"
-    gap: "?????DocumentVersion 只随源内容或业务版本变化。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-005."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-005 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-005 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-005-UT"
-      - "ING-005-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-005"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4521"
-      - "planned_test:ING-005-UT"
-      - "planned_test:ING-005-IT"
-      - "planned_evidence:needs_evidence:EV-ING-005"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-006
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser、模型或配置变化必须创建新 ParseSnapshot，不创建新 DocumentVersion。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4522"
-    gap: "?????Parser、模型或配置变化必须创建新 ParseSnapshot，不创建新 DocumentVersion。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-006."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-006 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-006 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-006-UT"
-      - "ING-006-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-006"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4522"
-      - "planned_test:ING-006-UT"
-      - "planned_test:ING-006-IT"
-      - "planned_evidence:needs_evidence:EV-ING-006"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-007
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "激活后的 ParsePlan 和 ParseSnapshot 不可原地修改。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4523"
-    gap: "?????激活后的 ParsePlan 和 ParseSnapshot 不可原地修改。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-007."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-007 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-007 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-007-UT"
-      - "ING-007-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-007"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4523"
-      - "planned_test:ING-007-UT"
-      - "planned_test:ING-007-IT"
-      - "planned_evidence:needs_evidence:EV-ING-007"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-008
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "在线附件和知识库文件必须共享同一 Ingestion Kernel。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4524"
-    gap: "?????在线附件和知识库文件必须共享同一 Ingestion Kernel。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-008."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-008 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-008 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-008-UT"
-      - "ING-008-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-008"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4524"
-      - "planned_test:ING-008-UT"
-      - "planned_test:ING-008-IT"
-      - "planned_evidence:needs_evidence:EV-ING-008"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-009
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Agent Core 不得在 Graph Node 内直接调用文档 Parser。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4525"
-    gap: "?????Agent Core 不得在 Graph Node 内直接调用文档 Parser。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-009."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-009 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-009 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-009-UT"
-      - "ING-009-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-009"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4525"
-      - "planned_test:ING-009-UT"
-      - "planned_test:ING-009-IT"
-      - "planned_evidence:needs_evidence:EV-ING-009"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-010
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input 不得生成 RetrievalChunk、Embedding、Index 或 KnowledgeVersion。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4526"
-    gap: "?????Input 不得生成 RetrievalChunk、Embedding、Index 或 KnowledgeVersion。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-010."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-010 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-010 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-010-UT"
-      - "ING-010-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-010"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4526"
-      - "planned_test:ING-010-UT"
-      - "planned_test:ING-010-IT"
-      - "planned_evidence:needs_evidence:EV-ING-010"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-011
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "SourceSpan 不得包含 Knowledge Chunk ID。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4527"
-    gap: "?????SourceSpan 不得包含 Knowledge Chunk ID。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-011."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-011 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-011 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-011-UT"
-      - "ING-011-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-011"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4527"
-      - "planned_test:ING-011-UT"
-      - "planned_test:ING-011-IT"
-      - "planned_evidence:needs_evidence:EV-ING-011"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-012
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有未处理或失败区域必须进入 MissingContentManifest。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4528"
-    gap: "?????所有未处理或失败区域必须进入 MissingContentManifest。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-012."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-012 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-012 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-012-UT"
-      - "ING-012-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-012"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4528"
-      - "planned_test:ING-012-UT"
-      - "planned_test:ING-012-IT"
-      - "planned_evidence:needs_evidence:EV-ING-012"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-013
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "raw、normalized、search 和 model-derived 内容必须分字段保存。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4529"
-    gap: "?????raw、normalized、search 和 model-derived 内容必须分字段保存。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-013."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-013 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-013 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-013-UT"
-      - "ING-013-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-013"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4529"
-      - "planned_test:ING-013-UT"
-      - "planned_test:ING-013-IT"
-      - "planned_evidence:needs_evidence:EV-ING-013"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-014
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每次 Transform 必须记录输入 Hash、输出 Hash、版本和 Loss Class。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4530"
-    gap: "?????每次 Transform 必须记录输入 Hash、输出 Hash、版本和 Loss Class。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-014."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-014 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-014 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-014-UT"
-      - "ING-014-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-014"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4530"
-      - "planned_test:ING-014-UT"
-      - "planned_test:ING-014-IT"
-      - "planned_evidence:needs_evidence:EV-ING-014"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-015
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "任何 Lossy Transform 只能生成派生 View，不能删除原始内容。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4531"
-    gap: "?????任何 Lossy Transform 只能生成派生 View，不能删除原始内容。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-015."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-015 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-015 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-015-UT"
-      - "ING-015-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-015"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4531"
-      - "planned_test:ING-015-UT"
-      - "planned_test:ING-015-IT"
-      - "planned_evidence:needs_evidence:EV-ING-015"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-016
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "可靠原生结构存在时不得默认整文档 OCR。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4532"
-    gap: "?????可靠原生结构存在时不得默认整文档 OCR。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-016."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-016 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-016 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-016-UT"
-      - "ING-016-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-016"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4532"
-      - "planned_test:ING-016-UT"
-      - "planned_test:ING-016-IT"
-      - "planned_evidence:needs_evidence:EV-ING-016"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-017
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "OCR 输出必须保留坐标、置信度、模型版本和图像 Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4533"
-    gap: "?????OCR 输出必须保留坐标、置信度、模型版本和图像 Hash。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-017."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-017 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-017 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-017-UT"
-      - "ING-017-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-017"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4533"
-      - "planned_test:ING-017-UT"
-      - "planned_test:ING-017-IT"
-      - "planned_evidence:needs_evidence:EV-ING-017"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-018
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "VLM 输出默认标记 MODEL_DERIVED。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4534"
-    gap: "?????VLM 输出默认标记 MODEL_DERIVED。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-018."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-018 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-018 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-018-UT"
-      - "ING-018-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-018"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4534"
-      - "planned_test:ING-018-UT"
-      - "planned_test:ING-018-IT"
-      - "planned_evidence:needs_evidence:EV-ING-018"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-019
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "远程 OCR/VLM 必须经过 Security Gate 和 Model Gateway。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4535"
-    gap: "?????远程 OCR/VLM 必须经过 Security Gate 和 Model Gateway。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-019."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-019 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-019 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-019-UT"
-      - "ING-019-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-019"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4535"
-      - "planned_test:ING-019-UT"
-      - "planned_test:ING-019-IT"
-      - "planned_evidence:needs_evidence:EV-ING-019"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-020
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 选择必须综合格式、文本层、复杂度、安全、成本和 Deadline。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4536"
-    gap: "?????Parser 选择必须综合格式、文本层、复杂度、安全、成本和 Deadline。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-020."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-020 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-020 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-020-UT"
-      - "ING-020-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-020"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4536"
-      - "planned_test:ING-020-UT"
-      - "planned_test:ING-020-IT"
-      - "planned_evidence:needs_evidence:EV-ING-020"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-021
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "系统必须支持文件、页面和区域三级 Parser 路由。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4537"
-    gap: "?????系统必须支持文件、页面和区域三级 Parser 路由。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-021."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-021 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-021 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-021-UT"
-      - "ING-021-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-021"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4537"
-      - "planned_test:ING-021-UT"
-      - "planned_test:ING-021-IT"
-      - "planned_evidence:needs_evidence:EV-ING-021"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-022
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser Adapter 必须是 Provider-neutral typed contract。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4538"
-    gap: "?????Parser Adapter 必须是 Provider-neutral typed contract。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-022."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-022 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-022 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-022-UT"
-      - "ING-022-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-022"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4538"
-      - "planned_test:ING-022-UT"
-      - "planned_test:ING-022-IT"
-      - "planned_evidence:needs_evidence:EV-ING-022"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-023
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 成功返回不等于 Snapshot 可用。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4539"
-    gap: "?????Parser 成功返回不等于 Snapshot 可用。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-023."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-023 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-023 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-023-UT"
-      - "ING-023-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-023"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4539"
-      - "planned_test:ING-023-UT"
-      - "planned_test:ING-023-IT"
-      - "planned_evidence:needs_evidence:EV-ING-023"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-024
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Quality Verdict 必须为 PASS、DEGRADED 或 BLOCK。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4540"
-    gap: "?????Quality Verdict 必须为 PASS、DEGRADED 或 BLOCK。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-024."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-024 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-024 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-024-UT"
-      - "ING-024-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-024"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4540"
-      - "planned_test:ING-024-UT"
-      - "planned_test:ING-024-IT"
-      - "planned_evidence:needs_evidence:EV-ING-024"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-025
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "BLOCK Snapshot 不得发布给 Knowledge。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4541"
-    gap: "?????BLOCK Snapshot 不得发布给 Knowledge。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-025."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-025 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-025 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-025-UT"
-      - "ING-025-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-025"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4541"
-      - "planned_test:ING-025-UT"
-      - "planned_test:ING-025-IT"
-      - "planned_evidence:needs_evidence:EV-ING-025"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-026
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DEGRADED Handoff 必须由 Profile 明确允许并携带缺失清单。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4542"
-    gap: "?????DEGRADED Handoff 必须由 Profile 明确允许并携带缺失清单。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-026."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-026 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-026 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-026-UT"
-      - "ING-026-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-026"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4542"
-      - "planned_test:ING-026-UT"
-      - "planned_test:ING-026-IT"
-      - "planned_evidence:needs_evidence:EV-ING-026"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-027
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Quality Verdict 最终提交必须由确定性 Policy Engine 完成。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4543"
-    gap: "?????Quality Verdict 最终提交必须由确定性 Policy Engine 完成。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-027."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-027 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-027 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-027-UT"
-      - "ING-027-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-027"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4543"
-      - "planned_test:ING-027-UT"
-      - "planned_test:ING-027-IT"
-      - "planned_evidence:needs_evidence:EV-ING-027"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-028
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "ParseJob 与 ParseAttempt 必须分离。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4544"
-    gap: "?????ParseJob 与 ParseAttempt 必须分离。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-028."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-028 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-028 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-028-UT"
-      - "ING-028-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-028"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4544"
-      - "planned_test:ING-028-UT"
-      - "planned_test:ING-028-IT"
-      - "planned_evidence:needs_evidence:EV-ING-028"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-029
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个 Attempt 必须绑定 execution epoch、Lease 和 Fencing Token。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4545"
-    gap: "?????每个 Attempt 必须绑定 execution epoch、Lease 和 Fencing Token。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-029."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-029 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-029 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-029-UT"
-      - "ING-029-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-029"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4545"
-      - "planned_test:ING-029-UT"
-      - "planned_test:ING-029-IT"
-      - "planned_evidence:needs_evidence:EV-ING-029"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-030
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Lease 过期后的晚到结果必须被拒绝。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4546"
-    gap: "?????Lease 过期后的晚到结果必须被拒绝。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-030."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-030 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-030 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-030-UT"
-      - "ING-030-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-030"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4546"
-      - "planned_test:ING-030-UT"
-      - "planned_test:ING-030-IT"
-      - "planned_evidence:needs_evidence:EV-ING-030"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-031
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Queue 采用 at-least-once 语义，消费者必须幂等。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4547"
-    gap: "?????Queue 采用 at-least-once 语义，消费者必须幂等。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-031."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-031 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-031 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-031-UT"
-      - "ING-031-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-031"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4547"
-      - "planned_test:ING-031-UT"
-      - "planned_test:ING-031-IT"
-      - "planned_evidence:needs_evidence:EV-ING-031"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-032
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "领域 Commit 与消息发布必须使用 Outbox。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4548"
-    gap: "?????领域 Commit 与消息发布必须使用 Outbox。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-032."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-032 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-032 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-032-UT"
-      - "ING-032-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-032"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4548"
-      - "planned_test:ING-032-UT"
-      - "planned_test:ING-032-IT"
-      - "planned_evidence:needs_evidence:EV-ING-032"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-033
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "消费者必须在领域 Commit 后 ACK。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4549"
-    gap: "?????消费者必须在领域 Commit 后 ACK。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-033."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-033 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-033 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-033-UT"
-      - "ING-033-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-033"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4549"
-      - "planned_test:ING-033-UT"
-      - "planned_test:ING-033-IT"
-      - "planned_evidence:needs_evidence:EV-ING-033"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-034
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "大型 Payload 只能通过 ObjectRef 传递，不进入 Queue Message。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4550"
-    gap: "?????大型 Payload 只能通过 ObjectRef 传递，不进入 Queue Message。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-034."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-034 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-034 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-034-UT"
-      - "ING-034-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-034"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4550"
-      - "planned_test:ING-034-UT"
-      - "planned_test:ING-034-IT"
-      - "planned_evidence:needs_evidence:EV-ING-034"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-035
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis 不得成为任何最终领域状态的唯一来源。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4551"
-    gap: "?????Redis 不得成为任何最终领域状态的唯一来源。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-035."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-035 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-035 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-035-UT"
-      - "ING-035-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-035"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4551"
-      - "planned_test:ING-035-UT"
-      - "planned_test:ING-035-IT"
-      - "planned_evidence:needs_evidence:EV-ING-035"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-036
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis 清空或驱逐后系统必须保持正确，只允许性能下降。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4552"
-    gap: "?????Redis 清空或驱逐后系统必须保持正确，只允许性能下降。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-036."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-036 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-036 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-036-UT"
-      - "ING-036-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-036"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4552"
-      - "planned_test:ING-036-UT"
-      - "planned_test:ING-036-IT"
-      - "planned_evidence:needs_evidence:EV-ING-036"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-037
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis Cache 命中必须校验 Tenant、Input Hash、Bundle Hash 和 Config Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4553"
-    gap: "?????Redis Cache 命中必须校验 Tenant、Input Hash、Bundle Hash 和 Config Hash。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-037."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-037 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-037 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-037-UT"
-      - "ING-037-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-037"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4553"
-      - "planned_test:ING-037-UT"
-      - "planned_test:ING-037-IT"
-      - "planned_evidence:needs_evidence:EV-ING-037"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-038
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "去重的最终判断必须由 PostgreSQL 唯一约束或条件写完成。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4554"
-    gap: "?????去重的最终判断必须由 PostgreSQL 唯一约束或条件写完成。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-038."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-038 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-038 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-038-UT"
-      - "ING-038-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-038"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4554"
-      - "planned_test:ING-038-UT"
-      - "planned_test:ING-038-IT"
-      - "planned_evidence:needs_evidence:EV-ING-038"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-039
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "默认不得跨 Tenant 进行可观察内容去重。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4555"
-    gap: "?????默认不得跨 Tenant 进行可观察内容去重。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-039."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-039 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-039 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-039-UT"
-      - "ING-039-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-039"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4555"
-      - "planned_test:ING-039-UT"
-      - "planned_test:ING-039-IT"
-      - "planned_evidence:needs_evidence:EV-ING-039"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-040
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "上传、解析和 Handoff API 必须支持 Idempotency-Key。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4556"
-    gap: "?????上传、解析和 Handoff API 必须支持 Idempotency-Key。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-040."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-040 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-040 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-040-UT"
-      - "ING-040-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-040"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4556"
-      - "planned_test:ING-040-UT"
-      - "planned_test:ING-040-IT"
-      - "planned_evidence:needs_evidence:EV-ING-040"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-041
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "数据库事务内不得执行对象、Queue、Redis、HTTP、Parser 或模型调用。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4557"
-    gap: "?????数据库事务内不得执行对象、Queue、Redis、HTTP、Parser 或模型调用。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-041."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-041 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-041 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-041-UT"
-      - "ING-041-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-041"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4557"
-      - "planned_test:ING-041-UT"
-      - "planned_test:ING-041-IT"
-      - "planned_evidence:needs_evidence:EV-ING-041"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-042
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "生产 Schema 必须由 Alembic Migration 管理。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4558"
-    gap: "?????生产 Schema 必须由 Alembic Migration 管理。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-042."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-042 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-042 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-042-UT"
-      - "ING-042-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-042"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4558"
-      - "planned_test:ING-042-UT"
-      - "planned_test:ING-042-IT"
-      - "planned_evidence:needs_evidence:EV-ING-042"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-043
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "完整 IR 的大型权威 Artifact 必须存 Object Store，数据库保存 Ref/Hash 与查询投影。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4559"
-    gap: "?????完整 IR 的大型权威 Artifact 必须存 Object Store，数据库保存 Ref/Hash 与查询投影。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-043."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-043 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-043 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-043-UT"
-      - "ING-043-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-043"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4559"
-      - "planned_test:ING-043-UT"
-      - "planned_test:ING-043-IT"
-      - "planned_evidence:needs_evidence:EV-ING-043"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-044
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "对象读取必须要求 COMMITTED 状态和 Hash 匹配。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4560"
-    gap: "?????对象读取必须要求 COMMITTED 状态和 Hash 匹配。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-044."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-044 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-044 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-044-UT"
-      - "ING-044-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-044"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4560"
-      - "planned_test:ING-044-UT"
-      - "planned_test:ING-044-IT"
-      - "planned_evidence:needs_evidence:EV-ING-044"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-045
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "对象上传成功但 DB 未提交时必须由 Reconciler 清理孤儿。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4561"
-    gap: "?????对象上传成功但 DB 未提交时必须由 Reconciler 清理孤儿。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-045."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-045 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-045 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-045-UT"
-      - "ING-045-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-045"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4561"
-      - "planned_test:ING-045-UT"
-      - "planned_test:ING-045-IT"
-      - "planned_evidence:needs_evidence:EV-ING-045"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-046
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DB 已提交但消息未发布时必须由 Outbox 恢复。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4562"
-    gap: "?????DB 已提交但消息未发布时必须由 Outbox 恢复。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-046."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-046 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-046 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-046-UT"
-      - "ING-046-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-046"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4562"
-      - "planned_test:ING-046-UT"
-      - "planned_test:ING-046-IT"
-      - "planned_evidence:needs_evidence:EV-ING-046"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-047
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Snapshot 已提交但 Handoff Receipt 丢失时必须幂等重发。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4563"
-    gap: "?????Snapshot 已提交但 Handoff Receipt 丢失时必须幂等重发。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-047."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-047 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-047 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-047-UT"
-      - "ING-047-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-047"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4563"
-      - "planned_test:ING-047-UT"
-      - "planned_test:ING-047-IT"
-      - "planned_evidence:needs_evidence:EV-ING-047"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-048
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "删除必须先阻止新读取，再异步完成下游和物理清理。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4564"
-    gap: "?????删除必须先阻止新读取，再异步完成下游和物理清理。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-048."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-048 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-048 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-048-UT"
-      - "ING-048-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-048"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4564"
-      - "planned_test:ING-048-UT"
-      - "planned_test:ING-048-IT"
-      - "planned_evidence:needs_evidence:EV-ING-048"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-049
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Legal Hold 只能阻止物理 Purge，不能恢复已撤权内容的新访问。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4565"
-    gap: "?????Legal Hold 只能阻止物理 Purge，不能恢复已撤权内容的新访问。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-049."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-049 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-049 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-049-UT"
-      - "ING-049-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-049"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4565"
-      - "planned_test:ING-049-UT"
-      - "planned_test:ING-049-IT"
-      - "planned_evidence:needs_evidence:EV-ING-049"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-050
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "删除完成必须有 Input、Knowledge、Object 和 Verification Receipt。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4566"
-    gap: "?????删除完成必须有 Input、Knowledge、Object 和 Verification Receipt。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-050."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-050 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-050 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-050-UT"
-      - "ING-050-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-050"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4566"
-      - "planned_test:ING-050-UT"
-      - "planned_test:ING-050-IT"
-      - "planned_evidence:needs_evidence:EV-ING-050"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-051
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "安全 Epoch 变化必须使不兼容旧 Handoff 对新请求失效。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4567"
-    gap: "?????安全 Epoch 变化必须使不兼容旧 Handoff 对新请求失效。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-051."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-051 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-051 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-051-UT"
-      - "ING-051-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-051"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4567"
-      - "planned_test:ING-051-UT"
-      - "planned_test:ING-051-IT"
-      - "planned_evidence:needs_evidence:EV-ING-051"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-052
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有远程 URL 获取必须防 SSRF、DNS Rebinding 和无界响应。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4568"
-    gap: "?????所有远程 URL 获取必须防 SSRF、DNS Rebinding 和无界响应。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-052."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-052 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-052 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-052-UT"
-      - "ING-052-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-052"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4568"
-      - "planned_test:ING-052-UT"
-      - "planned_test:ING-052-IT"
-      - "planned_evidence:needs_evidence:EV-ING-052"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-053
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Archive 解析必须限制深度、条目数、展开大小和路径。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4569"
-    gap: "?????Archive 解析必须限制深度、条目数、展开大小和路径。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-053."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-053 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-053 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-053-UT"
-      - "ING-053-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-053"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4569"
-      - "planned_test:ING-053-UT"
-      - "planned_test:ING-053-IT"
-      - "planned_evidence:needs_evidence:EV-ING-053"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-054
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "不可信 Parser 必须运行在受限 Sandbox。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4570"
-    gap: "?????不可信 Parser 必须运行在受限 Sandbox。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-054."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-054 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-054 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-054-UT"
-      - "ING-054-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-054"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4570"
-      - "planned_test:ING-054-UT"
-      - "planned_test:ING-054-IT"
-      - "planned_evidence:needs_evidence:EV-ING-054"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-055
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser Bundle 必须固定依赖版本、镜像 Digest 和模型权重 Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4571"
-    gap: "?????Parser Bundle 必须固定依赖版本、镜像 Digest 和模型权重 Hash。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-055."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-055 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-055 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-055-UT"
-      - "ING-055-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-055"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4571"
-      - "planned_test:ING-055-UT"
-      - "planned_test:ING-055-IT"
-      - "planned_evidence:needs_evidence:EV-ING-055"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-056
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "缺失模型权重必须显式失败，不得静默下载并改变版本。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4572"
-    gap: "?????缺失模型权重必须显式失败，不得静默下载并改变版本。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-056."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-056 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-056 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-056-UT"
-      - "ING-056-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-056"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4572"
-      - "planned_test:ING-056-UT"
-      - "planned_test:ING-056-IT"
-      - "planned_evidence:needs_evidence:EV-ING-056"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-057
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Profile 必须版本化、可哈希，并固定到 ParsePlan。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4573"
-    gap: "?????Profile 必须版本化、可哈希，并固定到 ParsePlan。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-057."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-057 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-057 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-057-UT"
-      - "ING-057-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-057"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4573"
-      - "planned_test:ING-057-UT"
-      - "planned_test:ING-057-IT"
-      - "planned_evidence:needs_evidence:EV-ING-057"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-058
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Priority 和 Admission 必须为删除、安全和在线附件保留容量。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4574"
-    gap: "?????Priority 和 Admission 必须为删除、安全和在线附件保留容量。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-058."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-058 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-058 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-058-UT"
-      - "ING-058-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-058"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4574"
-      - "planned_test:ING-058-UT"
-      - "planned_test:ING-058-IT"
-      - "planned_evidence:needs_evidence:EV-ING-058"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-059
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "批量任务不得无限占用页面并行和 GPU Batch。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4575"
-    gap: "?????批量任务不得无限占用页面并行和 GPU Batch。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-059."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-059 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-059 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-059-UT"
-      - "ING-059-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-059"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4575"
-      - "planned_test:ING-059-UT"
-      - "planned_test:ING-059-IT"
-      - "planned_evidence:needs_evidence:EV-ING-059"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-060
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "在线 Fast Snapshot 和高质量 Snapshot 必须是两个独立版本。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4576"
-    gap: "?????在线 Fast Snapshot 和高质量 Snapshot 必须是两个独立版本。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-060."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-060 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-060 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-060-UT"
-      - "ING-060-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-060"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4576"
-      - "planned_test:ING-060-UT"
-      - "planned_test:ING-060-IT"
-      - "planned_evidence:needs_evidence:EV-ING-060"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-061
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个 Snapshot 必须绑定 Parser Bundle、Config、IR Schema 和 Quality Policy。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4577"
-    gap: "?????每个 Snapshot 必须绑定 Parser Bundle、Config、IR Schema 和 Quality Policy。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-061."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-061 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-061 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-061-UT"
-      - "ING-061-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-061"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4577"
-      - "planned_test:ING-061-UT"
-      - "planned_test:ING-061-IT"
-      - "planned_evidence:needs_evidence:EV-ING-061"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-062
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个跨模块 Handoff 必须使用 CrossModuleEnvelopeV1。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4578"
-    gap: "?????每个跨模块 Handoff 必须使用 CrossModuleEnvelopeV1。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-062."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-062 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-062 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-062-UT"
-      - "ING-062-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-062"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4578"
-      - "planned_test:ING-062-UT"
-      - "planned_test:ING-062-IT"
-      - "planned_evidence:needs_evidence:EV-ING-062"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-063
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Handoff Payload 必须同时校验 payload hash 和 schema hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4579"
-    gap: "?????Handoff Payload 必须同时校验 payload hash 和 schema hash。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-063."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-063 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-063 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-063-UT"
-      - "ING-063-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-063"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4579"
-      - "planned_test:ING-063-UT"
-      - "planned_test:ING-063-IT"
-      - "planned_evidence:needs_evidence:EV-ING-063"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-064
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Unknown Contract Version、Missing Tenant 和 Stale Epoch 默认 fail-closed。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4580"
-    gap: "?????Unknown Contract Version、Missing Tenant 和 Stale Epoch 默认 fail-closed。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-064."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-064 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-064 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-064-UT"
-      - "ING-064-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-064"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4580"
-      - "planned_test:ING-064-UT"
-      - "planned_test:ING-064-IT"
-      - "planned_evidence:needs_evidence:EV-ING-064"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-065
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input 必须保留表格、公式、图片和隐藏内容，或显式声明缺失。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4581"
-    gap: "?????Input 必须保留表格、公式、图片和隐藏内容，或显式声明缺失。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-065."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-065 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-065 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-065-UT"
-      - "ING-065-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-065"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4581"
-      - "planned_test:ING-065-UT"
-      - "planned_test:ING-065-IT"
-      - "planned_evidence:needs_evidence:EV-ING-065"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-066
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Excel 必须同时保留公式、缓存值和显示值。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4582"
-    gap: "?????Excel 必须同时保留公式、缓存值和显示值。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-066."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-066 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-066 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-066-UT"
-      - "ING-066-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-066"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4582"
-      - "planned_test:ING-066-UT"
-      - "planned_test:ING-066-IT"
-      - "planned_evidence:needs_evidence:EV-ING-066"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-067
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Word 必须保留或声明修订、批注、脚注和页眉页脚。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4583"
-    gap: "?????Word 必须保留或声明修订、批注、脚注和页眉页脚。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-067."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-067 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-067 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-067-UT"
-      - "ING-067-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-067"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4583"
-      - "planned_test:ING-067-UT"
-      - "planned_test:ING-067-IT"
-      - "planned_evidence:needs_evidence:EV-ING-067"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-068
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "PPT 必须保留文本框、位置、备注、隐藏页和嵌入对象信息。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4584"
-    gap: "?????PPT 必须保留文本框、位置、备注、隐藏页和嵌入对象信息。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-068."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-068 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-068 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-068-UT"
-      - "ING-068-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-068"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4584"
-      - "planned_test:ING-068-UT"
-      - "planned_test:ING-068-IT"
-      - "planned_evidence:needs_evidence:EV-ING-068"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-069
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "HTML 必须保存原始 Snapshot、最终 URL、重定向链和 DOM 定位。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4585"
-    gap: "?????HTML 必须保存原始 Snapshot、最终 URL、重定向链和 DOM 定位。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-069."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-069 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-069 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-069-UT"
-      - "ING-069-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-069"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4585"
-      - "planned_test:ING-069-UT"
-      - "planned_test:ING-069-IT"
-      - "planned_evidence:needs_evidence:EV-ING-069"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-070
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Git / Code 必须绑定 Commit、Blob Hash、Path、Symbol 和 Line。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4586"
-    gap: "?????Git / Code 必须绑定 Commit、Blob Hash、Path、Symbol 和 Line。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-070."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-070 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-070 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-070-UT"
-      - "ING-070-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-070"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4586"
-      - "planned_test:ING-070-UT"
-      - "planned_test:ING-070-IT"
-      - "planned_evidence:needs_evidence:EV-ING-070"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-071
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "ParserQualityReport 必须可计算 SourceSpan Coverage 和 Missing Content。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4587"
-    gap: "?????ParserQualityReport 必须可计算 SourceSpan Coverage 和 Missing Content。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-071."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-071 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-071 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-071-UT"
-      - "ING-071-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-071"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4587"
-      - "planned_test:ING-071-UT"
-      - "planned_test:ING-071-IT"
-      - "planned_evidence:needs_evidence:EV-ING-071"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-072
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "新 Parser Bundle 必须通过 Shadow Eval 后才能成为 Active Candidate。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4588"
-    gap: "?????新 Parser Bundle 必须通过 Shadow Eval 后才能成为 Active Candidate。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-072."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-072 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-072 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-072-UT"
-      - "ING-072-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-072"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4588"
-      - "planned_test:ING-072-UT"
-      - "planned_test:ING-072-IT"
-      - "planned_evidence:needs_evidence:EV-ING-072"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-073
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "公开 Benchmark 不得替代 Zuno 自己的 Golden Corpus。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4589"
-    gap: "?????公开 Benchmark 不得替代 Zuno 自己的 Golden Corpus。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-073."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-073 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-073 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-073-UT"
-      - "ING-073-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-073"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4589"
-      - "planned_test:ING-073-UT"
-      - "planned_test:ING-073-IT"
-      - "planned_evidence:needs_evidence:EV-ING-073"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-074
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Trace 不得记录完整敏感文档、明文 Secret 或隐藏思维链。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4590"
-    gap: "?????Trace 不得记录完整敏感文档、明文 Secret 或隐藏思维链。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-074."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-074 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-074 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-074-UT"
-      - "ING-074-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-074"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4590"
-      - "planned_test:ING-074-UT"
-      - "planned_test:ING-074-IT"
-      - "planned_evidence:needs_evidence:EV-ING-074"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-075
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有状态必须可从 PostgreSQL 和 Object Store 重建，不依赖前端或 Redis。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4591"
-    gap: "?????所有状态必须可从 PostgreSQL 和 Object Store 重建，不依赖前端或 Redis。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-075."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-075 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-075 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-075-UT"
-      - "ING-075-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-075"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4591"
-      - "planned_test:ING-075-UT"
-      - "planned_test:ING-075-IT"
-      - "planned_evidence:needs_evidence:EV-ING-075"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-076
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Reconciler 必须使用 Claim、Generation 和 Fencing，且修复动作幂等。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4592"
-    gap: "?????Reconciler 必须使用 Claim、Generation 和 Fencing，且修复动作幂等。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-076."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-076 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-076 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-076-UT"
-      - "ING-076-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-076"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4592"
-      - "planned_test:ING-076-UT"
-      - "planned_test:ING-076-IT"
-      - "planned_evidence:needs_evidence:EV-ING-076"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-077
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "用户取消 Parse 不得自动删除已提交 SourceObject。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4593"
-    gap: "?????用户取消 Parse 不得自动删除已提交 SourceObject。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-077."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-077 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-077 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-077-UT"
-      - "ING-077-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-077"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4593"
-      - "planned_test:ING-077-UT"
-      - "planned_test:ING-077-IT"
-      - "planned_evidence:needs_evidence:EV-ING-077"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-078
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "预算耗尽必须产生缺失声明或 BLOCK，不得伪造完整解析。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4594"
-    gap: "?????预算耗尽必须产生缺失声明或 BLOCK，不得伪造完整解析。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-078."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-078 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-078 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-078-UT"
-      - "ING-078-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-078"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4594"
-      - "planned_test:ING-078-UT"
-      - "planned_test:ING-078-IT"
-      - "planned_evidence:needs_evidence:EV-ING-078"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-079
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input API 不得暴露 Bucket Credential、Provider Secret 或内部 Queue 细节。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4595"
-    gap: "?????Input API 不得暴露 Bucket Credential、Provider Secret 或内部 Queue 细节。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-079."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-079 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-079 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-079-UT"
-      - "ING-079-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-079"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4595"
-      - "planned_test:ING-079-UT"
-      - "planned_test:ING-079-IT"
-      - "planned_evidence:needs_evidence:EV-ING-079"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-ING-080
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Target 只有在代码、Migration、测试、Trace、Eval 和运行证据齐备后才能提升为 Current。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "src/backend/zuno/knowledge/storage/contracts.py"
       - "docs/modules/02-input-document-ingestion.md:4596"
-    gap: "?????Target 只有在代码、Migration、测试、Trace、Eval 和运行证据齐备后才能提升为 Current。???? Current ????????????????? PHASE11 ?????????/??????????????? Current?"
+    gap: "Input runtime batch has code, tests, verifier, and evidence for ARCH-ING-080."
     owner: "Input / Document Ingestion"
     target_phase: "PHASE11"
     planned_work_package: "P11 durable ingestion and source lineage"
     dependencies:
       - "PHASE04"
       - "PHASE05"
-    failure_or_recovery_requirement: "target_not_current:ARCH-ING-080 ??????????????????????? PHASE11 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-ING-080 covered by Input runtime batch tests and verifier."
     test_ids:
-      - "ING-080-UT"
-      - "ING-080-IT"
+      - "tests/knowledge/test_input_runtime_batch.py"
+      - "tools/scripts/verify_input_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-ING-080"
+      - "docs/evidence/input-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/02-input-document-ingestion.md:4596"
-      - "planned_test:ING-080-UT"
-      - "planned_test:ING-080-IT"
-      - "planned_evidence:needs_evidence:EV-ING-080"
+      - "current:src/backend/zuno/knowledge/ingestion/runtime_batch.py"
+      - "current:src/backend/zuno/knowledge/ingestion/contracts.py"
+      - "current:src/backend/zuno/knowledge/ingestion/async_runtime.py"
+      - "current:src/backend/zuno/knowledge/storage/contracts.py"
+      - "test:tests/knowledge/test_input_runtime_batch.py"
+      - "test:tools/scripts/verify_input_runtime_batch.py"
+      - "evidence:docs/evidence/input-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-KNOW-001
     module: "03 Knowledge / Agentic GraphRAG"
