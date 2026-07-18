@@ -89,6 +89,7 @@ work_packages:
       - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
       - "tools/scripts/verify_phase04_infrastructure_typed_ports.py"
       - "tools/scripts/verify_phase04_tenant_isolation_profiles.py"
+      - "tools/scripts/verify_phase04_tenant_physical_constraints.py"
       - "tools/scripts/verify_phase04_upgrade_compatibility_profiles.py"
       - "tools/scripts/verify_phase04_adapter_conformance_profiles.py"
       - "tools/scripts/verify_phase04_release_provenance_manifest.py"
@@ -101,6 +102,7 @@ work_packages:
       - "tests/repo/test_phase04_infrastructure_domain_boundary.py"
       - "tests/repo/test_phase04_infrastructure_typed_ports.py"
       - "tests/repo/test_phase04_tenant_isolation_profiles.py"
+      - "tests/repo/test_phase04_tenant_physical_constraints.py"
       - "tests/repo/test_phase04_upgrade_compatibility_profiles.py"
       - "tests/repo/test_phase04_adapter_conformance_profiles.py"
       - "tests/repo/test_phase04_release_provenance_manifest.py"
@@ -115,6 +117,7 @@ work_packages:
       - "docs/evidence/phase04-infrastructure-domain-boundary.md"
       - "docs/evidence/phase04-infrastructure-typed-ports.md"
       - "docs/evidence/phase04-tenant-isolation-profiles.md"
+      - "docs/evidence/phase04-tenant-physical-constraints.md"
       - "docs/evidence/phase04-upgrade-compatibility-profiles.md"
       - "docs/evidence/phase04-adapter-conformance-profiles.md"
       - "docs/evidence/phase04-release-provenance-manifest.md"
@@ -148,6 +151,10 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-tenant-isolation-profiles.md"
+      tenant_physical_constraints:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-tenant-physical-constraints.md"
       upgrade_compatibility_profiles:
         state: completed
         evidence:

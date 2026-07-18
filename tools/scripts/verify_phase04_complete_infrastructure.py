@@ -169,6 +169,12 @@ TENANT_ISOLATION_PROFILE_VERIFIER = (
 TENANT_ISOLATION_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-tenant-isolation-profiles.md"
 )
+TENANT_PHYSICAL_CONSTRAINTS_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_tenant_physical_constraints.py"
+)
+TENANT_PHYSICAL_CONSTRAINTS_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-tenant-physical-constraints.md"
+)
 UPGRADE_COMPATIBILITY_PROFILE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_upgrade_compatibility_profiles.py"
 )
@@ -1272,6 +1278,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in tenant_profile_evidence:
                 errors.append(
                     "PHASE04 tenant isolation profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not TENANT_PHYSICAL_CONSTRAINTS_VERIFIER.exists():
+        errors.append("missing PHASE04 tenant physical constraints verifier")
+    else:
+        tenant_physical_errors = _load_verifier(
+            TENANT_PHYSICAL_CONSTRAINTS_VERIFIER,
+            "verify_phase04_tenant_physical_constraints",
+            "verify_phase04_tenant_physical_constraints",
+        )()
+        for tenant_physical_error in tenant_physical_errors:
+            errors.append(
+                "PHASE04 tenant physical constraints verification failed: "
+                f"{tenant_physical_error}"
+            )
+
+    if not TENANT_PHYSICAL_CONSTRAINTS_EVIDENCE.exists():
+        errors.append("missing PHASE04 tenant physical constraints evidence")
+    else:
+        tenant_physical_evidence = _read(TENANT_PHYSICAL_CONSTRAINTS_EVIDENCE)
+        for phrase in [
+            "relational_tenant_physical_constraint: passed",
+            "queue_tenant_protocol_constraint: passed",
+            "object_tenant_target_constraint: passed",
+            "trace_audit_tenant_snapshot_constraint: passed",
+            "target_only_services_not_promoted: passed",
+            "Cross-tenant hit quarantine/fail-closed",
+        ]:
+            if phrase not in tenant_physical_evidence:
+                errors.append(
+                    "PHASE04 tenant physical constraints evidence missing phrase: "
                     f"{phrase}"
                 )
 
