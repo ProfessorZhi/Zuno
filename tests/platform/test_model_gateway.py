@@ -4,10 +4,14 @@ from types import SimpleNamespace
 
 from zuno.platform.model_gateway import (
     BudgetPolicy,
+    ModelAttemptState,
     ModelCallRequest,
+    ModelCallState,
     ModelCategory,
     ModelGateway,
     ModelGatewayRequest,
+    ModelOperation,
+    ModelUsageKind,
     MockModelProvider,
 )
 from zuno.platform.model_roles import ModelRole
@@ -110,4 +114,89 @@ def test_model_gateway_budget_block_includes_role_without_provider_call() -> Non
     assert result.status == "blocked"
     assert result.metrics.role == ModelRole.CRITIC
     assert result.trace_event["payload"]["role"] == "critic"
+    assert provider.call_count == 0
+
+
+def test_model_gateway_freezes_call_binding_attempt_and_usage_receipts() -> None:
+    provider = MockModelProvider(provider_id="primary", model_id="mock-chat", response='{"answer": "ok", "confidence": 0.9}')
+    gateway = ModelGateway(providers=[provider])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            operation=ModelOperation.GENERATE,
+            role="planner",
+            prompt="Return structured output.",
+            provider_id="primary",
+            model_slot="reasoning_model",
+            config_version="config:2026-07-18",
+            prompt_version="prompt:planner:3",
+            schema_version="schema:answer:1",
+            adapter_version="adapter:primary:2",
+            pricing_version="pricing:primary:2026-07",
+            security_epoch_ref="sec_epoch:tenant:9",
+            output_schema={"answer": str, "confidence": float},
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.call_state == ModelCallState.SUCCEEDED
+    assert result.binding.operation == ModelOperation.GENERATE
+    assert result.binding.config_version == "config:2026-07-18"
+    assert result.binding.prompt_version == "prompt:planner:3"
+    assert result.binding.schema_version == "schema:answer:1"
+    assert result.binding.adapter_version == "adapter:primary:2"
+    assert result.binding.pricing_version == "pricing:primary:2026-07"
+    assert result.binding.security_epoch_ref == "sec_epoch:tenant:9"
+    assert result.selected_attempt_id == result.attempts[0].attempt_id
+    assert [attempt.state for attempt in result.attempts] == [ModelAttemptState.SUCCEEDED]
+    assert [receipt.kind for receipt in result.usage_receipts] == [ModelUsageKind.ESTIMATE, ModelUsageKind.OBSERVED]
+    assert all(receipt.immutable for receipt in result.usage_receipts)
+    assert result.structured_output == {"answer": "ok", "confidence": 0.9}
+    assert result.trace_event["payload"]["binding"]["binding_hash"] == result.binding.binding_hash
+    assert len([attempt for attempt in result.attempts if attempt.state == ModelAttemptState.SUCCEEDED]) == 1
+
+
+def test_model_gateway_timeout_records_unknown_attempt_before_fallback() -> None:
+    primary = MockModelProvider(provider_id="primary", model_id="mock-primary", fail_mode="timeout")
+    fallback = MockModelProvider(provider_id="fallback", model_id="mock-fallback")
+    gateway = ModelGateway(providers=[primary, fallback])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Fallback after an unknown timeout.",
+            provider_id="primary",
+            fallback_provider_ids=["fallback"],
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert [attempt.state for attempt in result.attempts] == [
+        ModelAttemptState.UNKNOWN_RECONCILE,
+        ModelAttemptState.SUCCEEDED,
+    ]
+    assert result.attempts[0].reconcile_required is True
+    assert result.attempts[0].failure_code == "MODEL_TIMEOUT_UNKNOWN"
+    assert len(result.usage_receipts) == 3
+    assert result.metrics.fallback_reason == "timeout:primary"
+
+
+def test_model_gateway_cancel_before_dispatch_records_usage_without_provider_call() -> None:
+    provider = MockModelProvider(provider_id="primary", model_id="mock-chat")
+    gateway = ModelGateway(providers=[provider])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="This should not dispatch.",
+            provider_id="primary",
+            metadata={"cancel_before_dispatch": True},
+        )
+    )
+
+    assert result.status == "cancelled"
+    assert result.call_state == ModelCallState.CANCELLED
+    assert result.attempts == ()
+    assert [receipt.kind for receipt in result.usage_receipts] == [ModelUsageKind.ESTIMATE, ModelUsageKind.OBSERVED]
     assert provider.call_count == 0
