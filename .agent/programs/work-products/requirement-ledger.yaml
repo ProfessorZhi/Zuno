@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 250
-  implementation_available: 506
+  target_not_current: 240
+  implementation_available: 516
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -22354,261 +22354,290 @@ requirements:
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "所有共享 Contract 只有一个 Owner"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:450"
-    gap: "?????所有共享 Contract 只有一个 Owner???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies single owner per shared contract and rejects duplicate owners."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-001 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-001 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-001-UT"
-      - "XMOD-001-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-001"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:450"
-      - "planned_test:XMOD-001-UT"
-      - "planned_test:XMOD-001-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-001"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-002
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Producer/Consumer/Storage/Failure Owner 完整"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:451"
-    gap: "?????Producer/Consumer/Storage/Failure Owner 完整???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies owner, producer, consumer, schema hash, storage receipt and failure owner coverage."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-002 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-002 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-002-UT"
-      - "XMOD-002-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-002"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:451"
-      - "planned_test:XMOD-002-UT"
-      - "planned_test:XMOD-002-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-002"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-003
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Effective Epoch/Generation/Deadline 按适用性贯通"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/shared.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:452"
-    gap: "?????Effective Epoch/Generation/Deadline 按适用性贯通???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies EffectiveSecurityEpoch, expected generation and deadline fields on shared envelope, prepared action and index write batch."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-003 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-003 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-003-UT"
-      - "XMOD-003-IT"
-      - "XMOD-003-FT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-003"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:452"
-      - "planned_test:XMOD-003-UT"
-      - "planned_test:XMOD-003-IT"
-      - "planned_test:XMOD-003-FT"
-      - "planned_evidence:needs_evidence:EV-XMOD-003"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-004
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Receipt 不冒充领域成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/shared.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:453"
-    gap: "?????Receipt 不冒充领域成功???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies audit/effect/index/visibility receipts do not expose domain success fields."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-004 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-004 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-004-UT"
-      - "XMOD-004-IT"
-      - "XMOD-004-FT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-004"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:453"
-      - "planned_test:XMOD-004-UT"
-      - "planned_test:XMOD-004-IT"
-      - "planned_test:XMOD-004-FT"
-      - "planned_evidence:needs_evidence:EV-XMOD-004"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-005
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "PreparedAction Ownership 已冻结为四方拆分"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:454"
-    gap: "?????PreparedAction Ownership 已冻结为四方拆分???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies ActionProposal/Binding remain Agent Core, PreparedToolAction/Effect remain Tool Runtime and Approval remains Security."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-005 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-005 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-005-UT"
-      - "XMOD-005-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-005"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:454"
-      - "planned_test:XMOD-005-UT"
-      - "planned_test:XMOD-005-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-005"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-006
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Mandatory Audit Backpressure 跨模块一致"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/shared.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:455"
-    gap: "?????Mandatory Audit Backpressure 跨模块一致???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies audit requirement refs, failed audit persistence state and cross-module audit failure codes."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-006 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-006 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-006-UT"
-      - "XMOD-006-IT"
-      - "XMOD-006-FT"
-      - "XMOD-006-E2E"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-006"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:455"
-      - "planned_test:XMOD-006-UT"
-      - "planned_test:XMOD-006-IT"
-      - "planned_test:XMOD-006-FT"
-      - "planned_test:XMOD-006-E2E"
-      - "planned_evidence:needs_evidence:EV-XMOD-006"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-007
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Index Publish/Deletion/Recovery 协议一致"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:456"
-    gap: "?????Index Publish/Deletion/Recovery 协议一致???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies IndexWriteBatch/IndexWriteReceipt/WriteVisibilityReceipt ownership, producer/consumer pairs and recovery fields."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-007 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-007 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-007-UT"
-      - "XMOD-007-IT"
-      - "XMOD-007-FT"
-      - "XMOD-007-E2E"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-007"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:456"
-      - "planned_test:XMOD-007-UT"
-      - "planned_test:XMOD-007-IT"
-      - "planned_test:XMOD-007-FT"
-      - "planned_test:XMOD-007-E2E"
-      - "planned_evidence:needs_evidence:EV-XMOD-007"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-008
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Contract Version/Enum Compatibility 可验证"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:457"
-    gap: "?????Contract Version/Enum Compatibility 可验证???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies unknown major rejection, compatible minor lookup and unknown enum fail-closed behavior."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-008 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-008 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-008-UT"
-      - "XMOD-008-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-008"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:457"
-      - "planned_test:XMOD-008-UT"
-      - "planned_test:XMOD-008-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-008"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-009
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Failure Prefix 与共享 Code 无重复冲突"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "src/backend/zuno/platform/contracts/shared.py"
       - "docs/governance/wave1-cross-module-contract-registry.md:458"
-    gap: "?????Failure Prefix 与共享 Code 无重复冲突???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch validates canonical failure codes through FailureCodeV1 owner prefix rules and duplicate detection."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-009 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-009 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-009-UT"
-      - "XMOD-009-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-009"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:458"
-      - "planned_test:XMOD-009-UT"
-      - "planned_test:XMOD-009-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-009"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-010
     module: "Wave 1 Cross-module Contract"
     mandatory: true
     target_statement: "Confirmed Contract 必须有 ADR 与合并审计证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
       - "docs/governance/wave1-cross-module-contract-registry.md:459"
-    gap: "?????Confirmed Contract 必须有 ADR 与合并审计证据???? Current ????????????????? PHASE03 ?????????/??????????????? Current?"
+    gap: "XMOD runtime batch verifies confirmed ADR, confirmed registry, baseline SHA, merge audit checklist, requirement/test/evidence mappings and distinct evidence documents."
     owner: "Cross-module Contract Registry"
     target_phase: "PHASE03"
     planned_work_package: "P03 executable cross-module contract bundle"
     dependencies:
       - "PHASE02"
-    failure_or_recovery_requirement: "target_not_current:ARCH-XMOD-010 ??????????????????????? PHASE03 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-XMOD-010 covered by XMOD runtime batch tests and verifier."
     test_ids:
-      - "XMOD-010-UT"
-      - "XMOD-010-IT"
+      - "tests/contracts/test_xmod_runtime_batch.py"
+      - "tools/scripts/verify_xmod_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-XMOD-010"
+      - "docs/evidence/xmod-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/governance/wave1-cross-module-contract-registry.md:459"
-      - "planned_test:XMOD-010-UT"
-      - "planned_test:XMOD-010-IT"
-      - "planned_evidence:needs_evidence:EV-XMOD-010"
+      - "current:src/backend/zuno/platform/contracts/runtime_batch.py"
+      - "current:docs/decisions/0003-wave1-cross-module-contract-freeze.md"
+      - "test:tests/contracts/test_xmod_runtime_batch.py"
+      - "test:tools/scripts/verify_xmod_runtime_batch.py"
+      - "evidence:docs/evidence/xmod-runtime-batch.md"
     reviewer: "Coordinator"

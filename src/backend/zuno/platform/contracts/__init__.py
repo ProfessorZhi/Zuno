@@ -10,6 +10,13 @@ from zuno.platform.contracts.registry import (
     ContractVersion,
     build_wave1_contract_registry,
 )
+from zuno.platform.contracts.runtime_batch import (
+    CANONICAL_FAILURE_CODES,
+    CrossModuleRuntimeBatchError,
+    CrossModuleRuntimeBatchReport,
+    validate_cross_module_runtime_batch,
+    validate_cross_module_runtime_batch_from_repo,
+)
 from zuno.platform.contracts.shared import (
     ActionExecutionBindingV1,
     ActionProposalV1,
@@ -50,6 +57,7 @@ __all__ = [
     "ActionProposalV1",
     "AdapterConformanceProfileV1",
     "AuditPersistenceReceiptV1",
+    "CANONICAL_FAILURE_CODES",
     "CapabilityInvocationRefV1",
     "ContractBundleManifest",
     "ContractRef",
@@ -57,6 +65,8 @@ __all__ = [
     "ContractRegistryEntry",
     "ContractVersion",
     "CrossModuleEnvelopeV1",
+    "CrossModuleRuntimeBatchError",
+    "CrossModuleRuntimeBatchReport",
     "DataServiceCapabilityV1",
     "EffectiveSecurityEpochRefV1",
     "EffectReceiptV1",
@@ -86,4 +96,6 @@ __all__ = [
     "canonical_json",
     "canonical_sha256",
     "schema_sha256",
+    "validate_cross_module_runtime_batch",
+    "validate_cross_module_runtime_batch_from_repo",
 ]
