@@ -6,7 +6,7 @@
 
 它证明 PostgreSQL WAL archive + base backup + point-in-time recovery 可以恢复到一个已验证 RecoverySet，并且 target time 之后写入的 derived index watermark 不会混入恢复结果。
 
-它不证明 official LangGraph PostgreSQL Checkpointer adapter 已安装，也不证明完整 Product Projection Replay 或 PHASE04 closure。
+它不证明 graph-level Checkpointer interrupt/resume、retention/prune、跨领域 Projection Replay、combined-service fault 或 PHASE04 closure。
 
 ## Environment
 
@@ -36,10 +36,10 @@ python tools/scripts/verify_phase04_pitr_alignment.py
 - restored_recovery_set_verified: passed
 - restored_authoritative_and_derived_watermarks_aligned: passed
 - post_target_derived_index_watermark_excluded: passed
-- phase_completion: blocked_official_checkpointer_and_product_projection_replay
+- phase_completion: blocked_graph_resume_retention_and_combined_fault
 
 ## Boundary
 
 `ARCH-INFRA-029` 当前达到 `implementation_available`：PITR drill 使用真实 PostgreSQL WAL archive/basebackup/recovery，并把 DB/Object/Checkpoint/Index 的恢复点通过 RecoverySet 对齐。
 
-该证据仍不能关闭 PHASE04，因为 official LangGraph PostgreSQL Checkpointer runtime/restore 和完整 Product Projection Replay 仍未完成。
+该证据仍不能关闭 PHASE04，因为 graph-level Checkpointer interrupt/resume、retention/prune、跨领域 Projection Replay 和 combined-service fault 仍未完成。

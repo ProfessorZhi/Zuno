@@ -168,16 +168,20 @@ def _verify_backup_scope_profiles(data: dict[str, Any]) -> list[str]:
         or "not promoted" not in postgres_boundary
     ):
         errors.append("PostgreSQL backup encryption boundary must reject overclaiming")
-    if "blocked by dependency approval" not in _as_text(
+    if "pg_dump/pg_restore" not in _as_text(
         by_component.get("langgraph_postgres_checkpointer", {}).get(
             "encryption_current_boundary"
         )
     ):
-        errors.append("Checkpointer backup scope must remain blocked")
-    if "target_not_current" not in _as_text(
+        errors.append("Checkpointer backup scope must reference the proven backup/restore subset")
+    if "implementation_available_subset" not in _as_text(
         by_component.get("pitr", {}).get("completion_boundary")
     ):
-        errors.append("PITR backup scope must remain target_not_current")
+        errors.append("PITR backup scope must reference the proven PITR subset")
+    if "implementation_available_subset" not in _as_text(
+        by_component.get("product_projection_replay", {}).get("completion_boundary")
+    ):
+        errors.append("Product projection replay scope must reference the proven replay subset")
 
     return errors
 
@@ -219,9 +223,10 @@ def _verify_evidence_file() -> list[str]:
             "backup_rpo_source_coverage: passed",
             "backup_encryption_requirement_defined: passed",
             "service_boundary_profile: passed",
-            "checkpoint_boundary_blocked_not_completed: passed",
-            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
-            "不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore",
+            "checkpoint_backup_restore_boundary: passed",
+            "product_projection_replay_boundary: passed",
+            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "不证明生产 encrypted backup、graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
         ]
         if phrase not in evidence
     ]

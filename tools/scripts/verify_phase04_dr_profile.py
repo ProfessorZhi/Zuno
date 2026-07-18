@@ -55,10 +55,12 @@ def verify_phase04_dr_profile() -> list[str]:
         errors.append("DR profile must keep PHASE05 not ready")
     boundary = _as_text(data.get("boundary"))
     if (
-        "PITR alignment is proven" not in boundary
-        or "official LangGraph PostgreSQL Checkpointer recovery remain" not in boundary
+        "PITR alignment" not in boundary
+        or "official LangGraph PostgreSQL Checkpointer backup/restore" not in boundary
+        or "Product Projection Replay from restored authoritative fact" not in boundary
+        or "combined-service fault remain" not in boundary
     ):
-        errors.append("DR profile boundary must separate proven PITR from remaining recovery blockers")
+        errors.append("DR profile boundary must separate proven recovery subsets from remaining blockers")
 
     cutover_policy = data.get("cutover_policy") or {}
     if cutover_policy.get("explicit_cutover_required") is not True:
@@ -109,12 +111,13 @@ def verify_phase04_dr_profile() -> list[str]:
         if isinstance(item, dict)
     }
     checkpointer = by_component.get("langgraph_postgres_checkpointer") or {}
-    if checkpointer.get("current_status") != "blocked":
-        errors.append("official Checkpointer DR profile must remain blocked")
-    if "official dependency approval required" not in _as_text(
+    if checkpointer.get("current_status") != "implementation_available_subset":
+        errors.append("official Checkpointer DR profile must reference the proven backup/restore subset")
+    if (
         checkpointer.get("verification_command")
+        != "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
     ):
-        errors.append("official Checkpointer block reason is missing")
+        errors.append("official Checkpointer DR profile must use the official backup/restore verifier")
 
     pitr = by_component.get("pitr") or {}
     if pitr.get("current_status") != "implementation_available_subset":
@@ -123,8 +126,13 @@ def verify_phase04_dr_profile() -> list[str]:
         errors.append("PITR DR profile must use the PITR alignment verifier")
 
     projection = by_component.get("product_projection_replay") or {}
-    if projection.get("current_status") != "target_not_current":
-        errors.append("product projection replay must remain target_not_current")
+    if projection.get("current_status") != "implementation_available_subset":
+        errors.append("product projection replay must reference the proven restore/replay subset")
+    if (
+        projection.get("verification_command")
+        != "python tools/scripts/verify_phase04_backup_restore_replay.py"
+    ):
+        errors.append("product projection replay must use the backup/restore/replay verifier")
 
     return errors
 

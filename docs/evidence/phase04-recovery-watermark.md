@@ -13,7 +13,7 @@ status: implementation_available_for_recovery_watermark_subscope
 - mismatched_derived_watermark_rejected: passed
 - recovery_set_authoritative_and_derived_alignment: passed
 - recovery_set_verification_hash: passed
-- phase_completion: blocked_official_checkpointer_and_full_recovery_set
+- phase_completion: blocked_graph_resume_retention_and_combined_fault
 
 ## Command
 
@@ -33,4 +33,4 @@ Result: passed.
 
 本证据证明 `ARCH-INFRA-022` 和 `ARCH-INFRA-052` 的当前 Infrastructure 子范围：PostgreSQL `infra_recovery_watermarks` / `infra_recovery_sets` / `infra_recovery_set_members` 提供权威组件和派生组件 watermark 记录、RecoverySet 对齐检查、mismatch fail-closed 和 verification hash。
 
-本证据不证明 PITR、完整 Product Projection Replay、official Checkpointer restore 或完整 PHASE04 RecoverySet 演练，因此不关闭 PHASE04。
+本证据不单独证明 PITR、Product Projection Replay 或 official Checkpointer restore；这些由各自 verifier 证明。本证据不证明 graph-level Checkpointer interrupt/resume、retention/prune、combined-service fault 或完整 PHASE04 closure。

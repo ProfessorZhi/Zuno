@@ -715,7 +715,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_checkpointer_pg_dump: passed",
             "official_checkpointer_pg_restore: passed",
             "official_postgres_saver_read_restored_checkpoint: passed",
-            "phase_completion: still_blocked_product_projection_replay_and_combined_fault",
+            "phase_completion: still_blocked_graph_resume_retention_and_combined_fault",
         ]:
             if phrase not in official_restore_evidence:
                 errors.append(
@@ -1158,6 +1158,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "object_manifest_restore: passed",
             "checkpoint_table_restore: passed",
             "outbox_inbox_watermark: passed",
+            "product_projection_replay: passed",
+            "product_projection_recovery_set: passed",
+            "product_projection_hash_verification: passed",
             "runtime_restart_after_restore: passed",
             "Backup/Restore/Replay subset != PHASE04 completion",
         ]:
@@ -1373,7 +1376,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "mismatched_derived_watermark_rejected: passed",
             "recovery_set_authoritative_and_derived_alignment: passed",
             "recovery_set_verification_hash: passed",
-            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
             "`ARCH-INFRA-022` 和 `ARCH-INFRA-052`",
         ]:
             if phrase not in recovery_watermark_evidence:
@@ -1410,7 +1413,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "relational_cross_tenant_hit_fail_closed: passed",
             "object_cross_tenant_hit_quarantined: passed",
             "cross_tenant_hit_receipt_durable: passed",
-            "phase_completion: blocked_official_checkpointer_and_product_projection_replay",
+            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
             "`ARCH-INFRA-035`",
             "`ARCH-INFRA-058`",
         ]:
@@ -1444,7 +1447,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "restored_recovery_set_verified: passed",
             "restored_authoritative_and_derived_watermarks_aligned: passed",
             "post_target_derived_index_watermark_excluded: passed",
-            "phase_completion: blocked_official_checkpointer_and_product_projection_replay",
+            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
             "`ARCH-INFRA-029`",
         ]:
             if phrase not in pitr_alignment_evidence:
@@ -1470,7 +1473,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "phase04_completion_claim: false",
             "phase05_ready: false",
             "component: langgraph_postgres_checkpointer",
-            "current_status: blocked",
+            "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py",
+            "component: product_projection_replay",
+            "python tools/scripts/verify_phase04_backup_restore_replay.py",
             "component: pitr",
             "current_status: implementation_available_subset",
             "python tools/scripts/verify_phase04_pitr_alignment.py",
@@ -1490,11 +1495,11 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "dr_profile_schema: passed",
             "rpo_rto_owner_coverage: passed",
             "explicit_cutover_policy: passed",
-            "blocked_checkpointer_boundary: passed",
+            "checkpointer_backup_restore_boundary: passed",
             "pitr_alignment_boundary: passed",
-            "projection_replay_target_not_current_boundary: passed",
-            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
-            "PITR alignment is proven separately",
+            "product_projection_replay_boundary: passed",
+            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "cross-domain projection replay remains outside the proven subset",
         ]:
             if phrase not in dr_profile_evidence:
                 errors.append(f"PHASE04 DR profile evidence missing phrase: {phrase}")
@@ -1558,8 +1563,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "backup_encryption_requirement_defined: passed",
             "service_boundary_profile: passed",
             "postgresql_rabbitmq_object_checkpoint_boundary: passed",
-            "checkpoint_boundary_blocked_not_completed: passed",
-            "不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore",
+            "checkpoint_backup_restore_boundary: passed",
+            "product_projection_replay_boundary: passed",
+            "不证明生产 encrypted backup、graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
         ]:
             if phrase not in backup_service_boundary_evidence:
                 errors.append(

@@ -14,9 +14,9 @@ status: implementation_available_for_backup_service_boundary_subscope
 - backup_evidence_ref_existence: passed
 - service_boundary_profile: passed
 - postgresql_rabbitmq_object_checkpoint_boundary: passed
-- checkpoint_boundary_blocked_not_completed: passed
-- pitr_and_projection_replay_not_promoted: passed
-- phase_completion: blocked_official_checkpointer_and_full_recovery_set
+- checkpoint_backup_restore_boundary: passed
+- product_projection_replay_boundary: passed
+- phase_completion: blocked_graph_resume_retention_and_combined_fault
 
 ## Command
 
@@ -38,4 +38,4 @@ Result: passed.
 
 本证据也证明 `InfrastructureCapabilityProfileV1` / `DataServiceCapabilityV1` 中 PostgreSQL、RabbitMQ、Object Store 和 Checkpoint Store 的 typed boundary 已经机器可验证；其中 Checkpoint Store 明确保留 `official_adapter_not_yet_installed` unsupported semantic。
 
-它不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore，也不关闭 PHASE04。
+它不证明生产 encrypted backup、graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault，也不关闭 PHASE04。

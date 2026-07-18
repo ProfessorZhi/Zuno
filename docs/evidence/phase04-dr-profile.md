@@ -2,7 +2,7 @@
 
 phase_id: PHASE04
 task_id: P04-T07
-date: 2026-07-17
+date: 2026-07-18
 status: implementation_available_for_dr_profile_subscope
 
 ## Result
@@ -12,10 +12,10 @@ status: implementation_available_for_dr_profile_subscope
 - explicit_cutover_policy: passed
 - evidence_ref_existence: passed
 - verification_command_boundary: passed
-- blocked_checkpointer_boundary: passed
+- checkpointer_backup_restore_boundary: passed
 - pitr_alignment_boundary: passed
-- projection_replay_target_not_current_boundary: passed
-- phase_completion: blocked_official_checkpointer_and_full_recovery_set
+- product_projection_replay_boundary: passed
+- phase_completion: blocked_graph_resume_retention_and_combined_fault
 
 ## Command
 
@@ -29,4 +29,4 @@ Result: passed.
 
 This evidence proves only that the PHASE04 disaster recovery profile has explicit RPO, RTO, owner, recovery owner, verification command, evidence ref, and fail-closed cutover policy for the required infrastructure recovery components.
 
-It does not prove full Product Projection Replay, the official LangGraph PostgreSQL Checkpointer, or PHASE04 closure. PITR alignment is proven separately by `docs/evidence/phase04-pitr-alignment.md`.
+PITR alignment, official Checkpointer backup/restore, and Product Projection Replay from restored authoritative fact are proven by separate verifiers. Cross-domain projection replay remains outside the proven subset, and this evidence does not prove graph-level Checkpointer interrupt/resume, retention/prune, combined-service fault, or PHASE04 closure.

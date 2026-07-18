@@ -6304,7 +6304,7 @@ requirements:
       - "tests/integration/test_phase04_pitr_alignment.py"
       - "docs/evidence/phase04-pitr-alignment.md"
       - "docs/modules/11-infrastructure.md:1910"
-    gap: "none within PHASE04 PITR alignment subscope; official Checkpointer restore and full Product Projection Replay remain Phase-level blockers"
+    gap: "none within PHASE04 PITR alignment subscope; graph-level Checkpointer interrupt/resume, retention/prune, cross-domain replay and combined-service fault remain Phase-level blockers"
     owner: "Infrastructure"
     target_phase: "PHASE04"
     planned_work_package: "P04-T07 PITR alignment drill"

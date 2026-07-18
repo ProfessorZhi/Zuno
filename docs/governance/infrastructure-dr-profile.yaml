@@ -10,7 +10,7 @@ profile_version: 1
 deployment_class: SERVER_PRODUCT
 phase04_completion_claim: false
 phase05_ready: false
-boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment is proven by the local WAL archive drill, while full Product Projection Replay and official LangGraph PostgreSQL Checkpointer recovery remain outside the proven subset."
+boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment, official LangGraph PostgreSQL Checkpointer backup/restore, and Product Projection Replay from restored authoritative fact are proven by local drills; cross-domain projection replay, graph-level Checkpointer interrupt/resume, retention/prune and combined-service fault remain outside the proven subset."
 
 backup_scope_profile_version: 1
 backup_scope_boundary: "Backup scope profile defines backup scope, RPO source, encryption requirement, verification command and evidence ref only; it does not claim production encrypted backup completion, PITR, full RecoverySet or official Checkpointer restore."
@@ -47,19 +47,19 @@ backup_scope_profiles:
     backup_scope: "Official LangGraph PostgreSQL Checkpointer schema, checkpoints, thread state and resume metadata"
     rpo_source: "checkpoint generation aligned with domain RecoveryWatermark"
     encryption_requirement: "Production Checkpointer backups require the same encrypted PostgreSQL backup policy plus checkpoint schema/version compatibility checks."
-    encryption_current_boundary: "Official LangGraph PostgreSQL Checkpointer backup/restore remains blocked by dependency approval."
-    verification_command: "blocked: official dependency approval required"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    completion_boundary: "blocked; not PHASE04 completion evidence"
+    encryption_current_boundary: "PHASE04 proves local pg_dump/pg_restore for official Checkpointer rows; production encrypted backup custody remains outside the local evidence boundary."
+    verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
+    evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
+    completion_boundary: "implementation_available_subset; graph-level interrupt/resume, retention/prune and combined-service fault remain incomplete"
 
   - component: product_projection_replay
     backup_scope: "Derived product projections rebuilt from authoritative PostgreSQL facts and object manifests"
     rpo_source: "source domain fact recovery point"
     encryption_requirement: "Projection replay artifacts must derive from encrypted authoritative backups or be rebuilt after restore without becoming a new fact source."
-    encryption_current_boundary: "Full product/cross-domain projection replay remains target_not_current."
-    verification_command: "target_not_current: full product/cross-domain projection replay"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    completion_boundary: "target_not_current"
+    encryption_current_boundary: "PHASE04 proves Product Projection replay from restored authoritative outbox fact and object manifest; cross-domain Product/Agent/Knowledge/Memory/Tool/Observability replay remains outside this subset."
+    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
+    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
+    completion_boundary: "implementation_available_subset; cross-domain replay and final cutover remain incomplete"
 
   - component: pitr
     backup_scope: "PostgreSQL WAL archive and point-in-time restore window"
@@ -68,7 +68,7 @@ backup_scope_profiles:
     encryption_current_boundary: "Local PITR alignment is proven with transient WAL archive; production encrypted WAL archive custody remains outside the local evidence boundary."
     verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
     evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
-    completion_boundary: "implementation_available_subset; official Checkpointer restore and full Product Projection Replay remain Phase-level blockers"
+    completion_boundary: "implementation_available_subset; graph-level Checkpointer interrupt/resume, retention/prune and combined-service fault remain Phase-level blockers"
 
 cutover_policy:
   explicit_cutover_required: true
@@ -119,24 +119,24 @@ recovery_profiles:
     owner: Infrastructure/Checkpointer Adapter
     recovery_owner: Agent Core Recovery Owner
     rpo: "checkpoint generation aligned with domain RecoveryWatermark"
-    rto: "must be measured after official Checkpointer adapter approval and implementation"
+    rto: "measured for local pg_dump/pg_restore subset; graph-level interrupt/resume RTO remains to be measured"
     backup_method: "official LangGraph PostgreSQL Checkpointer backup/restore path"
-    verification_command: "blocked: official dependency approval required"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    current_status: blocked
-    current_boundary: "Official LangGraph PostgreSQL Checkpointer is not installed or proven; this blocks PHASE04 closure."
+    verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
+    evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
+    current_status: implementation_available_subset
+    current_boundary: "Official Checkpointer lifecycle and backup/restore subsets are proven; graph-level interrupt/resume, retention/prune and combined-service fault still block PHASE04 closure."
 
   - component: product_projection_replay
     authority: derived_projection
     owner: Product/Domain Projection Owners
     recovery_owner: Product Projection Replay Owner
     rpo: "source domain fact recovery point"
-    rto: "must be measured by full projection replay"
+    rto: "measured by local restore/replay drill for Product projection subset"
     backup_method: "rebuild from authoritative PostgreSQL facts and object manifests"
-    verification_command: "target_not_current: full product/cross-domain projection replay"
-    evidence_ref: "docs/evidence/phase04-complete-infrastructure-blocker.md"
-    current_status: target_not_current
-    current_boundary: "PHASE04 local subset has no full product/cross-domain projection replay proof."
+    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
+    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
+    current_status: implementation_available_subset
+    current_boundary: "Product projection replay from restored authoritative fact is proven; cross-domain Product/Agent/Knowledge/Memory/Tool/Observability replay remains outside this PHASE04 subset."
 
   - component: pitr
     authority: recovery_window

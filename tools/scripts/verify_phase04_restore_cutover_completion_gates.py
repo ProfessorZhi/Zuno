@@ -71,9 +71,11 @@ def verify_phase04_restore_cutover_completion_gates() -> list[str]:
         "postgres_restore: passed",
         "object_manifest_restore: passed",
         "checkpoint_table_restore: passed",
+        "product_projection_replay: passed",
+        "product_projection_recovery_set: passed",
         "runtime_restart_after_restore: passed",
-        "official_checkpointer_restore: not_yet_proven",
-        "pitr: not_yet_proven",
+        "official_checkpointer_restore: proven_separately",
+        "pitr: proven_separately",
         "临时 `zuno_phase04_restore_<marker>`",
     ]:
         if phrase not in backup_evidence:
@@ -93,8 +95,8 @@ def verify_phase04_restore_cutover_completion_gates() -> list[str]:
         "backup_completed_requires_verification_gate: passed",
         "restore_isolated_before_cutover_gate: passed",
         "recovery_cutover_explicit_allow_gate: passed",
-        "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
-        "不证明完整 Backup/Restore/PITR、RecoverySet 或 official Checkpointer restore",
+        "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+        "不证明 graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
     ]:
         if phrase not in boundary_evidence:
             errors.append(f"restore/cutover gate evidence missing phrase: {phrase}")

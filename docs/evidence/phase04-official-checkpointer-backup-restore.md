@@ -15,7 +15,7 @@ status: partial_implementation_available
 - official_postgres_saver_restored_generation: passed
 - official_checkpoint_writes_restored: passed
 - checkpoint_receipt_not_domain_success: preserved
-- phase_completion: still_blocked_product_projection_replay_and_combined_fault
+- phase_completion: still_blocked_graph_resume_retention_and_combined_fault
 
 ## Commands
 
@@ -35,4 +35,4 @@ PHASE04 official Checkpointer backup/restore verification passed.
 
 本证据证明官方 `langgraph.checkpoint.postgres.PostgresSaver` 的 `checkpoint_*` schema 能随真实 PostgreSQL `pg_dump -Fc` 进入备份，并在临时恢复库中通过 `pg_restore` 后继续被官方 `PostgresSaver` 读取。恢复验证覆盖两代 checkpoint、latest generation、list count 和 writes row；简单 checkpoint 不一定产生 `checkpoint_blobs` row，但 `checkpoint_blobs` 表必须随官方 schema 恢复。
 
-本证据不证明 Product / cross-domain Projection Replay，不证明包含 official Checkpointer 的 combined-service fault，也不把 checkpoint receipt 解释为领域成功。
+本证据不证明 graph-level interrupt/resume，不证明 retention/prune，不证明包含 official Checkpointer 的 combined-service fault，也不把 checkpoint receipt 解释为领域成功。Product Projection Replay 已由 `docs/evidence/phase04-backup-restore-replay.md` 的恢复库重放子范围单独证明。
