@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 714
-  implementation_available: 42
+  target_not_current: 712
+  implementation_available: 44
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -4346,51 +4346,69 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Current/Target/Future/Not Selected 分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "docs/modules/11-infrastructure.md"
+      - ".agent/modules/11-infrastructure.md"
+      - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "docs/evidence/phase04-infrastructure-docs-governance.md"
       - "docs/modules/11-infrastructure.md:1882"
-    gap: "?????Current/Target/Future/Not Selected 分层???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Infrastructure Target 文档中的 Current/Target/Future/Explicitly Not Selected 分层已可机器验证；这只证明文档治理边界，不证明 runtime adapter 或恢复闭环。"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-001 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "docs governance gate proves Current/Target/Future/Explicitly Not Selected layering and prevents target-only claims from becoming current without evidence"
     test_ids:
-      - "INFRA-001-UT"
-      - "INFRA-001-IT"
+      - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "tests/repo/test_phase04_infrastructure_docs_governance.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-001"
+      - "docs/evidence/phase04-infrastructure-docs-governance.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1882"
-      - "planned_test:INFRA-001-UT"
-      - "planned_test:INFRA-001-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-001"
+      - "current:docs/modules/11-infrastructure.md"
+      - "current:.agent/modules/11-infrastructure.md"
+      - "current:tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "test:tests/repo/test_phase04_infrastructure_docs_governance.py"
+      - "evidence:docs/evidence/phase04-infrastructure-docs-governance.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-002
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "单一正式架构文档与镜像"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "docs/modules/11-infrastructure.md"
+      - ".agent/modules/11-infrastructure.md"
+      - "docs/architecture/architecture.md"
+      - ".agent/architecture/architecture.md"
+      - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "docs/evidence/phase04-infrastructure-docs-governance.md"
       - "docs/modules/11-infrastructure.md:1883"
-    gap: "?????单一正式架构文档与镜像???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "唯一正式 Infrastructure Target 文档、byte-identical Agent 镜像、architecture canonical 四文件集合和 entrypoint verifier 已可机器验证；这不证明 runtime 完成。"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-002 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "docs governance gate proves the single formal target document and byte-identical Agent mirror are protected by entrypoint verifiers"
     test_ids:
-      - "INFRA-002-UT"
-      - "INFRA-002-IT"
+      - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "tests/repo/test_phase04_infrastructure_docs_governance.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-002"
+      - "docs/evidence/phase04-infrastructure-docs-governance.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1883"
-      - "planned_test:INFRA-002-UT"
-      - "planned_test:INFRA-002-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-002"
+      - "current:docs/modules/11-infrastructure.md"
+      - "current:.agent/modules/11-infrastructure.md"
+      - "current:docs/architecture/architecture.md"
+      - "current:.agent/architecture/architecture.md"
+      - "current:tools/scripts/verify_phase04_infrastructure_docs_governance.py"
+      - "test:tests/repo/test_phase04_infrastructure_docs_governance.py"
+      - "evidence:docs/evidence/phase04-infrastructure-docs-governance.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-003
     module: "11 Infrastructure"

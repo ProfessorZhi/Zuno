@@ -86,6 +86,7 @@ work_packages:
       - "tools/scripts/verify_phase04_operator_readiness.py"
       - "tools/scripts/verify_phase04_dr_profile.py"
       - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "tools/scripts/verify_phase04_infrastructure_docs_governance.py"
       - "tools/scripts/verify_phase04_infrastructure_domain_boundary.py"
       - "tools/scripts/verify_phase04_infrastructure_typed_ports.py"
       - "tools/scripts/verify_phase04_tenant_isolation_profiles.py"
@@ -100,6 +101,7 @@ work_packages:
       - "tests/integration/test_phase04_operator_readiness.py"
       - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_phase04_infrastructure_capability_profile.py"
+      - "tests/repo/test_phase04_infrastructure_docs_governance.py"
       - "tests/repo/test_phase04_infrastructure_domain_boundary.py"
       - "tests/repo/test_phase04_infrastructure_typed_ports.py"
       - "tests/repo/test_phase04_tenant_isolation_profiles.py"
@@ -116,6 +118,7 @@ work_packages:
       - "docs/evidence/phase04-operator-readiness.md"
       - "docs/evidence/phase04-dr-profile.md"
       - "docs/evidence/phase04-infrastructure-capability-profile.md"
+      - "docs/evidence/phase04-infrastructure-docs-governance.md"
       - "docs/evidence/phase04-infrastructure-domain-boundary.md"
       - "docs/evidence/phase04-infrastructure-typed-ports.md"
       - "docs/evidence/phase04-tenant-isolation-profiles.md"
@@ -142,6 +145,10 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-infrastructure-capability-profile.md"
+      infrastructure_docs_governance:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-infrastructure-docs-governance.md"
       infrastructure_domain_boundary:
         state: completed
         evidence:

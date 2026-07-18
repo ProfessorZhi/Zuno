@@ -52,6 +52,7 @@ combined_postgres_rabbitmq_minio_fault_subset: passed
 operator_readiness_subset: proven
 dr_profile_rpo_rto_owner: proven
 infrastructure_capability_profile: proven
+infrastructure_docs_governance: proven
 infrastructure_domain_boundary: proven
 infrastructure_typed_ports: proven
 tenant_isolation_profiles: proven
@@ -115,6 +116,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_operator_readiness.py` | passed; Operator readiness snapshot 聚合 PostgreSQL health/readiness/pool metrics、Outbox backlog、RabbitMQ queue depth、MinIO object read probe、trace correlation、failure owner/retry owner/recovery owner，并明确 telemetry 不产生 Eval verdict |
 | `python tools/scripts/verify_phase04_dr_profile.py` | passed; `docs/governance/infrastructure-dr-profile.yaml` 覆盖 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO/RTO/Owner/Recovery Owner/验证命令/evidence ref，并保持 cutover fail closed |
 | `python tools/scripts/verify_phase04_infrastructure_capability_profile.py` | passed; `InfrastructureCapabilityProfileV1` 与 `DataServiceCapabilityV1` immutable、versioned、canonical-hash、Developer CI / Server Product typed contract 共用、派生服务非权威和 unsupported semantics 显式声明均通过 |
+| `python tools/scripts/verify_phase04_infrastructure_docs_governance.py` | passed; Infrastructure Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Target 文档、Agent 镜像、architecture canonical 四文件集合和 entrypoint verifier 均通过 |
 | `python tools/scripts/verify_phase04_infrastructure_domain_boundary.py` | passed; 基础设施 receipt contract 和 PHASE04 evidence 均明确 Queue ACK、Object Commit、Idempotency Claim、Object Manifest visibility 与 operator telemetry 不代表领域成功 |
 | `python tools/scripts/verify_phase04_infrastructure_typed_ports.py` | passed; Developer CI 与 Server Product profile 使用同一 `InfrastructureCapabilityProfileV1` / `DataServiceCapabilityV1` typed port，覆盖全部 required service kind，并对 unknown service kind fail closed |
 | `python tools/scripts/verify_phase04_tenant_isolation_profiles.py` | passed; Infrastructure Capability Profile 中每个 service kind 都有 `TenantIsolationProfileV1`，包含 tenant scope、强隔离选项、cross-tenant fail-closed/quarantine/audit action 和存在的 evidence ref |
@@ -186,6 +188,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
 - DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；其中 official Checkpointer 仍为 blocked，PITR 与 product projection replay 仍为 target_not_current。
 - Infrastructure Capability Profile subset：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 提供 frozen Pydantic contract、canonical content hash、profile version、deployment class、typed service capability、config hash、supported/unsupported semantics 和派生服务非权威校验；这只证明 profile contract 本身 current，不证明 blocked adapters 已实现。
+- Infrastructure docs governance subset：`tools/scripts/verify_phase04_infrastructure_docs_governance.py` 固化 Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Infrastructure Target 文档、Agent 镜像、architecture canonical 四文件集合和文档入口；该 gate 不替代任何 runtime 证据。
 - Infrastructure/domain boundary subset：`tools/scripts/verify_phase04_infrastructure_domain_boundary.py` 固化 Queue ACK、RabbitMQ delivery、Object Commit、Idempotency Claim、Object Manifest visibility 和 operator telemetry 都不能解释为 product/domain success；MinIO manifest adoption verifier 同时证明 object receipt 不会在 crash path 推进领域成功。
 - Infrastructure typed-port subset：`tools/scripts/verify_phase04_infrastructure_typed_ports.py` 固化 Developer CI 与 Server Product profile 共用同一 typed contract surface，并覆盖 PostgreSQL、RabbitMQ、Object、Checkpoint、Vector、Graph、Lexical、Cache、Secret 和 Telemetry service kind；unknown service kind fail closed。
 - Tenant isolation profile subset：`TenantIsolationProfileV1` 为每个 typed Infrastructure service kind 固定 tenant scope、默认 target、强隔离选项、cross-tenant action 和 evidence ref；该 profile gate 不替代 `ARCH-INFRA-058` 的全服务运行时 cross-tenant hit quarantine/fail-closed 证明。
@@ -195,6 +198,8 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 Infrastructure requirement `ARCH-INFRA-003` is now proven by `tools/scripts/verify_phase04_infrastructure_capability_profile.py`: the capability profile contract is immutable, versioned, canonical-hashed, and shared by Developer CI and Server Product deployment classes. This does not prove official Checkpointer, PITR, complete recovery set, or enterprise index adapters.
+
+Infrastructure requirements `ARCH-INFRA-001` and `ARCH-INFRA-002` are now proven by `tools/scripts/verify_phase04_infrastructure_docs_governance.py`: Infrastructure Current/Target/Future/Explicitly Not Selected layering, the single formal Infrastructure Target document, the byte-identical Agent mirror, and canonical architecture entrypoints are machine-verifiable. This does not prove any runtime adapter, Checkpointer, PITR, or recovery set.
 
 Infrastructure requirement `ARCH-INFRA-004` is now proven by `tools/scripts/verify_phase04_infrastructure_domain_boundary.py`: infrastructure receipts are checked against domain-success boundary evidence and the MinIO manifest crash guard. This does not prove any domain terminal state; it proves Infrastructure does not own one.
 

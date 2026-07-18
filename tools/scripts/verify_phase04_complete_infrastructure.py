@@ -151,6 +151,12 @@ CAPABILITY_PROFILE_VERIFIER = (
 CAPABILITY_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-capability-profile.md"
 )
+INFRASTRUCTURE_DOCS_GOVERNANCE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_infrastructure_docs_governance.py"
+)
+INFRASTRUCTURE_DOCS_GOVERNANCE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-infrastructure-docs-governance.md"
+)
 DOMAIN_BOUNDARY_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_infrastructure_domain_boundary.py"
 )
@@ -1186,6 +1192,37 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in capability_profile_evidence:
                 errors.append(
                     "PHASE04 infrastructure capability profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not INFRASTRUCTURE_DOCS_GOVERNANCE_VERIFIER.exists():
+        errors.append("missing PHASE04 infrastructure docs governance verifier")
+    else:
+        docs_governance_errors = _load_verifier(
+            INFRASTRUCTURE_DOCS_GOVERNANCE_VERIFIER,
+            "verify_phase04_infrastructure_docs_governance",
+            "verify_phase04_infrastructure_docs_governance",
+        )()
+        for docs_governance_error in docs_governance_errors:
+            errors.append(
+                "PHASE04 infrastructure docs governance verification failed: "
+                f"{docs_governance_error}"
+            )
+
+    if not INFRASTRUCTURE_DOCS_GOVERNANCE_EVIDENCE.exists():
+        errors.append("missing PHASE04 infrastructure docs governance evidence")
+    else:
+        docs_governance_evidence = _read(INFRASTRUCTURE_DOCS_GOVERNANCE_EVIDENCE)
+        for phrase in [
+            "current_target_future_not_selected_layering: passed",
+            "single_formal_infrastructure_target_document: passed",
+            "agent_infrastructure_mirror_byte_identical: passed",
+            "architecture_canonical_file_set: passed",
+            "本证据不证明任何 runtime adapter",
+        ]:
+            if phrase not in docs_governance_evidence:
+                errors.append(
+                    "PHASE04 infrastructure docs governance evidence missing phrase: "
                     f"{phrase}"
                 )
 
