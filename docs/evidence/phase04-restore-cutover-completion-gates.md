@@ -13,7 +13,7 @@ status: implementation_available_for_restore_cutover_completion_gate_subscope
 - backup_restore_subset_registered: passed
 - full_recovery_markers_still_block_completion: passed
 - coordinator_approval_required_for_cutover: passed
-- phase_completion: blocked_graph_resume_retention_and_combined_fault
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Command
 
@@ -35,4 +35,4 @@ Result: passed.
 
 当前 restore 证据覆盖真实 `pg_dump`、隔离临时数据库 `pg_restore`、MinIO restore point、infrastructure primitive rows、Product Projection Replay、verified RecoverySet 子范围和恢复库 runtime restart。它证明 restore 在隔离目标中验证后仍不会自动切生产。
 
-本证据不证明 graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault，也不关闭 PHASE04。
+本证据不证明跨领域 replay final cutover 或 PHASE04 closure；official Checkpointer graph interrupt/resume、retention cleanup、backup/restore 和 combined-service fault 已由各自证据单独证明。

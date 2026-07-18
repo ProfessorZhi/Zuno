@@ -82,9 +82,9 @@ def verify_phase04_restore_cutover_completion_gates() -> list[str]:
             errors.append(f"backup/restore evidence missing phrase: {phrase}")
 
     for phrase in [
-        "backup_restore_replay: missing",
+        "backup_restore_replay: proven",
         "backup_restore_replay_subset: passed",
-        "combined_dependency_fault: missing",
+        "combined_dependency_fault: proven",
         "coordinator_decision: not_approved",
         "status: blocked",
     ]:
@@ -95,8 +95,8 @@ def verify_phase04_restore_cutover_completion_gates() -> list[str]:
         "backup_completed_requires_verification_gate: passed",
         "restore_isolated_before_cutover_gate: passed",
         "recovery_cutover_explicit_allow_gate: passed",
-        "phase_completion: blocked_graph_resume_retention_and_combined_fault",
-        "不证明 graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
+        "phase_completion: blocked_cross_domain_replay_and_approval",
+        "不证明跨领域 replay final cutover 或 PHASE04 closure",
     ]:
         if phrase not in boundary_evidence:
             errors.append(f"restore/cutover gate evidence missing phrase: {phrase}")

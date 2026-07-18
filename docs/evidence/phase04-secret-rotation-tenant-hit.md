@@ -35,7 +35,7 @@ pytest -q tests/integration/test_phase04_secret_rotation_tenant_hit.py -p no:cac
 - relational_cross_tenant_hit_fail_closed: passed
 - object_cross_tenant_hit_quarantined: passed
 - cross_tenant_hit_receipt_durable: passed
-- phase_completion: blocked_graph_resume_retention_and_combined_fault
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Boundary
 

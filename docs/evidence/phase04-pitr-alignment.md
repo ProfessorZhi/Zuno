@@ -36,10 +36,10 @@ python tools/scripts/verify_phase04_pitr_alignment.py
 - restored_recovery_set_verified: passed
 - restored_authoritative_and_derived_watermarks_aligned: passed
 - post_target_derived_index_watermark_excluded: passed
-- phase_completion: blocked_graph_resume_retention_and_combined_fault
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Boundary
 
 `ARCH-INFRA-029` 当前达到 `implementation_available`：PITR drill 使用真实 PostgreSQL WAL archive/basebackup/recovery，并把 DB/Object/Checkpoint/Index 的恢复点通过 RecoverySet 对齐。
 
-该证据仍不能关闭 PHASE04，因为 graph-level Checkpointer interrupt/resume、retention/prune、跨领域 Projection Replay 和 combined-service fault 仍未完成。
+该证据仍不能关闭 PHASE04，因为跨领域 Projection Replay、P04-T06/P04-T07 readiness 状态和 Coordinator approval gate 仍未完成。

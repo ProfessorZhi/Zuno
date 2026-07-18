@@ -446,11 +446,10 @@ def verify_current_program() -> list[str]:
             "verify_phase04_complete_infrastructure",
         )()
         expected_fragments = [
+            "P04-T06 is not completed in phase04-readiness.yaml",
+            "P04-T07 is not completed in phase04-readiness.yaml",
             "PHASE04 coordinator approval is not approved",
             "PHASE05 start gate remains closed",
-            "official LangGraph PostgreSQL Checkpointer is not importable/proven",
-            "PHASE04 evidence missing completion proof marker: langgraph_postgres_checkpointer: proven",
-            "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven",
         ]
         combined = "\n".join(complete_errors)
         for fragment in expected_fragments:

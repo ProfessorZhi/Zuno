@@ -225,8 +225,8 @@ def _verify_evidence_file() -> list[str]:
             "service_boundary_profile: passed",
             "checkpoint_backup_restore_boundary: passed",
             "product_projection_replay_boundary: passed",
-            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
-            "不证明生产 encrypted backup、graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
+            "不证明生产 encrypted backup、跨领域 replay final cutover 或 PHASE04 closure",
         ]
         if phrase not in evidence
     ]

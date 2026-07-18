@@ -13,7 +13,7 @@ status: implementation_available_for_recovery_watermark_subscope
 - mismatched_derived_watermark_rejected: passed
 - recovery_set_authoritative_and_derived_alignment: passed
 - recovery_set_verification_hash: passed
-- phase_completion: blocked_graph_resume_retention_and_combined_fault
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Command
 

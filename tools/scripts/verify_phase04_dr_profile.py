@@ -58,7 +58,7 @@ def verify_phase04_dr_profile() -> list[str]:
         "PITR alignment" not in boundary
         or "official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore" not in boundary
         or "Product Projection Replay from restored authoritative fact" not in boundary
-        or "combined-service fault remain" not in boundary
+        or "combined-service fault including official Checkpointer is proven" not in boundary
     ):
         errors.append("DR profile boundary must separate proven recovery subsets from remaining blockers")
 

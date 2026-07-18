@@ -1236,7 +1236,10 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "outbox_to_inbox_after_restart: passed",
             "minio_hash_after_restart: passed",
             "new_postgres_runtime_after_restart: passed",
-            "official_checkpointer_in_combined_fault: not_yet_proven",
+            "official_checkpointer_in_combined_fault: passed",
+            "official_checkpointer_after_restart: passed",
+            "official_checkpointer_delta_history_after_restart: passed",
+            "combined_dependency_fault: proven",
             "不关闭 P04-T07",
         ]:
             if phrase not in combined_fault_evidence:
@@ -1419,7 +1422,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "mismatched_derived_watermark_rejected: passed",
             "recovery_set_authoritative_and_derived_alignment: passed",
             "recovery_set_verification_hash: passed",
-            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
             "`ARCH-INFRA-022` 和 `ARCH-INFRA-052`",
         ]:
             if phrase not in recovery_watermark_evidence:
@@ -1456,7 +1459,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "relational_cross_tenant_hit_fail_closed: passed",
             "object_cross_tenant_hit_quarantined: passed",
             "cross_tenant_hit_receipt_durable: passed",
-            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
             "`ARCH-INFRA-035`",
             "`ARCH-INFRA-058`",
         ]:
@@ -1490,7 +1493,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "restored_recovery_set_verified: passed",
             "restored_authoritative_and_derived_watermarks_aligned: passed",
             "post_target_derived_index_watermark_excluded: passed",
-            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
             "`ARCH-INFRA-029`",
         ]:
             if phrase not in pitr_alignment_evidence:
@@ -1541,7 +1544,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "checkpointer_backup_restore_boundary: passed",
             "pitr_alignment_boundary: passed",
             "product_projection_replay_boundary: passed",
-            "phase_completion: blocked_graph_resume_retention_and_combined_fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
             "cross-domain projection replay remains outside the proven subset",
         ]:
             if phrase not in dr_profile_evidence:
@@ -1608,7 +1611,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "postgresql_rabbitmq_object_checkpoint_boundary: passed",
             "checkpoint_backup_restore_boundary: passed",
             "product_projection_replay_boundary: passed",
-            "不证明生产 encrypted backup、graph-level Checkpointer interrupt/resume、retention/prune 或 combined-service fault",
+            "不证明生产 encrypted backup、跨领域 replay final cutover 或 PHASE04 closure",
         ]:
             if phrase not in backup_service_boundary_evidence:
                 errors.append(

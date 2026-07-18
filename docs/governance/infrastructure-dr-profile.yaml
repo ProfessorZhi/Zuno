@@ -4,13 +4,13 @@ status: implementation_available_for_phase04_dr_profile_subscope
 phase: PHASE04
 task_id: P04-T07
 owner: Infrastructure
-last_verified: 2026-07-17
+last_verified: 2026-07-18
 profile_id: zuno-server-product-dr-profile
 profile_version: 1
 deployment_class: SERVER_PRODUCT
 phase04_completion_claim: false
 phase05_ready: false
-boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment, official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore, and Product Projection Replay from restored authoritative fact are proven by local drills; cross-domain projection replay and combined-service fault remain outside the proven subset."
+boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment, official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore, Product Projection Replay from restored authoritative fact, and combined-service fault including official Checkpointer is proven by local drills; cross-domain projection replay remains outside the proven subset."
 
 backup_scope_profile_version: 1
 backup_scope_boundary: "Backup scope profile defines backup scope, RPO source, encryption requirement, verification command and evidence ref only; it does not claim production encrypted backup completion, PITR, full RecoverySet or official Checkpointer restore."
@@ -50,7 +50,7 @@ backup_scope_profiles:
     encryption_current_boundary: "PHASE04 proves local pg_dump/pg_restore for official Checkpointer rows; production encrypted backup custody remains outside the local evidence boundary."
     verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
     evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
-    completion_boundary: "implementation_available_subset; combined-service fault remains incomplete"
+    completion_boundary: "implementation_available_subset; combined-service fault including official Checkpointer is proven separately"
 
   - component: product_projection_replay
     backup_scope: "Derived product projections rebuilt from authoritative PostgreSQL facts and object manifests"
@@ -68,7 +68,7 @@ backup_scope_profiles:
     encryption_current_boundary: "Local PITR alignment is proven with transient WAL archive; production encrypted WAL archive custody remains outside the local evidence boundary."
     verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
     evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
-    completion_boundary: "implementation_available_subset; combined-service fault remains Phase-level blocker"
+    completion_boundary: "implementation_available_subset; cross-domain replay remains Phase-level blocker"
 
 cutover_policy:
   explicit_cutover_required: true
@@ -124,7 +124,7 @@ recovery_profiles:
     verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
     evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
     current_status: implementation_available_subset
-    current_boundary: "Official Checkpointer lifecycle, graph interrupt/resume, retention cleanup and backup/restore subsets are proven; combined-service fault still blocks PHASE04 closure."
+    current_boundary: "Official Checkpointer lifecycle, graph interrupt/resume, retention cleanup, backup/restore and combined-service fault subsets are proven; cross-domain replay still blocks PHASE04 closure."
 
   - component: product_projection_replay
     authority: derived_projection

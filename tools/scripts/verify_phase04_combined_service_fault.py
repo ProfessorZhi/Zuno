@@ -8,6 +8,9 @@ from pathlib import Path
 from uuid import uuid4
 
 import psycopg
+from importlib.util import find_spec
+from langgraph.checkpoint.base import empty_checkpoint
+from langgraph.checkpoint.postgres import PostgresSaver
 from sqlalchemy import text
 
 from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
@@ -71,6 +74,80 @@ def _store() -> MinioObjectStore:
         access_key=MINIO_ACCESS_KEY,
         secret_key=MINIO_SECRET_KEY,
     )
+
+
+def _official_checkpoint(marker: str, *, version: str) -> dict[str, object]:
+    checkpoint = empty_checkpoint()
+    checkpoint["channel_values"] = {
+        "marker": marker,
+        "fault_scope": "phase04-combined-service-fault",
+    }
+    checkpoint["channel_versions"] = {"marker": version}
+    checkpoint["versions_seen"] = {"phase04": {"marker": version}}
+    checkpoint["updated_channels"] = ["marker"]
+    return checkpoint
+
+
+def _seed_official_checkpointer(marker: str) -> dict[str, object]:
+    thread_id = f"phase04-combined-official-{marker}"
+    namespace = "phase04-combined-fault"
+    with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
+        saver.setup()
+        config = {"configurable": {"thread_id": thread_id, "checkpoint_ns": namespace}}
+        version = saver.get_next_version(None, None)
+        saved = saver.put(
+            config,
+            _official_checkpoint(marker, version=version),
+            {"source": "phase04-combined-service-fault", "step": "pre-fault"},
+            {"marker": version},
+        )
+        saver.put_writes(
+            saved,
+            [("combined_fault", {"marker": marker, "thread_id": thread_id})],
+            f"combined-task-{marker}",
+        )
+    return {
+        "thread_id": thread_id,
+        "namespace": namespace,
+        "checkpoint_id": str(saved["configurable"]["checkpoint_id"]),
+        "config": saved,
+    }
+
+
+def _verify_official_checkpointer_recovery(
+    errors: list[str],
+    *,
+    marker: str,
+    official_seed: dict[str, object],
+) -> None:
+    with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
+        restored = saver.get_tuple(official_seed["config"])
+        listed = list(
+            saver.list(
+                {
+                    "configurable": {
+                        "thread_id": str(official_seed["thread_id"]),
+                        "checkpoint_ns": str(official_seed["namespace"]),
+                    }
+                },
+                limit=5,
+            )
+        )
+        delta_history = saver.get_delta_channel_history(
+            config=official_seed["config"],
+            channels=["marker"],
+        )
+    if restored is None:
+        errors.append("official Checkpointer checkpoint did not survive combined outage")
+        return
+    if restored.checkpoint["channel_values"].get("marker") != marker:
+        errors.append("official Checkpointer restored wrong marker after combined outage")
+    if str(restored.config["configurable"]["checkpoint_id"]) != str(official_seed["checkpoint_id"]):
+        errors.append("official Checkpointer restored wrong checkpoint id after combined outage")
+    if len(listed) != 1:
+        errors.append(f"official Checkpointer history changed across combined outage: {len(listed)}")
+    if "marker" not in delta_history:
+        errors.append("official Checkpointer delta history missing after combined outage")
 
 
 def _runtime() -> PostgresRuntime:
@@ -158,6 +235,7 @@ async def _verify_recovery(
     bucket: str,
     object_name: str,
     topology: RabbitMQTopology,
+    official_seed: dict[str, object],
 ) -> tuple[PostgresRuntime, RabbitMQTransport]:
     runtime = _runtime()
     transport = RabbitMQTransport(RABBITMQ_URL)
@@ -225,6 +303,11 @@ async def _verify_recovery(
         recovered_content = _store().read_object(bucket=bucket, object_name=object_name)
         if recovered_content != content or hashlib.sha256(recovered_content).digest() != hashlib.sha256(content).digest():
             errors.append("MinIO committed object changed across combined outage")
+        _verify_official_checkpointer_recovery(
+            errors,
+            marker=marker,
+            official_seed=official_seed,
+        )
     except Exception:
         await transport.close()
         await runtime.close()
@@ -240,6 +323,7 @@ async def _cleanup(
     topology: RabbitMQTopology,
     runtime: PostgresRuntime | None,
     transport: RabbitMQTransport | None,
+    official_thread_id: str | None,
 ) -> list[str]:
     errors: list[str] = []
     if transport is None:
@@ -292,6 +376,12 @@ async def _cleanup(
                 await cleanup_runtime.close()
     if runtime is not None:
         await runtime.close()
+    if official_thread_id is not None:
+        try:
+            with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
+                saver.delete_thread(official_thread_id)
+        except Exception as exc:
+            errors.append(f"official Checkpointer cleanup failed: {type(exc).__name__}")
     return errors
 
 
@@ -306,9 +396,12 @@ async def _verify() -> list[str]:
     event_id: str | None = None
     runtime: PostgresRuntime | None = None
     recovered_transport: RabbitMQTransport | None = None
+    official_seed: dict[str, object] | None = None
     services_stopped = False
 
     try:
+        if find_spec("langgraph.checkpoint.postgres") is None:
+            return ["official LangGraph PostgreSQL Checkpointer package is not importable"]
         store = _store()
         staged = store.stage_object(bucket=bucket, object_name=object_name, content=content)
         committed = store.commit_object(
@@ -321,6 +414,7 @@ async def _verify() -> list[str]:
             errors.append("MinIO pre-fault commit hash mismatch")
 
         event_id, manifest_hash = _seed_database(marker, object_ref, content)
+        official_seed = _seed_official_checkpointer(marker)
 
         transport = RabbitMQTransport(RABBITMQ_URL)
         await transport.connect()
@@ -361,6 +455,7 @@ async def _verify() -> list[str]:
                 bucket=bucket,
                 object_name=object_name,
                 topology=topology,
+                official_seed=official_seed,
             )
     except Exception as exc:
         errors.append(f"combined service fault drill failed: {type(exc).__name__}: {exc}")
@@ -376,6 +471,9 @@ async def _verify() -> list[str]:
                     topology=topology,
                     runtime=runtime,
                     transport=recovered_transport,
+                    official_thread_id=(
+                        None if official_seed is None else str(official_seed["thread_id"])
+                    ),
                 )
             )
         else:

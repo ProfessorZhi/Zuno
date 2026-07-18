@@ -18,7 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  implementation_available: 756
+  implementation_available: 755
+  target_not_current: 1
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -6304,7 +6305,7 @@ requirements:
       - "tests/integration/test_phase04_pitr_alignment.py"
       - "docs/evidence/phase04-pitr-alignment.md"
       - "docs/modules/11-infrastructure.md:1910"
-    gap: "none within PHASE04 PITR alignment subscope; graph-level Checkpointer interrupt/resume, retention/prune, cross-domain replay and combined-service fault remain Phase-level blockers"
+    gap: "none within PHASE04 PITR alignment subscope; cross-domain replay and Coordinator approval remain Phase-level blockers"
     owner: "Infrastructure"
     target_phase: "PHASE04"
     planned_work_package: "P04-T07 PITR alignment drill"
@@ -6991,19 +6992,19 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Recovery Cutover 显式允许"
-    current_status: implementation_available
+    current_status: target_not_current
     current_paths:
       - "docs/governance/infrastructure-dr-profile.yaml"
       - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
       - "docs/evidence/phase04-restore-cutover-completion-gates.md"
       - "docs/modules/11-infrastructure.md:1934"
-    gap: "Recovery cutover explicit allow gate is current; Coordinator approval is still pending and production cutover is not allowed."
+    gap: "Recovery cutover fail-closed policy is current, but explicit Coordinator approval and production cutover remain target_not_current."
     owner: "Infrastructure"
     target_phase: "PHASE04"
     planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "proven: DR profile cutover_allowed_by_default=false and approval_owner=Coordinator keep recovery cutover fail-closed."
+    failure_or_recovery_requirement: "target_not_current: final recovery cutover requires explicit Coordinator approval after remaining cross-domain replay boundary closure."
     test_ids:
       - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
       - "tests/repo/test_phase04_restore_cutover_completion_gates.py"
