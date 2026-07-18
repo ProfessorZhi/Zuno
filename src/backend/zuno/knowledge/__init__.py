@@ -54,6 +54,7 @@ if TYPE_CHECKING:
         RetrievalRequest,
         RetrievedDocument,
     )
+    from zuno.knowledge.runtime_batch import KnowledgeRuntimeBatch
     from zuno.knowledge.trace import (
         EvidenceChecker,
         EvidenceVerdict,
@@ -92,6 +93,7 @@ _LAZY_EXPORT_TO_MODULE = {
     "KnowledgeQueryResult": "zuno.knowledge.query_service",
     "KnowledgeQueryService": "zuno.knowledge.query_service",
     "KnowledgeIndexRuntime": "zuno.knowledge.indexing",
+    "KnowledgeRuntimeBatch": "zuno.knowledge.runtime_batch",
     "KnowledgeSpaceManifest": "zuno.knowledge.indexing",
     "LoadedGraphRAGProject": "zuno.knowledge.contracts",
     "ProcessedQuery": "zuno.knowledge.retrieval",
@@ -143,6 +145,7 @@ __all__ = [
     "KnowledgeQueryResult",
     "KnowledgeQueryService",
     "KnowledgeIndexRuntime",
+    "KnowledgeRuntimeBatch",
     "KnowledgeSpaceManifest",
     "LoadedGraphRAGProject",
     "ProductMode",

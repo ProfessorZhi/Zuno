@@ -110,6 +110,29 @@ EXPECTED_EXPORTS = {
         "KnowledgeSpaceManifest",
         "adapter_status_for_targets",
     ],
+    "zuno.knowledge.runtime_batch": [
+        "ConfigSeparationRecord",
+        "CorrectiveRetrievalDecision",
+        "DeletionPropagationRecord",
+        "EvalReleaseDecision",
+        "EvidenceLedgerRecord",
+        "EvidenceQualityDecision",
+        "EvidenceRecord",
+        "EvidenceRequirementRecord",
+        "FusionDecision",
+        "GraphEvidenceDecision",
+        "KnowledgeEventRecord",
+        "KnowledgeQueryRequest",
+        "KnowledgeReadinessEvidence",
+        "KnowledgeRuntimeBatch",
+        "KnowledgeVersionRecord",
+        "KnowledgeVersionState",
+        "RecoveryDecision",
+        "RetrievalPlanRecord",
+        "RetrievalRoundRecord",
+        "RetrievalRoundStatus",
+        "StopBudgetDecision",
+    ],
 }
 
 
@@ -144,6 +167,7 @@ def test_knowledge_package_facade_points_at_layer_modules() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
+    from zuno.knowledge.runtime_batch import KnowledgeRuntimeBatch
 
     assert knowledge.AgenticRetrievalRouter is AgenticRetrievalRouter
     assert knowledge.ProductMode is ProductMode
@@ -152,6 +176,7 @@ def test_knowledge_package_facade_points_at_layer_modules() -> None:
     assert knowledge.KnowledgeQueryService is KnowledgeQueryService
     assert knowledge.KnowledgeIndexRuntime is KnowledgeIndexRuntime
     assert knowledge.RetrievalPlanner is RetrievalPlanner
+    assert knowledge.KnowledgeRuntimeBatch is KnowledgeRuntimeBatch
 
 
 def test_importing_knowledge_surfaces_does_not_load_heavy_runtime_modules() -> None:
