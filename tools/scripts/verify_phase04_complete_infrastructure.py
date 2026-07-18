@@ -309,6 +309,15 @@ OFFICIAL_LANGGRAPH_CHECKPOINTER_VERIFIER = (
 OFFICIAL_LANGGRAPH_CHECKPOINTER_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-official-langgraph-checkpointer.md"
 )
+OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_VERIFIER = (
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_official_checkpointer_backup_restore.py"
+)
+OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-official-checkpointer-backup-restore.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -682,6 +691,35 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in official_checkpointer_evidence:
                 errors.append(
                     "PHASE04 official LangGraph Checkpointer evidence missing phrase: "
+                    f"{phrase}"
+                )
+    if not OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_VERIFIER.exists():
+        errors.append("missing PHASE04 official Checkpointer backup/restore verifier")
+    else:
+        official_restore_errors = _load_verifier(
+            OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_VERIFIER,
+            "verify_phase04_official_checkpointer_backup_restore",
+            "verify_phase04_official_checkpointer_backup_restore",
+        )()
+        for official_restore_error in official_restore_errors:
+            errors.append(
+                "PHASE04 official Checkpointer backup/restore verification failed: "
+                f"{official_restore_error}"
+            )
+    if not OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_EVIDENCE.exists():
+        errors.append("missing PHASE04 official Checkpointer backup/restore evidence")
+    else:
+        official_restore_evidence = _read(OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_EVIDENCE)
+        for phrase in [
+            "official_checkpointer_backup_restore: proven",
+            "official_checkpointer_pg_dump: passed",
+            "official_checkpointer_pg_restore: passed",
+            "official_postgres_saver_read_restored_checkpoint: passed",
+            "phase_completion: still_blocked_product_projection_replay_and_combined_fault",
+        ]:
+            if phrase not in official_restore_evidence:
+                errors.append(
+                    "PHASE04 official Checkpointer backup/restore evidence missing phrase: "
                     f"{phrase}"
                 )
 

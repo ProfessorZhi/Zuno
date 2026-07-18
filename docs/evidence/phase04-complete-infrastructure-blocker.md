@@ -76,6 +76,7 @@ reconciler_supervision_boundary: proven
 checkpoint_boundary_version: proven
 restore_cutover_completion_gates: proven
 official_langgraph_checkpointer_lifecycle_subset: proven
+official_checkpointer_backup_restore: proven
 
 ## Stop Condition
 
@@ -150,11 +151,12 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过，official Checkpointer 仍 blocked |
 | `python tools/scripts/verify_phase04_restore_cutover_completion_gates.py` | passed; backup completed、isolated restore cutover 和 recovery cutover explicit allow 三类 gate 均保持 fail-closed |
 | `python tools/scripts/verify_phase04_official_langgraph_checkpointer.py` | passed; official `langgraph.checkpoint.postgres.PostgresSaver` 在真实 PostgreSQL 上完成 setup、多代 put、restart restore、thread isolation、writes、delta channel history、delete cleanup、infra generation 对账和 stale generation reject |
+| `python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py` | passed; official `PostgresSaver` checkpoint schema/rows/writes 随真实 `pg_dump -Fc` 备份并在临时恢复库经 `pg_restore` 后由官方 saver 读取 |
 
 ## Missing Required Proof
 
 - LangGraph PostgreSQL Checkpointer graph-level interrupt/resume、retention/prune 和 schema upgrade recovery
-- Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
+- Backup/Restore/Replay for product projections、完整产品 Runtime restart 与 full recovery set
 - 包含官方 Checkpointer 的完整 combined dependency fault evidence
 
 ## Current Verified Subset
