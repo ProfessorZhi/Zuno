@@ -29,9 +29,8 @@ def test_phase04_complete_infrastructure_is_fail_closed_until_full_proof() -> No
     errors = "\n".join(verifier.verify_phase04_complete_infrastructure())
     assert "PHASE04 coordinator approval is not approved" in errors
     assert "PHASE05 start gate remains closed" in errors
-    assert "official LangGraph PostgreSQL Checkpointer is not importable/proven" in errors
-    assert "PHASE04 evidence missing completion proof marker: langgraph_postgres_checkpointer: proven" in errors
     assert "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven" in errors
+    assert "PHASE04 evidence missing completion proof marker: combined_dependency_fault: proven" in errors
 
 
 def test_phase04_partial_evidence_remains_withdrawn() -> None:

@@ -17,7 +17,7 @@ postgres_deadlock_retry_subset: passed
 postgres_serialization_retry_subset: passed
 postgres_pool_exhaustion_subset: passed
 postgres_connection_loss_recovery_subset: passed
-langgraph_postgres_checkpointer: missing
+langgraph_postgres_checkpointer: proven
 backup_restore_replay: missing
 rabbitmq_fault_evidence: proven
 minio_restore_evidence: proven
@@ -75,10 +75,11 @@ infra_requirement_064_evidence_gate: proven
 reconciler_supervision_boundary: proven
 checkpoint_boundary_version: proven
 restore_cutover_completion_gates: proven
+official_langgraph_checkpointer_smoke: proven
 
 ## Stop Condition
 
-PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证，但完整 Phase 还要求官方 LangGraph PostgreSQL Checkpointer 与完整恢复闭环。
+PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证；官方 LangGraph PostgreSQL Checkpointer 依赖已由 Coordinator Decision 批准并通过基础 PostgresSaver smoke，但完整 Phase 还要求 official Checkpointer restore/recovery、Product Projection Replay 与包含 official Checkpointer 的组合故障证据。
 
 目标文件要求真实 PostgreSQL、RabbitMQ、MinIO/S3、LangGraph PostgreSQL Checkpointer、Backup/Restore/Replay 和故障证据都成立后，PHASE04 才能 completed，PHASE05 才能 ready。静态 YAML、Compose 声明、primitive table、一次性连通性测试和 mock 不能替代这些证据。
 
@@ -148,10 +149,11 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_reconciler_supervision_boundary.py` | passed; IdempotencyWorkerSupervisor 的 reconcile/no-reexecution 与 LeaseWorkerCoordinator 的 heartbeat/fenced commit/fail-closed 边界均有证据 |
 | `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过，official Checkpointer 仍 blocked |
 | `python tools/scripts/verify_phase04_restore_cutover_completion_gates.py` | passed; backup completed、isolated restore cutover 和 recovery cutover explicit allow 三类 gate 均保持 fail-closed |
+| `python tools/scripts/verify_phase04_official_langgraph_checkpointer.py` | passed; official `langgraph.checkpoint.postgres.PostgresSaver` 在真实 PostgreSQL 上完成 setup、put/get after restart、thread isolation 和 writes smoke |
 
 ## Missing Required Proof
 
-- LangGraph PostgreSQL Checkpointer interrupt/resume/thread isolation/generation reconciliation
+- LangGraph PostgreSQL Checkpointer interrupt/resume/generation reconciliation
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - 包含官方 Checkpointer 的完整 combined dependency fault evidence
 

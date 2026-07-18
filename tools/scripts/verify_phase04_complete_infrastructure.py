@@ -300,6 +300,15 @@ CHECKPOINT_BOUNDARY_VERSION_VERIFIER = (
 CHECKPOINT_BOUNDARY_VERSION_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-checkpoint-boundary-version.md"
 )
+OFFICIAL_LANGGRAPH_CHECKPOINTER_VERIFIER = (
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_official_langgraph_checkpointer.py"
+)
+OFFICIAL_LANGGRAPH_CHECKPOINTER_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-official-langgraph-checkpointer.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -643,6 +652,35 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         errors.append(
             "official LangGraph PostgreSQL Checkpointer is not importable/proven"
         )
+    elif not OFFICIAL_LANGGRAPH_CHECKPOINTER_VERIFIER.exists():
+        errors.append("missing PHASE04 official LangGraph Checkpointer verifier")
+    else:
+        official_checkpointer_errors = _load_verifier(
+            OFFICIAL_LANGGRAPH_CHECKPOINTER_VERIFIER,
+            "verify_phase04_official_langgraph_checkpointer",
+            "verify_phase04_official_langgraph_checkpointer",
+        )()
+        for official_checkpointer_error in official_checkpointer_errors:
+            errors.append(
+                "PHASE04 official LangGraph Checkpointer verification failed: "
+                f"{official_checkpointer_error}"
+            )
+    if not OFFICIAL_LANGGRAPH_CHECKPOINTER_EVIDENCE.exists():
+        errors.append("missing PHASE04 official LangGraph Checkpointer evidence")
+    else:
+        official_checkpointer_evidence = _read(OFFICIAL_LANGGRAPH_CHECKPOINTER_EVIDENCE)
+        for phrase in [
+            "coordinator_dependency_decision: approved",
+            "langgraph_postgres_checkpointer: proven",
+            "official_postgres_saver_setup: passed",
+            "official_checkpoint_put_get_after_restart: passed",
+            "phase_completion: still_blocked_full_restore_replay_and_combined_fault",
+        ]:
+            if phrase not in official_checkpointer_evidence:
+                errors.append(
+                    "PHASE04 official LangGraph Checkpointer evidence missing phrase: "
+                    f"{phrase}"
+                )
 
     if not RABBITMQ_TRANSPORT_VERIFIER.exists():
         errors.append("missing PHASE04 RabbitMQ transport verifier")
