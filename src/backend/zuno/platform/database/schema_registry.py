@@ -35,6 +35,8 @@ DOMAIN_TABLE_OWNERS = {
 }
 
 INFRASTRUCTURE_TABLES = {
+    "infra_capacity_admissions",
+    "infra_capacity_reservations",
     "infra_checkpoints",
     "infra_delivery_watermarks",
     "infra_idempotency_claims",
@@ -56,6 +58,7 @@ REVISION_OWNERS = {
     "20260717_08": "Infrastructure",
     "20260717_09": "Product Surface",
     "20260717_10": "Infrastructure",
+    "20260718_11": "Infrastructure",
 }
 
 ONLINE_SCHEMA_OBJECTS = {

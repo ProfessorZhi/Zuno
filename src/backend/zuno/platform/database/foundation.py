@@ -20,6 +20,10 @@ class InfrastructureConflictError(RuntimeError):
     pass
 
 
+class CapacityBackpressureError(RuntimeError):
+    pass
+
+
 class FencingRejectedError(RuntimeError):
     pass
 
@@ -129,6 +133,17 @@ class DeliveryWatermarkReceipt:
     ordering_key: str
     contiguous_sequence: int
     max_seen_sequence: int
+
+
+@dataclass(frozen=True, slots=True)
+class CapacityReservationReceipt:
+    reservation_id: str
+    resource_id: str
+    owner_id: str
+    amount: int
+    generation: int
+    remaining_capacity: int
+    expires_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -1257,6 +1272,176 @@ class InfrastructureRepository:
         if result.rowcount != 1:
             raise FencingRejectedError("idempotency claim cannot be aborted by this owner/generation")
 
+    def configure_capacity(
+        self,
+        *,
+        resource_id: str,
+        capacity_limit: int,
+        owner_id: str,
+        drained: bool = False,
+    ) -> int:
+        if not resource_id.strip():
+            raise ValueError("resource_id must not be empty")
+        if capacity_limit < 1:
+            raise ValueError("capacity_limit must be positive")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_capacity_admissions(
+                    resource_id, capacity_limit, drained, generation, updated_by
+                ) VALUES (
+                    :resource_id, :capacity_limit, :drained, 1, :owner_id
+                )
+                ON CONFLICT (resource_id) DO UPDATE
+                SET capacity_limit = EXCLUDED.capacity_limit,
+                    drained = EXCLUDED.drained,
+                    generation = infra_capacity_admissions.generation + 1,
+                    updated_by = EXCLUDED.updated_by,
+                    updated_at = now()
+                RETURNING generation
+                """
+            ),
+            {
+                "resource_id": resource_id,
+                "capacity_limit": capacity_limit,
+                "drained": drained,
+                "owner_id": owner_id,
+            },
+        ).one()
+        return int(row.generation)
+
+    def set_capacity_drain(self, *, resource_id: str, drained: bool, owner_id: str) -> int:
+        if not resource_id.strip():
+            raise ValueError("resource_id must not be empty")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE infra_capacity_admissions
+                SET drained = :drained,
+                    generation = generation + 1,
+                    updated_by = :owner_id,
+                    updated_at = now()
+                WHERE resource_id = :resource_id
+                RETURNING generation
+                """
+            ),
+            {
+                "resource_id": resource_id,
+                "drained": drained,
+                "owner_id": owner_id,
+            },
+        ).first()
+        if row is None:
+            raise CapacityBackpressureError("capacity admission resource is not configured")
+        return int(row.generation)
+
+    def reserve_capacity(
+        self,
+        *,
+        resource_id: str,
+        owner_id: str,
+        amount: int = 1,
+        ttl_seconds: int = 30,
+    ) -> CapacityReservationReceipt:
+        if not resource_id.strip():
+            raise ValueError("resource_id must not be empty")
+        if amount < 1:
+            raise ValueError("reservation amount must be positive")
+        if ttl_seconds < 1:
+            raise ValueError("reservation ttl_seconds must be positive")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        reservation_id = f"capacity:{uuid4()}"
+        admission = self.connection.execute(
+            text(
+                """
+                SELECT resource_id, capacity_limit, drained, generation
+                FROM infra_capacity_admissions
+                WHERE resource_id = :resource_id
+                FOR UPDATE
+                """
+            ),
+            {"resource_id": resource_id},
+        ).first()
+        if admission is None or bool(admission.drained):
+            raise CapacityBackpressureError("capacity admission is drained, missing, or exhausted")
+
+        reserved_amount = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT COALESCE(SUM(amount), 0)::integer
+                    FROM infra_capacity_reservations
+                    WHERE resource_id = :resource_id
+                      AND status = 'active'
+                      AND expires_at > now()
+                    """
+                ),
+                {"resource_id": resource_id},
+            ).scalar_one()
+        )
+        remaining_capacity = int(admission.capacity_limit) - reserved_amount - amount
+        if remaining_capacity < 0:
+            raise CapacityBackpressureError("capacity admission is drained, missing, or exhausted")
+
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_capacity_reservations(
+                    reservation_id, resource_id, owner_id, amount,
+                    generation, status, expires_at
+                ) VALUES (
+                    :reservation_id, :resource_id, :owner_id, :amount,
+                    :generation, 'active', now() + (:ttl_seconds * interval '1 second')
+                )
+                RETURNING reservation_id, resource_id, owner_id, amount,
+                          generation, expires_at
+                """
+            ),
+            {
+                "resource_id": resource_id,
+                "owner_id": owner_id,
+                "amount": amount,
+                "ttl_seconds": ttl_seconds,
+                "reservation_id": reservation_id,
+                "generation": int(admission.generation),
+            },
+        ).one()
+        return CapacityReservationReceipt(
+            reservation_id=str(row.reservation_id),
+            resource_id=str(row.resource_id),
+            owner_id=str(row.owner_id),
+            amount=int(row.amount),
+            generation=int(row.generation),
+            remaining_capacity=remaining_capacity,
+            expires_at=row.expires_at,
+        )
+
+    def release_capacity(self, *, reservation_id: str, owner_id: str) -> None:
+        if not reservation_id.strip():
+            raise ValueError("reservation_id must not be empty")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_capacity_reservations
+                SET status = 'released',
+                    released_at = now()
+                WHERE reservation_id = :reservation_id
+                  AND owner_id = :owner_id
+                  AND status = 'active'
+                """
+            ),
+            {"reservation_id": reservation_id, "owner_id": owner_id},
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("capacity reservation cannot be released by this owner")
+
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         if ttl_seconds < 1:
             raise ValueError("lease ttl_seconds must be positive")
@@ -1613,6 +1798,8 @@ def _sqlstate(exc: DBAPIError) -> str:
 
 
 __all__ = [
+    "CapacityBackpressureError",
+    "CapacityReservationReceipt",
     "DeliveryWatermarkReceipt",
     "FencingRejectedError",
     "FencingToken",

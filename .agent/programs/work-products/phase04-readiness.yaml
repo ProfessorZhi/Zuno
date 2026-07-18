@@ -22,6 +22,7 @@ work_packages:
       - "infra/db/alembic/versions/20260417_01_init_postgresql.py"
       - "infra/db/alembic/versions/20260717_09_workspace_session_online_index.py"
       - "infra/db/alembic/versions/20260717_10_backfill_owner_online_constraint.py"
+      - "infra/db/alembic/versions/20260718_11_capacity_admission.py"
       - "src/backend/zuno/platform/database/schema_registry.py"
       - "tools/scripts/verify_phase04_alembic_migration.py"
       - "tools/scripts/verify_phase04_existing_database_upgrade.py"
@@ -102,6 +103,7 @@ work_packages:
       - "tools/scripts/verify_phase04_reconciler_supervision_boundary.py"
       - "tools/scripts/verify_phase04_checkpoint_boundary_version.py"
       - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "tools/scripts/verify_phase04_capacity_admission.py"
       - "tests/integration/test_phase04_operator_readiness.py"
       - "tests/repo/test_phase04_dr_profile.py"
       - "tests/repo/test_phase04_infrastructure_capability_profile.py"
@@ -121,6 +123,7 @@ work_packages:
       - "tests/repo/test_phase04_reconciler_supervision_boundary.py"
       - "tests/repo/test_phase04_checkpoint_boundary_version.py"
       - "tests/repo/test_phase04_restore_cutover_completion_gates.py"
+      - "tests/integration/test_phase04_capacity_admission.py"
       - "docs/evidence/phase04-backup-restore-replay.md"
       - "docs/evidence/phase04-combined-service-fault.md"
       - "docs/evidence/phase04-operator-readiness.md"
@@ -142,6 +145,7 @@ work_packages:
       - "docs/evidence/phase04-reconciler-supervision-boundary.md"
       - "docs/evidence/phase04-checkpoint-boundary-version.md"
       - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      - "docs/evidence/phase04-capacity-admission.md"
       - "docs/governance/infrastructure-operations-runbook.md"
       - "docs/governance/infrastructure-dr-profile.yaml"
     completed_scope:
@@ -221,6 +225,10 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      capacity_admission:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-capacity-admission.md"
     remaining_scope: "official Checkpointer restore, PITR, product/cross-domain projection replay, complete recovery set, and combined-service fault including the official Checkpointer"
 phase_dependencies:
   PHASE05:
@@ -252,6 +260,7 @@ validation:
     - "python tools/scripts/verify_phase04_reconciler_supervision_boundary.py"
     - "python tools/scripts/verify_phase04_checkpoint_boundary_version.py"
     - "python tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+    - "python tools/scripts/verify_phase04_capacity_admission.py"
     - "python tools/scripts/verify_current_program.py"
     - "python tools/scripts/verify_phase04_postgres_foundation.py"
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"

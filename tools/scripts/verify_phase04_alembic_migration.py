@@ -26,7 +26,7 @@ ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
 REQUIRED_INFRA_TABLES = INFRASTRUCTURE_TABLES
 REQUIRED_DOMAIN_TABLES = set(DOMAIN_TABLE_OWNERS)
-EXPECTED_HEAD_REVISION = "20260717_10"
+EXPECTED_HEAD_REVISION = "20260718_11"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -155,6 +155,25 @@ REQUIRED_TABLE_COLUMNS = {
         "applied_generation",
         "applied_at",
     },
+    "infra_capacity_admissions": {
+        "resource_id",
+        "capacity_limit",
+        "drained",
+        "generation",
+        "updated_by",
+        "updated_at",
+    },
+    "infra_capacity_reservations": {
+        "reservation_id",
+        "resource_id",
+        "owner_id",
+        "amount",
+        "generation",
+        "status",
+        "expires_at",
+        "released_at",
+        "created_at",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -181,6 +200,12 @@ REQUIRED_CONSTRAINTS = {
     "pk_infra_migration_backfill_chunks",
     "ck_infra_migration_backfill_chunks_counts",
     "ck_infra_migration_backfills_owner_nonempty",
+    "fk_infra_capacity_reservations_admission",
+    "ck_infra_capacity_admissions_limit_positive",
+    "ck_infra_capacity_admissions_generation_positive",
+    "ck_infra_capacity_reservations_amount_positive",
+    "ck_infra_capacity_reservations_generation_positive",
+    "ck_infra_capacity_reservations_status",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -193,6 +218,7 @@ REQUIRED_INDEXES = {
     "ix_infra_migration_backfills_state_lease",
     "ix_infra_migration_backfills_owner",
     "ix_infra_migration_backfill_chunks_applied",
+    "ix_infra_capacity_reservations_resource_active",
     "ix_workspace_session_user_update_time",
 }
 

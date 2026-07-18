@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 704
-  implementation_available: 52
+  target_not_current: 701
+  implementation_available: 55
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5225,76 +5225,88 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Drain 停止 Admission 并 Fence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1912"
-    gap: "?????Drain 停止 Admission 并 Fence???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "tools/scripts/verify_phase04_capacity_admission.py"
+      - "docs/evidence/phase04-capacity-admission.md"
+    gap: "none within P04-T07 capacity admission subscope; Product/Agent/Model/Tool runtime adoption remains separate owner work"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 capacity admission subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-031 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: drained capacity admission rejects new reservations and release is fenced by reservation owner"
     test_ids:
-      - "INFRA-031-UT"
-      - "INFRA-031-IT"
+      - "tests/integration/test_phase04_capacity_admission.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-031"
+      - "docs/evidence/phase04-capacity-admission.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1912"
-      - "planned_test:INFRA-031-UT"
-      - "planned_test:INFRA-031-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-031"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "test:tests/integration/test_phase04_capacity_admission.py"
+      - "evidence:docs/evidence/phase04-capacity-admission.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-032
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "CapacityReservation 原子保留释放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1913"
-    gap: "?????CapacityReservation 原子保留释放???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "tools/scripts/verify_phase04_capacity_admission.py"
+      - "docs/evidence/phase04-capacity-admission.md"
+    gap: "none within P04-T07 capacity admission subscope; broader runtime callers must adopt the primitive in their owner phase"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 capacity admission subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-032 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: PostgreSQL row lock serializes concurrent reservations so only one worker wins, and release restores admission capacity"
     test_ids:
-      - "INFRA-032-UT"
-      - "INFRA-032-IT"
+      - "tests/integration/test_phase04_capacity_admission.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-032"
+      - "docs/evidence/phase04-capacity-admission.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1913"
-      - "planned_test:INFRA-032-UT"
-      - "planned_test:INFRA-032-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-032"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "test:tests/integration/test_phase04_capacity_admission.py"
+      - "evidence:docs/evidence/phase04-capacity-admission.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-033
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Capacity Exhaustion Backpressure"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1914"
-    gap: "?????Capacity Exhaustion Backpressure???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "tools/scripts/verify_phase04_capacity_admission.py"
+      - "docs/evidence/phase04-capacity-admission.md"
+    gap: "none within P04-T07 capacity admission subscope; caller-level retry/backoff policies remain owned by each runtime path"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 capacity admission subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-033 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: exhausted capacity and drained resources raise CapacityBackpressureError instead of admitting work"
     test_ids:
-      - "INFRA-033-UT"
-      - "INFRA-033-IT"
+      - "tests/integration/test_phase04_capacity_admission.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-033"
+      - "docs/evidence/phase04-capacity-admission.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1914"
-      - "planned_test:INFRA-033-UT"
-      - "planned_test:INFRA-033-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-033"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_11_capacity_admission.py"
+      - "test:tests/integration/test_phase04_capacity_admission.py"
+      - "evidence:docs/evidence/phase04-capacity-admission.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-034
     module: "11 Infrastructure"

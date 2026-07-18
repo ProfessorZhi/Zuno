@@ -139,6 +139,12 @@ OPERATOR_READINESS_EVIDENCE = (
 OPERATOR_RUNBOOK = (
     REPO_ROOT / "docs" / "governance" / "infrastructure-operations-runbook.md"
 )
+CAPACITY_ADMISSION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_capacity_admission.py"
+)
+CAPACITY_ADMISSION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-capacity-admission.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -250,7 +256,10 @@ LEASE_COORDINATION_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_worker_coordination.py"
 )
 RECONCILER_SUPERVISION_BOUNDARY_VERIFIER = (
-    REPO_ROOT / "tools" / "scripts" / "verify_phase04_reconciler_supervision_boundary.py"
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_reconciler_supervision_boundary.py"
 )
 RECONCILER_SUPERVISION_BOUNDARY_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-reconciler-supervision-boundary.md"
@@ -1128,6 +1137,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in operator_runbook:
                 errors.append(
                     f"PHASE04 infrastructure operations runbook missing phrase: {phrase}"
+                )
+
+    if not CAPACITY_ADMISSION_VERIFIER.exists():
+        errors.append("missing PHASE04 capacity admission verifier")
+    else:
+        capacity_admission_errors = _load_verifier(
+            CAPACITY_ADMISSION_VERIFIER,
+            "verify_phase04_capacity_admission",
+            "verify_phase04_capacity_admission",
+        )()
+        for capacity_admission_error in capacity_admission_errors:
+            errors.append(
+                "PHASE04 capacity admission verification failed: "
+                f"{capacity_admission_error}"
+            )
+
+    if not CAPACITY_ADMISSION_EVIDENCE.exists():
+        errors.append("missing PHASE04 capacity admission evidence")
+    else:
+        capacity_admission_evidence = _read(CAPACITY_ADMISSION_EVIDENCE)
+        for phrase in [
+            "capacity_admission_schema: passed",
+            "drain_stops_new_admission: passed",
+            "capacity_reservation_atomic_single_winner: passed",
+            "capacity_release_restores_admission: passed",
+            "capacity_exhaustion_backpressure: passed",
+            "wrong_owner_release_rejected: passed",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "`ARCH-INFRA-031`、`ARCH-INFRA-032` 和 `ARCH-INFRA-033`",
+        ]:
+            if phrase not in capacity_admission_evidence:
+                errors.append(
+                    f"PHASE04 capacity admission evidence missing phrase: {phrase}"
                 )
 
     if not DR_PROFILE_VERIFIER.exists():
