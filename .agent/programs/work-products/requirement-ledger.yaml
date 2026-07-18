@@ -18,18 +18,22 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 240
-  implementation_available: 516
+  target_not_current: 160
+  implementation_available: 596
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "AgentRunGraph 是唯一产品主 Controller"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3535"
-    gap: "?????AgentRunGraph 是唯一产品主 Controller???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-001."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -38,26 +42,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-001 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-001 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-001-UT"
-      - "AGENT-001-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-001"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3535"
-      - "planned_test:AGENT-001-UT"
-      - "planned_test:AGENT-001-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-001"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-002
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Plan、ReAct、Reflection、Replan、Reflexion 在同一 Runtime 分层协作"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3536"
-    gap: "?????Plan、ReAct、Reflection、Replan、Reflexion 在同一 Runtime 分层协作???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-002."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -66,26 +78,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-002 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-002 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-002-UT"
-      - "AGENT-002-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-002"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3536"
-      - "planned_test:AGENT-002-UT"
-      - "planned_test:AGENT-002-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-002"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-003
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Runtime State 必须可序列化、版本化和恢复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3537"
-    gap: "?????Runtime State 必须可序列化、版本化和恢复???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-003."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -94,26 +114,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-003 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-003 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-003-UT"
-      - "AGENT-003-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-003"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3537"
-      - "planned_test:AGENT-003-UT"
-      - "planned_test:AGENT-003-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-003"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-004
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有循环必须受 RuntimeBudget 和 Deadline 控制"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3538"
-    gap: "?????所有循环必须受 RuntimeBudget 和 Deadline 控制???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-004."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -122,26 +150,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-004 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-004 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-004-UT"
-      - "AGENT-004-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-004"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3538"
-      - "planned_test:AGENT-004-UT"
-      - "planned_test:AGENT-004-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-004"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-005
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有产品入口复用同一 Agent Runtime Contract"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3539"
-    gap: "?????所有产品入口复用同一 Agent Runtime Contract???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-005."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -150,26 +186,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-005 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-005 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-005-UT"
-      - "AGENT-005-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-005"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3539"
-      - "planned_test:AGENT-005-UT"
-      - "planned_test:AGENT-005-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-005"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-006
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Interrupt / Signal / Resume 必须跨进程恢复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3540"
-    gap: "?????Interrupt / Signal / Resume 必须跨进程恢复???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-006."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -178,26 +222,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-006 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-006 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-006-UT"
-      - "AGENT-006-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-006"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3540"
-      - "planned_test:AGENT-006-UT"
-      - "planned_test:AGENT-006-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-006"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-007
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Graph State 和领域表只保存大型内容 Ref"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3541"
-    gap: "?????Graph State 和领域表只保存大型内容 Ref???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-007."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -206,26 +258,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-007 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-007 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-007-UT"
-      - "AGENT-007-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-007"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3541"
-      - "planned_test:AGENT-007-UT"
-      - "planned_test:AGENT-007-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-007"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-008
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "每个控制阶段产生 RuntimeEvent 和 Trace Span"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3542"
-    gap: "?????每个控制阶段产生 RuntimeEvent 和 Trace Span???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-008."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -234,26 +294,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-008 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-008 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-008-UT"
-      - "AGENT-008-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-008"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3542"
-      - "planned_test:AGENT-008-UT"
-      - "planned_test:AGENT-008-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-008"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-009
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有任务都必须创建 Plan"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3543"
-    gap: "?????所有任务都必须创建 Plan???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-009."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -262,26 +330,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-009 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-009 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-009-UT"
-      - "AGENT-009-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-009"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3543"
-      - "planned_test:AGENT-009-UT"
-      - "planned_test:AGENT-009-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-009"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-010
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Plan 表达为 DAG，并默认最大化安全并行"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3544"
-    gap: "?????Plan 表达为 DAG，并默认最大化安全并行???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-010."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -290,26 +366,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-010 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-010 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-010-UT"
-      - "AGENT-010-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-010"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3544"
-      - "planned_test:AGENT-010-UT"
-      - "planned_test:AGENT-010-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-010"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-011
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "PlanVersion 激活后不可变，Replan 创建新版本"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3545"
-    gap: "?????PlanVersion 激活后不可变，Replan 创建新版本???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-011."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -318,26 +402,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-011 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-011 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-011-UT"
-      - "AGENT-011-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-011"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3545"
-      - "planned_test:AGENT-011-UT"
-      - "planned_test:AGENT-011-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-011"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-012
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "PlanStepDefinition、StepRun、ActionRun 和 Result 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3546"
-    gap: "?????PlanStepDefinition、StepRun、ActionRun 和 Result 分离???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-012."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -346,26 +438,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-012 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-012 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-012-UT"
-      - "AGENT-012-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-012"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3546"
-      - "planned_test:AGENT-012-UT"
-      - "planned_test:AGENT-012-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-012"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-013
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "每个 Run 固定 ExecutionContextSnapshot"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3547"
-    gap: "?????每个 Run 固定 ExecutionContextSnapshot???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-013."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -374,26 +474,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-013 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-013 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-013-UT"
-      - "AGENT-013-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-013"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3547"
-      - "planned_test:AGENT-013-UT"
-      - "planned_test:AGENT-013-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-013"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-014
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "知识任务固定 KnowledgeSnapshot"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3548"
-    gap: "?????知识任务固定 KnowledgeSnapshot???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-014."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -402,26 +510,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-014 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-014 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-014-UT"
-      - "AGENT-014-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-014"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3548"
-      - "planned_test:AGENT-014-UT"
-      - "planned_test:AGENT-014-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-014"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-015
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Grounded Completion 通过 AnswerPolicy 和 Final Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3549"
-    gap: "?????Grounded Completion 通过 AnswerPolicy 和 Final Gate???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-015."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -430,26 +546,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-015 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-015 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-015-UT"
-      - "AGENT-015-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-015"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3549"
-      - "planned_test:AGENT-015-UT"
-      - "planned_test:AGENT-015-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-015"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-016
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "动态 Fan-out 通过 DispatchGroup、DispatchItem 和 StepRun 持久化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3550"
-    gap: "?????动态 Fan-out 通过 DispatchGroup、DispatchItem 和 StepRun 持久化???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-016."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -458,26 +582,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-016 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-016 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-016-UT"
-      - "AGENT-016-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-016"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3550"
-      - "planned_test:AGENT-016-UT"
-      - "planned_test:AGENT-016-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-016"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-017
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "副作用 Action 声明 Replay、Approval 和 Idempotency Policy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3551"
-    gap: "?????副作用 Action 声明 Replay、Approval 和 Idempotency Policy???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-017."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -486,26 +618,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-017 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-017 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-017-UT"
-      - "AGENT-017-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-017"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3551"
-      - "planned_test:AGENT-017-UT"
-      - "planned_test:AGENT-017-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-017"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-018
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "RunOutcome 精确区分所有终局"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3552"
-    gap: "?????RunOutcome 精确区分所有终局???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-018."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -514,26 +654,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-018 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-018 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-018-UT"
-      - "AGENT-018-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-018"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3552"
-      - "planned_test:AGENT-018-UT"
-      - "planned_test:AGENT-018-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-018"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-019
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Cancellation、Deadline、Budget 和 Security 传播到所有分支"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3553"
-    gap: "?????Cancellation、Deadline、Budget 和 Security 传播到所有分支???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-019."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -542,26 +690,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-019 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-019 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-019-UT"
-      - "AGENT-019-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-019"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3553"
-      - "planned_test:AGENT-019-UT"
-      - "planned_test:AGENT-019-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-019"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-020
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有等待使用统一 Interrupt / Signal Contract"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3554"
-    gap: "?????所有等待使用统一 Interrupt / Signal Contract???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-020."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -570,26 +726,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-020 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-020 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-020-UT"
-      - "AGENT-020-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-020"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3554"
-      - "planned_test:AGENT-020-UT"
-      - "planned_test:AGENT-020-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-020"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-021
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Graph State 只保存控制 Ref"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3555"
-    gap: "?????Graph State 只保存控制 Ref???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-021."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -598,26 +762,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-021 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-021 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-021-UT"
-      - "AGENT-021-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-021"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3555"
-      - "planned_test:AGENT-021-UT"
-      - "planned_test:AGENT-021-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-021"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-022
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "分层质量控制必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3556"
-    gap: "?????分层质量控制必须分离???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-022."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -626,26 +798,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-022 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-022 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-022-UT"
-      - "AGENT-022-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-022"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3556"
-      - "planned_test:AGENT-022-UT"
-      - "planned_test:AGENT-022-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-022"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-023
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "每个 Step Acceptance，Critic 按 Trigger 调用"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3557"
-    gap: "?????每个 Step Acceptance，Critic 按 Trigger 调用???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-023."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -654,26 +834,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-023 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-023 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-023-UT"
-      - "AGENT-023-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-023"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3557"
-      - "planned_test:AGENT-023-UT"
-      - "planned_test:AGENT-023-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-023"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-024
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "并行 Replan 经过 Replan Barrier"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3558"
-    gap: "?????并行 Replan 经过 Replan Barrier???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-024."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -682,26 +870,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-024 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-024 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-024-UT"
-      - "AGENT-024-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-024"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3558"
-      - "planned_test:AGENT-024-UT"
-      - "planned_test:AGENT-024-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-024"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-025
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "PostgreSQL 保存领域事实，Checkpointer 保存图控制状态"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3559"
-    gap: "?????PostgreSQL 保存领域事实，Checkpointer 保存图控制状态???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-025."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -710,26 +906,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-025 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-025 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-025-UT"
-      - "AGENT-025-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-025"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3559"
-      - "planned_test:AGENT-025-UT"
-      - "planned_test:AGENT-025-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-025"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-026
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "跨模块 Port 使用明确类型"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3560"
-    gap: "?????跨模块 Port 使用明确类型???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-026."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -738,26 +942,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-026 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-026 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-026-UT"
-      - "AGENT-026-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-026"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3560"
-      - "planned_test:AGENT-026-UT"
-      - "planned_test:AGENT-026-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-026"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-027
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "外部执行明确 SUCCEEDED、FAILED 或 UNKNOWN"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3561"
-    gap: "?????外部执行明确 SUCCEEDED、FAILED 或 UNKNOWN???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-027."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -766,26 +978,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-027 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-027 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-027-UT"
-      - "AGENT-027-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-027"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3561"
-      - "planned_test:AGENT-027-UT"
-      - "planned_test:AGENT-027-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-027"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-028
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "领域写入与事件发布使用事务 + Outbox"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3562"
-    gap: "?????领域写入与事件发布使用事务 + Outbox???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-028."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -794,26 +1014,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-028 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-028 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-028-UT"
-      - "AGENT-028-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-028"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3562"
-      - "planned_test:AGENT-028-UT"
-      - "planned_test:AGENT-028-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-028"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-029
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "模型职责使用独立 Model Role"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3563"
-    gap: "?????模型职责使用独立 Model Role???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-029."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -822,26 +1050,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-029 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-029 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-029-UT"
-      - "AGENT-029-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-029"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3563"
-      - "planned_test:AGENT-029-UT"
-      - "planned_test:AGENT-029-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-029"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-030
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Planner 获得 Executor ModelCapabilityProfile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3564"
-    gap: "?????Planner 获得 Executor ModelCapabilityProfile???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-030."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -850,26 +1086,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-030 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-030 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-030-UT"
-      - "AGENT-030-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-030"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3564"
-      - "planned_test:AGENT-030-UT"
-      - "planned_test:AGENT-030-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-030"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-031
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "模型升级受 RetryPolicy、Risk 和 Budget 控制"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3565"
-    gap: "?????模型升级受 RetryPolicy、Risk 和 Budget 控制???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-031."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -878,26 +1122,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-031 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-031 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-031-UT"
-      - "AGENT-031-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-031"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3565"
-      - "planned_test:AGENT-031-UT"
-      - "planned_test:AGENT-031-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-031"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-032
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "并行 Worker 只返回幂等 BranchResultRef"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3566"
-    gap: "?????并行 Worker 只返回幂等 BranchResultRef???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-032."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -906,26 +1158,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-032 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-032 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-032-UT"
-      - "AGENT-032-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-032"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3566"
-      - "planned_test:AGENT-032-UT"
-      - "planned_test:AGENT-032-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-032"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-033
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Agent Core 必须维护并验证架构不变量"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2805"
-    gap: "?????Agent Core 必须维护并验证架构不变量???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-033."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -934,26 +1194,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-033 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-033 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-033-UT"
-      - "AGENT-033-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-033"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2805"
-      - "planned_test:AGENT-033-UT"
-      - "planned_test:AGENT-033-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-033"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-034
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "AgentRun、PlanVersion、StepRun、ActionRun 和 Publication 必须使用独立状态机"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2806"
-    gap: "?????AgentRun、PlanVersion、StepRun、ActionRun 和 Publication 必须使用独立状态机???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-034."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -962,26 +1230,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-034 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-034 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-034-UT"
-      - "AGENT-034-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-034"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2806"
-      - "planned_test:AGENT-034-UT"
-      - "planned_test:AGENT-034-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-034"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-035
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "PlanVersion 激活后不可变且同一 Run 最多一个 Active Version"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2807"
-    gap: "?????PlanVersion 激活后不可变且同一 Run 最多一个 Active Version???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-035."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -990,26 +1266,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-035 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-035 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-035-UT"
-      - "AGENT-035-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-035"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2807"
-      - "planned_test:AGENT-035-UT"
-      - "planned_test:AGENT-035-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-035"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-036
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "DAG 必须支持结构化 DependencyRule 与 ActivationCondition"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2808"
-    gap: "?????DAG 必须支持结构化 DependencyRule 与 ActivationCondition???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-036."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1018,26 +1302,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-036 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-036 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-036-UT"
-      - "AGENT-036-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-036"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2808"
-      - "planned_test:AGENT-036-UT"
-      - "planned_test:AGENT-036-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-036"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-037
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Step 必须区分 Status、Disposition 与 ResultValidity"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2809"
-    gap: "?????Step 必须区分 Status、Disposition 与 ResultValidity???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-037."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1046,26 +1338,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-037 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-037 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-037-UT"
-      - "AGENT-037-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-037"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2809"
-      - "planned_test:AGENT-037-UT"
-      - "planned_test:AGENT-037-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-037"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-038
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Scheduler 必须检测不可满足依赖和计划死锁"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2810"
-    gap: "?????Scheduler 必须检测不可满足依赖和计划死锁???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-038."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1074,26 +1374,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-038 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-038 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-038-UT"
-      - "AGENT-038-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-038"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2810"
-      - "planned_test:AGENT-038-UT"
-      - "planned_test:AGENT-038-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-038"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-039
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Join 必须使用显式 JoinPolicy、JoinAttempt 和 JoinOutcome"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2811"
-    gap: "?????Join 必须使用显式 JoinPolicy、JoinAttempt 和 JoinOutcome???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-039."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1102,26 +1410,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-039 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-039 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-039-UT"
-      - "AGENT-039-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-039"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2811"
-      - "planned_test:AGENT-039-UT"
-      - "planned_test:AGENT-039-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-039"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-040
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Dispatch 必须先持久化后执行"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2812"
-    gap: "?????Dispatch 必须先持久化后执行???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-040."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1130,26 +1446,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-040 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-040 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-040-UT"
-      - "AGENT-040-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-040"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2812"
-      - "planned_test:AGENT-040-UT"
-      - "planned_test:AGENT-040-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-040"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-041
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Controller 与 Worker 写入必须使用 Fencing Epoch"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2813"
-    gap: "?????Controller 与 Worker 写入必须使用 Fencing Epoch???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-041."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1158,26 +1482,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-041 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-041 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-041-UT"
-      - "AGENT-041-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-041"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2813"
-      - "planned_test:AGENT-041-UT"
-      - "planned_test:AGENT-041-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-041"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-042
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Reducer 必须幂等、可重放、顺序无关"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2814"
-    gap: "?????Reducer 必须幂等、可重放、顺序无关???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-042."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1186,26 +1518,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-042 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-042 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-042-UT"
-      - "AGENT-042-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-042"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2814"
-      - "planned_test:AGENT-042-UT"
-      - "planned_test:AGENT-042-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-042"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-043
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Replan 必须经过 Replan Barrier 并创建新 PlanVersion"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2815"
-    gap: "?????Replan 必须经过 Replan Barrier 并创建新 PlanVersion???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-043."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1214,26 +1554,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-043 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-043 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-043-UT"
-      - "AGENT-043-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-043"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2815"
-      - "planned_test:AGENT-043-UT"
-      - "planned_test:AGENT-043-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-043"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-044
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "一个 Run 必须支持多个 Pending Interrupt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2816"
-    gap: "?????一个 Run 必须支持多个 Pending Interrupt???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-044."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1242,26 +1590,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-044 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-044 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-044-UT"
-      - "AGENT-044-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-044"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2816"
-      - "planned_test:AGENT-044-UT"
-      - "planned_test:AGENT-044-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-044"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-045
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Signal 必须版本化、鉴权、幂等并绑定 Interrupt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2817"
-    gap: "?????Signal 必须版本化、鉴权、幂等并绑定 Interrupt???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-045."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1270,26 +1626,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-045 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-045 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-045-UT"
-      - "AGENT-045-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-045"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2817"
-      - "planned_test:AGENT-045-UT"
-      - "planned_test:AGENT-045-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-045"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-046
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "副作用必须遵循 Prepare、Approve、Claim、Execute、Reconcile 协议"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2818"
-    gap: "?????副作用必须遵循 Prepare、Approve、Claim、Execute、Reconcile 协议???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-046."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1298,26 +1662,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-046 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-046 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-046-UT"
-      - "AGENT-046-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-046"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2818"
-      - "planned_test:AGENT-046-UT"
-      - "planned_test:AGENT-046-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-046"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-047
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "UNKNOWN 副作用不得盲目重试"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2819"
-    gap: "?????UNKNOWN 副作用不得盲目重试???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-047."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1326,26 +1698,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-047 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-047 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-047-UT"
-      - "AGENT-047-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-047"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2819"
-      - "planned_test:AGENT-047-UT"
-      - "planned_test:AGENT-047-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-047"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-048
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "AnswerPolicy 与 Final Gate 必须覆盖所有正式输出"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2820"
-    gap: "?????AnswerPolicy 与 Final Gate 必须覆盖所有正式输出???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-048."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1354,26 +1734,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-048 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-048 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-048-UT"
-      - "AGENT-048-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-048"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2820"
-      - "planned_test:AGENT-048-UT"
-      - "planned_test:AGENT-048-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-048"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-049
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "FinalCandidate、ArtifactVersion 与 Publication 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2821"
-    gap: "?????FinalCandidate、ArtifactVersion 与 Publication 必须分离???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-049."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1382,26 +1770,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-049 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-049 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-049-UT"
-      - "AGENT-049-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-049"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2821"
-      - "planned_test:AGENT-049-UT"
-      - "planned_test:AGENT-049-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-049"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-050
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Publication 必须幂等、可恢复并保存 DeliveryReceipt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2822"
-    gap: "?????Publication 必须幂等、可恢复并保存 DeliveryReceipt???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-050."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1410,26 +1806,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-050 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-050 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-050-UT"
-      - "AGENT-050-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-050"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2822"
-      - "planned_test:AGENT-050-UT"
-      - "planned_test:AGENT-050-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-050"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-051
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Failure 必须使用统一 Failure Taxonomy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2823"
-    gap: "?????Failure 必须使用统一 Failure Taxonomy???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-051."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1438,26 +1842,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-051 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-051 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-051-UT"
-      - "AGENT-051-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-051"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2823"
-      - "planned_test:AGENT-051-UT"
-      - "planned_test:AGENT-051-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-051"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-052
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Retry、Repair、Fallback 与 Replan 必须分别审计"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2824"
-    gap: "?????Retry、Repair、Fallback 与 Replan 必须分别审计???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-052."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1466,26 +1878,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-052 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-052 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-052-UT"
-      - "AGENT-052-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-052"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2824"
-      - "planned_test:AGENT-052-UT"
-      - "planned_test:AGENT-052-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-052"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-053
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Budget 必须支持 Run、Step、Action 三层 Reservation 与 Consumption"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2825"
-    gap: "?????Budget 必须支持 Run、Step、Action 三层 Reservation 与 Consumption???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-053."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1494,26 +1914,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-053 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-053 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-053-UT"
-      - "AGENT-053-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-053"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2825"
-      - "planned_test:AGENT-053-UT"
-      - "planned_test:AGENT-053-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-053"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-054
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Scheduler 必须实现 Admission Control、公平性与 Starvation Detection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2826"
-    gap: "?????Scheduler 必须实现 Admission Control、公平性与 Starvation Detection???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-054."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1522,26 +1950,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-054 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-054 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-054-UT"
-      - "AGENT-054-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-054"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2826"
-      - "planned_test:AGENT-054-UT"
-      - "planned_test:AGENT-054-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-054"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-055
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Runtime 必须检测 No-progress 和 Plan Oscillation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2827"
-    gap: "?????Runtime 必须检测 No-progress 和 Plan Oscillation???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-055."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1550,26 +1986,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-055 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-055 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-055-UT"
-      - "AGENT-055-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-055"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2827"
-      - "planned_test:AGENT-055-UT"
-      - "planned_test:AGENT-055-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-055"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-056
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Agent Core 必须遵守 Cross-module Ownership Matrix"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2828"
-    gap: "?????Agent Core 必须遵守 Cross-module Ownership Matrix???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-056."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1578,26 +2022,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-056 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-056 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-056-UT"
-      - "AGENT-056-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-056"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2828"
-      - "planned_test:AGENT-056-UT"
-      - "planned_test:AGENT-056-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-056"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-057
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有跨模块交互必须使用版本化 Contract Envelope"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2829"
-    gap: "?????所有跨模块交互必须使用版本化 Contract Envelope???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-057."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1606,26 +2058,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-057 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-057 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-057-UT"
-      - "AGENT-057-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-057"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2829"
-      - "planned_test:AGENT-057-UT"
-      - "planned_test:AGENT-057-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-057"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-058
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "同一 Run 必须固定 Runtime、Graph、Contract、Prompt 与 Policy Bundle Version"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2830"
-    gap: "?????同一 Run 必须固定 Runtime、Graph、Contract、Prompt 与 Policy Bundle Version???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-058."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1634,26 +2094,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-058 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-058 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-058-UT"
-      - "AGENT-058-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-058"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2830"
-      - "planned_test:AGENT-058-UT"
-      - "planned_test:AGENT-058-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-058"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-059
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Checkpoint、Domain Fact 与 Object Payload 必须明确分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2831"
-    gap: "?????Checkpoint、Domain Fact 与 Object Payload 必须明确分层???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-059."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1662,26 +2130,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-059 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-059 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-059-UT"
-      - "AGENT-059-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-059"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2831"
-      - "planned_test:AGENT-059-UT"
-      - "planned_test:AGENT-059-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-059"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-060
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "每个不变量和 Requirement 必须映射到测试与运行证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:2832"
-    gap: "?????每个不变量和 Requirement 必须映射到测试与运行证据???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-060."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1690,26 +2166,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-060 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-060 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-060-UT"
-      - "AGENT-060-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-060"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:2832"
-      - "planned_test:AGENT-060-UT"
-      - "planned_test:AGENT-060-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-060"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-061
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "每个 Run 必须使用版本化 TaskContract 与 GoalVersion"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3483"
-    gap: "?????每个 Run 必须使用版本化 TaskContract 与 GoalVersion???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-061."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1718,26 +2202,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-061 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-061 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-061-UT"
-      - "AGENT-061-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-061"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3483"
-      - "planned_test:AGENT-061-UT"
-      - "planned_test:AGENT-061-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-061"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-062
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "PlanVersion 必须绑定明确 GoalVersion"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3484"
-    gap: "?????PlanVersion 必须绑定明确 GoalVersion???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-062."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1746,26 +2238,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-062 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-062 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-062-UT"
-      - "AGENT-062-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-062"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3484"
-      - "planned_test:AGENT-062-UT"
-      - "planned_test:AGENT-062-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-062"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-063
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "ObjectiveDefinition 与 ObjectiveOutcome 必须结构化并驱动 PARTIAL"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3485"
-    gap: "?????ObjectiveDefinition 与 ObjectiveOutcome 必须结构化并驱动 PARTIAL???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-063."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1774,26 +2274,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-063 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-063 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-063-UT"
-      - "AGENT-063-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-063"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3485"
-      - "planned_test:AGENT-063-UT"
-      - "planned_test:AGENT-063-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-063"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-064
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "用户新输入必须分类为补充、澄清、约束、输出、目标变化或新任务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3486"
-    gap: "?????用户新输入必须分类为补充、澄清、约束、输出、目标变化或新任务???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-064."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1802,26 +2310,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-064 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-064 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-064-UT"
-      - "AGENT-064-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-064"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3486"
-      - "planned_test:AGENT-064-UT"
-      - "planned_test:AGENT-064-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-064"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-065
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "同一 Run 的控制命令必须经 Single Controller 串行仲裁"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3487"
-    gap: "?????同一 Run 的控制命令必须经 Single Controller 串行仲裁???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-065."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1830,26 +2346,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-065 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-065 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-065-UT"
-      - "AGENT-065-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-065"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3487"
-      - "planned_test:AGENT-065-UT"
-      - "planned_test:AGENT-065-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-065"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-066
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Security、Cancellation、Deadline、Reconcile、Approval、Budget、Replan 和 Quality 必须有确定优先级"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3488"
-    gap: "?????Security、Cancellation、Deadline、Reconcile、Approval、Budget、Replan 和 Quality 必须有确定优先级???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-066."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1858,26 +2382,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-066 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-066 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-066-UT"
-      - "AGENT-066-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-066"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3488"
-      - "planned_test:AGENT-066-UT"
-      - "planned_test:AGENT-066-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-066"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-067
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有 ControlDecision 必须可审计并携带 Epoch 与 Generation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3489"
-    gap: "?????所有 ControlDecision 必须可审计并携带 Epoch 与 Generation???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-067."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1886,26 +2418,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-067 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-067 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-067-UT"
-      - "AGENT-067-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-067"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3489"
-      - "planned_test:AGENT-067-UT"
-      - "planned_test:AGENT-067-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-067"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-068
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Domain Store 与 Checkpoint 必须使用 Generation 和 RecoveryWatermark 协调"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3490"
-    gap: "?????Domain Store 与 Checkpoint 必须使用 Generation 和 RecoveryWatermark 协调???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-068."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1914,26 +2454,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-068 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-068 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-068-UT"
-      - "AGENT-068-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-068"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3490"
-      - "planned_test:AGENT-068-UT"
-      - "planned_test:AGENT-068-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-068"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-069
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Checkpoint 不得引用未提交 Domain Generation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3491"
-    gap: "?????Checkpoint 不得引用未提交 Domain Generation???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-069."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1942,26 +2490,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-069 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-069 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-069-UT"
-      - "AGENT-069-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-069"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3491"
-      - "planned_test:AGENT-069-UT"
-      - "planned_test:AGENT-069-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-069"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-070
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Domain/Checkpoint 不一致必须通过确定性 Recovery Rule 修复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3492"
-    gap: "?????Domain/Checkpoint 不一致必须通过确定性 Recovery Rule 修复???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-070."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1970,26 +2526,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-070 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-070 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-070-UT"
-      - "AGENT-070-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-070"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3492"
-      - "planned_test:AGENT-070-UT"
-      - "planned_test:AGENT-070-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-070"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-071
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有可复用结果必须有 ResultValidity"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3493"
-    gap: "?????所有可复用结果必须有 ResultValidity???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-071."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -1998,26 +2562,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-071 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-071 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-071-UT"
-      - "AGENT-071-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-071"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3493"
-      - "planned_test:AGENT-071-UT"
-      - "planned_test:AGENT-071-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-071"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-072
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "REVOKED、STALE、TAINTED 与 SUPERSEDED 必须按依赖图传播"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3494"
-    gap: "?????REVOKED、STALE、TAINTED 与 SUPERSEDED 必须按依赖图传播???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-072."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2026,26 +2598,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-072 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-072 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-072-UT"
-      - "AGENT-072-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-072"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3494"
-      - "planned_test:AGENT-072-UT"
-      - "planned_test:AGENT-072-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-072"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-073
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Publication 前必须重新校验 ResultValidity"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3495"
-    gap: "?????Publication 前必须重新校验 ResultValidity???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-073."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2054,26 +2634,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-073 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-073 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-073-UT"
-      - "AGENT-073-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-073"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3495"
-      - "planned_test:AGENT-073-UT"
-      - "planned_test:AGENT-073-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-073"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-074
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Domain、Progress、Audit、Integration 与 Publication Event 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3496"
-    gap: "?????Domain、Progress、Audit、Integration 与 Publication Event 必须分离???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-074."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2082,26 +2670,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-074 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-074 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-074-UT"
-      - "AGENT-074-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-074"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3496"
-      - "planned_test:AGENT-074-UT"
-      - "planned_test:AGENT-074-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-074"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-075
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Outbox 必须提供同一 Run 有序的 at-least-once 交付和消费者幂等"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3497"
-    gap: "?????Outbox 必须提供同一 Run 有序的 at-least-once 交付和消费者幂等???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-075."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2110,26 +2706,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-075 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-075 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-075-UT"
-      - "AGENT-075-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-075"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3497"
-      - "planned_test:AGENT-075-UT"
-      - "planned_test:AGENT-075-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-075"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-076
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Artifact 必须使用不可变 Version、Validation、Supersession 和 Publication Binding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3498"
-    gap: "?????Artifact 必须使用不可变 Version、Validation、Supersession 和 Publication Binding???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-076."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2138,26 +2742,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-076 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-076 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-076-UT"
-      - "AGENT-076-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-076"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3498"
-      - "planned_test:AGENT-076-UT"
-      - "planned_test:AGENT-076-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-076"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-077
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "已发布 Artifact 的撤回、更正与保留必须可审计"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3499"
-    gap: "?????已发布 Artifact 的撤回、更正与保留必须可审计???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-077."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2166,26 +2778,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-077 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-077 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-077-UT"
-      - "AGENT-077-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-077"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3499"
-      - "planned_test:AGENT-077-UT"
-      - "planned_test:AGENT-077-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-077"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-078
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Run、Dispatch、Step、UNKNOWN Action、Interrupt、Publication、Outbox 和 Budget 必须有 Reconciler"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3500"
-    gap: "?????Run、Dispatch、Step、UNKNOWN Action、Interrupt、Publication、Outbox 和 Budget 必须有 Reconciler???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-078."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2194,26 +2814,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-078 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-078 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-078-UT"
-      - "AGENT-078-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-078"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3500"
-      - "planned_test:AGENT-078-UT"
-      - "planned_test:AGENT-078-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-078"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-079
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "所有 Reconciler 必须使用 Claim、Fencing、Idempotency 和人工升级策略"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3501"
-    gap: "?????所有 Reconciler 必须使用 Claim、Fencing、Idempotency 和人工升级策略???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-079."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2222,26 +2850,34 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-079 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-079 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-079-UT"
-      - "AGENT-079-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-079"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3501"
-      - "planned_test:AGENT-079-UT"
-      - "planned_test:AGENT-079-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-079"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-AGENT-080
     module: "06 Agent Core / Planning & Control"
     mandatory: true
     target_statement: "Deadline、Expiry、Lease、Duration 与用户时区必须使用明确时间语义"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/agent/runtime_batch.py"
+      - "src/backend/zuno/agent/harness.py"
+      - "src/backend/zuno/agent/durable_runtime.py"
+      - "src/backend/zuno/agent/planning.py"
       - "docs/modules/06-agent-core-planning-control.md:3502"
-    gap: "?????Deadline、Expiry、Lease、Duration 与用户时区必须使用明确时间语义???? Current ????????????????? PHASE08 ?????????/??????????????? Current?"
+    gap: "Agent runtime batch has code, tests, verifier, and evidence for ARCH-AGENT-080."
     owner: "Agent Core / Planning & Control"
     target_phase: "PHASE08"
     planned_work_package: "P08 deterministic single controller / P17 dynamic DAG"
@@ -2250,17 +2886,21 @@ requirements:
       - "PHASE05"
       - "PHASE06"
       - "PHASE07"
-    failure_or_recovery_requirement: "target_not_current:ARCH-AGENT-080 ??????????????????????? PHASE08 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-AGENT-080 covered by Agent runtime batch tests and verifier."
     test_ids:
-      - "AGENT-080-UT"
-      - "AGENT-080-IT"
+      - "tests/agent/test_agent_runtime_batch.py"
+      - "tools/scripts/verify_agent_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-AGENT-080"
+      - "docs/evidence/agent-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/06-agent-core-planning-control.md:3502"
-      - "planned_test:AGENT-080-UT"
-      - "planned_test:AGENT-080-IT"
-      - "planned_evidence:needs_evidence:EV-AGENT-080"
+      - "current:src/backend/zuno/agent/runtime_batch.py"
+      - "current:src/backend/zuno/agent/harness.py"
+      - "current:src/backend/zuno/agent/durable_runtime.py"
+      - "current:src/backend/zuno/agent/planning.py"
+      - "test:tests/agent/test_agent_runtime_batch.py"
+      - "test:tools/scripts/verify_agent_runtime_batch.py"
+      - "evidence:docs/evidence/agent-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-001
     module: "07 Capability / Skill"

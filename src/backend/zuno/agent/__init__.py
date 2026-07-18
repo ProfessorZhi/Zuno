@@ -4,6 +4,11 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from zuno.agent.runtime_batch import (
+        AgentRuntimeBatchError,
+        AgentRuntimeBatchReport,
+        validate_agent_runtime_batch,
+    )
     from zuno.agent.control_runtime import AgentControlRuntime, AgentRuntimeResult, RuntimeObservation
     from zuno.agent.context import (
         AgentExecutionContext,
@@ -35,6 +40,8 @@ if TYPE_CHECKING:
 _EXPORT_TO_MODULE = {
     "AgentConfig": "zuno.agent.runtime",
     "AgentControlRuntime": "zuno.agent.control_runtime",
+    "AgentRuntimeBatchError": "zuno.agent.runtime_batch",
+    "AgentRuntimeBatchReport": "zuno.agent.runtime_batch",
     "AgentRuntimeResult": "zuno.agent.control_runtime",
     "AgentExecutionContext": "zuno.agent.context",
     "ContextOrchestrator": "zuno.agent.context",
@@ -58,11 +65,14 @@ _EXPORT_TO_MODULE = {
     "StreamAgentState": "zuno.agent.state",
     "build_default_strategy_selector": "zuno.agent.planning",
     "build_single_controller_runtime_harness": "zuno.agent.harness",
+    "validate_agent_runtime_batch": "zuno.agent.runtime_batch",
 }
 
 __all__ = [
     "AgentConfig",
     "AgentControlRuntime",
+    "AgentRuntimeBatchError",
+    "AgentRuntimeBatchReport",
     "AgentRuntimeResult",
     "AgentExecutionContext",
     "ContextOrchestrator",
@@ -86,6 +96,7 @@ __all__ = [
     "StreamAgentState",
     "build_default_strategy_selector",
     "build_single_controller_runtime_harness",
+    "validate_agent_runtime_batch",
 ]
 
 
