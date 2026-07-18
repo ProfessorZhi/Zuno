@@ -26,7 +26,7 @@ ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
 REQUIRED_INFRA_TABLES = INFRASTRUCTURE_TABLES
 REQUIRED_DOMAIN_TABLES = set(DOMAIN_TABLE_OWNERS)
-EXPECTED_HEAD_REVISION = "20260718_14"
+EXPECTED_HEAD_REVISION = "20260718_15"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -252,6 +252,54 @@ REQUIRED_TABLE_COLUMNS = {
         "watermark",
         "payload_hash",
     },
+    "infra_secret_versions": {
+        "secret_ref",
+        "version",
+        "tenant_id",
+        "kms_key_ref",
+        "config_hash",
+        "payload_hash",
+        "payload",
+        "status",
+        "owner_id",
+        "created_at",
+        "activated_at",
+        "retired_at",
+    },
+    "infra_secret_rotation_heads": {
+        "secret_ref",
+        "tenant_id",
+        "active_version",
+        "previous_version",
+        "generation",
+        "status",
+        "owner_id",
+        "updated_at",
+    },
+    "infra_secret_leases": {
+        "lease_id",
+        "secret_ref",
+        "tenant_id",
+        "version",
+        "generation",
+        "owner_id",
+        "payload_hash",
+        "issued_at",
+        "expires_at",
+    },
+    "infra_cross_tenant_hits": {
+        "hit_id",
+        "service_kind",
+        "resource_ref",
+        "expected_tenant_id",
+        "observed_tenant_id",
+        "action",
+        "status",
+        "payload_hash",
+        "payload",
+        "owner_id",
+        "created_at",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -311,6 +359,25 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_recovery_sets_verification_hash",
     "ck_infra_recovery_set_members_authority",
     "ck_infra_recovery_set_members_payload_hash",
+    "pk_infra_secret_versions",
+    "fk_infra_secret_rotation_heads_active",
+    "fk_infra_secret_rotation_heads_previous",
+    "fk_infra_secret_leases_version",
+    "ck_infra_secret_versions_version",
+    "ck_infra_secret_versions_config_hash",
+    "ck_infra_secret_versions_payload_hash",
+    "ck_infra_secret_versions_status",
+    "ck_infra_secret_rotation_heads_generation",
+    "ck_infra_secret_rotation_heads_active_version",
+    "ck_infra_secret_rotation_heads_previous_version",
+    "ck_infra_secret_rotation_heads_status",
+    "ck_infra_secret_leases_version",
+    "ck_infra_secret_leases_generation",
+    "ck_infra_secret_leases_payload_hash",
+    "ck_infra_cross_tenant_hits_mismatch",
+    "ck_infra_cross_tenant_hits_action",
+    "ck_infra_cross_tenant_hits_status",
+    "ck_infra_cross_tenant_hits_payload_hash",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -329,6 +396,9 @@ REQUIRED_INDEXES = {
     "ix_infra_cutover_snapshots_target_status",
     "ix_infra_recovery_watermarks_kind_watermark",
     "ix_infra_recovery_sets_recovery_point",
+    "ix_infra_secret_versions_tenant_status",
+    "ix_infra_secret_leases_secret_generation",
+    "ix_infra_cross_tenant_hits_resource",
     "ix_workspace_session_user_update_time",
 }
 

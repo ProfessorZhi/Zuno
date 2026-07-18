@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 695
-  implementation_available: 61
+  target_not_current: 693
+  implementation_available: 63
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5352,26 +5352,31 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Encryption/Secret Rotation 可回滚"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1916"
-    gap: "?????Encryption/Secret Rotation 可回滚???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_15_secret_rotation_tenant_hit.py"
+      - "tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+      - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
+    gap: "none within PHASE04 Infrastructure secret rotation subscope; production KMS/broker implementation and real secret material custody remain outside this PostgreSQL receipt gate"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 secret rotation and tenant hit gate"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-035 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: secret version activation is generation-fenced, secret leases expose only ref/version/hash/ttl, secret material payloads are rejected, and rollback restores the previous active version"
     test_ids:
-      - "INFRA-035-UT"
-      - "INFRA-035-IT"
+      - "tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+      - "tests/integration/test_phase04_secret_rotation_tenant_hit.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-035"
+      - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1916"
-      - "planned_test:INFRA-035-UT"
-      - "planned_test:INFRA-035-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-035"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_15_secret_rotation_tenant_hit.py"
+      - "test:tests/integration/test_phase04_secret_rotation_tenant_hit.py"
+      - "evidence:docs/evidence/phase04-secret-rotation-tenant-hit.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-036
     module: "11 Infrastructure"
@@ -5989,7 +5994,7 @@ requirements:
       - "tools/scripts/verify_phase04_tenant_isolation_profiles.py"
       - "docs/evidence/phase04-tenant-isolation-profiles.md"
       - "docs/modules/11-infrastructure.md:1938"
-    gap: "tenant isolation profiles are current for every typed service kind; full runtime cross-tenant hit quarantine/fail-closed remains target_not_current under ARCH-INFRA-058"
+    gap: "tenant isolation profiles are current for every typed service kind; runtime cross-tenant hit quarantine/fail-closed is now proven separately under ARCH-INFRA-058"
     owner: "Infrastructure"
     target_phase: "PHASE04"
     planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
@@ -6013,26 +6018,31 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Cross-tenant Hit Quarantine/Fail-closed"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1939"
-    gap: "?????Cross-tenant Hit Quarantine/Fail-closed???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_15_secret_rotation_tenant_hit.py"
+      - "tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+      - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
+    gap: "none within PHASE04 Infrastructure tenant-hit receipt gate; each product adapter still owns adoption at its domain boundary"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 secret rotation and tenant hit gate"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-058 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: runtime tenant scope gate blocks cross-tenant hits and persists FAIL_CLOSED or QUARANTINE receipts for audit/reconciliation"
     test_ids:
-      - "INFRA-058-UT"
-      - "INFRA-058-IT"
+      - "tools/scripts/verify_phase04_secret_rotation_tenant_hit.py"
+      - "tests/integration/test_phase04_secret_rotation_tenant_hit.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-058"
+      - "docs/evidence/phase04-secret-rotation-tenant-hit.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1939"
-      - "planned_test:INFRA-058-UT"
-      - "planned_test:INFRA-058-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-058"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_15_secret_rotation_tenant_hit.py"
+      - "test:tests/integration/test_phase04_secret_rotation_tenant_hit.py"
+      - "evidence:docs/evidence/phase04-secret-rotation-tenant-hit.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-059
     module: "11 Infrastructure"

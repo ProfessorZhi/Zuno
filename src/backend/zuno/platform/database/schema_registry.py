@@ -42,6 +42,7 @@ INFRASTRUCTURE_TABLES = {
     "infra_checkpoints",
     "infra_cutover_snapshots",
     "infra_cutover_targets",
+    "infra_cross_tenant_hits",
     "infra_delivery_watermarks",
     "infra_idempotency_claims",
     "infra_inbox_messages",
@@ -54,6 +55,9 @@ INFRASTRUCTURE_TABLES = {
     "infra_recovery_set_members",
     "infra_recovery_sets",
     "infra_recovery_watermarks",
+    "infra_secret_leases",
+    "infra_secret_rotation_heads",
+    "infra_secret_versions",
     "infra_worker_leases",
 }
 
@@ -70,6 +74,7 @@ REVISION_OWNERS = {
     "20260718_12": "Infrastructure",
     "20260718_13": "Infrastructure",
     "20260718_14": "Infrastructure",
+    "20260718_15": "Infrastructure",
 }
 
 ONLINE_SCHEMA_OBJECTS = {

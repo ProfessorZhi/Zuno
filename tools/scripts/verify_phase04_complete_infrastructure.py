@@ -163,6 +163,12 @@ RECOVERY_WATERMARK_VERIFIER = (
 RECOVERY_WATERMARK_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-recovery-watermark.md"
 )
+SECRET_ROTATION_TENANT_HIT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_secret_rotation_tenant_hit.py"
+)
+SECRET_ROTATION_TENANT_HIT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-secret-rotation-tenant-hit.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -1288,6 +1294,45 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in recovery_watermark_evidence:
                 errors.append(
                     f"PHASE04 recovery watermark evidence missing phrase: {phrase}"
+                )
+
+    if not SECRET_ROTATION_TENANT_HIT_VERIFIER.exists():
+        errors.append("missing PHASE04 secret rotation tenant hit verifier")
+    else:
+        secret_rotation_errors = _load_verifier(
+            SECRET_ROTATION_TENANT_HIT_VERIFIER,
+            "verify_phase04_secret_rotation_tenant_hit",
+            "verify_phase04_secret_rotation_tenant_hit",
+        )()
+        for secret_rotation_error in secret_rotation_errors:
+            errors.append(
+                "PHASE04 secret rotation tenant hit verification failed: "
+                f"{secret_rotation_error}"
+            )
+
+    if not SECRET_ROTATION_TENANT_HIT_EVIDENCE.exists():
+        errors.append("missing PHASE04 secret rotation tenant hit evidence")
+    else:
+        secret_rotation_evidence = _read(SECRET_ROTATION_TENANT_HIT_EVIDENCE)
+        for phrase in [
+            "secret_rotation_schema: passed",
+            "secret_material_payload_rejected: passed",
+            "secret_version_activation: passed",
+            "secret_lease_uses_active_generation: passed",
+            "cross_tenant_secret_lease_rejected: passed",
+            "rollback_restores_previous_secret_version: passed",
+            "stale_secret_rotation_generation_rejected: passed",
+            "relational_cross_tenant_hit_fail_closed: passed",
+            "object_cross_tenant_hit_quarantined: passed",
+            "cross_tenant_hit_receipt_durable: passed",
+            "phase_completion: blocked_official_checkpointer_pitr_and_full_recovery",
+            "`ARCH-INFRA-035`",
+            "`ARCH-INFRA-058`",
+        ]:
+            if phrase not in secret_rotation_evidence:
+                errors.append(
+                    "PHASE04 secret rotation tenant hit evidence missing phrase: "
+                    f"{phrase}"
                 )
 
     if not DR_PROFILE_VERIFIER.exists():

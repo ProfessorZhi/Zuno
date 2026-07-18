@@ -198,6 +198,38 @@ class RecoverySetReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class SecretVersionReceipt:
+    secret_ref: str
+    tenant_id: str
+    version: int
+    status: str
+    generation: int
+
+
+@dataclass(frozen=True, slots=True)
+class SecretLeaseReceipt:
+    lease_id: str
+    secret_ref: str
+    tenant_id: str
+    version: int
+    generation: int
+    payload_hash: str
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class CrossTenantHitReceipt:
+    hit_id: str
+    service_kind: str
+    resource_ref: str
+    expected_tenant_id: str
+    observed_tenant_id: str
+    action: str
+    status: str
+    payload_hash: str
+
+
+@dataclass(frozen=True, slots=True)
 class TransactionRetryReceipt:
     result: Any
     attempts: int
@@ -2134,6 +2166,368 @@ class InfrastructureRepository:
             verification_hash=verification_hash,
         )
 
+    def register_secret_version(
+        self,
+        *,
+        secret_ref: str,
+        tenant_id: str,
+        version: int,
+        kms_key_ref: str,
+        config_hash: str,
+        owner_id: str,
+        payload: dict[str, Any],
+    ) -> SecretVersionReceipt:
+        if (
+            not secret_ref.strip()
+            or not tenant_id.strip()
+            or not kms_key_ref.strip()
+            or not owner_id.strip()
+        ):
+            raise ValueError("secret_ref, tenant_id, kms_key_ref and owner_id must not be empty")
+        if version < 1:
+            raise ValueError("secret version must be positive")
+        if len(config_hash) != 64:
+            raise ValueError("config_hash must be a sha256 hex digest")
+        if _contains_secret_material(payload):
+            raise ValueError("secret rotation payload must not contain secret material")
+        payload_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_secret_versions(
+                    secret_ref, version, tenant_id, kms_key_ref, config_hash,
+                    payload_hash, payload, status, owner_id
+                ) VALUES (
+                    :secret_ref, :version, :tenant_id, :kms_key_ref, :config_hash,
+                    :payload_hash, CAST(:payload AS jsonb), 'staged', :owner_id
+                )
+                ON CONFLICT (secret_ref, version) DO UPDATE
+                SET tenant_id = EXCLUDED.tenant_id,
+                    kms_key_ref = EXCLUDED.kms_key_ref,
+                    config_hash = EXCLUDED.config_hash,
+                    payload_hash = EXCLUDED.payload_hash,
+                    payload = EXCLUDED.payload,
+                    owner_id = EXCLUDED.owner_id
+                WHERE infra_secret_versions.status <> 'active'
+                """
+            ),
+            {
+                "secret_ref": secret_ref,
+                "version": version,
+                "tenant_id": tenant_id,
+                "kms_key_ref": kms_key_ref,
+                "config_hash": config_hash,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+                "owner_id": owner_id,
+            },
+        )
+        return SecretVersionReceipt(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            version=version,
+            status="staged",
+            generation=0,
+        )
+
+    def activate_secret_version(
+        self,
+        *,
+        secret_ref: str,
+        tenant_id: str,
+        version: int,
+        expected_generation: int,
+        owner_id: str,
+    ) -> SecretVersionReceipt:
+        if expected_generation < 0:
+            raise ValueError("expected_generation must be non-negative")
+        version_row = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id
+                FROM infra_secret_versions
+                WHERE secret_ref = :secret_ref AND version = :version
+                FOR UPDATE
+                """
+            ),
+            {"secret_ref": secret_ref, "version": version},
+        ).first()
+        if version_row is None:
+            raise InfrastructureConflictError("secret version is not registered")
+        if str(version_row.tenant_id) != tenant_id:
+            raise InfrastructureConflictError("secret version crossed the tenant boundary")
+
+        head = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id, active_version, generation
+                FROM infra_secret_rotation_heads
+                WHERE secret_ref = :secret_ref
+                FOR UPDATE
+                """
+            ),
+            {"secret_ref": secret_ref},
+        ).first()
+        current_generation = 0 if head is None else int(head.generation)
+        if current_generation != expected_generation:
+            raise FencingRejectedError("secret rotation generation is stale")
+        if head is not None and str(head.tenant_id) != tenant_id:
+            raise InfrastructureConflictError("secret head crossed the tenant boundary")
+        previous_version = None if head is None else int(head.active_version)
+        next_generation = current_generation + 1
+
+        self.connection.execute(
+            text(
+                """
+                UPDATE infra_secret_versions
+                SET status = CASE WHEN version = :version THEN 'active' ELSE 'retired' END,
+                    activated_at = CASE WHEN version = :version THEN now() ELSE activated_at END,
+                    retired_at = CASE WHEN version = :version THEN NULL ELSE now() END
+                WHERE secret_ref = :secret_ref AND tenant_id = :tenant_id
+                """
+            ),
+            {"secret_ref": secret_ref, "tenant_id": tenant_id, "version": version},
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_secret_rotation_heads(
+                    secret_ref, tenant_id, active_version, previous_version,
+                    generation, status, owner_id
+                ) VALUES (
+                    :secret_ref, :tenant_id, :version, :previous_version,
+                    :generation, 'active', :owner_id
+                )
+                ON CONFLICT (secret_ref) DO UPDATE
+                SET tenant_id = EXCLUDED.tenant_id,
+                    active_version = EXCLUDED.active_version,
+                    previous_version = EXCLUDED.previous_version,
+                    generation = EXCLUDED.generation,
+                    status = 'active',
+                    owner_id = EXCLUDED.owner_id,
+                    updated_at = now()
+                """
+            ),
+            {
+                "secret_ref": secret_ref,
+                "tenant_id": tenant_id,
+                "version": version,
+                "previous_version": previous_version,
+                "generation": next_generation,
+                "owner_id": owner_id,
+            },
+        )
+        return SecretVersionReceipt(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            version=version,
+            status="active",
+            generation=next_generation,
+        )
+
+    def rollback_secret_version(
+        self,
+        *,
+        secret_ref: str,
+        tenant_id: str,
+        target_version: int,
+        expected_generation: int,
+        owner_id: str,
+    ) -> SecretVersionReceipt:
+        head = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id, active_version, generation
+                FROM infra_secret_rotation_heads
+                WHERE secret_ref = :secret_ref
+                FOR UPDATE
+                """
+            ),
+            {"secret_ref": secret_ref},
+        ).first()
+        if head is None:
+            raise InfrastructureConflictError("secret rotation head is missing")
+        if str(head.tenant_id) != tenant_id:
+            raise InfrastructureConflictError("secret rollback crossed the tenant boundary")
+        if int(head.generation) != expected_generation:
+            raise FencingRejectedError("secret rollback generation is stale")
+        active_version = int(head.active_version)
+        if target_version == active_version:
+            raise InfrastructureConflictError("secret rollback target is already active")
+        target = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id
+                FROM infra_secret_versions
+                WHERE secret_ref = :secret_ref AND version = :target_version
+                FOR UPDATE
+                """
+            ),
+            {"secret_ref": secret_ref, "target_version": target_version},
+        ).first()
+        if target is None:
+            raise InfrastructureConflictError("secret rollback target is missing")
+        if str(target.tenant_id) != tenant_id:
+            raise InfrastructureConflictError("secret rollback target crossed the tenant boundary")
+        next_generation = int(head.generation) + 1
+        self.connection.execute(
+            text(
+                """
+                UPDATE infra_secret_versions
+                SET status = CASE WHEN version = :target_version THEN 'active' ELSE 'retired' END,
+                    activated_at = CASE WHEN version = :target_version THEN now() ELSE activated_at END,
+                    retired_at = CASE WHEN version = :target_version THEN NULL ELSE now() END
+                WHERE secret_ref = :secret_ref AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "secret_ref": secret_ref,
+                "tenant_id": tenant_id,
+                "target_version": target_version,
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE infra_secret_rotation_heads
+                SET active_version = :target_version,
+                    previous_version = :active_version,
+                    generation = :generation,
+                    status = 'rolled_back',
+                    owner_id = :owner_id,
+                    updated_at = now()
+                WHERE secret_ref = :secret_ref
+                """
+            ),
+            {
+                "secret_ref": secret_ref,
+                "target_version": target_version,
+                "active_version": active_version,
+                "generation": next_generation,
+                "owner_id": owner_id,
+            },
+        )
+        return SecretVersionReceipt(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            version=target_version,
+            status="rolled_back",
+            generation=next_generation,
+        )
+
+    def issue_secret_lease(
+        self,
+        *,
+        secret_ref: str,
+        tenant_id: str,
+        owner_id: str,
+        ttl_seconds: int,
+    ) -> SecretLeaseReceipt:
+        if ttl_seconds < 1:
+            raise ValueError("secret lease ttl_seconds must be positive")
+        row = self.connection.execute(
+            text(
+                """
+                SELECT h.tenant_id, h.active_version, h.generation, v.payload_hash
+                FROM infra_secret_rotation_heads h
+                JOIN infra_secret_versions v
+                  ON v.secret_ref = h.secret_ref
+                 AND v.version = h.active_version
+                WHERE h.secret_ref = :secret_ref
+                  AND h.tenant_id = :tenant_id
+                  AND v.status = 'active'
+                FOR UPDATE
+                """
+            ),
+            {"secret_ref": secret_ref, "tenant_id": tenant_id},
+        ).first()
+        if row is None:
+            raise InfrastructureConflictError("active secret version is unavailable for tenant")
+        lease_id = f"secret-lease:{uuid4()}"
+        lease_row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_secret_leases(
+                    lease_id, secret_ref, tenant_id, version, generation,
+                    owner_id, payload_hash, expires_at
+                ) VALUES (
+                    :lease_id, :secret_ref, :tenant_id, :version, :generation,
+                    :owner_id, :payload_hash, now() + (:ttl_seconds * interval '1 second')
+                )
+                RETURNING lease_id, secret_ref, tenant_id, version, generation,
+                          payload_hash, expires_at
+                """
+            ),
+            {
+                "lease_id": lease_id,
+                "secret_ref": secret_ref,
+                "tenant_id": tenant_id,
+                "version": int(row.active_version),
+                "generation": int(row.generation),
+                "owner_id": owner_id,
+                "payload_hash": str(row.payload_hash),
+                "ttl_seconds": ttl_seconds,
+            },
+        ).one()
+        return SecretLeaseReceipt(
+            lease_id=str(lease_row.lease_id),
+            secret_ref=str(lease_row.secret_ref),
+            tenant_id=str(lease_row.tenant_id),
+            version=int(lease_row.version),
+            generation=int(lease_row.generation),
+            payload_hash=str(lease_row.payload_hash),
+            expires_at=lease_row.expires_at,
+        )
+
+    def enforce_tenant_scope(
+        self,
+        *,
+        service_kind: str,
+        resource_ref: str,
+        expected_tenant_id: str,
+        observed_tenant_id: str,
+        action: str,
+        owner_id: str,
+        payload: dict[str, Any],
+    ) -> None:
+        if expected_tenant_id == observed_tenant_id:
+            return
+        if action not in {"QUARANTINE", "FAIL_CLOSED", "MANDATORY_AUDIT"}:
+            raise ValueError("cross-tenant action must fail closed")
+        status = {
+            "QUARANTINE": "quarantined",
+            "FAIL_CLOSED": "blocked",
+            "MANDATORY_AUDIT": "mandatory_audit",
+        }[action]
+        payload_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_cross_tenant_hits(
+                    hit_id, service_kind, resource_ref, expected_tenant_id,
+                    observed_tenant_id, action, status, payload_hash, payload, owner_id
+                ) VALUES (
+                    :hit_id, :service_kind, :resource_ref, :expected_tenant_id,
+                    :observed_tenant_id, :action, :status, :payload_hash,
+                    CAST(:payload AS jsonb), :owner_id
+                )
+                """
+            ),
+            {
+                "hit_id": f"tenant-hit:{uuid4()}",
+                "service_kind": service_kind,
+                "resource_ref": resource_ref,
+                "expected_tenant_id": expected_tenant_id,
+                "observed_tenant_id": observed_tenant_id,
+                "action": action,
+                "status": status,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+                "owner_id": owner_id,
+            },
+        )
+        raise InfrastructureConflictError("cross-tenant hit was blocked")
+
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         if ttl_seconds < 1:
             raise ValueError("lease ttl_seconds must be positive")
@@ -2481,6 +2875,19 @@ class InfrastructureRepository:
         }
 
 
+def _contains_secret_material(payload: Any) -> bool:
+    forbidden_keys = {"secret", "secret_material", "plaintext", "material", "value"}
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if str(key).lower() in forbidden_keys:
+                return True
+            if _contains_secret_material(value):
+                return True
+    elif isinstance(payload, (list, tuple)):
+        return any(_contains_secret_material(item) for item in payload)
+    return False
+
+
 def _json(payload: dict[str, Any]) -> str:
     return canonical_json(payload)
 
@@ -2495,6 +2902,7 @@ __all__ = [
     "ActiveSnapshotRefReceipt",
     "CapacityBackpressureError",
     "CapacityReservationReceipt",
+    "CrossTenantHitReceipt",
     "CutoverActivationReceipt",
     "DeliveryWatermarkReceipt",
     "FencingRejectedError",
@@ -2512,6 +2920,8 @@ __all__ = [
     "OutboxReplayReceipt",
     "RecoverySetReceipt",
     "RecoveryWatermarkReceipt",
+    "SecretLeaseReceipt",
+    "SecretVersionReceipt",
     "TransactionRetryReceipt",
     "create_foundation_engine",
     "run_transaction_with_retry",
