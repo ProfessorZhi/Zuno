@@ -351,6 +351,54 @@ class ModelJudgeResult:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelCompressedContext:
+    compression_id: str
+    summary: str
+    lineage_refs: tuple[str, ...]
+    preserved_constraints: tuple[str, ...]
+    conflict_refs: tuple[str, ...]
+    distortion_risks: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.lineage_refs:
+            raise ModelGatewayProviderError("compressed context must preserve lineage")
+        if not self.preserved_constraints:
+            raise ModelGatewayProviderError("compressed context must preserve constraints")
+
+
+@dataclass(frozen=True, slots=True)
+class ModelOutputCandidate:
+    candidate_id: str
+    target_owner: Literal["MEMORY"]
+    payload: dict[str, Any]
+    source_model_call_ref: str
+    requires_owner_review: bool = True
+    directly_committable: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelRiskProposal:
+    proposal_id: str
+    target_owner: Literal["SECURITY"]
+    risk_level: Literal["LOW", "MEDIUM", "HIGH", "BLOCK"]
+    evidence_refs: tuple[str, ...]
+    source_model_call_ref: str
+    requires_owner_review: bool = True
+    directly_enforced: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelActionProposal:
+    proposal_id: str
+    target_owner: Literal["AGENT_CORE", "TOOL_RUNTIME"]
+    action_name: str
+    args_hash: str
+    source_model_call_ref: str
+    requires_owner_binding: bool = True
+    directly_executable: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class BudgetPolicy:
     max_cost: float | None = None
     max_latency_ms: float | None = None
@@ -1042,6 +1090,63 @@ class ModelGateway:
             gateway_audited=True,
         )
 
+    def compress_context(
+        self,
+        *,
+        source_text: str,
+        lineage_refs: tuple[str, ...],
+        constraints: tuple[str, ...],
+        conflict_refs: tuple[str, ...],
+        distortion_risks: tuple[str, ...],
+    ) -> ModelCompressedContext:
+        return ModelCompressedContext(
+            compression_id="ctx_compress_" + _stable_hash([source_text, lineage_refs, constraints])[:16],
+            summary=source_text[:240],
+            lineage_refs=lineage_refs,
+            preserved_constraints=constraints,
+            conflict_refs=conflict_refs,
+            distortion_risks=distortion_risks,
+        )
+
+    def memory_candidate(self, *, payload: dict[str, Any], source_model_call_ref: str) -> ModelOutputCandidate:
+        return ModelOutputCandidate(
+            candidate_id="memory_candidate_" + _stable_hash([payload, source_model_call_ref])[:16],
+            target_owner="MEMORY",
+            payload=dict(payload),
+            source_model_call_ref=source_model_call_ref,
+        )
+
+    def security_risk_proposal(
+        self,
+        *,
+        risk_level: Literal["LOW", "MEDIUM", "HIGH", "BLOCK"],
+        evidence_refs: tuple[str, ...],
+        source_model_call_ref: str,
+    ) -> ModelRiskProposal:
+        return ModelRiskProposal(
+            proposal_id="risk_proposal_" + _stable_hash([risk_level, evidence_refs, source_model_call_ref])[:16],
+            target_owner="SECURITY",
+            risk_level=risk_level,
+            evidence_refs=evidence_refs,
+            source_model_call_ref=source_model_call_ref,
+        )
+
+    def tool_action_proposal(
+        self,
+        *,
+        action_name: str,
+        args: dict[str, Any],
+        source_model_call_ref: str,
+        target_owner: Literal["AGENT_CORE", "TOOL_RUNTIME"] = "AGENT_CORE",
+    ) -> ModelActionProposal:
+        return ModelActionProposal(
+            proposal_id="action_proposal_" + _stable_hash([action_name, args, source_model_call_ref, target_owner])[:16],
+            target_owner=target_owner,
+            action_name=action_name,
+            args_hash=_stable_hash(args),
+            source_model_call_ref=source_model_call_ref,
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -1488,6 +1593,8 @@ __all__ = [
     "ModelCallResponse",
     "ModelCallState",
     "ModelCategory",
+    "ModelActionProposal",
+    "ModelCompressedContext",
     "ModelControlAction",
     "ModelControlActionType",
     "ModelDomainWrite",
@@ -1502,8 +1609,10 @@ __all__ = [
     "ModelOperation",
     "ModelClassificationResult",
     "ModelJudgeResult",
+    "ModelOutputCandidate",
     "ModelRepairRecord",
     "ModelRerankItem",
+    "ModelRiskProposal",
     "ModelRole",
     "ModelStreamResult",
     "ModelTranscriptionSegment",

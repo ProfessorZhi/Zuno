@@ -27,7 +27,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 32))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 36))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -246,6 +246,41 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("judge call did not go through gateway budget audit")
     if judge.sole_quality_proof_allowed or not judge.requires_external_evidence:
         errors.append("judge result can be used as sole quality proof")
+
+    compressed = operation_gateway.compress_context(
+        source_text="Important renewal constraints conflict with outdated pricing.",
+        lineage_refs=("ctx:event:1", "ctx:evidence:2"),
+        constraints=("preserve renewal date",),
+        conflict_refs=("conflict:pricing",),
+        distortion_risks=("pricing may be stale",),
+    )
+    if not compressed.lineage_refs or not compressed.preserved_constraints or not compressed.distortion_risks:
+        errors.append("context compression did not preserve lineage, constraints, and distortion risks")
+    if compressed.conflict_refs != ("conflict:pricing",):
+        errors.append("context compression did not preserve conflict refs")
+
+    memory = operation_gateway.memory_candidate(
+        payload={"fact": "Supplier renewal date is July 18."},
+        source_model_call_ref="model_call_memory",
+    )
+    if memory.target_owner != "MEMORY" or not memory.requires_owner_review or memory.directly_committable:
+        errors.append("memory model output is not restricted to candidate form")
+
+    risk = operation_gateway.security_risk_proposal(
+        risk_level="HIGH",
+        evidence_refs=("ev:secret",),
+        source_model_call_ref="model_call_security",
+    )
+    if risk.target_owner != "SECURITY" or not risk.requires_owner_review or risk.directly_enforced:
+        errors.append("security model output is not restricted to risk proposal form")
+
+    action = operation_gateway.tool_action_proposal(
+        action_name="send_email",
+        args={"to": "team@example.com", "body": "Draft"},
+        source_model_call_ref="model_call_tool",
+    )
+    if action.target_owner != "AGENT_CORE" or not action.requires_owner_binding or action.directly_executable:
+        errors.append("tool model output is not restricted to action proposal form")
 
     split_action_result = ModelGateway(
         providers=[

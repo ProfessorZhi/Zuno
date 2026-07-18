@@ -392,3 +392,45 @@ def test_model_gateway_operation_result_contracts_cover_embedding_rerank_media_a
     assert judge.budget_verdict.allowed is True
     assert judge.sole_quality_proof_allowed is False
     assert judge.requires_external_evidence is True
+
+
+def test_model_gateway_compression_and_domain_outputs_are_candidates_or_proposals() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    compressed = gateway.compress_context(
+        source_text="Important renewal constraints conflict with outdated pricing.",
+        lineage_refs=("ctx:event:1", "ctx:evidence:2"),
+        constraints=("preserve renewal date",),
+        conflict_refs=("conflict:pricing",),
+        distortion_risks=("pricing may be stale",),
+    )
+    assert compressed.lineage_refs == ("ctx:event:1", "ctx:evidence:2")
+    assert compressed.preserved_constraints == ("preserve renewal date",)
+    assert compressed.conflict_refs == ("conflict:pricing",)
+    assert compressed.distortion_risks == ("pricing may be stale",)
+
+    memory = gateway.memory_candidate(
+        payload={"fact": "Supplier renewal date is July 18."},
+        source_model_call_ref="model_call_memory",
+    )
+    assert memory.target_owner == "MEMORY"
+    assert memory.requires_owner_review is True
+    assert memory.directly_committable is False
+
+    risk = gateway.security_risk_proposal(
+        risk_level="HIGH",
+        evidence_refs=("ev:secret",),
+        source_model_call_ref="model_call_security",
+    )
+    assert risk.target_owner == "SECURITY"
+    assert risk.requires_owner_review is True
+    assert risk.directly_enforced is False
+
+    action = gateway.tool_action_proposal(
+        action_name="send_email",
+        args={"to": "team@example.com", "body": "Draft"},
+        source_model_call_ref="model_call_tool",
+    )
+    assert action.target_owner == "AGENT_CORE"
+    assert action.requires_owner_binding is True
+    assert action.directly_executable is False
