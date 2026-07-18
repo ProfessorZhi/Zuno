@@ -33,6 +33,8 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelProviderSignalStatus,
     ModelRepairRecord,
     ModelQuotaPolicy,
+    ModelReadinessProbe,
+    ModelReadinessStatus,
     ModelRetentionSubject,
     ModelDeletionStep,
     ModelUsageKind,
@@ -41,7 +43,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 66))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 70))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -878,6 +880,87 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("delete did not enforce tombstone/visibility/cleanup/verification order")
     if not completed_delete.verified:
         errors.append("delete workflow did not preserve verification result")
+
+    legal_hold_delete = usage_gateway.deletion_workflow(
+        object_ref="model-artifact:legal",
+        tombstone=True,
+        visibility_revoked=True,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+        legal_hold=True,
+    )
+    if not legal_hold_delete.legal_hold or not legal_hold_delete.visibility_revoked:
+        errors.append("legal hold delete did not keep tombstone/visibility semantics")
+    if legal_hold_delete.physical_cleanup_allowed:
+        errors.append("legal hold allowed physical cleanup")
+    if legal_hold_delete.steps != (
+        ModelDeletionStep.TOMBSTONE,
+        ModelDeletionStep.VISIBILITY_REVOCATION,
+    ):
+        errors.append("legal hold delete restored or skipped visibility revocation")
+
+    sli = usage_gateway.sli_slo_dimension(
+        call_id="call:1",
+        attempt_id="attempt:1",
+        operation=ModelOperation.GENERATE,
+        role=ModelRole.EXECUTOR,
+        tenant_id="tenant-a",
+        provider_id="usage_fallback",
+        config_version="config:v1",
+        slo_ref="slo:model-generate:v1",
+    )
+    if (
+        not sli.call_id
+        or not sli.attempt_id
+        or sli.operation != ModelOperation.GENERATE
+        or sli.role != ModelRole.EXECUTOR
+        or sli.tenant_id != "tenant-a"
+        or sli.provider_id != "usage_fallback"
+        or sli.config_version != "config:v1"
+        or sli.slo_ref != "slo:model-generate:v1"
+    ):
+        errors.append("SLI/SLO did not distinguish call/attempt/operation/role/tenant/provider/config")
+
+    missing_readiness = usage_gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref=None,
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+        )
+    )
+    mock_only_readiness = usage_gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref="ev:security",
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+            mock_only=True,
+        )
+    )
+    ready = usage_gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref="ev:security",
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+        )
+    )
+    if missing_readiness.status != ModelReadinessStatus.NOT_READY or missing_readiness.missing_evidence != ("security",):
+        errors.append("readiness did not require adapter/security/persistence/usage/reconcile/capacity/deletion evidence")
+    if mock_only_readiness.status != ModelReadinessStatus.NOT_READY or mock_only_readiness.reason != "mock_only_not_ready":
+        errors.append("mock-only readiness was marked ready")
+    if ready.status != ModelReadinessStatus.READY:
+        errors.append("complete non-mock readiness evidence was not marked ready")
 
     split_action_result = ModelGateway(
         providers=[

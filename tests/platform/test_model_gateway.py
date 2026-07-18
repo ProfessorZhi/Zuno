@@ -27,6 +27,8 @@ from zuno.platform.model_gateway import (
     ModelProviderSignalStatus,
     ModelQuotaPolicy,
     ModelRepairRecord,
+    ModelReadinessProbe,
+    ModelReadinessStatus,
     ModelRetentionSubject,
     ModelDeletionStep,
     ModelUsageKind,
@@ -1031,3 +1033,94 @@ def test_model_gateway_operational_command_retention_and_delete_boundaries() -> 
         ModelDeletionStep.VERIFICATION,
     )
     assert completed_delete.verified is True
+
+
+def test_model_gateway_legal_hold_sli_slo_and_readiness_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    legal_hold_delete = gateway.deletion_workflow(
+        object_ref="model-artifact:legal",
+        tombstone=True,
+        visibility_revoked=True,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+        legal_hold=True,
+    )
+    assert legal_hold_delete.legal_hold is True
+    assert legal_hold_delete.visibility_revoked is True
+    assert legal_hold_delete.physical_cleanup_allowed is False
+    assert legal_hold_delete.steps == (
+        ModelDeletionStep.TOMBSTONE,
+        ModelDeletionStep.VISIBILITY_REVOCATION,
+    )
+
+    sli = gateway.sli_slo_dimension(
+        call_id="call:1",
+        attempt_id="attempt:1",
+        operation=ModelOperation.GENERATE,
+        role=ModelRole.EXECUTOR,
+        tenant_id="tenant-a",
+        provider_id="primary",
+        config_version="config:v1",
+        slo_ref="slo:model-generate:v1",
+    )
+    assert (
+        sli.call_id,
+        sli.attempt_id,
+        sli.operation,
+        sli.role,
+        sli.tenant_id,
+        sli.provider_id,
+        sli.config_version,
+        sli.slo_ref,
+    ) == (
+        "call:1",
+        "attempt:1",
+        ModelOperation.GENERATE,
+        ModelRole.EXECUTOR,
+        "tenant-a",
+        "primary",
+        "config:v1",
+        "slo:model-generate:v1",
+    )
+
+    missing = gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref=None,
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+        )
+    )
+    mock_only = gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref="ev:security",
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+            mock_only=True,
+        )
+    )
+    ready = gateway.readiness_verdict(
+        ModelReadinessProbe(
+            adapter_evidence_ref="ev:adapter",
+            security_evidence_ref="ev:security",
+            persistence_evidence_ref="ev:persistence",
+            usage_evidence_ref="ev:usage",
+            reconcile_evidence_ref="ev:reconcile",
+            capacity_evidence_ref="ev:capacity",
+            deletion_evidence_ref="ev:deletion",
+        )
+    )
+
+    assert missing.status == ModelReadinessStatus.NOT_READY
+    assert missing.missing_evidence == ("security",)
+    assert mock_only.status == ModelReadinessStatus.NOT_READY
+    assert mock_only.reason == "mock_only_not_ready"
+    assert ready.status == ModelReadinessStatus.READY

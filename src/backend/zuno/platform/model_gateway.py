@@ -142,6 +142,11 @@ class ModelDeletionStep(StrEnum):
     VERIFICATION = "VERIFICATION"
 
 
+class ModelReadinessStatus(StrEnum):
+    READY = "READY"
+    NOT_READY = "NOT_READY"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -575,6 +580,39 @@ class ModelDeletionWorkflow:
     visibility_revoked: bool
     physical_cleanup_allowed: bool
     verified: bool
+    legal_hold: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelSliSloDimension:
+    call_id: str
+    attempt_id: str
+    operation: ModelOperation
+    role: ModelRole
+    tenant_id: str
+    provider_id: str
+    config_version: str
+    slo_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelReadinessProbe:
+    adapter_evidence_ref: str | None
+    security_evidence_ref: str | None
+    persistence_evidence_ref: str | None
+    usage_evidence_ref: str | None
+    reconcile_evidence_ref: str | None
+    capacity_evidence_ref: str | None
+    deletion_evidence_ref: str | None
+    mock_only: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelReadinessVerdict:
+    status: ModelReadinessStatus
+    missing_evidence: tuple[str, ...]
+    mock_only: bool
+    reason: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -2251,13 +2289,14 @@ class ModelGateway:
         visibility_revoked: bool,
         physical_cleanup_requested: bool,
         verification_passed: bool,
+        legal_hold: bool = False,
     ) -> ModelDeletionWorkflow:
         steps: list[ModelDeletionStep] = []
         if tombstone:
             steps.append(ModelDeletionStep.TOMBSTONE)
         if visibility_revoked:
             steps.append(ModelDeletionStep.VISIBILITY_REVOCATION)
-        cleanup_allowed = tombstone and visibility_revoked and physical_cleanup_requested
+        cleanup_allowed = tombstone and visibility_revoked and physical_cleanup_requested and not legal_hold
         if cleanup_allowed:
             steps.append(ModelDeletionStep.PHYSICAL_CLEANUP)
         verified = cleanup_allowed and verification_passed
@@ -2270,6 +2309,62 @@ class ModelGateway:
             visibility_revoked=visibility_revoked,
             physical_cleanup_allowed=cleanup_allowed,
             verified=verified,
+            legal_hold=legal_hold,
+        )
+
+    def sli_slo_dimension(
+        self,
+        *,
+        call_id: str,
+        attempt_id: str,
+        operation: ModelOperation | str,
+        role: ModelRole | str,
+        tenant_id: str,
+        provider_id: str,
+        config_version: str,
+        slo_ref: str,
+    ) -> ModelSliSloDimension:
+        return ModelSliSloDimension(
+            call_id=call_id,
+            attempt_id=attempt_id,
+            operation=ModelOperation(operation),
+            role=ModelRole(role),
+            tenant_id=tenant_id,
+            provider_id=provider_id,
+            config_version=config_version,
+            slo_ref=slo_ref,
+        )
+
+    def readiness_verdict(self, probe: ModelReadinessProbe) -> ModelReadinessVerdict:
+        evidence = {
+            "adapter": probe.adapter_evidence_ref,
+            "security": probe.security_evidence_ref,
+            "persistence": probe.persistence_evidence_ref,
+            "usage": probe.usage_evidence_ref,
+            "reconcile": probe.reconcile_evidence_ref,
+            "capacity": probe.capacity_evidence_ref,
+            "deletion": probe.deletion_evidence_ref,
+        }
+        missing = tuple(name for name, ref in evidence.items() if not ref)
+        if probe.mock_only:
+            return ModelReadinessVerdict(
+                status=ModelReadinessStatus.NOT_READY,
+                missing_evidence=missing,
+                mock_only=True,
+                reason="mock_only_not_ready",
+            )
+        if missing:
+            return ModelReadinessVerdict(
+                status=ModelReadinessStatus.NOT_READY,
+                missing_evidence=missing,
+                mock_only=False,
+                reason="missing_evidence",
+            )
+        return ModelReadinessVerdict(
+            status=ModelReadinessStatus.READY,
+            missing_evidence=(),
+            mock_only=False,
+            reason="ready",
         )
 
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
@@ -2793,6 +2888,10 @@ __all__ = [
     "ModelRerankItem",
     "ModelRetentionBinding",
     "ModelRetentionSubject",
+    "ModelReadinessProbe",
+    "ModelReadinessStatus",
+    "ModelReadinessVerdict",
+    "ModelSliSloDimension",
     "ModelDeletionStep",
     "ModelDeletionWorkflow",
     "ModelRiskProposal",
