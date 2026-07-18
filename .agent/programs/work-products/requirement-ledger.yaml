@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 560
-  implementation_available: 196
+  target_not_current: 480
+  implementation_available: 276
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -2265,2082 +2265,2562 @@ requirements:
   - requirement_id: ARCH-CAP-001
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Capability / Skill 是业务能力语义、方法包、版本目录、可用性快照和选择治理模块，不得执行 Tool 或提交其他模块领域事实"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2429"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-001."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-001 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-001 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-001-UT"
-      - "CAP-001-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-001"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2429"
-      - "planned_test:CAP-001-UT"
-      - "planned_test:CAP-001-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-001"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-002
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Capability、Skill、Tool、Function Calling、MCP、API、CLI 和 Provider 必须使用本文的独立定义"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2430"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-002."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-002 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-002 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-002-UT"
-      - "CAP-002-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-002"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2430"
-      - "planned_test:CAP-002-UT"
-      - "planned_test:CAP-002-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-002"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-003
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Skill 必须通过 CapabilityRequirement 组合能力，不得把具体执行命令冒充方法步骤"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2431"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-003."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-003 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-003 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-003-UT"
-      - "CAP-003-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-003"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2431"
-      - "planned_test:CAP-003-UT"
-      - "planned_test:CAP-003-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-003"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-004
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "API、CLI、SDK、MCP、Browser、RPC 是 Provider 或执行协议，不是业务 CapabilityKind"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2432"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-004."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-004 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-004 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-004-UT"
-      - "CAP-004-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-004"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2432"
-      - "planned_test:CAP-004-UT"
-      - "planned_test:CAP-004-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-004"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-005
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Security Gate、Approval、Budget、Trace、Checkpoint、Lease 和 IdempotencyClaim 不是业务 Capability"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2433"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-005."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-005 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-005 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-005-UT"
-      - "CAP-005-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-005"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2433"
-      - "planned_test:CAP-005-UT"
-      - "planned_test:CAP-005-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-005"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-006
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Capability / Skill 的 Target 主设计只能由单一正式文档承载，Agent 镜像必须字节级一致"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2434"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-006."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-006 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-006 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-006-UT"
-      - "CAP-006-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-006"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2434"
-      - "planned_test:CAP-006-UT"
-      - "planned_test:CAP-006-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-006"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-007
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "Current、Gap 和 Measurement 只能由状态事实源维护，Target 文档不得冒充实现完成"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2435"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-007."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-007 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-007 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-007-UT"
-      - "CAP-007-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-007"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2435"
-      - "planned_test:CAP-007-UT"
-      - "planned_test:CAP-007-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-007"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-008
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "模型只能产生 Discovery、Mapping、Selection 或 Load Proposal，不得激活 Version、Binding 或执行 Tool"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2436"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-008."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-008 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-008 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-008-UT"
-      - "CAP-008-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-008"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2436"
-      - "planned_test:CAP-008-UT"
-      - "planned_test:CAP-008-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-008"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-009
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "跨模块消息必须使用 CrossModuleEnvelopeV1 并携带版本、Hash、Tenant、Trace 和适用的 Security Epoch"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2437"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-009."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-009 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-009 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-009-UT"
-      - "CAP-009-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-009"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2437"
-      - "planned_test:CAP-009-UT"
-      - "planned_test:CAP-009-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-009"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-010
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "FOUNDATION"
-    current_status: target_not_current
+    target_statement: "未知 Version、Enum、Hash、Generation、Tenant 或安全上下文必须 fail-closed、quarantine 或返回显式 Blocked"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2438"
-    gap: "?????FOUNDATION???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-010."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-010 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-010 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-010-UT"
-      - "CAP-010-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-010"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2438"
-      - "planned_test:CAP-010-UT"
-      - "planned_test:CAP-010-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-010"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-011
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "SkillDefinition 是稳定逻辑身份，SkillVersion 发布后不可原地修改"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2439"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-011."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-011 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-011 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-011-UT"
-      - "CAP-011-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-011"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2439"
-      - "planned_test:CAP-011-UT"
-      - "planned_test:CAP-011-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-011"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-012
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "SkillVersion 必须结构化保存 Metadata、Instruction、ResourceManifest、CapabilityRequirement 和 AcceptanceCriteria"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2440"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-012."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-012 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-012 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-012-UT"
-      - "CAP-012-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-012"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2440"
-      - "planned_test:CAP-012-UT"
-      - "planned_test:CAP-012-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-012"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-013
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "Skill discovery 只能先暴露 Metadata，Instruction 和 Resource 必须按需渐进加载"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2441"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-013."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-013 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-013 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-013-UT"
-      - "CAP-013-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-013"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2441"
-      - "planned_test:CAP-013-UT"
-      - "planned_test:CAP-013-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-013"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-014
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "每次 Skill discovery 必须产生不可变 SkillDiscoveryResult 并记录候选、拒绝原因和版本"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2442"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-014."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-014 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-014 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-014-UT"
-      - "CAP-014-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-014"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2442"
-      - "planned_test:CAP-014-UT"
-      - "planned_test:CAP-014-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-014"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-015
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "每次 Skill load 必须固定 SkillVersion、资源 Hash、Load Policy 和 Budget"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2443"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-015."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-015 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-015 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-015-UT"
-      - "CAP-015-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-015"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2443"
-      - "planned_test:CAP-015-UT"
-      - "planned_test:CAP-015-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-015"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-016
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "Skill Resource 必须按类型、数据等级、完整性、来源和可执行性分类"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2444"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-016."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-016 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-016 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-016-UT"
-      - "CAP-016-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-016"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2444"
-      - "planned_test:CAP-016-UT"
-      - "planned_test:CAP-016-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-016"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-017
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "Skill 中的脚本、Delegate 或可执行资源不得由 Skill Loader 直接运行，必须引用 ToolDefinitionRef"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2445"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-017."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-017 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-017 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-017-UT"
-      - "CAP-017-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-017"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2445"
-      - "planned_test:CAP-017-UT"
-      - "planned_test:CAP-017-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-017"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-018
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "Skill allowed_tools 或 allowed_capabilities 只能缩小候选范围，不能扩大授权"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2446"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-018."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-018 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-018 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-018-UT"
-      - "CAP-018-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-018"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2446"
-      - "planned_test:CAP-018-UT"
-      - "planned_test:CAP-018-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-018"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-019
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "外部或用户提供的 Skill 默认不可信，必须经过签名、完整性、策略和风险校验"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2447"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-019."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-019 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-019 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-019-UT"
-      - "CAP-019-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-019"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2447"
-      - "planned_test:CAP-019-UT"
-      - "planned_test:CAP-019-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-019"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-020
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SKILL"
-    current_status: target_not_current
+    target_statement: "SkillVersion 撤销、隔离或资源失效必须使依赖的 LoadResult 和 SelectionResult 失效并通知 Agent Core"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2448"
-    gap: "?????SKILL???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-020."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-020 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-020 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-020-UT"
-      - "CAP-020-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-020"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2448"
-      - "planned_test:CAP-020-UT"
-      - "planned_test:CAP-020-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-020"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-021
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "CapabilityDefinition 必须使用稳定业务语义身份，不得直接使用 Provider Tool 名称作为主身份"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2449"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-021."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-021 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-021 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-021-UT"
-      - "CAP-021-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-021"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2449"
-      - "planned_test:CAP-021-UT"
-      - "planned_test:CAP-021-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-021"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-022
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "CapabilityVersion 必须定义 Canonical Input/Output Contract、风险、依赖、兼容和验收语义"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2450"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-022."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-022 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-022 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-022-UT"
-      - "CAP-022-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-022"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2450"
-      - "planned_test:CAP-022-UT"
-      - "planned_test:CAP-022-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-022"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-023
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "Portable Capability 与 Provider-native Capability 必须分离，禁止强行最低公分母映射"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2451"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-023."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-023 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-023 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-023-UT"
-      - "CAP-023-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-023"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2451"
-      - "planned_test:CAP-023-UT"
-      - "planned_test:CAP-023-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-023"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-024
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "CapabilityProviderBinding 必须把精确 CapabilityVersion 映射到版本化 ToolDefinitionRef 或领域 Port Ref"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2452"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-024."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-024 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-024 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-024-UT"
-      - "CAP-024-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-024"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2452"
-      - "planned_test:CAP-024-UT"
-      - "planned_test:CAP-024-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-024"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-025
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "Binding 可由人工、规则或模型产生 Proposal，但只能由确定性验证和治理 Gate 激活"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2453"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-025."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-025 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-025 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-025-UT"
-      - "CAP-025-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-025"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2453"
-      - "planned_test:CAP-025-UT"
-      - "planned_test:CAP-025-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-025"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-026
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "模型生成的 Binding Proposal 不得仅凭语义相似度进入 ACTIVE"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2454"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-026."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-026 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-026 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-026-UT"
-      - "CAP-026-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-026"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2454"
-      - "planned_test:CAP-026-UT"
-      - "planned_test:CAP-026-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-026"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-027
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "ProviderConformanceRecord 必须覆盖输入、输出、副作用、幂等、Reconciliation、安全和错误语义"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2455"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-027."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-027 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-027 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-027-UT"
-      - "CAP-027-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-027"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2455"
-      - "planned_test:CAP-027-UT"
-      - "planned_test:CAP-027-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-027"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-028
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "同名 Tool 不得自动视为同一 Capability，不同名 Tool 也不得因名称不同而自动判为不等价"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2456"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-028."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-028 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-028 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-028-UT"
-      - "CAP-028-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-028"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2456"
-      - "planned_test:CAP-028-UT"
-      - "planned_test:CAP-028-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-028"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-029
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "一个 Capability 可以绑定多个 Provider，但必须记录 ProviderFamily、Backend、Quota 和 Effect Failure Domain"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2457"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-029."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-029 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-029 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-029-UT"
-      - "CAP-029-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-029"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2457"
-      - "planned_test:CAP-029-UT"
-      - "planned_test:CAP-029-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-029"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-030
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "BINDING"
-    current_status: target_not_current
+    target_statement: "Connector Pack 只能作为安装输入，激活后必须拆分为各模块拥有的版本化领域事实"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2458"
-    gap: "?????BINDING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-030."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-030 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-030 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-030-UT"
-      - "CAP-030-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-030"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2458"
-      - "planned_test:CAP-030-UT"
-      - "planned_test:CAP-030-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-030"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-031
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "CapabilityAvailabilitySnapshot 必须是不可变、版本化、带 TTL 和来源 Generation 的规划快照"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2459"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-031."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-031 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-031 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-031-UT"
-      - "CAP-031-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-031"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2459"
-      - "planned_test:CAP-031-UT"
-      - "planned_test:CAP-031-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-031"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-032
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "Availability 的 AVAILABLE 只表示可作为候选，不等价于 Authorization、Approval 或 Execution Readiness"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2460"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-032."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-032 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-032 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-032-UT"
-      - "CAP-032-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-032"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2460"
-      - "planned_test:CAP-032-UT"
-      - "planned_test:CAP-032-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-032"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-033
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "Availability Entry 必须区分 AVAILABLE、DEGRADED、CONFIG_REQUIRED、UNAVAILABLE、VERSION_INCOMPATIBLE、POLICY_CONSTRAINED、REVOKED 和 UNKNOWN"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2461"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-033."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-033 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-033 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-033-UT"
-      - "CAP-033-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-033"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2461"
-      - "planned_test:CAP-033-UT"
-      - "planned_test:CAP-033-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-033"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-034
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "PlanVersion 必须固定 CapabilityAvailabilitySnapshotRef，不能在恢复时静默重算并覆盖历史"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2462"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-034."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-034 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-034 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-034-UT"
-      - "CAP-034-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-034"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2462"
-      - "planned_test:CAP-034-UT"
-      - "planned_test:CAP-034-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-034"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-035
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "每个 Action 执行前必须由 08/09/11 完成最新 Readiness Preflight，07 快照不能替代该检查"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2463"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-035."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-035 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-035 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-035-UT"
-      - "CAP-035-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-035"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2463"
-      - "planned_test:CAP-035-UT"
-      - "planned_test:CAP-035-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-035"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-036
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "高风险 Action 对 Schema、Instance、Security Epoch、Credential 和 Approval 的陈旧容忍必须为零或显式 Policy"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2464"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-036."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-036 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-036 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-036-UT"
-      - "CAP-036-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-036"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2464"
-      - "planned_test:CAP-036-UT"
-      - "planned_test:CAP-036-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-036"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-037
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "CapabilitySelectionResult 必须记录候选集、硬过滤、评分、选中 Binding、实例或实例池 Ref 和 fallback 顺序"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2465"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-037."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-037 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-037 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-037-UT"
-      - "CAP-037-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-037"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2465"
-      - "planned_test:CAP-037-UT"
-      - "planned_test:CAP-037-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-037"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-038
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "模型可以提出 Provider Preference，但硬过滤、版本兼容和最终 Selection Commit 必须确定性执行"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2466"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-038."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-038 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-038 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-038-UT"
-      - "CAP-038-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-038"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2466"
-      - "planned_test:CAP-038-UT"
-      - "planned_test:CAP-038-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-038"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-039
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "StepFeasibilityDecision 归 Agent Core；07 只能提供 Requirement、Snapshot、Selection 和未满足约束"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2467"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-039."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-039 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-039 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-039-UT"
-      - "CAP-039-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-039"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2467"
-      - "planned_test:CAP-039-UT"
-      - "planned_test:CAP-039-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-039"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-040
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "AVAILABILITY"
-    current_status: target_not_current
+    target_statement: "Fallback Candidate 必须保持 Step Output Contract、风险上限、Tenant、数据驻留和副作用语义"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2468"
-    gap: "?????AVAILABILITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-040."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-040 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-040 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-040-UT"
-      - "CAP-040-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-040"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2468"
-      - "planned_test:CAP-040-UT"
-      - "planned_test:CAP-040-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-040"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-041
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "Skill 和 Capability Requirement 可以声明兼容版本范围，Selection 必须解析为精确版本"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2469"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-041."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-041 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-041 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-041-UT"
-      - "CAP-041-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-041"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2469"
-      - "planned_test:CAP-041-UT"
-      - "planned_test:CAP-041-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-041"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-042
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "PlanVersion 必须固定精确 CapabilityVersion、BindingVersion、ToolDefinitionRef 和 Schema Hash"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2470"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-042."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-042 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-042 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-042-UT"
-      - "CAP-042-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-042"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2470"
-      - "planned_test:CAP-042-UT"
-      - "planned_test:CAP-042-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-042"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-043
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "PreparedToolAction 必须再次固定精确 ToolDefinitionVersion、ProviderInstanceRef 和 Prepared Hash"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2471"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-043."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-043 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-043 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-043-UT"
-      - "CAP-043-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-043"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2471"
-      - "planned_test:CAP-043-UT"
-      - "planned_test:CAP-043-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-043"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-044
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "Tool Inventory 变化必须创建新 Generation 和 ToolDefinitionVersion，不得原地改 Schema"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2472"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-044."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-044 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-044 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-044-UT"
-      - "CAP-044-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-044"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2472"
-      - "planned_test:CAP-044-UT"
-      - "planned_test:CAP-044-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-044"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-045
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "MCP listChanged、OpenAPI 更新、CLI Manifest 更新必须触发 Binding 重新验证或失效"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2473"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-045."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-045 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-045 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-045-UT"
-      - "CAP-045-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-045"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2473"
-      - "planned_test:CAP-045-UT"
-      - "planned_test:CAP-045-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-045"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-046
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "Deprecated Version 可按 Policy 服务已固定 Run，但不得用于新的 Selection；Revoked Version 默认立即阻止新执行"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2474"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-046."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-046 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-046 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-046-UT"
-      - "CAP-046-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-046"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2474"
-      - "planned_test:CAP-046-UT"
-      - "planned_test:CAP-046-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-046"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-047
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "未知或不兼容 ToolDefinitionVersion 必须返回显式 Failure，不得按相近名称猜测替代"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2475"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-047."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-047 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-047 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-047-UT"
-      - "CAP-047-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-047"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2475"
-      - "planned_test:CAP-047-UT"
-      - "planned_test:CAP-047-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-047"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-048
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "Active Plan 引用失效时由 Agent Core 决定 Wait、Fallback、Replan 或 Block，07 不得改写 Plan"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2476"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-048."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-048 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-048 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-048-UT"
-      - "CAP-048-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-048"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2476"
-      - "planned_test:CAP-048-UT"
-      - "planned_test:CAP-048-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-048"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-049
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "SelectionResult、LoadResult 和 Snapshot 必须有 ResultValidity，支持 VALID、STALE、REVOKED、SUPERSEDED 和 UNKNOWN_VALIDITY"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2477"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-049."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-049 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-049 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-049-UT"
-      - "CAP-049-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-049"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2477"
-      - "planned_test:CAP-049-UT"
-      - "planned_test:CAP-049-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-049"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-050
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "VERSIONING"
-    current_status: target_not_current
+    target_statement: "Result reuse 前必须重验 Version、Scope、Security Epoch、Snapshot TTL 和 Resource Integrity"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2478"
-    gap: "?????VERSIONING???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-050."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-050 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-050 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-050-UT"
-      - "CAP-050-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-050"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2478"
-      - "planned_test:CAP-050-UT"
-      - "planned_test:CAP-050-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-050"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-051
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "ProviderInstance 表示业务连接实例，Credential Scope 表示授权能力，CapabilityConstraint 表示任务要求，三者不得混合"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2479"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-051."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-051 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-051 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-051-UT"
-      - "CAP-051-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-051"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2479"
-      - "planned_test:CAP-051-UT"
-      - "planned_test:CAP-051-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-051"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-052
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "07 可以选择 ProviderInstanceRef 或 ProviderPoolRef，但 08 只能在同一业务身份池内选择 RuntimeEndpointReplica"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2480"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-052."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-052 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-052 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-052-UT"
-      - "CAP-052-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-052"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2480"
-      - "planned_test:CAP-052-UT"
-      - "planned_test:CAP-052-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-052"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-053
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "不同 Tenant、App、Region、Identity Mode 或 Effect Domain 之间切换必须重新 Selection、Prepare 和 Authorization"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2481"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-053."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-053 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-053 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-053-UT"
-      - "CAP-053-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-053"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2481"
-      - "planned_test:CAP-053-UT"
-      - "planned_test:CAP-053-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-053"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-054
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "07 不保存 Secret、Token、Credential Material 或可执行 Payload，只保存 Requirement 和 Ref"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2482"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-054."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-054 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-054 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-054-UT"
-      - "CAP-054-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-054"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2482"
-      - "planned_test:CAP-054-UT"
-      - "planned_test:CAP-054-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-054"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-055
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "Capability Constraint 必须支持 Tenant、Workspace、Region、Data Residency、Identity Mode、Resource Scope 和 Provider Trust"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2483"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-055."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-055 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-055 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-055-UT"
-      - "CAP-055-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-055"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2483"
-      - "planned_test:CAP-055-UT"
-      - "planned_test:CAP-055-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-055"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-056
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "Provider Trust、签名、发布者、来源、许可证和供应链证明必须参与 Binding 与 Selection"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2484"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-056."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-056 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-056 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-056-UT"
-      - "CAP-056-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-056"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2484"
-      - "planned_test:CAP-056-UT"
-      - "planned_test:CAP-056-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-056"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-057
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "Skill Instruction 与 Security Policy 冲突时 Security 决定优先，Skill 不得改变 Authorization 结果"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2485"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-057."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-057 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-057 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-057-UT"
-      - "CAP-057-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-057"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2485"
-      - "planned_test:CAP-057-UT"
-      - "planned_test:CAP-057-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-057"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-058
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "Read-only、Write、External Effect、Destructive 等风险分类必须与 08/09 的 SideEffectClass 对齐"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2486"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-058."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-058 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-058 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-058-UT"
-      - "CAP-058-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-058"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2486"
-      - "planned_test:CAP-058-UT"
-      - "planned_test:CAP-058-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-058"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-059
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "数据等级和最小披露必须控制 Skill Metadata、Instruction、Resource 与 Tool Schema 的模型可见性"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2487"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-059."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-059 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-059 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-059-UT"
-      - "CAP-059-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-059"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2487"
-      - "planned_test:CAP-059-UT"
-      - "planned_test:CAP-059-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-059"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-060
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "SECURITY"
-    current_status: target_not_current
+    target_statement: "强制审计要求必须在 Selection 中传播为 Requirement，但持久化 Receipt 和 AuditEvent 分别归 11 与 10"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2488"
-    gap: "?????SECURITY???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-060."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-060 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-060 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-060-UT"
-      - "CAP-060-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-060"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2488"
-      - "planned_test:CAP-060-UT"
-      - "planned_test:CAP-060-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-060"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-061
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "PostgreSQL 保存 07 的定义、版本、Binding、Snapshot、Selection、状态转换和事件事实"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2489"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-061."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-061 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-061 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-061-UT"
-      - "CAP-061-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-061"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2489"
-      - "planned_test:CAP-061-UT"
-      - "planned_test:CAP-061-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-061"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-062
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "大型 Skill Resource 和不可变包内容保存于 Object Store，数据库只保存 Ref、Hash 和 Metadata"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2490"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-062."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-062 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-062 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-062-UT"
-      - "CAP-062-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-062"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2490"
-      - "planned_test:CAP-062-UT"
-      - "planned_test:CAP-062-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-062"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-063
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "定义发布、Active Pointer、Transition 和 Outbox 必须在同一事务中提交"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2491"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-063."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-063 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-063 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-063-UT"
-      - "CAP-063-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-063"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2491"
-      - "planned_test:CAP-063-UT"
-      - "planned_test:CAP-063-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-063"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-064
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "SelectionResult 与其候选摘要、Snapshot Ref、Policy Ref 和 Event 必须原子提交"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2492"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-064."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-064 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-064 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-064-UT"
-      - "CAP-064-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-064"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2492"
-      - "planned_test:CAP-064-UT"
-      - "planned_test:CAP-064-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-064"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-065
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "Cache、搜索索引和 Runtime Health 只能作为 Projection，不得成为 Definition、Version 或 Revocation 的事实源"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2493"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-065."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-065 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-065 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-065-UT"
-      - "CAP-065-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-065"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2493"
-      - "planned_test:CAP-065-UT"
-      - "planned_test:CAP-065-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-065"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-066
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "所有状态转换必须使用 expected generation/CAS 并产生结构化 Transition Record"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2494"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-066."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-066 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-066 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-066-UT"
-      - "CAP-066-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-066"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2494"
-      - "planned_test:CAP-066-UT"
-      - "planned_test:CAP-066-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-066"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-067
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "Outbox 提供 at-least-once 交付，消费者必须按 event_id 幂等"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2495"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-067."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-067 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-067 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-067-UT"
-      - "CAP-067-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-067"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2495"
-      - "planned_test:CAP-067-UT"
-      - "planned_test:CAP-067-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-067"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-068
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "崩溃恢复必须覆盖资源提交、版本发布、Active 切换、Snapshot 构建和撤销传播中断"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2496"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-068."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-068 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-068 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-068-UT"
-      - "CAP-068-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-068"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2496"
-      - "planned_test:CAP-068-UT"
-      - "planned_test:CAP-068-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-068"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-069
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "Capability、Skill、Binding、Snapshot、Selection 和 Outbox 必须有明确 Reconciler、Claim、Fencing 和人工升级"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2497"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-069."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-069 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-069 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-069-UT"
-      - "CAP-069-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-069"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2497"
-      - "planned_test:CAP-069-UT"
-      - "planned_test:CAP-069-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-069"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-070
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "PERSISTENCE"
-    current_status: target_not_current
+    target_statement: "时间、TTL、Expiry 和 Lease-sensitive 比较必须使用数据库时间；进程内耗时使用 monotonic clock"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2498"
-    gap: "?????PERSISTENCE???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-070."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-070 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-070 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-070-UT"
-      - "CAP-070-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-070"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2498"
-      - "planned_test:CAP-070-UT"
-      - "planned_test:CAP-070-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-070"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-071
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "核心代码不得包含针对飞书、Slack、GitHub、Jira 等具体 Provider 的条件分支"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2499"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-071."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-071 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-071 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-071-UT"
-      - "CAP-071-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-071"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2499"
-      - "planned_test:CAP-071-UT"
-      - "planned_test:CAP-071-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-071"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-072
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "08 只实现少数通用 HTTP、CLI、MCP、SDK、RPC、Browser、Database 和 LocalFunction Adapter 家族"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2500"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-072."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-072 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-072 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-072-UT"
-      - "CAP-072-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-072"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2500"
-      - "planned_test:CAP-072-UT"
-      - "planned_test:CAP-072-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-072"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-073
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "每个允许执行的 CLI 操作必须有结构化 Tool Manifest，禁止模型生成任意 Shell 字符串"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2501"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-073."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-073 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-073 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-073-UT"
-      - "CAP-073-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-073"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2501"
-      - "planned_test:CAP-073-UT"
-      - "planned_test:CAP-073-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-073"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-074
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "OpenAPI、MCP tools/list、CLI help 或 completion 可生成 Draft ToolDefinition/Binding Proposal，但不能直接 Active"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2502"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-074."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-074 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-074 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-074-UT"
-      - "CAP-074-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-074"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2502"
-      - "planned_test:CAP-074-UT"
-      - "planned_test:CAP-074-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-074"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-075
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "Connector Pack 必须支持 Provider 定义、Tool Manifest、Capability Mapping、Scope Mapping、Contract Test 和 Reconciliation 扩展"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2503"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-075."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-075 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-075 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-075-UT"
-      - "CAP-075-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-075"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2503"
-      - "planned_test:CAP-075-UT"
-      - "planned_test:CAP-075-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-075"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-076
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "只有声明式 Mapping 无法表达的签名、流式、交互式 CLI、认证或 Reconciliation 才允许 Custom Extension"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2504"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-076."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-076 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-076 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-076-UT"
-      - "CAP-076-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-076"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2504"
-      - "planned_test:CAP-076-UT"
-      - "planned_test:CAP-076-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-076"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-077
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "多 Provider fallback 必须识别共享 Backend、Quota 和 Effect Domain，禁止把同源实现冒充独立容灾"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2505"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-077."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-077 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-077 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-077-UT"
-      - "CAP-077-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-077"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2505"
-      - "planned_test:CAP-077-UT"
-      - "planned_test:CAP-077-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-077"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-078
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "副作用 ToolAttempt 为 UNKNOWN 时禁止跨 API、CLI、MCP Provider 盲目重试，必须先由 08 Reconcile"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2506"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-078."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-078 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-078 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-078-UT"
-      - "CAP-078-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-078"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2506"
-      - "planned_test:CAP-078-UT"
-      - "planned_test:CAP-078-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-078"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-079
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "07 必须提供 Discovery、Load、Binding、Availability、Selection、Fallback 和 Revocation 的结构化 Trace/Event"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2507"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-079."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-079 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-079 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-079-UT"
-      - "CAP-079-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-079"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2507"
-      - "planned_test:CAP-079-UT"
-      - "planned_test:CAP-079-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-079"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-CAP-080
     module: "07 Capability / Skill"
     mandatory: true
-    target_statement: "CONNECTOR"
-    current_status: target_not_current
+    target_statement: "Target 转为 Current 必须有代码、Migration、Unit、Integration、Fault、E2E、Trace、Eval 和运行证据"
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/07-capability-skill.md:2508"
-    gap: "?????CONNECTOR???? Current ????????????????? PHASE14 ?????????/??????????????? Current?"
+      - "src/backend/zuno/capability/runtime_batch.py"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
+      - "docs/evidence/capability-runtime-batch.md"
+    gap: "Capability runtime batch has code, tests, verifier, and evidence for ARCH-CAP-080."
     owner: "Capability / Skill"
     target_phase: "PHASE14"
-    planned_work_package: "P14 capability and skill control plane"
+    planned_work_package: "P14 capability skill governance"
     dependencies:
-      - "PHASE05"
+      - "PHASE03"
+      - "PHASE04"
       - "PHASE08"
-    failure_or_recovery_requirement: "target_not_current:ARCH-CAP-080 ??????????????????????? PHASE14 ???? fault/e2e ??????"
+      - "PHASE09"
+    failure_or_recovery_requirement: "implementation_available:ARCH-CAP-080 covered by focused Capability runtime batch tests and verifier."
     test_ids:
-      - "CAP-080-UT"
-      - "CAP-080-IT"
+      - "tests/capability/test_capability_runtime_batch.py"
+      - "tools/scripts/verify_capability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-CAP-080"
+      - "docs/evidence/capability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/07-capability-skill.md:2508"
-      - "planned_test:CAP-080-UT"
-      - "planned_test:CAP-080-IT"
-      - "planned_evidence:needs_evidence:EV-CAP-080"
+      - "current:src/backend/zuno/capability/runtime_batch.py"
+      - "test:tests/capability/test_capability_runtime_batch.py"
+      - "test:tools/scripts/verify_capability_runtime_batch.py"
+      - "evidence:docs/evidence/capability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-001
     module: "11 Infrastructure"

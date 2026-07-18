@@ -77,6 +77,45 @@ EXPECTED_EXPORTS = {
         "ToolSandboxContext",
         "build_default_tool_control_plane_runtime",
     ],
+    "zuno.capability.runtime_batch": [
+        "CapabilityAvailabilityEntry",
+        "CapabilityAvailabilitySnapshot",
+        "CapabilityAvailabilityStatus",
+        "CapabilityAuditBoundary",
+        "CapabilityBoundaryDecision",
+        "CapabilityConceptTaxonomy",
+        "CapabilityConnectorPolicy",
+        "CapabilityConstraintRecord",
+        "CapabilityCurrentEvidenceGate",
+        "CapabilityDecisionStatus",
+        "CapabilityDefinitionRecord",
+        "CapabilityEnvelope",
+        "CapabilityFallbackVerdict",
+        "CapabilityInventoryChange",
+        "CapabilityOutboxRecord",
+        "CapabilityPersistenceBoundary",
+        "CapabilityPinnedVersionSet",
+        "CapabilityProviderBindingRecord",
+        "CapabilityRecoveryPlan",
+        "CapabilityResultValidity",
+        "CapabilityReuseVerdict",
+        "CapabilityRuntimeBatch",
+        "CapabilitySecurityBoundary",
+        "CapabilitySelectionRecord",
+        "CapabilityTraceEvent",
+        "CapabilityTransactionRecord",
+        "CapabilityTransitionRecord",
+        "CapabilityUnknownContractVerdict",
+        "CapabilityVersionRecord",
+        "ConnectorPackSplit",
+        "ProviderConformanceRecord",
+        "ProviderFailureDomain",
+        "SkillDiscoveryResult",
+        "SkillLoadResult",
+        "SkillPolicyVerdict",
+        "SkillResourceClassification",
+        "SkillVersionRecord",
+    ],
     "zuno.capability.trace": [
         "CapabilitySelectionTrace",
     ],
@@ -120,6 +159,7 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     from zuno.capability.layer import CapabilityRouter
     from zuno.capability.registry import CapabilityRegistry
     from zuno.capability.runtime import ToolControlPlaneRuntime
+    from zuno.capability.runtime_batch import CapabilityRuntimeBatch
     from zuno.capability.selector import DynamicCapabilitySelector
 
     assert capability.CapabilityRecord is CapabilityRecord
@@ -128,6 +168,7 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     assert capability.DynamicCapabilitySelector is DynamicCapabilitySelector
     assert capability.ToolCardManifest is ToolCardManifest
     assert capability.ToolControlPlaneRuntime is ToolControlPlaneRuntime
+    assert capability.CapabilityRuntimeBatch is CapabilityRuntimeBatch
 
 
 def test_importing_capability_surfaces_does_not_load_heavy_runtime_modules() -> None:

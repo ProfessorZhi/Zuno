@@ -47,6 +47,9 @@ if TYPE_CHECKING:
         ToolSandboxContext,
         build_default_tool_control_plane_runtime,
     )
+    from zuno.capability.runtime_batch import (
+        CapabilityRuntimeBatch,
+    )
     from zuno.capability.selector import (
         CapabilitySelectionRequest,
         CapabilitySelectionResult,
@@ -70,6 +73,7 @@ _EXPORT_TO_MODULE = {
     "CapabilitySelectionResult": "zuno.capability.selector",
     "CapabilitySelectionTrace": "zuno.capability.trace",
     "CapabilityType": "zuno.capability.contracts",
+    "CapabilityRuntimeBatch": "zuno.capability.runtime_batch",
     "CredentialGrant": "zuno.capability.runtime",
     "DynamicCapabilitySelector": "zuno.capability.selector",
     "ApprovalGate": "zuno.capability.control_plane",
@@ -115,6 +119,7 @@ __all__ = [
     "CapabilitySelectionResult",
     "CapabilitySelectionTrace",
     "CapabilityType",
+    "CapabilityRuntimeBatch",
     "CredentialGrant",
     "DynamicCapabilitySelector",
     "ExecutorAdapterContract",
