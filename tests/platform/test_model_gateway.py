@@ -8,7 +8,10 @@ from zuno.platform.model_gateway import (
     ModelCallRequest,
     ModelCallState,
     ModelCategory,
+    ModelControlActionType,
+    ModelDomainWrite,
     ModelGateway,
+    ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
     ModelRepairRecord,
@@ -255,3 +258,73 @@ def test_model_gateway_stream_layers_chunks_for_product_events() -> None:
     assert result.product_events[-1].event_type == "model_stream_completed"
     assert result.attempt.provider_id == "primary"
     assert result.usage_receipts[0].attempt_id == result.attempt.attempt_id
+
+
+def test_model_gateway_failed_call_returns_reconcile_escalation_and_replan_proposal() -> None:
+    provider = MockModelProvider(provider_id="primary", model_id="mock-chat", fail_mode="timeout")
+    gateway = ModelGateway(providers=[provider])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Fail without fallback.",
+            provider_id="primary",
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.call_state == ModelCallState.FAILED
+    assert result.attempts[0].reconcile_required is True
+    assert result.attempts[0].state == ModelAttemptState.UNKNOWN_RECONCILE
+    assert [action.action_type for action in result.control_actions] == [
+        ModelControlActionType.RECONCILE,
+        ModelControlActionType.ESCALATE,
+        ModelControlActionType.REPLAN_PROPOSAL,
+    ]
+    assert result.control_actions[-1].owner == "AGENT_CORE"
+    assert all(not action.activates_plan_version and not action.modifies_run_outcome for action in result.control_actions)
+
+
+def test_model_gateway_fallback_and_repair_are_separate_control_actions() -> None:
+    primary = MockModelProvider(provider_id="primary", model_id="mock-primary", fail_mode="error")
+    fallback = MockModelProvider(provider_id="fallback", model_id="mock-fallback", response='{"answer": "ok"}')
+    gateway = ModelGateway(providers=[primary, fallback])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Fallback then repair.",
+            provider_id="primary",
+            fallback_provider_ids=["fallback"],
+            schema_version="schema:answer:2",
+            output_schema={"answer": str, "confidence": float},
+            repair_output='{"answer": "ok", "confidence": 0.7}',
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert [action.action_type for action in result.control_actions] == [
+        ModelControlActionType.FALLBACK,
+        ModelControlActionType.REPAIR,
+    ]
+    assert result.repair_record is not None
+    assert result.metrics.provider_id == "fallback"
+
+
+def test_model_gateway_rejects_plan_version_and_run_outcome_writes() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    for write in [ModelDomainWrite.PLAN_VERSION_ACTIVATION, ModelDomainWrite.RUN_OUTCOME_UPDATE]:
+        try:
+            gateway.invoke(
+                ModelGatewayRequest(
+                    category="chat",
+                    prompt="Forbidden domain write.",
+                    provider_id="primary",
+                    requested_domain_writes=(write,),
+                )
+            )
+        except ModelGatewayProviderError as exc:
+            assert "PlanVersion" in str(exc) or "RunOutcome" in str(exc)
+        else:
+            raise AssertionError("gateway accepted forbidden Agent Core domain write")

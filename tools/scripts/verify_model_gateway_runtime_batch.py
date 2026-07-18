@@ -14,7 +14,10 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelAttemptState,
     ModelCallState,
     ModelCategory,
+    ModelControlActionType,
+    ModelDomainWrite,
     ModelGateway,
+    ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
     ModelRepairRecord,
@@ -24,7 +27,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 21))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 24))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -160,6 +163,68 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("timeout did not enter unknown/reconcile before fallback")
     if not fallback_result.attempts[0].reconcile_required:
         errors.append("unknown provider execution did not require reconcile")
+
+    failed_result = ModelGateway(
+        providers=[MockModelProvider(provider_id="failed", model_id="mock-failed", fail_mode="timeout")]
+    ).invoke(
+        ModelGatewayRequest(
+            category=ModelCategory.CHAT,
+            prompt="Fail without fallback.",
+            provider_id="failed",
+        )
+    )
+    if failed_result.status != "failed" or failed_result.call_state != ModelCallState.FAILED:
+        errors.append("all-provider-failed path did not return a failed result")
+    if not failed_result.attempts[0].reconcile_required:
+        errors.append("provider-may-have-executed timeout did not enter reconcile")
+    if [action.action_type for action in failed_result.control_actions] != [
+        ModelControlActionType.RECONCILE,
+        ModelControlActionType.ESCALATE,
+        ModelControlActionType.REPLAN_PROPOSAL,
+    ]:
+        errors.append("retry/fallback/escalation/replan control actions are not separated")
+    if failed_result.control_actions[-1].owner != "AGENT_CORE":
+        errors.append("replan proposal is not owned by Agent Core")
+    if any(action.activates_plan_version or action.modifies_run_outcome for action in failed_result.control_actions):
+        errors.append("model gateway control action mutates Agent Core domain state")
+
+    split_action_result = ModelGateway(
+        providers=[
+            MockModelProvider(provider_id="primary_error", model_id="mock-primary", fail_mode="error"),
+            MockModelProvider(provider_id="fallback_repair", model_id="mock-fallback", response='{"answer": "ok"}'),
+        ]
+    ).invoke(
+        ModelGatewayRequest(
+            category=ModelCategory.CHAT,
+            prompt="Fallback then repair.",
+            provider_id="primary_error",
+            fallback_provider_ids=["fallback_repair"],
+            schema_version="schema:answer:2",
+            output_schema={"answer": str, "confidence": float},
+            repair_output='{"answer": "ok", "confidence": 0.7}',
+        )
+    )
+    if [action.action_type for action in split_action_result.control_actions] != [
+        ModelControlActionType.FALLBACK,
+        ModelControlActionType.REPAIR,
+    ]:
+        errors.append("fallback and repair are not independent control actions")
+
+    guarded_gateway = ModelGateway(providers=[MockModelProvider(provider_id="guard", model_id="mock-guard")])
+    for forbidden_write in [ModelDomainWrite.PLAN_VERSION_ACTIVATION, ModelDomainWrite.RUN_OUTCOME_UPDATE]:
+        try:
+            guarded_gateway.invoke(
+                ModelGatewayRequest(
+                    category=ModelCategory.CHAT,
+                    prompt="Forbidden domain write.",
+                    provider_id="guard",
+                    requested_domain_writes=(forbidden_write,),
+                )
+            )
+        except ModelGatewayProviderError:
+            pass
+        else:
+            errors.append(f"gateway accepted forbidden Agent Core domain write: {forbidden_write.value}")
 
     cancelled_provider = MockModelProvider(provider_id="cancel", model_id="mock-cancel")
     cancelled = ModelGateway(providers=[cancelled_provider]).invoke(

@@ -59,6 +59,21 @@ class ModelUsageKind(StrEnum):
     CORRECTION = "CORRECTION"
 
 
+class ModelControlActionType(StrEnum):
+    RETRY = "retry"
+    REPAIR = "repair"
+    FALLBACK = "fallback"
+    ESCALATE = "escalate"
+    REPLAN_PROPOSAL = "replan_proposal"
+    RECONCILE = "reconcile"
+
+
+class ModelDomainWrite(StrEnum):
+    NONE = "none"
+    PLAN_VERSION_ACTIVATION = "plan_version_activation"
+    RUN_OUTCOME_UPDATE = "run_outcome_update"
+
+
 class ModelGatewayProviderError(RuntimeError):
     pass
 
@@ -170,6 +185,32 @@ class ModelUsageReceipt:
             "total_tokens": self.total_tokens,
             "estimated_cost": self.estimated_cost,
             "immutable": self.immutable,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ModelControlAction:
+    action_id: str
+    action_type: ModelControlActionType
+    owner: Literal["MODEL_GATEWAY", "AGENT_CORE", "OBSERVABILITY"]
+    reason: str
+    attempt_id: str | None = None
+    activates_plan_version: bool = False
+    modifies_run_outcome: bool = False
+
+    def __post_init__(self) -> None:
+        if self.activates_plan_version or self.modifies_run_outcome:
+            raise ModelGatewayProviderError("model gateway cannot mutate Agent Core domain state")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "action_id": self.action_id,
+            "action_type": self.action_type.value,
+            "owner": self.owner,
+            "reason": self.reason,
+            "attempt_id": self.attempt_id,
+            "activates_plan_version": self.activates_plan_version,
+            "modifies_run_outcome": self.modifies_run_outcome,
         }
 
 
@@ -305,12 +346,14 @@ class ModelGatewayRequest:
     security_epoch_ref: str = "security:local:1"
     output_schema: dict[str, type] | None = None
     repair_output: str | None = None
+    requested_domain_writes: tuple[ModelDomainWrite | str, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.category = ModelCategory(self.category)
         self.role = ModelRole(self.role)
         self.operation = ModelOperation(self.operation) if self.operation else _default_operation(self.category)
+        self.requested_domain_writes = tuple(ModelDomainWrite(value) for value in self.requested_domain_writes)
 
 
 @dataclass(frozen=True, slots=True)
@@ -358,6 +401,7 @@ class ModelGatewayResult:
     binding: ModelGatewayBinding
     attempts: tuple[ModelAttemptReceipt, ...] = ()
     usage_receipts: tuple[ModelUsageReceipt, ...] = ()
+    control_actions: tuple[ModelControlAction, ...] = ()
     selected_attempt_id: str | None = None
     structured_output: dict[str, Any] | None = None
     repair_record: ModelRepairRecord | None = None
@@ -441,6 +485,7 @@ class ModelGateway:
         self.default_budget = default_budget or BudgetPolicy()
 
     def invoke(self, request: ModelGatewayRequest) -> ModelGatewayResult:
+        _ensure_gateway_domain_boundary(request)
         provider = self._select_provider(request.category, request.provider_id)
         binding = self._build_binding(request, provider)
         call_id = "model_call_" + binding.binding_hash[:16]
@@ -483,6 +528,7 @@ class ModelGateway:
                 binding=binding,
                 attempts=(),
                 usage_receipts=(estimate_receipt,),
+                control_actions=(),
             )
             return ModelGatewayResult(
                 status="blocked",
@@ -494,6 +540,7 @@ class ModelGateway:
                 call_state=ModelCallState.BUDGET_BLOCKED,
                 binding=binding,
                 usage_receipts=(estimate_receipt,),
+                control_actions=(),
             )
 
         if request.metadata.get("cancel_before_dispatch") is True:
@@ -516,6 +563,7 @@ class ModelGateway:
                 binding=binding,
                 attempts=(),
                 usage_receipts=(estimate_receipt, cancel_receipt),
+                control_actions=(),
             )
             return ModelGatewayResult(
                 status="cancelled",
@@ -527,6 +575,7 @@ class ModelGateway:
                 call_state=ModelCallState.CANCELLED,
                 binding=binding,
                 usage_receipts=(estimate_receipt, cancel_receipt),
+                control_actions=(),
             )
 
         candidate_ids = [provider.provider_id, *request.fallback_provider_ids]
@@ -536,6 +585,7 @@ class ModelGateway:
         last_error: str | None = None
         attempts: list[ModelAttemptReceipt] = []
         usage_receipts: list[ModelUsageReceipt] = [estimate_receipt]
+        control_actions: list[ModelControlAction] = []
 
         for attempt_index, provider_id in enumerate(candidate_ids):
             active_provider = self._select_provider(request.category, provider_id)
@@ -559,6 +609,22 @@ class ModelGateway:
                     completion_tokens=0,
                 )
                 usage_receipts.append(receipt)
+                control_actions.append(
+                    _control_action(
+                        call_id=call_id,
+                        action_type=ModelControlActionType.RECONCILE,
+                        reason="provider_may_have_executed_after_timeout",
+                        attempt_id=attempt_id,
+                    )
+                )
+                control_actions.append(
+                    _control_action(
+                        call_id=call_id,
+                        action_type=ModelControlActionType.FALLBACK if attempt_index + 1 < len(candidate_ids) else ModelControlActionType.ESCALATE,
+                        reason="timeout_boundary_after_attempt",
+                        attempt_id=attempt_id,
+                    )
+                )
                 attempts.append(
                     ModelAttemptReceipt(
                         attempt_id=attempt_id,
@@ -588,6 +654,14 @@ class ModelGateway:
                     completion_tokens=0,
                 )
                 usage_receipts.append(receipt)
+                control_actions.append(
+                    _control_action(
+                        call_id=call_id,
+                        action_type=ModelControlActionType.FALLBACK if attempt_index + 1 < len(candidate_ids) else ModelControlActionType.ESCALATE,
+                        reason="provider_error_boundary_after_attempt",
+                        attempt_id=attempt_id,
+                    )
+                )
                 attempts.append(
                     ModelAttemptReceipt(
                         attempt_id=attempt_id,
@@ -656,6 +730,15 @@ class ModelGateway:
                 completion_tokens=active_completion_tokens,
             )
             usage_receipts.append(receipt)
+            if repair_record is not None:
+                control_actions.append(
+                    _control_action(
+                        call_id=call_id,
+                        action_type=ModelControlActionType.REPAIR,
+                        reason=repair_record.failure_code,
+                        attempt_id=attempt_id,
+                    )
+                )
             attempts.append(
                 ModelAttemptReceipt(
                     attempt_id=attempt_id,
@@ -677,6 +760,7 @@ class ModelGateway:
                 binding=binding,
                 attempts=tuple(attempts),
                 usage_receipts=tuple(usage_receipts),
+                control_actions=tuple(control_actions),
             )
             return ModelGatewayResult(
                 status="succeeded",
@@ -689,6 +773,7 @@ class ModelGateway:
                 binding=binding,
                 attempts=tuple(attempts),
                 usage_receipts=tuple(usage_receipts),
+                control_actions=tuple(control_actions),
                 selected_attempt_id=attempt_id,
                 structured_output=structured_output,
                 repair_record=repair_record,
@@ -705,6 +790,25 @@ class ModelGateway:
             fallback_reason=fallback_reason,
         )
         final_state = ModelCallState.CANCELLED if attempts and attempts[-1].state == ModelAttemptState.CANCELLED else ModelCallState.FAILED
+        if final_state == ModelCallState.FAILED:
+            if not any(action.action_type == ModelControlActionType.ESCALATE for action in control_actions):
+                control_actions.append(
+                    _control_action(
+                        call_id=call_id,
+                        action_type=ModelControlActionType.ESCALATE,
+                        reason="all_model_attempts_failed",
+                        attempt_id=attempts[-1].attempt_id if attempts else None,
+                    )
+                )
+            control_actions.append(
+                _control_action(
+                    call_id=call_id,
+                    action_type=ModelControlActionType.REPLAN_PROPOSAL,
+                    reason="agent_core_may_replan_after_model_failure",
+                    attempt_id=attempts[-1].attempt_id if attempts else None,
+                    owner="AGENT_CORE",
+                )
+            )
         trace_event = self._build_trace_event(
             event_type="model_call_failed",
             request=request,
@@ -716,9 +820,24 @@ class ModelGateway:
             binding=binding,
             attempts=tuple(attempts),
             usage_receipts=tuple(usage_receipts),
+            control_actions=tuple(control_actions),
+        )
+        return ModelGatewayResult(
+            status="cancelled" if final_state == ModelCallState.CANCELLED else "failed",
+            output="",
+            metrics=failed_metrics,
+            budget_verdict=budget_verdict,
+            trace_event=trace_event,
+            call_id=call_id,
+            call_state=final_state,
+            binding=binding,
+            attempts=tuple(attempts),
+            usage_receipts=tuple(usage_receipts),
+            control_actions=tuple(control_actions),
         )
 
     def stream(self, request: ModelGatewayRequest) -> ModelStreamResult:
+        _ensure_gateway_domain_boundary(request)
         provider = self._select_provider(request.category, request.provider_id)
         binding = self._build_binding(request, provider)
         call_id = "model_call_" + binding.binding_hash[:16]
@@ -753,18 +872,6 @@ class ModelGateway:
             gateway_chunks=tuple(gateway_chunks),
             product_events=tuple(product_events),
             usage_receipts=(usage_receipt,),
-        )
-        return ModelGatewayResult(
-            status="cancelled" if final_state == ModelCallState.CANCELLED else "failed",
-            output="",
-            metrics=failed_metrics,
-            budget_verdict=budget_verdict,
-            trace_event=trace_event,
-            call_id=call_id,
-            call_state=final_state,
-            binding=binding,
-            attempts=tuple(attempts),
-            usage_receipts=tuple(usage_receipts),
         )
 
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
@@ -919,6 +1026,7 @@ class ModelGateway:
         binding: ModelGatewayBinding,
         attempts: tuple[ModelAttemptReceipt, ...],
         usage_receipts: tuple[ModelUsageReceipt, ...],
+        control_actions: tuple[ModelControlAction, ...],
         error: str | None = None,
     ) -> dict[str, Any]:
         payload = {
@@ -927,6 +1035,7 @@ class ModelGateway:
             "binding": binding.to_dict(),
             "attempts": [attempt.to_dict() for attempt in attempts],
             "usage_receipts": [receipt.to_dict() for receipt in usage_receipts],
+            "control_actions": [action.to_dict() for action in control_actions],
             **metrics.to_dict(),
             "budget_verdict": budget_verdict.to_dict(),
             "run_id": request.run_id,
@@ -1018,6 +1127,33 @@ def _stable_hash(payload: Any) -> str:
 
 def _error_ref(exc: BaseException) -> str:
     return "error_" + _stable_hash({"type": type(exc).__name__, "message": str(exc)})[:16]
+
+
+def _ensure_gateway_domain_boundary(request: ModelGatewayRequest) -> None:
+    forbidden = {
+        ModelDomainWrite.PLAN_VERSION_ACTIVATION,
+        ModelDomainWrite.RUN_OUTCOME_UPDATE,
+    }
+    requested = set(request.requested_domain_writes)
+    if requested & forbidden:
+        raise ModelGatewayProviderError("model gateway cannot activate PlanVersion or modify RunOutcome")
+
+
+def _control_action(
+    *,
+    call_id: str,
+    action_type: ModelControlActionType,
+    reason: str,
+    attempt_id: str | None,
+    owner: Literal["MODEL_GATEWAY", "AGENT_CORE", "OBSERVABILITY"] = "MODEL_GATEWAY",
+) -> ModelControlAction:
+    return ModelControlAction(
+        action_id="model_action_" + _stable_hash([call_id, action_type.value, reason, attempt_id, owner])[:16],
+        action_type=action_type,
+        owner=owner,
+        reason=reason,
+        attempt_id=attempt_id,
+    )
 
 
 def _validate_structured_output(request: ModelGatewayRequest, output: str) -> tuple[str, dict[str, Any] | None, ModelRepairRecord | None]:
@@ -1173,6 +1309,9 @@ __all__ = [
     "ModelCallResponse",
     "ModelCallState",
     "ModelCategory",
+    "ModelControlAction",
+    "ModelControlActionType",
+    "ModelDomainWrite",
     "ModelGateway",
     "ModelGatewayBinding",
     "ModelGatewayCancellationError",

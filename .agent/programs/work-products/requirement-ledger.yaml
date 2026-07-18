@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 672
-  implementation_available: 84
+  target_not_current: 669
+  implementation_available: 87
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -11424,91 +11424,94 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider 可能已执行时必须进入 UNKNOWN/Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2307"
-    gap: "?????Provider 可能已执行时必须进入 UNKNOWN/Reconcile???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-021 的 UNKNOWN/Reconcile、控制动作分离和 Agent Core domain boundary。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-021 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-021 由 verify_model_gateway_runtime_batch.py 覆盖 reconcile/control-action/domain-boundary fault 语义。"
     test_ids:
-      - "MODEL-021-UT"
-      - "MODEL-021-IT"
-      - "MODEL-021-FT"
-      - "MODEL-021-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-021"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2307"
-      - "planned_test:MODEL-021-UT"
-      - "planned_test:MODEL-021-IT"
-      - "planned_test:MODEL-021-FT"
-      - "planned_test:MODEL-021-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-021"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-022
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Retry、Repair、Fallback、Escalation 与 Replan 必须分开"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2308"
-    gap: "?????Retry、Repair、Fallback、Escalation 与 Replan 必须分开???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-022 的 UNKNOWN/Reconcile、控制动作分离和 Agent Core domain boundary。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-022 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-022 由 verify_model_gateway_runtime_batch.py 覆盖 reconcile/control-action/domain-boundary fault 语义。"
     test_ids:
-      - "MODEL-022-UT"
-      - "MODEL-022-IT"
-      - "MODEL-022-FT"
-      - "MODEL-022-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-022"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2308"
-      - "planned_test:MODEL-022-UT"
-      - "planned_test:MODEL-022-IT"
-      - "planned_test:MODEL-022-FT"
-      - "planned_test:MODEL-022-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-022"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-023
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Gateway 不得激活 PlanVersion 或修改 RunOutcome"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2309"
-    gap: "?????Gateway 不得激活 PlanVersion 或修改 RunOutcome???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-023 的 UNKNOWN/Reconcile、控制动作分离和 Agent Core domain boundary。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-023 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-023 由 verify_model_gateway_runtime_batch.py 覆盖 reconcile/control-action/domain-boundary fault 语义。"
     test_ids:
-      - "MODEL-023-UT"
-      - "MODEL-023-IT"
-      - "MODEL-023-FT"
-      - "MODEL-023-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-023"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2309"
-      - "planned_test:MODEL-023-UT"
-      - "planned_test:MODEL-023-IT"
-      - "planned_test:MODEL-023-FT"
-      - "planned_test:MODEL-023-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-023"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-024
     module: "04 Model Gateway"
