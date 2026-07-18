@@ -68,6 +68,7 @@ infra_requirement_006_010_ledger_subset: proven
 infra_requirement_064_evidence_gate: proven
 reconciler_supervision_boundary: proven
 checkpoint_boundary_version: proven
+restore_cutover_completion_gates: proven
 
 ## Stop Condition
 
@@ -134,6 +135,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 | `python tools/scripts/verify_phase04_reconciler_supervision_boundary.py` | passed; IdempotencyWorkerSupervisor 的 reconcile/no-reexecution 与 LeaseWorkerCoordinator 的 heartbeat/fenced commit/fail-closed 边界均有证据 |
 | `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过，official Checkpointer 仍 blocked |
+| `python tools/scripts/verify_phase04_restore_cutover_completion_gates.py` | passed; backup completed、isolated restore cutover 和 recovery cutover explicit allow 三类 gate 均保持 fail-closed |
 
 ## Missing Required Proof
 
@@ -203,6 +205,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Contract ownership boundary subset：`tools/scripts/verify_phase04_contract_ownership_boundaries.py` 固化 Index write/receipt/visibility 与 Knowledge acceptance 分层、IndexManifest/Acceptance 领域归属，以及 PreparedToolAction/ActionProposal/SecurityApproval/AuditPersistence owner 不重叠；该 gate 不替代 index adapter runtime、Tool effect runtime 或 audit runtime。
 - Reconciler supervision boundary subset：`tools/scripts/verify_phase04_reconciler_supervision_boundary.py` 固化 IdempotencyWorkerSupervisor 的 reconcile callback、owner/generation/expiry fencing、lost completion no-reexecution，以及 LeaseWorkerCoordinator 的 heartbeat、同事务 fenced commit、crash handoff 和 PostgreSQL partition fail-closed；该 gate 不证明所有产品 Reconciler 已接入。
 - Checkpoint boundary/version subset：`tools/scripts/verify_phase04_checkpoint_boundary_version.py` 固化 `agent_runtime_checkpoints` 归 Agent Core、`infra_checkpoints` 为 Infrastructure receipt、Checkpoint Commit 不等于 Domain Commit，以及 CHECKPOINT adapter/schema unknown version fail-closed；该 gate 不证明 official Checkpointer runtime 已安装或可恢复。
+- Restore/cutover completion gate subset：`tools/scripts/verify_phase04_restore_cutover_completion_gates.py` 固化 backup/restore/replay marker、isolated restore target、Coordinator approval 和 cutover fail-closed policy；该 gate 不证明完整 Backup/Restore/PITR、RecoverySet 或 official Checkpointer restore。
 
 Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
@@ -231,6 +234,8 @@ Infrastructure requirements `ARCH-INFRA-026` and `ARCH-INFRA-041` are now proven
 Infrastructure requirement `ARCH-INFRA-039` is now proven by `tools/scripts/verify_phase04_reconciler_supervision_boundary.py`: current Infrastructure reconciler supervision uses idempotency claim fencing, reconciliation without re-execution, lease heartbeat, fencing token and fail-closed ownership loss. This does not prove every product Reconciler has adopted the boundary.
 
 Infrastructure requirements `ARCH-INFRA-021` and `ARCH-INFRA-023` are now proven by `tools/scripts/verify_phase04_checkpoint_boundary_version.py`: Checkpoint/Domain facts are separated by schema ownership and receipt boundary, and CHECKPOINT adapter/schema unknown versions fail closed through the upgrade compatibility profile. This does not prove official Checkpointer runtime or restore.
+
+Infrastructure requirements `ARCH-INFRA-027`, `ARCH-INFRA-028`, and `ARCH-INFRA-053` are now proven by `tools/scripts/verify_phase04_restore_cutover_completion_gates.py`: backup completion is gated by required proof markers, isolated restore does not cut over automatically, and recovery cutover requires explicit Coordinator approval. This does not prove full recovery completion.
 
 ## Existing Partial Evidence
 

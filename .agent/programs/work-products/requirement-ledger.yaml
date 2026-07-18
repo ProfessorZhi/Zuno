@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 707
-  implementation_available: 49
+  target_not_current: 704
+  implementation_available: 52
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5113,51 +5113,63 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Backup 验证后才 Completed"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "tools/scripts/verify_phase04_complete_infrastructure.py"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
       - "docs/modules/11-infrastructure.md:1908"
-    gap: "?????Backup 验证后才 Completed???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Backup completion fail-closed gate is current; full backup/restore/replay proof markers remain missing and keep PHASE04 blocked."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-027 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: PHASE04 cannot be marked completed while backup_restore_replay and combined recovery proof markers are missing."
     test_ids:
-      - "INFRA-027-UT"
-      - "INFRA-027-IT"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "tests/repo/test_phase04_restore_cutover_completion_gates.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-027"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1908"
-      - "planned_test:INFRA-027-UT"
-      - "planned_test:INFRA-027-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-027"
+      - "current:tools/scripts/verify_phase04_complete_infrastructure.py"
+      - "current:tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "test:tests/repo/test_phase04_restore_cutover_completion_gates.py"
+      - "evidence:docs/evidence/phase04-restore-cutover-completion-gates.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-028
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Restore 隔离验证后 Cutover"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "docs/governance/infrastructure-dr-profile.yaml"
+      - "docs/evidence/phase04-backup-restore-replay.md"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
       - "docs/modules/11-infrastructure.md:1909"
-    gap: "?????Restore 隔离验证后 Cutover???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Restore isolation and no-auto-cutover gate is current; production cutover and full RecoverySet remain blocked."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-028 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: restore rehearsal uses an isolated temporary database and DR profile requires explicit cutover approval with default deny."
     test_ids:
-      - "INFRA-028-UT"
-      - "INFRA-028-IT"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "tests/repo/test_phase04_restore_cutover_completion_gates.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-028"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      - "docs/evidence/phase04-backup-restore-replay.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1909"
-      - "planned_test:INFRA-028-UT"
-      - "planned_test:INFRA-028-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-028"
+      - "current:docs/governance/infrastructure-dr-profile.yaml"
+      - "current:tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "test:tests/repo/test_phase04_restore_cutover_completion_gates.py"
+      - "evidence:docs/evidence/phase04-restore-cutover-completion-gates.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-029
     module: "11 Infrastructure"
@@ -5823,26 +5835,31 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Recovery Cutover 显式允许"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "docs/governance/infrastructure-dr-profile.yaml"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
       - "docs/modules/11-infrastructure.md:1934"
-    gap: "?????Recovery Cutover 显式允许???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Recovery cutover explicit allow gate is current; Coordinator approval is still pending and production cutover is not allowed."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-053 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: DR profile cutover_allowed_by_default=false and approval_owner=Coordinator keep recovery cutover fail-closed."
     test_ids:
-      - "INFRA-053-UT"
-      - "INFRA-053-IT"
+      - "tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "tests/repo/test_phase04_restore_cutover_completion_gates.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-053"
+      - "docs/evidence/phase04-restore-cutover-completion-gates.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1934"
-      - "planned_test:INFRA-053-UT"
-      - "planned_test:INFRA-053-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-053"
+      - "current:docs/governance/infrastructure-dr-profile.yaml"
+      - "current:tools/scripts/verify_phase04_restore_cutover_completion_gates.py"
+      - "test:tests/repo/test_phase04_restore_cutover_completion_gates.py"
+      - "evidence:docs/evidence/phase04-restore-cutover-completion-gates.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-054
     module: "11 Infrastructure"
