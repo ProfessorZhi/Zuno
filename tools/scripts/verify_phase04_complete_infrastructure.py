@@ -249,6 +249,12 @@ LEASE_FENCING_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-lease-fencin
 LEASE_COORDINATION_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_phase04_lease_worker_coordination.py"
 )
+RECONCILER_SUPERVISION_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_reconciler_supervision_boundary.py"
+)
+RECONCILER_SUPERVISION_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-reconciler-supervision-boundary.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -1672,6 +1678,37 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in lease_evidence:
                 errors.append(
                     f"PHASE04 lease/fencing evidence missing phrase: {phrase}"
+                )
+
+    if not RECONCILER_SUPERVISION_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 reconciler supervision boundary verifier")
+    else:
+        reconciler_boundary_errors = _load_verifier(
+            RECONCILER_SUPERVISION_BOUNDARY_VERIFIER,
+            "verify_phase04_reconciler_supervision_boundary",
+            "verify_phase04_reconciler_supervision_boundary",
+        )()
+        for reconciler_boundary_error in reconciler_boundary_errors:
+            errors.append(
+                "PHASE04 reconciler supervision boundary verification failed: "
+                f"{reconciler_boundary_error}"
+            )
+
+    if not RECONCILER_SUPERVISION_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 reconciler supervision boundary evidence")
+    else:
+        reconciler_boundary_evidence = _read(RECONCILER_SUPERVISION_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "reconciler_supervision_boundary: passed",
+            "idempotency_reconcile_no_reexecution: passed",
+            "lease_fencing_supervision: passed",
+            "postgres_partition_fail_closed: passed",
+            "不证明所有产品 Reconciler 已接入",
+        ]:
+            if phrase not in reconciler_boundary_evidence:
+                errors.append(
+                    "PHASE04 reconciler supervision boundary evidence missing phrase: "
+                    f"{phrase}"
                 )
 
     if not PARTIAL_EVIDENCE.exists():
