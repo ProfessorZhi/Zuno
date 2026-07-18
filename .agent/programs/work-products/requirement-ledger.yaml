@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 721
-  implementation_available: 35
+  target_not_current: 718
+  implementation_available: 38
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5457,76 +5457,82 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Milvus 可重建且非事实源"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1923"
-    gap: "?????Milvus 可重建且非事实源???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "docs/evidence/phase04-derived-index-boundary.md"
+    gap: "Milvus/VECTOR authority boundary is current as rebuildable and non-authoritative; current server adapter, visibility receipts, acceptance gate and rebuild drill remain later implementation targets."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 derived index boundary subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-042 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: VECTOR/Milvus target is non-authoritative, rebuildable from source, versioned, and excluded from PHASE04 required release adapter provenance"
     test_ids:
-      - "INFRA-042-UT"
-      - "INFRA-042-IT"
+      - "tests/repo/test_phase04_derived_index_boundary.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-042"
+      - "docs/evidence/phase04-derived-index-boundary.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1923"
-      - "planned_test:INFRA-042-UT"
-      - "planned_test:INFRA-042-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-042"
+      - "current:tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "current:tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "test:tests/repo/test_phase04_derived_index_boundary.py"
+      - "evidence:docs/evidence/phase04-derived-index-boundary.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-043
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Neo4j 可重建且不拥有 Ontology"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1924"
-    gap: "?????Neo4j 可重建且不拥有 Ontology???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "docs/evidence/phase04-derived-index-boundary.md"
+    gap: "Neo4j/GRAPH authority boundary is current as rebuildable and non-authoritative; current server adapter, ontology ownership enforcement, visibility receipts and rebuild drill remain later implementation targets."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 derived index boundary subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-043 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: GRAPH/Neo4j target is non-authoritative, rebuildable from source, versioned, and does not claim ontology ownership"
     test_ids:
-      - "INFRA-043-UT"
-      - "INFRA-043-IT"
+      - "tests/repo/test_phase04_derived_index_boundary.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-043"
+      - "docs/evidence/phase04-derived-index-boundary.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1924"
-      - "planned_test:INFRA-043-UT"
-      - "planned_test:INFRA-043-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-043"
+      - "current:tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "current:tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "test:tests/repo/test_phase04_derived_index_boundary.py"
+      - "evidence:docs/evidence/phase04-derived-index-boundary.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-044
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "BM25/Search Versioned/Rebuildable"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1925"
-    gap: "?????BM25/Search Versioned/Rebuildable???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "docs/evidence/phase04-derived-index-boundary.md"
+    gap: "BM25/Search/LEXICAL authority boundary is current as versioned and rebuildable; current server adapter, visibility receipts, acceptance gate and rebuild drill remain later implementation targets."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 derived index boundary subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-044 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: LEXICAL/BM25 target is non-authoritative, rebuildable from source, versioned, and excluded from PHASE04 required release adapter provenance"
     test_ids:
-      - "INFRA-044-UT"
-      - "INFRA-044-IT"
+      - "tests/repo/test_phase04_derived_index_boundary.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-044"
+      - "docs/evidence/phase04-derived-index-boundary.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1925"
-      - "planned_test:INFRA-044-UT"
-      - "planned_test:INFRA-044-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-044"
+      - "current:tools/scripts/verify_phase04_derived_index_boundary.py"
+      - "current:tools/scripts/verify_phase04_infrastructure_capability_profile.py"
+      - "test:tests/repo/test_phase04_derived_index_boundary.py"
+      - "evidence:docs/evidence/phase04-derived-index-boundary.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-045
     module: "11 Infrastructure"

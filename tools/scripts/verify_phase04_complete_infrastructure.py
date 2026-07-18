@@ -193,6 +193,12 @@ REDIS_OPTIONAL_BOUNDARY_VERIFIER = (
 REDIS_OPTIONAL_BOUNDARY_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-redis-optional-boundary.md"
 )
+DERIVED_INDEX_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_derived_index_boundary.py"
+)
+DERIVED_INDEX_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-derived-index-boundary.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1396,6 +1402,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in redis_optional_evidence:
                 errors.append(
                     "PHASE04 Redis optional boundary evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not DERIVED_INDEX_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 derived index boundary verifier")
+    else:
+        derived_index_errors = _load_verifier(
+            DERIVED_INDEX_BOUNDARY_VERIFIER,
+            "verify_phase04_derived_index_boundary",
+            "verify_phase04_derived_index_boundary",
+        )()
+        for derived_index_error in derived_index_errors:
+            errors.append(
+                "PHASE04 derived index boundary verification failed: "
+                f"{derived_index_error}"
+            )
+
+    if not DERIVED_INDEX_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 derived index boundary evidence")
+    else:
+        derived_index_evidence = _read(DERIVED_INDEX_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "vector_index_rebuildable_non_authoritative: passed",
+            "graph_index_rebuildable_non_authoritative: passed",
+            "lexical_index_rebuildable_non_authoritative: passed",
+            "derived_index_versioned_semantics: passed",
+            "derived_indexes_not_required_release_adapters: passed",
+            "It does not prove current server adapters for Milvus",
+        ]:
+            if phrase not in derived_index_evidence:
+                errors.append(
+                    "PHASE04 derived index boundary evidence missing phrase: "
                     f"{phrase}"
                 )
 
