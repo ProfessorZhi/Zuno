@@ -145,6 +145,12 @@ CAPACITY_ADMISSION_VERIFIER = (
 CAPACITY_ADMISSION_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-capacity-admission.md"
 )
+MANDATORY_AUDIT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_mandatory_audit.py"
+)
+MANDATORY_AUDIT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-mandatory-audit.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -1170,6 +1176,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in capacity_admission_evidence:
                 errors.append(
                     f"PHASE04 capacity admission evidence missing phrase: {phrase}"
+                )
+
+    if not MANDATORY_AUDIT_VERIFIER.exists():
+        errors.append("missing PHASE04 mandatory audit verifier")
+    else:
+        mandatory_audit_errors = _load_verifier(
+            MANDATORY_AUDIT_VERIFIER,
+            "verify_phase04_mandatory_audit",
+            "verify_phase04_mandatory_audit",
+        )()
+        for mandatory_audit_error in mandatory_audit_errors:
+            errors.append(
+                "PHASE04 mandatory audit verification failed: "
+                f"{mandatory_audit_error}"
+            )
+
+    if not MANDATORY_AUDIT_EVIDENCE.exists():
+        errors.append("missing PHASE04 mandatory audit evidence")
+    else:
+        mandatory_audit_evidence = _read(MANDATORY_AUDIT_EVIDENCE)
+        for phrase in [
+            "mandatory_audit_schema: passed",
+            "durable_audit_before_effect: passed",
+            "effect_without_durable_audit_rejected: passed",
+            "audit_capacity_fail_closed: passed",
+            "capacity_failed_audit_no_effect: passed",
+            "audit_capacity_recovers_after_observed_effect: passed",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "`ARCH-INFRA-054` 和 `ARCH-INFRA-055`",
+        ]:
+            if phrase not in mandatory_audit_evidence:
+                errors.append(
+                    f"PHASE04 mandatory audit evidence missing phrase: {phrase}"
                 )
 
     if not DR_PROFILE_VERIFIER.exists():

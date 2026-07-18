@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 701
-  implementation_available: 55
+  target_not_current: 699
+  implementation_available: 57
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5877,51 +5877,59 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Mandatory Audit Durable 后才 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1935"
-    gap: "?????Mandatory Audit Durable 后才 Effect???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_12_mandatory_audit.py"
+      - "tools/scripts/verify_phase04_mandatory_audit.py"
+      - "docs/evidence/phase04-mandatory-audit.md"
+    gap: "none within P04-T07 mandatory audit Infrastructure subscope; Tool/Product/Agent/Security runtime adoption remains separate owner work"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 mandatory audit subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-054 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: effect outbox write is rejected before durable mandatory audit receipt and accepted only after the audit row is durable"
     test_ids:
-      - "INFRA-054-UT"
-      - "INFRA-054-IT"
+      - "tests/integration/test_phase04_mandatory_audit.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-054"
+      - "docs/evidence/phase04-mandatory-audit.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1935"
-      - "planned_test:INFRA-054-UT"
-      - "planned_test:INFRA-054-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-054"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_12_mandatory_audit.py"
+      - "test:tests/integration/test_phase04_mandatory_audit.py"
+      - "evidence:docs/evidence/phase04-mandatory-audit.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-055
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Audit Capacity 有 Fail Mode"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1936"
-    gap: "?????Audit Capacity 有 Fail Mode???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/database/foundation.py"
+      - "infra/db/alembic/versions/20260718_12_mandatory_audit.py"
+      - "tools/scripts/verify_phase04_mandatory_audit.py"
+      - "docs/evidence/phase04-mandatory-audit.md"
+    gap: "none within P04-T07 mandatory audit Infrastructure subscope; broader caller retry/backoff policy remains owned by each runtime path"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 mandatory audit subscope completed"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-055 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: fail_closed audit channel capacity exhaustion raises AuditCapacityError and no effect outbox row is written"
     test_ids:
-      - "INFRA-055-UT"
-      - "INFRA-055-IT"
+      - "tests/integration/test_phase04_mandatory_audit.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-055"
+      - "docs/evidence/phase04-mandatory-audit.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1936"
-      - "planned_test:INFRA-055-UT"
-      - "planned_test:INFRA-055-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-055"
+      - "current:src/backend/zuno/platform/database/foundation.py"
+      - "current:infra/db/alembic/versions/20260718_12_mandatory_audit.py"
+      - "test:tests/integration/test_phase04_mandatory_audit.py"
+      - "evidence:docs/evidence/phase04-mandatory-audit.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-056
     module: "11 Infrastructure"

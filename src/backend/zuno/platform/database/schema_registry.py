@@ -35,6 +35,7 @@ DOMAIN_TABLE_OWNERS = {
 }
 
 INFRASTRUCTURE_TABLES = {
+    "infra_audit_channels",
     "infra_capacity_admissions",
     "infra_capacity_reservations",
     "infra_checkpoints",
@@ -43,6 +44,7 @@ INFRASTRUCTURE_TABLES = {
     "infra_inbox_messages",
     "infra_migration_backfill_chunks",
     "infra_migration_backfills",
+    "infra_mandatory_audit_events",
     "infra_object_manifests",
     "infra_outbox_events",
     "infra_outbox_sequences",
@@ -59,6 +61,7 @@ REVISION_OWNERS = {
     "20260717_09": "Product Surface",
     "20260717_10": "Infrastructure",
     "20260718_11": "Infrastructure",
+    "20260718_12": "Infrastructure",
 }
 
 ONLINE_SCHEMA_OBJECTS = {

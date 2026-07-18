@@ -24,6 +24,10 @@ class CapacityBackpressureError(RuntimeError):
     pass
 
 
+class AuditCapacityError(RuntimeError):
+    pass
+
+
 class FencingRejectedError(RuntimeError):
     pass
 
@@ -144,6 +148,18 @@ class CapacityReservationReceipt:
     generation: int
     remaining_capacity: int
     expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class AuditPersistenceReceipt:
+    audit_id: str
+    channel_id: str
+    effect_id: str
+    owner_id: str
+    payload_hash: str
+    generation: int
+    remaining_capacity: int
+    durable_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -1442,6 +1458,196 @@ class InfrastructureRepository:
         if result.rowcount != 1:
             raise FencingRejectedError("capacity reservation cannot be released by this owner")
 
+    def configure_audit_channel(
+        self,
+        *,
+        channel_id: str,
+        capacity_limit: int,
+        owner_id: str,
+        fail_mode: str = "fail_closed",
+        drained: bool = False,
+    ) -> int:
+        if not channel_id.strip():
+            raise ValueError("channel_id must not be empty")
+        if capacity_limit < 1:
+            raise ValueError("capacity_limit must be positive")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        if fail_mode not in {"fail_closed"}:
+            raise ValueError("unsupported mandatory audit fail_mode")
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_audit_channels(
+                    channel_id, capacity_limit, fail_mode, drained, generation, updated_by
+                ) VALUES (
+                    :channel_id, :capacity_limit, :fail_mode, :drained, 1, :owner_id
+                )
+                ON CONFLICT (channel_id) DO UPDATE
+                SET capacity_limit = EXCLUDED.capacity_limit,
+                    fail_mode = EXCLUDED.fail_mode,
+                    drained = EXCLUDED.drained,
+                    generation = infra_audit_channels.generation + 1,
+                    updated_by = EXCLUDED.updated_by,
+                    updated_at = now()
+                RETURNING generation
+                """
+            ),
+            {
+                "channel_id": channel_id,
+                "capacity_limit": capacity_limit,
+                "fail_mode": fail_mode,
+                "drained": drained,
+                "owner_id": owner_id,
+            },
+        ).one()
+        return int(row.generation)
+
+    def record_mandatory_audit(
+        self,
+        *,
+        channel_id: str,
+        effect_id: str,
+        owner_id: str,
+        payload: dict[str, Any],
+    ) -> AuditPersistenceReceipt:
+        if not channel_id.strip():
+            raise ValueError("channel_id must not be empty")
+        if not effect_id.strip():
+            raise ValueError("effect_id must not be empty")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        payload_hash = canonical_sha256(payload)
+        channel = self.connection.execute(
+            text(
+                """
+                SELECT channel_id, capacity_limit, fail_mode, drained, generation
+                FROM infra_audit_channels
+                WHERE channel_id = :channel_id
+                FOR UPDATE
+                """
+            ),
+            {"channel_id": channel_id},
+        ).first()
+        if channel is None or bool(channel.drained):
+            raise AuditCapacityError("mandatory audit channel is missing or drained")
+
+        in_flight = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT COALESCE(COUNT(*), 0)::integer
+                    FROM infra_mandatory_audit_events
+                    WHERE channel_id = :channel_id
+                      AND status = 'durable'
+                    """
+                ),
+                {"channel_id": channel_id},
+            ).scalar_one()
+        )
+        remaining_capacity = int(channel.capacity_limit) - in_flight - 1
+        if remaining_capacity < 0:
+            raise AuditCapacityError("mandatory audit capacity exhausted")
+
+        audit_id = f"audit:{uuid4()}"
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_mandatory_audit_events(
+                    audit_id, channel_id, effect_id, owner_id, payload_hash,
+                    payload, status, generation
+                ) VALUES (
+                    :audit_id, :channel_id, :effect_id, :owner_id, :payload_hash,
+                    CAST(:payload AS jsonb), 'durable', :generation
+                )
+                RETURNING audit_id, channel_id, effect_id, owner_id, payload_hash,
+                          generation, created_at
+                """
+            ),
+            {
+                "audit_id": audit_id,
+                "channel_id": channel_id,
+                "effect_id": effect_id,
+                "owner_id": owner_id,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+                "generation": int(channel.generation),
+            },
+        ).one()
+        return AuditPersistenceReceipt(
+            audit_id=str(row.audit_id),
+            channel_id=str(row.channel_id),
+            effect_id=str(row.effect_id),
+            owner_id=str(row.owner_id),
+            payload_hash=str(row.payload_hash),
+            generation=int(row.generation),
+            remaining_capacity=remaining_capacity,
+            durable_at=row.created_at,
+        )
+
+    def assert_audit_durable_for_effect(
+        self,
+        *,
+        audit_id: str,
+        effect_id: str,
+        owner_id: str,
+    ) -> AuditPersistenceReceipt:
+        if not audit_id.strip() or not effect_id.strip() or not owner_id.strip():
+            raise ValueError("audit_id, effect_id and owner_id must not be empty")
+        row = self.connection.execute(
+            text(
+                """
+                SELECT audit_id, channel_id, effect_id, owner_id, payload_hash,
+                       generation, created_at
+                FROM infra_mandatory_audit_events
+                WHERE audit_id = :audit_id
+                  AND effect_id = :effect_id
+                  AND owner_id = :owner_id
+                  AND status = 'durable'
+                FOR UPDATE
+                """
+            ),
+            {"audit_id": audit_id, "effect_id": effect_id, "owner_id": owner_id},
+        ).first()
+        if row is None:
+            raise FencingRejectedError("effect cannot run before durable mandatory audit")
+        return AuditPersistenceReceipt(
+            audit_id=str(row.audit_id),
+            channel_id=str(row.channel_id),
+            effect_id=str(row.effect_id),
+            owner_id=str(row.owner_id),
+            payload_hash=str(row.payload_hash),
+            generation=int(row.generation),
+            remaining_capacity=0,
+            durable_at=row.created_at,
+        )
+
+    def mark_audited_effect_observed(
+        self,
+        *,
+        audit_id: str,
+        effect_id: str,
+        owner_id: str,
+    ) -> None:
+        if not audit_id.strip() or not effect_id.strip() or not owner_id.strip():
+            raise ValueError("audit_id, effect_id and owner_id must not be empty")
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_mandatory_audit_events
+                SET status = 'effect_observed',
+                    effect_observed_at = now()
+                WHERE audit_id = :audit_id
+                  AND effect_id = :effect_id
+                  AND owner_id = :owner_id
+                  AND status = 'durable'
+                """
+            ),
+            {"audit_id": audit_id, "effect_id": effect_id, "owner_id": owner_id},
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("audited effect cannot be observed by this owner")
+
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         if ttl_seconds < 1:
             raise ValueError("lease ttl_seconds must be positive")
@@ -1798,6 +2004,8 @@ def _sqlstate(exc: DBAPIError) -> str:
 
 
 __all__ = [
+    "AuditCapacityError",
+    "AuditPersistenceReceipt",
     "CapacityBackpressureError",
     "CapacityReservationReceipt",
     "DeliveryWatermarkReceipt",
