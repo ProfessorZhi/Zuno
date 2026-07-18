@@ -113,6 +113,12 @@ class ModelOverloadState(StrEnum):
     LOAD_SHEDDING = "LOAD_SHEDDING"
 
 
+class ModelCacheKind(StrEnum):
+    PROVIDER_PROMPT = "PROVIDER_PROMPT"
+    METADATA = "METADATA"
+    RESULT = "RESULT"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -460,6 +466,52 @@ class ModelOverloadDecision:
     reason: str
     preserved_gates: tuple[str, ...]
     bypass_allowed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCachePolicy:
+    cache_kind: ModelCacheKind
+    enabled: bool
+    tenant_id: str
+    config_version: str
+    schema_version: str
+    model_version: str
+    adapter_version: str
+    security_epoch_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCacheKey:
+    cache_kind: ModelCacheKind
+    tenant_id: str
+    cache_key: str
+    version_scope: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCacheLookup:
+    cache_kind: ModelCacheKind
+    key: ModelCacheKey
+    hit: bool
+    provider_attempt_allowed: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCacheReuseReceipt:
+    reuse_receipt_id: str
+    cache_key: str
+    source_result_ref: str
+    call_id: str
+    creates_provider_attempt: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCacheInvalidationDecision:
+    cache_key: str
+    invalidated: bool
+    reason: Literal["revocation", "deletion", "model_retirement", "validity_changed"]
+    tombstone_ref: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -1919,6 +1971,132 @@ class ModelGateway:
             preserved_gates=gate_tuple,
         )
 
+    def cache_policy(
+        self,
+        *,
+        cache_kind: ModelCacheKind | str,
+        tenant_id: str,
+        config_version: str,
+        schema_version: str,
+        model_version: str,
+        adapter_version: str,
+        security_epoch_ref: str,
+        enabled: bool | None = None,
+    ) -> ModelCachePolicy:
+        normalized_kind = ModelCacheKind(cache_kind)
+        return ModelCachePolicy(
+            cache_kind=normalized_kind,
+            enabled=False if enabled is None and normalized_kind == ModelCacheKind.RESULT else bool(enabled),
+            tenant_id=tenant_id,
+            config_version=config_version,
+            schema_version=schema_version,
+            model_version=model_version,
+            adapter_version=adapter_version,
+            security_epoch_ref=security_epoch_ref,
+        )
+
+    def cache_key(
+        self,
+        *,
+        policy: ModelCachePolicy,
+        prompt_hash: str,
+    ) -> ModelCacheKey:
+        version_scope = (
+            policy.config_version,
+            policy.schema_version,
+            policy.model_version,
+            policy.adapter_version,
+            policy.security_epoch_ref,
+        )
+        return ModelCacheKey(
+            cache_kind=policy.cache_kind,
+            tenant_id=policy.tenant_id,
+            version_scope=version_scope,
+            cache_key="cache_"
+            + _stable_hash(
+                [
+                    policy.cache_kind.value,
+                    policy.tenant_id,
+                    *version_scope,
+                    prompt_hash,
+                ]
+            )[:24],
+        )
+
+    def lookup_cache(
+        self,
+        *,
+        policy: ModelCachePolicy,
+        key: ModelCacheKey,
+        stored_result_ref: str | None,
+    ) -> ModelCacheLookup:
+        if key.cache_kind != policy.cache_kind or key.tenant_id != policy.tenant_id:
+            return ModelCacheLookup(
+                cache_kind=policy.cache_kind,
+                key=key,
+                hit=False,
+                provider_attempt_allowed=True,
+                reason="cache_scope_mismatch",
+            )
+        if key.version_scope != (
+            policy.config_version,
+            policy.schema_version,
+            policy.model_version,
+            policy.adapter_version,
+            policy.security_epoch_ref,
+        ):
+            return ModelCacheLookup(
+                cache_kind=policy.cache_kind,
+                key=key,
+                hit=False,
+                provider_attempt_allowed=True,
+                reason="cache_version_mismatch",
+            )
+        if not policy.enabled or stored_result_ref is None:
+            return ModelCacheLookup(
+                cache_kind=policy.cache_kind,
+                key=key,
+                hit=False,
+                provider_attempt_allowed=True,
+                reason="cache_disabled_or_empty",
+            )
+        return ModelCacheLookup(
+            cache_kind=policy.cache_kind,
+            key=key,
+            hit=True,
+            provider_attempt_allowed=False,
+            reason="cache_hit",
+        )
+
+    def cache_reuse_receipt(
+        self,
+        *,
+        lookup: ModelCacheLookup,
+        source_result_ref: str,
+        call_id: str,
+    ) -> ModelCacheReuseReceipt:
+        if not lookup.hit:
+            raise ModelGatewayProviderError("cache reuse receipt requires cache hit")
+        return ModelCacheReuseReceipt(
+            reuse_receipt_id="cache_reuse_" + _stable_hash([lookup.key.cache_key, source_result_ref, call_id])[:16],
+            cache_key=lookup.key.cache_key,
+            source_result_ref=source_result_ref,
+            call_id=call_id,
+        )
+
+    def invalidate_cache(
+        self,
+        *,
+        key: ModelCacheKey,
+        reason: Literal["revocation", "deletion", "model_retirement", "validity_changed"],
+    ) -> ModelCacheInvalidationDecision:
+        return ModelCacheInvalidationDecision(
+            cache_key=key.cache_key,
+            invalidated=True,
+            reason=reason,
+            tombstone_ref="cache_tombstone_" + _stable_hash([key.cache_key, reason])[:16],
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -2392,6 +2570,12 @@ __all__ = [
     "ModelAdapterConformanceVerdict",
     "ModelCompressedContext",
     "ModelCallConfigBinding",
+    "ModelCacheInvalidationDecision",
+    "ModelCacheKey",
+    "ModelCacheKind",
+    "ModelCacheLookup",
+    "ModelCachePolicy",
+    "ModelCacheReuseReceipt",
     "ModelControlAction",
     "ModelControlActionType",
     "ModelCapabilityProfile",

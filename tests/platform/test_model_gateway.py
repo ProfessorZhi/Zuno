@@ -7,6 +7,7 @@ from zuno.platform.model_gateway import (
     BudgetVerdict,
     ModelAdmissionLayer,
     ModelAttemptState,
+    ModelCacheKind,
     ModelCallRequest,
     ModelCallState,
     ModelCategory,
@@ -832,3 +833,117 @@ def test_model_gateway_admission_queue_and_overload_boundaries() -> None:
     assert shedding.state == ModelOverloadState.LOAD_SHEDDING and shedding.load_shedding is True
     assert shedding.preserved_gates == required
     assert shedding.bypass_allowed is False
+
+
+def test_model_gateway_cache_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+    prompt_policy = gateway.cache_policy(
+        cache_kind=ModelCacheKind.PROVIDER_PROMPT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+    metadata_policy = gateway.cache_policy(
+        cache_kind=ModelCacheKind.METADATA,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+    result_policy_default = gateway.cache_policy(
+        cache_kind=ModelCacheKind.RESULT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+    )
+    result_policy_enabled = gateway.cache_policy(
+        cache_kind=ModelCacheKind.RESULT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+
+    prompt_key = gateway.cache_key(policy=prompt_policy, prompt_hash="prompt-hash")
+    metadata_key = gateway.cache_key(policy=metadata_policy, prompt_hash="prompt-hash")
+    result_key = gateway.cache_key(policy=result_policy_enabled, prompt_hash="prompt-hash")
+    other_tenant_key = gateway.cache_key(
+        policy=gateway.cache_policy(
+            cache_kind=ModelCacheKind.RESULT,
+            tenant_id="tenant-b",
+            config_version="config:v1",
+            schema_version="schema:v1",
+            model_version="model:v1",
+            adapter_version="adapter:v1",
+            security_epoch_ref="security:v1",
+            enabled=True,
+        ),
+        prompt_hash="prompt-hash",
+    )
+    other_version_key = gateway.cache_key(
+        policy=gateway.cache_policy(
+            cache_kind=ModelCacheKind.RESULT,
+            tenant_id="tenant-a",
+            config_version="config:v2",
+            schema_version="schema:v1",
+            model_version="model:v1",
+            adapter_version="adapter:v1",
+            security_epoch_ref="security:v1",
+            enabled=True,
+        ),
+        prompt_hash="prompt-hash",
+    )
+
+    assert len({prompt_key.cache_key, metadata_key.cache_key, result_key.cache_key}) == 3
+    assert result_policy_default.enabled is False
+    assert result_key.cache_key != other_tenant_key.cache_key
+    assert result_key.cache_key != other_version_key.cache_key
+
+    disabled_lookup = gateway.lookup_cache(
+        policy=result_policy_default,
+        key=result_key,
+        stored_result_ref="result:1",
+    )
+    hit = gateway.lookup_cache(
+        policy=result_policy_enabled,
+        key=result_key,
+        stored_result_ref="result:1",
+    )
+    reuse = gateway.cache_reuse_receipt(
+        lookup=hit,
+        source_result_ref="result:1",
+        call_id="model_call_cache_hit",
+    )
+
+    assert disabled_lookup.hit is False
+    assert disabled_lookup.provider_attempt_allowed is True
+    assert hit.hit is True
+    assert hit.provider_attempt_allowed is False
+    assert reuse.creates_provider_attempt is False
+    assert reuse.source_result_ref == "result:1"
+
+    invalidations = [
+        gateway.invalidate_cache(key=result_key, reason=reason)
+        for reason in ("revocation", "deletion", "model_retirement", "validity_changed")
+    ]
+    assert [item.invalidated for item in invalidations] == [True, True, True, True]
+    assert [item.reason for item in invalidations] == [
+        "revocation",
+        "deletion",
+        "model_retirement",
+        "validity_changed",
+    ]
+    assert all(item.tombstone_ref.startswith("cache_tombstone_") for item in invalidations)

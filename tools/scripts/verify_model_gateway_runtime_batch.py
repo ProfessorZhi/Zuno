@@ -14,6 +14,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
     BudgetVerdict,
     ModelAdmissionLayer,
     ModelAttemptState,
+    ModelCacheKind,
     ModelCallState,
     ModelCategory,
     ModelCapabilityStatus,
@@ -37,7 +38,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 58))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 62))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -681,6 +682,119 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("severe overload did not produce explicit load shedding state")
     if shedding.preserved_gates != required_gates or shedding.bypass_allowed:
         errors.append("overload bypassed security/validation/usage/audit/budget gates")
+
+    prompt_policy = usage_gateway.cache_policy(
+        cache_kind=ModelCacheKind.PROVIDER_PROMPT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+    metadata_policy = usage_gateway.cache_policy(
+        cache_kind=ModelCacheKind.METADATA,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+    result_policy_default = usage_gateway.cache_policy(
+        cache_kind=ModelCacheKind.RESULT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+    )
+    result_policy_enabled = usage_gateway.cache_policy(
+        cache_kind=ModelCacheKind.RESULT,
+        tenant_id="tenant-a",
+        config_version="config:v1",
+        schema_version="schema:v1",
+        model_version="model:v1",
+        adapter_version="adapter:v1",
+        security_epoch_ref="security:v1",
+        enabled=True,
+    )
+    prompt_key = usage_gateway.cache_key(policy=prompt_policy, prompt_hash="prompt-hash")
+    metadata_key = usage_gateway.cache_key(policy=metadata_policy, prompt_hash="prompt-hash")
+    result_key = usage_gateway.cache_key(policy=result_policy_enabled, prompt_hash="prompt-hash")
+    other_tenant_key = usage_gateway.cache_key(
+        policy=usage_gateway.cache_policy(
+            cache_kind=ModelCacheKind.RESULT,
+            tenant_id="tenant-b",
+            config_version="config:v1",
+            schema_version="schema:v1",
+            model_version="model:v1",
+            adapter_version="adapter:v1",
+            security_epoch_ref="security:v1",
+            enabled=True,
+        ),
+        prompt_hash="prompt-hash",
+    )
+    other_version_key = usage_gateway.cache_key(
+        policy=usage_gateway.cache_policy(
+            cache_kind=ModelCacheKind.RESULT,
+            tenant_id="tenant-a",
+            config_version="config:v2",
+            schema_version="schema:v1",
+            model_version="model:v1",
+            adapter_version="adapter:v1",
+            security_epoch_ref="security:v1",
+            enabled=True,
+        ),
+        prompt_hash="prompt-hash",
+    )
+    if len({prompt_key.cache_key, metadata_key.cache_key, result_key.cache_key}) != 3:
+        errors.append("provider prompt cache, metadata cache, and result cache are not separated")
+    if result_policy_default.enabled:
+        errors.append("result cache is not disabled by default")
+    if result_key.cache_key == other_tenant_key.cache_key or result_key.cache_key == other_version_key.cache_key:
+        errors.append("result cache is not isolated by tenant and version scope")
+
+    disabled_lookup = usage_gateway.lookup_cache(
+        policy=result_policy_default,
+        key=result_key,
+        stored_result_ref="result:1",
+    )
+    hit = usage_gateway.lookup_cache(
+        policy=result_policy_enabled,
+        key=result_key,
+        stored_result_ref="result:1",
+    )
+    if disabled_lookup.hit or not disabled_lookup.provider_attempt_allowed:
+        errors.append("disabled result cache did not fall through to provider attempt")
+    if not hit.hit or hit.provider_attempt_allowed:
+        errors.append("cache hit did not suppress provider attempt")
+    reuse = usage_gateway.cache_reuse_receipt(
+        lookup=hit,
+        source_result_ref="result:1",
+        call_id="model_call_cache_hit",
+    )
+    if reuse.creates_provider_attempt or reuse.source_result_ref != "result:1":
+        errors.append("cache hit did not create reuse receipt without provider attempt")
+
+    invalidations = [
+        usage_gateway.invalidate_cache(key=result_key, reason=reason)
+        for reason in ("revocation", "deletion", "model_retirement", "validity_changed")
+    ]
+    if [item.invalidated for item in invalidations] != [True, True, True, True]:
+        errors.append("cache invalidation did not invalidate every requested reason")
+    if [item.reason for item in invalidations] != [
+        "revocation",
+        "deletion",
+        "model_retirement",
+        "validity_changed",
+    ]:
+        errors.append("cache invalidation reasons were not preserved")
+    if not all(item.tombstone_ref.startswith("cache_tombstone_") for item in invalidations):
+        errors.append("cache invalidation did not produce tombstone refs")
 
     split_action_result = ModelGateway(
         providers=[
