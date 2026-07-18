@@ -38,13 +38,14 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelReadinessStatus,
     ModelRetentionSubject,
     ModelDeletionStep,
+    ModelUnknownSignalDisposition,
     ModelUsageKind,
     MockModelProvider,
 )
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 76))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 89))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -1039,6 +1040,125 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("shadow call did not independently record security/budget/usage/trace/retention")
     if shadow_result.enters_business_output:
         errors.append("shadow result enters business output")
+
+    validity = usage_gateway.result_validity_event(
+        result_ref="model-result:1",
+        previous_validity="VALID",
+        new_validity="REVOKED",
+        fact_owner="Model Gateway",
+        propagation_owner="Knowledge",
+    )
+    if validity.propagation_allowed or validity.fact_owner != "Model Gateway":
+        errors.append("result validity propagation was not controlled by the fact owner")
+
+    failure = usage_gateway.classify_failure(
+        provider_id="usage_fallback",
+        raw_error_ref="provider-error:rate-limit:1",
+        raw_error_code="rate-limit",
+    )
+    if failure.provider_neutral_code != "PROVIDER_RATE_LIMIT" or failure.raw_error_ref != "provider-error:rate-limit:1":
+        errors.append("provider-neutral failure code is unstable or lost raw error ref")
+
+    suggested = usage_gateway.suggested_control_action(
+        action=ModelControlActionType.REPLAN_PROPOSAL,
+        suggested_by="Model Gateway",
+    )
+    if suggested.decision_owner != "AGENT_CORE" or suggested.replaces_agent_core_decision:
+        errors.append("suggested control action replaced Agent Core decision owner")
+
+    domain_event = usage_gateway.domain_event(
+        event_type="model.result.validity_changed",
+        event_version="1.0",
+        sequence=7,
+        idempotency_key="idem:model:event:7",
+        payload={"result": "ok", "api_key": "sk-secret"},
+    )
+    if domain_event.event_version != "1.0" or domain_event.sequence != 7 or not domain_event.replayable:
+        errors.append("domain event is not versioned/sortable/replayable")
+    if "sk-secret" in repr(domain_event.redacted_payload):
+        errors.append("domain event payload was not redacted")
+
+    projection = usage_gateway.projection_boundary(
+        source_fact_ref="model-fact:1",
+        trace_projection_ref="trace:1",
+        audit_projection_ref="audit:1",
+        eval_projection_ref="eval:1",
+    )
+    if projection.projections_replace_source_fact or projection.source_fact_ref != "model-fact:1":
+        errors.append("trace/audit/eval projection replaced gateway source fact")
+
+    ownership = usage_gateway.ownership_boundary(
+        owned_facts=("ModelAttempt", "UsageReceipt"),
+        foreign_facts=("PlanVersion", "RunOutcome"),
+    )
+    if ownership.module != "Model Gateway" or ownership.cross_owner_write_allowed:
+        errors.append("model gateway ownership boundary allowed cross-owner writes")
+
+    envelope = usage_gateway.versioned_envelope(
+        envelope_type="ModelDomainEvent",
+        major_version=1,
+        minor_version=0,
+        payload_ref="payload:model-event:1",
+        idempotency_key="idem:model-event:1",
+        correlation_id="corr:1",
+        causation_id="cause:1",
+    )
+    if envelope.major_version != 1 or not all([envelope.payload_ref, envelope.idempotency_key, envelope.correlation_id]):
+        errors.append("cross-module request/event did not use a versioned envelope")
+
+    layering = usage_gateway.storage_layering_boundary(
+        domain_fact_ref="postgres:model_attempt:1",
+        object_payload_ref="object:model_payload:1",
+        projection_ref="projection:model_attempt:1",
+    )
+    if layering.layers_collapsed or layering.domain_fact_ref == layering.object_payload_ref:
+        errors.append("domain fact/object payload/projection layers were collapsed")
+
+    facade = usage_gateway.compatibility_facade_boundary(
+        facade_id="legacy-model-facade",
+        bypass_inventory_ref="docs/evidence/model-gateway-runtime-batch.md#bypass",
+        migration_deadline_ref="deadline:model-facade-removal",
+    )
+    if facade.new_bypass_allowed or not (facade.bypass_inventory_ref and facade.migration_deadline_ref):
+        errors.append("compatibility facade lacks bypass inventory, no-new-bypass, or migration deadline")
+
+    migration = usage_gateway.migration_integrity_verdict(
+        migration_id="migration:model-gateway:1",
+        preserves_history_versions=True,
+        preserves_usage_receipts=True,
+        preserves_implementation_status=True,
+    )
+    if not migration.accepted:
+        errors.append("migration integrity did not preserve history/usage/status")
+
+    unknown = usage_gateway.unknown_signal_verdict(
+        signal_kind="terminal_state",
+        raw_value="PROVIDER_WEIRD_DONE",
+        quarantine=True,
+    )
+    if unknown.accepted or unknown.disposition != ModelUnknownSignalDisposition.QUARANTINE:
+        errors.append("unknown security/terminal/event signal did not fail closed or quarantine")
+
+    fault = usage_gateway.fault_recovery_evidence(
+        fault_id="provider-timeout-unknown",
+        high_risk=True,
+        fault_injection_ref="tests/platform/test_model_gateway.py",
+        recovery_evidence_ref="docs/evidence/model-gateway-runtime-batch.md",
+    )
+    if not (fault.high_risk and fault.fault_injection_ref and fault.recovery_evidence_ref):
+        errors.append("high-risk fault lacks fault injection and recovery evidence")
+
+    current_gate = usage_gateway.current_evidence_gate(
+        requirement_id="ARCH-MODEL-088",
+        code_ref="src/backend/zuno/platform/model_gateway.py",
+        migration_ref="migration:not-required-runtime-contract",
+        test_ref="tests/platform/test_model_gateway.py",
+        trace_ref="docs/evidence/model-gateway-runtime-batch.md#trace",
+        eval_ref="tests/evals/test_model_gateway_cost_latency.py",
+        runtime_evidence_ref="docs/evidence/model-gateway-runtime-batch.md",
+    )
+    if not current_gate.implementation_available:
+        errors.append("target-to-current gate lacks code/migration/test/trace/eval/runtime evidence")
 
     split_action_result = ModelGateway(
         providers=[

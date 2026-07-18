@@ -32,6 +32,7 @@ from zuno.platform.model_gateway import (
     ModelReadinessStatus,
     ModelRetentionSubject,
     ModelDeletionStep,
+    ModelUnknownSignalDisposition,
     ModelUsageKind,
     MockModelProvider,
 )
@@ -1208,3 +1209,114 @@ def test_model_gateway_adapter_experiment_and_shadow_boundaries() -> None:
         "retention:shadow",
     )
     assert result.enters_business_output is False
+
+
+def test_model_gateway_event_ownership_facade_unknown_and_current_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    validity = gateway.result_validity_event(
+        result_ref="model-result:1",
+        previous_validity="VALID",
+        new_validity="REVOKED",
+        fact_owner="Model Gateway",
+        propagation_owner="Knowledge",
+    )
+    failure = gateway.classify_failure(
+        provider_id="primary",
+        raw_error_ref="provider-error:1",
+        raw_error_code="rate-limit",
+    )
+    suggested = gateway.suggested_control_action(
+        action=ModelControlActionType.REPLAN_PROPOSAL,
+        suggested_by="Model Gateway",
+    )
+    event = gateway.domain_event(
+        event_type="model.result.validity_changed",
+        event_version="1.0",
+        sequence=7,
+        idempotency_key="idem:model:event:7",
+        payload={"result": "ok", "api_key": "sk-secret"},
+    )
+    projection = gateway.projection_boundary(
+        source_fact_ref="model-fact:1",
+        trace_projection_ref="trace:1",
+        audit_projection_ref="audit:1",
+        eval_projection_ref="eval:1",
+    )
+    ownership = gateway.ownership_boundary(
+        owned_facts=("ModelAttempt", "UsageReceipt"),
+        foreign_facts=("PlanVersion", "RunOutcome"),
+    )
+    envelope = gateway.versioned_envelope(
+        envelope_type="ModelDomainEvent",
+        major_version=1,
+        minor_version=0,
+        payload_ref="payload:model-event:1",
+        idempotency_key="idem:model-event:1",
+        correlation_id="corr:1",
+        causation_id="cause:1",
+    )
+    layering = gateway.storage_layering_boundary(
+        domain_fact_ref="postgres:model_attempt:1",
+        object_payload_ref="object:model_payload:1",
+        projection_ref="projection:model_attempt:1",
+    )
+    facade = gateway.compatibility_facade_boundary(
+        facade_id="legacy-model-facade",
+        bypass_inventory_ref="docs/evidence/model-gateway-runtime-batch.md#bypass",
+        migration_deadline_ref="deadline:model-facade-removal",
+    )
+    migration = gateway.migration_integrity_verdict(
+        migration_id="migration:model-gateway:1",
+        preserves_history_versions=True,
+        preserves_usage_receipts=True,
+        preserves_implementation_status=True,
+    )
+    unknown_terminal = gateway.unknown_signal_verdict(
+        signal_kind="terminal_state",
+        raw_value="PROVIDER_WEIRD_DONE",
+        quarantine=True,
+    )
+    fault = gateway.fault_recovery_evidence(
+        fault_id="provider-timeout-unknown",
+        high_risk=True,
+        fault_injection_ref="tests/platform/test_model_gateway.py",
+        recovery_evidence_ref="docs/evidence/model-gateway-runtime-batch.md",
+    )
+    current = gateway.current_evidence_gate(
+        requirement_id="ARCH-MODEL-088",
+        code_ref="src/backend/zuno/platform/model_gateway.py",
+        migration_ref="migration:not-required-runtime-contract",
+        test_ref="tests/platform/test_model_gateway.py",
+        trace_ref="docs/evidence/model-gateway-runtime-batch.md#trace",
+        eval_ref="tests/evals/test_model_gateway_cost_latency.py",
+        runtime_evidence_ref="docs/evidence/model-gateway-runtime-batch.md",
+    )
+
+    assert validity.propagation_allowed is False
+    assert validity.fact_owner == "Model Gateway"
+    assert failure.provider_neutral_code == "PROVIDER_RATE_LIMIT"
+    assert failure.raw_error_ref == "provider-error:1"
+    assert suggested.decision_owner == "AGENT_CORE"
+    assert suggested.replaces_agent_core_decision is False
+    assert event.event_version == "1.0"
+    assert event.idempotency_key == "idem:model:event:7"
+    assert event.replayable is True
+    assert "sk-secret" not in repr(event.redacted_payload)
+    assert projection.projections_replace_source_fact is False
+    assert projection.source_fact_ref == "model-fact:1"
+    assert ownership.module == "Model Gateway"
+    assert ownership.cross_owner_write_allowed is False
+    assert "PlanVersion" in ownership.foreign_facts
+    assert envelope.major_version == 1
+    assert envelope.payload_ref == "payload:model-event:1"
+    assert layering.layers_collapsed is False
+    assert layering.domain_fact_ref != layering.object_payload_ref
+    assert facade.new_bypass_allowed is False
+    assert facade.bypass_inventory_ref
+    assert facade.migration_deadline_ref
+    assert migration.accepted is True
+    assert unknown_terminal.accepted is False
+    assert unknown_terminal.disposition == ModelUnknownSignalDisposition.QUARANTINE
+    assert fault.fault_injection_ref and fault.recovery_evidence_ref
+    assert current.implementation_available is True

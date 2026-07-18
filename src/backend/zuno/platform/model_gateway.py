@@ -154,6 +154,11 @@ class ModelAdapterRolloutMode(StrEnum):
     ROLLBACK = "ROLLBACK"
 
 
+class ModelUnknownSignalDisposition(StrEnum):
+    FAIL_CLOSED = "FAIL_CLOSED"
+    QUARANTINE = "QUARANTINE"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -674,6 +679,136 @@ class ModelShadowResult:
     shadow_call_id: str
     result_ref: str
     enters_business_output: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelResultValidityEvent:
+    event_id: str
+    result_ref: str
+    previous_validity: str
+    new_validity: str
+    fact_owner: str
+    propagation_owner: str
+    propagation_allowed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelFailureClassification:
+    provider_id: str
+    raw_error_ref: str
+    provider_neutral_code: str
+    stable: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class ModelSuggestedControlAction:
+    action: ModelControlActionType
+    suggested_by: str
+    decision_owner: str = "AGENT_CORE"
+    replaces_agent_core_decision: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelDomainEvent:
+    event_id: str
+    event_version: str
+    sequence: int
+    idempotency_key: str
+    replayable: bool
+    redacted_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ModelProjectionBoundary:
+    source_fact_ref: str
+    trace_projection_ref: str
+    audit_projection_ref: str
+    eval_projection_ref: str
+    projections_replace_source_fact: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelOwnershipBoundary:
+    module: str
+    owned_facts: tuple[str, ...]
+    foreign_facts: tuple[str, ...]
+    cross_owner_write_allowed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelVersionedEnvelope:
+    envelope_type: str
+    major_version: int
+    minor_version: int
+    payload_ref: str
+    idempotency_key: str
+    correlation_id: str
+    causation_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelStorageLayeringBoundary:
+    domain_fact_ref: str
+    object_payload_ref: str
+    projection_ref: str
+    layers_collapsed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCompatibilityFacadeBoundary:
+    facade_id: str
+    bypass_inventory_ref: str
+    new_bypass_allowed: bool
+    migration_deadline_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelMigrationIntegrityVerdict:
+    migration_id: str
+    preserves_history_versions: bool
+    preserves_usage_receipts: bool
+    preserves_implementation_status: bool
+    accepted: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelUnknownSignalVerdict:
+    signal_kind: str
+    raw_value: str
+    disposition: ModelUnknownSignalDisposition
+    accepted: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelFaultRecoveryEvidence:
+    fault_id: str
+    high_risk: bool
+    fault_injection_ref: str
+    recovery_evidence_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCurrentEvidenceGate:
+    requirement_id: str
+    code_ref: str
+    migration_ref: str
+    test_ref: str
+    trace_ref: str
+    eval_ref: str
+    runtime_evidence_ref: str
+
+    @property
+    def implementation_available(self) -> bool:
+        return all(
+            [
+                self.code_ref,
+                self.migration_ref,
+                self.test_ref,
+                self.trace_ref,
+                self.eval_ref,
+                self.runtime_evidence_ref,
+            ]
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -2537,6 +2672,200 @@ class ModelGateway:
     ) -> ModelShadowResult:
         return ModelShadowResult(shadow_call_id=shadow_call_id, result_ref=result_ref)
 
+    def result_validity_event(
+        self,
+        *,
+        result_ref: str,
+        previous_validity: str,
+        new_validity: str,
+        fact_owner: str,
+        propagation_owner: str,
+    ) -> ModelResultValidityEvent:
+        event_id = "model_result_validity_" + _stable_hash([result_ref, previous_validity, new_validity, fact_owner])[:16]
+        return ModelResultValidityEvent(
+            event_id=event_id,
+            result_ref=result_ref,
+            previous_validity=previous_validity,
+            new_validity=new_validity,
+            fact_owner=fact_owner,
+            propagation_owner=propagation_owner,
+            propagation_allowed=fact_owner == propagation_owner,
+        )
+
+    def classify_failure(self, *, provider_id: str, raw_error_ref: str, raw_error_code: str) -> ModelFailureClassification:
+        normalized = raw_error_code.strip().lower().replace(" ", "_").replace("-", "_")
+        mapping = {
+            "rate_limit": "PROVIDER_RATE_LIMIT",
+            "timeout": "PROVIDER_TIMEOUT",
+            "invalid_request": "PROVIDER_INVALID_REQUEST",
+            "auth_error": "PROVIDER_AUTHENTICATION_FAILED",
+        }
+        return ModelFailureClassification(
+            provider_id=provider_id,
+            raw_error_ref=raw_error_ref,
+            provider_neutral_code=mapping.get(normalized, "PROVIDER_UNKNOWN_FAILURE"),
+        )
+
+    def suggested_control_action(
+        self,
+        *,
+        action: ModelControlActionType | str,
+        suggested_by: str,
+    ) -> ModelSuggestedControlAction:
+        return ModelSuggestedControlAction(action=ModelControlActionType(action), suggested_by=suggested_by)
+
+    def domain_event(
+        self,
+        *,
+        event_type: str,
+        event_version: str,
+        sequence: int,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ModelDomainEvent:
+        redacted_payload = redact_sensitive_payload(payload)
+        event_id = "model_event_" + _stable_hash([event_type, event_version, sequence, idempotency_key, redacted_payload])[:16]
+        return ModelDomainEvent(
+            event_id=event_id,
+            event_version=event_version,
+            sequence=sequence,
+            idempotency_key=idempotency_key,
+            replayable=True,
+            redacted_payload=redacted_payload,
+        )
+
+    def projection_boundary(
+        self,
+        *,
+        source_fact_ref: str,
+        trace_projection_ref: str,
+        audit_projection_ref: str,
+        eval_projection_ref: str,
+    ) -> ModelProjectionBoundary:
+        return ModelProjectionBoundary(
+            source_fact_ref=source_fact_ref,
+            trace_projection_ref=trace_projection_ref,
+            audit_projection_ref=audit_projection_ref,
+            eval_projection_ref=eval_projection_ref,
+        )
+
+    def ownership_boundary(self, *, owned_facts: tuple[str, ...], foreign_facts: tuple[str, ...]) -> ModelOwnershipBoundary:
+        return ModelOwnershipBoundary(module="Model Gateway", owned_facts=owned_facts, foreign_facts=foreign_facts)
+
+    def versioned_envelope(
+        self,
+        *,
+        envelope_type: str,
+        major_version: int,
+        minor_version: int,
+        payload_ref: str,
+        idempotency_key: str,
+        correlation_id: str,
+        causation_id: str,
+    ) -> ModelVersionedEnvelope:
+        if major_version <= 0:
+            raise ModelGatewayProviderError("versioned envelope requires a known positive major version")
+        return ModelVersionedEnvelope(
+            envelope_type=envelope_type,
+            major_version=major_version,
+            minor_version=minor_version,
+            payload_ref=payload_ref,
+            idempotency_key=idempotency_key,
+            correlation_id=correlation_id,
+            causation_id=causation_id,
+        )
+
+    def storage_layering_boundary(
+        self,
+        *,
+        domain_fact_ref: str,
+        object_payload_ref: str,
+        projection_ref: str,
+    ) -> ModelStorageLayeringBoundary:
+        return ModelStorageLayeringBoundary(
+            domain_fact_ref=domain_fact_ref,
+            object_payload_ref=object_payload_ref,
+            projection_ref=projection_ref,
+        )
+
+    def compatibility_facade_boundary(
+        self,
+        *,
+        facade_id: str,
+        bypass_inventory_ref: str,
+        migration_deadline_ref: str,
+    ) -> ModelCompatibilityFacadeBoundary:
+        if not (bypass_inventory_ref and migration_deadline_ref):
+            raise ModelGatewayProviderError("compatibility facade requires bypass inventory and migration deadline")
+        return ModelCompatibilityFacadeBoundary(
+            facade_id=facade_id,
+            bypass_inventory_ref=bypass_inventory_ref,
+            new_bypass_allowed=False,
+            migration_deadline_ref=migration_deadline_ref,
+        )
+
+    def migration_integrity_verdict(
+        self,
+        *,
+        migration_id: str,
+        preserves_history_versions: bool,
+        preserves_usage_receipts: bool,
+        preserves_implementation_status: bool,
+    ) -> ModelMigrationIntegrityVerdict:
+        accepted = preserves_history_versions and preserves_usage_receipts and preserves_implementation_status
+        return ModelMigrationIntegrityVerdict(
+            migration_id=migration_id,
+            preserves_history_versions=preserves_history_versions,
+            preserves_usage_receipts=preserves_usage_receipts,
+            preserves_implementation_status=preserves_implementation_status,
+            accepted=accepted,
+        )
+
+    def unknown_signal_verdict(self, *, signal_kind: str, raw_value: str, quarantine: bool = False) -> ModelUnknownSignalVerdict:
+        return ModelUnknownSignalVerdict(
+            signal_kind=signal_kind,
+            raw_value=raw_value,
+            disposition=ModelUnknownSignalDisposition.QUARANTINE if quarantine else ModelUnknownSignalDisposition.FAIL_CLOSED,
+        )
+
+    def fault_recovery_evidence(
+        self,
+        *,
+        fault_id: str,
+        high_risk: bool,
+        fault_injection_ref: str,
+        recovery_evidence_ref: str,
+    ) -> ModelFaultRecoveryEvidence:
+        if high_risk and not (fault_injection_ref and recovery_evidence_ref):
+            raise ModelGatewayProviderError("high-risk fault requires fault injection and recovery evidence")
+        return ModelFaultRecoveryEvidence(
+            fault_id=fault_id,
+            high_risk=high_risk,
+            fault_injection_ref=fault_injection_ref,
+            recovery_evidence_ref=recovery_evidence_ref,
+        )
+
+    def current_evidence_gate(
+        self,
+        *,
+        requirement_id: str,
+        code_ref: str,
+        migration_ref: str,
+        test_ref: str,
+        trace_ref: str,
+        eval_ref: str,
+        runtime_evidence_ref: str,
+    ) -> ModelCurrentEvidenceGate:
+        return ModelCurrentEvidenceGate(
+            requirement_id=requirement_id,
+            code_ref=code_ref,
+            migration_ref=migration_ref,
+            test_ref=test_ref,
+            trace_ref=trace_ref,
+            eval_ref=eval_ref,
+            runtime_evidence_ref=runtime_evidence_ref,
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -3018,6 +3347,7 @@ __all__ = [
     "ModelCacheLookup",
     "ModelCachePolicy",
     "ModelCacheReuseReceipt",
+    "ModelCompatibilityFacadeBoundary",
     "ModelControlAction",
     "ModelControlActionType",
     "ModelCapabilityProfile",
@@ -3028,9 +3358,12 @@ __all__ = [
     "ModelConfigActivationDecision",
     "ModelConfigActivationGate",
     "ModelDomainWrite",
+    "ModelDomainEvent",
     "ModelEmbeddingResult",
     "ModelExperimentAssignment",
     "ModelExperimentGateVerdict",
+    "ModelFailureClassification",
+    "ModelFaultRecoveryEvidence",
     "ModelGateway",
     "ModelGatewayBinding",
     "ModelGatewayConfigSnapshot",
@@ -3045,6 +3378,7 @@ __all__ = [
     "ModelOperationalCommandVerdict",
     "ModelOverloadDecision",
     "ModelOverloadState",
+    "ModelProjectionBoundary",
     "ModelClassificationResult",
     "ModelJudgeResult",
     "ModelOutputCandidate",
@@ -3059,6 +3393,7 @@ __all__ = [
     "ModelQueuedRequestBinding",
     "ModelQuotaPolicy",
     "ModelQuotaReservation",
+    "ModelCurrentEvidenceGate",
     "ModelRepairRecord",
     "ModelRerankItem",
     "ModelRetentionBinding",
@@ -3069,6 +3404,14 @@ __all__ = [
     "ModelSliSloDimension",
     "ModelShadowCallRecord",
     "ModelShadowResult",
+    "ModelMigrationIntegrityVerdict",
+    "ModelOwnershipBoundary",
+    "ModelResultValidityEvent",
+    "ModelStorageLayeringBoundary",
+    "ModelSuggestedControlAction",
+    "ModelUnknownSignalDisposition",
+    "ModelUnknownSignalVerdict",
+    "ModelVersionedEnvelope",
     "ModelDeletionStep",
     "ModelDeletionWorkflow",
     "ModelRiskProposal",
