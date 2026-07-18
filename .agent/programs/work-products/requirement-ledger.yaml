@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 604
-  implementation_available: 152
+  target_not_current: 560
+  implementation_available: 196
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -13484,1057 +13484,1321 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Context"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1994"
-    gap: "?????Trace Context???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-001."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-001 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-001 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-001-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-001"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1994"
-      - "planned_test:OBS-001-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-001"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-002
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Tree"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1995"
-    gap: "?????Trace Tree???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-002."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-002 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-002 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-002-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-002"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1995"
-      - "planned_test:OBS-002-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-002"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-003
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Envelope Versioning"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1996"
-    gap: "?????Envelope Versioning???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-003."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-003 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-003 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-003-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-003"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1996"
-      - "planned_test:OBS-003-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-003"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-004
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Dedup"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1997"
-    gap: "?????Dedup???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-004."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-004 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-004 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-004-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-004"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1997"
-      - "planned_test:OBS-004-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-004"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-005
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Ordering"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1998"
-    gap: "?????Ordering???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-005."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-005 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-005 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-005-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-005"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1998"
-      - "planned_test:OBS-005-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-005"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-006
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Lifecycle"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:1999"
-    gap: "?????Trace Lifecycle???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-006."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-006 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-006 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-006-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-006"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:1999"
-      - "planned_test:OBS-006-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-006"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-007
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agent Core Mapping"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2000"
-    gap: "?????Agent Core Mapping???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-007."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-007 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-007 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-007-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-007"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2000"
-      - "planned_test:OBS-007-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-007"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-008
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Model/Retrieval/Tool Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2001"
-    gap: "?????Model/Retrieval/Tool Trace???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-008."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-008 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-008 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-008-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-008"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2001"
-      - "planned_test:OBS-008-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-008"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-009
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Security Redaction"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2002"
-    gap: "?????Security Redaction???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-009."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-009 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-009 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-009-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-009"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2002"
-      - "planned_test:OBS-009-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-009"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-010
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Immutable Audit"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2003"
-    gap: "?????Immutable Audit???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-010."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-010 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-010 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-010-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-010"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2003"
-      - "planned_test:OBS-010-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-010"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-011
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Sampling"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2004"
-    gap: "?????Sampling???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-011."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-011 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-011 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-011-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-011"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2004"
-      - "planned_test:OBS-011-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-011"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-012
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "External Sink"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2005"
-    gap: "?????External Sink???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-012."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-012 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-012 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-012-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-012"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2005"
-      - "planned_test:OBS-012-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-012"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-013
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Retention/Legal Hold"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2006"
-    gap: "?????Retention/Legal Hold???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-013."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-013 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-013 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-013-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-013"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2006"
-      - "planned_test:OBS-013-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-013"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-014
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Eval Dataset/Case"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2007"
-    gap: "?????Eval Dataset/Case???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-014."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-014 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-014 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-014-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-014"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2007"
-      - "planned_test:OBS-014-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-014"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-015
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Eval Run/Case Recovery"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2008"
-    gap: "?????Eval Run/Case Recovery???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-015."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-015 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-015 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-015-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-015"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2008"
-      - "planned_test:OBS-015-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-015"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-016
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Judge Policy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2009"
-    gap: "?????Judge Policy???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-016."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-016 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-016 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-016-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-016"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2009"
-      - "planned_test:OBS-016-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-016"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-017
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Failure Bucket"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2010"
-    gap: "?????Failure Bucket???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-017."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-017 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-017 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-017-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-017"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2010"
-      - "planned_test:OBS-017-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-017"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-018
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Benchmark Comparability"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2011"
-    gap: "?????Benchmark Comparability???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-018."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-018 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-018 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-018-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-018"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2011"
-      - "planned_test:OBS-018-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-018"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-019
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Profile Completeness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2012"
-    gap: "?????Profile Completeness???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-019."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-019 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-019 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-019-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-019"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2012"
-      - "planned_test:OBS-019-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-019"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-020
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2013"
-    gap: "?????Release Gate???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-020."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-020 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-020 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-020-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-020"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2013"
-      - "planned_test:OBS-020-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-020"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-021
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Measurement Status"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2014"
-    gap: "?????Measurement Status???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-021."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-021 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-021 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-021-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-021"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2014"
-      - "planned_test:OBS-021-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-021"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-022
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Evidence Registry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2015"
-    gap: "?????Evidence Registry???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-022."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-022 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-022 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-022-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-022"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2015"
-      - "planned_test:OBS-022-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-022"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-023
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Projection Rebuild"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2016"
-    gap: "?????Projection Rebuild???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-023."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-023 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-023 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-023-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-023"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2016"
-      - "planned_test:OBS-023-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-023"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-024
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Quality Proven"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2017"
-    gap: "?????Quality Proven???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-024."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-024 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-024 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-024-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-024"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2017"
-      - "planned_test:OBS-024-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-024"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-001
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Core Five Registry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2023"
-    gap: "?????Core Five Registry???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-001."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-001 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-001 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-001-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-001"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2023"
-      - "planned_test:OBS-RAG-001-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-001"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-002
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Context Precision"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2024"
-    gap: "?????Context Precision???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-002."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-002 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-002 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-002-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-002"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2024"
-      - "planned_test:OBS-RAG-002-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-002"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-003
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Context Recall"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2025"
-    gap: "?????Context Recall???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-003."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-003 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-003 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-003-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-003"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2025"
-      - "planned_test:OBS-RAG-003-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-003"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-004
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Faithfulness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2026"
-    gap: "?????Faithfulness???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-004."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-004 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-004 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-004-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-004"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2026"
-      - "planned_test:OBS-RAG-004-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-004"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-005
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Answer Relevancy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2027"
-    gap: "?????Answer Relevancy???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-005."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-005 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-005 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-005-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-005"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2027"
-      - "planned_test:OBS-RAG-005-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-005"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-006
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Answer Correctness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2028"
-    gap: "?????Answer Correctness???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-006."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-006 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-006 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-006-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-006"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2028"
-      - "planned_test:OBS-RAG-006-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-006"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-007
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Metric Status"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2029"
-    gap: "?????Metric Status???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-007."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-007 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-007 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-007-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-007"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2029"
-      - "planned_test:OBS-RAG-007-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-007"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-008
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Metric Versioning"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2030"
-    gap: "?????Metric Versioning???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-008."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-008 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-008 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-008-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-008"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2030"
-      - "planned_test:OBS-RAG-008-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-008"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-009
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Route Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2031"
-    gap: "?????Route Trace???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-009."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-009 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-009 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-009-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-009"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2031"
-      - "planned_test:OBS-RAG-009-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-009"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-010
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Graph Traversal Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2032"
-    gap: "?????Graph Traversal Trace???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-010."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-010 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-010 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-010-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-010"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2032"
-      - "planned_test:OBS-RAG-010-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-010"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-011
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Source Grounding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2033"
-    gap: "?????Source Grounding???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-011."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-011 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-011 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-011-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-011"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2033"
-      - "planned_test:OBS-RAG-011-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-011"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-012
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Fusion/Rerank Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2034"
-    gap: "?????Fusion/Rerank Trace???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-012."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-012 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-012 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-012-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-012"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2034"
-      - "planned_test:OBS-RAG-012-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-012"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-013
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agentic Loop Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2035"
-    gap: "?????Agentic Loop Trace???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-013."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-013 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-013 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-013-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-013"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2035"
-      - "planned_test:OBS-RAG-013-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-013"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-014
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Failure Buckets"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2036"
-    gap: "?????Failure Buckets???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-014."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-014 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-014 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-014-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-014"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2036"
-      - "planned_test:OBS-RAG-014-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-014"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-015
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Evaluation Slices"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2037"
-    gap: "?????Evaluation Slices???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-015."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-015 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-015 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-015-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-015"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2037"
-      - "planned_test:OBS-RAG-015-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-015"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-016
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agent Efficiency"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2038"
-    gap: "?????Agent Efficiency???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-016."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-016 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-016 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-016-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-016"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2038"
-      - "planned_test:OBS-RAG-016-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-016"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-017
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Quality-constrained Efficiency"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2039"
-    gap: "?????Quality-constrained Efficiency???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-017."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-017 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-017 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-017-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-017"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2039"
-      - "planned_test:OBS-RAG-017-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-017"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-018
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Cost/Latency Attribution"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2040"
-    gap: "?????Cost/Latency Attribution???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-018."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-018 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-018 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-018-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-018"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2040"
-      - "planned_test:OBS-RAG-018-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-018"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-019
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Core Five Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2041"
-    gap: "?????Core Five Release Gate???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-019."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-019 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-019 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-019-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-019"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2041"
-      - "planned_test:OBS-RAG-019-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-019"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-OBS-RAG-020
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Reproducible Evidence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/10-observability-eval.md:2042"
-    gap: "?????Reproducible Evidence???? Current ????????????????? PHASE06 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/observability/trace_eval.py"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
+      - "docs/evidence/observability-runtime-batch.md"
+    gap: "Observability runtime batch has code, tests, verifier, and evidence for ARCH-OBS-RAG-020."
     owner: "Observability / Eval"
     target_phase: "PHASE06"
     planned_work_package: "P06 observability black box / P20 benchmark release gate"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-OBS-RAG-020 ??????????????????????? PHASE06 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-OBS-RAG-020 covered by focused Observability runtime batch tests and verifier."
     test_ids:
-      - "OBS-RAG-020-UT"
+      - "tests/platform/test_observability_runtime_batch.py"
+      - "tools/scripts/verify_observability_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-OBS-RAG-020"
+      - "docs/evidence/observability-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/10-observability-eval.md:2042"
-      - "planned_test:OBS-RAG-020-UT"
-      - "planned_evidence:needs_evidence:EV-OBS-RAG-020"
+      - "current:src/backend/zuno/platform/observability/trace_eval.py"
+      - "test:tests/platform/test_observability_runtime_batch.py"
+      - "test:tools/scripts/verify_observability_runtime_batch.py"
+      - "evidence:docs/evidence/observability-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-PRODUCT-001
     module: "01 Product Surface"
