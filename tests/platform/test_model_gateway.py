@@ -20,12 +20,15 @@ from zuno.platform.model_gateway import (
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelOperationalCommandKind,
     ModelOverloadState,
     ModelProviderHealthStatus,
     ModelProviderLifecycleState,
     ModelProviderSignalStatus,
     ModelQuotaPolicy,
     ModelRepairRecord,
+    ModelRetentionSubject,
+    ModelDeletionStep,
     ModelUsageKind,
     MockModelProvider,
 )
@@ -947,3 +950,84 @@ def test_model_gateway_cache_boundaries() -> None:
         "validity_changed",
     ]
     assert all(item.tombstone_ref.startswith("cache_tombstone_") for item in invalidations)
+
+
+def test_model_gateway_operational_command_retention_and_delete_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    command = gateway.operational_command(
+        command_kind=ModelOperationalCommandKind.DISABLE_PROVIDER,
+        command_version="opcmd:v1",
+        target_ref="provider:primary",
+        expected_generation=4,
+        payload={"reason": "incident"},
+        high_risk=True,
+        authorized_by="ops-admin",
+        approval_ref="approval:123",
+        audit_ref="audit:456",
+    )
+    missing_controls = gateway.operational_command(
+        command_kind=ModelOperationalCommandKind.DISABLE_PROVIDER,
+        command_version="opcmd:v1",
+        target_ref="provider:primary",
+        expected_generation=4,
+        payload={"reason": "incident"},
+        high_risk=True,
+    )
+
+    accepted = gateway.evaluate_operational_command(command, active_generation=4)
+    rejected = gateway.evaluate_operational_command(missing_controls, active_generation=4)
+    stale = gateway.evaluate_operational_command(command, active_generation=5)
+
+    assert command.command_id.startswith("model_op_cmd_")
+    assert command.command_version == "opcmd:v1"
+    assert accepted.accepted is True and accepted.committed_generation == 5
+    assert rejected.accepted is False and rejected.reason == "missing_high_risk_controls"
+    assert stale.accepted is False and stale.reason == "generation_mismatch"
+
+    retention = gateway.retention_bindings(
+        retention_until_by_subject={
+            ModelRetentionSubject.PROMPT: 10.0,
+            ModelRetentionSubject.RESPONSE: 20.0,
+            ModelRetentionSubject.STREAM: 30.0,
+            ModelRetentionSubject.USAGE: 40.0,
+            ModelRetentionSubject.FAILURE: 50.0,
+            ModelRetentionSubject.DECISION: 60.0,
+        },
+        policy_ref_by_subject={
+            ModelRetentionSubject.PROMPT: "retention:prompt",
+            ModelRetentionSubject.RESPONSE: "retention:response",
+            ModelRetentionSubject.STREAM: "retention:stream",
+            ModelRetentionSubject.USAGE: "retention:usage",
+            ModelRetentionSubject.FAILURE: "retention:failure",
+            ModelRetentionSubject.DECISION: "retention:decision",
+        },
+    )
+
+    assert [item.subject for item in retention] == list(ModelRetentionSubject)
+    assert len({item.retention_policy_ref for item in retention}) == len(ModelRetentionSubject)
+
+    blocked_delete = gateway.deletion_workflow(
+        object_ref="model-artifact:1",
+        tombstone=True,
+        visibility_revoked=False,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+    )
+    completed_delete = gateway.deletion_workflow(
+        object_ref="model-artifact:1",
+        tombstone=True,
+        visibility_revoked=True,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+    )
+
+    assert blocked_delete.physical_cleanup_allowed is False
+    assert blocked_delete.steps == (ModelDeletionStep.TOMBSTONE,)
+    assert completed_delete.steps == (
+        ModelDeletionStep.TOMBSTONE,
+        ModelDeletionStep.VISIBILITY_REVOCATION,
+        ModelDeletionStep.PHYSICAL_CLEANUP,
+        ModelDeletionStep.VERIFICATION,
+    )
+    assert completed_delete.verified is True

@@ -119,6 +119,29 @@ class ModelCacheKind(StrEnum):
     RESULT = "RESULT"
 
 
+class ModelOperationalCommandKind(StrEnum):
+    ENABLE_PROVIDER = "ENABLE_PROVIDER"
+    DISABLE_PROVIDER = "DISABLE_PROVIDER"
+    RETIRE_MODEL = "RETIRE_MODEL"
+    UPDATE_CONFIG = "UPDATE_CONFIG"
+
+
+class ModelRetentionSubject(StrEnum):
+    PROMPT = "PROMPT"
+    RESPONSE = "RESPONSE"
+    STREAM = "STREAM"
+    USAGE = "USAGE"
+    FAILURE = "FAILURE"
+    DECISION = "DECISION"
+
+
+class ModelDeletionStep(StrEnum):
+    TOMBSTONE = "TOMBSTONE"
+    VISIBILITY_REVOCATION = "VISIBILITY_REVOCATION"
+    PHYSICAL_CLEANUP = "PHYSICAL_CLEANUP"
+    VERIFICATION = "VERIFICATION"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -512,6 +535,46 @@ class ModelCacheInvalidationDecision:
     invalidated: bool
     reason: Literal["revocation", "deletion", "model_retirement", "validity_changed"]
     tombstone_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelOperationalCommand:
+    command_id: str
+    command_kind: ModelOperationalCommandKind
+    command_version: str
+    target_ref: str
+    expected_generation: int
+    payload_hash: str
+    high_risk: bool
+    authorized_by: str | None
+    approval_ref: str | None
+    audit_ref: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ModelOperationalCommandVerdict:
+    command_id: str
+    accepted: bool
+    reason: str
+    committed_generation: int
+
+
+@dataclass(frozen=True, slots=True)
+class ModelRetentionBinding:
+    subject: ModelRetentionSubject
+    retention_policy_ref: str
+    retention_until: float
+    legal_hold: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ModelDeletionWorkflow:
+    object_ref: str
+    steps: tuple[ModelDeletionStep, ...]
+    tombstone_ref: str
+    visibility_revoked: bool
+    physical_cleanup_allowed: bool
+    verified: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -2097,6 +2160,118 @@ class ModelGateway:
             tombstone_ref="cache_tombstone_" + _stable_hash([key.cache_key, reason])[:16],
         )
 
+    def operational_command(
+        self,
+        *,
+        command_kind: ModelOperationalCommandKind | str,
+        command_version: str,
+        target_ref: str,
+        expected_generation: int,
+        payload: dict[str, Any],
+        high_risk: bool,
+        authorized_by: str | None = None,
+        approval_ref: str | None = None,
+        audit_ref: str | None = None,
+    ) -> ModelOperationalCommand:
+        normalized_kind = ModelOperationalCommandKind(command_kind)
+        payload_hash = _stable_hash(payload)
+        return ModelOperationalCommand(
+            command_id="model_op_cmd_" + _stable_hash([normalized_kind.value, command_version, target_ref, expected_generation, payload_hash])[:16],
+            command_kind=normalized_kind,
+            command_version=command_version,
+            target_ref=target_ref,
+            expected_generation=expected_generation,
+            payload_hash=payload_hash,
+            high_risk=high_risk,
+            authorized_by=authorized_by,
+            approval_ref=approval_ref,
+            audit_ref=audit_ref,
+        )
+
+    def evaluate_operational_command(
+        self,
+        command: ModelOperationalCommand,
+        *,
+        active_generation: int,
+    ) -> ModelOperationalCommandVerdict:
+        if not command.command_version:
+            return ModelOperationalCommandVerdict(
+                command_id=command.command_id,
+                accepted=False,
+                reason="missing_command_version",
+                committed_generation=active_generation,
+            )
+        if command.expected_generation != active_generation:
+            return ModelOperationalCommandVerdict(
+                command_id=command.command_id,
+                accepted=False,
+                reason="generation_mismatch",
+                committed_generation=active_generation,
+            )
+        if command.high_risk and not (command.authorized_by and command.approval_ref and command.audit_ref):
+            return ModelOperationalCommandVerdict(
+                command_id=command.command_id,
+                accepted=False,
+                reason="missing_high_risk_controls",
+                committed_generation=active_generation,
+            )
+        return ModelOperationalCommandVerdict(
+            command_id=command.command_id,
+            accepted=True,
+            reason="accepted",
+            committed_generation=active_generation + 1,
+        )
+
+    def retention_bindings(
+        self,
+        *,
+        retention_until_by_subject: dict[ModelRetentionSubject | str, float],
+        policy_ref_by_subject: dict[ModelRetentionSubject | str, str],
+    ) -> tuple[ModelRetentionBinding, ...]:
+        bindings: list[ModelRetentionBinding] = []
+        for subject in ModelRetentionSubject:
+            retention_until = retention_until_by_subject.get(subject, retention_until_by_subject.get(subject.value))
+            policy_ref = policy_ref_by_subject.get(subject, policy_ref_by_subject.get(subject.value))
+            if retention_until is None or policy_ref is None:
+                raise ModelGatewayProviderError(f"missing retention binding for {subject.value}")
+            bindings.append(
+                ModelRetentionBinding(
+                    subject=subject,
+                    retention_policy_ref=str(policy_ref),
+                    retention_until=float(retention_until),
+                )
+            )
+        return tuple(bindings)
+
+    def deletion_workflow(
+        self,
+        *,
+        object_ref: str,
+        tombstone: bool,
+        visibility_revoked: bool,
+        physical_cleanup_requested: bool,
+        verification_passed: bool,
+    ) -> ModelDeletionWorkflow:
+        steps: list[ModelDeletionStep] = []
+        if tombstone:
+            steps.append(ModelDeletionStep.TOMBSTONE)
+        if visibility_revoked:
+            steps.append(ModelDeletionStep.VISIBILITY_REVOCATION)
+        cleanup_allowed = tombstone and visibility_revoked and physical_cleanup_requested
+        if cleanup_allowed:
+            steps.append(ModelDeletionStep.PHYSICAL_CLEANUP)
+        verified = cleanup_allowed and verification_passed
+        if verified:
+            steps.append(ModelDeletionStep.VERIFICATION)
+        return ModelDeletionWorkflow(
+            object_ref=object_ref,
+            steps=tuple(steps),
+            tombstone_ref="model_delete_tombstone_" + _stable_hash([object_ref])[:16],
+            visibility_revoked=visibility_revoked,
+            physical_cleanup_allowed=cleanup_allowed,
+            verified=verified,
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -2596,6 +2771,9 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "ModelOperationalCommand",
+    "ModelOperationalCommandKind",
+    "ModelOperationalCommandVerdict",
     "ModelOverloadDecision",
     "ModelOverloadState",
     "ModelClassificationResult",
@@ -2613,6 +2791,10 @@ __all__ = [
     "ModelQuotaReservation",
     "ModelRepairRecord",
     "ModelRerankItem",
+    "ModelRetentionBinding",
+    "ModelRetentionSubject",
+    "ModelDeletionStep",
+    "ModelDeletionWorkflow",
     "ModelRiskProposal",
     "ModelRole",
     "ModelStreamResult",

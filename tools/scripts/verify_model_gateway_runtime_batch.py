@@ -26,19 +26,22 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelOperationalCommandKind,
     ModelOverloadState,
     ModelProviderHealthStatus,
     ModelProviderLifecycleState,
     ModelProviderSignalStatus,
     ModelRepairRecord,
     ModelQuotaPolicy,
+    ModelRetentionSubject,
+    ModelDeletionStep,
     ModelUsageKind,
     MockModelProvider,
 )
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 62))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 66))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -795,6 +798,86 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("cache invalidation reasons were not preserved")
     if not all(item.tombstone_ref.startswith("cache_tombstone_") for item in invalidations):
         errors.append("cache invalidation did not produce tombstone refs")
+
+    op_command = usage_gateway.operational_command(
+        command_kind=ModelOperationalCommandKind.DISABLE_PROVIDER,
+        command_version="opcmd:v1",
+        target_ref="provider:usage_fallback",
+        expected_generation=4,
+        payload={"reason": "incident"},
+        high_risk=True,
+        authorized_by="ops-admin",
+        approval_ref="approval:123",
+        audit_ref="audit:456",
+    )
+    missing_controls = usage_gateway.operational_command(
+        command_kind=ModelOperationalCommandKind.DISABLE_PROVIDER,
+        command_version="opcmd:v1",
+        target_ref="provider:usage_fallback",
+        expected_generation=4,
+        payload={"reason": "incident"},
+        high_risk=True,
+    )
+    accepted_command = usage_gateway.evaluate_operational_command(op_command, active_generation=4)
+    rejected_command = usage_gateway.evaluate_operational_command(missing_controls, active_generation=4)
+    stale_command = usage_gateway.evaluate_operational_command(op_command, active_generation=5)
+    if not op_command.command_id.startswith("model_op_cmd_") or op_command.command_version != "opcmd:v1":
+        errors.append("operational command is not versioned and content-addressed")
+    if not accepted_command.accepted or accepted_command.committed_generation != 5:
+        errors.append("valid operational command did not commit next generation")
+    if rejected_command.accepted or rejected_command.reason != "missing_high_risk_controls":
+        errors.append("high-risk command did not require authorization/approval/audit")
+    if stale_command.accepted or stale_command.reason != "generation_mismatch":
+        errors.append("operational command did not enforce expected generation")
+
+    retention = usage_gateway.retention_bindings(
+        retention_until_by_subject={
+            ModelRetentionSubject.PROMPT: 10.0,
+            ModelRetentionSubject.RESPONSE: 20.0,
+            ModelRetentionSubject.STREAM: 30.0,
+            ModelRetentionSubject.USAGE: 40.0,
+            ModelRetentionSubject.FAILURE: 50.0,
+            ModelRetentionSubject.DECISION: 60.0,
+        },
+        policy_ref_by_subject={
+            ModelRetentionSubject.PROMPT: "retention:prompt",
+            ModelRetentionSubject.RESPONSE: "retention:response",
+            ModelRetentionSubject.STREAM: "retention:stream",
+            ModelRetentionSubject.USAGE: "retention:usage",
+            ModelRetentionSubject.FAILURE: "retention:failure",
+            ModelRetentionSubject.DECISION: "retention:decision",
+        },
+    )
+    if [item.subject for item in retention] != list(ModelRetentionSubject):
+        errors.append("retention did not bind prompt/response/stream/usage/failure/decision independently")
+    if len({item.retention_policy_ref for item in retention}) != len(ModelRetentionSubject):
+        errors.append("retention subjects do not have independent policy refs")
+
+    blocked_delete = usage_gateway.deletion_workflow(
+        object_ref="model-artifact:1",
+        tombstone=True,
+        visibility_revoked=False,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+    )
+    completed_delete = usage_gateway.deletion_workflow(
+        object_ref="model-artifact:1",
+        tombstone=True,
+        visibility_revoked=True,
+        physical_cleanup_requested=True,
+        verification_passed=True,
+    )
+    if blocked_delete.physical_cleanup_allowed or blocked_delete.steps != (ModelDeletionStep.TOMBSTONE,):
+        errors.append("delete allowed physical cleanup before visibility revocation")
+    if completed_delete.steps != (
+        ModelDeletionStep.TOMBSTONE,
+        ModelDeletionStep.VISIBILITY_REVOCATION,
+        ModelDeletionStep.PHYSICAL_CLEANUP,
+        ModelDeletionStep.VERIFICATION,
+    ):
+        errors.append("delete did not enforce tombstone/visibility/cleanup/verification order")
+    if not completed_delete.verified:
+        errors.append("delete workflow did not preserve verification result")
 
     split_action_result = ModelGateway(
         providers=[
