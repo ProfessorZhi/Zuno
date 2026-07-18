@@ -328,3 +328,67 @@ def test_model_gateway_rejects_plan_version_and_run_outcome_writes() -> None:
             assert "PlanVersion" in str(exc) or "RunOutcome" in str(exc)
         else:
             raise AssertionError("gateway accepted forbidden Agent Core domain write")
+
+
+def test_model_gateway_operation_result_contracts_cover_embedding_rerank_media_and_judge() -> None:
+    gateway = ModelGateway(
+        providers=[
+            MockModelProvider(provider_id="judge", model_id="mock-judge", categories=[ModelCategory.EVAL_JUDGE]),
+            MockModelProvider(provider_id="embedding", model_id="mock-embedding", categories=[ModelCategory.EMBEDDING]),
+        ]
+    )
+
+    embeddings = gateway.embed_batch(
+        texts=("alpha", "", "beta"),
+        revision="embed-rev-1",
+        dimension=4,
+        normalization="L2",
+        index_generation="index-gen-7",
+    )
+    assert [item.state for item in embeddings] == ["SUCCEEDED", "FAILED", "SUCCEEDED"]
+    assert embeddings[0].revision == "embed-rev-1"
+    assert embeddings[0].dimension == 4
+    assert embeddings[0].normalization == "L2"
+    assert embeddings[0].index_generation == "index-gen-7"
+    assert len(embeddings[0].vector) == 4
+    assert embeddings[1].failure_reason == "empty_text"
+
+    reranked = gateway.rerank((("doc-b", 0.2), ("doc-a", 0.9)))
+    assert [(item.item_id, item.score, item.rank) for item in reranked] == [("doc-a", 0.9, 1), ("doc-b", 0.2, 2)]
+
+    region = gateway.analyze_vision(
+        source_lineage_ref="source:pdf:1",
+        page_number=3,
+        bbox=(1.0, 2.0, 30.0, 40.0),
+        text="OCR text",
+    )
+    assert region.page_number == 3
+    assert region.bbox == (1.0, 2.0, 30.0, 40.0)
+    assert region.source_lineage_ref == "source:pdf:1"
+
+    segments = gateway.transcribe(((0, 1200, "hello", True), (1200, 2400, "world", False)))
+    assert [(segment.start_ms, segment.end_ms, segment.partial) for segment in segments] == [(0, 1200, True), (1200, 2400, False)]
+
+    classification = gateway.classify(
+        label_scores={"approve": 0.61, "deny": 0.39},
+        threshold=0.7,
+        calibration_ref="calibration:v1",
+    )
+    assert classification.label is None
+    assert classification.abstained is True
+    assert classification.threshold == 0.7
+    assert classification.calibration_ref == "calibration:v1"
+
+    judge = gateway.judge(
+        ModelGatewayRequest(
+            category=ModelCategory.EVAL_JUDGE,
+            prompt="Judge the answer.",
+            provider_id="judge",
+        ),
+        score=0.82,
+        rationale="grounded enough",
+    )
+    assert judge.gateway_audited is True
+    assert judge.budget_verdict.allowed is True
+    assert judge.sole_quality_proof_allowed is False
+    assert judge.requires_external_evidence is True

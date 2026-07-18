@@ -27,7 +27,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 24))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 32))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -187,6 +187,65 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("replan proposal is not owned by Agent Core")
     if any(action.activates_plan_version or action.modifies_run_outcome for action in failed_result.control_actions):
         errors.append("model gateway control action mutates Agent Core domain state")
+
+    operation_gateway = ModelGateway(
+        providers=[
+            MockModelProvider(provider_id="judge", model_id="mock-judge", categories=[ModelCategory.EVAL_JUDGE]),
+            MockModelProvider(provider_id="embedding", model_id="mock-embedding", categories=[ModelCategory.EMBEDDING]),
+        ]
+    )
+    embeddings = operation_gateway.embed_batch(
+        texts=("alpha", "", "beta"),
+        revision="embed-rev-1",
+        dimension=4,
+        normalization="L2",
+        index_generation="index-gen-7",
+    )
+    if [item.state for item in embeddings] != ["SUCCEEDED", "FAILED", "SUCCEEDED"]:
+        errors.append("embedding batch did not keep item-level terminal states")
+    if not all(item.revision == "embed-rev-1" and item.dimension == 4 for item in embeddings):
+        errors.append("embedding results did not freeze revision and dimension")
+    if embeddings[0].normalization != "L2" or embeddings[0].index_generation != "index-gen-7":
+        errors.append("embedding result did not freeze normalization and index generation")
+
+    reranked = operation_gateway.rerank((("doc-b", 0.2), ("doc-a", 0.9)))
+    if [(item.item_id, item.score, item.rank) for item in reranked] != [("doc-a", 0.9, 1), ("doc-b", 0.2, 2)]:
+        errors.append("rerank result did not preserve item id, score, and rank")
+
+    region = operation_gateway.analyze_vision(
+        source_lineage_ref="source:pdf:1",
+        page_number=3,
+        bbox=(1.0, 2.0, 30.0, 40.0),
+        text="OCR text",
+    )
+    if region.page_number != 3 or region.bbox != (1.0, 2.0, 30.0, 40.0) or region.source_lineage_ref != "source:pdf:1":
+        errors.append("vision/OCR result did not preserve page, bbox, and source lineage")
+
+    segments = operation_gateway.transcribe(((0, 1200, "hello", True), (1200, 2400, "world", False)))
+    if [(segment.start_ms, segment.end_ms, segment.partial) for segment in segments] != [(0, 1200, True), (1200, 2400, False)]:
+        errors.append("transcription result did not preserve segment timestamp and partial semantics")
+
+    classification = operation_gateway.classify(
+        label_scores={"approve": 0.61, "deny": 0.39},
+        threshold=0.7,
+        calibration_ref="calibration:v1",
+    )
+    if classification.label is not None or not classification.abstained or classification.calibration_ref != "calibration:v1":
+        errors.append("classification did not support threshold, calibration, and abstain")
+
+    judge = operation_gateway.judge(
+        ModelGatewayRequest(
+            category=ModelCategory.EVAL_JUDGE,
+            prompt="Judge the answer.",
+            provider_id="judge",
+        ),
+        score=0.82,
+        rationale="grounded enough",
+    )
+    if not judge.gateway_audited or not judge.budget_verdict.allowed:
+        errors.append("judge call did not go through gateway budget audit")
+    if judge.sole_quality_proof_allowed or not judge.requires_external_evidence:
+        errors.append("judge result can be used as sole quality proof")
 
     split_action_result = ModelGateway(
         providers=[

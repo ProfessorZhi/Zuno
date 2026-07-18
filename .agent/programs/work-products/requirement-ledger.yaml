@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 669
-  implementation_available: 87
+  target_not_current: 661
+  implementation_available: 95
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -11517,241 +11517,249 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Embedding 必须固定 Revision、Dimension、Normalization 和 Index Generation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2310"
-    gap: "?????Embedding 必须固定 Revision、Dimension、Normalization 和 Index Generation???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-024 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-024 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-024 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-024-UT"
-      - "MODEL-024-IT"
-      - "MODEL-024-FT"
-      - "MODEL-024-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-024"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2310"
-      - "planned_test:MODEL-024-UT"
-      - "planned_test:MODEL-024-IT"
-      - "planned_test:MODEL-024-FT"
-      - "planned_test:MODEL-024-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-024"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-025
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Embedding Batch 必须支持 Item 级终态和部分失败"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2311"
-    gap: "?????Embedding Batch 必须支持 Item 级终态和部分失败???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-025 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-025 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-025 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-025-UT"
-      - "MODEL-025-IT"
-      - "MODEL-025-FT"
-      - "MODEL-025-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-025"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2311"
-      - "planned_test:MODEL-025-UT"
-      - "planned_test:MODEL-025-IT"
-      - "planned_test:MODEL-025-FT"
-      - "planned_test:MODEL-025-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-025"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-026
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Rerank 必须保留 Item ID、Score 和批量语义"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2312"
-    gap: "?????Rerank 必须保留 Item ID、Score 和批量语义???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-026 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-026 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-026 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-026-UT"
-      - "MODEL-026-IT"
-      - "MODEL-026-FT"
-      - "MODEL-026-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-026"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2312"
-      - "planned_test:MODEL-026-UT"
-      - "planned_test:MODEL-026-IT"
-      - "planned_test:MODEL-026-FT"
-      - "planned_test:MODEL-026-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-026"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-027
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Vision/OCR 结果必须保留页、坐标与 Source Lineage"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2313"
-    gap: "?????Vision/OCR 结果必须保留页、坐标与 Source Lineage???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-027 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-027 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-027 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-027-UT"
-      - "MODEL-027-IT"
-      - "MODEL-027-FT"
-      - "MODEL-027-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-027"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2313"
-      - "planned_test:MODEL-027-UT"
-      - "planned_test:MODEL-027-IT"
-      - "planned_test:MODEL-027-FT"
-      - "planned_test:MODEL-027-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-027"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-028
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Transcription 必须定义 Segment、Timestamp 和 Partial 语义"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2314"
-    gap: "?????Transcription 必须定义 Segment、Timestamp 和 Partial 语义???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-028 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-028 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-028 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-028-UT"
-      - "MODEL-028-IT"
-      - "MODEL-028-FT"
-      - "MODEL-028-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-028"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2314"
-      - "planned_test:MODEL-028-UT"
-      - "planned_test:MODEL-028-IT"
-      - "planned_test:MODEL-028-FT"
-      - "planned_test:MODEL-028-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-028"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-029
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Classification 必须支持 Threshold、Calibration 和 Abstain"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2315"
-    gap: "?????Classification 必须支持 Threshold、Calibration 和 Abstain???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-029 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-029 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-029 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-029-UT"
-      - "MODEL-029-IT"
-      - "MODEL-029-FT"
-      - "MODEL-029-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-029"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2315"
-      - "planned_test:MODEL-029-UT"
-      - "planned_test:MODEL-029-IT"
-      - "planned_test:MODEL-029-FT"
-      - "planned_test:MODEL-029-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-029"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-030
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Judge 调用必须独立经过 Gateway 和预算审计"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2316"
-    gap: "?????Judge 调用必须独立经过 Gateway 和预算审计???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-030 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-030 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-030 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-030-UT"
-      - "MODEL-030-IT"
-      - "MODEL-030-FT"
-      - "MODEL-030-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-030"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2316"
-      - "planned_test:MODEL-030-UT"
-      - "planned_test:MODEL-030-IT"
-      - "planned_test:MODEL-030-FT"
-      - "planned_test:MODEL-030-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-030"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-031
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "模型自评不得成为唯一质量证明"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2317"
-    gap: "?????模型自评不得成为唯一质量证明???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-031 的 operation result contract、状态和审计边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-031 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-031 由 verify_model_gateway_runtime_batch.py 覆盖 operation result normal/fault 语义。"
     test_ids:
-      - "MODEL-031-UT"
-      - "MODEL-031-IT"
-      - "MODEL-031-FT"
-      - "MODEL-031-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-031"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2317"
-      - "planned_test:MODEL-031-UT"
-      - "planned_test:MODEL-031-IT"
-      - "planned_test:MODEL-031-FT"
-      - "planned_test:MODEL-031-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-031"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-032
     module: "04 Model Gateway"

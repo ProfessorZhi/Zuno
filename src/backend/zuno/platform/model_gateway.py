@@ -295,6 +295,62 @@ class ModelStreamResult:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelEmbeddingResult:
+    embedding_id: str
+    text_ref: str
+    vector: tuple[float, ...]
+    revision: str
+    dimension: int
+    normalization: Literal["NONE", "L2", "UNIT"]
+    index_generation: str
+    state: Literal["SUCCEEDED", "FAILED"]
+    failure_reason: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ModelRerankItem:
+    item_id: str
+    score: float
+    rank: int
+
+
+@dataclass(frozen=True, slots=True)
+class ModelVisionRegion:
+    page_number: int
+    bbox: tuple[float, float, float, float]
+    text: str
+    source_lineage_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelTranscriptionSegment:
+    segment_id: str
+    start_ms: int
+    end_ms: int
+    text: str
+    partial: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelClassificationResult:
+    label: str | None
+    score: float
+    threshold: float
+    calibration_ref: str
+    abstained: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelJudgeResult:
+    score: float
+    rationale_ref: str
+    budget_verdict: BudgetVerdict
+    gateway_audited: bool
+    sole_quality_proof_allowed: bool = False
+    requires_external_evidence: bool = True
+
+
+@dataclass(frozen=True, slots=True)
 class BudgetPolicy:
     max_cost: float | None = None
     max_latency_ms: float | None = None
@@ -874,6 +930,118 @@ class ModelGateway:
             usage_receipts=(usage_receipt,),
         )
 
+    def embed_batch(
+        self,
+        *,
+        texts: tuple[str, ...],
+        revision: str,
+        dimension: int,
+        normalization: Literal["NONE", "L2", "UNIT"],
+        index_generation: str,
+    ) -> tuple[ModelEmbeddingResult, ...]:
+        results: list[ModelEmbeddingResult] = []
+        for index, text in enumerate(texts):
+            if not text.strip():
+                results.append(
+                    ModelEmbeddingResult(
+                        embedding_id=f"embedding_{index}",
+                        text_ref=f"text:{index}",
+                        vector=(),
+                        revision=revision,
+                        dimension=dimension,
+                        normalization=normalization,
+                        index_generation=index_generation,
+                        state="FAILED",
+                        failure_reason="empty_text",
+                    )
+                )
+                continue
+            vector = _deterministic_vector(text, dimension, normalization)
+            results.append(
+                ModelEmbeddingResult(
+                    embedding_id=f"embedding_{_stable_hash([text, revision, index_generation])[:12]}",
+                    text_ref=f"text:{index}",
+                    vector=vector,
+                    revision=revision,
+                    dimension=dimension,
+                    normalization=normalization,
+                    index_generation=index_generation,
+                    state="SUCCEEDED",
+                )
+            )
+        return tuple(results)
+
+    def rerank(self, items: tuple[tuple[str, float], ...]) -> tuple[ModelRerankItem, ...]:
+        ranked = sorted((ModelRerankItem(item_id=item_id, score=score, rank=0) for item_id, score in items), key=lambda item: (-item.score, item.item_id))
+        return tuple(ModelRerankItem(item_id=item.item_id, score=item.score, rank=index + 1) for index, item in enumerate(ranked))
+
+    def analyze_vision(
+        self,
+        *,
+        source_lineage_ref: str,
+        page_number: int,
+        bbox: tuple[float, float, float, float],
+        text: str,
+    ) -> ModelVisionRegion:
+        return ModelVisionRegion(
+            page_number=page_number,
+            bbox=bbox,
+            text=text,
+            source_lineage_ref=source_lineage_ref,
+        )
+
+    def transcribe(self, segments: tuple[tuple[int, int, str, bool], ...]) -> tuple[ModelTranscriptionSegment, ...]:
+        return tuple(
+            ModelTranscriptionSegment(
+                segment_id=f"segment_{index}",
+                start_ms=start_ms,
+                end_ms=end_ms,
+                text=text,
+                partial=partial,
+            )
+            for index, (start_ms, end_ms, text, partial) in enumerate(segments)
+        )
+
+    def classify(
+        self,
+        *,
+        label_scores: dict[str, float],
+        threshold: float,
+        calibration_ref: str,
+    ) -> ModelClassificationResult:
+        label, score = max(label_scores.items(), key=lambda item: item[1])
+        abstained = score < threshold
+        return ModelClassificationResult(
+            label=None if abstained else label,
+            score=score,
+            threshold=threshold,
+            calibration_ref=calibration_ref,
+            abstained=abstained,
+        )
+
+    def judge(
+        self,
+        request: ModelGatewayRequest,
+        *,
+        score: float,
+        rationale: str,
+    ) -> ModelJudgeResult:
+        provider = self._select_provider(ModelCategory.EVAL_JUDGE, request.provider_id)
+        prompt_tokens = _estimate_tokens(request.prompt)
+        completion_tokens = provider.estimate_completion_tokens(prompt_tokens, request.max_output_tokens)
+        budget_verdict = self._evaluate_budget(
+            request=request,
+            provider=provider,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+        return ModelJudgeResult(
+            score=score,
+            rationale_ref="judge_rationale_" + _stable_hash([request.prompt, rationale])[:16],
+            budget_verdict=budget_verdict,
+            gateway_audited=True,
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -1090,6 +1258,17 @@ def _estimate_latency_ms(category: ModelCategory, token_count: int) -> float:
         ModelCategory.EVAL_JUDGE: 35.0,
     }[category]
     return round(base_latency + token_count * 0.8, 3)
+
+
+def _deterministic_vector(text: str, dimension: int, normalization: Literal["NONE", "L2", "UNIT"]) -> tuple[float, ...]:
+    if dimension <= 0:
+        raise ModelGatewayProviderError("embedding dimension must be positive")
+    seed = hashlib.sha256(text.encode("utf-8")).digest()
+    values = tuple(round(((seed[index % len(seed)] / 255.0) * 2.0) - 1.0, 6) for index in range(dimension))
+    if normalization in {"L2", "UNIT"}:
+        norm = sum(value * value for value in values) ** 0.5 or 1.0
+        return tuple(round(value / norm, 6) for value in values)
+    return values
 
 
 def _default_operation(category: ModelCategory) -> ModelOperation:
@@ -1312,6 +1491,7 @@ __all__ = [
     "ModelControlAction",
     "ModelControlActionType",
     "ModelDomainWrite",
+    "ModelEmbeddingResult",
     "ModelGateway",
     "ModelGatewayBinding",
     "ModelGatewayCancellationError",
@@ -1320,9 +1500,14 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "ModelClassificationResult",
+    "ModelJudgeResult",
     "ModelRepairRecord",
+    "ModelRerankItem",
     "ModelRole",
     "ModelStreamResult",
+    "ModelTranscriptionSegment",
+    "ModelVisionRegion",
     "GatewayStreamChunk",
     "ModelUsageKind",
     "ModelUsageReceipt",
