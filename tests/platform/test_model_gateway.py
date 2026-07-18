@@ -14,6 +14,7 @@ from zuno.platform.model_gateway import (
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelQuotaPolicy,
     ModelRepairRecord,
     ModelUsageKind,
     MockModelProvider,
@@ -434,3 +435,52 @@ def test_model_gateway_compression_and_domain_outputs_are_candidates_or_proposal
     assert action.target_owner == "AGENT_CORE"
     assert action.requires_owner_binding is True
     assert action.directly_executable is False
+
+
+def test_model_gateway_usage_pricing_and_quota_boundaries() -> None:
+    primary = MockModelProvider(provider_id="primary", model_id="mock-primary", fail_mode="timeout")
+    fallback = MockModelProvider(provider_id="fallback", model_id="mock-fallback")
+    gateway = ModelGateway(providers=[primary, fallback])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Fallback usage accounting.",
+            provider_id="primary",
+            fallback_provider_ids=["fallback"],
+            pricing_version="pricing:v1",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert [receipt.kind for receipt in result.usage_receipts] == [
+        ModelUsageKind.ESTIMATE,
+        ModelUsageKind.OBSERVED,
+        ModelUsageKind.OBSERVED,
+    ]
+    assert result.attempts[0].usage_receipt_id == result.usage_receipts[1].usage_receipt_id
+    assert result.attempts[1].usage_receipt_id == result.usage_receipts[2].usage_receipt_id
+
+    observed = result.usage_receipts[-1]
+    settled = gateway.settle_usage(observed)
+    correction = gateway.correct_usage(observed, prompt_tokens=7, completion_tokens=11)
+
+    assert [receipt.kind for receipt in [observed, settled, correction]] == [
+        ModelUsageKind.OBSERVED,
+        ModelUsageKind.SETTLED,
+        ModelUsageKind.CORRECTION,
+    ]
+    assert observed.pricing_version == settled.pricing_version == correction.pricing_version == "pricing:v1"
+    assert observed.usage_receipt_id != settled.usage_receipt_id
+    assert observed.usage_receipt_id != correction.usage_receipt_id
+
+    quota = ModelQuotaPolicy(quota_scope="tenant:t1:model", token_limit=10, reserved_tokens=0, generation=0)
+    first = gateway.reserve_quota(policy=quota, requested_tokens=6, expected_generation=0)
+    stale = gateway.reserve_quota(policy=quota, requested_tokens=6, expected_generation=0)
+    second = gateway.reserve_quota(policy=quota, requested_tokens=3, expected_generation=1)
+    exhausted = gateway.reserve_quota(policy=quota, requested_tokens=2, expected_generation=2)
+
+    assert first.accepted is True and first.committed_generation == 1
+    assert stale.accepted is False and stale.reason == "generation_mismatch"
+    assert second.accepted is True and second.committed_generation == 2
+    assert exhausted.accepted is False and exhausted.reason == "quota_exhausted"

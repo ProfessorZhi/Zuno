@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 657
-  implementation_available: 99
+  target_not_current: 652
+  implementation_available: 104
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -11889,151 +11889,156 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个 Attempt 包括失败和取消都必须产生 Usage 事实"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2322"
-    gap: "?????每个 Attempt 包括失败和取消都必须产生 Usage 事实???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-036 的 usage/pricing/quota 边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-036 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-036 由 verify_model_gateway_runtime_batch.py 覆盖 usage/pricing/quota normal/fault 语义。"
     test_ids:
-      - "MODEL-036-UT"
-      - "MODEL-036-IT"
-      - "MODEL-036-FT"
-      - "MODEL-036-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-036"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2322"
-      - "planned_test:MODEL-036-UT"
-      - "planned_test:MODEL-036-IT"
-      - "planned_test:MODEL-036-FT"
-      - "planned_test:MODEL-036-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-036"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-037
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Usage Estimate、Observed、Settled 和 Correction 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2323"
-    gap: "?????Usage Estimate、Observed、Settled 和 Correction 必须分离???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-037 的 usage/pricing/quota 边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-037 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-037 由 verify_model_gateway_runtime_batch.py 覆盖 usage/pricing/quota normal/fault 语义。"
     test_ids:
-      - "MODEL-037-UT"
-      - "MODEL-037-IT"
-      - "MODEL-037-FT"
-      - "MODEL-037-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-037"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2323"
-      - "planned_test:MODEL-037-UT"
-      - "planned_test:MODEL-037-IT"
-      - "planned_test:MODEL-037-FT"
-      - "planned_test:MODEL-037-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-037"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-038
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Pricing Version 必须固定且历史 Receipt 不回写"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2324"
-    gap: "?????Pricing Version 必须固定且历史 Receipt 不回写???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-038 的 usage/pricing/quota 边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-038 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-038 由 verify_model_gateway_runtime_batch.py 覆盖 usage/pricing/quota normal/fault 语义。"
     test_ids:
-      - "MODEL-038-UT"
-      - "MODEL-038-IT"
-      - "MODEL-038-FT"
-      - "MODEL-038-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-038"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2324"
-      - "planned_test:MODEL-038-UT"
-      - "planned_test:MODEL-038-IT"
-      - "planned_test:MODEL-038-FT"
-      - "planned_test:MODEL-038-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-038"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-039
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Quota 与业务 Budget 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2325"
-    gap: "?????Quota 与业务 Budget 必须分离???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-039 的 usage/pricing/quota 边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-039 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-039 由 verify_model_gateway_runtime_batch.py 覆盖 usage/pricing/quota normal/fault 语义。"
     test_ids:
-      - "MODEL-039-UT"
-      - "MODEL-039-IT"
-      - "MODEL-039-FT"
-      - "MODEL-039-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-039"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2325"
-      - "planned_test:MODEL-039-UT"
-      - "planned_test:MODEL-039-IT"
-      - "planned_test:MODEL-039-FT"
-      - "planned_test:MODEL-039-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-039"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-040
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Quota Race 必须由原子持久化或 CAS 解决"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2326"
-    gap: "?????Quota Race 必须由原子持久化或 CAS 解决???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-040 的 usage/pricing/quota 边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-040 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-040 由 verify_model_gateway_runtime_batch.py 覆盖 usage/pricing/quota normal/fault 语义。"
     test_ids:
-      - "MODEL-040-UT"
-      - "MODEL-040-IT"
-      - "MODEL-040-FT"
-      - "MODEL-040-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-040"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2326"
-      - "planned_test:MODEL-040-UT"
-      - "planned_test:MODEL-040-IT"
-      - "planned_test:MODEL-040-FT"
-      - "planned_test:MODEL-040-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-040"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-041
     module: "04 Model Gateway"

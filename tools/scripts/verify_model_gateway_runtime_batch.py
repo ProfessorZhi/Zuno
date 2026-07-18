@@ -21,13 +21,14 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelGatewayRequest,
     ModelOperation,
     ModelRepairRecord,
+    ModelQuotaPolicy,
     ModelUsageKind,
     MockModelProvider,
 )
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 36))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 41))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -281,6 +282,57 @@ def verify_model_gateway_runtime_batch() -> list[str]:
     )
     if action.target_owner != "AGENT_CORE" or not action.requires_owner_binding or action.directly_executable:
         errors.append("tool model output is not restricted to action proposal form")
+
+    usage_gateway = ModelGateway(
+        providers=[
+            MockModelProvider(provider_id="usage_primary", model_id="mock-primary", fail_mode="timeout"),
+            MockModelProvider(provider_id="usage_fallback", model_id="mock-fallback"),
+        ]
+    )
+    usage_result = usage_gateway.invoke(
+        ModelGatewayRequest(
+            category=ModelCategory.CHAT,
+            prompt="Fallback usage accounting.",
+            provider_id="usage_primary",
+            fallback_provider_ids=["usage_fallback"],
+            pricing_version="pricing:v1",
+        )
+    )
+    if [receipt.kind for receipt in usage_result.usage_receipts] != [
+        ModelUsageKind.ESTIMATE,
+        ModelUsageKind.OBSERVED,
+        ModelUsageKind.OBSERVED,
+    ]:
+        errors.append("every attempt, including failure/fallback, did not produce usage facts")
+    if usage_result.attempts[0].usage_receipt_id != usage_result.usage_receipts[1].usage_receipt_id:
+        errors.append("failed attempt is not linked to an observed usage receipt")
+    observed = usage_result.usage_receipts[-1]
+    settled = usage_gateway.settle_usage(observed)
+    correction = usage_gateway.correct_usage(observed, prompt_tokens=7, completion_tokens=11)
+    if [receipt.kind for receipt in [observed, settled, correction]] != [
+        ModelUsageKind.OBSERVED,
+        ModelUsageKind.SETTLED,
+        ModelUsageKind.CORRECTION,
+    ]:
+        errors.append("usage estimate/observed/settled/correction are not separated")
+    if observed.pricing_version != settled.pricing_version or observed.pricing_version != correction.pricing_version:
+        errors.append("pricing version was not frozen across historical receipts")
+    if observed.usage_receipt_id in {settled.usage_receipt_id, correction.usage_receipt_id}:
+        errors.append("settlement/correction overwrote historical usage receipt")
+
+    quota = ModelQuotaPolicy(quota_scope="tenant:t1:model", token_limit=10, reserved_tokens=0, generation=0)
+    first = usage_gateway.reserve_quota(policy=quota, requested_tokens=6, expected_generation=0)
+    stale = usage_gateway.reserve_quota(policy=quota, requested_tokens=6, expected_generation=0)
+    second = usage_gateway.reserve_quota(policy=quota, requested_tokens=3, expected_generation=1)
+    exhausted = usage_gateway.reserve_quota(policy=quota, requested_tokens=2, expected_generation=2)
+    if not first.accepted or first.committed_generation != 1:
+        errors.append("quota CAS first reservation did not commit generation 1")
+    if stale.accepted or stale.reason != "generation_mismatch":
+        errors.append("quota CAS race did not reject stale generation")
+    if not second.accepted or second.committed_generation != 2:
+        errors.append("quota CAS second reservation did not commit generation 2")
+    if exhausted.accepted or exhausted.reason != "quota_exhausted":
+        errors.append("quota did not enforce token limit separately from budget")
 
     split_action_result = ModelGateway(
         providers=[

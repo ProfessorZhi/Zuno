@@ -189,6 +189,25 @@ class ModelUsageReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelQuotaPolicy:
+    quota_scope: str
+    token_limit: int
+    reserved_tokens: int
+    generation: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class ModelQuotaReservation:
+    reservation_id: str
+    quota_scope: str
+    reserved_tokens: int
+    expected_generation: int
+    committed_generation: int
+    accepted: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
 class ModelControlAction:
     action_id: str
     action_type: ModelControlActionType
@@ -587,6 +606,8 @@ class ModelGateway:
     ) -> None:
         self._providers = {provider.provider_id: provider for provider in providers}
         self.default_budget = default_budget or BudgetPolicy()
+        self._quota_generations: dict[str, int] = {}
+        self._quota_reserved_tokens: dict[str, int] = {}
 
     def invoke(self, request: ModelGatewayRequest) -> ModelGatewayResult:
         _ensure_gateway_domain_boundary(request)
@@ -1147,6 +1168,81 @@ class ModelGateway:
             source_model_call_ref=source_model_call_ref,
         )
 
+    def settle_usage(self, receipt: ModelUsageReceipt) -> ModelUsageReceipt:
+        return ModelUsageReceipt(
+            usage_receipt_id="usage_settled_" + _stable_hash([receipt.usage_receipt_id, receipt.pricing_version])[:16],
+            call_id=receipt.call_id,
+            attempt_id=receipt.attempt_id,
+            kind=ModelUsageKind.SETTLED,
+            pricing_version=receipt.pricing_version,
+            prompt_tokens=receipt.prompt_tokens,
+            completion_tokens=receipt.completion_tokens,
+            total_tokens=receipt.total_tokens,
+            estimated_cost=receipt.estimated_cost,
+        )
+
+    def correct_usage(
+        self,
+        receipt: ModelUsageReceipt,
+        *,
+        prompt_tokens: int,
+        completion_tokens: int,
+    ) -> ModelUsageReceipt:
+        total_tokens = prompt_tokens + completion_tokens
+        return ModelUsageReceipt(
+            usage_receipt_id="usage_correction_" + _stable_hash([receipt.usage_receipt_id, total_tokens])[:16],
+            call_id=receipt.call_id,
+            attempt_id=receipt.attempt_id,
+            kind=ModelUsageKind.CORRECTION,
+            pricing_version=receipt.pricing_version,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+            estimated_cost=_estimate_cost(ModelCategory.CHAT, total_tokens),
+        )
+
+    def reserve_quota(
+        self,
+        *,
+        policy: ModelQuotaPolicy,
+        requested_tokens: int,
+        expected_generation: int,
+    ) -> ModelQuotaReservation:
+        current_generation = self._quota_generations.get(policy.quota_scope, policy.generation)
+        current_reserved = self._quota_reserved_tokens.get(policy.quota_scope, policy.reserved_tokens)
+        if expected_generation != current_generation:
+            return ModelQuotaReservation(
+                reservation_id="quota_rejected_" + _stable_hash([policy.quota_scope, requested_tokens, expected_generation])[:16],
+                quota_scope=policy.quota_scope,
+                reserved_tokens=0,
+                expected_generation=expected_generation,
+                committed_generation=current_generation,
+                accepted=False,
+                reason="generation_mismatch",
+            )
+        if current_reserved + requested_tokens > policy.token_limit:
+            return ModelQuotaReservation(
+                reservation_id="quota_rejected_" + _stable_hash([policy.quota_scope, requested_tokens, current_generation, "limit"])[:16],
+                quota_scope=policy.quota_scope,
+                reserved_tokens=0,
+                expected_generation=expected_generation,
+                committed_generation=current_generation,
+                accepted=False,
+                reason="quota_exhausted",
+            )
+        committed_generation = current_generation + 1
+        self._quota_generations[policy.quota_scope] = committed_generation
+        self._quota_reserved_tokens[policy.quota_scope] = current_reserved + requested_tokens
+        return ModelQuotaReservation(
+            reservation_id="quota_" + _stable_hash([policy.quota_scope, requested_tokens, committed_generation])[:16],
+            quota_scope=policy.quota_scope,
+            reserved_tokens=requested_tokens,
+            expected_generation=expected_generation,
+            committed_generation=committed_generation,
+            accepted=True,
+            reason="reserved",
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -1610,6 +1706,8 @@ __all__ = [
     "ModelClassificationResult",
     "ModelJudgeResult",
     "ModelOutputCandidate",
+    "ModelQuotaPolicy",
+    "ModelQuotaReservation",
     "ModelRepairRecord",
     "ModelRerankItem",
     "ModelRiskProposal",
