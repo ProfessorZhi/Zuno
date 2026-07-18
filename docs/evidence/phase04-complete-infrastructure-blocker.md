@@ -80,7 +80,7 @@ official_checkpointer_backup_restore: proven
 
 ## Stop Condition
 
-PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证；官方 LangGraph PostgreSQL Checkpointer 依赖已由 Coordinator Decision 批准，并通过基础 PostgresSaver lifecycle、真实 `pg_dump`/`pg_restore` backup/restore、以及恢复库 Product Projection Replay 子范围验证。但完整 Phase 还要求 graph-level interrupt/resume、retention/prune、跨领域 replay 与包含 official Checkpointer 的组合故障证据。
+PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证；官方 LangGraph PostgreSQL Checkpointer 依赖已由 Coordinator Decision 批准，并通过基础 PostgresSaver lifecycle、graph-level interrupt/resume after restart、真实 `pg_dump`/`pg_restore` backup/restore、以及恢复库 Product Projection Replay 子范围验证。但完整 Phase 还要求 retention/prune、跨领域 replay 边界收口与包含 official Checkpointer 的组合故障证据。
 
 目标文件要求真实 PostgreSQL、RabbitMQ、MinIO/S3、LangGraph PostgreSQL Checkpointer、Backup/Restore/Replay 和故障证据都成立后，PHASE04 才能 completed，PHASE05 才能 ready。静态 YAML、Compose 声明、primitive table、一次性连通性测试和 mock 不能替代这些证据。
 
@@ -228,7 +228,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Checkpoint boundary/version subset：`tools/scripts/verify_phase04_checkpoint_boundary_version.py` 固化 `agent_runtime_checkpoints` 归 Agent Core、`infra_checkpoints` 为 Infrastructure receipt、Checkpoint Commit 不等于 Domain Commit，以及 CHECKPOINT adapter/schema unknown version fail-closed；该 gate 不证明 official Checkpointer runtime 已安装或可恢复。
 - Restore/cutover completion gate subset：`tools/scripts/verify_phase04_restore_cutover_completion_gates.py` 固化 backup/restore/replay marker、isolated restore target、Coordinator approval 和 cutover fail-closed policy；该 gate 不证明完整 Backup/Restore/PITR、RecoverySet 或 official Checkpointer restore。
 
-Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing、PITR alignment、MinIO Object/Manifest/治理/恢复子范围、official Checkpointer backup/restore 和 Product Projection Replay 子范围；仍不能证明 graph-level Checkpointer interrupt/resume、retention/prune、跨领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
+Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing、PITR alignment、MinIO Object/Manifest/治理/恢复子范围、official Checkpointer graph interrupt/resume + backup/restore 和 Product Projection Replay 子范围；仍不能证明 retention/prune、跨领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
 Infrastructure requirement `ARCH-INFRA-003` is now proven by `tools/scripts/verify_phase04_infrastructure_capability_profile.py`: the capability profile contract is immutable, versioned, canonical-hashed, and shared by Developer CI and Server Product deployment classes. This does not prove official Checkpointer, PITR, complete recovery set, or enterprise index adapters.
 
@@ -248,7 +248,7 @@ Infrastructure requirement ledger subset `ARCH-INFRA-006` through `ARCH-INFRA-01
 
 Infrastructure requirement `ARCH-INFRA-064` is now proven by `tools/scripts/verify_requirement_ledger_evidence_gate.py`: every ledger item promoted to `implementation_available` must have existing current paths, current tests, current evidence refs, and complete reverse trace refs. This gate protects Target-to-Current promotion only; it does not prove any still-target runtime capability.
 
-Infrastructure requirement `ARCH-INFRA-040` is now proven by `tools/scripts/verify_phase04_dr_profile.py`: the DR Profile has explicit RPO/RTO/Owner/Recovery Owner, bounded verification commands, existing evidence refs, and fail-closed cutover policy. This does not prove graph-level Checkpointer interrupt/resume, retention/prune, cross-domain replay, combined-service fault, or production encrypted backup custody.
+Infrastructure requirement `ARCH-INFRA-040` is now proven by `tools/scripts/verify_phase04_dr_profile.py`: the DR Profile has explicit RPO/RTO/Owner/Recovery Owner, bounded verification commands, existing evidence refs, and fail-closed cutover policy. This does not prove Checkpointer retention/prune, cross-domain replay, combined-service fault, or production encrypted backup custody.
 
 Infrastructure requirements `ARCH-INFRA-031`, `ARCH-INFRA-032`, and `ARCH-INFRA-033` are now proven by `tools/scripts/verify_phase04_capacity_admission.py`: drain stops new admission, reservations are atomically serialized by PostgreSQL, owner-fenced release restores capacity, and exhausted capacity raises backpressure. This does not prove caller-level Product/Agent/Model/Tool adoption.
 
@@ -260,7 +260,7 @@ Infrastructure requirements `ARCH-INFRA-022` and `ARCH-INFRA-052` are now proven
 
 Infrastructure requirements `ARCH-INFRA-035` and `ARCH-INFRA-058` are now proven by `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`: secret rotation is generation-fenced and rollbackable without persisting secret material, and cross-tenant hits are durably fail-closed or quarantined. This does not prove production KMS, PITR, Product Projection Replay, or official Checkpointer restore.
 
-Infrastructure requirement `ARCH-INFRA-029` is now proven by `tools/scripts/verify_phase04_pitr_alignment.py`: WAL archive/basebackup/PITR restores to a verified DB/Object/Checkpoint/Index RecoverySet and excludes post-target derived index writes. This does not prove graph-level Checkpointer interrupt/resume, retention/prune, cross-domain replay, or combined-service fault.
+Infrastructure requirement `ARCH-INFRA-029` is now proven by `tools/scripts/verify_phase04_pitr_alignment.py`: WAL archive/basebackup/PITR restores to a verified DB/Object/Checkpoint/Index RecoverySet and excludes post-target derived index writes. This does not prove Checkpointer retention/prune, cross-domain replay, or combined-service fault.
 
 Infrastructure requirements `ARCH-INFRA-026` and `ARCH-INFRA-041` are now proven by `tools/scripts/verify_phase04_backup_service_boundaries.py`: Backup Scope/RPO/Encryption/Verify is explicitly defined for each recovery component, and PostgreSQL/RabbitMQ/Object/Checkpoint service boundaries are machine-verifiable through the typed capability profile. This does not prove production encrypted backup, PITR, complete RecoverySet, or official Checkpointer restore.
 
@@ -276,4 +276,4 @@ Infrastructure requirements `ARCH-INFRA-027`, `ARCH-INFRA-028`, and `ARCH-INFRA-
 
 ## Gate Decision
 
-PHASE04 remains not completed. PHASE05 must remain blocked until P04-T06/T07 are completed, graph-level Checkpointer interrupt/resume and retention/prune evidence exists, cross-domain replay boundaries are closed or explicitly deferred by Coordinator Decision, combined dependency fault evidence includes the official Checkpointer, and the Coordinator approval gate is explicit.
+PHASE04 remains not completed. PHASE05 must remain blocked until P04-T06/T07 are completed, Checkpointer retention/prune evidence exists or the package limitation is explicitly closed by Coordinator Decision, cross-domain replay boundaries are closed or explicitly deferred by Coordinator Decision, combined dependency fault evidence includes the official Checkpointer, and the Coordinator approval gate is explicit.

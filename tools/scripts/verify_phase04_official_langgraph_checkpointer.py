@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from importlib.util import find_spec
+from typing import TypedDict
 from uuid import uuid4
 
 import psycopg
 from langgraph.checkpoint.base import empty_checkpoint
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
 
 from zuno.platform.database.foundation import (
     InfrastructureConflictError,
@@ -15,6 +18,12 @@ from zuno.platform.database.foundation import (
 
 POSTGRES_DSN = "postgresql://postgres:postgres@localhost:5432/zuno"
 SQLALCHEMY_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/zuno"
+
+
+class _InterruptGraphState(TypedDict):
+    marker: str
+    approval: str
+    events: list[str]
 
 
 def _checkpoint(marker: str, *, version: str, generation: int, parent_ref: str | None = None) -> dict[str, object]:
@@ -42,7 +51,91 @@ def _cleanup(thread_ids: list[str]) -> None:
             cur.execute(
                 "DELETE FROM infra_checkpoints WHERE thread_id = ANY(%s)",
                 (thread_ids,),
+                )
+
+
+def _build_interrupt_resume_graph():
+    def approval_node(state: _InterruptGraphState) -> dict[str, object]:
+        resume_value = interrupt({"kind": "approval", "marker": state["marker"]})
+        return {
+            "approval": str(resume_value),
+            "events": state.get("events", []) + [f"resumed:{resume_value}"],
+        }
+
+    def final_node(state: _InterruptGraphState) -> dict[str, object]:
+        return {"events": state.get("events", []) + ["finalized"]}
+
+    builder = StateGraph(_InterruptGraphState)
+    builder.add_node("approval", approval_node)
+    builder.add_node("final", final_node)
+    builder.add_edge(START, "approval")
+    builder.add_edge("approval", "final")
+    builder.add_edge("final", END)
+    return builder
+
+
+def _verify_graph_level_interrupt_resume(marker: str, thread_id: str) -> list[str]:
+    errors: list[str] = []
+    config = {"configurable": {"thread_id": thread_id}}
+    graph_builder = _build_interrupt_resume_graph()
+
+    with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
+        saver.setup()
+        graph = graph_builder.compile(checkpointer=saver)
+        interrupted = graph.invoke(
+            {"marker": marker, "approval": "", "events": []},
+            config,
+        )
+        interrupt_values = interrupted.get("__interrupt__") or []
+        if not interrupt_values:
+            errors.append("official graph did not emit an interrupt")
+        else:
+            interrupt_value = getattr(interrupt_values[0], "value", None)
+            if interrupt_value != {"kind": "approval", "marker": marker}:
+                errors.append(f"official graph interrupt payload mismatch: {interrupt_value!r}")
+        state_after_interrupt = graph.get_state(config)
+        if state_after_interrupt.next != ("approval",):
+            errors.append(
+                f"official graph interrupt did not persist resumable node: {state_after_interrupt.next!r}"
             )
+        if not state_after_interrupt.tasks or not state_after_interrupt.tasks[0].interrupts:
+            errors.append("official graph interrupt task was not persisted")
+
+    with PostgresSaver.from_conn_string(POSTGRES_DSN) as restarted_saver:
+        restarted_graph = graph_builder.compile(checkpointer=restarted_saver)
+        resumed = restarted_graph.invoke(Command(resume="approved"), config)
+        if resumed.get("approval") != "approved":
+            errors.append(f"official graph resume returned wrong approval: {resumed!r}")
+        if resumed.get("events") != ["resumed:approved", "finalized"]:
+            errors.append(f"official graph resume lost execution history: {resumed!r}")
+        final_state = restarted_graph.get_state(config)
+        if final_state.next != ():
+            errors.append(f"official graph still had pending nodes after resume: {final_state.next!r}")
+        history = list(restarted_graph.get_state_history(config))
+        if len(history) < 4:
+            errors.append("official graph checkpoint history did not retain interrupt/resume states")
+        if not any(snapshot.next == ("approval",) for snapshot in history):
+            errors.append("official graph history did not include interrupted approval node")
+        if not any(snapshot.next == ("final",) for snapshot in history):
+            errors.append("official graph history did not include resumed final node")
+
+    with psycopg.connect(POSTGRES_DSN) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT count(*)
+                FROM checkpoints
+                WHERE thread_id = %s
+                """,
+                (thread_id,),
+            )
+            checkpoint_count = int(cur.fetchone()[0])
+            if checkpoint_count < 4:
+                errors.append(
+                    "official graph interrupt/resume did not persist enough checkpoint rows: "
+                    f"{checkpoint_count}"
+                )
+    return errors
 
 
 def verify_phase04_official_langgraph_checkpointer() -> list[str]:
@@ -54,8 +147,9 @@ def verify_phase04_official_langgraph_checkpointer() -> list[str]:
     thread_a = f"phase04-official-a-{marker}"
     thread_b = f"phase04-official-b-{marker}"
     thread_delete = f"phase04-official-delete-{marker}"
+    thread_graph = f"phase04-official-graph-{marker}"
     namespace = "phase04-official"
-    thread_ids = [thread_a, thread_b, thread_delete]
+    thread_ids = [thread_a, thread_b, thread_delete, thread_graph]
     engine = create_foundation_engine(SQLALCHEMY_URL)
     try:
         with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
@@ -174,6 +268,7 @@ def verify_phase04_official_langgraph_checkpointer() -> list[str]:
         expected = {"checkpoint_migrations", "checkpoints", "checkpoint_blobs", "checkpoint_writes"}
         if tables != expected:
             errors.append(f"official PostgresSaver schema setup missing tables: {sorted(expected - tables)}")
+        errors.extend(_verify_graph_level_interrupt_resume(marker, thread_graph))
     except Exception as exc:
         errors.append(
             "official LangGraph PostgreSQL Checkpointer smoke failed: "

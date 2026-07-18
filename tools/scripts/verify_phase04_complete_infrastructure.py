@@ -686,7 +686,10 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_multi_generation_restore: passed",
             "official_checkpoint_infra_generation_reconcile: passed",
             "stale_checkpoint_generation_rejected: passed",
-            "phase_completion: still_blocked_full_restore_replay_and_combined_fault",
+            "official_graph_interrupt: passed",
+            "official_graph_resume_after_restart: passed",
+            "official_graph_checkpoint_history: passed",
+            "phase_completion: still_blocked_retention_prune_and_combined_fault",
         ]:
             if phrase not in official_checkpointer_evidence:
                 errors.append(
