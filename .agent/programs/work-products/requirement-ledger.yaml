@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 725
-  implementation_available: 31
+  target_not_current: 723
+  implementation_available: 33
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5946,51 +5946,55 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Local/Enterprise 共用 Conformance"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1942"
-    gap: "?????Local/Enterprise 共用 Conformance???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_adapter_conformance_profiles.py"
+      - "docs/evidence/phase04-adapter-conformance-profiles.md"
+    gap: "Adapter Conformance profile is current for Developer CI and Server Product service kinds; future enterprise-only adapters must pass the same profile before promotion."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 adapter conformance profile subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-061 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: Developer CI and Server Product profiles share service kind coverage, conformance suite version, supported semantics, unsupported semantics and required evidence refs"
     test_ids:
-      - "INFRA-061-UT"
-      - "INFRA-061-IT"
+      - "tests/repo/test_phase04_adapter_conformance_profiles.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-061"
+      - "docs/evidence/phase04-adapter-conformance-profiles.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1942"
-      - "planned_test:INFRA-061-UT"
-      - "planned_test:INFRA-061-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-061"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_adapter_conformance_profiles.py"
+      - "test:tests/repo/test_phase04_adapter_conformance_profiles.py"
+      - "evidence:docs/evidence/phase04-adapter-conformance-profiles.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-062
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Unsupported Local Semantic Fail-fast"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1943"
-    gap: "?????Unsupported Local Semantic Fail-fast???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_adapter_conformance_profiles.py"
+      - "docs/evidence/phase04-adapter-conformance-profiles.md"
+    gap: "Unsupported local semantic fail-fast is current in the adapter conformance profile; it does not prove unavailable target adapters are implemented."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 adapter conformance profile subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-062 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: unknown or unsupported semantics raise fail-fast errors rather than silently degrading to local-only behavior"
     test_ids:
-      - "INFRA-062-UT"
-      - "INFRA-062-IT"
+      - "tests/repo/test_phase04_adapter_conformance_profiles.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-062"
+      - "docs/evidence/phase04-adapter-conformance-profiles.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1943"
-      - "planned_test:INFRA-062-UT"
-      - "planned_test:INFRA-062-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-062"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_adapter_conformance_profiles.py"
+      - "test:tests/repo/test_phase04_adapter_conformance_profiles.py"
+      - "evidence:docs/evidence/phase04-adapter-conformance-profiles.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-063
     module: "11 Infrastructure"

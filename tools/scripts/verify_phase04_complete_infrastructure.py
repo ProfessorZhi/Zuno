@@ -175,6 +175,12 @@ UPGRADE_COMPATIBILITY_PROFILE_VERIFIER = (
 UPGRADE_COMPATIBILITY_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-upgrade-compatibility-profiles.md"
 )
+ADAPTER_CONFORMANCE_PROFILE_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_adapter_conformance_profiles.py"
+)
+ADAPTER_CONFORMANCE_PROFILE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-adapter-conformance-profiles.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1281,6 +1287,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in upgrade_profile_evidence:
                 errors.append(
                     "PHASE04 upgrade compatibility profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not ADAPTER_CONFORMANCE_PROFILE_VERIFIER.exists():
+        errors.append("missing PHASE04 adapter conformance profile verifier")
+    else:
+        conformance_profile_errors = _load_verifier(
+            ADAPTER_CONFORMANCE_PROFILE_VERIFIER,
+            "verify_phase04_adapter_conformance_profiles",
+            "verify_phase04_adapter_conformance_profiles",
+        )()
+        for conformance_profile_error in conformance_profile_errors:
+            errors.append(
+                "PHASE04 adapter conformance profile verification failed: "
+                f"{conformance_profile_error}"
+            )
+
+    if not ADAPTER_CONFORMANCE_PROFILE_EVIDENCE.exists():
+        errors.append("missing PHASE04 adapter conformance profile evidence")
+    else:
+        conformance_profile_evidence = _read(ADAPTER_CONFORMANCE_PROFILE_EVIDENCE)
+        for phrase in [
+            "adapter_conformance_profile_contract: passed",
+            "developer_ci_server_product_same_suite: passed",
+            "service_kind_coverage_parity: passed",
+            "unsupported_local_semantic_fail_fast: passed",
+            "conformance_suite_version_hash_changes: passed",
+            "It does not prove that every future enterprise adapter is implemented",
+        ]:
+            if phrase not in conformance_profile_evidence:
+                errors.append(
+                    "PHASE04 adapter conformance profile evidence missing phrase: "
                     f"{phrase}"
                 )
 

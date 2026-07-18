@@ -337,6 +337,53 @@ class UpgradeCompatibilityProfileV1(StrictContract):
         return self
 
 
+class AdapterConformanceProfileV1(StrictContract):
+    profile_id: str
+    adapter_name: str
+    service_kind: Literal[
+        "RELATIONAL",
+        "QUEUE",
+        "OBJECT",
+        "CHECKPOINT",
+        "VECTOR",
+        "GRAPH",
+        "LEXICAL",
+        "CACHE",
+        "TRACE_AUDIT",
+        "SECRET_KMS",
+    ]
+    deployment_class: Literal["DEVELOPER_CI", "SERVER_PRODUCT"]
+    supported_semantics: tuple[str, ...]
+    unsupported_semantics: tuple[str, ...] = ()
+    fail_fast_on_unsupported: bool
+    conformance_suite_version: str
+    required_test_refs: tuple[str, ...]
+    evidence_ref: str
+    current_runtime_status: Literal["PROVEN", "PROFILE_ONLY", "BLOCKED"]
+    content_hash: str
+
+    def hash_inputs(self) -> dict[str, Any]:
+        data = self.model_dump(mode="json", exclude_none=False)
+        data.pop("content_hash", None)
+        return data
+
+    @model_validator(mode="after")
+    def _conformance_boundary_is_explicit(self) -> "AdapterConformanceProfileV1":
+        if not self.supported_semantics:
+            raise ValueError("supported_semantics must be explicit")
+        if not self.fail_fast_on_unsupported:
+            raise ValueError("unsupported semantics must fail fast")
+        if not self.conformance_suite_version:
+            raise ValueError("conformance_suite_version must be explicit")
+        if not self.required_test_refs:
+            raise ValueError("required_test_refs must be explicit")
+        if set(self.supported_semantics).intersection(self.unsupported_semantics):
+            raise ValueError("a semantic cannot be both supported and unsupported")
+        if canonical_sha256(self.hash_inputs()) != self.content_hash:
+            raise ValueError("content_hash does not match conformance profile")
+        return self
+
+
 class InfrastructureCapabilityProfileV1(StrictContract):
     profile_id: str
     profile_version: str

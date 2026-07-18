@@ -29,6 +29,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T07 Infrastructure Typed Port 子范围：Local/Developer CI 与 Server Product 已共用同一 `InfrastructureCapabilityProfileV1` / `DataServiceCapabilityV1` typed port surface，并覆盖 PostgreSQL、RabbitMQ、Object、Checkpoint、Vector、Graph、Lexical、Cache、Secret 和 Telemetry service kind；unknown service kind fail closed，但 official Checkpointer 等 target adapter 仍未完成。
 - PHASE04 P04-T07 Tenant Isolation Profile 子范围：`TenantIsolationProfileV1` 已达到 `implementation available`，Infrastructure Capability Profile 中每个 service kind 都有 tenant scope、默认 target、强隔离选项、cross-tenant action 和 evidence ref；它不证明 `ARCH-INFRA-058` 的全服务运行时 cross-tenant hit quarantine/fail-closed。
 - PHASE04 P04-T07 Upgrade Compatibility Profile 子范围：`UpgradeCompatibilityProfileV1` 已达到 `implementation available`，Infrastructure Capability Profile 中每个 service kind 都有显式 adapter/schema version、read/write/rollback compatible versions、unknown-version fail-closed action 和 canonical content hash；它不证明 live rolling upgrade、official Checkpointer integration 或完整 recovery replay。
+- PHASE04 P04-T07 Adapter Conformance Profile 子范围：`AdapterConformanceProfileV1` 已达到 `implementation available`，Developer CI 与 Server Product 对每个 service kind 共用 conformance suite version、supported/unsupported semantics、required test refs 和 evidence ref，并对 unsupported local semantic fail-fast；它不证明所有未来 enterprise adapter 已实现。
 
 ## Short-term Closure Gap
 

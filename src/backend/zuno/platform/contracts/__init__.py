@@ -13,6 +13,7 @@ from zuno.platform.contracts.registry import (
 from zuno.platform.contracts.shared import (
     ActionExecutionBindingV1,
     ActionProposalV1,
+    AdapterConformanceProfileV1,
     AuditPersistenceReceiptV1,
     CapabilityInvocationRefV1,
     ContractRef,
@@ -46,6 +47,7 @@ from zuno.platform.contracts.shared import (
 __all__ = [
     "ActionExecutionBindingV1",
     "ActionProposalV1",
+    "AdapterConformanceProfileV1",
     "AuditPersistenceReceiptV1",
     "CapabilityInvocationRefV1",
     "ContractBundleManifest",
