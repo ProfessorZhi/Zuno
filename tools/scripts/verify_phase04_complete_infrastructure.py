@@ -255,6 +255,12 @@ RECONCILER_SUPERVISION_BOUNDARY_VERIFIER = (
 RECONCILER_SUPERVISION_BOUNDARY_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-reconciler-supervision-boundary.md"
 )
+CHECKPOINT_BOUNDARY_VERSION_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_checkpoint_boundary_version.py"
+)
+CHECKPOINT_BOUNDARY_VERSION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-checkpoint-boundary-version.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -1708,6 +1714,36 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in reconciler_boundary_evidence:
                 errors.append(
                     "PHASE04 reconciler supervision boundary evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not CHECKPOINT_BOUNDARY_VERSION_VERIFIER.exists():
+        errors.append("missing PHASE04 checkpoint boundary/version verifier")
+    else:
+        checkpoint_boundary_errors = _load_verifier(
+            CHECKPOINT_BOUNDARY_VERSION_VERIFIER,
+            "verify_phase04_checkpoint_boundary_version",
+            "verify_phase04_checkpoint_boundary_version",
+        )()
+        for checkpoint_boundary_error in checkpoint_boundary_errors:
+            errors.append(
+                "PHASE04 checkpoint boundary/version verification failed: "
+                f"{checkpoint_boundary_error}"
+            )
+
+    if not CHECKPOINT_BOUNDARY_VERSION_EVIDENCE.exists():
+        errors.append("missing PHASE04 checkpoint boundary/version evidence")
+    else:
+        checkpoint_boundary_evidence = _read(CHECKPOINT_BOUNDARY_VERSION_EVIDENCE)
+        for phrase in [
+            "checkpoint_domain_fact_separation: passed",
+            "checkpoint_version_fail_closed: passed",
+            "official_checkpointer_blocked_boundary: passed",
+            "不证明 official LangGraph PostgreSQL Checkpointer runtime 已安装或可恢复",
+        ]:
+            if phrase not in checkpoint_boundary_evidence:
+                errors.append(
+                    "PHASE04 checkpoint boundary/version evidence missing phrase: "
                     f"{phrase}"
                 )
 

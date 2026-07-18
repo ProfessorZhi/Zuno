@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 709
-  implementation_available: 47
+  target_not_current: 707
+  implementation_available: 49
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -4925,26 +4925,34 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Checkpoint/Domain 事实分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/database/schema_registry.py"
+      - "src/backend/zuno/platform/database/README.md"
+      - "docs/governance/wave1-cross-module-contract-registry.md"
+      - "tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "docs/evidence/phase04-checkpoint-boundary-version.md"
       - "docs/modules/11-infrastructure.md:1902"
-    gap: "?????Checkpoint/Domain 事实分离???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Checkpoint/Domain fact separation is current at schema ownership and receipt-boundary level; official Checkpointer runtime remains blocked under P04-T06."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-021 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: agent_runtime_checkpoints is Agent Core owned, infra_checkpoints is an Infrastructure receipt table, and Checkpoint Commit is not Domain Commit."
     test_ids:
-      - "INFRA-021-UT"
-      - "INFRA-021-IT"
+      - "tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "tests/repo/test_phase04_checkpoint_boundary_version.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-021"
+      - "docs/evidence/phase04-checkpoint-boundary-version.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1902"
-      - "planned_test:INFRA-021-UT"
-      - "planned_test:INFRA-021-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-021"
+      - "current:src/backend/zuno/platform/database/schema_registry.py"
+      - "current:docs/governance/wave1-cross-module-contract-registry.md"
+      - "current:tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "test:tests/repo/test_phase04_checkpoint_boundary_version.py"
+      - "evidence:docs/evidence/phase04-checkpoint-boundary-version.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-022
     module: "11 Infrastructure"
@@ -4975,26 +4983,34 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Checkpoint Version 不兼容 Fail-closed"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_upgrade_compatibility_profiles.py"
+      - "tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "docs/evidence/phase04-upgrade-compatibility-profiles.md"
+      - "docs/evidence/phase04-checkpoint-boundary-version.md"
       - "docs/modules/11-infrastructure.md:1904"
-    gap: "?????Checkpoint Version 不兼容 Fail-closed???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Checkpoint adapter/schema version fail-closed is current in the typed upgrade compatibility profile; official Checkpointer runtime and restore remain blocked."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-023 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: CHECKPOINT unknown adapter and schema major versions are not read/write compatible and use FAIL_CLOSED actions."
     test_ids:
-      - "INFRA-023-UT"
-      - "INFRA-023-IT"
+      - "tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "tests/repo/test_phase04_checkpoint_boundary_version.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-023"
+      - "docs/evidence/phase04-checkpoint-boundary-version.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1904"
-      - "planned_test:INFRA-023-UT"
-      - "planned_test:INFRA-023-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-023"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_upgrade_compatibility_profiles.py"
+      - "current:tools/scripts/verify_phase04_checkpoint_boundary_version.py"
+      - "test:tests/repo/test_phase04_checkpoint_boundary_version.py"
+      - "evidence:docs/evidence/phase04-checkpoint-boundary-version.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-024
     module: "11 Infrastructure"
