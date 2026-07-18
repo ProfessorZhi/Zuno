@@ -57,6 +57,7 @@ infrastructure_typed_ports: proven
 tenant_isolation_profiles: proven
 upgrade_compatibility_profiles: proven
 adapter_conformance_profiles: proven
+release_provenance_manifest: proven
 infra_requirement_006_010_ledger_subset: proven
 infra_requirement_064_evidence_gate: proven
 
@@ -115,6 +116,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_tenant_isolation_profiles.py` | passed; Infrastructure Capability Profile 中每个 service kind 都有 `TenantIsolationProfileV1`，包含 tenant scope、强隔离选项、cross-tenant fail-closed/quarantine/audit action 和存在的 evidence ref |
 | `python tools/scripts/verify_phase04_upgrade_compatibility_profiles.py` | passed; Infrastructure Capability Profile 中每个 service kind 都有 `UpgradeCompatibilityProfileV1`，包含显式 adapter/schema version、read/write/rollback compatible versions、unknown-version fail-closed action 和 canonical content hash |
 | `python tools/scripts/verify_phase04_adapter_conformance_profiles.py` | passed; Developer CI 与 Server Product 对每个 service kind 共用 `AdapterConformanceProfileV1`、conformance suite version、supported/unsupported semantics、required test refs 和 evidence refs，并对 unsupported local semantic fail-fast |
+| `python tools/scripts/verify_phase04_release_provenance_manifest.py` | passed; `ReleaseManifestV1` 绑定 source commit、运行中 image id bundle、Compose network/port refs、config hash、migration versions、adapter versions、compatibility evidence 和 provenance refs |
 | `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof

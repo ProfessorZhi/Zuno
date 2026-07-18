@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 723
-  implementation_available: 33
+  target_not_current: 722
+  implementation_available: 34
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -6000,26 +6000,28 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Network/Release/Provenance 可验证"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
-      - "docs/modules/11-infrastructure.md:1944"
-    gap: "?????Network/Release/Provenance 可验证???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "tools/scripts/verify_phase04_release_provenance_manifest.py"
+      - "docs/evidence/phase04-release-provenance-manifest.md"
+    gap: "PHASE04 infrastructure release provenance manifest is current for local real PostgreSQL/RabbitMQ/MinIO services; production application image release, external SBOM/signing, official Checkpointer and full recovery replay remain separate target scopes."
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 release provenance manifest subscope"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-063 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "proven: release manifest binds source commit, running image ids, Compose network refs, config hash, migration versions, adapter versions, compatibility evidence and rollback ref validation"
     test_ids:
-      - "INFRA-063-UT"
-      - "INFRA-063-IT"
+      - "tests/repo/test_phase04_release_provenance_manifest.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-063"
+      - "docs/evidence/phase04-release-provenance-manifest.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1944"
-      - "planned_test:INFRA-063-UT"
-      - "planned_test:INFRA-063-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-063"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:tools/scripts/verify_phase04_release_provenance_manifest.py"
+      - "test:tests/repo/test_phase04_release_provenance_manifest.py"
+      - "evidence:docs/evidence/phase04-release-provenance-manifest.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-064
     module: "11 Infrastructure"

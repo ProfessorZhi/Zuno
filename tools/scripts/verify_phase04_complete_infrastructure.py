@@ -181,6 +181,12 @@ ADAPTER_CONFORMANCE_PROFILE_VERIFIER = (
 ADAPTER_CONFORMANCE_PROFILE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-adapter-conformance-profiles.md"
 )
+RELEASE_PROVENANCE_MANIFEST_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_release_provenance_manifest.py"
+)
+RELEASE_PROVENANCE_MANIFEST_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-release-provenance-manifest.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1319,6 +1325,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in conformance_profile_evidence:
                 errors.append(
                     "PHASE04 adapter conformance profile evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not RELEASE_PROVENANCE_MANIFEST_VERIFIER.exists():
+        errors.append("missing PHASE04 release provenance manifest verifier")
+    else:
+        release_provenance_errors = _load_verifier(
+            RELEASE_PROVENANCE_MANIFEST_VERIFIER,
+            "verify_phase04_release_provenance_manifest",
+            "verify_phase04_release_provenance_manifest",
+        )()
+        for release_provenance_error in release_provenance_errors:
+            errors.append(
+                "PHASE04 release provenance manifest verification failed: "
+                f"{release_provenance_error}"
+            )
+
+    if not RELEASE_PROVENANCE_MANIFEST_EVIDENCE.exists():
+        errors.append("missing PHASE04 release provenance manifest evidence")
+    else:
+        release_provenance_evidence = _read(RELEASE_PROVENANCE_MANIFEST_EVIDENCE)
+        for phrase in [
+            "release_manifest_contract: passed",
+            "source_commit_bound: passed",
+            "running_image_digest_bound: passed",
+            "compose_network_refs_bound: passed",
+            "compatibility_evidence_bound: passed",
+            "rollback_ref_self_rejected: passed",
+            "It does not prove a production application image release",
+        ]:
+            if phrase not in release_provenance_evidence:
+                errors.append(
+                    "PHASE04 release provenance manifest evidence missing phrase: "
                     f"{phrase}"
                 )
 

@@ -384,6 +384,54 @@ class AdapterConformanceProfileV1(StrictContract):
         return self
 
 
+class ReleaseManifestV1(StrictContract):
+    release_id: str
+    source_commit: str
+    application_image_digest: str
+    sbom_ref: str
+    signature_ref: str
+    config_versions: tuple[str, ...]
+    migration_versions: tuple[str, ...]
+    adapter_versions: tuple[str, ...]
+    data_service_compatibility_ref: str
+    rollback_release_ref: str | None = None
+    network_refs: tuple[str, ...]
+    provenance_refs: tuple[str, ...]
+    content_hash: str
+
+    def hash_inputs(self) -> dict[str, Any]:
+        data = self.model_dump(mode="json", exclude_none=False)
+        data.pop("content_hash", None)
+        return data
+
+    @model_validator(mode="after")
+    def _release_provenance_is_bound(self) -> "ReleaseManifestV1":
+        if len(self.source_commit) != 40:
+            raise ValueError("source_commit must be a full commit sha")
+        if not self.application_image_digest.startswith("sha256:"):
+            raise ValueError("application_image_digest must be a sha256 digest")
+        if not self.sbom_ref:
+            raise ValueError("sbom_ref must be explicit")
+        if not self.signature_ref.startswith("sha256:"):
+            raise ValueError("signature_ref must be a sha256 digest")
+        for field_name, values in [
+            ("config_versions", self.config_versions),
+            ("migration_versions", self.migration_versions),
+            ("adapter_versions", self.adapter_versions),
+            ("network_refs", self.network_refs),
+            ("provenance_refs", self.provenance_refs),
+        ]:
+            if not values:
+                raise ValueError(f"{field_name} must be explicit")
+        if not self.data_service_compatibility_ref:
+            raise ValueError("data_service_compatibility_ref must be explicit")
+        if self.rollback_release_ref == self.release_id:
+            raise ValueError("rollback_release_ref cannot point to the same release")
+        if canonical_sha256(self.hash_inputs()) != self.content_hash:
+            raise ValueError("content_hash does not match release manifest")
+        return self
+
+
 class InfrastructureCapabilityProfileV1(StrictContract):
     profile_id: str
     profile_version: str
