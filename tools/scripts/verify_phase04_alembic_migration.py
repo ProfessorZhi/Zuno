@@ -26,7 +26,7 @@ ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
 REQUIRED_INFRA_TABLES = INFRASTRUCTURE_TABLES
 REQUIRED_DOMAIN_TABLES = set(DOMAIN_TABLE_OWNERS)
-EXPECTED_HEAD_REVISION = "20260718_12"
+EXPECTED_HEAD_REVISION = "20260718_13"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -195,6 +195,37 @@ REQUIRED_TABLE_COLUMNS = {
         "created_at",
         "effect_observed_at",
     },
+    "infra_cutover_targets": {
+        "target_id",
+        "active_snapshot_id",
+        "active_generation",
+        "updated_by",
+        "updated_at",
+    },
+    "infra_cutover_snapshots": {
+        "snapshot_id",
+        "target_id",
+        "owner_id",
+        "payload_hash",
+        "payload",
+        "status",
+        "activated_generation",
+        "created_at",
+        "activated_at",
+        "superseded_at",
+        "retired_at",
+        "retired_by",
+    },
+    "infra_active_snapshot_refs": {
+        "ref_id",
+        "target_id",
+        "snapshot_id",
+        "generation",
+        "owner_id",
+        "status",
+        "created_at",
+        "released_at",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -235,6 +266,16 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_mandatory_audit_events_generation_positive",
     "ck_infra_mandatory_audit_events_status",
     "ck_infra_mandatory_audit_events_payload_hash",
+    "fk_infra_cutover_snapshots_target",
+    "fk_infra_cutover_targets_active_snapshot",
+    "fk_infra_active_snapshot_refs_target",
+    "fk_infra_active_snapshot_refs_snapshot",
+    "ck_infra_cutover_targets_generation_positive",
+    "ck_infra_cutover_snapshots_payload_hash",
+    "ck_infra_cutover_snapshots_status",
+    "ck_infra_cutover_snapshots_generation_positive",
+    "ck_infra_active_snapshot_refs_generation_positive",
+    "ck_infra_active_snapshot_refs_status",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -249,6 +290,8 @@ REQUIRED_INDEXES = {
     "ix_infra_migration_backfill_chunks_applied",
     "ix_infra_capacity_reservations_resource_active",
     "ix_infra_mandatory_audit_events_channel_status",
+    "ix_infra_active_snapshot_refs_snapshot_active",
+    "ix_infra_cutover_snapshots_target_status",
     "ix_workspace_session_user_update_time",
 }
 

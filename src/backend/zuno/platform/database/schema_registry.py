@@ -35,10 +35,13 @@ DOMAIN_TABLE_OWNERS = {
 }
 
 INFRASTRUCTURE_TABLES = {
+    "infra_active_snapshot_refs",
     "infra_audit_channels",
     "infra_capacity_admissions",
     "infra_capacity_reservations",
     "infra_checkpoints",
+    "infra_cutover_snapshots",
+    "infra_cutover_targets",
     "infra_delivery_watermarks",
     "infra_idempotency_claims",
     "infra_inbox_messages",
@@ -62,6 +65,7 @@ REVISION_OWNERS = {
     "20260717_10": "Infrastructure",
     "20260718_11": "Infrastructure",
     "20260718_12": "Infrastructure",
+    "20260718_13": "Infrastructure",
 }
 
 ONLINE_SCHEMA_OBJECTS = {

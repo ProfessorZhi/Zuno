@@ -163,6 +163,24 @@ class AuditPersistenceReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class CutoverActivationReceipt:
+    target_id: str
+    snapshot_id: str
+    previous_generation: int
+    active_generation: int
+    activated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveSnapshotRefReceipt:
+    ref_id: str
+    target_id: str
+    snapshot_id: str
+    generation: int
+    owner_id: str
+
+
+@dataclass(frozen=True, slots=True)
 class TransactionRetryReceipt:
     result: Any
     attempts: int
@@ -1648,6 +1666,294 @@ class InfrastructureRepository:
         if result.rowcount != 1:
             raise FencingRejectedError("audited effect cannot be observed by this owner")
 
+    def configure_cutover_target(
+        self,
+        *,
+        target_id: str,
+        owner_id: str,
+    ) -> int:
+        if not target_id.strip():
+            raise ValueError("target_id must not be empty")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_cutover_targets(
+                    target_id, active_generation, updated_by
+                ) VALUES (
+                    :target_id, 1, :owner_id
+                )
+                ON CONFLICT (target_id) DO UPDATE
+                SET updated_by = EXCLUDED.updated_by,
+                    updated_at = now()
+                RETURNING active_generation
+                """
+            ),
+            {"target_id": target_id, "owner_id": owner_id},
+        ).one()
+        return int(row.active_generation)
+
+    def register_cutover_snapshot(
+        self,
+        *,
+        target_id: str,
+        snapshot_id: str,
+        owner_id: str,
+        payload: dict[str, Any],
+    ) -> str:
+        if not target_id.strip() or not snapshot_id.strip() or not owner_id.strip():
+            raise ValueError("target_id, snapshot_id and owner_id must not be empty")
+        payload_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_cutover_snapshots(
+                    snapshot_id, target_id, owner_id, payload_hash, payload, status
+                ) VALUES (
+                    :snapshot_id, :target_id, :owner_id, :payload_hash,
+                    CAST(:payload AS jsonb), 'candidate'
+                )
+                """
+            ),
+            {
+                "snapshot_id": snapshot_id,
+                "target_id": target_id,
+                "owner_id": owner_id,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+            },
+        )
+        return payload_hash
+
+    def activate_cutover_snapshot(
+        self,
+        *,
+        target_id: str,
+        snapshot_id: str,
+        expected_generation: int,
+        owner_id: str,
+    ) -> CutoverActivationReceipt:
+        if expected_generation < 1:
+            raise ValueError("expected_generation must be positive")
+        if not target_id.strip() or not snapshot_id.strip() or not owner_id.strip():
+            raise ValueError("target_id, snapshot_id and owner_id must not be empty")
+        target = self.connection.execute(
+            text(
+                """
+                SELECT target_id, active_snapshot_id, active_generation
+                FROM infra_cutover_targets
+                WHERE target_id = :target_id
+                FOR UPDATE
+                """
+            ),
+            {"target_id": target_id},
+        ).first()
+        if target is None:
+            raise FencingRejectedError("cutover target is not configured")
+        if int(target.active_generation) != expected_generation:
+            raise FencingRejectedError("cutover generation CAS rejected stale writer")
+
+        snapshot = self.connection.execute(
+            text(
+                """
+                SELECT snapshot_id
+                FROM infra_cutover_snapshots
+                WHERE target_id = :target_id
+                  AND snapshot_id = :snapshot_id
+                  AND status = 'candidate'
+                FOR UPDATE
+                """
+            ),
+            {"target_id": target_id, "snapshot_id": snapshot_id},
+        ).first()
+        if snapshot is None:
+            raise FencingRejectedError("cutover snapshot is not a candidate for this target")
+
+        next_generation = expected_generation + 1
+        if target.active_snapshot_id is not None:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE infra_cutover_snapshots
+                    SET status = 'superseded',
+                        superseded_at = now()
+                    WHERE snapshot_id = :snapshot_id
+                      AND status = 'active'
+                    """
+                ),
+                {"snapshot_id": target.active_snapshot_id},
+            )
+        activated = self.connection.execute(
+            text(
+                """
+                UPDATE infra_cutover_snapshots
+                SET status = 'active',
+                    activated_generation = :next_generation,
+                    activated_at = now()
+                WHERE snapshot_id = :snapshot_id
+                  AND target_id = :target_id
+                  AND status = 'candidate'
+                RETURNING activated_at
+                """
+            ),
+            {
+                "target_id": target_id,
+                "snapshot_id": snapshot_id,
+                "next_generation": next_generation,
+            },
+        ).one()
+        self.connection.execute(
+            text(
+                """
+                UPDATE infra_cutover_targets
+                SET active_snapshot_id = :snapshot_id,
+                    active_generation = :next_generation,
+                    updated_by = :owner_id,
+                    updated_at = now()
+                WHERE target_id = :target_id
+                """
+            ),
+            {
+                "target_id": target_id,
+                "snapshot_id": snapshot_id,
+                "next_generation": next_generation,
+                "owner_id": owner_id,
+            },
+        )
+        return CutoverActivationReceipt(
+            target_id=target_id,
+            snapshot_id=snapshot_id,
+            previous_generation=expected_generation,
+            active_generation=next_generation,
+            activated_at=activated.activated_at,
+        )
+
+    def acquire_active_snapshot_ref(
+        self,
+        *,
+        target_id: str,
+        owner_id: str,
+    ) -> ActiveSnapshotRefReceipt:
+        if not target_id.strip() or not owner_id.strip():
+            raise ValueError("target_id and owner_id must not be empty")
+        target = self.connection.execute(
+            text(
+                """
+                SELECT target_id, active_snapshot_id, active_generation
+                FROM infra_cutover_targets
+                WHERE target_id = :target_id
+                FOR UPDATE
+                """
+            ),
+            {"target_id": target_id},
+        ).first()
+        if target is None or target.active_snapshot_id is None:
+            raise FencingRejectedError("cutover target has no active snapshot")
+        ref_id = f"snapshot-ref:{uuid4()}"
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_active_snapshot_refs(
+                    ref_id, target_id, snapshot_id, generation, owner_id, status
+                ) VALUES (
+                    :ref_id, :target_id, :snapshot_id, :generation, :owner_id, 'active'
+                )
+                RETURNING ref_id, target_id, snapshot_id, generation, owner_id
+                """
+            ),
+            {
+                "ref_id": ref_id,
+                "target_id": target_id,
+                "snapshot_id": target.active_snapshot_id,
+                "generation": int(target.active_generation),
+                "owner_id": owner_id,
+            },
+        ).one()
+        return ActiveSnapshotRefReceipt(
+            ref_id=str(row.ref_id),
+            target_id=str(row.target_id),
+            snapshot_id=str(row.snapshot_id),
+            generation=int(row.generation),
+            owner_id=str(row.owner_id),
+        )
+
+    def release_active_snapshot_ref(self, *, ref_id: str, owner_id: str) -> None:
+        if not ref_id.strip() or not owner_id.strip():
+            raise ValueError("ref_id and owner_id must not be empty")
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_active_snapshot_refs
+                SET status = 'released',
+                    released_at = now()
+                WHERE ref_id = :ref_id
+                  AND owner_id = :owner_id
+                  AND status = 'active'
+                """
+            ),
+            {"ref_id": ref_id, "owner_id": owner_id},
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("active snapshot ref cannot be released by this owner")
+
+    def retire_cutover_snapshot(
+        self,
+        *,
+        target_id: str,
+        snapshot_id: str,
+        owner_id: str,
+    ) -> None:
+        if not target_id.strip() or not snapshot_id.strip() or not owner_id.strip():
+            raise ValueError("target_id, snapshot_id and owner_id must not be empty")
+        target = self.connection.execute(
+            text(
+                """
+                SELECT active_snapshot_id
+                FROM infra_cutover_targets
+                WHERE target_id = :target_id
+                FOR UPDATE
+                """
+            ),
+            {"target_id": target_id},
+        ).first()
+        if target is None:
+            raise FencingRejectedError("cutover target is not configured")
+        if target.active_snapshot_id == snapshot_id:
+            raise FencingRejectedError("active cutover snapshot cannot be retired")
+        active_refs = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT COALESCE(COUNT(*), 0)::integer
+                    FROM infra_active_snapshot_refs
+                    WHERE target_id = :target_id
+                      AND snapshot_id = :snapshot_id
+                      AND status = 'active'
+                    """
+                ),
+                {"target_id": target_id, "snapshot_id": snapshot_id},
+            ).scalar_one()
+        )
+        if active_refs:
+            raise FencingRejectedError("active snapshot references block retirement")
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_cutover_snapshots
+                SET status = 'retired',
+                    retired_at = now(),
+                    retired_by = :owner_id
+                WHERE target_id = :target_id
+                  AND snapshot_id = :snapshot_id
+                  AND status IN ('candidate', 'superseded')
+                """
+            ),
+            {"target_id": target_id, "snapshot_id": snapshot_id, "owner_id": owner_id},
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError("cutover snapshot is not eligible for retirement")
+
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         if ttl_seconds < 1:
             raise ValueError("lease ttl_seconds must be positive")
@@ -2006,8 +2312,10 @@ def _sqlstate(exc: DBAPIError) -> str:
 __all__ = [
     "AuditCapacityError",
     "AuditPersistenceReceipt",
+    "ActiveSnapshotRefReceipt",
     "CapacityBackpressureError",
     "CapacityReservationReceipt",
+    "CutoverActivationReceipt",
     "DeliveryWatermarkReceipt",
     "FencingRejectedError",
     "FencingToken",

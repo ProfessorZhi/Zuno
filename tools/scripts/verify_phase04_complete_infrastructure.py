@@ -151,6 +151,12 @@ MANDATORY_AUDIT_VERIFIER = (
 MANDATORY_AUDIT_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-mandatory-audit.md"
 )
+CUTOVER_SNAPSHOT_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_cutover_snapshot.py"
+)
+CUTOVER_SNAPSHOT_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-cutover-snapshot.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -1209,6 +1215,40 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in mandatory_audit_evidence:
                 errors.append(
                     f"PHASE04 mandatory audit evidence missing phrase: {phrase}"
+                )
+
+    if not CUTOVER_SNAPSHOT_VERIFIER.exists():
+        errors.append("missing PHASE04 cutover snapshot verifier")
+    else:
+        cutover_snapshot_errors = _load_verifier(
+            CUTOVER_SNAPSHOT_VERIFIER,
+            "verify_phase04_cutover_snapshot",
+            "verify_phase04_cutover_snapshot",
+        )()
+        for cutover_snapshot_error in cutover_snapshot_errors:
+            errors.append(
+                "PHASE04 cutover snapshot verification failed: "
+                f"{cutover_snapshot_error}"
+            )
+
+    if not CUTOVER_SNAPSHOT_EVIDENCE.exists():
+        errors.append("missing PHASE04 cutover snapshot evidence")
+    else:
+        cutover_snapshot_evidence = _read(CUTOVER_SNAPSHOT_EVIDENCE)
+        for phrase in [
+            "cutover_snapshot_schema: passed",
+            "cutover_generation_cas: passed",
+            "stale_generation_rejected: passed",
+            "active_snapshot_ref_acquired: passed",
+            "active_snapshot_blocks_retirement: passed",
+            "current_active_snapshot_retirement_rejected: passed",
+            "released_snapshot_ref_allows_retirement: passed",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "`ARCH-INFRA-048` 和 `ARCH-INFRA-049`",
+        ]:
+            if phrase not in cutover_snapshot_evidence:
+                errors.append(
+                    f"PHASE04 cutover snapshot evidence missing phrase: {phrase}"
                 )
 
     if not DR_PROFILE_VERIFIER.exists():
