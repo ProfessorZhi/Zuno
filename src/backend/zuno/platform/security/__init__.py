@@ -28,9 +28,18 @@ from zuno.platform.security.governance import (
     redact_sensitive_payload,
     redact_sensitive_text,
 )
+from zuno.platform.security.runtime_batch import (
+    AuthorizationVerdict,
+    Classification,
+    SandboxTier,
+    SecurityRuntimeBatch,
+    TrustLabel,
+)
 
 __all__ = [
     "AccessScope",
+    "AuthorizationVerdict",
+    "Classification",
     "ExecutionMode",
     "GateRequest",
     "GateResult",
@@ -41,10 +50,12 @@ __all__ = [
     "RetrievalSecurityGate",
     "SandboxAuditEvent",
     "SandboxProfile",
+    "SandboxTier",
     "SecurityDecision",
     "SecurityFinding",
     "SecurityGate",
     "SecurityTraceSummary",
+    "SecurityRuntimeBatch",
     "ToolGateResult",
     "ToolSecurityGate",
     "ToolSecurityProfile",
@@ -53,5 +64,6 @@ __all__ = [
     "normalize_execution_mode",
     "redact_sensitive_payload",
     "redact_sensitive_text",
+    "TrustLabel",
     "validate_tools_for_mode",
 ]

@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 400
-  implementation_available: 356
+  target_not_current: 340
+  implementation_available: 416
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -17284,1487 +17284,1801 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "可信 Principal 和身份链"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2510"
-    gap: "?????可信 Principal 和身份链???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-001 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-001 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-001 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-001-UT"
-      - "SEC-001-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-001"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2510"
-      - "planned_test:SEC-001-UT"
-      - "planned_test:SEC-001-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-001"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-002
     module: "09 Security"
     mandatory: true
     target_statement: "Tenant / Workspace 强隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2511"
-    gap: "?????Tenant / Workspace 强隔离???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-002 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-002 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-002 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-002-UT"
-      - "SEC-002-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-002"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2511"
-      - "planned_test:SEC-002-UT"
-      - "planned_test:SEC-002-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-002"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-003
     module: "09 Security"
     mandatory: true
     target_statement: "OrgUnit 无环单父树"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2512"
-    gap: "?????OrgUnit 无环单父树???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-003 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-003 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-003 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-003-UT"
-      - "SEC-003-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-003"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2512"
-      - "planned_test:SEC-003-UT"
-      - "planned_test:SEC-003-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-003"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-004
     module: "09 Security"
     mandatory: true
     target_statement: "Membership 与资源授权分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2513"
-    gap: "?????Membership 与资源授权分离???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-004 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-004 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-004 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-004-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-004"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2513"
-      - "planned_test:SEC-004-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-004"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-005
     module: "09 Security"
     mandatory: true
     target_statement: "DelegatedAdminScope 限定管理范围"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2514"
-    gap: "?????DelegatedAdminScope 限定管理范围???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-005 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-005 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-005 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-005-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-005"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2514"
-      - "planned_test:SEC-005-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-005"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-006
     module: "09 Security"
     mandatory: true
     target_statement: "三档 UI 权限"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2515"
-    gap: "?????三档 UI 权限???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-006 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-006 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-006 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-006-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-006"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2515"
-      - "planned_test:SEC-006-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-006"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-007
     module: "09 Security"
     mandatory: true
     target_statement: "细粒度 ActionSet"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2516"
-    gap: "?????细粒度 ActionSet???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-007 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-007 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-007 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-007-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-007"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2516"
-      - "planned_test:SEC-007-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-007"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-008
     module: "09 Security"
     mandatory: true
     target_statement: "Explicit Deny 优先"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2517"
-    gap: "?????Explicit Deny 优先???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-008 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-008 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-008 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-008-UT"
-      - "SEC-008-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-008"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2517"
-      - "planned_test:SEC-008-UT"
-      - "planned_test:SEC-008-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-008"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-009
     module: "09 Security"
     mandatory: true
     target_statement: "默认拒绝"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2518"
-    gap: "?????默认拒绝???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-009 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-009 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-009 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-009-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-009"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2518"
-      - "planned_test:SEC-009-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-009"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-010
     module: "09 Security"
     mandatory: true
     target_statement: "禁止委派放大"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2519"
-    gap: "?????禁止委派放大???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-010 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-010 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-010 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-010-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-010"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2519"
-      - "planned_test:SEC-010-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-010"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-011
     module: "09 Security"
     mandatory: true
     target_statement: "父 Grant 撤销级联"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2520"
-    gap: "?????父 Grant 撤销级联???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-011 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-011 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-011 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-011-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-011"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2520"
-      - "planned_test:SEC-011-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-011"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-012
     module: "09 Security"
     mandatory: true
     target_statement: "Agent 是一等 Principal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2521"
-    gap: "?????Agent 是一等 Principal???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-012 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-012 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-012 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-012-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-012"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2521"
-      - "planned_test:SEC-012-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-012"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-013
     module: "09 Security"
     mandatory: true
     target_statement: "Task / Session 临时授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2522"
-    gap: "?????Task / Session 临时授权???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-013 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-013 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-013 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-013-UT"
-      - "SEC-013-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-013"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2522"
-      - "planned_test:SEC-013-UT"
-      - "planned_test:SEC-013-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-013"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-014
     module: "09 Security"
     mandatory: true
     target_statement: "User / Agent / Task 权限取交集"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2523"
-    gap: "?????User / Agent / Task 权限取交集???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-014 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-014 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-014 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-014-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-014"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2523"
-      - "planned_test:SEC-014-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-014"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-015
     module: "09 Security"
     mandatory: true
     target_statement: "Policy Schema Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2524"
-    gap: "?????Policy Schema Validation???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-015 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-015 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-015 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-015-UT"
-      - "SEC-015-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-015"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2524"
-      - "planned_test:SEC-015-UT"
-      - "planned_test:SEC-015-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-015"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-016
     module: "09 Security"
     mandatory: true
     target_statement: "Policy Simulation / Shadow"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2525"
-    gap: "?????Policy Simulation / Shadow???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-016 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-016 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-016 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-016-UT"
-      - "SEC-016-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-016"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2525"
-      - "planned_test:SEC-016-UT"
-      - "planned_test:SEC-016-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-016"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-017
     module: "09 Security"
     mandatory: true
     target_statement: "PolicyVersion 不可变激活"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2526"
-    gap: "?????PolicyVersion 不可变激活???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-017 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-017 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-017 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-017-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-017"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2526"
-      - "planned_test:SEC-017-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-017"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-018
     module: "09 Security"
     mandatory: true
     target_statement: "PAP / PDP / PEP / PIP 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2527"
-    gap: "?????PAP / PDP / PEP / PIP 分离???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-018 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-018 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-018 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-018-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-018"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2527"
-      - "planned_test:SEC-018-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-018"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-019
     module: "09 Security"
     mandatory: true
     target_statement: "Decision Explanation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2528"
-    gap: "?????Decision Explanation???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-019 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-019 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-019 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-019-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-019"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2528"
-      - "planned_test:SEC-019-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-019"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-020
     module: "09 Security"
     mandatory: true
     target_statement: "Epoch 和 Cache 一致性"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2529"
-    gap: "?????Epoch 和 Cache 一致性???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-020 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-020 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-020 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-020-UT"
-      - "SEC-020-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-020"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2529"
-      - "planned_test:SEC-020-UT"
-      - "planned_test:SEC-020-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-020"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-021
     module: "09 Security"
     mandatory: true
     target_statement: "Input Detection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2530"
-    gap: "?????Input Detection???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-021 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-021 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-021 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-021-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-021"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2530"
-      - "planned_test:SEC-021-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-021"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-022
     module: "09 Security"
     mandatory: true
     target_statement: "Output Detection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2531"
-    gap: "?????Output Detection???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-022 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-022 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-022 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-022-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-022"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2531"
-      - "planned_test:SEC-022-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-022"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-023
     module: "09 Security"
     mandatory: true
     target_statement: "DataClassification 传播"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2532"
-    gap: "?????DataClassification 传播???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-023 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-023 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-023 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-023-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-023"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2532"
-      - "planned_test:SEC-023-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-023"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-024
     module: "09 Security"
     mandatory: true
     target_statement: "Redaction 失败不导出"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2533"
-    gap: "?????Redaction 失败不导出???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-024 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-024 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-024 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-024-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-024"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2533"
-      - "planned_test:SEC-024-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-024"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-025
     module: "09 Security"
     mandatory: true
     target_statement: "Instruction Trust Label"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2534"
-    gap: "?????Instruction Trust Label???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-025 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-025 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-025 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-025-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-025"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2534"
-      - "planned_test:SEC-025-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-025"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-026
     module: "09 Security"
     mandatory: true
     target_statement: "不可信数据不控制流程"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2535"
-    gap: "?????不可信数据不控制流程???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-026 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-026 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-026 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-026-UT"
-      - "SEC-026-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-026"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2535"
-      - "planned_test:SEC-026-UT"
-      - "planned_test:SEC-026-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-026"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-027
     module: "09 Security"
     mandatory: true
     target_statement: "Information Flow"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2536"
-    gap: "?????Information Flow???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-027 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-027 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-027 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-027-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-027"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2536"
-      - "planned_test:SEC-027-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-027"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-028
     module: "09 Security"
     mandatory: true
     target_statement: "Protected Sink"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2537"
-    gap: "?????Protected Sink???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-028 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-028 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-028 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-028-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-028"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2537"
-      - "planned_test:SEC-028-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-028"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-029
     module: "09 Security"
     mandatory: true
     target_statement: "Declassification"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2538"
-    gap: "?????Declassification???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-029 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-029 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-029 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-029-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-029"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2538"
-      - "planned_test:SEC-029-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-029"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-030
     module: "09 Security"
     mandatory: true
     target_statement: "Action 与用户目标绑定"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2539"
-    gap: "?????Action 与用户目标绑定???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-030 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-030 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-030 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-030-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-030"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2539"
-      - "planned_test:SEC-030-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-030"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-031
     module: "09 Security"
     mandatory: true
     target_statement: "Memory Poisoning Quarantine"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2540"
-    gap: "?????Memory Poisoning Quarantine???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-031 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-031 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-031 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-031-UT"
-      - "SEC-031-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-031"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2540"
-      - "planned_test:SEC-031-UT"
-      - "planned_test:SEC-031-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-031"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-032
     module: "09 Security"
     mandatory: true
     target_statement: "多模态注入隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2541"
-    gap: "?????多模态注入隔离???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-032 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-032 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-032 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-032-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-032"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2541"
-      - "planned_test:SEC-032-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-032"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-033
     module: "09 Security"
     mandatory: true
     target_statement: "Knowledge 查询前授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2542"
-    gap: "?????Knowledge 查询前授权???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-033 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-033 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-033 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-033-UT"
-      - "SEC-033-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-033"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2542"
-      - "planned_test:SEC-033-UT"
-      - "planned_test:SEC-033-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-033"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-034
     module: "09 Security"
     mandatory: true
     target_statement: "Citation 重新授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2543"
-    gap: "?????Citation 重新授权???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-034 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-034 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-034 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-034-UT"
-      - "SEC-034-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-034"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2543"
-      - "planned_test:SEC-034-UT"
-      - "planned_test:SEC-034-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-034"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-035
     module: "09 Security"
     mandatory: true
     target_statement: "Model Provider / Residency Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2544"
-    gap: "?????Model Provider / Residency Gate???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-035 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-035 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-035 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-035-UT"
-      - "SEC-035-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-035"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2544"
-      - "planned_test:SEC-035-UT"
-      - "planned_test:SEC-035-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-035"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-036
     module: "09 Security"
     mandatory: true
     target_statement: "PreparedToolAction Hash"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2545"
-    gap: "?????PreparedToolAction Hash???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-036 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-036 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-036 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-036-UT"
-      - "SEC-036-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-036"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2545"
-      - "planned_test:SEC-036-UT"
-      - "planned_test:SEC-036-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-036"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-037
     module: "09 Security"
     mandatory: true
     target_statement: "Approval 防重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2546"
-    gap: "?????Approval 防重放???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-037 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-037 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-037 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-037-UT"
-      - "SEC-037-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-037"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2546"
-      - "planned_test:SEC-037-UT"
-      - "planned_test:SEC-037-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-037"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-038
     module: "09 Security"
     mandatory: true
     target_statement: "执行时 Epoch 复核"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2547"
-    gap: "?????执行时 Epoch 复核???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-038 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-038 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-038 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-038-UT"
-      - "SEC-038-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-038"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2547"
-      - "planned_test:SEC-038-UT"
-      - "planned_test:SEC-038-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-038"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-039
     module: "09 Security"
     mandatory: true
     target_statement: "Tool Effect Unknown Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2548"
-    gap: "?????Tool Effect Unknown Reconcile???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-039 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-039 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-039 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-039-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-039"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2548"
-      - "planned_test:SEC-039-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-039"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-040
     module: "09 Security"
     mandatory: true
     target_statement: "MCP Audience Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2549"
-    gap: "?????MCP Audience Validation???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-040 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-040 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-040 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-040-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-040"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2549"
-      - "planned_test:SEC-040-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-040"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-041
     module: "09 Security"
     mandatory: true
     target_statement: "禁止 Token Passthrough"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2550"
-    gap: "?????禁止 Token Passthrough???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-041 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-041 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-041 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-041-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-041"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2550"
-      - "planned_test:SEC-041-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-041"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-042
     module: "09 Security"
     mandatory: true
     target_statement: "On-Behalf-Of Binding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2551"
-    gap: "?????On-Behalf-Of Binding???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-042 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-042 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-042 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-042-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-042"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2551"
-      - "planned_test:SEC-042-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-042"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-043
     module: "09 Security"
     mandatory: true
     target_statement: "Secret Ref / Short Lease"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2552"
-    gap: "?????Secret Ref / Short Lease???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-043 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-043 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-043 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-043-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-043"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2552"
-      - "planned_test:SEC-043-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-043"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-044
     module: "09 Security"
     mandatory: true
     target_statement: "Secret 不进入 Prompt / Trace / Memory"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2553"
-    gap: "?????Secret 不进入 Prompt / Trace / Memory???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-044 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-044 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-044 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-044-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-044"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2553"
-      - "planned_test:SEC-044-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-044"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-045
     module: "09 Security"
     mandatory: true
     target_statement: "Sandbox 分级"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2554"
-    gap: "?????Sandbox 分级???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-045 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-045 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-045 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-045-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-045"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2554"
-      - "planned_test:SEC-045-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-045"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-046
     module: "09 Security"
     mandatory: true
     target_statement: "Network Egress / SSRF"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2555"
-    gap: "?????Network Egress / SSRF???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-046 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-046 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-046 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-046-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-046"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2555"
-      - "planned_test:SEC-046-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-046"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-047
     module: "09 Security"
     mandatory: true
     target_statement: "Supply Chain Provenance"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2556"
-    gap: "?????Supply Chain Provenance???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-047 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-047 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-047 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-047-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-047"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2556"
-      - "planned_test:SEC-047-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-047"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-048
     module: "09 Security"
     mandatory: true
     target_statement: "Trust Lifecycle"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2557"
-    gap: "?????Trust Lifecycle???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-048 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-048 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-048 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-048-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-048"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2557"
-      - "planned_test:SEC-048-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-048"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-049
     module: "09 Security"
     mandatory: true
     target_statement: "Break-glass 限时限域"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2558"
-    gap: "?????Break-glass 限时限域???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-049 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-049 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-049 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-049-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-049"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2558"
-      - "planned_test:SEC-049-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-049"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-050
     module: "09 Security"
     mandatory: true
     target_statement: "Security Incident"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2559"
-    gap: "?????Security Incident???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-050 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-050 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-050 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-050-UT"
-      - "SEC-050-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-050"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2559"
-      - "planned_test:SEC-050-UT"
-      - "planned_test:SEC-050-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-050"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-051
     module: "09 Security"
     mandatory: true
     target_statement: "Security Facts + Outbox 同事务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2560"
-    gap: "?????Security Facts + Outbox 同事务???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-051 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-051 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-051 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-051-UT"
-      - "SEC-051-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-051"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2560"
-      - "planned_test:SEC-051-UT"
-      - "planned_test:SEC-051-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-051"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-052
     module: "09 Security"
     mandatory: true
     target_statement: "Mandatory Audit Before Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2561"
-    gap: "?????Mandatory Audit Before Effect???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-052 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-052 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-052 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-052-UT"
-      - "SEC-052-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-052"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2561"
-      - "planned_test:SEC-052-UT"
-      - "planned_test:SEC-052-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-052"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-053
     module: "09 Security"
     mandatory: true
     target_statement: "Audit 不转移领域 Ownership"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2562"
-    gap: "?????Audit 不转移领域 Ownership???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-053 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-053 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-053 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-053-UT"
-      - "SEC-053-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-053"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2562"
-      - "planned_test:SEC-053-UT"
-      - "planned_test:SEC-053-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-053"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-054
     module: "09 Security"
     mandatory: true
     target_statement: "Retry / Idempotency / Recovery"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2563"
-    gap: "?????Retry / Idempotency / Recovery???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-054 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-054 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-054 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-054-UT"
-      - "SEC-054-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-054"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2563"
-      - "planned_test:SEC-054-UT"
-      - "planned_test:SEC-054-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-054"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-055
     module: "09 Security"
     mandatory: true
     target_statement: "PostgreSQL 安全事实源"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2564"
-    gap: "?????PostgreSQL 安全事实源???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-055 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-055 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-055 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-055-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-055"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2564"
-      - "planned_test:SEC-055-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-055"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-056
     module: "09 Security"
     mandatory: true
     target_statement: "Checkpointer 只保存控制状态"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2565"
-    gap: "?????Checkpointer 只保存控制状态???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-056 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-056 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-056 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-056-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-056"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2565"
-      - "planned_test:SEC-056-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-056"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-057
     module: "09 Security"
     mandatory: true
     target_statement: "前端只展示后端有效结果"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2566"
-    gap: "?????前端只展示后端有效结果???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-057 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-057 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-057 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-057-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-057"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2566"
-      - "planned_test:SEC-057-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-057"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-058
     module: "09 Security"
     mandatory: true
     target_statement: "Adaptive Security Eval"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2567"
-    gap: "?????Adaptive Security Eval???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-058 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-058 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-058 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-058-UT"
-      - "SEC-058-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-058"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2567"
-      - "planned_test:SEC-058-UT"
-      - "planned_test:SEC-058-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-058"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-059
     module: "09 Security"
     mandatory: true
     target_statement: "Security + Utility Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2568"
-    gap: "?????Security + Utility Release Gate???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-059 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-059 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-059 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-059-UT"
-      - "SEC-059-IT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-059"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2568"
-      - "planned_test:SEC-059-UT"
-      - "planned_test:SEC-059-IT"
-      - "planned_evidence:needs_evidence:EV-SEC-059"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-SEC-060
     module: "09 Security"
     mandatory: true
     target_statement: "Target 转 Current 的工程证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/security/runtime_batch.py"
+      - "tests/security/test_security_runtime_batch.py"
+      - "tools/scripts/verify_security_runtime_batch.py"
+      - "docs/evidence/security-runtime-batch.md"
       - "docs/modules/09-security.md:2569"
-    gap: "?????Target 转 Current 的工程证据???? Current ????????????????? PHASE05 ?????????/??????????????? Current?"
+    gap: "ARCH-SEC-060 已由 Security Runtime batch contract、focused tests、verifier 和 evidence 覆盖；仍不代表 PHASE05 或全 Program 关闭。"
     owner: "Security"
     target_phase: "PHASE05"
     planned_work_package: "P05 security control plane"
     dependencies:
       - "PHASE03"
       - "PHASE04"
-    failure_or_recovery_requirement: "target_not_current:ARCH-SEC-060 ??????????????????????? PHASE05 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-SEC-060 covered by Security runtime batch tests and verifier."
     test_ids:
-      - "SEC-060-UT"
+      - "tests/security/test_security_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-SEC-060"
+      - "docs/evidence/security-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/09-security.md:2569"
-      - "planned_test:SEC-060-UT"
-      - "planned_evidence:needs_evidence:EV-SEC-060"
+      - "current:src/backend/zuno/platform/security/runtime_batch.py"
+      - "test:tests/security/test_security_runtime_batch.py"
+      - "evidence:docs/evidence/security-runtime-batch.md"
+      - "verifier:tools/scripts/verify_security_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-001
     module: "08 Tool Runtime"
