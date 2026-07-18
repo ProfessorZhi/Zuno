@@ -318,6 +318,15 @@ OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_VERIFIER = (
 OFFICIAL_CHECKPOINTER_BACKUP_RESTORE_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-official-checkpointer-backup-restore.md"
 )
+OFFICIAL_CHECKPOINTER_RETENTION_VERIFIER = (
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_official_checkpointer_retention.py"
+)
+OFFICIAL_CHECKPOINTER_RETENTION_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-official-checkpointer-retention.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -689,7 +698,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_graph_interrupt: passed",
             "official_graph_resume_after_restart: passed",
             "official_graph_checkpoint_history: passed",
-            "phase_completion: still_blocked_retention_prune_and_combined_fault",
+            "phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary",
         ]:
             if phrase not in official_checkpointer_evidence:
                 errors.append(
@@ -723,6 +732,37 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in official_restore_evidence:
                 errors.append(
                     "PHASE04 official Checkpointer backup/restore evidence missing phrase: "
+                    f"{phrase}"
+                )
+    if not OFFICIAL_CHECKPOINTER_RETENTION_VERIFIER.exists():
+        errors.append("missing PHASE04 official Checkpointer retention verifier")
+    else:
+        official_retention_errors = _load_verifier(
+            OFFICIAL_CHECKPOINTER_RETENTION_VERIFIER,
+            "verify_phase04_official_checkpointer_retention",
+            "verify_phase04_official_checkpointer_retention",
+        )()
+        for official_retention_error in official_retention_errors:
+            errors.append(
+                "PHASE04 official Checkpointer retention verification failed: "
+                f"{official_retention_error}"
+            )
+    if not OFFICIAL_CHECKPOINTER_RETENTION_EVIDENCE.exists():
+        errors.append("missing PHASE04 official Checkpointer retention evidence")
+    else:
+        official_retention_evidence = _read(OFFICIAL_CHECKPOINTER_RETENTION_EVIDENCE)
+        for phrase in [
+            "official_checkpointer_retention: proven",
+            "official_delete_thread_retention_cleanup: passed",
+            "official_active_thread_preserved_after_retention: passed",
+            "official_partial_prune_fail_closed: passed",
+            "official_run_delete_fail_closed: passed",
+            "official_retention_restart_restore: passed",
+            "phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary",
+        ]:
+            if phrase not in official_retention_evidence:
+                errors.append(
+                    "PHASE04 official Checkpointer retention evidence missing phrase: "
                     f"{phrase}"
                 )
 
@@ -2068,8 +2108,8 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         for phrase in [
             "checkpoint_domain_fact_separation: passed",
             "checkpoint_version_fail_closed: passed",
-            "official_checkpointer_blocked_boundary: passed",
-            "不证明 official LangGraph PostgreSQL Checkpointer runtime 已安装或可恢复",
+            "official_checkpointer_runtime_boundary: passed",
+            "不证明 combined-service fault、跨领域 replay final cutover 或 PHASE04 closure",
         ]:
             if phrase not in checkpoint_boundary_evidence:
                 errors.append(

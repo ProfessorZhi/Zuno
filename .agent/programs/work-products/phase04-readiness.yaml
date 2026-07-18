@@ -88,7 +88,13 @@ work_packages:
           - "tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
           - "tests/repo/test_phase04_official_checkpointer_backup_restore.py"
           - "docs/evidence/phase04-official-checkpointer-backup-restore.md"
-    remaining_scope: "official LangGraph PostgreSQL Checkpointer schema upgrade recovery, retention/prune, and combined-service fault evidence"
+      official_checkpointer_retention:
+        state: completed
+        outputs:
+          - "tools/scripts/verify_phase04_official_checkpointer_retention.py"
+          - "tests/repo/test_phase04_official_checkpointer_retention.py"
+          - "docs/evidence/phase04-official-checkpointer-retention.md"
+    remaining_scope: "official LangGraph PostgreSQL Checkpointer schema upgrade recovery and combined-service fault evidence"
   P04-T07:
     state: ready
     existing_outputs:
@@ -281,7 +287,11 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-official-checkpointer-backup-restore.md"
-    remaining_scope: "cross-domain replay beyond the Product projection recovery subset, retention/prune, and combined-service fault including the official Checkpointer"
+      official_checkpointer_retention:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-official-checkpointer-retention.md"
+    remaining_scope: "cross-domain replay beyond the Product projection recovery subset and combined-service fault including the official Checkpointer"
 phase_dependencies:
   PHASE05:
     depends_on: [PHASE03, PHASE04]

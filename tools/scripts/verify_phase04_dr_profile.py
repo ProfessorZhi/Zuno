@@ -56,7 +56,7 @@ def verify_phase04_dr_profile() -> list[str]:
     boundary = _as_text(data.get("boundary"))
     if (
         "PITR alignment" not in boundary
-        or "official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus backup/restore" not in boundary
+        or "official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore" not in boundary
         or "Product Projection Replay from restored authoritative fact" not in boundary
         or "combined-service fault remain" not in boundary
     ):

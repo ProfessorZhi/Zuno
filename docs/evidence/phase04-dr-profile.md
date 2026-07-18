@@ -29,4 +29,4 @@ Result: passed.
 
 This evidence proves only that the PHASE04 disaster recovery profile has explicit RPO, RTO, owner, recovery owner, verification command, evidence ref, and fail-closed cutover policy for the required infrastructure recovery components.
 
-PITR alignment, official Checkpointer graph interrupt/resume plus backup/restore, and Product Projection Replay from restored authoritative fact are proven by separate verifiers. Cross-domain projection replay remains outside the proven subset, and this evidence does not prove Checkpointer retention/prune, combined-service fault, or PHASE04 closure.
+PITR alignment, official Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore, and Product Projection Replay from restored authoritative fact are proven by separate verifiers. cross-domain projection replay remains outside the proven subset, and this evidence does not prove combined-service fault or PHASE04 closure.

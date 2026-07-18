@@ -165,14 +165,14 @@ def verify_phase04_checkpoint_boundary_version() -> list[str]:
     for phrase in [
         "checkpoint_domain_fact_separation: passed",
         "checkpoint_version_fail_closed: passed",
-        "official_checkpointer_blocked_boundary: passed",
-        "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
-        "不证明 official LangGraph PostgreSQL Checkpointer runtime 已安装或可恢复",
+        "official_checkpointer_runtime_boundary: passed",
+        "phase_completion: blocked_combined_fault_and_cross_domain_replay_boundary",
+        "不证明 combined-service fault、跨领域 replay final cutover 或 PHASE04 closure",
     ]:
         if phrase not in boundary_evidence:
             errors.append(f"checkpoint boundary evidence missing phrase: {phrase}")
     for phrase in [
-        "langgraph_postgres_checkpointer: missing",
+        "langgraph_postgres_checkpointer: proven",
         "infrastructure_capability_profile: proven",
         "upgrade_compatibility_profiles: proven",
     ]:

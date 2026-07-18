@@ -27,9 +27,11 @@ def test_phase04_real_services_smoke_passes_against_running_docker_services() ->
 def test_phase04_complete_infrastructure_is_fail_closed_until_full_proof() -> None:
     verifier = _load_verifier()
     errors = "\n".join(verifier.verify_phase04_complete_infrastructure())
+    assert "P04-T06 is not completed in phase04-readiness.yaml" in errors
+    assert "P04-T07 is not completed in phase04-readiness.yaml" in errors
     assert "PHASE04 coordinator approval is not approved" in errors
     assert "PHASE05 start gate remains closed" in errors
-    assert "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven" in errors
+    assert "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven" not in errors
     assert "PHASE04 evidence missing completion proof marker: combined_dependency_fault: proven" in errors
 
 
