@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from zuno.platform.model_gateway import (
     BudgetPolicy,
     BudgetVerdict,
+    ModelAdapterRolloutMode,
     ModelAdmissionLayer,
     ModelAttemptState,
     ModelCacheKind,
@@ -1124,3 +1125,86 @@ def test_model_gateway_legal_hold_sli_slo_and_readiness_boundaries() -> None:
     assert mock_only.status == ModelReadinessStatus.NOT_READY
     assert mock_only.reason == "mock_only_not_ready"
     assert ready.status == ModelReadinessStatus.READY
+
+
+def test_model_gateway_adapter_experiment_and_shadow_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    rollout = gateway.adapter_rollout_plan(
+        active_adapter_version="adapter:v1",
+        candidate_adapter_version="adapter:v2",
+        sdk_api_version="sdk:v2",
+        rollback_adapter_version="adapter:v1",
+    )
+    assert rollout.modes == (
+        ModelAdapterRolloutMode.PARALLEL,
+        ModelAdapterRolloutMode.CANARY,
+        ModelAdapterRolloutMode.DRAIN,
+        ModelAdapterRolloutMode.ROLLBACK,
+    )
+    assert rollout.rollback_adapter_version == "adapter:v1"
+
+    sunset = gateway.provider_api_sunset_plan(
+        provider_id="primary",
+        retiring_api_version="api:v1",
+        replacement_api_version="api:v2",
+        migration_evidence_ref="ev:migration",
+        rollback_evidence_ref="ev:rollback",
+        compatibility_evidence_ref="ev:compatibility",
+    )
+    assert sunset.migration_evidence_ref == "ev:migration"
+    assert sunset.rollback_evidence_ref == "ev:rollback"
+    assert sunset.compatibility_evidence_ref == "ev:compatibility"
+
+    blocked_experiment = gateway.experiment_gate_verdict(
+        experiment_id="exp:model-routing",
+        security_passed=True,
+        capability_passed=True,
+        budget_passed=False,
+        deadline_passed=True,
+    )
+    allowed_experiment = gateway.experiment_gate_verdict(
+        experiment_id="exp:model-routing",
+        security_passed=True,
+        capability_passed=True,
+        budget_passed=True,
+        deadline_passed=True,
+    )
+    first_assignment = gateway.experiment_assignment(
+        experiment_id="exp:model-routing",
+        sticky_scope="tenant",
+        subject_ref="tenant-a",
+        variants=("control", "candidate"),
+    )
+    second_assignment = gateway.experiment_assignment(
+        experiment_id="exp:model-routing",
+        sticky_scope="tenant",
+        subject_ref="tenant-a",
+        variants=("control", "candidate"),
+    )
+
+    assert blocked_experiment.allowed is False and blocked_experiment.reason == "budget_gate_failed"
+    assert allowed_experiment.allowed is True
+    assert allowed_experiment.gates == ("security", "capability", "budget", "deadline")
+    assert first_assignment == second_assignment
+    assert first_assignment.sticky_scope == "tenant"
+
+    shadow = gateway.shadow_call_record(
+        shadow_call_id="shadow:1",
+        security_ref="security:shadow",
+        budget_ref="budget:shadow",
+        usage_ref="usage:shadow",
+        trace_ref="trace:shadow",
+        retention_ref="retention:shadow",
+    )
+    result = gateway.shadow_result(shadow_call_id=shadow.shadow_call_id, result_ref="result:shadow")
+
+    assert shadow.independent is True
+    assert (shadow.security_ref, shadow.budget_ref, shadow.usage_ref, shadow.trace_ref, shadow.retention_ref) == (
+        "security:shadow",
+        "budget:shadow",
+        "usage:shadow",
+        "trace:shadow",
+        "retention:shadow",
+    )
+    assert result.enters_business_output is False

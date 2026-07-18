@@ -147,6 +147,13 @@ class ModelReadinessStatus(StrEnum):
     NOT_READY = "NOT_READY"
 
 
+class ModelAdapterRolloutMode(StrEnum):
+    PARALLEL = "PARALLEL"
+    CANARY = "CANARY"
+    DRAIN = "DRAIN"
+    ROLLBACK = "ROLLBACK"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -613,6 +620,60 @@ class ModelReadinessVerdict:
     missing_evidence: tuple[str, ...]
     mock_only: bool
     reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelAdapterRolloutPlan:
+    active_adapter_version: str
+    candidate_adapter_version: str
+    sdk_api_version: str
+    modes: tuple[ModelAdapterRolloutMode, ...]
+    rollback_adapter_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelProviderApiSunsetPlan:
+    provider_id: str
+    retiring_api_version: str
+    replacement_api_version: str
+    migration_evidence_ref: str
+    rollback_evidence_ref: str
+    compatibility_evidence_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelExperimentGateVerdict:
+    experiment_id: str
+    allowed: bool
+    gates: tuple[str, ...]
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelExperimentAssignment:
+    experiment_id: str
+    sticky_scope: str
+    subject_ref: str
+    variant: str
+    assignment_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelShadowCallRecord:
+    shadow_call_id: str
+    security_ref: str
+    budget_ref: str
+    usage_ref: str
+    trace_ref: str
+    retention_ref: str
+    independent: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class ModelShadowResult:
+    shadow_call_id: str
+    result_ref: str
+    enters_business_output: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -2367,6 +2428,115 @@ class ModelGateway:
             reason="ready",
         )
 
+    def adapter_rollout_plan(
+        self,
+        *,
+        active_adapter_version: str,
+        candidate_adapter_version: str,
+        sdk_api_version: str,
+        rollback_adapter_version: str,
+    ) -> ModelAdapterRolloutPlan:
+        return ModelAdapterRolloutPlan(
+            active_adapter_version=active_adapter_version,
+            candidate_adapter_version=candidate_adapter_version,
+            sdk_api_version=sdk_api_version,
+            modes=(
+                ModelAdapterRolloutMode.PARALLEL,
+                ModelAdapterRolloutMode.CANARY,
+                ModelAdapterRolloutMode.DRAIN,
+                ModelAdapterRolloutMode.ROLLBACK,
+            ),
+            rollback_adapter_version=rollback_adapter_version,
+        )
+
+    def provider_api_sunset_plan(
+        self,
+        *,
+        provider_id: str,
+        retiring_api_version: str,
+        replacement_api_version: str,
+        migration_evidence_ref: str,
+        rollback_evidence_ref: str,
+        compatibility_evidence_ref: str,
+    ) -> ModelProviderApiSunsetPlan:
+        if not (migration_evidence_ref and rollback_evidence_ref and compatibility_evidence_ref):
+            raise ModelGatewayProviderError("provider api sunset requires migration, rollback, and compatibility evidence")
+        return ModelProviderApiSunsetPlan(
+            provider_id=provider_id,
+            retiring_api_version=retiring_api_version,
+            replacement_api_version=replacement_api_version,
+            migration_evidence_ref=migration_evidence_ref,
+            rollback_evidence_ref=rollback_evidence_ref,
+            compatibility_evidence_ref=compatibility_evidence_ref,
+        )
+
+    def experiment_gate_verdict(
+        self,
+        *,
+        experiment_id: str,
+        security_passed: bool,
+        capability_passed: bool,
+        budget_passed: bool,
+        deadline_passed: bool,
+    ) -> ModelExperimentGateVerdict:
+        gates = ("security", "capability", "budget", "deadline")
+        if not security_passed:
+            return ModelExperimentGateVerdict(experiment_id=experiment_id, allowed=False, gates=gates, reason="security_gate_failed")
+        if not capability_passed:
+            return ModelExperimentGateVerdict(experiment_id=experiment_id, allowed=False, gates=gates, reason="capability_gate_failed")
+        if not budget_passed:
+            return ModelExperimentGateVerdict(experiment_id=experiment_id, allowed=False, gates=gates, reason="budget_gate_failed")
+        if not deadline_passed:
+            return ModelExperimentGateVerdict(experiment_id=experiment_id, allowed=False, gates=gates, reason="deadline_gate_failed")
+        return ModelExperimentGateVerdict(experiment_id=experiment_id, allowed=True, gates=gates, reason="allowed")
+
+    def experiment_assignment(
+        self,
+        *,
+        experiment_id: str,
+        sticky_scope: str,
+        subject_ref: str,
+        variants: tuple[str, ...],
+    ) -> ModelExperimentAssignment:
+        if not variants:
+            raise ModelGatewayProviderError("experiment assignment requires at least one variant")
+        assignment_hash = _stable_hash([experiment_id, sticky_scope, subject_ref])
+        variant = variants[int(assignment_hash[:8], 16) % len(variants)]
+        return ModelExperimentAssignment(
+            experiment_id=experiment_id,
+            sticky_scope=sticky_scope,
+            subject_ref=subject_ref,
+            variant=variant,
+            assignment_hash=assignment_hash,
+        )
+
+    def shadow_call_record(
+        self,
+        *,
+        shadow_call_id: str,
+        security_ref: str,
+        budget_ref: str,
+        usage_ref: str,
+        trace_ref: str,
+        retention_ref: str,
+    ) -> ModelShadowCallRecord:
+        return ModelShadowCallRecord(
+            shadow_call_id=shadow_call_id,
+            security_ref=security_ref,
+            budget_ref=budget_ref,
+            usage_ref=usage_ref,
+            trace_ref=trace_ref,
+            retention_ref=retention_ref,
+        )
+
+    def shadow_result(
+        self,
+        *,
+        shadow_call_id: str,
+        result_ref: str,
+    ) -> ModelShadowResult:
+        return ModelShadowResult(shadow_call_id=shadow_call_id, result_ref=result_ref)
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -2825,6 +2995,8 @@ __all__ = [
     "BudgetPolicy",
     "BudgetVerdict",
     "MockModelProvider",
+    "ModelAdapterRolloutMode",
+    "ModelAdapterRolloutPlan",
     "ModelAdmissionDecision",
     "ModelAdmissionLayer",
     "ModelAdmissionLayerCheck",
@@ -2857,6 +3029,8 @@ __all__ = [
     "ModelConfigActivationGate",
     "ModelDomainWrite",
     "ModelEmbeddingResult",
+    "ModelExperimentAssignment",
+    "ModelExperimentGateVerdict",
     "ModelGateway",
     "ModelGatewayBinding",
     "ModelGatewayConfigSnapshot",
@@ -2879,6 +3053,7 @@ __all__ = [
     "ModelProviderLifecycleState",
     "ModelProviderSignalStatus",
     "ModelProviderSignalVerdict",
+    "ModelProviderApiSunsetPlan",
     "ModelProviderHealthStatus",
     "ModelProviderHealthWindow",
     "ModelQueuedRequestBinding",
@@ -2892,6 +3067,8 @@ __all__ = [
     "ModelReadinessStatus",
     "ModelReadinessVerdict",
     "ModelSliSloDimension",
+    "ModelShadowCallRecord",
+    "ModelShadowResult",
     "ModelDeletionStep",
     "ModelDeletionWorkflow",
     "ModelRiskProposal",

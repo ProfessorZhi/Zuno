@@ -12,6 +12,7 @@ if str(SRC_ROOT) not in sys.path:
 from zuno.platform.model_gateway import (  # noqa: E402
     BudgetPolicy,
     BudgetVerdict,
+    ModelAdapterRolloutMode,
     ModelAdmissionLayer,
     ModelAttemptState,
     ModelCacheKind,
@@ -43,7 +44,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 70))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 76))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -961,6 +962,83 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("mock-only readiness was marked ready")
     if ready.status != ModelReadinessStatus.READY:
         errors.append("complete non-mock readiness evidence was not marked ready")
+
+    rollout = usage_gateway.adapter_rollout_plan(
+        active_adapter_version="adapter:v1",
+        candidate_adapter_version="adapter:v2",
+        sdk_api_version="sdk:v2",
+        rollback_adapter_version="adapter:v1",
+    )
+    if rollout.modes != (
+        ModelAdapterRolloutMode.PARALLEL,
+        ModelAdapterRolloutMode.CANARY,
+        ModelAdapterRolloutMode.DRAIN,
+        ModelAdapterRolloutMode.ROLLBACK,
+    ):
+        errors.append("adapter rollout does not support parallel/canary/drain/rollback")
+    if rollout.rollback_adapter_version != "adapter:v1":
+        errors.append("adapter rollout did not preserve rollback adapter version")
+
+    sunset = usage_gateway.provider_api_sunset_plan(
+        provider_id="usage_fallback",
+        retiring_api_version="api:v1",
+        replacement_api_version="api:v2",
+        migration_evidence_ref="ev:migration",
+        rollback_evidence_ref="ev:rollback",
+        compatibility_evidence_ref="ev:compatibility",
+    )
+    if not (sunset.migration_evidence_ref and sunset.rollback_evidence_ref and sunset.compatibility_evidence_ref):
+        errors.append("provider API sunset lacks migration/rollback/compatibility evidence")
+
+    blocked_experiment = usage_gateway.experiment_gate_verdict(
+        experiment_id="exp:model-routing",
+        security_passed=True,
+        capability_passed=True,
+        budget_passed=False,
+        deadline_passed=True,
+    )
+    allowed_experiment = usage_gateway.experiment_gate_verdict(
+        experiment_id="exp:model-routing",
+        security_passed=True,
+        capability_passed=True,
+        budget_passed=True,
+        deadline_passed=True,
+    )
+    if blocked_experiment.allowed or blocked_experiment.reason != "budget_gate_failed":
+        errors.append("experiment was allowed before security/capability/budget/deadline gates")
+    if not allowed_experiment.allowed or allowed_experiment.gates != ("security", "capability", "budget", "deadline"):
+        errors.append("experiment did not record required gate order")
+
+    first_assignment = usage_gateway.experiment_assignment(
+        experiment_id="exp:model-routing",
+        sticky_scope="tenant",
+        subject_ref="tenant-a",
+        variants=("control", "candidate"),
+    )
+    second_assignment = usage_gateway.experiment_assignment(
+        experiment_id="exp:model-routing",
+        sticky_scope="tenant",
+        subject_ref="tenant-a",
+        variants=("control", "candidate"),
+    )
+    if first_assignment != second_assignment or first_assignment.sticky_scope != "tenant":
+        errors.append("experiment assignment is not reproducible with sticky scope")
+
+    shadow = usage_gateway.shadow_call_record(
+        shadow_call_id="shadow:1",
+        security_ref="security:shadow",
+        budget_ref="budget:shadow",
+        usage_ref="usage:shadow",
+        trace_ref="trace:shadow",
+        retention_ref="retention:shadow",
+    )
+    shadow_result = usage_gateway.shadow_result(shadow_call_id=shadow.shadow_call_id, result_ref="result:shadow")
+    if not shadow.independent or not all(
+        [shadow.security_ref, shadow.budget_ref, shadow.usage_ref, shadow.trace_ref, shadow.retention_ref]
+    ):
+        errors.append("shadow call did not independently record security/budget/usage/trace/retention")
+    if shadow_result.enters_business_output:
+        errors.append("shadow result enters business output")
 
     split_action_result = ModelGateway(
         providers=[
