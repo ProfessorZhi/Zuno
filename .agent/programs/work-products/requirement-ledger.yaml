@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 717
-  implementation_available: 39
+  target_not_current: 714
+  implementation_available: 42
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -5576,51 +5576,65 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "Index Write/Visibility/Verification 分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
       - "docs/modules/11-infrastructure.md:1927"
-    gap: "?????Index Write/Visibility/Verification 分层???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "Index write batch、write receipt、visibility receipt 和 Knowledge acceptance contract boundary 已可机器验证；current index adapter runtime、visibility probe、acceptance test 和 rebuild drill 仍是后续 target。"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-046 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "contract gate proves write receipt and visibility receipt cannot claim domain acceptance"
     test_ids:
-      - "INFRA-046-UT"
-      - "INFRA-046-IT"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "tests/repo/test_phase04_contract_ownership_boundaries.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-046"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1927"
-      - "planned_test:INFRA-046-UT"
-      - "planned_test:INFRA-046-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-046"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "current:tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "test:tests/repo/test_phase04_contract_ownership_boundaries.py"
+      - "evidence:docs/evidence/phase04-contract-ownership-boundaries.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-047
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "IndexManifest/Acceptance 归领域 Owner"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
       - "docs/modules/11-infrastructure.md:1928"
-    gap: "?????IndexManifest/Acceptance 归领域 Owner???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "KnowledgeVersionRefV1 持有 index_manifest_hash 和 visibility_receipt_ref，registry owner 为 Knowledge；Infrastructure 只拥有 write/visibility receipts。current index acceptance runtime 仍是后续 target。"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-047 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "contract gate proves Infrastructure receipt cannot own IndexManifest/Acceptance"
     test_ids:
-      - "INFRA-047-UT"
-      - "INFRA-047-IT"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "tests/repo/test_phase04_contract_ownership_boundaries.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-047"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1928"
-      - "planned_test:INFRA-047-UT"
-      - "planned_test:INFRA-047-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-047"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "current:tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "test:tests/repo/test_phase04_contract_ownership_boundaries.py"
+      - "evidence:docs/evidence/phase04-contract-ownership-boundaries.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-048
     module: "11 Infrastructure"
@@ -5830,26 +5844,33 @@ requirements:
     module: "11 Infrastructure"
     mandatory: true
     target_statement: "PreparedToolAction Ownership 不重叠"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/platform/contracts/shared.py"
+      - "src/backend/zuno/platform/contracts/registry.py"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
       - "docs/modules/11-infrastructure.md:1937"
-    gap: "?????PreparedToolAction Ownership 不重叠???? Current ????????????????? PHASE04 ?????????/??????????????? Current?"
+    gap: "PreparedToolActionV1 属于 Tool Runtime，ActionProposal/Binding 属于 Agent Core，SecurityApprovalDecision 属于 Security，AuditPersistenceReceipt 属于 Infrastructure；owner 不重叠已可机器验证。Tool effect runtime 与 audit durable-before-effect runtime 仍是独立 target。"
     owner: "Infrastructure"
     target_phase: "PHASE04"
-    planned_work_package: "P04 durable infrastructure foundation"
+    planned_work_package: "P04-T07 Backup, Restore, Replay, Concurrency and Operational Evidence"
     dependencies:
       - "PHASE03"
-    failure_or_recovery_requirement: "target_not_current:ARCH-INFRA-056 ??????????????????????? PHASE04 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "contract gate proves PreparedToolAction canonical hash and registry ownership fail closed on overlap or stale hash"
     test_ids:
-      - "INFRA-056-UT"
-      - "INFRA-056-IT"
+      - "tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "tests/repo/test_phase04_contract_ownership_boundaries.py"
     evidence_refs:
-      - "needs_evidence:EV-INFRA-056"
+      - "docs/evidence/phase04-contract-ownership-boundaries.md"
+      - "docs/evidence/phase04-complete-infrastructure-blocker.md"
     reverse_trace_refs:
       - "target:docs/modules/11-infrastructure.md:1937"
-      - "planned_test:INFRA-056-UT"
-      - "planned_test:INFRA-056-IT"
-      - "planned_evidence:needs_evidence:EV-INFRA-056"
+      - "current:src/backend/zuno/platform/contracts/shared.py"
+      - "current:src/backend/zuno/platform/contracts/registry.py"
+      - "current:tools/scripts/verify_phase04_contract_ownership_boundaries.py"
+      - "test:tests/repo/test_phase04_contract_ownership_boundaries.py"
+      - "evidence:docs/evidence/phase04-contract-ownership-boundaries.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-INFRA-057
     module: "11 Infrastructure"

@@ -34,6 +34,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE04 P04-T07 Release Provenance Manifest 子范围：`ReleaseManifestV1` 已达到 `implementation available`，本地真实 PostgreSQL/RabbitMQ/MinIO 的 source commit、运行中 image id bundle、Compose network/port refs、config hash、migration versions、adapter versions、compatibility evidence 与 provenance refs 可机器验证；它不证明 production application image release、外部 SBOM/signing、official Checkpointer 或完整 recovery replay。
 - PHASE04 P04-T07 Redis Optional Boundary 子范围：`DataServiceCapabilityV1` 中 Redis/CACHE boundary 已达到 `implementation available`，Redis 只作为 optional acceleration cache，非权威、可从来源重建，且不进入 PHASE04 required real services 或 release adapter provenance；它不证明 Redis HA、failover、rate-limit acceleration 或 enterprise deployment。
 - PHASE04 P04-T07 Derived Index Boundary 子范围：`DataServiceCapabilityV1` 中 VECTOR/Milvus、GRAPH/Neo4j 和 LEXICAL/BM25/Search boundary 已达到 `implementation available`，三者均为 versioned、non-authoritative、rebuildable from source，且不进入 PHASE04 required release adapter provenance；它不证明这些 server adapter、visibility receipt、acceptance gate 或 rebuild drill 已实现。
+- PHASE04 P04-T07 Contract Ownership Boundary 子范围：`ARCH-INFRA-046/047/056` 已达到 `implementation available`，Index write/receipt/visibility 与 Knowledge acceptance 分层、IndexManifest/Acceptance 归领域 Owner、PreparedToolAction/ActionProposal/SecurityApproval/AuditPersistence owner 不重叠均可机器验证；它不证明 index adapter runtime、Tool effect runtime 或 audit durable-before-effect runtime 已完成。
 
 ## Short-term Closure Gap
 

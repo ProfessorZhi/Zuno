@@ -205,6 +205,12 @@ DERIVED_INDEX_BOUNDARY_VERIFIER = (
 DERIVED_INDEX_BOUNDARY_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-derived-index-boundary.md"
 )
+CONTRACT_OWNERSHIP_BOUNDARY_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_contract_ownership_boundaries.py"
+)
+CONTRACT_OWNERSHIP_BOUNDARY_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-contract-ownership-boundaries.md"
+)
 REQUIREMENT_LEDGER_EVIDENCE_GATE_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_requirement_ledger_evidence_gate.py"
 )
@@ -1472,6 +1478,38 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in derived_index_evidence:
                 errors.append(
                     "PHASE04 derived index boundary evidence missing phrase: "
+                    f"{phrase}"
+                )
+
+    if not CONTRACT_OWNERSHIP_BOUNDARY_VERIFIER.exists():
+        errors.append("missing PHASE04 contract ownership boundary verifier")
+    else:
+        contract_ownership_errors = _load_verifier(
+            CONTRACT_OWNERSHIP_BOUNDARY_VERIFIER,
+            "verify_phase04_contract_ownership_boundaries",
+            "verify_phase04_contract_ownership_boundaries",
+        )()
+        for contract_ownership_error in contract_ownership_errors:
+            errors.append(
+                "PHASE04 contract ownership boundary verification failed: "
+                f"{contract_ownership_error}"
+            )
+
+    if not CONTRACT_OWNERSHIP_BOUNDARY_EVIDENCE.exists():
+        errors.append("missing PHASE04 contract ownership boundary evidence")
+    else:
+        contract_ownership_evidence = _read(CONTRACT_OWNERSHIP_BOUNDARY_EVIDENCE)
+        for phrase in [
+            "index_write_visibility_contract_layering: passed",
+            "index_manifest_acceptance_domain_owner: passed",
+            "write_receipt_not_domain_acceptance: passed",
+            "prepared_tool_action_owner_distinct: passed",
+            "prepared_tool_action_canonical_hash_fail_closed: passed",
+            "本证据不证明 Milvus、Neo4j、BM25/Search 当前 server adapter",
+        ]:
+            if phrase not in contract_ownership_evidence:
+                errors.append(
+                    "PHASE04 contract ownership boundary evidence missing phrase: "
                     f"{phrase}"
                 )
 

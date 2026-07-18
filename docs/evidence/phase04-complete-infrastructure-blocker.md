@@ -61,6 +61,7 @@ adapter_conformance_profiles: proven
 release_provenance_manifest: proven
 redis_optional_boundary: proven
 derived_index_boundary: proven
+contract_ownership_boundaries: proven
 infra_requirement_006_010_ledger_subset: proven
 infra_requirement_064_evidence_gate: proven
 
@@ -123,6 +124,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_release_provenance_manifest.py` | passed; `ReleaseManifestV1` 绑定 source commit、运行中 image id bundle、Compose network/port refs、config hash、migration versions、adapter versions、compatibility evidence 和 provenance refs |
 | `python tools/scripts/verify_phase04_redis_optional_boundary.py` | passed; Redis/CACHE 在 `DataServiceCapabilityV1` 中为 optional、non-authoritative、rebuildable，并且不进入 PHASE04 required real services 或 release adapter provenance |
 | `python tools/scripts/verify_phase04_derived_index_boundary.py` | passed; VECTOR/Milvus、GRAPH/Neo4j 和 LEXICAL/BM25/Search 在 `DataServiceCapabilityV1` 中为 versioned、non-authoritative、rebuildable，并且不进入 PHASE04 required release adapter provenance |
+| `python tools/scripts/verify_phase04_contract_ownership_boundaries.py` | passed; Index write/receipt/visibility 与 Knowledge acceptance 分层、IndexManifest/Acceptance 领域归属、PreparedToolAction/ActionProposal/SecurityApproval/AuditPersistence owner 不重叠均通过 |
 | `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
 
 ## Missing Required Proof
@@ -188,6 +190,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Infrastructure typed-port subset：`tools/scripts/verify_phase04_infrastructure_typed_ports.py` 固化 Developer CI 与 Server Product profile 共用同一 typed contract surface，并覆盖 PostgreSQL、RabbitMQ、Object、Checkpoint、Vector、Graph、Lexical、Cache、Secret 和 Telemetry service kind；unknown service kind fail closed。
 - Tenant isolation profile subset：`TenantIsolationProfileV1` 为每个 typed Infrastructure service kind 固定 tenant scope、默认 target、强隔离选项、cross-tenant action 和 evidence ref；该 profile gate 不替代 `ARCH-INFRA-058` 的全服务运行时 cross-tenant hit quarantine/fail-closed 证明。
 - Tenant physical constraints subset：`tools/scripts/verify_phase04_tenant_physical_constraints.py` 把 `ARCH-INFRA-034` 固定到当前真实服务证据：PostgreSQL tenant context、tenant-scoped unique key 和 SQL filter，RabbitMQ tenant header，Object ref/MinIO bucket-prefix-auth hook，以及 Operator tenant snapshot；该 gate 不替代 official Checkpointer 或 `ARCH-INFRA-058`。
+- Contract ownership boundary subset：`tools/scripts/verify_phase04_contract_ownership_boundaries.py` 固化 Index write/receipt/visibility 与 Knowledge acceptance 分层、IndexManifest/Acceptance 领域归属，以及 PreparedToolAction/ActionProposal/SecurityApproval/AuditPersistence owner 不重叠；该 gate 不替代 index adapter runtime、Tool effect runtime 或 audit runtime。
 
 Operator readiness 已有正式证据和 runbook，但这些结果只证明三类服务的 canonical integration path 已可用，并证明 PostgreSQL sync/async Session Runtime、完整 Alembic migration foundation、RabbitMQ Transactional Outbox/Inbox、Idempotency、Lease/Fencing，以及 MinIO Object/Manifest/治理/恢复子范围；仍不能证明 official Checkpointer、PITR、完整领域 Projection Replay 或包含 Checkpointer 的组合故障恢复。
 
@@ -200,6 +203,8 @@ Infrastructure requirement `ARCH-INFRA-005` is now proven by `tools/scripts/veri
 Infrastructure requirement `ARCH-INFRA-057` is now proven by `tools/scripts/verify_phase04_tenant_isolation_profiles.py`: every service kind in the Infrastructure Capability Profile has a typed TenantIsolationProfile with tenant scope and fail-closed/quarantine/audit action. This does not prove the separate full-runtime cross-tenant hit requirement.
 
 Infrastructure requirement `ARCH-INFRA-034` is now proven by `tools/scripts/verify_phase04_tenant_physical_constraints.py`: tenant scope participates in current PostgreSQL physical keys and filters, RabbitMQ protocol headers, Object ref/MinIO target/auth hook boundaries, and Operator tenant snapshots. This does not prove official Checkpointer tenant isolation or the separate full-runtime cross-tenant hit requirement.
+
+Infrastructure requirements `ARCH-INFRA-046`, `ARCH-INFRA-047`, and `ARCH-INFRA-056` are now proven by `tools/scripts/verify_phase04_contract_ownership_boundaries.py`: Index write/receipt/visibility contracts are separated from Knowledge acceptance, IndexManifest/Acceptance remains domain-owned, and PreparedToolAction ownership is distinct from Agent Core proposal/binding, Security approval, and Infrastructure audit persistence. This does not prove current index adapters, Tool effect runtime, or audit durable-before-effect runtime.
 
 Infrastructure requirement ledger subset `ARCH-INFRA-006` through `ARCH-INFRA-010` is now proven by the same real-service verifier set: PostgreSQL authoritative fact storage, Repository no-commit ownership, external I/O / DB transaction boundary, Generation/Epoch/Fencing conditional writes, and PostgreSQL role-specific pool/timeout/leak evidence are marked `implementation_available`. This subset does not include the official LangGraph PostgreSQL Checkpointer, PITR, complete Projection Replay, or the full recovery set.
 
