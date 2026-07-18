@@ -116,6 +116,16 @@ EXPECTED_EXPORTS = {
         "SkillResourceClassification",
         "SkillVersionRecord",
     ],
+    "zuno.capability.tool_runtime": [
+        "AdapterFamily",
+        "DispatchCertainty",
+        "EffectCertainty",
+        "EffectLevel",
+        "PreparedActionStatus",
+        "ReconciliationConclusion",
+        "ToolAttemptStatus",
+        "ToolRuntimeBatch",
+    ],
     "zuno.capability.trace": [
         "CapabilitySelectionTrace",
     ],
@@ -161,6 +171,7 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     from zuno.capability.runtime import ToolControlPlaneRuntime
     from zuno.capability.runtime_batch import CapabilityRuntimeBatch
     from zuno.capability.selector import DynamicCapabilitySelector
+    from zuno.capability.tool_runtime import ToolRuntimeBatch
 
     assert capability.CapabilityRecord is CapabilityRecord
     assert capability.CapabilityRegistry is CapabilityRegistry
@@ -169,6 +180,7 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     assert capability.ToolCardManifest is ToolCardManifest
     assert capability.ToolControlPlaneRuntime is ToolControlPlaneRuntime
     assert capability.CapabilityRuntimeBatch is CapabilityRuntimeBatch
+    assert capability.ToolRuntimeBatch is ToolRuntimeBatch
 
 
 def test_importing_capability_surfaces_does_not_load_heavy_runtime_modules() -> None:

@@ -56,6 +56,7 @@ if TYPE_CHECKING:
         DynamicCapabilitySelector,
     )
     from zuno.capability.trace import CapabilitySelectionTrace
+    from zuno.capability.tool_runtime import ToolRuntimeBatch
 
 
 _EXPORT_TO_MODULE = {
@@ -96,6 +97,7 @@ _EXPORT_TO_MODULE = {
     "ToolResultNormalizer": "zuno.capability.control_plane",
     "ToolRuntimeExecutionResult": "zuno.capability.runtime",
     "ToolRuntimeRequest": "zuno.capability.runtime",
+    "ToolRuntimeBatch": "zuno.capability.tool_runtime",
     "ToolSandboxContext": "zuno.capability.runtime",
     "ToolSideEffectLevel": "zuno.capability.control_plane",
     "ToolTrustTier": "zuno.capability.control_plane",
@@ -141,6 +143,7 @@ __all__ = [
     "ToolResultNormalizer",
     "ToolRuntimeExecutionResult",
     "ToolRuntimeRequest",
+    "ToolRuntimeBatch",
     "ToolSandboxContext",
     "ToolSideEffectLevel",
     "ToolTrustTier",

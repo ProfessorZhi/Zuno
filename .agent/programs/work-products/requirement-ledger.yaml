@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 480
-  implementation_available: 276
+  target_not_current: 400
+  implementation_available: 356
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -18770,2081 +18770,2641 @@ requirements:
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "唯一正式模块文档"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2212"
-    gap: "?????唯一正式模块文档???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-001 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-001 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-001 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-001-UT"
-      - "TOOL-001-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:document hash"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2212"
-      - "planned_test:TOOL-001-UT"
-      - "planned_test:TOOL-001-IT"
-      - "planned_evidence:needs_evidence:document hash"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-002
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "正式文档与镜像一致"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2213"
-    gap: "?????正式文档与镜像一致???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-002 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-002 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-002 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-002-UT"
-      - "TOOL-002-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:blob SHA"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2213"
-      - "planned_test:TOOL-002-UT"
-      - "planned_test:TOOL-002-IT"
-      - "planned_evidence:needs_evidence:blob SHA"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-003
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "08 拥有权威 ToolDefinition"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2214"
-    gap: "?????08 拥有权威 ToolDefinition???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-003 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-003 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-003 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-003-UT"
-      - "TOOL-003-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:definition event"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2214"
-      - "planned_test:TOOL-003-UT"
-      - "planned_test:TOOL-003-IT"
-      - "planned_evidence:needs_evidence:definition event"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-004
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "07 只拥有 Planner 投影"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2215"
-    gap: "?????07 只拥有 Planner 投影???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-004 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-004 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-004 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-004-UT"
-      - "TOOL-004-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:projection lineage"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2215"
-      - "planned_test:TOOL-004-UT"
-      - "planned_test:TOOL-004-IT"
-      - "planned_evidence:needs_evidence:projection lineage"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-005
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "所有执行进入 Gateway"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2216"
-    gap: "?????所有执行进入 Gateway???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-005 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-005 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-005 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-005-UT"
-      - "TOOL-005-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:gateway trace"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2216"
-      - "planned_test:TOOL-005-UT"
-      - "planned_test:TOOL-005-IT"
-      - "planned_evidence:needs_evidence:gateway trace"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-006
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "ToolVersion 不可变"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2217"
-    gap: "?????ToolVersion 不可变???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-006 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-006 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-006 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-006-UT"
-      - "TOOL-006-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:version hash"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2217"
-      - "planned_test:TOOL-006-UT"
-      - "planned_test:TOOL-006-IT"
-      - "planned_evidence:needs_evidence:version hash"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-007
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Installation 与 Definition 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2218"
-    gap: "?????Installation 与 Definition 分离???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-007 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-007 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-007 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-007-UT"
-      - "TOOL-007-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-007"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2218"
-      - "planned_test:TOOL-007-UT"
-      - "planned_test:TOOL-007-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-007"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-008
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Activation 显式版本化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2219"
-    gap: "?????Activation 显式版本化???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-008 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-008 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-008 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-008-UT"
-      - "TOOL-008-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-008"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2219"
-      - "planned_test:TOOL-008-UT"
-      - "planned_test:TOOL-008-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-008"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-009
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Exposure 不等于 Execute"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2220"
-    gap: "?????Exposure 不等于 Execute???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-009 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-009 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-009 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-009-UT"
-      - "TOOL-009-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-009"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2220"
-      - "planned_test:TOOL-009-UT"
-      - "planned_test:TOOL-009-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-009"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-010
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "ActionProposal 由 06 提供"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2221"
-    gap: "?????ActionProposal 由 06 提供???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-010 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-010 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-010 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-010-UT"
-      - "TOOL-010-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-010"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2221"
-      - "planned_test:TOOL-010-UT"
-      - "planned_test:TOOL-010-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-010"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-011
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "PreparedToolAction 由 08 提交"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2222"
-    gap: "?????PreparedToolAction 由 08 提交???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-011 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-011 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-011 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-011-UT"
-      - "TOOL-011-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-011"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2222"
-      - "planned_test:TOOL-011-UT"
-      - "planned_test:TOOL-011-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-011"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-012
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Canonicalization 版本化"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2223"
-    gap: "?????Canonicalization 版本化???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-012 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-012 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-012 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-012-UT"
-      - "TOOL-012-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-012"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2223"
-      - "planned_test:TOOL-012-UT"
-      - "planned_test:TOOL-012-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-012"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-013
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Hash 稳定且可重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2224"
-    gap: "?????Hash 稳定且可重放???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-013 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-013 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-013 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-013-UT"
-      - "TOOL-013-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-013"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2224"
-      - "planned_test:TOOL-013-UT"
-      - "planned_test:TOOL-013-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-013"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-014
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "TargetResourceSet 显式"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2225"
-    gap: "?????TargetResourceSet 显式???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-014 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-014 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-014 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-014-UT"
-      - "TOOL-014-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-014"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2225"
-      - "planned_test:TOOL-014-UT"
-      - "planned_test:TOOL-014-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-014"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-015
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "EffectProfile 多维分类"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2226"
-    gap: "?????EffectProfile 多维分类???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-015 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-015 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-015 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-015-UT"
-      - "TOOL-015-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-015"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2226"
-      - "planned_test:TOOL-015-UT"
-      - "planned_test:TOOL-015-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-015"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-016
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "PreparedAction 不含 Secret"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2227"
-    gap: "?????PreparedAction 不含 Secret???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-016 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-016 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-016 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-016-UT"
-      - "TOOL-016-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-016"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2227"
-      - "planned_test:TOOL-016-UT"
-      - "planned_test:TOOL-016-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-016"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-017
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Approval 绑定完整 Hash"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2228"
-    gap: "?????Approval 绑定完整 Hash???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-017 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-017 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-017 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-017-UT"
-      - "TOOL-017-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-017"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2228"
-      - "planned_test:TOOL-017-UT"
-      - "planned_test:TOOL-017-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-017"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-018
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Execute 前重检 Epoch"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2229"
-    gap: "?????Execute 前重检 Epoch???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-018 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-018 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-018 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-018-UT"
-      - "TOOL-018-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-018"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2229"
-      - "planned_test:TOOL-018-UT"
-      - "planned_test:TOOL-018-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-018"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-019
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Mandatory Audit 先于 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2230"
-    gap: "?????Mandatory Audit 先于 Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-019 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-019 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-019 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-019-UT"
-      - "TOOL-019-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-019"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2230"
-      - "planned_test:TOOL-019-UT"
-      - "planned_test:TOOL-019-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-019"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-020
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Claim 先于 Dispatch"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2231"
-    gap: "?????Claim 先于 Dispatch???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-020 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-020 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-020 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-020-UT"
-      - "TOOL-020-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-020"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2231"
-      - "planned_test:TOOL-020-UT"
-      - "planned_test:TOOL-020-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-020"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-021
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Claim 不等于 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2232"
-    gap: "?????Claim 不等于 Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-021 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-021 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-021 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-021-UT"
-      - "TOOL-021-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-021"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2232"
-      - "planned_test:TOOL-021-UT"
-      - "planned_test:TOOL-021-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-021"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-022
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "每次真实 Dispatch 有 Attempt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2233"
-    gap: "?????每次真实 Dispatch 有 Attempt???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-022 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-022 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-022 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-022-UT"
-      - "TOOL-022-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-022"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2233"
-      - "planned_test:TOOL-022-UT"
-      - "planned_test:TOOL-022-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-022"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-023
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "SDK 隐藏 Retry 受控"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2234"
-    gap: "?????SDK 隐藏 Retry 受控???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-023 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-023 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-023 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-023-UT"
-      - "TOOL-023-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-023"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2234"
-      - "planned_test:TOOL-023-UT"
-      - "planned_test:TOOL-023-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-023"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-024
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Attempt 状态合法"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2235"
-    gap: "?????Attempt 状态合法???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-024 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-024 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-024 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-024-UT"
-      - "TOOL-024-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-024"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2235"
-      - "planned_test:TOOL-024-UT"
-      - "planned_test:TOOL-024-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-024"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-025
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Dispatch certainty 显式"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2236"
-    gap: "?????Dispatch certainty 显式???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-025 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-025 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-025 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-025-UT"
-      - "TOOL-025-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-025"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2236"
-      - "planned_test:TOOL-025-UT"
-      - "planned_test:TOOL-025-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-025"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-026
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "所有 Tool 有 ExecutionReceipt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2237"
-    gap: "?????所有 Tool 有 ExecutionReceipt???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-026 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-026 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-026 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-026-UT"
-      - "TOOL-026-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-026"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2237"
-      - "planned_test:TOOL-026-UT"
-      - "planned_test:TOOL-026-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-026"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-027
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Effectful Tool 有 EffectReceipt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2238"
-    gap: "?????Effectful Tool 有 EffectReceipt???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-027 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-027 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-027 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-027-UT"
-      - "TOOL-027-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-027"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2238"
-      - "planned_test:TOOL-027-UT"
-      - "planned_test:TOOL-027-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-027"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-028
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "批量 Effect 逐项表达"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2239"
-    gap: "?????批量 Effect 逐项表达???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-028 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-028 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-028 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-028-UT"
-      - "TOOL-028-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-028"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2239"
-      - "planned_test:TOOL-028-UT"
-      - "planned_test:TOOL-028-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-028"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-029
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Receipt 追加不可覆盖"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2240"
-    gap: "?????Receipt 追加不可覆盖???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-029 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-029 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-029 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-029-UT"
-      - "TOOL-029-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-029"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2240"
-      - "planned_test:TOOL-029-UT"
-      - "planned_test:TOOL-029-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-029"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-030
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "UNKNOWN 禁止盲目 Retry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2241"
-    gap: "?????UNKNOWN 禁止盲目 Retry???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-030 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-030 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-030 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-030-UT"
-      - "TOOL-030-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-030"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2241"
-      - "planned_test:TOOL-030-UT"
-      - "planned_test:TOOL-030-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-030"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-031
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Reconciliation 可超越 Run"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2242"
-    gap: "?????Reconciliation 可超越 Run???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-031 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-031 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-031 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-031-UT"
-      - "TOOL-031-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-031"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2242"
-      - "planned_test:TOOL-031-UT"
-      - "planned_test:TOOL-031-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-031"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-032
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "只有确认未执行才可重试"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2243"
-    gap: "?????只有确认未执行才可重试???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-032 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-032 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-032 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-032-UT"
-      - "TOOL-032-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-032"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2243"
-      - "planned_test:TOOL-032-UT"
-      - "planned_test:TOOL-032-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-032"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-033
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Compensation 是新动作"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2244"
-    gap: "?????Compensation 是新动作???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-033 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-033 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-033 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-033-UT"
-      - "TOOL-033-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-033"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2244"
-      - "planned_test:TOOL-033-UT"
-      - "planned_test:TOOL-033-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-033"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-034
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Cancellation 不冒充停止"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2245"
-    gap: "?????Cancellation 不冒充停止???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-034 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-034 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-034 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-034-UT"
-      - "TOOL-034-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-034"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2245"
-      - "planned_test:TOOL-034-UT"
-      - "planned_test:TOOL-034-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-034"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-035
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "ToolObservation 归 08"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2246"
-    gap: "?????ToolObservation 归 08???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-035 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-035 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-035 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-035-UT"
-      - "TOOL-035-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-035"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2246"
-      - "planned_test:TOOL-035-UT"
-      - "planned_test:TOOL-035-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-035"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-036
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "NormalizedObservation 归 06"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2247"
-    gap: "?????NormalizedObservation 归 06???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-036 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-036 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-036 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-036-UT"
-      - "TOOL-036-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-036"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2247"
-      - "planned_test:TOOL-036-UT"
-      - "planned_test:TOOL-036-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-036"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-037
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Tool Output 默认不可信"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2248"
-    gap: "?????Tool Output 默认不可信???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-037 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-037 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-037 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-037-UT"
-      - "TOOL-037-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-037"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2248"
-      - "planned_test:TOOL-037-UT"
-      - "planned_test:TOOL-037-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-037"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-038
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Output Schema 强校验"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2249"
-    gap: "?????Output Schema 强校验???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-038 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-038 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-038 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-038-UT"
-      - "TOOL-038-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-038"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2249"
-      - "planned_test:TOOL-038-UT"
-      - "planned_test:TOOL-038-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-038"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-039
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Output 不自动进 Memory"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2250"
-    gap: "?????Output 不自动进 Memory???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-039 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-039 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-039 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-039-UT"
-      - "TOOL-039-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-039"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2250"
-      - "planned_test:TOOL-039-UT"
-      - "planned_test:TOOL-039-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-039"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-040
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Output 不自动成为 Evidence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2251"
-    gap: "?????Output 不自动成为 Evidence???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-040 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-040 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-040 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-040-UT"
-      - "TOOL-040-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-040"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2251"
-      - "planned_test:TOOL-040-UT"
-      - "planned_test:TOOL-040-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-040"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-041
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "CLI 不继承宿主环境"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2252"
-    gap: "?????CLI 不继承宿主环境???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-041 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-041 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-041 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-041-UT"
-      - "TOOL-041-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-041"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2252"
-      - "planned_test:TOOL-041-UT"
-      - "planned_test:TOOL-041-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-041"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-042
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "CLI 终止进程树"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2253"
-    gap: "?????CLI 终止进程树???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-042 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-042 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-042 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-042-UT"
-      - "TOOL-042-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-042"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2253"
-      - "planned_test:TOOL-042-UT"
-      - "planned_test:TOOL-042-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-042"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-043
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "CLI 资源受限"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2254"
-    gap: "?????CLI 资源受限???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-043 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-043 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-043 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-043-UT"
-      - "TOOL-043-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-043"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2254"
-      - "planned_test:TOOL-043-UT"
-      - "planned_test:TOOL-043-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-043"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-044
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "OpenAPI 防 SSRF"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2255"
-    gap: "?????OpenAPI 防 SSRF???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-044 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-044 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-044 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-044-UT"
-      - "TOOL-044-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-044"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2255"
-      - "planned_test:TOOL-044-UT"
-      - "planned_test:TOOL-044-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-044"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-045
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Redirect 重新校验"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2256"
-    gap: "?????Redirect 重新校验???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-045 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-045 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-045 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-045-UT"
-      - "TOOL-045-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-045"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2256"
-      - "planned_test:TOOL-045-UT"
-      - "planned_test:TOOL-045-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-045"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-046
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Connectivity Probe 无隐式 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2257"
-    gap: "?????Connectivity Probe 无隐式 Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-046 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-046 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-046 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-046-UT"
-      - "TOOL-046-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-046"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2257"
-      - "planned_test:TOOL-046-UT"
-      - "planned_test:TOOL-046-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-046"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-047
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "SDK 版本固定"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2258"
-    gap: "?????SDK 版本固定???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-047 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-047 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-047 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-047-UT"
-      - "TOOL-047-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-047"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2258"
-      - "planned_test:TOOL-047-UT"
-      - "planned_test:TOOL-047-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-047"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-048
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Adapter Conformance 可失效"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2259"
-    gap: "?????Adapter Conformance 可失效???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-048 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-048 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-048 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-048-UT"
-      - "TOOL-048-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-048"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2259"
-      - "planned_test:TOOL-048-UT"
-      - "planned_test:TOOL-048-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-048"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-049
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP 初始化先协商"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2260"
-    gap: "?????MCP 初始化先协商???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-049 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-049 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-049 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-049-UT"
-      - "TOOL-049-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-049"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2260"
-      - "planned_test:TOOL-049-UT"
-      - "planned_test:TOOL-049-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-049"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-050
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP 只使用已协商能力"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2261"
-    gap: "?????MCP 只使用已协商能力???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-050 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-050 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-050 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-050-UT"
-      - "TOOL-050-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-050"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2261"
-      - "planned_test:TOOL-050-UT"
-      - "planned_test:TOOL-050-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-050"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-051
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP Tool Schema 绑定 Snapshot"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2262"
-    gap: "?????MCP Tool Schema 绑定 Snapshot???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-051 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-051 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-051 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-051-UT"
-      - "TOOL-051-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-051"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2262"
-      - "planned_test:TOOL-051-UT"
-      - "planned_test:TOOL-051-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-051"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-052
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP listChanged 使旧动作失效"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2263"
-    gap: "?????MCP listChanged 使旧动作失效???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-052 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-052 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-052 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-052-UT"
-      - "TOOL-052-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-052"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2263"
-      - "planned_test:TOOL-052-UT"
-      - "planned_test:TOOL-052-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-052"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-053
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP annotations 不可信"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2264"
-    gap: "?????MCP annotations 不可信???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-053 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-053 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-053 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-053-UT"
-      - "TOOL-053-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-053"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2264"
-      - "planned_test:TOOL-053-UT"
-      - "planned_test:TOOL-053-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-053"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-054
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP 输出支持多模态结构"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2265"
-    gap: "?????MCP 输出支持多模态结构???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-054 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-054 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-054 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-054-UT"
-      - "TOOL-054-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-054"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2265"
-      - "planned_test:TOOL-054-UT"
-      - "planned_test:TOOL-054-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-054"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-055
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP Task 可恢复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2266"
-    gap: "?????MCP Task 可恢复???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-055 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-055 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-055 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-055-UT"
-      - "TOOL-055-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-055"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2266"
-      - "planned_test:TOOL-055-UT"
-      - "planned_test:TOOL-055-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-055"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-056
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP redelivery 与 Effect 幂等分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2267"
-    gap: "?????MCP redelivery 与 Effect 幂等分离???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-056 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-056 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-056 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-056-UT"
-      - "TOOL-056-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-056"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2267"
-      - "planned_test:TOOL-056-UT"
-      - "planned_test:TOOL-056-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-056"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-057
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP Sampling 经 04"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2268"
-    gap: "?????MCP Sampling 经 04???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-057 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-057 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-057 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-057-UT"
-      - "TOOL-057-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-057"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2268"
-      - "planned_test:TOOL-057-UT"
-      - "planned_test:TOOL-057-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-057"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-058
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "MCP Elicitation 不是 Approval"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2269"
-    gap: "?????MCP Elicitation 不是 Approval???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-058 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-058 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-058 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-058-UT"
-      - "TOOL-058-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-058"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2269"
-      - "planned_test:TOOL-058-UT"
-      - "planned_test:TOOL-058-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-058"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-059
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Token 禁止 passthrough"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2270"
-    gap: "?????Token 禁止 passthrough???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-059 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-059 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-059 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-059-UT"
-      - "TOOL-059-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-059"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2270"
-      - "planned_test:TOOL-059-UT"
-      - "planned_test:TOOL-059-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-059"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-060
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Browser Submit 可预览"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2271"
-    gap: "?????Browser Submit 可预览???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-060 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-060 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-060 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-060-UT"
-      - "TOOL-060-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-060"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2271"
-      - "planned_test:TOOL-060-UT"
-      - "planned_test:TOOL-060-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-060"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-061
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Async accepted 不等于完成"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2272"
-    gap: "?????Async accepted 不等于完成???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-061 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-061 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-061 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-061-UT"
-      - "TOOL-061-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-061"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2272"
-      - "planned_test:TOOL-061-UT"
-      - "planned_test:TOOL-061-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-061"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-062
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Callback 防重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2273"
-    gap: "?????Callback 防重放???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-062 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-062 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-062 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-062-UT"
-      - "TOOL-062-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-062"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2273"
-      - "planned_test:TOOL-062-UT"
-      - "planned_test:TOOL-062-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-062"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-063
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "并行使用资源冲突键"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2274"
-    gap: "?????并行使用资源冲突键???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-063 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-063 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-063 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-063-UT"
-      - "TOOL-063-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-063"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2274"
-      - "planned_test:TOOL-063-UT"
-      - "planned_test:TOOL-063-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-063"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-064
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Replan Barrier 阻止旧 Dispatch"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2275"
-    gap: "?????Replan Barrier 阻止旧 Dispatch???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-064 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-064 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-064 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-064-UT"
-      - "TOOL-064-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-064"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2275"
-      - "planned_test:TOOL-064-UT"
-      - "planned_test:TOOL-064-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-064"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-065
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Timeout 分阶段"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2276"
-    gap: "?????Timeout 分阶段???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-065 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-065 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-065 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-065-UT"
-      - "TOOL-065-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-065"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2276"
-      - "planned_test:TOOL-065-UT"
-      - "planned_test:TOOL-065-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-065"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-066
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Deadline 贯穿 Envelope"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2277"
-    gap: "?????Deadline 贯穿 Envelope???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-066 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-066 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-066 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-066-UT"
-      - "TOOL-066-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-066"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2277"
-      - "planned_test:TOOL-066-UT"
-      - "planned_test:TOOL-066-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-066"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-067
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Tool Failure 保持 Namespace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2278"
-    gap: "?????Tool Failure 保持 Namespace???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-067 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-067 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-067 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-067-UT"
-      - "TOOL-067-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-067"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2278"
-      - "planned_test:TOOL-067-UT"
-      - "planned_test:TOOL-067-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-067"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-068
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Outbox 与领域事实同事务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2279"
-    gap: "?????Outbox 与领域事实同事务???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-068 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-068 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-068 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-068-UT"
-      - "TOOL-068-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-068"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2279"
-      - "planned_test:TOOL-068-UT"
-      - "planned_test:TOOL-068-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-068"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-069
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Secret 只以 Lease 交付"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2280"
-    gap: "?????Secret 只以 Lease 交付???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-069 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-069 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-069 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-069-UT"
-      - "TOOL-069-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-069"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2280"
-      - "planned_test:TOOL-069-UT"
-      - "planned_test:TOOL-069-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-069"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-070
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "隔离不足 fail-closed"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2281"
-    gap: "?????隔离不足 fail-closed???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-070 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-070 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-070 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-070-UT"
-      - "TOOL-070-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-070"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2281"
-      - "planned_test:TOOL-070-UT"
-      - "planned_test:TOOL-070-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-070"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-071
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Capacity 不绕过 Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2282"
-    gap: "?????Capacity 不绕过 Gate???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-071 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-071 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-071 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-071-UT"
-      - "TOOL-071-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-071"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2282"
-      - "planned_test:TOOL-071-UT"
-      - "planned_test:TOOL-071-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-071"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-072
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Canary 不复制真实 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2283"
-    gap: "?????Canary 不复制真实 Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-072 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-072 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-072 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-072-UT"
-      - "TOOL-072-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-072"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2283"
-      - "planned_test:TOOL-072-UT"
-      - "planned_test:TOOL-072-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-072"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-073
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Drain 保持恢复"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2284"
-    gap: "?????Drain 保持恢复???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-073 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-073 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-073 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-073-UT"
-      - "TOOL-073-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-073"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2284"
-      - "planned_test:TOOL-073-UT"
-      - "planned_test:TOOL-073-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-073"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-074
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Retired Tool 可核对历史 Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2285"
-    gap: "?????Retired Tool 可核对历史 Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-074 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-074 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-074 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-074-UT"
-      - "TOOL-074-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-074"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2285"
-      - "planned_test:TOOL-074-UT"
-      - "planned_test:TOOL-074-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-074"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-075
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Large Payload 使用 ObjectRef"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2286"
-    gap: "?????Large Payload 使用 ObjectRef???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-075 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-075 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-075 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-075-UT"
-      - "TOOL-075-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-075"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2286"
-      - "planned_test:TOOL-075-UT"
-      - "planned_test:TOOL-075-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-075"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-076
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Legal Hold 优先删除"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2287"
-    gap: "?????Legal Hold 优先删除???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-076 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-076 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-076 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-076-UT"
-      - "TOOL-076-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-076"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2287"
-      - "planned_test:TOOL-076-UT"
-      - "planned_test:TOOL-076-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-076"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-077
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "SLO 关注 Confirmed Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2288"
-    gap: "?????SLO 关注 Confirmed Effect???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-077 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-077 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-077 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-077-UT"
-      - "TOOL-077-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-077"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2288"
-      - "planned_test:TOOL-077-UT"
-      - "planned_test:TOOL-077-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-077"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-078
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Current 旁路有 Allowlist"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2289"
-    gap: "?????Current 旁路有 Allowlist???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-078 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-078 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-078 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-078-UT"
-      - "TOOL-078-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-078"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2289"
-      - "planned_test:TOOL-078-UT"
-      - "planned_test:TOOL-078-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-078"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-079
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Allowlist 最终归零"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2290"
-    gap: "?????Allowlist 最终归零???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-079 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-079 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-079 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-079-UT"
-      - "TOOL-079-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-079"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2290"
-      - "planned_test:TOOL-079-UT"
-      - "planned_test:TOOL-079-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-079"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-TOOL-080
     module: "08 Tool Runtime"
     mandatory: true
     target_statement: "Target 变 Current 需要工程证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
+      - "src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
+      - "tools/scripts/verify_tool_runtime_batch.py"
+      - "docs/evidence/tool-runtime-batch.md"
       - "docs/modules/08-tool-runtime.md:2291"
-    gap: "?????Target 变 Current 需要工程证据???? Current ????????????????? PHASE15 ?????????/??????????????? Current?"
+    gap: "ARCH-TOOL-080 已由 Tool Runtime batch contract、focused tests、surface guard、verifier 和 evidence 覆盖；仍不代表 PHASE15 或全 Program 关闭。"
     owner: "Tool Runtime"
     target_phase: "PHASE15"
     planned_work_package: "P15 read-only cutover / P16 side-effect reconciliation"
     dependencies:
       - "PHASE08"
       - "PHASE14"
-    failure_or_recovery_requirement: "target_not_current:ARCH-TOOL-080 ??????????????????????? PHASE15 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-TOOL-080 covered by Tool runtime batch tests and verifier."
     test_ids:
-      - "TOOL-080-UT"
-      - "TOOL-080-IT"
+      - "tests/capability/test_tool_runtime_batch.py"
+      - "tests/agent/test_capability_layer_surfaces.py"
     evidence_refs:
-      - "needs_evidence:EV-TOOL-080"
+      - "docs/evidence/tool-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/08-tool-runtime.md:2291"
-      - "planned_test:TOOL-080-UT"
-      - "planned_test:TOOL-080-IT"
-      - "planned_evidence:needs_evidence:EV-TOOL-080"
+      - "current:src/backend/zuno/capability/tool_runtime/runtime_batch.py"
+      - "test:tests/capability/test_tool_runtime_batch.py"
+      - "test:tests/agent/test_capability_layer_surfaces.py"
+      - "evidence:docs/evidence/tool-runtime-batch.md"
+      - "verifier:tools/scripts/verify_tool_runtime_batch.py"
     reviewer: "Coordinator"
   - requirement_id: ARCH-XMOD-001
     module: "Wave 1 Cross-module Contract"
