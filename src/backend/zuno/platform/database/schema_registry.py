@@ -51,6 +51,9 @@ INFRASTRUCTURE_TABLES = {
     "infra_object_manifests",
     "infra_outbox_events",
     "infra_outbox_sequences",
+    "infra_recovery_set_members",
+    "infra_recovery_sets",
+    "infra_recovery_watermarks",
     "infra_worker_leases",
 }
 
@@ -66,6 +69,7 @@ REVISION_OWNERS = {
     "20260718_11": "Infrastructure",
     "20260718_12": "Infrastructure",
     "20260718_13": "Infrastructure",
+    "20260718_14": "Infrastructure",
 }
 
 ONLINE_SCHEMA_OBJECTS = {

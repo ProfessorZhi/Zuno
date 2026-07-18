@@ -157,6 +157,12 @@ CUTOVER_SNAPSHOT_VERIFIER = (
 CUTOVER_SNAPSHOT_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-cutover-snapshot.md"
 )
+RECOVERY_WATERMARK_VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_recovery_watermark.py"
+)
+RECOVERY_WATERMARK_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-recovery-watermark.md"
+)
 DR_PROFILE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_dr_profile.py"
 DR_PROFILE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase04-dr-profile.md"
 DR_PROFILE = REPO_ROOT / "docs" / "governance" / "infrastructure-dr-profile.yaml"
@@ -1249,6 +1255,39 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             if phrase not in cutover_snapshot_evidence:
                 errors.append(
                     f"PHASE04 cutover snapshot evidence missing phrase: {phrase}"
+                )
+
+    if not RECOVERY_WATERMARK_VERIFIER.exists():
+        errors.append("missing PHASE04 recovery watermark verifier")
+    else:
+        recovery_watermark_errors = _load_verifier(
+            RECOVERY_WATERMARK_VERIFIER,
+            "verify_phase04_recovery_watermark",
+            "verify_phase04_recovery_watermark",
+        )()
+        for recovery_watermark_error in recovery_watermark_errors:
+            errors.append(
+                "PHASE04 recovery watermark verification failed: "
+                f"{recovery_watermark_error}"
+            )
+
+    if not RECOVERY_WATERMARK_EVIDENCE.exists():
+        errors.append("missing PHASE04 recovery watermark evidence")
+    else:
+        recovery_watermark_evidence = _read(RECOVERY_WATERMARK_EVIDENCE)
+        for phrase in [
+            "recovery_watermark_schema: passed",
+            "authoritative_watermarks_recorded: passed",
+            "derived_watermarks_recorded: passed",
+            "mismatched_derived_watermark_rejected: passed",
+            "recovery_set_authoritative_and_derived_alignment: passed",
+            "recovery_set_verification_hash: passed",
+            "phase_completion: blocked_official_checkpointer_and_full_recovery_set",
+            "`ARCH-INFRA-022` 和 `ARCH-INFRA-052`",
+        ]:
+            if phrase not in recovery_watermark_evidence:
+                errors.append(
+                    f"PHASE04 recovery watermark evidence missing phrase: {phrase}"
                 )
 
     if not DR_PROFILE_VERIFIER.exists():

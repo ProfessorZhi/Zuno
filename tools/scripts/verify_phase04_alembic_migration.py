@@ -26,7 +26,7 @@ ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
 REQUIRED_INFRA_TABLES = INFRASTRUCTURE_TABLES
 REQUIRED_DOMAIN_TABLES = set(DOMAIN_TABLE_OWNERS)
-EXPECTED_HEAD_REVISION = "20260718_13"
+EXPECTED_HEAD_REVISION = "20260718_14"
 REQUIRED_TABLE_COLUMNS = {
     "infra_outbox_events": {
         "event_id",
@@ -226,6 +226,32 @@ REQUIRED_TABLE_COLUMNS = {
         "created_at",
         "released_at",
     },
+    "infra_recovery_watermarks": {
+        "component_id",
+        "service_kind",
+        "authority",
+        "watermark",
+        "payload_hash",
+        "payload",
+        "owner_id",
+        "updated_at",
+    },
+    "infra_recovery_sets": {
+        "recovery_set_id",
+        "recovery_point",
+        "status",
+        "verification_hash",
+        "owner_id",
+        "created_at",
+    },
+    "infra_recovery_set_members": {
+        "recovery_set_id",
+        "component_id",
+        "service_kind",
+        "authority",
+        "watermark",
+        "payload_hash",
+    },
 }
 REQUIRED_CONSTRAINTS = {
     "ck_infra_outbox_events_status",
@@ -276,6 +302,15 @@ REQUIRED_CONSTRAINTS = {
     "ck_infra_cutover_snapshots_generation_positive",
     "ck_infra_active_snapshot_refs_generation_positive",
     "ck_infra_active_snapshot_refs_status",
+    "fk_infra_recovery_set_members_set",
+    "fk_infra_recovery_set_members_watermark",
+    "pk_infra_recovery_set_members",
+    "ck_infra_recovery_watermarks_authority",
+    "ck_infra_recovery_watermarks_payload_hash",
+    "ck_infra_recovery_sets_status",
+    "ck_infra_recovery_sets_verification_hash",
+    "ck_infra_recovery_set_members_authority",
+    "ck_infra_recovery_set_members_payload_hash",
 }
 FORBIDDEN_CONSTRAINTS = {"uq_infra_idempotency_claims_scope_key"}
 REQUIRED_INDEXES = {
@@ -292,6 +327,8 @@ REQUIRED_INDEXES = {
     "ix_infra_mandatory_audit_events_channel_status",
     "ix_infra_active_snapshot_refs_snapshot_active",
     "ix_infra_cutover_snapshots_target_status",
+    "ix_infra_recovery_watermarks_kind_watermark",
+    "ix_infra_recovery_sets_recovery_point",
     "ix_workspace_session_user_update_time",
 }
 

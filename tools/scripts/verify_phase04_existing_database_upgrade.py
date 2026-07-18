@@ -20,7 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ADMIN_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 DB_URL_TEMPLATE = "postgresql+psycopg://postgres:postgres@localhost:5432/{database}"
 BASE_REVISION = "20260417_01"
-HEAD_REVISION = "20260718_13"
+HEAD_REVISION = "20260718_14"
 
 
 def _create_database(database: str) -> None:

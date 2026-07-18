@@ -181,6 +181,23 @@ class ActiveSnapshotRefReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class RecoveryWatermarkReceipt:
+    component_id: str
+    service_kind: str
+    authority: str
+    watermark: str
+    payload_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class RecoverySetReceipt:
+    recovery_set_id: str
+    recovery_point: str
+    component_ids: tuple[str, ...]
+    verification_hash: str
+
+
+@dataclass(frozen=True, slots=True)
 class TransactionRetryReceipt:
     result: Any
     attempts: int
@@ -1954,6 +1971,169 @@ class InfrastructureRepository:
         if result.rowcount != 1:
             raise FencingRejectedError("cutover snapshot is not eligible for retirement")
 
+    def record_recovery_watermark(
+        self,
+        *,
+        component_id: str,
+        service_kind: str,
+        authority: str,
+        watermark: str,
+        owner_id: str,
+        payload: dict[str, Any],
+    ) -> RecoveryWatermarkReceipt:
+        if not component_id.strip() or not service_kind.strip() or not watermark.strip():
+            raise ValueError("component_id, service_kind and watermark must not be empty")
+        if not owner_id.strip():
+            raise ValueError("owner_id must not be empty")
+        if authority not in {"authoritative", "derived"}:
+            raise ValueError("authority must be authoritative or derived")
+        payload_hash = canonical_sha256(payload)
+        row = self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_recovery_watermarks(
+                    component_id, service_kind, authority, watermark, payload_hash,
+                    payload, owner_id
+                ) VALUES (
+                    :component_id, :service_kind, :authority, :watermark, :payload_hash,
+                    CAST(:payload AS jsonb), :owner_id
+                )
+                ON CONFLICT (component_id) DO UPDATE
+                SET service_kind = EXCLUDED.service_kind,
+                    authority = EXCLUDED.authority,
+                    watermark = EXCLUDED.watermark,
+                    payload_hash = EXCLUDED.payload_hash,
+                    payload = EXCLUDED.payload,
+                    owner_id = EXCLUDED.owner_id,
+                    updated_at = now()
+                RETURNING component_id, service_kind, authority, watermark, payload_hash
+                """
+            ),
+            {
+                "component_id": component_id,
+                "service_kind": service_kind,
+                "authority": authority,
+                "watermark": watermark,
+                "payload_hash": payload_hash,
+                "payload": _json(payload),
+                "owner_id": owner_id,
+            },
+        ).one()
+        return RecoveryWatermarkReceipt(
+            component_id=str(row.component_id),
+            service_kind=str(row.service_kind),
+            authority=str(row.authority),
+            watermark=str(row.watermark),
+            payload_hash=str(row.payload_hash),
+        )
+
+    def create_recovery_set(
+        self,
+        *,
+        recovery_set_id: str,
+        recovery_point: str,
+        component_ids: tuple[str, ...],
+        owner_id: str,
+    ) -> RecoverySetReceipt:
+        if not recovery_set_id.strip() or not recovery_point.strip() or not owner_id.strip():
+            raise ValueError("recovery_set_id, recovery_point and owner_id must not be empty")
+        if not component_ids:
+            raise ValueError("component_ids must not be empty")
+        normalized_components = tuple(dict.fromkeys(component_ids))
+        if len(normalized_components) != len(component_ids) or any(
+            not item.strip() for item in normalized_components
+        ):
+            raise ValueError("component_ids must be unique and non-empty")
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT component_id, service_kind, authority, watermark, payload_hash
+                FROM infra_recovery_watermarks
+                WHERE component_id = ANY(:component_ids)
+                FOR UPDATE
+                """
+            ),
+            {"component_ids": list(normalized_components)},
+        ).all()
+        by_component = {str(row.component_id): row for row in rows}
+        missing = [item for item in normalized_components if item not in by_component]
+        if missing:
+            raise InfrastructureConflictError(f"missing recovery watermarks: {missing!r}")
+        mismatched = [
+            item
+            for item in normalized_components
+            if str(by_component[item].watermark) != recovery_point
+        ]
+        if mismatched:
+            raise InfrastructureConflictError(
+                f"recovery watermark mismatch for recovery point {recovery_point}: {mismatched!r}"
+            )
+        authorities = {str(row.authority) for row in rows}
+        if "authoritative" not in authorities or "derived" not in authorities:
+            raise InfrastructureConflictError("recovery set must include authoritative and derived watermarks")
+        verification_hash = canonical_sha256(
+            {
+                "recovery_point": recovery_point,
+                "components": [
+                    {
+                        "component_id": item,
+                        "service_kind": str(by_component[item].service_kind),
+                        "authority": str(by_component[item].authority),
+                        "watermark": str(by_component[item].watermark),
+                        "payload_hash": str(by_component[item].payload_hash),
+                    }
+                    for item in normalized_components
+                ],
+            }
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO infra_recovery_sets(
+                    recovery_set_id, recovery_point, status, verification_hash, owner_id
+                ) VALUES (
+                    :recovery_set_id, :recovery_point, 'verified',
+                    :verification_hash, :owner_id
+                )
+                """
+            ),
+            {
+                "recovery_set_id": recovery_set_id,
+                "recovery_point": recovery_point,
+                "verification_hash": verification_hash,
+                "owner_id": owner_id,
+            },
+        )
+        for component_id in normalized_components:
+            row = by_component[component_id]
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO infra_recovery_set_members(
+                        recovery_set_id, component_id, service_kind, authority,
+                        watermark, payload_hash
+                    ) VALUES (
+                        :recovery_set_id, :component_id, :service_kind, :authority,
+                        :watermark, :payload_hash
+                    )
+                    """
+                ),
+                {
+                    "recovery_set_id": recovery_set_id,
+                    "component_id": component_id,
+                    "service_kind": str(row.service_kind),
+                    "authority": str(row.authority),
+                    "watermark": str(row.watermark),
+                    "payload_hash": str(row.payload_hash),
+                },
+            )
+        return RecoverySetReceipt(
+            recovery_set_id=recovery_set_id,
+            recovery_point=recovery_point,
+            component_ids=normalized_components,
+            verification_hash=verification_hash,
+        )
+
     def acquire_lease(self, *, resource_id: str, owner_id: str, ttl_seconds: int = 30) -> FencingToken:
         if ttl_seconds < 1:
             raise ValueError("lease ttl_seconds must be positive")
@@ -2330,6 +2510,8 @@ __all__ = [
     "OutboxEventRecord",
     "OutboxFailureReceipt",
     "OutboxReplayReceipt",
+    "RecoverySetReceipt",
+    "RecoveryWatermarkReceipt",
     "TransactionRetryReceipt",
     "create_foundation_engine",
     "run_transaction_with_retry",
