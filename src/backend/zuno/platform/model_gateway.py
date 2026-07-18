@@ -174,6 +174,86 @@ class ModelUsageReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class ModelRepairRecord:
+    repair_record_id: str
+    original_output_sha256: str
+    repaired_output_sha256: str
+    schema_version: str
+    failure_code: str
+    deterministic: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "repair_record_id": self.repair_record_id,
+            "original_output_sha256": self.original_output_sha256,
+            "repaired_output_sha256": self.repaired_output_sha256,
+            "schema_version": self.schema_version,
+            "failure_code": self.failure_code,
+            "deterministic": self.deterministic,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderStreamChunk:
+    provider_chunk_id: str
+    sequence: int
+    content: str
+    final: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class GatewayStreamChunk:
+    gateway_chunk_id: str
+    provider_chunk_id: str
+    sequence: int
+    content: str
+    content_sha256: str
+    provisional: bool
+    duplicate: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "gateway_chunk_id": self.gateway_chunk_id,
+            "provider_chunk_id": self.provider_chunk_id,
+            "sequence": self.sequence,
+            "content": self.content,
+            "content_sha256": self.content_sha256,
+            "provisional": self.provisional,
+            "duplicate": self.duplicate,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ProductStreamEvent:
+    event_id: str
+    event_type: Literal["model_stream_delta", "model_stream_completed"]
+    sequence: int
+    content: str
+    provisional: bool
+    gateway_chunk_ref: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "sequence": self.sequence,
+            "content": self.content,
+            "provisional": self.provisional,
+            "gateway_chunk_ref": self.gateway_chunk_ref,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ModelStreamResult:
+    call_id: str
+    binding: ModelGatewayBinding
+    attempt: ModelAttemptReceipt
+    gateway_chunks: tuple[GatewayStreamChunk, ...]
+    product_events: tuple[ProductStreamEvent, ...]
+    usage_receipts: tuple[ModelUsageReceipt, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class BudgetPolicy:
     max_cost: float | None = None
     max_latency_ms: float | None = None
@@ -224,6 +304,7 @@ class ModelGatewayRequest:
     pricing_version: str = "pricing:local:1"
     security_epoch_ref: str = "security:local:1"
     output_schema: dict[str, type] | None = None
+    repair_output: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -279,7 +360,7 @@ class ModelGatewayResult:
     usage_receipts: tuple[ModelUsageReceipt, ...] = ()
     selected_attempt_id: str | None = None
     structured_output: dict[str, Any] | None = None
-    repair_record: dict[str, Any] | None = None
+    repair_record: ModelRepairRecord | None = None
 
 
 ModelCallRequest = ModelGatewayRequest
@@ -462,7 +543,7 @@ class ModelGateway:
             start = time.perf_counter()
             try:
                 output = active_provider.invoke(request)
-                structured_output, repair_record = _validate_structured_output(request, output)
+                output, structured_output, repair_record = _validate_structured_output(request, output)
             except ModelGatewayTimeoutError as exc:
                 retry_count += 1
                 timeout_count += 1
@@ -635,6 +716,43 @@ class ModelGateway:
             binding=binding,
             attempts=tuple(attempts),
             usage_receipts=tuple(usage_receipts),
+        )
+
+    def stream(self, request: ModelGatewayRequest) -> ModelStreamResult:
+        provider = self._select_provider(request.category, request.provider_id)
+        binding = self._build_binding(request, provider)
+        call_id = "model_call_" + binding.binding_hash[:16]
+        attempt_id = _build_attempt_id(call_id, provider.provider_id, 0)
+        provider_chunks = _provider_stream(provider, request)
+        gateway_chunks = _normalize_stream_chunks(call_id, provider_chunks)
+        product_events = _build_product_stream_events(call_id, gateway_chunks)
+        prompt_tokens = _estimate_tokens(request.prompt)
+        completion_tokens = _estimate_tokens(" ".join(chunk.content for chunk in gateway_chunks if not chunk.duplicate))
+        usage_receipt = self._build_usage_receipt(
+            request=request,
+            call_id=call_id,
+            attempt_id=attempt_id,
+            kind=ModelUsageKind.OBSERVED,
+            pricing_version=binding.pricing_version,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
+        attempt = ModelAttemptReceipt(
+            attempt_id=attempt_id,
+            provider_id=provider.provider_id,
+            model_id=provider.model_id,
+            adapter_version=binding.adapter_version,
+            state=ModelAttemptState.SUCCEEDED,
+            dispatch_index=0,
+            usage_receipt_id=usage_receipt.usage_receipt_id,
+        )
+        return ModelStreamResult(
+            call_id=call_id,
+            binding=binding,
+            attempt=attempt,
+            gateway_chunks=tuple(gateway_chunks),
+            product_events=tuple(product_events),
+            usage_receipts=(usage_receipt,),
         )
         return ModelGatewayResult(
             status="cancelled" if final_state == ModelCallState.CANCELLED else "failed",
@@ -902,21 +1020,144 @@ def _error_ref(exc: BaseException) -> str:
     return "error_" + _stable_hash({"type": type(exc).__name__, "message": str(exc)})[:16]
 
 
-def _validate_structured_output(request: ModelGatewayRequest, output: str) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+def _validate_structured_output(request: ModelGatewayRequest, output: str) -> tuple[str, dict[str, Any] | None, ModelRepairRecord | None]:
     if not request.output_schema:
-        return None, None
+        return output, None, None
     try:
         parsed = json.loads(output)
     except json.JSONDecodeError as exc:
-        raise ModelGatewayProviderError("structured output is not valid json") from exc
+        if request.repair_output is None:
+            raise ModelGatewayProviderError("structured output is not valid json") from exc
+        repaired_output = request.repair_output
+        repaired, _structured_output, repair_record = _validate_repaired_output(
+            request=request,
+            original_output=output,
+            repaired_output=repaired_output,
+            failure_code="MODEL_STRUCTURED_OUTPUT_INVALID_JSON",
+        )
+        return repaired, _structured_output, repair_record
 
     missing = [field for field in request.output_schema if field not in parsed]
     if missing:
-        raise ModelGatewayProviderError(f"structured output missing fields: {','.join(sorted(missing))}")
+        if request.repair_output is None:
+            raise ModelGatewayProviderError(f"structured output missing fields: {','.join(sorted(missing))}")
+        repaired_output = request.repair_output
+        repaired, _structured_output, repair_record = _validate_repaired_output(
+            request=request,
+            original_output=output,
+            repaired_output=repaired_output,
+            failure_code="MODEL_STRUCTURED_OUTPUT_MISSING_FIELDS",
+        )
+        return repaired, _structured_output, repair_record
     for field, expected_type in request.output_schema.items():
         if not isinstance(parsed[field], expected_type):
-            raise ModelGatewayProviderError(f"structured output field has wrong type: {field}")
-    return parsed, None
+            if request.repair_output is None:
+                raise ModelGatewayProviderError(f"structured output field has wrong type: {field}")
+            repaired_output = request.repair_output
+            repaired, _structured_output, repair_record = _validate_repaired_output(
+                request=request,
+                original_output=output,
+                repaired_output=repaired_output,
+                failure_code="MODEL_STRUCTURED_OUTPUT_TYPE_MISMATCH",
+            )
+            return repaired, _structured_output, repair_record
+    return output, parsed, None
+
+
+def _validate_repaired_output(
+    *,
+    request: ModelGatewayRequest,
+    original_output: str,
+    repaired_output: str,
+    failure_code: str,
+) -> tuple[str, dict[str, Any], ModelRepairRecord]:
+    try:
+        parsed = json.loads(repaired_output)
+    except json.JSONDecodeError as exc:
+        raise ModelGatewayProviderError("repair output is not valid json") from exc
+    for field, expected_type in request.output_schema.items() if request.output_schema else ():
+        if field not in parsed:
+            raise ModelGatewayProviderError(f"repair output missing field: {field}")
+        if not isinstance(parsed[field], expected_type):
+            raise ModelGatewayProviderError(f"repair output field has wrong type: {field}")
+    repair_record = ModelRepairRecord(
+        repair_record_id="repair_" + _stable_hash([original_output, repaired_output, request.schema_version, failure_code])[:16],
+        original_output_sha256=hashlib.sha256(original_output.encode("utf-8")).hexdigest(),
+        repaired_output_sha256=hashlib.sha256(repaired_output.encode("utf-8")).hexdigest(),
+        schema_version=request.schema_version,
+        failure_code=failure_code,
+    )
+    return repaired_output, parsed, repair_record
+
+
+def _provider_stream(provider: ModelProvider, request: ModelGatewayRequest) -> list[ProviderStreamChunk]:
+    raw_chunks = request.metadata.get("provider_stream_chunks")
+    if raw_chunks is None:
+        text = provider.invoke(request)
+        parts = [part for part in text.split(" ") if part]
+        return [
+            ProviderStreamChunk(
+                provider_chunk_id=f"{provider.provider_id}:{index}",
+                sequence=index,
+                content=part,
+                final=index == len(parts) - 1,
+            )
+            for index, part in enumerate(parts)
+        ]
+    chunks: list[ProviderStreamChunk] = []
+    for item in raw_chunks:
+        chunks.append(
+            ProviderStreamChunk(
+                provider_chunk_id=str(item["provider_chunk_id"]),
+                sequence=int(item["sequence"]),
+                content=str(item["content"]),
+                final=bool(item.get("final", False)),
+            )
+        )
+    return chunks
+
+
+def _normalize_stream_chunks(call_id: str, provider_chunks: list[ProviderStreamChunk]) -> list[GatewayStreamChunk]:
+    ordered = sorted(provider_chunks, key=lambda chunk: (chunk.sequence, chunk.provider_chunk_id))
+    seen: set[tuple[int, str]] = set()
+    normalized: list[GatewayStreamChunk] = []
+    for chunk in ordered:
+        key = (chunk.sequence, chunk.content)
+        duplicate = key in seen
+        seen.add(key)
+        content_sha256 = hashlib.sha256(chunk.content.encode("utf-8")).hexdigest()
+        normalized.append(
+            GatewayStreamChunk(
+                gateway_chunk_id="gw_chunk_" + _stable_hash([call_id, chunk.provider_chunk_id, chunk.sequence, content_sha256])[:16],
+                provider_chunk_id=chunk.provider_chunk_id,
+                sequence=chunk.sequence,
+                content=chunk.content,
+                content_sha256=content_sha256,
+                provisional=not chunk.final,
+                duplicate=duplicate,
+            )
+        )
+    return normalized
+
+
+def _build_product_stream_events(call_id: str, gateway_chunks: list[GatewayStreamChunk]) -> list[ProductStreamEvent]:
+    events: list[ProductStreamEvent] = []
+    visible_chunks = [chunk for chunk in gateway_chunks if not chunk.duplicate]
+    for chunk in visible_chunks:
+        event_type: Literal["model_stream_delta", "model_stream_completed"] = (
+            "model_stream_completed" if not chunk.provisional else "model_stream_delta"
+        )
+        events.append(
+            ProductStreamEvent(
+                event_id="product_stream_" + _stable_hash([call_id, chunk.gateway_chunk_id, event_type])[:16],
+                event_type=event_type,
+                sequence=chunk.sequence,
+                content=chunk.content,
+                provisional=chunk.provisional,
+                gateway_chunk_ref=chunk.gateway_chunk_id,
+            )
+        )
+    return events
 
 
 __all__ = [
@@ -940,8 +1181,13 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "ModelRepairRecord",
     "ModelRole",
+    "ModelStreamResult",
+    "GatewayStreamChunk",
     "ModelUsageKind",
     "ModelUsageReceipt",
+    "ProductStreamEvent",
+    "ProviderStreamChunk",
     "build_default_model_gateway",
 ]

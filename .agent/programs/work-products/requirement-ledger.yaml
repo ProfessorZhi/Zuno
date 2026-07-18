@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  target_not_current: 675
-  implementation_available: 81
+  target_not_current: 672
+  implementation_available: 84
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -11290,91 +11290,94 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Repair 必须保留原结果并形成独立 Attempt 或确定性记录"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2303"
-    gap: "?????Repair 必须保留原结果并形成独立 Attempt 或确定性记录???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-017 的 Repair/Streaming 调用语义、状态、Usage、Trace 和故障边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-017 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-017 由 verify_model_gateway_runtime_batch.py 覆盖 repair/streaming/chunk normal/fault 语义。"
     test_ids:
-      - "MODEL-017-UT"
-      - "MODEL-017-IT"
-      - "MODEL-017-FT"
-      - "MODEL-017-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-017"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2303"
-      - "planned_test:MODEL-017-UT"
-      - "planned_test:MODEL-017-IT"
-      - "planned_test:MODEL-017-FT"
-      - "planned_test:MODEL-017-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-017"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-018
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider、Gateway 和 Product Streaming 必须分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2304"
-    gap: "?????Provider、Gateway 和 Product Streaming 必须分层???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-018 的 Repair/Streaming 调用语义、状态、Usage、Trace 和故障边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-018 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-018 由 verify_model_gateway_runtime_batch.py 覆盖 repair/streaming/chunk normal/fault 语义。"
     test_ids:
-      - "MODEL-018-UT"
-      - "MODEL-018-IT"
-      - "MODEL-018-FT"
-      - "MODEL-018-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-018"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2304"
-      - "planned_test:MODEL-018-UT"
-      - "planned_test:MODEL-018-IT"
-      - "planned_test:MODEL-018-FT"
-      - "planned_test:MODEL-018-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-018"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-019
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Stream Chunk 必须顺序、去重、校验且保持 provisional"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2305"
-    gap: "?????Stream Chunk 必须顺序、去重、校验且保持 provisional???? Current ????????????????? PHASE07 ?????????/??????????????? Current?"
+      - "src/backend/zuno/platform/model_gateway.py"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "docs/evidence/model-gateway-runtime-batch.md"
+    gap: "已由 Model Gateway runtime batch 证明 ARCH-MODEL-019 的 Repair/Streaming 调用语义、状态、Usage、Trace 和故障边界。"
     owner: "Model Gateway"
     target_phase: "PHASE07"
     planned_work_package: "P07 model gateway runtime"
     dependencies:
       - "PHASE05"
       - "PHASE06"
-    failure_or_recovery_requirement: "target_not_current:ARCH-MODEL-019 ??????????????????????? PHASE07 ???? fault/e2e ??????"
+    failure_or_recovery_requirement: "implementation_available:ARCH-MODEL-019 由 verify_model_gateway_runtime_batch.py 覆盖 repair/streaming/chunk normal/fault 语义。"
     test_ids:
-      - "MODEL-019-UT"
-      - "MODEL-019-IT"
-      - "MODEL-019-FT"
-      - "MODEL-019-E2E"
+      - "tests/platform/test_model_gateway.py"
+      - "tools/scripts/verify_model_gateway_runtime_batch.py"
     evidence_refs:
-      - "needs_evidence:EV-MODEL-019"
+      - "docs/evidence/model-gateway-runtime-batch.md"
     reverse_trace_refs:
       - "target:docs/modules/04-model-gateway.md:2305"
-      - "planned_test:MODEL-019-UT"
-      - "planned_test:MODEL-019-IT"
-      - "planned_test:MODEL-019-FT"
-      - "planned_test:MODEL-019-E2E"
-      - "planned_evidence:needs_evidence:EV-MODEL-019"
+      - "current:src/backend/zuno/platform/model_gateway.py"
+      - "test:tests/platform/test_model_gateway.py"
+      - "test:tools/scripts/verify_model_gateway_runtime_batch.py"
+      - "evidence:docs/evidence/model-gateway-runtime-batch.md"
     reviewer: "Coordinator"
   - requirement_id: ARCH-MODEL-020
     module: "04 Model Gateway"

@@ -17,13 +17,14 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelGateway,
     ModelGatewayRequest,
     ModelOperation,
+    ModelRepairRecord,
     ModelUsageKind,
     MockModelProvider,
 )
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 17)) + ("ARCH-MODEL-020",)
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 21))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -83,6 +84,53 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("gateway usage receipts are not immutable")
     if result.structured_output != {"answer": "ok", "confidence": 0.9}:
         errors.append("gateway did not locally validate structured output")
+
+    repair_result = ModelGateway(
+        providers=[MockModelProvider(provider_id="repair", model_id="mock-repair", response='{"answer": "ok"}')]
+    ).invoke(
+        ModelGatewayRequest(
+            category=ModelCategory.CHAT,
+            prompt="Return repairable structured output.",
+            provider_id="repair",
+            schema_version="schema:answer:2",
+            output_schema={"answer": str, "confidence": float},
+            repair_output='{"answer": "ok", "confidence": 0.8}',
+        )
+    )
+    if not isinstance(repair_result.repair_record, ModelRepairRecord):
+        errors.append("repair did not preserve a deterministic repair record")
+    elif not repair_result.repair_record.deterministic or not repair_result.repair_record.original_output_sha256:
+        errors.append("repair record did not preserve original output hash")
+    if repair_result.output != '{"answer": "ok", "confidence": 0.8}':
+        errors.append("repair result did not use validated repaired output")
+
+    stream_result = ModelGateway(providers=[MockModelProvider(provider_id="stream", model_id="mock-stream")]).stream(
+        ModelGatewayRequest(
+            category=ModelCategory.CHAT,
+            prompt="Stream in chunks.",
+            provider_id="stream",
+            metadata={
+                "provider_stream_chunks": [
+                    {"provider_chunk_id": "c2", "sequence": 2, "content": "done", "final": True},
+                    {"provider_chunk_id": "c1", "sequence": 1, "content": "there"},
+                    {"provider_chunk_id": "c0", "sequence": 0, "content": "hello"},
+                    {"provider_chunk_id": "c1-dup", "sequence": 1, "content": "there"},
+                ]
+            },
+        )
+    )
+    if [chunk.sequence for chunk in stream_result.gateway_chunks] != [0, 1, 1, 2]:
+        errors.append("gateway stream chunks are not ordered")
+    if [chunk.duplicate for chunk in stream_result.gateway_chunks] != [False, False, True, False]:
+        errors.append("gateway stream chunks are not deduplicated")
+    if not all(chunk.content_sha256 for chunk in stream_result.gateway_chunks):
+        errors.append("gateway stream chunks do not carry content hashes")
+    if [event.content for event in stream_result.product_events] != ["hello", "there", "done"]:
+        errors.append("product stream events did not exclude duplicate provider chunks")
+    if [event.provisional for event in stream_result.product_events] != [True, True, False]:
+        errors.append("product stream events did not preserve provisional semantics")
+    if stream_result.product_events[-1].event_type != "model_stream_completed":
+        errors.append("product stream did not end with a completion event")
 
     blocked_provider = MockModelProvider(provider_id="blocked", model_id="mock-blocked")
     blocked = ModelGateway(providers=[blocked_provider], default_budget=BudgetPolicy(max_cost=0.000001)).invoke(

@@ -6,8 +6,7 @@
 
 覆盖需求：
 
-- `ARCH-MODEL-001` 到 `ARCH-MODEL-016`
-- `ARCH-MODEL-020`
+- `ARCH-MODEL-001` 到 `ARCH-MODEL-020`
 
 范围说明：
 
@@ -19,13 +18,14 @@
 - 已证明 Cancel-before-dispatch 不产生 Provider Attempt，但仍产生 Usage 事实。
 - 已证明 Usage Estimate 与 Observed Receipt 分离，Receipt 不回写。
 - 已证明 Structured Output 在本地 Schema 校验后才返回结构化结果。
+- 已证明 Repair 保留原始输出 hash，并形成确定性 `ModelRepairRecord`。
+- 已证明 Provider Stream Chunk、Gateway Stream Chunk 和 Product Stream Event 分层。
+- 已证明 Gateway Stream Chunk 按 sequence 排序、去重、内容 hash 校验并保持 provisional 语义。
 - 已证明 Gateway 源文件不直接导入 OpenAI/Anthropic Provider SDK。
 
 未覆盖：
 
-- `ARCH-MODEL-017` Repair 独立 Attempt 或确定性记录。
-- `ARCH-MODEL-018` Provider/Gateway/Product Streaming 分层。
-- `ARCH-MODEL-019` Stream Chunk 顺序、去重、校验和 provisional 语义。
+- `ARCH-MODEL-021` 以后仍需后续批次证明。
 
 验证命令：
 
@@ -38,7 +38,6 @@ pytest -q tests/platform/test_model_gateway.py tests/evals/test_model_gateway_co
 结果：
 
 ```text
-Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-020.
-7 passed in 18.77s
-14 passed in 77.27s
+Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020.
+9 passed in 21.40s
 ```

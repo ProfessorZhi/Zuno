@@ -11,6 +11,7 @@ from zuno.platform.model_gateway import (
     ModelGateway,
     ModelGatewayRequest,
     ModelOperation,
+    ModelRepairRecord,
     ModelUsageKind,
     MockModelProvider,
 )
@@ -200,3 +201,57 @@ def test_model_gateway_cancel_before_dispatch_records_usage_without_provider_cal
     assert result.attempts == ()
     assert [receipt.kind for receipt in result.usage_receipts] == [ModelUsageKind.ESTIMATE, ModelUsageKind.OBSERVED]
     assert provider.call_count == 0
+
+
+def test_model_gateway_repair_preserves_original_output_with_deterministic_record() -> None:
+    provider = MockModelProvider(provider_id="primary", model_id="mock-chat", response='{"answer": "ok"}')
+    gateway = ModelGateway(providers=[provider])
+
+    result = gateway.invoke(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Return structured output with repair.",
+            provider_id="primary",
+            schema_version="schema:answer:2",
+            output_schema={"answer": str, "confidence": float},
+            repair_output='{"answer": "ok", "confidence": 0.8}',
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.output == '{"answer": "ok", "confidence": 0.8}'
+    assert result.structured_output == {"answer": "ok", "confidence": 0.8}
+    assert isinstance(result.repair_record, ModelRepairRecord)
+    assert result.repair_record.deterministic is True
+    assert result.repair_record.schema_version == "schema:answer:2"
+    assert result.repair_record.failure_code == "MODEL_STRUCTURED_OUTPUT_MISSING_FIELDS"
+
+
+def test_model_gateway_stream_layers_chunks_for_product_events() -> None:
+    provider = MockModelProvider(provider_id="primary", model_id="mock-chat")
+    gateway = ModelGateway(providers=[provider])
+
+    result = gateway.stream(
+        ModelGatewayRequest(
+            category="chat",
+            prompt="Stream this.",
+            provider_id="primary",
+            metadata={
+                "provider_stream_chunks": [
+                    {"provider_chunk_id": "c2", "sequence": 2, "content": "done", "final": True},
+                    {"provider_chunk_id": "c1", "sequence": 1, "content": "there"},
+                    {"provider_chunk_id": "c0", "sequence": 0, "content": "hello"},
+                    {"provider_chunk_id": "c1-dup", "sequence": 1, "content": "there"},
+                ]
+            },
+        )
+    )
+
+    assert [chunk.sequence for chunk in result.gateway_chunks] == [0, 1, 1, 2]
+    assert [chunk.duplicate for chunk in result.gateway_chunks] == [False, False, True, False]
+    assert all(chunk.content_sha256 for chunk in result.gateway_chunks)
+    assert [event.content for event in result.product_events] == ["hello", "there", "done"]
+    assert [event.provisional for event in result.product_events] == [True, True, False]
+    assert result.product_events[-1].event_type == "model_stream_completed"
+    assert result.attempt.provider_id == "primary"
+    assert result.usage_receipts[0].attempt_id == result.attempt.attempt_id
