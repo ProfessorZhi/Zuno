@@ -75,14 +75,14 @@ work_packages:
           - "tools/scripts/verify_phase04_minio_manifest_adoption.py"
           - "tools/scripts/verify_phase04_minio_storage_restart.py"
           - "docs/evidence/phase04-minio-object-store.md"
-      official_langgraph_postgres_checkpointer_smoke:
+      official_langgraph_postgres_checkpointer_lifecycle_subset:
         state: completed
         outputs:
           - "docs/decisions/0005-official-langgraph-postgres-checkpointer.md"
           - "tools/scripts/verify_phase04_official_langgraph_checkpointer.py"
           - "tests/repo/test_phase04_official_langgraph_checkpointer.py"
           - "docs/evidence/phase04-official-langgraph-checkpointer.md"
-    remaining_scope: "official LangGraph PostgreSQL Checkpointer interrupt/resume/generation/schema/retention/reconciliation, official restore, product projection replay and combined-service fault evidence"
+    remaining_scope: "official LangGraph PostgreSQL Checkpointer graph-level interrupt/resume, schema upgrade recovery, retention/prune, official backup/restore, product projection replay and combined-service fault evidence"
   P04-T07:
     state: ready
     existing_outputs:
@@ -271,7 +271,7 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-pitr-alignment.md"
-    remaining_scope: "official Checkpointer restore, product/cross-domain projection replay, and combined-service fault including the official Checkpointer"
+    remaining_scope: "official Checkpointer backup/restore, product/cross-domain projection replay, retention/prune, graph-level interrupt/resume, and combined-service fault including the official Checkpointer"
 phase_dependencies:
   PHASE05:
     depends_on: [PHASE03, PHASE04]

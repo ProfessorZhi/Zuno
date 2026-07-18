@@ -75,7 +75,7 @@ infra_requirement_064_evidence_gate: proven
 reconciler_supervision_boundary: proven
 checkpoint_boundary_version: proven
 restore_cutover_completion_gates: proven
-official_langgraph_checkpointer_smoke: proven
+official_langgraph_checkpointer_lifecycle_subset: proven
 
 ## Stop Condition
 
@@ -149,11 +149,11 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_reconciler_supervision_boundary.py` | passed; IdempotencyWorkerSupervisor 的 reconcile/no-reexecution 与 LeaseWorkerCoordinator 的 heartbeat/fenced commit/fail-closed 边界均有证据 |
 | `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过，official Checkpointer 仍 blocked |
 | `python tools/scripts/verify_phase04_restore_cutover_completion_gates.py` | passed; backup completed、isolated restore cutover 和 recovery cutover explicit allow 三类 gate 均保持 fail-closed |
-| `python tools/scripts/verify_phase04_official_langgraph_checkpointer.py` | passed; official `langgraph.checkpoint.postgres.PostgresSaver` 在真实 PostgreSQL 上完成 setup、put/get after restart、thread isolation 和 writes smoke |
+| `python tools/scripts/verify_phase04_official_langgraph_checkpointer.py` | passed; official `langgraph.checkpoint.postgres.PostgresSaver` 在真实 PostgreSQL 上完成 setup、多代 put、restart restore、thread isolation、writes、delta channel history、delete cleanup、infra generation 对账和 stale generation reject |
 
 ## Missing Required Proof
 
-- LangGraph PostgreSQL Checkpointer interrupt/resume/generation reconciliation
+- LangGraph PostgreSQL Checkpointer graph-level interrupt/resume、retention/prune 和 schema upgrade recovery
 - Backup/Restore/Replay for official Checkpointer、product projections、完整产品 Runtime restart 与 full recovery set
 - 包含官方 Checkpointer 的完整 combined dependency fault evidence
 

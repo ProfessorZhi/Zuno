@@ -674,6 +674,9 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "langgraph_postgres_checkpointer: proven",
             "official_postgres_saver_setup: passed",
             "official_checkpoint_put_get_after_restart: passed",
+            "official_multi_generation_restore: passed",
+            "official_checkpoint_infra_generation_reconcile: passed",
+            "stale_checkpoint_generation_rejected: passed",
             "phase_completion: still_blocked_full_restore_replay_and_combined_fault",
         ]:
             if phrase not in official_checkpointer_evidence:
