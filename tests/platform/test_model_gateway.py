@@ -8,12 +8,15 @@ from zuno.platform.model_gateway import (
     ModelCallRequest,
     ModelCallState,
     ModelCategory,
+    ModelCapabilityStatus,
+    ModelCircuitStatus,
     ModelControlActionType,
     ModelDomainWrite,
     ModelGateway,
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelProviderHealthStatus,
     ModelQuotaPolicy,
     ModelRepairRecord,
     ModelUsageKind,
@@ -484,3 +487,128 @@ def test_model_gateway_usage_pricing_and_quota_boundaries() -> None:
     assert stale.accepted is False and stale.reason == "generation_mismatch"
     assert second.accepted is True and second.committed_generation == 2
     assert exhausted.accepted is False and exhausted.reason == "quota_exhausted"
+
+
+def test_model_gateway_health_circuit_capability_and_conformance_boundaries() -> None:
+    gateway = ModelGateway(providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")])
+
+    unknown_health = gateway.evaluate_provider_health(
+        provider_id="primary",
+        model_id="mock-chat",
+        region="us-east-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=0,
+        failure_count=0,
+        evidence_ref=None,
+    )
+    healthy = gateway.evaluate_provider_health(
+        provider_id="primary",
+        model_id="mock-chat",
+        region="us-east-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=9,
+        failure_count=1,
+        evidence_ref="ev:health-window:1",
+    )
+    unhealthy_other_region = gateway.evaluate_provider_health(
+        provider_id="primary",
+        model_id="mock-chat",
+        region="eu-west-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=1,
+        failure_count=9,
+        evidence_ref="ev:health-window:2",
+    )
+
+    assert unknown_health.status == ModelProviderHealthStatus.UNKNOWN
+    assert unknown_health.is_healthy is False
+    assert healthy.status == ModelProviderHealthStatus.HEALTHY
+    assert healthy.is_healthy is True
+
+    healthy_circuit = gateway.evaluate_circuit(healthy)
+    unhealthy_region_circuit = gateway.evaluate_circuit(unhealthy_other_region)
+    unknown_circuit = gateway.evaluate_circuit(unknown_health)
+
+    assert healthy_circuit.status == ModelCircuitStatus.CLOSED
+    assert unhealthy_region_circuit.status == ModelCircuitStatus.OPEN
+    assert unknown_circuit.status == ModelCircuitStatus.OPEN
+    assert healthy_circuit.key.isolation_key != unhealthy_region_circuit.key.isolation_key
+
+    degraded = gateway.capability_profile(
+        capability_id="cap:generate",
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        status=ModelCapabilityStatus.DEGRADED,
+        evidence_ref="ev:capability:degraded",
+    )
+    stale = gateway.capability_profile(
+        capability_id="cap:generate",
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        status=ModelCapabilityStatus.STALE,
+        evidence_ref="ev:capability:stale",
+    )
+    revoked = gateway.capability_profile(
+        capability_id="cap:generate",
+        provider_id="primary",
+        model_id="mock-chat",
+        operation=ModelOperation.GENERATE,
+        status=ModelCapabilityStatus.REVOKED,
+        evidence_ref="ev:capability:revoked",
+    )
+
+    assert degraded.dispatch_allowed is True and degraded.requires_operator_review is True
+    assert stale.dispatch_allowed is True and stale.requires_operator_review is True
+    assert revoked.dispatch_allowed is False and revoked.requires_operator_review is True
+
+    generate_suite = gateway.adapter_conformance_suite(
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+        evidence_ref="ev:conformance:generate:v1",
+        passed=True,
+    )
+    embed_suite = gateway.adapter_conformance_suite(
+        operation=ModelOperation.EMBED,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+        evidence_ref="ev:conformance:embed:v1",
+        passed=True,
+    )
+
+    assert generate_suite.suite_id != embed_suite.suite_id
+    assert generate_suite.conformance_hash != embed_suite.conformance_hash
+    assert gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+    ).valid is True
+    assert gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v2",
+        model_mapping_version="mapping:v1",
+    ).requires_revalidation is True
+    assert gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v2",
+    ).requires_revalidation is True

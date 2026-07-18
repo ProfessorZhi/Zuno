@@ -14,12 +14,15 @@ from zuno.platform.model_gateway import (  # noqa: E402
     ModelAttemptState,
     ModelCallState,
     ModelCategory,
+    ModelCapabilityStatus,
+    ModelCircuitStatus,
     ModelControlActionType,
     ModelDomainWrite,
     ModelGateway,
     ModelGatewayProviderError,
     ModelGatewayRequest,
     ModelOperation,
+    ModelProviderHealthStatus,
     ModelRepairRecord,
     ModelQuotaPolicy,
     ModelUsageKind,
@@ -28,7 +31,7 @@ from zuno.platform.model_gateway import (  # noqa: E402
 from zuno.platform.model_roles import ModelRole  # noqa: E402
 
 
-REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 41))
+REQUIREMENTS = tuple(f"ARCH-MODEL-{index:03d}" for index in range(1, 46))
 
 
 def verify_model_gateway_runtime_batch() -> list[str]:
@@ -333,6 +336,126 @@ def verify_model_gateway_runtime_batch() -> list[str]:
         errors.append("quota CAS second reservation did not commit generation 2")
     if exhausted.accepted or exhausted.reason != "quota_exhausted":
         errors.append("quota did not enforce token limit separately from budget")
+
+    unknown_health = usage_gateway.evaluate_provider_health(
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        region="us-east-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=0,
+        failure_count=0,
+        evidence_ref=None,
+    )
+    healthy = usage_gateway.evaluate_provider_health(
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        region="us-east-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=9,
+        failure_count=1,
+        evidence_ref="ev:health-window:1",
+    )
+    unhealthy_other_region = usage_gateway.evaluate_provider_health(
+        provider_id="usage_fallback",
+        model_id="mock-fallback",
+        region="eu-west-1",
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        window_started_at=1.0,
+        window_ended_at=2.0,
+        success_count=1,
+        failure_count=9,
+        evidence_ref="ev:health-window:2",
+    )
+    if unknown_health.status != ModelProviderHealthStatus.UNKNOWN or unknown_health.is_healthy:
+        errors.append("provider health without evidence defaulted to healthy")
+    if healthy.status != ModelProviderHealthStatus.HEALTHY or not healthy.is_healthy:
+        errors.append("provider health did not use window evidence for healthy state")
+
+    healthy_circuit = usage_gateway.evaluate_circuit(healthy)
+    unhealthy_region_circuit = usage_gateway.evaluate_circuit(unhealthy_other_region)
+    unknown_circuit = usage_gateway.evaluate_circuit(unknown_health)
+    if healthy_circuit.status != ModelCircuitStatus.CLOSED:
+        errors.append("healthy provider window did not close circuit")
+    if unhealthy_region_circuit.status != ModelCircuitStatus.OPEN or unknown_circuit.status != ModelCircuitStatus.OPEN:
+        errors.append("unhealthy/unknown provider windows did not open circuit")
+    if healthy_circuit.key.isolation_key == unhealthy_region_circuit.key.isolation_key:
+        errors.append("circuit isolation key did not include region")
+
+    capability_states = [
+        usage_gateway.capability_profile(
+            capability_id=f"cap:{status.value.lower()}",
+            provider_id="usage_fallback",
+            model_id="mock-fallback",
+            operation=ModelOperation.GENERATE,
+            status=status,
+            evidence_ref=f"ev:capability:{status.value.lower()}",
+        )
+        for status in (
+            ModelCapabilityStatus.DEGRADED,
+            ModelCapabilityStatus.STALE,
+            ModelCapabilityStatus.REVOKED,
+        )
+    ]
+    if [profile.status for profile in capability_states] != [
+        ModelCapabilityStatus.DEGRADED,
+        ModelCapabilityStatus.STALE,
+        ModelCapabilityStatus.REVOKED,
+    ]:
+        errors.append("capability lifecycle did not preserve degrade/stale/revoke states")
+    if capability_states[-1].dispatch_allowed:
+        errors.append("revoked capability still allows dispatch")
+    if not all(profile.requires_operator_review for profile in capability_states):
+        errors.append("degraded/stale/revoked capabilities do not require operator review")
+
+    generate_suite = usage_gateway.adapter_conformance_suite(
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+        evidence_ref="ev:conformance:generate:v1",
+        passed=True,
+    )
+    embed_suite = usage_gateway.adapter_conformance_suite(
+        operation=ModelOperation.EMBED,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+        evidence_ref="ev:conformance:embed:v1",
+        passed=True,
+    )
+    if generate_suite.suite_id == embed_suite.suite_id or generate_suite.conformance_hash == embed_suite.conformance_hash:
+        errors.append("adapter conformance suite is not operation-specific")
+    if not usage_gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v1",
+    ).valid:
+        errors.append("unchanged adapter conformance did not validate")
+    if not usage_gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v2",
+        model_mapping_version="mapping:v1",
+    ).requires_revalidation:
+        errors.append("SDK/API change did not invalidate conformance")
+    if not usage_gateway.validate_adapter_conformance(
+        generate_suite,
+        operation=ModelOperation.GENERATE,
+        adapter_version="adapter:v1",
+        sdk_api_version="sdk:v1",
+        model_mapping_version="mapping:v2",
+    ).requires_revalidation:
+        errors.append("model mapping change did not invalidate conformance")
 
     split_action_result = ModelGateway(
         providers=[

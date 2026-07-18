@@ -59,6 +59,24 @@ class ModelUsageKind(StrEnum):
     CORRECTION = "CORRECTION"
 
 
+class ModelProviderHealthStatus(StrEnum):
+    HEALTHY = "HEALTHY"
+    UNHEALTHY = "UNHEALTHY"
+    UNKNOWN = "UNKNOWN"
+
+
+class ModelCircuitStatus(StrEnum):
+    CLOSED = "CLOSED"
+    OPEN = "OPEN"
+
+
+class ModelCapabilityStatus(StrEnum):
+    AVAILABLE = "AVAILABLE"
+    DEGRADED = "DEGRADED"
+    STALE = "STALE"
+    REVOKED = "REVOKED"
+
+
 class ModelControlActionType(StrEnum):
     RETRY = "retry"
     REPAIR = "repair"
@@ -204,6 +222,103 @@ class ModelQuotaReservation:
     expected_generation: int
     committed_generation: int
     accepted: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ModelProviderHealthWindow:
+    provider_id: str
+    model_id: str
+    region: str
+    operation: ModelOperation
+    adapter_version: str
+    window_started_at: float
+    window_ended_at: float
+    success_count: int
+    failure_count: int
+    evidence_ref: str | None
+    status: ModelProviderHealthStatus
+
+    @property
+    def evidence_count(self) -> int:
+        return self.success_count + self.failure_count
+
+    @property
+    def is_healthy(self) -> bool:
+        return self.status == ModelProviderHealthStatus.HEALTHY and self.evidence_count > 0
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCircuitKey:
+    provider_id: str
+    model_id: str
+    region: str
+    operation: ModelOperation
+    adapter_version: str
+
+    @property
+    def isolation_key(self) -> str:
+        return _stable_hash(
+            [
+                self.provider_id,
+                self.model_id,
+                self.region,
+                self.operation.value,
+                self.adapter_version,
+            ]
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCircuitDecision:
+    key: ModelCircuitKey
+    status: ModelCircuitStatus
+    reason: str
+    health_evidence_ref: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ModelCapabilityProfile:
+    capability_id: str
+    provider_id: str
+    model_id: str
+    operation: ModelOperation
+    status: ModelCapabilityStatus
+    evidence_ref: str
+    dispatch_allowed: bool
+    requires_operator_review: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ModelAdapterConformanceSuite:
+    suite_id: str
+    operation: ModelOperation
+    adapter_version: str
+    sdk_api_version: str
+    model_mapping_version: str
+    evidence_ref: str
+    passed: bool
+
+    @property
+    def conformance_hash(self) -> str:
+        return _stable_hash(
+            [
+                self.suite_id,
+                self.operation.value,
+                self.adapter_version,
+                self.sdk_api_version,
+                self.model_mapping_version,
+                self.evidence_ref,
+                self.passed,
+            ]
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModelAdapterConformanceVerdict:
+    suite_id: str
+    valid: bool
+    requires_revalidation: bool
     reason: str
 
 
@@ -1243,6 +1358,172 @@ class ModelGateway:
             reason="reserved",
         )
 
+    def evaluate_provider_health(
+        self,
+        *,
+        provider_id: str,
+        model_id: str,
+        region: str,
+        operation: ModelOperation | str,
+        adapter_version: str,
+        window_started_at: float,
+        window_ended_at: float,
+        success_count: int,
+        failure_count: int,
+        evidence_ref: str | None,
+        unhealthy_failure_rate: float = 0.5,
+    ) -> ModelProviderHealthWindow:
+        total = success_count + failure_count
+        if success_count < 0 or failure_count < 0:
+            raise ModelGatewayProviderError("provider health counts must be non-negative")
+        if window_ended_at < window_started_at:
+            raise ModelGatewayProviderError("provider health window end must not precede start")
+        if total == 0 or not evidence_ref:
+            status = ModelProviderHealthStatus.UNKNOWN
+        elif failure_count / total > unhealthy_failure_rate:
+            status = ModelProviderHealthStatus.UNHEALTHY
+        else:
+            status = ModelProviderHealthStatus.HEALTHY
+        return ModelProviderHealthWindow(
+            provider_id=provider_id,
+            model_id=model_id,
+            region=region,
+            operation=ModelOperation(operation),
+            adapter_version=adapter_version,
+            window_started_at=window_started_at,
+            window_ended_at=window_ended_at,
+            success_count=success_count,
+            failure_count=failure_count,
+            evidence_ref=evidence_ref,
+            status=status,
+        )
+
+    def evaluate_circuit(self, health: ModelProviderHealthWindow) -> ModelCircuitDecision:
+        key = ModelCircuitKey(
+            provider_id=health.provider_id,
+            model_id=health.model_id,
+            region=health.region,
+            operation=health.operation,
+            adapter_version=health.adapter_version,
+        )
+        if health.status == ModelProviderHealthStatus.HEALTHY:
+            return ModelCircuitDecision(
+                key=key,
+                status=ModelCircuitStatus.CLOSED,
+                reason="provider_health_window_healthy",
+                health_evidence_ref=health.evidence_ref,
+            )
+        return ModelCircuitDecision(
+            key=key,
+            status=ModelCircuitStatus.OPEN,
+            reason=f"provider_health_window_{health.status.value.lower()}",
+            health_evidence_ref=health.evidence_ref,
+        )
+
+    def capability_profile(
+        self,
+        *,
+        capability_id: str,
+        provider_id: str,
+        model_id: str,
+        operation: ModelOperation | str,
+        status: ModelCapabilityStatus | str,
+        evidence_ref: str,
+    ) -> ModelCapabilityProfile:
+        normalized_status = ModelCapabilityStatus(status)
+        return ModelCapabilityProfile(
+            capability_id=capability_id,
+            provider_id=provider_id,
+            model_id=model_id,
+            operation=ModelOperation(operation),
+            status=normalized_status,
+            evidence_ref=evidence_ref,
+            dispatch_allowed=normalized_status != ModelCapabilityStatus.REVOKED,
+            requires_operator_review=normalized_status
+            in {ModelCapabilityStatus.DEGRADED, ModelCapabilityStatus.STALE, ModelCapabilityStatus.REVOKED},
+        )
+
+    def adapter_conformance_suite(
+        self,
+        *,
+        operation: ModelOperation | str,
+        adapter_version: str,
+        sdk_api_version: str,
+        model_mapping_version: str,
+        evidence_ref: str,
+        passed: bool,
+    ) -> ModelAdapterConformanceSuite:
+        normalized_operation = ModelOperation(operation)
+        return ModelAdapterConformanceSuite(
+            suite_id="conformance_"
+            + _stable_hash(
+                [
+                    normalized_operation.value,
+                    adapter_version,
+                    sdk_api_version,
+                    model_mapping_version,
+                    evidence_ref,
+                ]
+            )[:16],
+            operation=normalized_operation,
+            adapter_version=adapter_version,
+            sdk_api_version=sdk_api_version,
+            model_mapping_version=model_mapping_version,
+            evidence_ref=evidence_ref,
+            passed=passed,
+        )
+
+    def validate_adapter_conformance(
+        self,
+        suite: ModelAdapterConformanceSuite,
+        *,
+        operation: ModelOperation | str,
+        adapter_version: str,
+        sdk_api_version: str,
+        model_mapping_version: str,
+    ) -> ModelAdapterConformanceVerdict:
+        if not suite.passed:
+            return ModelAdapterConformanceVerdict(
+                suite_id=suite.suite_id,
+                valid=False,
+                requires_revalidation=True,
+                reason="suite_failed",
+            )
+        if suite.operation != ModelOperation(operation):
+            return ModelAdapterConformanceVerdict(
+                suite_id=suite.suite_id,
+                valid=False,
+                requires_revalidation=True,
+                reason="operation_changed",
+            )
+        if suite.adapter_version != adapter_version:
+            return ModelAdapterConformanceVerdict(
+                suite_id=suite.suite_id,
+                valid=False,
+                requires_revalidation=True,
+                reason="adapter_changed",
+            )
+        if suite.sdk_api_version != sdk_api_version:
+            return ModelAdapterConformanceVerdict(
+                suite_id=suite.suite_id,
+                valid=False,
+                requires_revalidation=True,
+                reason="sdk_api_changed",
+            )
+        if suite.model_mapping_version != model_mapping_version:
+            return ModelAdapterConformanceVerdict(
+                suite_id=suite.suite_id,
+                valid=False,
+                requires_revalidation=True,
+                reason="model_mapping_changed",
+            )
+        return ModelAdapterConformanceVerdict(
+            suite_id=suite.suite_id,
+            valid=True,
+            requires_revalidation=False,
+            reason="current",
+        )
+
     def _select_provider(self, category: ModelCategory, provider_id: str | None = None) -> ModelProvider:
         if provider_id:
             provider = self._providers.get(provider_id)
@@ -1690,9 +1971,16 @@ __all__ = [
     "ModelCallState",
     "ModelCategory",
     "ModelActionProposal",
+    "ModelAdapterConformanceSuite",
+    "ModelAdapterConformanceVerdict",
     "ModelCompressedContext",
     "ModelControlAction",
     "ModelControlActionType",
+    "ModelCapabilityProfile",
+    "ModelCapabilityStatus",
+    "ModelCircuitDecision",
+    "ModelCircuitKey",
+    "ModelCircuitStatus",
     "ModelDomainWrite",
     "ModelEmbeddingResult",
     "ModelGateway",
@@ -1706,6 +1994,8 @@ __all__ = [
     "ModelClassificationResult",
     "ModelJudgeResult",
     "ModelOutputCandidate",
+    "ModelProviderHealthStatus",
+    "ModelProviderHealthWindow",
     "ModelQuotaPolicy",
     "ModelQuotaReservation",
     "ModelRepairRecord",

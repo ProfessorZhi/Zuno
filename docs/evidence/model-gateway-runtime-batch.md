@@ -6,7 +6,7 @@
 
 覆盖需求：
 
-- `ARCH-MODEL-001` 到 `ARCH-MODEL-040`
+- `ARCH-MODEL-001` 到 `ARCH-MODEL-045`
 
 范围说明：
 
@@ -38,11 +38,16 @@
 - 已证明 Usage Observed、Settled 和 Correction 分离，Correction 不回写历史 Receipt。
 - 已证明 Pricing Version 固定在历史 Receipt 上，settle/correction 继承原 pricing version。
 - 已证明 Quota 与业务 Budget 分离，Quota 通过 generation CAS 处理 race，并显式返回 quota exhausted。
+- 已证明 Provider Health 基于窗口证据；无成功/失败证据或无 evidence ref 时状态为 `UNKNOWN`，不会默认为健康。
+- 已证明 Circuit key 按 Provider、Model、Region、Operation 和 Adapter Version 隔离，健康窗口只影响同 key circuit。
+- 已证明 Capability 生命周期支持 `DEGRADED`、`STALE` 和 `REVOKED`，撤销能力禁止 dispatch，异常状态需要 operator review。
+- 已证明 Adapter Conformance Suite 按 Operation-specific 生成，Generate 与 Embed 不共享 conformance hash。
+- 已证明 SDK/API version 或 Model Mapping version 变化会使既有 Conformance Verdict 失效并要求重验。
 - 已证明 Gateway 源文件不直接导入 OpenAI/Anthropic Provider SDK。
 
 未覆盖：
 
-- `ARCH-MODEL-041` 以后仍需后续批次证明。
+- `ARCH-MODEL-046` 以后仍需后续批次证明。
 
 验证命令：
 
@@ -55,6 +60,7 @@ pytest -q tests/platform/test_model_gateway.py tests/evals/test_model_gateway_co
 结果：
 
 ```text
-Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020, ARCH-MODEL-021, ARCH-MODEL-022, ARCH-MODEL-023, ARCH-MODEL-024, ARCH-MODEL-025, ARCH-MODEL-026, ARCH-MODEL-027, ARCH-MODEL-028, ARCH-MODEL-029, ARCH-MODEL-030, ARCH-MODEL-031, ARCH-MODEL-032, ARCH-MODEL-033, ARCH-MODEL-034, ARCH-MODEL-035, ARCH-MODEL-036, ARCH-MODEL-037, ARCH-MODEL-038, ARCH-MODEL-039, ARCH-MODEL-040.
-15 passed in 23.87s
+Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020, ARCH-MODEL-021, ARCH-MODEL-022, ARCH-MODEL-023, ARCH-MODEL-024, ARCH-MODEL-025, ARCH-MODEL-026, ARCH-MODEL-027, ARCH-MODEL-028, ARCH-MODEL-029, ARCH-MODEL-030, ARCH-MODEL-031, ARCH-MODEL-032, ARCH-MODEL-033, ARCH-MODEL-034, ARCH-MODEL-035, ARCH-MODEL-036, ARCH-MODEL-037, ARCH-MODEL-038, ARCH-MODEL-039, ARCH-MODEL-040, ARCH-MODEL-041, ARCH-MODEL-042, ARCH-MODEL-043, ARCH-MODEL-044, ARCH-MODEL-045.
+16 passed in 22.40s
+26 passed in 24.58s
 ```
