@@ -51,6 +51,13 @@ from zuno.platform.security.persistence import (
     SecuritySecretRefReceipt,
     SecurityUnitOfWork,
 )
+from zuno.platform.security.product_actions import (
+    PostgresSecurityProductActionGuard,
+    SecurityProductActionDenied,
+    SecurityProductActionGuard,
+    SecurityProductActionRequest,
+    build_product_action_hash,
+)
 
 __all__ = [
     "AccessScope",
@@ -62,6 +69,7 @@ __all__ = [
     "InputSecurityGate",
     "OutputSecurityGate",
     "PostgresSecurityApprovalFactSink",
+    "PostgresSecurityProductActionGuard",
     "RetrievalCandidate",
     "RetrievalGateResult",
     "RetrievalSecurityGate",
@@ -79,6 +87,9 @@ __all__ = [
     "SecurityOutboxReceipt",
     "SecurityPersistenceError",
     "SecurityPrincipalContextReceipt",
+    "SecurityProductActionDenied",
+    "SecurityProductActionGuard",
+    "SecurityProductActionRequest",
     "SecurityRedactionDecisionReceipt",
     "SecurityRepository",
     "SecuritySecretLeaseReceipt",
@@ -90,6 +101,7 @@ __all__ = [
     "ToolSecurityGate",
     "ToolSecurityProfile",
     "build_security_trace_summary",
+    "build_product_action_hash",
     "normalize_access_scope",
     "normalize_execution_mode",
     "redact_sensitive_payload",

@@ -281,8 +281,12 @@ async def get_workspace_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    return resp_200(data=WorkspaceTaskRuntimeService.get_artifact(artifact_id))
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.get_artifact(
+            artifact_id,
+            principal_id=str(login_user.user_id or ""),
+        )
+    )
 
 
 @router.get("/artifact/{artifact_id}/download", summary="Download workspace artifact")
@@ -290,8 +294,10 @@ async def download_workspace_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    payload = WorkspaceTaskRuntimeService.download_artifact(artifact_id)
+    payload = WorkspaceTaskRuntimeService.download_artifact(
+        artifact_id,
+        principal_id=str(login_user.user_id or ""),
+    )
     return PlainTextResponse(
         payload["content"],
         media_type=payload["media_type"],

@@ -1027,3 +1027,42 @@ PHASE06 external sink isolation available
 phase closure not approved
 remaining: full Agent/Model/Knowledge/Memory/Capability/Tool/Security/Infrastructure adapter default-path cutover and optional FastAPI route wiring
 ```
+
+## PHASE05 Product Action Reauthorization 003
+
+新增 Security-owned Product action reauthorization guard：
+
+```text
+src/backend/zuno/platform/security/product_actions.py
+src/backend/zuno/platform/security/__init__.py
+src/backend/zuno/api/services/workspace_task_runtime.py
+src/backend/zuno/api/v1/workspace.py
+tests/api/test_workspace_task_runtime.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+SecurityProductActionRequest: 绑定 tenant/workspace/principal/action/resource/decision/prepared_action_hash
+PostgresSecurityProductActionGuard: 通过 SecurityRepository.validate_pre_effect_authorization 做 effect/read/download 前重新授权
+WorkspaceTaskRuntimeService.configure_security_product_action_guard: workspace artifact read/download 接入 Security guard
+workspace API: artifact read/download 传入 login_user.user_id 作为 principal
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/security/product_actions.py src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/api/v1/workspace.py tools/scripts/verify_phase05_security_persistence.py tests/api/test_workspace_task_runtime.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 product artifact read/download reauthorization guard available
+phase closure not approved
+remaining: production startup default Postgres guard wiring, resume/citation/admin default-path reauthorization and full PEP/PDP cutover
+```

@@ -19,6 +19,7 @@ date: 2026-07-19
 - `SecurityRepository.validate_pre_effect_authorization(...)` 在 effect 前重新校验 `prepared_action_hash`、epoch active、approval status 和 deadline；参数变更、过期 approval、revoked/stale epoch 均 fail-closed。
 - `SecurityRepository.record_secret_ref(...)`、`issue_secret_lease(...)` 和 `validate_secret_lease(...)` 已证明 Secret material 不落业务表，wrong audience、expired lease、revoked secret 均 fail-closed。
 - `SecurityRepository.record_redaction_decision(...)` 在 redaction 失败时把 requested allow 降为 `block`，只保存 redacted payload hash 与 decision hash。
+- `PostgresSecurityProductActionGuard` 和 `SecurityProductActionRequest` 提供 Product/API action 重新授权端口；workspace artifact read/download 已接入可配置 guard，配置后会在 artifact read/download 默认调用路径上重新授权，deny 时返回 403。
 - 最小 eval evidence 覆盖：
   - adaptive attack side-effect request must require approval or deny；
   - benign read-only request must preserve utility；
@@ -29,12 +30,12 @@ date: 2026-07-19
 ```powershell
 python tools/scripts/verify_phase05_security_persistence.py
 python tools/scripts/verify_phase05_security_eval.py
-pytest -q tests/security/test_phase05_security_eval_gate.py tests/fault/security tests/integration/test_phase05_security_persistence_runtime.py -p no:cacheprovider
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/security/test_phase05_security_eval_gate.py tests/fault/security tests/integration/test_phase05_security_persistence_runtime.py -p no:cacheprovider
 ```
 
 ## 未证明
 
 - 尚未覆盖完整 PEP/PDP cutover。
-- Security fault matrix 仍未完整覆盖所有 Product/API resume、download、citation 和 admin 默认路径。
+- Security fault matrix 仍未完整覆盖 Product/API resume、citation 和 admin 默认路径；artifact read/download 已有可配置 Security guard 接入证据，但尚未证明生产启动默认配置强制使用 Postgres guard。
 - 尚未形成 PHASE05 closure decision。
 - PHASE07 与 PHASE11 不得引用本文作为依赖已完成证明。

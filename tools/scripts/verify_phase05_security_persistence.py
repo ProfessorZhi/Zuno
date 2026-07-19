@@ -271,6 +271,26 @@ def verify_phase05_security_persistence() -> list[str]:
         if forbidden in repository:
             errors.append(f"security persistence repository contains forbidden phrase: {forbidden}")
 
+    product_actions = (
+        REPO_ROOT
+        / "src"
+        / "backend"
+        / "zuno"
+        / "platform"
+        / "security"
+        / "product_actions.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "class SecurityProductActionRequest",
+        "class SecurityProductActionGuard",
+        "class PostgresSecurityProductActionGuard",
+        "validate_pre_effect_authorization",
+        "build_product_action_hash",
+        "SecurityProductActionDenied",
+    ]:
+        if phrase not in product_actions:
+            errors.append(f"security product action guard missing phrase: {phrase}")
+
     tool_runtime = (
         REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "runtime.py"
     ).read_text(encoding="utf-8")
@@ -290,11 +310,26 @@ def verify_phase05_security_persistence() -> list[str]:
     ).read_text(encoding="utf-8")
     for phrase in [
         "configure_security_approval_sink",
+        "configure_security_product_action_guard",
+        "_require_product_action_authorized",
+        "artifact.read",
+        "artifact.download",
         "build_default_tool_control_plane_runtime(",
         "security_approval_sink=sink",
     ]:
         if phrase not in workspace_runtime:
             errors.append(f"workspace runtime missing Security approval sink wiring phrase: {phrase}")
+
+    workspace_api = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1" / "workspace.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "principal_id=str(login_user.user_id or \"\")",
+        "WorkspaceTaskRuntimeService.get_artifact(",
+        "WorkspaceTaskRuntimeService.download_artifact(",
+    ]:
+        if phrase not in workspace_api:
+            errors.append(f"workspace API missing product action reauthorization phrase: {phrase}")
 
     fault_test = (
         REPO_ROOT
@@ -329,6 +364,22 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in pre_effect_fault_test:
             errors.append(f"security pre-effect fault test missing phrase: {phrase}")
+
+    workspace_test = (
+        REPO_ROOT
+        / "tests"
+        / "api"
+        / "test_workspace_task_runtime.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_workspace_artifact_read_and_download_reauthorize_through_security_guard",
+        "test_workspace_artifact_download_returns_403_when_security_reauthorization_denies",
+        "artifact.read",
+        "artifact.download",
+        "product action denied by Security",
+    ]:
+        if phrase not in workspace_test:
+            errors.append(f"workspace security reauthorization test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):

@@ -73,6 +73,10 @@ from zuno.platform.security import (
     SandboxAuditEvent,
     SecurityDecision,
     SecurityGate,
+    SecurityProductActionDenied,
+    SecurityProductActionGuard,
+    SecurityProductActionRequest,
+    build_product_action_hash,
 )
 from zuno.schema.workspace import (
     ArtifactContract,
@@ -123,6 +127,7 @@ class WorkspaceTaskRuntimeService:
     _input_security_gate = InputSecurityGate()
     _retrieval_security_gate = RetrievalSecurityGate()
     _output_security_gate = OutputSecurityGate()
+    _security_product_action_guard: SecurityProductActionGuard | None = None
     _span_builder = ZunoSpanBuilder()
     _trace_spans: dict[str, list[dict]] = {}
     _release_evals: dict[str, dict] = {}
@@ -223,6 +228,13 @@ class WorkspaceTaskRuntimeService:
         )
 
     @classmethod
+    def configure_security_product_action_guard(
+        cls,
+        guard: SecurityProductActionGuard | None,
+    ) -> None:
+        cls._security_product_action_guard = guard
+
+    @classmethod
     def reset_runtime_state_for_tests(cls) -> None:
         cls._tasks = {}
         cls._task_inputs = {}
@@ -250,6 +262,7 @@ class WorkspaceTaskRuntimeService:
         cls._trace_replays = {}
         cls._durable_ingestion_store = None
         cls._source_object_store = None
+        cls._security_product_action_guard = None
 
     @classmethod
     def _rehydrate_from_durable_store(cls) -> None:
@@ -2113,10 +2126,15 @@ class WorkspaceTaskRuntimeService:
             yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
     @classmethod
-    def get_artifact(cls, artifact_id: str) -> dict:
+    def get_artifact(cls, artifact_id: str, *, principal_id: str = "") -> dict:
         artifact = cls._artifacts.get(artifact_id)
         if artifact is None:
             raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        cls._require_product_action_authorized(
+            artifact=artifact,
+            principal_id=principal_id,
+            action="artifact.read",
+        )
         citation_refs = cls._artifact_citation_refs.get(
             artifact_id,
             [ref.model_dump(mode="json") for ref in artifact.citation_refs],
@@ -2134,16 +2152,53 @@ class WorkspaceTaskRuntimeService:
         }
 
     @classmethod
-    def download_artifact(cls, artifact_id: str) -> dict:
+    def download_artifact(cls, artifact_id: str, *, principal_id: str = "") -> dict:
         artifact = cls._artifacts.get(artifact_id)
         if artifact is None:
             raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        cls._require_product_action_authorized(
+            artifact=artifact,
+            principal_id=principal_id,
+            action="artifact.download",
+        )
         return {
             "artifact": artifact,
             "content": cls._artifact_content.get(artifact_id, ""),
             "filename": cls._artifact_filename(artifact),
             "media_type": "text/markdown; charset=utf-8",
         }
+
+    @classmethod
+    def _require_product_action_authorized(
+        cls,
+        *,
+        artifact: ArtifactContract,
+        principal_id: str,
+        action: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or artifact.owner
+        resource_ref = f"workspace-artifact:{artifact.artifact_id}"
+        request = SecurityProductActionRequest(
+            tenant_id=artifact.workspace_id,
+            workspace_id=artifact.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{artifact.artifact_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=artifact.workspace_id,
+                workspace_id=artifact.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
 
     @classmethod
     def record_feedback(

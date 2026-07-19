@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
+from zuno.platform.security import SecurityProductActionDenied
 
 
 def _client() -> TestClient:
@@ -845,3 +846,88 @@ def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> 
     content = artifact_response.json()["data"]["content"]
     assert "Renewal notice must be sent 30 days" in content
     assert "[1]" in content
+
+
+class RecordingProductActionGuard:
+    def __init__(self, *, deny_action: str | None = None) -> None:
+        self.deny_action = deny_action
+        self.requests = []
+
+    def require_authorized_action(self, request) -> None:
+        self.requests.append(request)
+        if request.action == self.deny_action:
+            raise SecurityProductActionDenied("product action denied by Security")
+
+
+def test_workspace_artifact_read_and_download_reauthorize_through_security_guard() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard()
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Create secured report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_guard",
+                "workspace_id": "workspace_phase05_guard",
+                "task_id": "task_phase05_guard",
+                "trace_id": "trace_phase05_guard",
+                "goal": "secured report",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        artifact_id = create_response.json()["data"]["artifact_ids"][0]
+
+        read_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}")
+        download_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}/download")
+
+        assert read_response.status_code == 200
+        assert download_response.status_code == 200
+        assert [request.action for request in guard.requests] == [
+            "artifact.read",
+            "artifact.download",
+        ]
+        assert all(request.principal_id == "user_phase03" for request in guard.requests)
+        assert all(request.prepared_action_hash for request in guard.requests)
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_artifact_download_returns_403_when_security_reauthorization_denies() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard(deny_action="artifact.download")
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Create denied secured report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_guard_deny",
+                "workspace_id": "workspace_phase05_guard_deny",
+                "task_id": "task_phase05_guard_deny",
+                "trace_id": "trace_phase05_guard_deny",
+                "goal": "denied secured report",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        artifact_id = create_response.json()["data"]["artifact_ids"][0]
+
+        response = client.get(f"/api/v1/workspace/artifact/{artifact_id}/download")
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "product action denied by Security"
+        assert [request.action for request in guard.requests] == ["artifact.download"]
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
