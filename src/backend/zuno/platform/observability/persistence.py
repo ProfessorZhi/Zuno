@@ -56,6 +56,13 @@ class ObservabilityAuditReceipt:
 
 
 @dataclass(frozen=True, slots=True)
+class ObservabilityAuditChainReceipt:
+    trace_id: str
+    verified_count: int
+    head_hash: str
+
+
+@dataclass(frozen=True, slots=True)
 class ObservabilityWatermarkReceipt:
     watermark_id: str
     stream_id: str
@@ -70,6 +77,14 @@ class ObservabilityDeadLetterReceipt:
     source_ref: str
     reason_code: str
     payload_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class ObservabilityProjectionRebuildReceipt:
+    rebuild_id: str
+    projection_id: str
+    fencing_token: str
+    status: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,6 +216,38 @@ class ObservabilityRepository:
         redacted_payload = redact_sensitive_payload(payload)
         payload_hash = canonical_sha256(redacted_payload)
         redaction_hash = canonical_sha256({"schema_ref": schema_ref, "payload": redacted_payload})
+        existing_id = self.connection.execute(
+            text(
+                """
+                SELECT payload_hash
+                FROM observability_ingest_envelopes
+                WHERE envelope_id = :envelope_id
+                """
+            ),
+            {"envelope_id": envelope_id},
+        ).first()
+        if existing_id is not None:
+            if str(existing_id.payload_hash) == payload_hash:
+                return ObservabilityEnvelopeReceipt(envelope_id, tenant_id, trace_id, "duplicate", payload_hash)
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE observability_ingest_envelopes
+                    SET status = 'quarantined',
+                        quarantine_reason = 'duplicate_envelope_payload_mismatch'
+                    WHERE envelope_id = :envelope_id
+                    """
+                ),
+                {"envelope_id": envelope_id},
+            )
+            self.record_dead_letter(
+                dead_letter_id=f"dead-letter:{envelope_id}",
+                tenant_id=tenant_id,
+                source_ref=envelope_id,
+                reason_code="duplicate_envelope_payload_mismatch",
+                payload=redacted_payload,
+            )
+            return ObservabilityEnvelopeReceipt(envelope_id, tenant_id, trace_id, "quarantined", payload_hash)
         existing = self.connection.execute(
             text(
                 """
@@ -476,6 +523,38 @@ class ObservabilityRepository:
         )
         return ObservabilityAuditReceipt(audit_id, trace_id, sequence, audit_hash)
 
+    def verify_audit_chain(
+        self,
+        *,
+        tenant_id: str,
+        trace_id: str,
+    ) -> ObservabilityAuditChainReceipt:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT audit_id, sequence, previous_hash, audit_hash, payload_hash
+                FROM observability_audit_records
+                WHERE tenant_id = :tenant_id
+                  AND trace_id = :trace_id
+                ORDER BY sequence
+                """
+            ),
+            {"tenant_id": tenant_id, "trace_id": trace_id},
+        ).mappings().all()
+        if not rows:
+            raise ObservabilityPersistenceError("audit chain missing")
+        previous_hash = "0" * 64
+        expected_sequence = 1
+        for row in rows:
+            sequence = int(row["sequence"])
+            if sequence != expected_sequence:
+                raise ObservabilityPersistenceError("audit sequence gap")
+            if row["previous_hash"] != previous_hash:
+                raise ObservabilityPersistenceError("audit hash mismatch")
+            previous_hash = str(row["audit_hash"])
+            expected_sequence += 1
+        return ObservabilityAuditChainReceipt(trace_id, len(rows), previous_hash)
+
     def update_watermark(
         self,
         *,
@@ -664,6 +743,92 @@ class ObservabilityRepository:
             for row in rows
         )
 
+    def claim_projection_rebuild(
+        self,
+        *,
+        rebuild_id: str,
+        tenant_id: str,
+        projection_id: str,
+        claim_owner: str,
+        fencing_token: str,
+        replay_from_sequence: int,
+        status: str = "claimed",
+    ) -> ObservabilityProjectionRebuildReceipt:
+        if replay_from_sequence < 0:
+            raise ObservabilityPersistenceError("projection rebuild replay_from_sequence must be non-negative")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO observability_projection_rebuilds(
+                    rebuild_id, tenant_id, projection_id, claim_owner,
+                    fencing_token, replay_from_sequence, status
+                ) VALUES (
+                    :rebuild_id, :tenant_id, :projection_id, :claim_owner,
+                    :fencing_token, :replay_from_sequence, :status
+                )
+                """
+            ),
+            {
+                "rebuild_id": rebuild_id,
+                "tenant_id": tenant_id,
+                "projection_id": projection_id,
+                "claim_owner": claim_owner,
+                "fencing_token": fencing_token,
+                "replay_from_sequence": replay_from_sequence,
+                "status": status,
+            },
+        )
+        return ObservabilityProjectionRebuildReceipt(rebuild_id, projection_id, fencing_token, status)
+
+    def complete_projection_rebuild(
+        self,
+        *,
+        rebuild_id: str,
+        tenant_id: str,
+        fencing_token: str,
+    ) -> ObservabilityProjectionRebuildReceipt:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT projection_id, fencing_token, status
+                FROM observability_projection_rebuilds
+                WHERE rebuild_id = :rebuild_id AND tenant_id = :tenant_id
+                FOR UPDATE
+                """
+            ),
+            {"rebuild_id": rebuild_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise ObservabilityPersistenceError("projection rebuild claim missing")
+        if row["fencing_token"] != fencing_token:
+            self.record_dead_letter(
+                dead_letter_id=f"dead-letter:{rebuild_id}:stale",
+                tenant_id=tenant_id,
+                source_ref=rebuild_id,
+                reason_code="stale_projector_late_commit",
+                payload={"rebuild_id": rebuild_id, "provided_fencing_token": fencing_token},
+            )
+            raise ObservabilityPersistenceError("stale projector late commit")
+        if row["status"] not in {"claimed", "running"}:
+            raise ObservabilityPersistenceError("projection rebuild already terminal")
+        self.connection.execute(
+            text(
+                """
+                UPDATE observability_projection_rebuilds
+                SET status = 'completed',
+                    completed_at = now()
+                WHERE rebuild_id = :rebuild_id AND tenant_id = :tenant_id
+                """
+            ),
+            {"rebuild_id": rebuild_id, "tenant_id": tenant_id},
+        )
+        return ObservabilityProjectionRebuildReceipt(
+            rebuild_id,
+            projection_id=str(row["projection_id"]),
+            fencing_token=fencing_token,
+            status="completed",
+        )
+
     def record_gap(
         self,
         *,
@@ -801,11 +966,13 @@ class ObservabilityRepository:
 
 
 __all__ = [
+    "ObservabilityAuditChainReceipt",
     "ObservabilityAuditReceipt",
     "ObservabilityDeadLetterReceipt",
     "ObservabilityEnvelopeReceipt",
     "ObservabilityFreshnessRecord",
     "ObservabilityPersistenceError",
+    "ObservabilityProjectionRebuildReceipt",
     "PostgresObservabilityRuntimeAdapter",
     "ObservabilityRepository",
     "ObservabilityRuntimeEventReceipt",

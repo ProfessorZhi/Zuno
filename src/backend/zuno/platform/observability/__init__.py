@@ -63,11 +63,13 @@ from zuno.platform.observability.product_benchmark import (
 )
 from zuno.platform.observability.local_trace_store import SQLiteLocalTraceStore
 from zuno.platform.observability.persistence import (
+    ObservabilityAuditChainReceipt,
     ObservabilityAuditReceipt,
     ObservabilityDeadLetterReceipt,
     ObservabilityEnvelopeReceipt,
     ObservabilityFreshnessRecord,
     ObservabilityPersistenceError,
+    ObservabilityProjectionRebuildReceipt,
     ObservabilityRepository,
     ObservabilityRuntimeEventReceipt,
     ObservabilitySpanReceipt,
@@ -87,6 +89,7 @@ __all__ = [
     "LangSmithExportAdapter",
     "MetricThreshold",
     "ObservabilityAuditRecord",
+    "ObservabilityAuditChainReceipt",
     "ObservabilityBenchmarkComparison",
     "ObservabilityDeliveryState",
     "ObservabilityDomainTrace",
@@ -107,6 +110,7 @@ __all__ = [
     "ObservabilityEnvelopeReceipt",
     "ObservabilityFreshnessRecord",
     "ObservabilityPersistenceError",
+    "ObservabilityProjectionRebuildReceipt",
     "ObservabilityRepository",
     "ObservabilityRuntimeEventReceipt",
     "ObservabilitySpanReceipt",

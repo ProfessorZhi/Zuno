@@ -918,3 +918,39 @@ PHASE05 security persistence fault semantics expanded
 phase closure not approved
 remaining: full PEP/PDP cutover, Product/API resume/download/citation/admin default-path reauthorization and PHASE06 audit dependency closure
 ```
+
+## PHASE06 Observability Fault Semantics 004
+
+新增 Observability-owned black-box fault 行为：
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+src/backend/zuno/platform/observability/__init__.py
+tests/fault/observability/test_phase06_observability_fault_semantics.py
+tools/scripts/verify_phase06_observability_persistence.py
+docs/evidence/phase06-observability-persistence.md
+```
+
+覆盖语义：
+
+```text
+ingest_envelope: 同 envelope_id 不同 payload 进入 quarantined，并写 duplicate_envelope_payload_mismatch dead letter
+verify_audit_chain: 检测 audit sequence gap 与 previous_hash mismatch
+claim_projection_rebuild / complete_projection_rebuild: 使用 fencing_token 拒绝 stale projector late commit，并写 dead letter
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/observability/persistence.py tools/scripts/verify_phase06_observability_persistence.py tests/fault/observability/test_phase06_observability_fault_semantics.py
+python tools/scripts/verify_phase06_observability_persistence.py
+pytest -q tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE06 observability persistence fault semantics expanded
+phase closure not approved
+remaining: API authorization checks, external sink failure isolation and full adapter default-path cutover
+```

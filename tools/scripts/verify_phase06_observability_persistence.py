@@ -244,14 +244,21 @@ def verify_phase06_observability_persistence() -> list[str]:
         "record_span",
         "record_runtime_event",
         "record_audit",
+        "verify_audit_chain",
         "update_watermark",
         "record_gap",
         "record_dead_letter",
+        "claim_projection_rebuild",
+        "complete_projection_rebuild",
         "record_security_audit",
         "trace_timeline",
         "projection_freshness",
         "dead_letters",
         "ObservabilityFreshnessRecord",
+        "ObservabilityAuditChainReceipt",
+        "ObservabilityProjectionRebuildReceipt",
+        "duplicate_envelope_payload_mismatch",
+        "stale_projector_late_commit",
         "duplicate_sequence_payload_mismatch",
         "redact_sensitive_payload",
     ]:
@@ -260,6 +267,23 @@ def verify_phase06_observability_persistence() -> list[str]:
     for forbidden in ["hidden_reasoning", "chain_of_thought", "access_token", "api_key", "password"]:
         if forbidden in repository:
             errors.append(f"observability persistence repository contains forbidden phrase: {forbidden}")
+
+    fault_test = (
+        REPO_ROOT
+        / "tests"
+        / "fault"
+        / "observability"
+        / "test_phase06_observability_fault_semantics.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "duplicate_envelope_payload_mismatch",
+        "audit sequence gap",
+        "audit hash mismatch",
+        "stale projector late commit",
+        "fencing_token",
+    ]:
+        if phrase not in fault_test:
+            errors.append(f"observability fault test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
