@@ -1066,3 +1066,36 @@ PHASE05 product artifact read/download reauthorization guard available
 phase closure not approved
 remaining: production startup default Postgres guard wiring, resume/citation/admin default-path reauthorization and full PEP/PDP cutover
 ```
+
+## PHASE05 Product Action Guard Startup Wiring 004
+
+新增应用启动默认接线：
+
+```text
+src/backend/zuno/main.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+init_config: 数据库 bootstrap 成功后配置 WorkspaceTaskRuntimeService.configure_security_product_action_guard(PostgresSecurityProductActionGuard(engine))
+artifact read/download: 生产启动后默认使用 Postgres Security pre-effect validation guard
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/main.py tools/scripts/verify_phase05_security_persistence.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 product artifact read/download Postgres guard startup wiring available
+phase closure not approved
+remaining: resume/citation/admin default-path reauthorization and full PEP/PDP cutover
+```

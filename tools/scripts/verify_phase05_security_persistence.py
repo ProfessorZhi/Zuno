@@ -331,6 +331,14 @@ def verify_phase05_security_persistence() -> list[str]:
         if phrase not in workspace_api:
             errors.append(f"workspace API missing product action reauthorization phrase: {phrase}")
 
+    app_startup = (REPO_ROOT / "src" / "backend" / "zuno" / "main.py").read_text(encoding="utf-8")
+    for phrase in [
+        "PostgresSecurityProductActionGuard(engine)",
+        "WorkspaceTaskRuntimeService.configure_security_product_action_guard(",
+    ]:
+        if phrase not in app_startup:
+            errors.append(f"app startup missing product action security guard phrase: {phrase}")
+
     fault_test = (
         REPO_ROOT
         / "tests"

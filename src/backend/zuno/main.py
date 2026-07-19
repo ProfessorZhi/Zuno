@@ -56,6 +56,14 @@ async def init_config():
     if not database_ready:
         raise RuntimeError("Database bootstrap failed during Phase 0 startup recovery")
 
+    from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
+    from zuno.platform.database import engine
+    from zuno.platform.security import PostgresSecurityProductActionGuard
+
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(
+        PostgresSecurityProductActionGuard(engine)
+    )
+
     await init_default_agent()
 
     async def run_optional_startup(name, coroutine, timeout_seconds: int = 20):
