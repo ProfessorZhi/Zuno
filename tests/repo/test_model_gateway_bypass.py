@@ -127,3 +127,25 @@ def test_resume_optimizer_returns_non_mock_gateway_output() -> None:
     enhancer = ResumeEnhancer(gateway=FakeGateway())
 
     assert enhancer.enhance_text("plain resume text") == "polished resume text"
+
+
+def test_autobuild_client_constructs_models_through_gateway_boundary() -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/platform/services/autobuild/client.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    autobuild_path = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "autobuild" / "client.py"
+    )
+    tree = ast.parse(autobuild_path.read_text(encoding="utf-8"))
+    imports = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+        and ast.get_source_segment(autobuild_path.read_text(encoding="utf-8"), node)
+    ]
+    import_text = "\n".join(ast.get_source_segment(autobuild_path.read_text(encoding="utf-8"), node) or "" for node in imports)
+
+    assert "langchain_openai" not in import_text
+    assert "ChatOpenAI" not in import_text

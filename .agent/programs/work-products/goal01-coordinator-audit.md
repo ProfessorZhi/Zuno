@@ -625,3 +625,28 @@ PHASE07 bypass count reduced from 10 to 9
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 004
+
+已迁移一个 AutoBuild 默认 chat model 构建点：
+
+```text
+src/backend/zuno/platform/services/autobuild/client.py
+```
+
+该文件原本在 `create_build_agent()` 中直接创建 `ChatOpenAI(**kwargs)`。现已改为通过注入或默认的 `ModelGateway` 调用 `get_chat_model(binding=..., role=ModelRole.EXECUTOR)`，保留 `LLMService.get_one_llm()` 返回的 model、api_key、base_url 作为 Gateway binding。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 9 to 8
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```
