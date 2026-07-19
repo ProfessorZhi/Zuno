@@ -1,13 +1,13 @@
 # PHASE04 PostgreSQL Domain and Transaction Foundation
 
 phase_id: PHASE04
-status: ready
+status: completed
 depends_on: PHASE03
 owner: Module 11 Infrastructure
 
 ## 订正说明
 
-2026-07-16 撤回此前 `completed` 结论。现有 PostgreSQL 16 Migration、基础 UoW、Outbox/Inbox、Idempotency、Lease/Fencing、Object Manifest 和 Checkpoint 表及 5 个集成测试作为部分实现保留，但它们只证明最小 Primitive，不证明完整基础设施 Runtime。
+2026-07-18 Coordinator Closure 批准 PHASE04 completed。PostgreSQL、Alembic、UoW、Outbox/Inbox、RabbitMQ、Idempotency、Lease/Fencing、MinIO/S3、官方 LangGraph PostgreSQL Checkpointer、Backup/Restore、Generic Replay Framework、Fault Recovery 和 Operator Readiness 已达到 PHASE04 范围内的 implementation available；这不代表 PHASE05–22 Runtime 或 production ready。
 
 本 Phase 不再接受“最小真实集成闭环”。必须完成 PHASE04 范围内服务器产品 Target 的真实 PostgreSQL、RabbitMQ、S3-compatible Object Store、LangGraph PostgreSQL Checkpointer、Migration、Backup/Restore、并发、故障和恢复能力。
 

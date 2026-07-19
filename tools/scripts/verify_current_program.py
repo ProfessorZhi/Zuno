@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE04"
+CURRENT_PHASE = "PHASE05"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -184,8 +184,8 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[0]: "completed",
         PHASE_FILES[1]: "completed",
         PHASE_FILES[2]: "completed",
-        PHASE_FILES[3]: "ready",
-        PHASE_FILES[4]: "planned",
+        PHASE_FILES[3]: "completed",
+        PHASE_FILES[4]: "ready",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -208,9 +208,9 @@ def _verify_correction_states() -> list[str]:
             "may_start_phase04_after_validation: true",
         ],
         "phase04-readiness.yaml": [
-            "current_phase_status: ready",
+            "current_phase_status: completed",
             "prior_completion_candidate: superseded",
-            "may_start_phase05_after_validation: false",
+            "may_start_phase05_after_validation: true",
         ],
     }
     for filename, phrases in readiness_checks.items():
@@ -293,7 +293,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE04",
+                "current_phase: PHASE05",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
@@ -309,7 +309,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE04",
+                "current_phase: PHASE05",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -329,20 +329,12 @@ def verify_current_program() -> list[str]:
                 "state: completed, depends_on: [], tasks: [P01-T01",
                 "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed",
                 "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed",
-                "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: ready",
-                "id: PHASE05",
+                "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
+                "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
             ],
             "program-manifest.yaml",
         )
     )
-    for forbidden in [
-        "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
-        "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
-    ]:
-        if forbidden in manifest:
-            errors.append(
-                f"program-manifest.yaml retains withdrawn phase state: {forbidden}"
-            )
 
     errors.extend(_verify_correction_states())
     errors.extend(_verify_requirement_ledger())
@@ -429,39 +421,47 @@ def verify_current_program() -> list[str]:
             "verify_phase04_postgres_foundation",
         )
     )
-    phase04_complete_path = (
-        REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
+    phase04_pre_closure_path = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase04_pre_closure_gate.py"
+    )
+    phase04_post_closure_path = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase04_post_closure_consistency.py"
     )
     phase04_blocker = (
         REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
     )
-    if not phase04_complete_path.exists():
-        errors.append("missing PHASE04 complete infrastructure verifier")
+    if not phase04_pre_closure_path.exists():
+        errors.append("missing PHASE04 pre-closure verifier")
+    elif not phase04_post_closure_path.exists():
+        errors.append("missing PHASE04 post-closure consistency verifier")
     elif not phase04_blocker.exists():
-        errors.append("missing PHASE04 blocker evidence")
+        errors.append("missing PHASE04 aggregate evidence")
     else:
-        complete_errors = _load_verifier_function(
-            phase04_complete_path,
-            "verify_phase04_complete_infrastructure",
-            "verify_phase04_complete_infrastructure",
+        pre_closure_errors = _load_verifier_function(
+            phase04_pre_closure_path,
+            "verify_phase04_pre_closure_gate",
+            "verify_phase04_pre_closure_gate",
         )()
-        expected_fragments = [
-            "P04-T06 is not completed in phase04-readiness.yaml",
-            "P04-T07 is not completed in phase04-readiness.yaml",
-            "PHASE04 coordinator approval is not approved",
-            "PHASE05 start gate remains closed",
-        ]
-        combined = "\n".join(complete_errors)
-        for fragment in expected_fragments:
-            if fragment not in combined:
-                errors.append(
-                    f"PHASE04 complete infrastructure gate missing blocker: {fragment}"
-                )
+        post_closure_errors = _load_verifier_function(
+            phase04_post_closure_path,
+            "verify_phase04_post_closure_consistency",
+            "verify_phase04_post_closure_consistency",
+        )()
+        errors.extend(
+            f"PHASE04 pre-closure gate failed after closure: {error}"
+            for error in pre_closure_errors
+        )
+        errors.extend(
+            f"PHASE04 post-closure consistency gate failed after closure: {error}"
+            for error in post_closure_errors
+        )
         blocker_text = _read(phase04_blocker)
         for phrase in [
-            "status: blocked",
+            "status: completed",
+            "coordinator_decision: approved",
             "Docker engine `29.4.0`",
             "real_services_smoke: passed",
+            "generic_replay_framework: proven",
         ]:
             if phrase not in blocker_text:
                 errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")

@@ -3,6 +3,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
+PRE_CLOSURE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_pre_closure_gate.py"
+POST_CLOSURE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_post_closure_consistency.py"
 SMOKE_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase04_real_services_smoke.py"
 
 
@@ -24,15 +26,25 @@ def test_phase04_real_services_smoke_passes_against_running_docker_services() ->
     assert module.verify_phase04_real_services_smoke() == []
 
 
-def test_phase04_complete_infrastructure_is_fail_closed_until_full_proof() -> None:
-    verifier = _load_verifier()
-    errors = "\n".join(verifier.verify_phase04_complete_infrastructure())
-    assert "P04-T06 is not completed in phase04-readiness.yaml" in errors
-    assert "P04-T07 is not completed in phase04-readiness.yaml" in errors
-    assert "PHASE04 coordinator approval is not approved" in errors
-    assert "PHASE05 start gate remains closed" in errors
-    assert "PHASE04 evidence missing completion proof marker: backup_restore_replay: proven" not in errors
-    assert "PHASE04 evidence missing completion proof marker: combined_dependency_fault: proven" not in errors
+def test_phase04_pre_and_post_closure_gates_pass_after_coordinator_closure() -> None:
+    for path, module_name, function_name in [
+        (
+            PRE_CLOSURE_VERIFIER,
+            "verify_phase04_pre_closure_gate",
+            "verify_phase04_pre_closure_gate",
+        ),
+        (
+            POST_CLOSURE_VERIFIER,
+            "verify_phase04_post_closure_consistency",
+            "verify_phase04_post_closure_consistency",
+        ),
+    ]:
+        spec = spec_from_file_location(module_name, path)
+        assert spec is not None
+        assert spec.loader is not None
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        assert getattr(module, function_name)() == []
 
 
 def test_phase04_partial_evidence_remains_withdrawn() -> None:

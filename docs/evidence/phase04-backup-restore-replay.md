@@ -3,7 +3,7 @@
 phase_id: PHASE04
 task_id: P04-T07
 date: 2026-07-18
-status: implementation_available_for_backup_restore_product_projection_replay_subscope
+status: implementation_available_for_backup_restore_cross_domain_replay_subscope
 postgres_backup: passed
 postgres_restore: passed
 object_manifest_restore: passed
@@ -13,15 +13,23 @@ minio_restore_point: passed
 product_projection_replay: passed
 product_projection_recovery_set: passed
 product_projection_hash_verification: passed
+generic_replay_framework: passed
+replay_generation: passed
+replay_duplicate_handling: passed
+replay_stale_generation_reject: passed
+future_domain_replay_port_contract: passed
+cross_domain_replay_contract_fixtures: passed
+cross_domain_recovery_set: passed
+cross_domain_hash_verification: passed
 official_checkpointer_restore: proven_separately
 pitr: proven_separately
 runtime_restart_after_restore: passed
 
 ## 边界
 
-Backup/Restore/Replay subset != PHASE04 completion.
+Backup/Restore/Replay subset is PHASE04 recovery/replay evidence, not a production cutover approval.
 
-本证据证明当前 PHASE04 infrastructure primitive rows 的真实恢复演练、真实 MinIO 对象恢复点、恢复后 Product Projection 从权威 Product source fact 与 Object Manifest 重放、以及针对恢复库重新构建的 sync/async PostgreSQL Runtime。它不证明完整产品运行时 cutover，不证明 Agent、Knowledge、Memory、Tool 和 Observability 的跨领域 Projection Replay，也不单独证明官方 LangGraph PostgreSQL Checkpointer 恢复或 PITR；后二者由各自证据文件证明。
+本证据证明当前 PHASE04 infrastructure primitive rows 的真实恢复演练、真实 MinIO 对象恢复点、恢复后 Product Projection 从权威 Product source fact 与 Object Manifest 重放、generic replay framework 的 generation / ordering / idempotent duplicate / stale generation reject / hash verification contract、future-domain replay port contract，以及针对恢复库重新构建的 sync/async PostgreSQL Runtime。它不证明完整产品运行时 cutover，不证明 Security、Agent、Knowledge、Memory、Tool 或 Observability 领域 Runtime 已完成，也不单独证明官方 LangGraph PostgreSQL Checkpointer 恢复或 PITR；后二者由各自证据文件证明。
 
 ## 环境
 
@@ -50,6 +58,11 @@ Backup/Restore/Replay subset != PHASE04 completion.
 - 在恢复库先确认 Product derived projection watermark 不存在，再从 restored Product source fact 和 restored Object Manifest 重放生成 projection payload。
 - 重放时同时校验 source payload canonical hash、MinIO restored object hash、PostgreSQL manifest hash 和 projection payload canonical hash；projection hash 不替代 source fact hash。
 - 重放后写入 `infra_recovery_watermarks` 的 authoritative Product watermark 与 derived Product Projection watermark，并创建 verified `infra_recovery_sets` / `infra_recovery_set_members`。
+- 在源库写入五个 future-domain replay contract fixtures，并在恢复库确认 derived projection watermark 预先不存在；这些 fixture 只验证统一 replay port 接入规则，不声明对应领域 Runtime Current。
+- 对 future-domain contract fixtures 分别校验 `published` 状态、tenant、topic、ordering sequence、canonical source hash，再重放为独立 derived projection watermark。
+- 为 replay contract fixtures 创建 verified `infra_recovery_sets` / `infra_recovery_set_members`，成员覆盖 authoritative source watermark 和 derived projection watermark，verification hash 绑定恢复点和成员集合。
+- 校验 derived projection hash 不替代 source fact hash，避免把派生投影误写成权威事实。
+- 使用 `InMemoryReplayPort` contract smoke 验证 replay generation、duplicate convergence、stale generation reject，以及 FutureDomain 接入不会被解释为领域 Runtime 已完成。
 - 针对恢复库重建 sync/async `PostgresRuntime`，验证两类 health/readiness；sync read-only UoW 读取 Outbox/Object，async read-only UoW 读取 Inbox/checkpoint primitive。
 - 删除临时恢复库、容器内 dump 和 MinIO bucket，再用一个 PostgreSQL 事务删除源库 recovery seed；重复演练不遗留 marker rows。
 
@@ -69,6 +82,5 @@ pytest -q tests/integration/test_phase04_backup_restore_replay.py -p no:cachepro
 
 - 本 verifier 内的 Checkpointer primitive 恢复只覆盖 `infra_checkpoints` table；官方 Checkpointer schema/runtime 恢复由 `docs/evidence/phase04-official-checkpointer-backup-restore.md` 单独证明。
 - PITR alignment 由 `docs/evidence/phase04-pitr-alignment.md` 单独证明。
-- Agent、Knowledge、Memory、Tool 和 Observability 的跨领域 Projection Replay 尚未证明。
-- PostgreSQL、RabbitMQ、MinIO 与官方 Checkpointer 的完整组合故障恢复仍缺失。
-- P04-T07 保持 `ready`，不是 completed。
+- 完整产品运行时 cutover 仍必须由 Coordinator Closure 显式批准；本证据不自动批准 cutover。
+- Security、Agent、Knowledge、Memory、Tool 和 Observability 的真实领域 replay 仍属于 PHASE05+ 对应阶段，不是 PHASE04 Closure 条件。

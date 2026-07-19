@@ -3,7 +3,7 @@
 phase_id: PHASE04
 task_id: P04-T06
 date: 2026-07-18
-status: partial_implementation_available
+status: implementation_available_for_official_checkpointer_lifecycle_subscope
 
 ## Result
 
@@ -24,7 +24,7 @@ status: partial_implementation_available
 - stale_checkpoint_generation_rejected: passed
 - official_copy_thread_prune: not_implemented_in_current_package
 - checkpoint_receipt_not_domain_success: preserved
-- phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Commands
 
@@ -46,4 +46,4 @@ PHASE04 official LangGraph PostgreSQL Checkpointer verification passed.
 
 `PostgresSaver.setup()` 创建的 `checkpoint_migrations`、`checkpoints`、`checkpoint_blobs` 和 `checkpoint_writes` 是官方 Checkpointer schema，不是 Zuno 领域事实表。当前 `langgraph-checkpoint-postgres==3.1.0` 的同步 `copy_thread()`、partial `prune()` 和 run-scoped `delete_for_runs()` 方法抛出 `NotImplementedError`；整 thread retention cleanup 已由 `docs/evidence/phase04-official-checkpointer-retention.md` 通过官方 `delete_thread()` 单独证明。
 
-这不证明 PHASE04 completed。仍需补齐包含 official Checkpointer 的 combined-service fault 证据；跨领域 replay 边界仍需最终 Coordinator 收口。
+这不证明 PHASE04 completed。official Checkpointer retention、backup/restore、schema upgrade recovery 和 combined-service fault 已由独立证据补齐；跨领域 replay、P04-T07 readiness、Coordinator approval 和 PHASE05 ready gate 仍需最终收口。

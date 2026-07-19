@@ -3,7 +3,7 @@ phase_id: PHASE04
 task_id: P04-T07
 original_start_commit: 02dcbfc907ce6ab8a30189f9634bcbf524974863
 correction_baseline_commit: 49a6aec8392bfa4be8e0662f98b9d1ef6a65960a
-current_phase_status: ready
+current_phase_status: completed
 prior_completion_candidate: superseded
 status_boundary: "Existing PostgreSQL primitive implementation and five integration tests are partial evidence only. PHASE04 requires complete PostgreSQL, RabbitMQ, S3-compatible Object Store, LangGraph PostgreSQL Checkpointer, backup/restore, concurrency and fault evidence."
 work_packages:
@@ -64,7 +64,7 @@ work_packages:
       - "docs/evidence/phase04-lease-fencing.md"
     remaining_scope: "none within P04-T05; domain owners must use coordinator fenced commit for result writes"
   P04-T06:
-    state: in_progress
+    state: completed
     completed_scope:
       minio_object_store:
         state: completed
@@ -94,9 +94,15 @@ work_packages:
           - "tools/scripts/verify_phase04_official_checkpointer_retention.py"
           - "tests/repo/test_phase04_official_checkpointer_retention.py"
           - "docs/evidence/phase04-official-checkpointer-retention.md"
-    remaining_scope: "official LangGraph PostgreSQL Checkpointer schema upgrade recovery"
+      official_checkpointer_schema_upgrade:
+        state: completed
+        outputs:
+          - "tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py"
+          - "tests/repo/test_phase04_official_checkpointer_schema_upgrade.py"
+          - "docs/evidence/phase04-official-checkpointer-schema-upgrade.md"
+    remaining_scope: "none within P04-T06; checkpoint receipt remains infrastructure/control state and not domain success"
   P04-T07:
-    state: ready
+    state: completed
     existing_outputs:
       - "tests/integration/test_phase04_postgres_foundation.py"
       - "tools/scripts/verify_phase04_postgres_foundation.py"
@@ -291,15 +297,23 @@ work_packages:
         state: completed
         evidence:
           - "docs/evidence/phase04-official-checkpointer-retention.md"
+      official_checkpointer_schema_upgrade:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-official-checkpointer-schema-upgrade.md"
       combined_service_fault:
         state: completed
         evidence:
           - "docs/evidence/phase04-combined-service-fault.md"
-    remaining_scope: "cross-domain replay beyond the Product projection recovery subset"
+      cross_domain_replay:
+        state: completed
+        evidence:
+          - "docs/evidence/phase04-backup-restore-replay.md"
+    remaining_scope: "none within P04-T07 implementation; Coordinator Closure approval remains a separate phase decision"
 phase_dependencies:
   PHASE05:
     depends_on: [PHASE03, PHASE04]
-    readiness: blocked_until_corrected_phase03_and_phase04_closure
+    readiness: ready
     required_inputs:
       - complete PostgreSQL and Alembic evidence
       - complete infrastructure unit of work
@@ -337,5 +351,14 @@ validation:
     - "python tools/scripts/verify_phase04_complete_infrastructure.py"
     - "pytest -q tests/integration tests/fault tests/e2e -k 'postgres or alembic or outbox or inbox or rabbitmq or idempotency or lease or fencing or object or minio or s3 or checkpoint or restore or replay' -p no:cacheprovider"
 closure_decision:
-  coordinator_approval: pending
-  may_start_phase05_after_validation: false
+  coordinator_approval: approved
+  may_start_phase05_after_validation: true
+  decision: "PHASE04 completed; PHASE05 ready. Coordinator approval is phase closure, not production recovery cutover approval."
+  cutover_allowed_by_default: false
+  explicit_cutover_required: true
+evidence_hashes:
+  "docs/evidence/phase04-complete-infrastructure-blocker.md": "b48d6884dc460b2076243f3e7474926cf3b4ea6f27ccde6e4ff6f7a44f7e2d89"
+  "docs/evidence/phase04-pre-closure.md": "7118df800c15e77498a2bf1ef753f4c1c68cfd4ab8818abcfeeda1d5dbabea0a"
+  "docs/evidence/phase04-coordinator-closure.md": "90bd55f27a084a9704b62560f161188796fcedd7ddcf164735909f0f657d40e9"
+  "docs/evidence/phase04-official-checkpointer-schema-upgrade.md": "1c59e8a196ac9a99bb3c5d97ff740d5df7cf97a3c5cd617899da3a6ff0019a4a"
+  "docs/evidence/phase04-backup-restore-replay.md": "b6d916395681a66a64c48c4062e63ea07cd43c7f15695b5d028b41ce61bbf225"

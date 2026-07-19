@@ -166,8 +166,8 @@ def verify_phase04_checkpoint_boundary_version() -> list[str]:
         "checkpoint_domain_fact_separation: passed",
         "checkpoint_version_fail_closed: passed",
         "official_checkpointer_runtime_boundary: passed",
-        "phase_completion: blocked_combined_fault_and_cross_domain_replay_boundary",
-        "不证明 combined-service fault、跨领域 replay final cutover 或 PHASE04 closure",
+        "phase_completion: blocked_cross_domain_replay_and_approval",
+        "不证明跨领域 replay final cutover 或 PHASE04 closure",
     ]:
         if phrase not in boundary_evidence:
             errors.append(f"checkpoint boundary evidence missing phrase: {phrase}")

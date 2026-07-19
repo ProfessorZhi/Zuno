@@ -3,8 +3,8 @@
 phase_id: PHASE04
 task_id: P04-T07
 date: 2026-07-18
-status: blocked
-coordinator_decision: not_approved
+status: completed
+coordinator_decision: approved
 real_services_smoke: passed
 alembic_migration_foundation: proven
 alembic_schema_drift_full_domain_and_infra: proven
@@ -19,6 +19,7 @@ postgres_pool_exhaustion_subset: passed
 postgres_connection_loss_recovery_subset: passed
 langgraph_postgres_checkpointer: proven
 backup_restore_replay: proven
+generic_replay_framework: proven
 rabbitmq_fault_evidence: proven
 minio_restore_evidence: proven
 combined_dependency_fault: proven
@@ -79,10 +80,11 @@ checkpoint_boundary_version: proven
 restore_cutover_completion_gates: proven
 official_langgraph_checkpointer_lifecycle_subset: proven
 official_checkpointer_backup_restore: proven
+official_checkpointer_schema_upgrade: proven
 
 ## Stop Condition
 
-PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证；官方 LangGraph PostgreSQL Checkpointer 依赖已由 Coordinator Decision 批准，并通过基础 PostgresSaver lifecycle、graph-level interrupt/resume after restart、整 thread retention cleanup、partial prune/run delete fail-closed、真实 `pg_dump`/`pg_restore` backup/restore、恢复库 Product Projection Replay 子范围，以及包含 official Checkpointer 的组合故障验证。但完整 Phase 还要求跨领域 replay 边界收口、P04-T06/T07 readiness 状态和 Coordinator approval gate。
+PHASE04 completed。当前已经启动真实 PostgreSQL、RabbitMQ 和 MinIO/S3，并完成各自 canonical integration/fault 子范围验证；官方 LangGraph PostgreSQL Checkpointer 依赖已由 Coordinator Decision 批准，并通过基础 PostgresSaver lifecycle、graph-level interrupt/resume after restart、整 thread retention cleanup、partial prune/run delete fail-closed、真实 `pg_dump`/`pg_restore` backup/restore、schema upgrade recovery、恢复库 Product Projection Replay、Generic Replay Framework contract、future-domain replay port contract，以及包含 official Checkpointer 的组合故障验证。P04-T06 与 P04-T07 均已完成；PHASE05 ready。
 
 目标文件要求真实 PostgreSQL、RabbitMQ、MinIO/S3、LangGraph PostgreSQL Checkpointer、Backup/Restore/Replay 和故障证据都成立后，PHASE04 才能 completed，PHASE05 才能 ready。静态 YAML、Compose 声明、primitive table、一次性连通性测试和 mock 不能替代这些证据。
 
@@ -125,7 +127,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_minio_object_store.py` | passed; staging, duplicate staging, multipart/partial upload, orphan cleanup, lost-response/duplicate-complete reconciliation, authorization deny-before-I/O, Object Lock version、retention、legal hold、lifecycle、pre-commit visibility、missing/hash fail-closed、commit cleanup、delete 和 restore 均在真实 MinIO 验证 |
 | `python tools/scripts/verify_phase04_minio_manifest_adoption.py` | passed; MinIO raw SHA-256/size receipt 进入 PostgreSQL Manifest，Input domain + Manifest 同事务，物理 commit 后 crash 可 reconcile，staged/deleted/quarantined read fail closed，篡改进入持久 quarantine |
 | `python tools/scripts/verify_phase04_minio_storage_restart.py` | passed; committed object and restore point survived real `docker restart zuno-minio` |
-| `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
+| `python tools/scripts/verify_phase04_backup_restore_replay.py` | passed; `pg_dump`/temporary `pg_restore`、MinIO restore point，并在恢复库重建 Product Projection、generic replay contract fixtures、RecoverySet/hash，再重建 sync/async PostgresRuntime 与 read-only UoW 后校验 infra rows |
 | `python tools/scripts/verify_phase04_combined_service_fault.py` | passed; PostgreSQL/RabbitMQ/MinIO 同时停机期间新调用 fail closed，全部健康恢复后 persistent message、Outbox→Inbox、Object hash、Manifest、checkpoint primitive 与 official `PostgresSaver` checkpoint/history/delta channel 对账通过 |
 | `python tools/scripts/verify_phase04_operator_readiness.py` | passed; Operator readiness snapshot 聚合 PostgreSQL health/readiness/pool metrics、Outbox backlog、RabbitMQ queue depth、MinIO object read probe、trace correlation、failure owner/retry owner/recovery owner，并明确 telemetry 不产生 Eval verdict |
 | `python tools/scripts/verify_phase04_capacity_admission.py` | passed; PostgreSQL capacity admission schema、drain、atomic reservation、owner-fenced release、exhaustion backpressure 与 release 后恢复 admission 均通过 |
@@ -148,18 +150,18 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 | `python tools/scripts/verify_phase04_redis_optional_boundary.py` | passed; Redis/CACHE 在 `DataServiceCapabilityV1` 中为 optional、non-authoritative、rebuildable，并且不进入 PHASE04 required real services 或 release adapter provenance |
 | `python tools/scripts/verify_phase04_derived_index_boundary.py` | passed; VECTOR/Milvus、GRAPH/Neo4j 和 LEXICAL/BM25/Search 在 `DataServiceCapabilityV1` 中为 versioned、non-authoritative、rebuildable，并且不进入 PHASE04 required release adapter provenance |
 | `python tools/scripts/verify_phase04_contract_ownership_boundaries.py` | passed; Index write/receipt/visibility 与 Knowledge acceptance 分层、IndexManifest/Acceptance 领域归属、PreparedToolAction/ActionProposal/SecurityApproval/AuditPersistence owner 不重叠均通过 |
-| `python tools/scripts/verify_phase04_complete_infrastructure.py` | expected blocked; 全部已登记真实子 verifier 执行通过，P04-T01/T02/T03/T04/T05 与 P04-T06 MinIO 子范围已完成，最终仍由 P04-T06 official Checkpointer 子范围、P04-T07、审批/PHASE05 gate、完整恢复与含 Checkpointer 的组合故障 marker 阻止关闭 |
+| `python tools/scripts/verify_phase04_pre_closure_gate.py` | passed; P04-T01-T05 completed、P04-T06/P04-T07 implementation complete 或 completion_candidate、真实服务/迁移/故障/恢复/replay 证据 marker、PHASE04 Mandatory Requirement Current 边界均通过；不要求 coordinator approval、PHASE04 completed 或 PHASE05 ready |
+| `python tools/scripts/verify_phase04_complete_infrastructure.py` | pending Coordinator Closure; Pre-Closure 通过前不运行，Closure 后作为静态一致性 gate 验证 approved/completed/ready 状态 |
 | `python tools/scripts/verify_phase04_reconciler_supervision_boundary.py` | passed; IdempotencyWorkerSupervisor 的 reconcile/no-reexecution 与 LeaseWorkerCoordinator 的 heartbeat/fenced commit/fail-closed 边界均有证据 |
-| `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过，official Checkpointer 仍 blocked |
+| `python tools/scripts/verify_phase04_checkpoint_boundary_version.py` | passed; Checkpoint/Domain fact boundary 与 Checkpoint adapter/schema unknown version fail-closed profile 均通过；official Checkpointer runtime/recovery 由独立证据证明 |
 | `python tools/scripts/verify_phase04_restore_cutover_completion_gates.py` | passed; backup completed、isolated restore cutover 和 recovery cutover explicit allow 三类 gate 均保持 fail-closed |
 | `python tools/scripts/verify_phase04_official_langgraph_checkpointer.py` | passed; official `langgraph.checkpoint.postgres.PostgresSaver` 在真实 PostgreSQL 上完成 setup、多代 put、restart restore、thread isolation、writes、delta channel history、delete cleanup、infra generation 对账和 stale generation reject |
 | `python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py` | passed; official `PostgresSaver` checkpoint schema/rows/writes 随真实 `pg_dump -Fc` 备份并在临时恢复库经 `pg_restore` 后由官方 saver 读取 |
+| `python tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py` | passed; 临时真实 PostgreSQL 库中手工应用官方 v0-v8 schema，当前 `PostgresSaver.setup()` 升级到 v9，旧 checkpoint 可读且 v9 `task_path` writes 可持久化 |
 
 ## Missing Required Proof
 
-- LangGraph PostgreSQL Checkpointer graph-level interrupt/resume、retention/prune 和 schema upgrade recovery
-- Backup/Restore/Replay for product projections、完整产品 Runtime restart 与 full recovery set
-- 跨领域 replay beyond Product projection recovery subset
+- 无剩余 PHASE04 功能 proof 缺口。
 
 ## Current Verified Subset
 
@@ -208,6 +210,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - MinIO/S3 governance subset：Object Lock committed version、GOVERNANCE retention、legal hold、exact-version purge deny、`_staging/` expiration lifecycle 与 authorization hook deny-before-I/O 均经真实 MinIO 验证；
 - MinIO/PostgreSQL Manifest adoption：Input domain fact 与 staged/visible Manifest 使用同一 Domain UoW；物理 commit 后 DB 更新前 crash 保持 staged gate，reconciler 按 raw SHA-256/size 收敛；篡改 object 持久 quarantine，删除先撤销数据库可见性再物理 purge；
 - Backup/Restore/Replay subset：真实 `pg_dump` 备份，恢复到临时 PostgreSQL DB，校验 `infra_outbox_events`、`infra_inbox_messages`、`infra_object_manifests`、`infra_checkpoints` 的唯一 recovery marker；恢复后从权威 Product source fact 与 Object Manifest 重放 Product Projection，写入 authoritative/derived recovery watermarks 和 verified RecoverySet，并清理临时 DB 和 dump；
+- Official Checkpointer schema upgrade subset：临时真实 PostgreSQL 库应用官方 migration v0-v8 后写入旧 checkpoint，当前 `PostgresSaver.setup()` 升级至 v9 后保留旧 checkpoint 可读，并证明 `checkpoint_writes.task_path` 新写入可持久化且 setup 幂等；
 - Restore Runtime restart subset：`pg_restore` 后针对临时恢复库新建 sync/async `PostgresRuntime`，两类 health/readiness 和 read-only UoW 均能读取对应恢复事实；
 - 三服务组合故障 subset：PostgreSQL、RabbitMQ、MinIO 同时停止期间新连接/读取 fail closed；恢复后新建 Runtime 与 Adapter 对账 durable RabbitMQ marker、Outbox→Inbox、MinIO bytes/hash、Object Manifest、checkpoint primitive 和 official `PostgresSaver` checkpoint/history/delta channel；
 - Operator readiness subset：真实 PostgreSQL sync/async health/readiness、pool metrics、Outbox backlog、RabbitMQ durable queue depth、MinIO stage/commit/read、trace correlation、failure owner/retry owner/recovery owner 与 evidence ref 均由结构化 snapshot 验证；Operator readiness telemetry 不生成 Eval verdict。
@@ -217,7 +220,7 @@ PHASE04 仍不能关闭。当前已经启动真实 PostgreSQL、RabbitMQ 和 Min
 - Recovery watermark subset：PostgreSQL `infra_recovery_watermarks` / `infra_recovery_sets` / `infra_recovery_set_members` 提供 authoritative/derived component watermark、RecoverySet alignment、mismatch fail-closed 和 verification hash；derived index watermark 落后时 RecoverySet 创建被拒绝，对齐后才 verified。
 - Secret rotation / tenant hit subset：PostgreSQL `infra_secret_versions` / `infra_secret_rotation_heads` / `infra_secret_leases` 提供 generation-fenced secret activation、active-version lease receipt、secret material reject 和 rollback；`infra_cross_tenant_hits` 持久化跨租户命中的 FAIL_CLOSED / QUARANTINE 证据，并在运行时拒绝继续服务。
 - PITR alignment subset：临时真实 PostgreSQL primary/recovery 容器启用 WAL archive、`pg_basebackup` 和 recovery target time；恢复库中 verified RecoverySet 的 PostgreSQL/Object/Checkpoint/Index watermark 均对齐，target time 之后写入的 derived index ahead watermark 未进入恢复结果。
-- DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；official Checkpointer backup/restore 与 Product Projection Replay 子范围已有对应 verifier，graph-level interrupt/resume、retention/prune、跨领域 replay 和 combined fault 仍未完成。
+- DR Profile subset：`docs/governance/infrastructure-dr-profile.yaml` 明确 PostgreSQL、Object Manifest/MinIO、RabbitMQ Outbox/Inbox、official Checkpointer、Product Projection Replay 和 PITR 的 RPO、RTO、owner、recovery owner、验证命令、evidence ref 与 cutover fail-closed policy；official Checkpointer backup/restore、graph-level interrupt/resume、retention/prune、Product Projection Replay、Generic Replay Framework 和 combined fault 均已有对应 verifier/evidence。
 - Infrastructure Capability Profile subset：`InfrastructureCapabilityProfileV1` 和 `DataServiceCapabilityV1` 提供 frozen Pydantic contract、canonical content hash、profile version、deployment class、typed service capability、config hash、supported/unsupported semantics 和派生服务非权威校验；这只证明 profile contract 本身 current，不证明 blocked adapters 已实现。
 - Backup/Service Boundary subset：`tools/scripts/verify_phase04_backup_service_boundaries.py` 固化 Backup Scope/RPO/Encryption/Verify profile，并把 PostgreSQL、RabbitMQ、Object Store 和 Checkpoint Store 的 typed service boundary 纳入同一 gate；该 gate 不证明生产 encrypted backup、PITR、完整 RecoverySet 或 official Checkpointer restore。
 - Infrastructure docs governance subset：`tools/scripts/verify_phase04_infrastructure_docs_governance.py` 固化 Current/Target/Future/Explicitly Not Selected 分层、唯一正式 Infrastructure Target 文档、Agent 镜像、architecture canonical 四文件集合和文档入口；该 gate 不替代任何 runtime 证据。
@@ -274,8 +277,8 @@ Infrastructure requirements `ARCH-INFRA-027`, `ARCH-INFRA-028`, and `ARCH-INFRA-
 
 ## Existing Partial Evidence
 
-`docs/evidence/phase04-postgres-foundation.md` remains valid only as historical partial evidence for its original primitive scope. Current aggregate evidence now separately proves PostgreSQL Domain UoW、Alembic、RabbitMQ Outbox/Inbox 与 MinIO 子能力；该旧文件不能被回写成完整 Phase 证据，PHASE04 仍受 official LangGraph PostgreSQL Checkpointer 和完整恢复闭环阻止。
+`docs/evidence/phase04-postgres-foundation.md` remains valid only as historical partial evidence for its original primitive scope. Current aggregate evidence now separately proves PostgreSQL Domain UoW、Alembic、RabbitMQ Outbox/Inbox、MinIO、official LangGraph PostgreSQL Checkpointer、Generic Replay Framework 和 Coordinator Closure；该旧文件不能被回写成完整 Phase 证据，也不能单独证明 production readiness。
 
 ## Gate Decision
 
-PHASE04 remains not completed. PHASE05 must remain blocked until P04-T06/T07 are completed, cross-domain replay boundaries are closed or explicitly deferred by Coordinator Decision, and the Coordinator approval gate is explicit.
+PHASE04 is completed by Coordinator Closure. PHASE05 is ready. Requirement Ledger correction, Pre-Closure readiness and Coordinator Closure must not be interpreted as implementing PHASE05+ modules.

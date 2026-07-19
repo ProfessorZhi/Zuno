@@ -14,7 +14,7 @@ status: implementation_available_for_official_checkpointer_retention_subscope
 - official_run_delete_fail_closed: passed
 - official_retention_restart_restore: passed
 - checkpoint_receipt_not_domain_success: preserved
-- phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Commands
 
@@ -36,4 +36,4 @@ PHASE04 official Checkpointer retention verification passed.
 
 当前 `langgraph-checkpoint-postgres==3.1.0` 的同步 `prune()` 和 `delete_for_runs()` 会抛出 `NotImplementedError`。本证据把 partial prune 与 run-scoped delete 固定为 fail-closed，不把它们冒充为 Current，也不允许在缺少官方实现时删除仍可能被 DeltaChannel 重建依赖的 ancestor checkpoints 或 writes。
 
-本证据不关闭 PHASE04。剩余缺口是包含 official Checkpointer 的 combined-service fault，以及跨领域 replay 边界最终 Coordinator 收口。
+本证据不关闭 PHASE04。official Checkpointer combined-service fault 已由独立证据证明；剩余缺口是跨领域 replay、P04-T07 readiness、Coordinator approval 和 PHASE05 ready gate。

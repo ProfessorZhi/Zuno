@@ -327,6 +327,15 @@ OFFICIAL_CHECKPOINTER_RETENTION_VERIFIER = (
 OFFICIAL_CHECKPOINTER_RETENTION_EVIDENCE = (
     REPO_ROOT / "docs" / "evidence" / "phase04-official-checkpointer-retention.md"
 )
+OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_VERIFIER = (
+    REPO_ROOT
+    / "tools"
+    / "scripts"
+    / "verify_phase04_official_checkpointer_schema_upgrade.py"
+)
+OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_EVIDENCE = (
+    REPO_ROOT / "docs" / "evidence" / "phase04-official-checkpointer-schema-upgrade.md"
+)
 
 REQUIRED_REAL_SERVICES = {
     "PostgreSQL": ("localhost", 5432),
@@ -352,6 +361,7 @@ REQUIRED_COMPLETION_PROOF_MARKERS = [
     "real_services_smoke: passed",
     "langgraph_postgres_checkpointer: proven",
     "backup_restore_replay: proven",
+    "generic_replay_framework: proven",
     "rabbitmq_fault_evidence: proven",
     "minio_restore_evidence: proven",
     "combined_dependency_fault: proven",
@@ -698,7 +708,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_graph_interrupt: passed",
             "official_graph_resume_after_restart: passed",
             "official_graph_checkpoint_history: passed",
-            "phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
         ]:
             if phrase not in official_checkpointer_evidence:
                 errors.append(
@@ -727,7 +737,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_checkpointer_pg_dump: passed",
             "official_checkpointer_pg_restore: passed",
             "official_postgres_saver_read_restored_checkpoint: passed",
-            "phase_completion: still_blocked_graph_resume_retention_and_combined_fault",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
         ]:
             if phrase not in official_restore_evidence:
                 errors.append(
@@ -758,11 +768,42 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "official_partial_prune_fail_closed: passed",
             "official_run_delete_fail_closed: passed",
             "official_retention_restart_restore: passed",
-            "phase_completion: still_blocked_combined_fault_and_cross_domain_replay_boundary",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
         ]:
             if phrase not in official_retention_evidence:
                 errors.append(
                     "PHASE04 official Checkpointer retention evidence missing phrase: "
+                    f"{phrase}"
+                )
+    if not OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_VERIFIER.exists():
+        errors.append("missing PHASE04 official Checkpointer schema upgrade verifier")
+    else:
+        official_schema_errors = _load_verifier(
+            OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_VERIFIER,
+            "verify_phase04_official_checkpointer_schema_upgrade",
+            "verify_phase04_official_checkpointer_schema_upgrade",
+        )()
+        for official_schema_error in official_schema_errors:
+            errors.append(
+                "PHASE04 official Checkpointer schema upgrade verification failed: "
+                f"{official_schema_error}"
+            )
+    if not OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_EVIDENCE.exists():
+        errors.append("missing PHASE04 official Checkpointer schema upgrade evidence")
+    else:
+        official_schema_evidence = _read(OFFICIAL_CHECKPOINTER_SCHEMA_UPGRADE_EVIDENCE)
+        for phrase in [
+            "official_checkpointer_schema_upgrade: proven",
+            "official_old_schema_v8_created: passed",
+            "official_setup_migrated_to_v9: passed",
+            "official_pre_upgrade_checkpoint_recovered: passed",
+            "official_v9_task_path_write: passed",
+            "official_setup_idempotent_after_upgrade: passed",
+            "phase_completion: blocked_cross_domain_replay_and_approval",
+        ]:
+            if phrase not in official_schema_evidence:
+                errors.append(
+                    "PHASE04 official Checkpointer schema upgrade evidence missing phrase: "
                     f"{phrase}"
                 )
 
@@ -1204,8 +1245,13 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "product_projection_replay: passed",
             "product_projection_recovery_set: passed",
             "product_projection_hash_verification: passed",
+            "generic_replay_framework: passed",
+            "replay_generation: passed",
+            "replay_duplicate_handling: passed",
+            "replay_stale_generation_reject: passed",
+            "future_domain_replay_port_contract: passed",
             "runtime_restart_after_restore: passed",
-            "Backup/Restore/Replay subset != PHASE04 completion",
+            "Backup/Restore/Replay subset is PHASE04 recovery/replay evidence",
         ]:
             if phrase not in backup_evidence:
                 errors.append(
@@ -1545,7 +1591,6 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "pitr_alignment_boundary: passed",
             "product_projection_replay_boundary: passed",
             "phase_completion: blocked_cross_domain_replay_and_approval",
-            "cross-domain projection replay remains outside the proven subset",
         ]:
             if phrase not in dr_profile_evidence:
                 errors.append(f"PHASE04 DR profile evidence missing phrase: {phrase}")
@@ -2112,7 +2157,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
             "checkpoint_domain_fact_separation: passed",
             "checkpoint_version_fail_closed: passed",
             "official_checkpointer_runtime_boundary: passed",
-            "不证明 combined-service fault、跨领域 replay final cutover 或 PHASE04 closure",
+            "不证明跨领域 replay final cutover 或 PHASE04 closure",
         ]:
             if phrase not in checkpoint_boundary_evidence:
                 errors.append(

@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE04
+current_phase: PHASE05
 phase_count: 22
 program_version: 2
 activated_at: 2026-07-14
@@ -39,14 +39,14 @@ Current 审计
 - PHASE01 已完成重新审计和 Coordinator Closure；Inventory、Requirement Ledger、Risk Register 与 Readiness 作为 PHASE02 输入。
 - PHASE02 已有 Matrix/Flag/Allowlist/Playbook 是迁移设计，尚未形成可执行 Adapter、Flag State Machine、Cutover Controller、Rollback Drill 和 Runtime/CI Guard。
 - PHASE03 已有共享 Contract 内核是部分实现，尚未覆盖十一模块完整 Contract、真实 Producer/Consumer、Web/Desktop 类型和重复定义清理。
-- PHASE04 已有 PostgreSQL Primitive 是部分实现，尚未完成 RabbitMQ、真实 S3/MinIO、LangGraph PostgreSQL Checkpointer、Backup/Restore、组合故障、并发与恢复证明。
+- PHASE04 completed。PostgreSQL、Alembic、UoW、Outbox/Inbox、RabbitMQ、Idempotency、Lease/Fencing、MinIO/S3、官方 LangGraph PostgreSQL Checkpointer、Backup/Restore、Generic Replay Framework、Fault Recovery 和 Operator Readiness 已按 PHASE04 范围完成；这不表示 PHASE05–22 Runtime 已实现，也不表示 production ready。
 
-这些已有产物保留并作为后续实现输入。PHASE05 在 PHASE02–04 完整关闭前保持 `planned`。
+这些已有产物保留并作为后续实现输入。PHASE05 ready；Security Control Plane 可在完整耐久基础设施之上开始，PHASE05–22 Runtime Requirement 仍是 Target。
 
 ## 当前阶段
 
 ```text
-PHASE04_postgres-domain-and-transaction-foundation
+PHASE05_security-control-plane
 ```
 
 PHASE01 先重新冻结最新 `main` Current、完整 Requirement Ledger、Runtime/Persistence/Frontend/Legacy Inventory 和风险依赖，确保后续实现没有遗漏范围。PHASE02–04 按订正后的完整完成定义依次推进。

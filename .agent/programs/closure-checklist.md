@@ -2,25 +2,28 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE01
+current_phase: PHASE05
 program_version: 2
+
+PHASE04 completed
+PHASE05 ready
 
 ## PHASE01–04 订正状态
 
 - [x] 旧完成结论已撤回，已有产物保留为部分证据。
 - [x] Program Manifest、Roadmap、Current 和 Phase 文件已改为完整范围完成标准。
-- [ ] PHASE01 完整 Current/Gap/Requirement 双向追踪重新关闭。
-- [ ] PHASE02 可执行 Adapter/Flag/Cutover/Rollback/Guard 重新关闭。
-- [ ] PHASE03 十一模块完整 Contract/Producer/Consumer Adoption 重新关闭。
-- [ ] PHASE04 PostgreSQL/RabbitMQ/Object/Checkpointer/Backup/Restore/Fault 重新关闭。
-- [ ] PHASE05 在订正后的 PHASE03/04 关闭后 ready。
+- [x] PHASE01 完整 Current/Gap/Requirement 双向追踪重新关闭。
+- [x] PHASE02 可执行 Adapter/Flag/Cutover/Rollback/Guard 重新关闭。
+- [x] PHASE03 十一模块完整 Contract/Producer/Consumer Adoption 重新关闭。
+- [x] PHASE04 PostgreSQL/RabbitMQ/Object/Checkpointer/Backup/Restore/Fault 重新关闭。
+- [x] PHASE05 ready。
 
 ## Phase 状态
 
-- [ ] PHASE01 Current Baseline and Requirement Ledger
-- [ ] PHASE02 Legacy Runtime Compatibility and Cutover Control
-- [ ] PHASE03 Executable Cross-module Contract Bundle
-- [ ] PHASE04 PostgreSQL Domain and Transaction Foundation
+- [x] PHASE01 Current Baseline and Requirement Ledger
+- [x] PHASE02 Legacy Runtime Compatibility and Cutover Control
+- [x] PHASE03 Executable Cross-module Contract Bundle
+- [x] PHASE04 PostgreSQL Domain and Transaction Foundation
 - [ ] PHASE05 Security Control Plane
 - [ ] PHASE06 Observability Minimum Black Box
 - [ ] PHASE07 Model Gateway Runtime

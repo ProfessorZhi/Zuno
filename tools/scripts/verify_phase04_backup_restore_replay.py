@@ -15,6 +15,7 @@ from zuno.platform.database.foundation import (
     create_foundation_engine,
 )
 from zuno.platform.database.runtime import PostgresRuntime, PostgresRuntimeConfig
+from zuno.platform.recovery import InMemoryReplayPort, ReplayContractError, ReplaySourceFact
 from zuno.platform.storage import MinioObjectStore
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -23,13 +24,37 @@ POSTGRES_BASE_DSN = "postgresql://postgres:postgres@localhost:5432"
 MINIO_ENDPOINT = "localhost:9000"
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
+CROSS_DOMAIN_REPLAY_DOMAINS = (
+    "agent",
+    "knowledge",
+    "memory",
+    "tool",
+    "observability",
+)
 
 
 def _run(command: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
 
 
-def _insert_recovery_seed(marker: str, object_ref: str, object_hash: str) -> dict[str, str]:
+def _cross_domain_source_payloads(marker: str, object_ref: str, object_hash: str) -> dict[str, dict[str, object]]:
+    return {
+        domain: {
+            "marker": marker,
+            "domain": domain,
+            "source_fact_ref": f"{domain}-source:{marker}",
+            "source_partition": f"{domain}-partition:{marker}",
+            "source_watermark": 1,
+            "object_ref": object_ref,
+            "object_hash": object_hash,
+            "projection_schema_version": f"{domain}-projection-v1",
+            "recovery_owner": f"{domain}-replay-owner",
+        }
+        for domain in CROSS_DOMAIN_REPLAY_DOMAINS
+    }
+
+
+def _insert_recovery_seed(marker: str, object_ref: str, object_hash: str) -> dict[str, object]:
     engine = create_foundation_engine(POSTGRES_SQLALCHEMY_URL)
     try:
         uow = InfrastructureUnitOfWork(engine)
@@ -83,6 +108,33 @@ def _insert_recovery_seed(marker: str, object_ref: str, object_hash: str) -> dic
                     event_id=product_event_id,
                     worker_id=f"product-projector-{marker}",
                 )
+            cross_domain_event_ids: dict[str, str] = {}
+            cross_domain_source_hashes: dict[str, str] = {}
+            for domain, payload in _cross_domain_source_payloads(
+                marker,
+                object_ref,
+                object_hash,
+            ).items():
+                event_id_for_domain = repo.enqueue_outbox(
+                    aggregate_id=f"{domain}-projection-{marker}",
+                    topic=f"{domain}.projection.source_fact",
+                    payload=payload,
+                    idempotency_key=f"phase04-{domain}-projection-{marker}",
+                    tenant_id="tenant-phase04",
+                    ordering_key=f"{domain}-projection-{marker}",
+                )
+                cross_domain_event_ids[domain] = event_id_for_domain
+                cross_domain_source_hashes[domain] = canonical_sha256(payload)
+            cross_domain_claimed = repo.claim_outbox(
+                worker_id=f"cross-domain-projector-{marker}",
+                limit=20,
+            )
+            for domain, event_id_for_domain in cross_domain_event_ids.items():
+                if event_id_for_domain in cross_domain_claimed:
+                    repo.complete_outbox(
+                        event_id=event_id_for_domain,
+                        worker_id=f"cross-domain-projector-{marker}",
+                    )
             repo.save_checkpoint(
                 thread_id=f"thread-{marker}",
                 checkpoint_id=f"checkpoint-{marker}",
@@ -95,6 +147,8 @@ def _insert_recovery_seed(marker: str, object_ref: str, object_hash: str) -> dic
             "inbox_hash": inbox_hash,
             "product_event_id": product_event_id,
             "product_source_hash": canonical_sha256(product_source_payload),
+            "cross_domain_event_ids": cross_domain_event_ids,
+            "cross_domain_source_hashes": cross_domain_source_hashes,
         }
     finally:
         engine.dispose()
@@ -382,7 +436,293 @@ def _replay_product_projection_from_restore(
     return errors
 
 
-def _cleanup_recovery_seed(marker: str, event_id: str, object_ref: str, product_event_id: str) -> None:
+def _replay_cross_domain_projections_from_restore(
+    database_name: str,
+    marker: str,
+    event_ids: dict[str, str],
+    expected_source_hashes: dict[str, str],
+) -> list[str]:
+    errors: list[str] = []
+    dsn = f"{POSTGRES_BASE_DSN}/{database_name}"
+    recovery_point = f"cross-domain-source:{marker}"
+    recovery_set_id = f"cross-domain-recovery-set-{marker}"
+    components: list[dict[str, str]] = []
+    with psycopg.connect(dsn, connect_timeout=5) as conn:
+        with conn.cursor() as cur:
+            for domain in CROSS_DOMAIN_REPLAY_DOMAINS:
+                projection_component_id = f"{domain}-projection-{marker}"
+                cur.execute(
+                    """
+                    SELECT count(*)
+                    FROM infra_recovery_watermarks
+                    WHERE component_id = %s
+                    """,
+                    (projection_component_id,),
+                )
+                if cur.fetchone() != (0,):
+                    errors.append(
+                        f"derived {domain} projection watermark existed before replay"
+                    )
+
+            for domain in CROSS_DOMAIN_REPLAY_DOMAINS:
+                source_event_id = event_ids[domain]
+                expected_source_hash = expected_source_hashes[domain]
+                cur.execute(
+                    """
+                    SELECT event_id, aggregate_id, payload, payload_hash,
+                           ordering_sequence, status
+                    FROM infra_outbox_events
+                    WHERE event_id = %s
+                      AND topic = %s
+                      AND tenant_id = 'tenant-phase04'
+                    """,
+                    (source_event_id, f"{domain}.projection.source_fact"),
+                )
+                source = cur.fetchone()
+                if source is None:
+                    errors.append(f"restored {domain} source fact missing: {source_event_id}")
+                    continue
+                (
+                    restored_event_id,
+                    aggregate_id,
+                    source_payload,
+                    restored_source_hash,
+                    ordering_sequence,
+                    status,
+                ) = source
+                source_payload = dict(source_payload)
+                if restored_source_hash != expected_source_hash:
+                    errors.append(
+                        f"restored {domain} source fact hash mismatch: {restored_source_hash!r}"
+                    )
+                if canonical_sha256(source_payload) != restored_source_hash:
+                    errors.append(
+                        f"restored {domain} source payload failed canonical hash verification"
+                    )
+                if status != "published":
+                    errors.append(
+                        f"restored {domain} source fact was not published: {status!r}"
+                    )
+                if int(ordering_sequence or 0) != 1:
+                    errors.append(
+                        f"restored {domain} ordering watermark mismatch: {ordering_sequence!r}"
+                    )
+
+                authoritative_component_id = f"{domain}-authoritative-{marker}"
+                projection_component_id = f"{domain}-projection-{marker}"
+                projection_payload = {
+                    "projection_id": f"{domain}-projection:{marker}",
+                    "domain": domain,
+                    "source_fact_ref": restored_event_id,
+                    "source_partition": aggregate_id,
+                    "source_watermark": int(ordering_sequence or 0),
+                    "schema_version": source_payload["projection_schema_version"],
+                    "recovery_owner": source_payload["recovery_owner"],
+                    "rebuildable": True,
+                }
+                projection_hash = canonical_sha256(projection_payload)
+                if projection_hash == restored_source_hash:
+                    errors.append(
+                        f"derived {domain} projection hash must not replace source fact hash"
+                    )
+
+                for component_id, service_kind, authority, payload_hash, payload in (
+                    (
+                        authoritative_component_id,
+                        domain.upper(),
+                        "authoritative",
+                        restored_source_hash,
+                        source_payload,
+                    ),
+                    (
+                        projection_component_id,
+                        f"{domain.upper()}_PROJECTION",
+                        "derived",
+                        projection_hash,
+                        projection_payload,
+                    ),
+                ):
+                    cur.execute(
+                        """
+                        INSERT INTO infra_recovery_watermarks(
+                            component_id, service_kind, authority, watermark,
+                            payload_hash, payload, owner_id
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            component_id,
+                            service_kind,
+                            authority,
+                            recovery_point,
+                            payload_hash,
+                            Jsonb(payload),
+                            f"phase04-{domain}-replay",
+                        ),
+                    )
+                    components.append(
+                        {
+                            "component_id": component_id,
+                            "service_kind": service_kind,
+                            "authority": authority,
+                            "watermark": recovery_point,
+                            "payload_hash": payload_hash,
+                        }
+                    )
+
+            if errors:
+                conn.rollback()
+                return errors
+
+            verification_hash = canonical_sha256(
+                {
+                    "recovery_point": recovery_point,
+                    "components": sorted(
+                        components,
+                        key=lambda item: item["component_id"],
+                    ),
+                }
+            )
+            cur.execute(
+                """
+                INSERT INTO infra_recovery_sets(
+                    recovery_set_id, recovery_point, status, verification_hash, owner_id
+                ) VALUES (%s, %s, 'verified', %s, 'phase04-cross-domain-replay')
+                """,
+                (recovery_set_id, recovery_point, verification_hash),
+            )
+            for component in components:
+                cur.execute(
+                    """
+                    INSERT INTO infra_recovery_set_members(
+                        recovery_set_id, component_id, service_kind, authority,
+                        watermark, payload_hash
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        recovery_set_id,
+                        component["component_id"],
+                        component["service_kind"],
+                        component["authority"],
+                        component["watermark"],
+                        component["payload_hash"],
+                    ),
+                )
+            conn.commit()
+
+            cur.execute(
+                """
+                SELECT count(*)
+                FROM infra_recovery_set_members
+                WHERE recovery_set_id = %s
+                """,
+                (recovery_set_id,),
+            )
+            if cur.fetchone() != (len(CROSS_DOMAIN_REPLAY_DOMAINS) * 2,):
+                errors.append("cross-domain RecoverySet member count mismatch")
+            cur.execute(
+                """
+                SELECT count(*)
+                FROM infra_recovery_watermarks
+                WHERE component_id LIKE %s
+                  AND authority = 'derived'
+                """,
+                (f"%-projection-{marker}",),
+            )
+            if cur.fetchone() != (len(CROSS_DOMAIN_REPLAY_DOMAINS) + 1,):
+                errors.append("cross-domain derived projection count mismatch")
+            cur.execute(
+                """
+                SELECT status, verification_hash
+                FROM infra_recovery_sets
+                WHERE recovery_set_id = %s
+                """,
+                (recovery_set_id,),
+            )
+            recovery_set = cur.fetchone()
+            if recovery_set != ("verified", verification_hash):
+                errors.append(f"cross-domain RecoverySet mismatch: {recovery_set!r}")
+    return errors
+
+
+def _verify_generic_replay_contract(marker: str) -> list[str]:
+    errors: list[str] = []
+    port = InMemoryReplayPort()
+    source = ReplaySourceFact.create(
+        source_ref=f"product-source:{marker}",
+        owner_module="Product",
+        recovery_point=f"restore:{marker}",
+        replay_generation=2,
+        ordering_sequence=1,
+        payload={"marker": marker, "source": "product", "watermark": 1},
+    )
+    receipt = port.replay_projection(
+        source=source,
+        projection_ref=f"product-projection:{marker}",
+        expected_generation=2,
+        projection_payload={
+            "marker": marker,
+            "projection": "product",
+            "source_ref": source.source_ref,
+        },
+    )
+    duplicate = port.replay_projection(
+        source=source,
+        projection_ref=f"product-projection:{marker}",
+        expected_generation=2,
+        projection_payload={
+            "marker": marker,
+            "projection": "product",
+            "source_ref": source.source_ref,
+        },
+    )
+    if receipt.duplicate:
+        errors.append("generic replay first receipt was incorrectly marked duplicate")
+    if not duplicate.duplicate:
+        errors.append("generic replay duplicate handling did not converge")
+    if receipt.source_hash == receipt.projection_hash:
+        errors.append("generic replay projection hash replaced authoritative source hash")
+    try:
+        port.replay_projection(
+            source=source,
+            projection_ref=f"product-projection-stale:{marker}",
+            expected_generation=1,
+            projection_payload={"marker": marker, "projection": "stale"},
+        )
+    except ReplayContractError:
+        pass
+    else:
+        errors.append("generic replay stale generation was not rejected")
+
+    future_source = ReplaySourceFact.create(
+        source_ref=f"future-domain-source:{marker}",
+        owner_module="FutureDomain",
+        recovery_point=f"restore:{marker}",
+        replay_generation=1,
+        ordering_sequence=1,
+        payload={"marker": marker, "contract_only": True},
+    )
+    future_receipt = port.replay_projection(
+        source=future_source,
+        projection_ref=f"future-domain-projection:{marker}",
+        expected_generation=1,
+        projection_payload={
+            "marker": marker,
+            "derived": True,
+            "source_ref": future_source.source_ref,
+        },
+    )
+    if future_receipt.owner_module != "FutureDomain":
+        errors.append("generic replay future-domain contract owner changed")
+    return errors
+
+
+def _cleanup_recovery_seed(
+    marker: str,
+    event_id: str,
+    object_ref: str,
+    product_event_id: str,
+    cross_domain_event_ids: dict[str, str],
+) -> None:
     engine = create_foundation_engine(POSTGRES_SQLALCHEMY_URL)
     try:
         with engine.begin() as connection:
@@ -401,6 +741,11 @@ def _cleanup_recovery_seed(marker: str, event_id: str, object_ref: str, product_
                 text("DELETE FROM infra_outbox_events WHERE event_id = :event_id"),
                 {"event_id": product_event_id},
             )
+            for event_id_for_domain in cross_domain_event_ids.values():
+                connection.execute(
+                    text("DELETE FROM infra_outbox_events WHERE event_id = :event_id"),
+                    {"event_id": event_id_for_domain},
+                )
             connection.execute(
                 text("DELETE FROM infra_object_manifests WHERE object_ref = :object_ref"),
                 {"object_ref": object_ref},
@@ -562,6 +907,14 @@ def verify_phase04_backup_restore_replay() -> list[str]:
                 )
             )
             errors.extend(
+                _replay_cross_domain_projections_from_restore(
+                    database_name,
+                    marker,
+                    seed["cross_domain_event_ids"],
+                    seed["cross_domain_source_hashes"],
+                )
+            )
+            errors.extend(
                 asyncio.run(
                     _verify_restored_runtime(
                         database_name,
@@ -571,6 +924,7 @@ def verify_phase04_backup_restore_replay() -> list[str]:
                     )
                 )
             )
+            errors.extend(_verify_generic_replay_contract(marker))
     finally:
         _run(["docker", "exec", "zuno-postgres", "dropdb", "-U", "postgres", "--if-exists", database_name])
         _run(["docker", "exec", "zuno-postgres", "rm", "-f", dump_path])
@@ -580,6 +934,7 @@ def verify_phase04_backup_restore_replay() -> list[str]:
                 seed["event_id"],
                 object_ref,
                 seed["product_event_id"],
+                seed["cross_domain_event_ids"],
             )
         store.remove_bucket_tree(bucket)
     return errors

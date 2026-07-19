@@ -15,7 +15,7 @@ status: implementation_available_for_checkpoint_boundary_version_subscope
 - unknown_checkpoint_adapter_version_rejected: passed
 - unknown_checkpoint_schema_version_rejected: passed
 - official_checkpointer_runtime_boundary: passed
-- phase_completion: blocked_combined_fault_and_cross_domain_replay_boundary
+- phase_completion: blocked_cross_domain_replay_and_approval
 
 ## Command
 
@@ -37,4 +37,4 @@ Result: passed.
 
 本证据也证明 `CHECKPOINT` capability 的 adapter/schema version 进入 `UpgradeCompatibilityProfileV1`，unknown adapter/schema major version 默认 fail closed；official LangGraph PostgreSQL Checkpointer runtime 已由独立 evidence 证明，但 Checkpoint receipt 仍只属于 Infrastructure / Agent Core 恢复边界，不成为领域成功事实。
 
-本证据不证明 combined-service fault、跨领域 replay final cutover 或 PHASE04 closure。
+本证据不证明跨领域 replay final cutover 或 PHASE04 closure。
