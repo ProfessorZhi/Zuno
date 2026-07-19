@@ -496,3 +496,19 @@ PHASE05 fail-closed Security fact and mandatory audit requirement path available
 phase closure not approved
 remaining: broader PEP/PDP cutover coverage, audit fault injection, security eval evidence
 ```
+
+Fault injection follow-up:
+
+```text
+tests/fault/security/test_phase05_security_sink_fail_closed.py
+```
+
+Security approval sink outage is now covered for approved side effects and disabled-tool fail-closed paths. In both cases the runtime raises before executor invocation; the disabled-tool fault test also asserts `calls == []`.
+
+Status:
+
+```text
+PHASE05 security sink outage fails closed before effect
+phase closure not approved
+remaining: broader PEP/PDP cutover coverage, security eval evidence
+```

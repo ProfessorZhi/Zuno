@@ -291,6 +291,22 @@ def verify_phase05_security_persistence() -> list[str]:
         if phrase not in workspace_runtime:
             errors.append(f"workspace runtime missing Security approval sink wiring phrase: {phrase}")
 
+    fault_test = (
+        REPO_ROOT
+        / "tests"
+        / "fault"
+        / "security"
+        / "test_phase05_security_sink_fail_closed.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "security sink unavailable",
+        "approved_before_effect",
+        "failed_closed_before_effect",
+        "calls == []",
+    ]:
+        if phrase not in fault_test:
+            errors.append(f"security sink fault test missing phrase: {phrase}")
+
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
         errors.append(
