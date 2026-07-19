@@ -370,6 +370,23 @@ phase closure not approved
 remaining: reducer/query projection, authorization checks, external sink isolation, full fault tests
 ```
 
+Query/freshness follow-up:
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+tests/integration/test_phase06_observability_persistence_runtime.py
+```
+
+Observability repository now exposes read-only `trace_timeline`, `projection_freshness` and `dead_letters` queries. Watermarks advance when missing sequences are filled, open gaps are marked `filled`, and query payloads remain redacted.
+
+Status:
+
+```text
+PHASE06 read-only trace/freshness/dead-letter query surface available
+phase closure not approved
+remaining: API authorization checks, external sink isolation, full fault tests
+```
+
 ## PHASE05 Security Persistence Work Product
 
 新增 `infra/db/alembic/versions/20260719_16_security_control_plane.py`，作为 PHASE05 Security 所有的第一组持久化事实源。该迁移从 `20260718_15` 之后接入，不改变 PHASE04 已闭合基础设施边界。

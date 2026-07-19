@@ -248,6 +248,10 @@ def verify_phase06_observability_persistence() -> list[str]:
         "record_gap",
         "record_dead_letter",
         "record_security_audit",
+        "trace_timeline",
+        "projection_freshness",
+        "dead_letters",
+        "ObservabilityFreshnessRecord",
         "duplicate_sequence_payload_mismatch",
         "redact_sensitive_payload",
     ]:

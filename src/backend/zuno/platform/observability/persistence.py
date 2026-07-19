@@ -72,6 +72,26 @@ class ObservabilityDeadLetterReceipt:
     payload_hash: str
 
 
+@dataclass(frozen=True, slots=True)
+class ObservabilityTimelineRecord:
+    event_id: str
+    stream_id: str
+    sequence: int
+    event_type: str
+    redacted_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ObservabilityFreshnessRecord:
+    trace_id: str
+    stream_id: str
+    contiguous_sequence: int
+    max_seen_sequence: int
+    freshness_status: str
+    open_gap_count: int
+    dead_letter_count: int
+
+
 class PostgresObservabilityRuntimeAdapter:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -482,9 +502,18 @@ class ObservabilityRepository:
         else:
             contiguous = int(row.contiguous_sequence)
             max_seen = max(int(row.max_seen_sequence), observed_sequence)
-            if observed_sequence == contiguous + 1:
-                contiguous = observed_sequence
+        contiguous = self._contiguous_sequence(
+            tenant_id=tenant_id,
+            stream_id=stream_id,
+            start_sequence=contiguous,
+            max_seen_sequence=max_seen,
+        )
         freshness_status = "fresh" if contiguous == max_seen else "gap"
+        self._fill_gaps(
+            tenant_id=tenant_id,
+            stream_id=stream_id,
+            contiguous_sequence=contiguous,
+        )
         if freshness_status == "gap":
             self.record_gap(
                 tenant_id=tenant_id,
@@ -520,6 +549,120 @@ class ObservabilityRepository:
             },
         )
         return ObservabilityWatermarkReceipt(watermark_id, stream_id, contiguous, max_seen, freshness_status)
+
+    def trace_timeline(
+        self,
+        *,
+        tenant_id: str,
+        trace_id: str,
+    ) -> tuple[ObservabilityTimelineRecord, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT event_id, stream_id, sequence, event_type, redacted_payload
+                FROM observability_runtime_events
+                WHERE tenant_id = :tenant_id
+                  AND trace_id = :trace_id
+                ORDER BY stream_id, sequence, event_id
+                """
+            ),
+            {"tenant_id": tenant_id, "trace_id": trace_id},
+        ).all()
+        return tuple(
+            ObservabilityTimelineRecord(
+                event_id=str(row.event_id),
+                stream_id=str(row.stream_id),
+                sequence=int(row.sequence),
+                event_type=str(row.event_type),
+                redacted_payload=dict(row.redacted_payload),
+            )
+            for row in rows
+        )
+
+    def projection_freshness(
+        self,
+        *,
+        tenant_id: str,
+        trace_id: str,
+        stream_id: str,
+        projection_id: str = "runtime-events",
+    ) -> ObservabilityFreshnessRecord:
+        watermark_id = f"watermark:{tenant_id}:{projection_id}:{stream_id}"
+        row = self.connection.execute(
+            text(
+                """
+                SELECT contiguous_sequence, max_seen_sequence, freshness_status
+                FROM observability_projection_watermarks
+                WHERE watermark_id = :watermark_id
+                """
+            ),
+            {"watermark_id": watermark_id},
+        ).first()
+        gap_count = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT count(*)
+                    FROM observability_gaps
+                    WHERE tenant_id = :tenant_id
+                      AND stream_id = :stream_id
+                      AND status = 'open'
+                    """
+                ),
+                {"tenant_id": tenant_id, "stream_id": stream_id},
+            ).scalar_one()
+        )
+        dead_letter_count = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT count(*)
+                    FROM observability_dead_letters
+                    WHERE tenant_id = :tenant_id
+                      AND status = 'open'
+                    """
+                ),
+                {"tenant_id": tenant_id},
+            ).scalar_one()
+        )
+        if row is None:
+            return ObservabilityFreshnessRecord(trace_id, stream_id, 0, 0, "stale", gap_count, dead_letter_count)
+        return ObservabilityFreshnessRecord(
+            trace_id=trace_id,
+            stream_id=stream_id,
+            contiguous_sequence=int(row.contiguous_sequence),
+            max_seen_sequence=int(row.max_seen_sequence),
+            freshness_status=str(row.freshness_status),
+            open_gap_count=gap_count,
+            dead_letter_count=dead_letter_count,
+        )
+
+    def dead_letters(
+        self,
+        *,
+        tenant_id: str,
+    ) -> tuple[ObservabilityDeadLetterReceipt, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT dead_letter_id, source_ref, reason_code, payload_hash
+                FROM observability_dead_letters
+                WHERE tenant_id = :tenant_id
+                  AND status = 'open'
+                ORDER BY created_at, dead_letter_id
+                """
+            ),
+            {"tenant_id": tenant_id},
+        ).all()
+        return tuple(
+            ObservabilityDeadLetterReceipt(
+                dead_letter_id=str(row.dead_letter_id),
+                source_ref=str(row.source_ref),
+                reason_code=str(row.reason_code),
+                payload_hash=str(row.payload_hash),
+            )
+            for row in rows
+        )
 
     def record_gap(
         self,
@@ -593,17 +736,82 @@ class ObservabilityRepository:
         if not tenant_id.strip() or not workspace_id.strip() or not trace_id.strip():
             raise ObservabilityPersistenceError("tenant_id, workspace_id and trace_id are required")
 
+    def _contiguous_sequence(
+        self,
+        *,
+        tenant_id: str,
+        stream_id: str,
+        start_sequence: int,
+        max_seen_sequence: int,
+    ) -> int:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT sequence
+                FROM observability_runtime_events
+                WHERE tenant_id = :tenant_id
+                  AND stream_id = :stream_id
+                  AND sequence > :start_sequence
+                  AND sequence <= :max_seen_sequence
+                ORDER BY sequence
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "stream_id": stream_id,
+                "start_sequence": start_sequence,
+                "max_seen_sequence": max_seen_sequence,
+            },
+        ).all()
+        contiguous = start_sequence
+        for row in rows:
+            sequence = int(row.sequence)
+            if sequence == contiguous + 1:
+                contiguous = sequence
+                continue
+            if sequence > contiguous + 1:
+                break
+        return contiguous
+
+    def _fill_gaps(
+        self,
+        *,
+        tenant_id: str,
+        stream_id: str,
+        contiguous_sequence: int,
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                UPDATE observability_gaps
+                SET status = 'filled',
+                    filled_at = now()
+                WHERE tenant_id = :tenant_id
+                  AND stream_id = :stream_id
+                  AND status = 'open'
+                  AND missing_before_sequence <= :contiguous_sequence
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "stream_id": stream_id,
+                "contiguous_sequence": contiguous_sequence,
+            },
+        )
+
 
 __all__ = [
     "ObservabilityAuditReceipt",
     "ObservabilityDeadLetterReceipt",
     "ObservabilityEnvelopeReceipt",
+    "ObservabilityFreshnessRecord",
     "ObservabilityPersistenceError",
     "PostgresObservabilityRuntimeAdapter",
     "ObservabilityRepository",
     "ObservabilityRuntimeEventReceipt",
     "ObservabilitySpanReceipt",
     "ObservabilityTraceReceipt",
+    "ObservabilityTimelineRecord",
     "ObservabilityUnitOfWork",
     "ObservabilityWatermarkReceipt",
 ]

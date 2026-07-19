@@ -121,6 +121,27 @@ def test_observability_uow_ingests_trace_event_audit_and_gap(engine) -> None:
             event_type="tool_result",
             payload={"status": "completed"},
         )
+        freshness_with_gap = repo.projection_freshness(
+            tenant_id="tenant-a",
+            trace_id=trace.trace_id,
+            stream_id="stream:phase06",
+        )
+        repo.record_runtime_event(
+            event_id="event:phase06:2",
+            tenant_id="tenant-a",
+            trace_id=trace.trace_id,
+            span_id=span.span_id,
+            stream_id="stream:phase06",
+            sequence=2,
+            event_type="tool_progress",
+            payload={"status": "in_progress"},
+        )
+        freshness_after_fill = repo.projection_freshness(
+            tenant_id="tenant-a",
+            trace_id=trace.trace_id,
+            stream_id="stream:phase06",
+        )
+        timeline = repo.trace_timeline(tenant_id="tenant-a", trace_id=trace.trace_id)
         audit = repo.record_audit(
             audit_id="audit:phase06:1",
             tenant_id="tenant-a",
@@ -132,20 +153,25 @@ def test_observability_uow_ingests_trace_event_audit_and_gap(engine) -> None:
 
     assert envelope.status == "accepted"
     assert duplicate.status == "duplicate"
+    assert freshness_with_gap.freshness_status == "gap"
+    assert freshness_after_fill.freshness_status == "fresh"
+    assert freshness_after_fill.open_gap_count == 0
+    assert [event.sequence for event in timeline] == [1, 2, 3]
+    assert "raw-secret" not in repr(timeline)
     assert audit.audit_hash
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM observability_ingest_envelopes")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM observability_traces")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM observability_spans")).scalar_one() == 1
-        assert conn.execute(text("SELECT count(*) FROM observability_runtime_events")).scalar_one() == 2
+        assert conn.execute(text("SELECT count(*) FROM observability_runtime_events")).scalar_one() == 3
         assert conn.execute(text("SELECT count(*) FROM observability_audit_records")).scalar_one() == 1
         watermark = conn.execute(
             text("SELECT contiguous_sequence, max_seen_sequence, freshness_status FROM observability_projection_watermarks")
         ).one()
-        assert watermark.contiguous_sequence == 1
+        assert watermark.contiguous_sequence == 3
         assert watermark.max_seen_sequence == 3
-        assert watermark.freshness_status == "gap"
-        assert conn.execute(text("SELECT count(*) FROM observability_gaps")).scalar_one() == 1
+        assert watermark.freshness_status == "fresh"
+        assert conn.execute(text("SELECT status FROM observability_gaps")).scalar_one() == "filled"
         payloads = conn.execute(
             text(
                 """
@@ -184,6 +210,7 @@ def test_observability_duplicate_sequence_payload_mismatch_dead_letters(engine) 
             event_type="second",
             payload={"value": "two"},
         )
+        dead_letters = repo.dead_letters(tenant_id="tenant-a")
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM observability_runtime_events")).scalar_one() == 1
@@ -191,6 +218,7 @@ def test_observability_duplicate_sequence_payload_mismatch_dead_letters(engine) 
             text("SELECT reason_code FROM observability_dead_letters")
         ).scalar_one()
         assert dead_letter == "duplicate_sequence_payload_mismatch"
+    assert [item.reason_code for item in dead_letters] == ["duplicate_sequence_payload_mismatch"]
 
 
 def test_observability_ingest_requires_tenant_workspace_trace_boundary(engine) -> None:
