@@ -35,7 +35,7 @@ async def select_knowledge_file(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="files")
         results = await KnowledgeFileService.get_knowledge_file(knowledge_id)
         return resp_200(data=results)
     except Exception as err:
@@ -48,7 +48,7 @@ async def delete_knowledge_file(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id)
+        await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id, action="delete")
         await KnowledgeFileService.delete_knowledge_file(knowledge_file_id)
         return resp_200()
     except Exception as err:
@@ -61,7 +61,7 @@ async def get_knowledge_file_status(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id)
+        await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id, action="status")
         knowledge_file = await KnowledgeFileService.select_knowledge_file_by_id(knowledge_file_id)
         return resp_200(data=knowledge_file.to_dict())
     except Exception as err:
@@ -77,7 +77,7 @@ async def get_knowledge_file_task(
         result = await KnowledgeFileService.get_task_detail(task_id)
         task = result.get("task")
         if task:
-            await KnowledgeFileService.verify_user_permission(task["knowledge_file_id"], login_user.user_id)
+            await KnowledgeFileService.verify_user_permission(task["knowledge_file_id"], login_user.user_id, action="task")
         return resp_200(data=result)
     except Exception as err:
         return resp_500(message=str(err))
@@ -91,9 +91,9 @@ async def list_knowledge_file_tasks(
 ):
     try:
         if knowledge_file_id:
-            await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id)
+            await KnowledgeFileService.verify_user_permission(knowledge_file_id, login_user.user_id, action="tasks")
         if knowledge_id:
-            await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id)
+            await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="tasks")
         result = await KnowledgeFileService.list_tasks(
             knowledge_file_id=knowledge_file_id,
             knowledge_id=knowledge_id,

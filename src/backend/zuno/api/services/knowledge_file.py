@@ -8,6 +8,7 @@ from zuno.api.services.knowledge import KnowledgeService
 from zuno.database.dao.knowledge_file import KnowledgeFileDao
 from zuno.database.dao.knowledge_task import KnowledgeTaskDao
 from zuno.database.models.user import AdminUser
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 from zuno.services.pipeline.manager import KnowledgePipelineManager
 from zuno.services.pipeline.models import KnowledgeTaskStage
 from zuno.services.queue.client import QueueClient, get_queue_names
@@ -270,9 +271,17 @@ class KnowledgeFileService:
         return await cls.reindex_knowledge_files(knowledge_id)
 
     @classmethod
-    async def verify_user_permission(cls, knowledge_file_id, user_id):
+    async def verify_user_permission(cls, knowledge_file_id, user_id, action: str = "access"):
         knowledge_file = await cls.select_knowledge_file_by_id(knowledge_file_id)
-        if user_id not in (AdminUser, knowledge_file.user_id):
+        if user_id == AdminUser:
+            if knowledge_file.user_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=f"admin.knowledge_file.{action}",
+                    resource_ref=f"knowledge-file:{knowledge_file_id}",
+                )
+            return
+        if user_id != knowledge_file.user_id:
             raise ValueError("No permission for this knowledge file")
 
     @classmethod

@@ -53,7 +53,7 @@ async def get_user_defined_tools(login_user: UserPayload = Depends(get_login_use
 @router.post("/delete", response_model=UnifiedResponseModel)
 async def delete_user_defined_tool(req: ToolDeleteReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await ToolService.verify_user_permission(req.tool_id, login_user.user_id)
+        await ToolService.verify_user_permission(req.tool_id, login_user.user_id, action="delete")
         await ToolService.delete_user_defined_tool(tool_id=req.tool_id)
         return resp_200()
     except Exception as err:
@@ -141,7 +141,7 @@ async def test_saved_tool_connectivity(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await ToolService.verify_user_permission(tool_id, login_user.user_id)
+        await ToolService.verify_user_permission(tool_id, login_user.user_id, action="test")
         tool = await ToolService.get_tool_by_id(tool_id)
         if not tool or not tool.is_user_defined:
             raise ValueError("Only user defined tools support saved connectivity checks")
@@ -166,7 +166,7 @@ async def update_user_defined_tool(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await ToolService.verify_user_permission(req.tool_id, login_user.user_id)
+        await ToolService.verify_user_permission(req.tool_id, login_user.user_id, action="update")
         await ToolService.update_user_defined_tool(
             tool_id=req.tool_id,
             update_values=ToolRuntimeService.build_update_payload(req),

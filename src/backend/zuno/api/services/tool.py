@@ -4,6 +4,7 @@ from typing import List, Union
 from zuno.database import SystemUser, ToolTable
 from zuno.database.dao.tool import ToolDao
 from zuno.database.models.user import AdminUser
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 from zuno.schema.tool import (
     CLIToolPreviewReq,
     RemoteApiAssistReq,
@@ -69,9 +70,17 @@ class ToolService:
         await ToolDao.delete_user_defined_tool(tool_id=tool_id)
 
     @classmethod
-    async def verify_user_permission(cls, tool_id: str, user_id: str):
+    async def verify_user_permission(cls, tool_id: str, user_id: str, action: str = "access"):
         authorized_user_id = await cls._get_user_by_tool_id(tool_id)
-        if user_id != AdminUser and user_id != authorized_user_id:
+        if user_id == AdminUser:
+            if authorized_user_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=f"admin.tool.{action}",
+                    resource_ref=f"tool:{tool_id}",
+                )
+            return
+        if user_id != authorized_user_id:
             raise ValueError("没有权限访问该资源")
 
     @classmethod

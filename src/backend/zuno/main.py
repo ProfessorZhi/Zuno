@@ -58,6 +58,7 @@ async def init_config():
 
     from zuno.api.services.mcp_server import MCPService
     from zuno.api.services.mcp_stdio_server import MCPServerService
+    from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
     from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
     from zuno.platform.database import engine
     from zuno.platform.security import PostgresSecurityProductActionGuard
@@ -66,6 +67,7 @@ async def init_config():
     WorkspaceTaskRuntimeService.configure_security_product_action_guard(product_action_guard)
     MCPService.configure_security_product_action_guard(product_action_guard)
     MCPServerService.configure_security_product_action_guard(product_action_guard)
+    configure_security_admin_action_guard(product_action_guard)
 
     await init_default_agent()
 

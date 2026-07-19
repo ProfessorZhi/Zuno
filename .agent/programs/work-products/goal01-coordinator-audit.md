@@ -1213,3 +1213,79 @@ PHASE05 workspace citation refs reauthorization guard available
 phase closure not approved
 remaining: non MCP admin surface audit and full PEP/PDP cutover
 ```
+
+## Goal01 Closure Matrix Freeze 001
+
+按更新后的目标文件冻结四张有限 Closure Matrix：
+
+```text
+.agent/programs/work-products/goal01-closure-matrix.md
+```
+
+边界：
+
+```text
+branch: integration/goal01-control-plane-model-ingestion
+start_sha_after_fetch: 36130924f5602c894d3d89eaaf6cefc3c8624a89
+origin_main_sha_after_fetch: ed787ee962f7f567163388188e56b4b765c27877
+matrix: PHASE05 PEP/PDP Cutover, PHASE06 Adapter Cutover, PHASE07 Runtime Closure, PHASE11 Ingestion Closure
+```
+
+Status:
+
+```text
+Closure Matrix frozen
+phase closure not approved
+only mandatory_open/completion_candidate rows may be processed unless tests prove architecture defect
+```
+
+## PHASE05 Non-MCP Admin Reauthorization 008
+
+新增非 MCP admin override 的共享 Security product action 重新授权：
+
+```text
+src/backend/zuno/api/services/security_admin_actions.py
+src/backend/zuno/api/services/agent.py
+src/backend/zuno/api/services/tool.py
+src/backend/zuno/api/services/dialog.py
+src/backend/zuno/api/services/mcp_agent.py
+src/backend/zuno/api/services/llm.py
+src/backend/zuno/api/services/knowledge.py
+src/backend/zuno/api/services/knowledge_file.py
+src/backend/zuno/api/v1/agent.py
+src/backend/zuno/api/v1/tool.py
+src/backend/zuno/api/v1/dialog.py
+src/backend/zuno/api/v1/llm.py
+src/backend/zuno/api/v1/knowledge.py
+src/backend/zuno/api/v1/knowledge_file.py
+src/backend/zuno/main.py
+tests/agent/test_phase05_admin_action_reauthorization.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+shared guard: security_admin_actions.require_admin_action_authorized 构造 SecurityProductActionRequest
+startup: init_config 将 PostgresSecurityProductActionGuard 注入共享 admin guard
+admin override: Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File 在 owner 不等于 AdminUser 时重新授权
+owner path: owner 自己操作自己的 resource 不触发 admin override guard
+deny: 在 permission success 或 DAO delete/update 前中断
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/services/security_admin_actions.py src/backend/zuno/api/services/agent.py src/backend/zuno/api/services/tool.py src/backend/zuno/api/services/dialog.py src/backend/zuno/api/services/mcp_agent.py src/backend/zuno/api/services/llm.py src/backend/zuno/api/services/knowledge.py src/backend/zuno/api/services/knowledge_file.py src/backend/zuno/api/v1/agent.py src/backend/zuno/api/v1/dialog.py src/backend/zuno/api/v1/llm.py src/backend/zuno/api/v1/tool.py src/backend/zuno/api/v1/knowledge.py src/backend/zuno/api/v1/knowledge_file.py src/backend/zuno/main.py tests/agent/test_phase05_admin_action_reauthorization.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/agent/test_phase05_admin_action_reauthorization.py tests/agent/test_mcp_server_service.py::test_mcp_admin_override_reauthorizes_through_security_guard tests/agent/test_mcp_server_service.py::test_mcp_admin_override_denial_blocks_before_permission_success tests/agent/test_mcp_server_service.py::test_mcp_owner_update_does_not_require_admin_override_security_guard tests/agent/test_mcp_stdio_server_security.py tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_reauthorizes_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_returns_403_when_security_guard_denies tests/api/test_workspace_agentic_product_contract.py::test_workspace_artifact_citation_refs_reauthorize_through_security_guard tests/api/test_workspace_agentic_product_contract.py::test_workspace_task_snapshot_citation_refs_return_403_when_security_guard_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 non-MCP admin default-path reauthorization guard available
+phase closure not approved
+remaining: Legacy Approval Boolean adapter deletion plan/guard and full PEP/PDP closure review
+```

@@ -16,6 +16,9 @@ MIGRATION_PATH = (
     / "versions"
     / "20260719_16_security_control_plane.py"
 )
+GOAL01_CLOSURE_MATRIX_PATH = (
+    REPO_ROOT / ".agent" / "programs" / "work-products" / "goal01-closure-matrix.md"
+)
 EXPECTED_REVISION = "20260719_16"
 EXPECTED_DOWN_REVISION = "20260718_15"
 FORBIDDEN_SECRET_COLUMNS = {
@@ -195,6 +198,8 @@ def verify_phase05_security_persistence() -> list[str]:
     errors: list[str] = []
     if not MIGRATION_PATH.exists():
         return ["missing PHASE05 security control plane migration"]
+    if not GOAL01_CLOSURE_MATRIX_PATH.exists():
+        return ["missing Goal01 closure matrix"]
 
     module = _load_migration()
     if module.revision != EXPECTED_REVISION:
@@ -291,6 +296,30 @@ def verify_phase05_security_persistence() -> list[str]:
         if phrase not in product_actions:
             errors.append(f"security product action guard missing phrase: {phrase}")
 
+    closure_matrix = GOAL01_CLOSURE_MATRIX_PATH.read_text(encoding="utf-8")
+    for phrase in [
+        "PHASE05 PEP/PDP Cutover Matrix",
+        "PHASE06 Adapter Cutover Matrix",
+        "PHASE07 Runtime Closure Matrix",
+        "PHASE11 Ingestion Closure Matrix",
+        "start_sha_after_fetch: `36130924f5602c894d3d89eaaf6cefc3c8624a89`",
+        "Admin 管理面：Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File",
+    ]:
+        if phrase not in closure_matrix:
+            errors.append(f"Goal01 closure matrix missing phrase: {phrase}")
+
+    admin_actions = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "security_admin_actions.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "configure_security_admin_action_guard",
+        "require_admin_action_authorized",
+        "SecurityProductActionRequest",
+        "build_product_action_hash",
+    ]:
+        if phrase not in admin_actions:
+            errors.append(f"shared admin action guard missing phrase: {phrase}")
+
     tool_runtime = (
         REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "runtime.py"
     ).read_text(encoding="utf-8")
@@ -342,6 +371,7 @@ def verify_phase05_security_persistence() -> list[str]:
         "WorkspaceTaskRuntimeService.configure_security_product_action_guard(",
         "MCPService.configure_security_product_action_guard(",
         "MCPServerService.configure_security_product_action_guard(",
+        "configure_security_admin_action_guard(product_action_guard)",
     ]:
         if phrase not in app_startup:
             errors.append(f"app startup missing product action security guard phrase: {phrase}")
@@ -376,6 +406,23 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in mcp_stdio_service:
             errors.append(f"MCP stdio admin service missing Security product action phrase: {phrase}")
+
+    admin_service_phrases = {
+        "agent.py": ["admin.agent.update", "admin.agent.delete", "require_admin_action_authorized"],
+        "tool.py": ["admin.tool.", "require_admin_action_authorized"],
+        "dialog.py": ["admin.dialog.", "require_admin_action_authorized"],
+        "mcp_agent.py": ["admin.mcp_agent.update", "admin.mcp_agent.delete", "require_admin_action_authorized"],
+        "llm.py": ["admin.llm.", "admin.llm.list", "require_admin_action_authorized"],
+        "knowledge.py": ["admin.knowledge.", "require_admin_action_authorized"],
+        "knowledge_file.py": ["admin.knowledge_file.", "require_admin_action_authorized"],
+    }
+    for filename, phrases in admin_service_phrases.items():
+        service_source = (
+            REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / filename
+        ).read_text(encoding="utf-8")
+        for phrase in phrases:
+            if phrase not in service_source:
+                errors.append(f"{filename} missing shared admin action phrase: {phrase}")
 
     fault_test = (
         REPO_ROOT
@@ -468,6 +515,22 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in mcp_stdio_admin_test:
             errors.append(f"MCP stdio admin security reauthorization test missing phrase: {phrase}")
+
+    non_mcp_admin_test = (
+        REPO_ROOT / "tests" / "agent" / "test_phase05_admin_action_reauthorization.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_agent_admin_override_reauthorizes_through_shared_security_guard",
+        "test_llm_admin_override_denial_blocks_before_permission_success",
+        "test_tool_owner_update_does_not_require_admin_override_security_guard",
+        "test_mcp_agent_admin_delete_denial_blocks_dao_delete",
+        "test_knowledge_file_admin_status_reauthorizes_through_shared_security_guard",
+        "admin.agent.delete",
+        "admin.llm.update",
+        "admin.knowledge_file.status",
+    ]:
+        if phrase not in non_mcp_admin_test:
+            errors.append(f"non-MCP admin security reauthorization test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
