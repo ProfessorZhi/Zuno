@@ -73,6 +73,7 @@ from zuno.platform.observability.persistence import (
     ObservabilityTraceReceipt,
     ObservabilityUnitOfWork,
     ObservabilityWatermarkReceipt,
+    PostgresObservabilityRuntimeAdapter,
 )
 
 __all__ = [
@@ -120,6 +121,7 @@ __all__ = [
     "ObservabilityTraceNode",
     "ObservabilityUnitOfWork",
     "ObservabilityWatermarkReceipt",
+    "PostgresObservabilityRuntimeAdapter",
     "QualityConstrainedEfficiency",
     "RAGCoreFiveMetric",
     "RAGFusionRerankTrace",

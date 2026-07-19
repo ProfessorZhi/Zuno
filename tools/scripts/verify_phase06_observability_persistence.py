@@ -238,6 +238,7 @@ def verify_phase06_observability_persistence() -> list[str]:
     for phrase in [
         "class ObservabilityUnitOfWork",
         "class ObservabilityRepository",
+        "class PostgresObservabilityRuntimeAdapter",
         "ingest_envelope",
         "record_trace",
         "record_span",
@@ -246,6 +247,7 @@ def verify_phase06_observability_persistence() -> list[str]:
         "update_watermark",
         "record_gap",
         "record_dead_letter",
+        "record_security_audit",
         "duplicate_sequence_payload_mismatch",
         "redact_sensitive_payload",
     ]:

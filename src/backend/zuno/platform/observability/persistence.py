@@ -7,7 +7,8 @@ from sqlalchemy import Engine, text
 from sqlalchemy.engine import Connection
 
 from zuno.platform.contracts import canonical_json, canonical_sha256
-from zuno.platform.security import redact_sensitive_payload
+from zuno.platform.security import SandboxAuditEvent, redact_sensitive_payload
+from zuno.platform.observability.trace_eval import ZunoSpan, ZunoSpanBuilder
 
 
 class ObservabilityPersistenceError(RuntimeError):
@@ -69,6 +70,69 @@ class ObservabilityDeadLetterReceipt:
     source_ref: str
     reason_code: str
     payload_hash: str
+
+
+class PostgresObservabilityRuntimeAdapter:
+    def __init__(self, engine: Engine) -> None:
+        self.engine = engine
+        self._span_builder = ZunoSpanBuilder()
+
+    def record_span(self, span: ZunoSpan) -> ObservabilityRuntimeEventReceipt:
+        tenant_id = span.session_id or span.thread_id or span.task_id
+        workspace_id = span.session_id or tenant_id
+        with ObservabilityUnitOfWork(self.engine) as repo:
+            repo.record_trace(
+                trace_id=span.trace_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                root_run_id=span.run_id,
+            )
+            repo.record_span(
+                span_id=span.run_id,
+                trace_id=span.trace_id,
+                tenant_id=tenant_id,
+                span_kind=span.span_kind.value,
+                name=span.name,
+                parent_span_id=span.parent_run_id,
+                status="failed" if span.error else "completed",
+            )
+            receipt = repo.record_runtime_event(
+                event_id=f"event:{span.trace_id}:{span.run_id}",
+                tenant_id=tenant_id,
+                trace_id=span.trace_id,
+                span_id=span.run_id,
+                stream_id=f"trace:{span.trace_id}",
+                sequence=1,
+                event_type=f"span.{span.span_kind.value}",
+                payload=span.to_otel_span(),
+            )
+            repo.record_audit(
+                audit_id=f"audit:{span.trace_id}:{span.run_id}",
+                tenant_id=tenant_id,
+                trace_id=span.trace_id,
+                sequence=1,
+                previous_hash="0" * 64,
+                payload={
+                    "span_id": span.run_id,
+                    "span_kind": span.span_kind.value,
+                    "policy_decision": span.policy_decision,
+                },
+            )
+            return receipt
+
+    def record_security_audit(
+        self,
+        audit: SandboxAuditEvent,
+        *,
+        run_id: str,
+        parent_run_id: str | None = None,
+    ) -> ObservabilityRuntimeEventReceipt:
+        span = self._span_builder.from_security_audit(
+            audit,
+            run_id=run_id,
+            parent_run_id=parent_run_id,
+        )
+        return self.record_span(span)
 
 
 class ObservabilityUnitOfWork:
@@ -535,6 +599,7 @@ __all__ = [
     "ObservabilityDeadLetterReceipt",
     "ObservabilityEnvelopeReceipt",
     "ObservabilityPersistenceError",
+    "PostgresObservabilityRuntimeAdapter",
     "ObservabilityRepository",
     "ObservabilityRuntimeEventReceipt",
     "ObservabilitySpanReceipt",

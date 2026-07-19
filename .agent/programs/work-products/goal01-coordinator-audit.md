@@ -353,6 +353,23 @@ phase closure not approved
 remaining: typed adapters, reducer/query projection, authorization checks, full fault tests
 ```
 
+Typed adapter follow-up:
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+tests/integration/test_phase06_observability_persistence_runtime.py
+```
+
+`PostgresObservabilityRuntimeAdapter` now persists `ZunoSpan` and `SandboxAuditEvent` as trace, span, runtime event and audit records through the same Observability repository. This gives active runtime audit/span objects a Security-aware typed adapter path into the durable black box without making Observability mutate source domain state.
+
+Status:
+
+```text
+PHASE06 typed security audit/span adapter available
+phase closure not approved
+remaining: reducer/query projection, authorization checks, external sink isolation, full fault tests
+```
+
 ## PHASE05 Security Persistence Work Product
 
 新增 `infra/db/alembic/versions/20260719_16_security_control_plane.py`，作为 PHASE05 Security 所有的第一组持久化事实源。该迁移从 `20260718_15` 之后接入，不改变 PHASE04 已闭合基础设施边界。

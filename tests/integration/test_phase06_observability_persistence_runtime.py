@@ -8,7 +8,12 @@ import pytest
 from sqlalchemy import text
 
 from zuno.platform.database.foundation import create_foundation_engine
-from zuno.platform.observability.persistence import ObservabilityPersistenceError, ObservabilityUnitOfWork
+from zuno.platform.observability.persistence import (
+    ObservabilityPersistenceError,
+    ObservabilityUnitOfWork,
+    PostgresObservabilityRuntimeAdapter,
+)
+from zuno.platform.security.governance import SandboxProfile, ToolSecurityGate, ToolSecurityProfile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATABASE_URL = os.environ.get(
@@ -203,3 +208,38 @@ def test_observability_ingest_requires_tenant_workspace_trace_boundary(engine) -
                 effective_security_epoch_ref="security-epoch:missing",
                 payload={"kind": "trace"},
             )
+
+
+def test_observability_runtime_adapter_persists_security_audit_span(engine) -> None:
+    adapter = PostgresObservabilityRuntimeAdapter(engine)
+    audit = ToolSecurityGate().evaluate(
+        profile=ToolSecurityProfile(
+            tool_id="mail.send",
+            side_effect_level="write_external",
+            execution_mode="api",
+            approval_required=True,
+            sandbox_required=True,
+            sandbox_profile=SandboxProfile.NETWORK_LIMITED,
+            network_policy="egress_mail_only",
+            audit_required=True,
+            credential_policy="brokered",
+        ),
+        model_intent="Send email",
+        proposed_args={"to": "hr@example.com", "password": "raw-secret"},
+        workspace_id="workspace-adapter",
+        trace_id="trace-adapter",
+        task_id="task-adapter",
+    ).audit_event
+
+    receipt = adapter.record_security_audit(audit, run_id="run-adapter")
+
+    assert receipt.trace_id == "trace-adapter"
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM observability_traces")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM observability_spans")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM observability_runtime_events")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM observability_audit_records")).scalar_one() == 1
+        payload = conn.execute(
+            text("SELECT redacted_payload FROM observability_runtime_events")
+        ).scalar_one()
+        assert "raw-secret" not in repr(payload)
