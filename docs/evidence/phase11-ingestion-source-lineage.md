@@ -10,8 +10,10 @@ phase_completion: `not_approved`
 ```text
 infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py
 src/backend/zuno/platform/database/schema_registry.py
+src/backend/zuno/platform/database/ingestion/persistence.py
 tools/scripts/verify_phase11_ingestion_source_lineage.py
 tests/repo/test_phase11_ingestion_source_lineage.py
+tests/integration/test_phase11_ingestion_persistence_runtime.py
 ```
 
 ## Verified Behavior
@@ -24,14 +26,17 @@ tests/repo/test_phase11_ingestion_source_lineage.py
 - SourceSpan 可回溯 ParseSnapshot 与 DocumentVersion。
 - Quality Gate 是 IndexableDocumentSnapshot 发布前置条件。
 - Input migration 不创建 Chunk、Entity、Relation、KnowledgeVersion、BM25 或 Vector Index。
+- `IngestionUnitOfWork` 可在一笔 PostgreSQL transaction 中写入 SourceObject 到 IndexableDocumentSnapshot 和 outbox event。
+- IndexableDocumentSnapshot 必须引用 QualityGateDecision；缺质量门时数据库 FK 拒绝 handoff。
+- SourceObject 写入前验证 `source_sha256` 是 64 位 hash。
 
 ## Validation
 
 ```powershell
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
-pytest -q tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
+pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider
 ```
 
 ## Limits
 
-该证据不证明 PHASE11 completed。尚未证明真实默认 upload/parser 路径已经迁移到 PostgreSQL schema，也未覆盖 queue crash、lease loss、retry exhaustion、delete/legal hold/restore、OCR/VLM/Human Review adapter conformance 或完整 Phase Closure Decision。
+该证据不证明 PHASE11 completed。尚未证明真实默认 upload/parser 路径已经迁移到 PostgreSQL repository，也未覆盖 queue crash、lease loss、retry exhaustion、delete/legal hold/restore、OCR/VLM/Human Review adapter conformance 或完整 Phase Closure Decision。

@@ -841,6 +841,7 @@ infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py
 src/backend/zuno/platform/database/schema_registry.py
 tools/scripts/verify_phase11_ingestion_source_lineage.py
 tests/repo/test_phase11_ingestion_source_lineage.py
+tests/integration/test_phase11_ingestion_persistence_runtime.py
 docs/evidence/phase11-ingestion-source-lineage.md
 ```
 
@@ -869,12 +870,14 @@ DocumentVersion 与 ParseSnapshot 分离。
 ParseAttempt 记录 lease/fencing token。
 QualityGateDecision 是 IndexableDocumentSnapshot 的 FK 前置条件。
 Input migration 不创建 Knowledge Chunk、Entity、Relation、KnowledgeVersion、BM25 或 Vector Index。
+IngestionUnitOfWork 可在一笔 Postgres transaction 中写入 SourceObject → IndexableDocumentSnapshot → Outbox。
+缺 QualityGateDecision 时数据库 FK 拒绝 IndexableDocumentSnapshot handoff。
 ```
 
 Status:
 
 ```text
-PHASE11 source-lineage Postgres schema partial implementation available
+PHASE11 source-lineage Postgres schema and repository partial implementation available
 phase closure not approved
 remaining: migrate real default upload/parser path to this schema; add queue crash, lease loss, retry/dead-letter, delete/legal-hold/restore and adapter conformance evidence
 ```

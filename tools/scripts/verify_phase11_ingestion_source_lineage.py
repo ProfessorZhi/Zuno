@@ -7,6 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py"
 SCHEMA_REGISTRY = REPO_ROOT / "src/backend/zuno/platform/database/schema_registry.py"
+PERSISTENCE = REPO_ROOT / "src/backend/zuno/platform/database/ingestion/persistence.py"
 
 REVISION = "20260719_18"
 DOWN_REVISION = "20260719_17"
@@ -67,9 +68,12 @@ def verify_phase11_ingestion_source_lineage() -> list[str]:
     errors: list[str] = []
     if not MIGRATION.exists():
         return [f"missing migration: {MIGRATION.relative_to(REPO_ROOT)}"]
+    if not PERSISTENCE.exists():
+        return [f"missing persistence runtime: {PERSISTENCE.relative_to(REPO_ROOT)}"]
 
     migration = _read(MIGRATION)
     registry = _read(SCHEMA_REGISTRY)
+    persistence = _read(PERSISTENCE)
 
     if f'revision = "{REVISION}"' not in migration:
         errors.append(f"migration missing revision {REVISION}")
@@ -115,6 +119,27 @@ def verify_phase11_ingestion_source_lineage() -> list[str]:
     ]:
         if fk not in migration:
             errors.append(f"migration missing required foreign key: {fk}")
+
+    for term in [
+        "class IngestionUnitOfWork",
+        "class IngestionRepository",
+        "record_source_object",
+        "record_document_version",
+        "record_parse_plan",
+        "record_parse_job",
+        "record_parse_attempt",
+        "record_parse_snapshot",
+        "record_source_span",
+        "record_quality_decision",
+        "record_indexable_snapshot",
+        "enqueue_outbox_event",
+        "get_indexable_snapshot",
+        "fencing_token",
+        "quality_decision_id",
+        "handoff_envelope_hash",
+    ]:
+        if term not in persistence:
+            errors.append(f"persistence runtime missing term: {term}")
 
     return errors
 
