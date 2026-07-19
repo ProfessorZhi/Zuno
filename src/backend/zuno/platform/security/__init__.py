@@ -35,6 +35,17 @@ from zuno.platform.security.runtime_batch import (
     SecurityRuntimeBatch,
     TrustLabel,
 )
+from zuno.platform.security.persistence import (
+    SecurityApprovalDecisionReceipt,
+    SecurityApprovalRequestReceipt,
+    SecurityAuthorizationReceipt,
+    SecurityEpochReceipt,
+    SecurityOutboxReceipt,
+    SecurityPersistenceError,
+    SecurityPrincipalContextReceipt,
+    SecurityRepository,
+    SecurityUnitOfWork,
+)
 
 __all__ = [
     "AccessScope",
@@ -54,8 +65,17 @@ __all__ = [
     "SecurityDecision",
     "SecurityFinding",
     "SecurityGate",
+    "SecurityApprovalDecisionReceipt",
+    "SecurityApprovalRequestReceipt",
+    "SecurityAuthorizationReceipt",
+    "SecurityEpochReceipt",
+    "SecurityOutboxReceipt",
+    "SecurityPersistenceError",
+    "SecurityPrincipalContextReceipt",
+    "SecurityRepository",
     "SecurityTraceSummary",
     "SecurityRuntimeBatch",
+    "SecurityUnitOfWork",
     "ToolGateResult",
     "ToolSecurityGate",
     "ToolSecurityProfile",

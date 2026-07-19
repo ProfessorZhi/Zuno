@@ -242,6 +242,26 @@ def verify_phase05_security_persistence() -> list[str]:
         if forbidden in source:
             errors.append(f"security migration contains forbidden phrase: {forbidden}")
 
+    repository = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "security" / "persistence.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "class SecurityUnitOfWork",
+        "class SecurityRepository",
+        "record_effective_epoch",
+        "record_principal_context",
+        "record_authorization_decision",
+        "request_approval",
+        "decide_approval",
+        "enqueue_security_event",
+        "SecurityPersistenceError",
+    ]:
+        if phrase not in repository:
+            errors.append(f"security persistence repository missing phrase: {phrase}")
+    for forbidden in ["access_token", "refresh_token", "api_key", "password"]:
+        if forbidden in repository:
+            errors.append(f"security persistence repository contains forbidden phrase: {forbidden}")
+
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
         errors.append(

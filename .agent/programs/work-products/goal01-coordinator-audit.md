@@ -336,3 +336,20 @@ PHASE05 persistence foundation added
 phase closure not approved
 remaining: runtime repository/UoW adoption, PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
 ```
+
+Runtime follow-up:
+
+```text
+src/backend/zuno/platform/security/persistence.py
+tests/integration/test_phase05_security_persistence.py
+```
+
+This adds a Security-owned UnitOfWork and repository that persists effective epoch, principal context, authorization decision, approval request, approval decision and security outbox event in one PostgreSQL transaction. It rejects obvious secret material keys before outbox persistence.
+
+Status after runtime follow-up:
+
+```text
+PHASE05 persistence foundation callable by runtime
+phase closure not approved
+remaining: PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
+```
