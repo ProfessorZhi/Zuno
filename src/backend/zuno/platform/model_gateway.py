@@ -1279,6 +1279,36 @@ class OpenAIUsageChatGatewayAdapter:
         return await self._async_client.chat.completions.create(**kwargs)
 
 
+class AnthropicMessagesGatewayAdapter:
+    """Provider SDK adapter for Anthropic messages inside the Gateway boundary."""
+
+    def __init__(self, *, api_key: str | None, base_url: str | None):
+        from anthropic import Anthropic
+
+        self._client = Anthropic(base_url=base_url, api_key=api_key)
+
+    def create(self, **kwargs: Any) -> Any:
+        return self._client.messages.create(**kwargs)
+
+    def stream(self, **kwargs: Any) -> Any:
+        return self._client.messages.stream(**kwargs)
+
+
+class AsyncAnthropicMessagesGatewayAdapter:
+    """Provider SDK adapter for async Anthropic messages inside the Gateway boundary."""
+
+    def __init__(self, *, api_key: str | None, base_url: str | None):
+        from anthropic import AsyncAnthropic
+
+        self._client = AsyncAnthropic(base_url=base_url, api_key=api_key)
+
+    async def create(self, **kwargs: Any) -> Any:
+        return await self._client.messages.create(**kwargs)
+
+    def stream(self, **kwargs: Any) -> Any:
+        return self._client.messages.stream(**kwargs)
+
+
 def is_openai_well_known_tool(tool_choice: str) -> bool:
     from langchain_openai.chat_models.base import WellKnownTools
 
@@ -3441,6 +3471,8 @@ def _build_product_stream_events(call_id: str, gateway_chunks: list[GatewayStrea
 __all__ = [
     "EchoLLMProvider",
     "LLMProvider",
+    "AnthropicMessagesGatewayAdapter",
+    "AsyncAnthropicMessagesGatewayAdapter",
     "BudgetPolicy",
     "BudgetVerdict",
     "MockModelProvider",

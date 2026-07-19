@@ -777,3 +777,30 @@ PHASE07 bypass count reduced from 2 to 1
 phase closure not approved
 remaining: migrate anthropic.py, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 010
+
+已迁移最后一个直接 Provider SDK import：
+
+```text
+src/backend/zuno/agent/core/models/anthropic.py
+```
+
+新增 `AnthropicMessagesGatewayAdapter` 与 `AsyncAnthropicMessagesGatewayAdapter` 于 `src/backend/zuno/platform/model_gateway.py`。`DeepAnthropic` 和 `DeepAsyncAnthropic` 不再继承 provider SDK class，而是通过 Gateway-owned adapter 组合实现原 `invoke`、`ainvoke` 和 stream helper 方法。
+
+同步更新：
+
+```text
+tools/scripts/verify_model_gateway_bypass.py
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 Provider SDK bypass count reduced from 1 to 0
+verify_model_gateway_bypass.py --strict expected to pass
+phase closure not approved
+remaining: complete broader PHASE07 runtime closure evidence and dependency gates for PHASE05/PHASE06
+```

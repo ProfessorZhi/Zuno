@@ -24,11 +24,9 @@ def test_model_gateway_bypass_inventory_is_locked_until_cutover() -> None:
     assert verifier.verify_model_gateway_bypass(strict=False) == []
 
 
-def test_model_gateway_bypass_strict_mode_documents_current_blocker() -> None:
+def test_model_gateway_bypass_strict_mode_passes_after_cutover() -> None:
     verifier = _load_verifier()
-    errors = verifier.verify_model_gateway_bypass(strict=True)
-    assert errors
-    assert any("provider SDK bypass remains" in error for error in errors)
+    assert verifier.verify_model_gateway_bypass(strict=True) == []
 
 
 def test_extract_helper_uses_gateway_boundary_without_import_side_effects() -> None:
@@ -425,3 +423,78 @@ def test_usage_model_uses_gateway_usage_adapter(monkeypatch) -> None:
     assert calls == [{"api_key": "secret-key", "base_url": "https://example.test"}]
     bound = model.bind_tools([], tool_choice="file_search")
     assert bound.kwargs["tool_choice"] == {"type": "file_search"}
+
+
+def test_anthropic_wrappers_use_gateway_adapters(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/anthropic.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.core.models import anthropic as anthropic_module
+
+    calls = []
+
+    class FakeAnthropicAdapter:
+        def __init__(self, *, api_key, base_url):
+            calls.append({"api_key": api_key, "base_url": base_url})
+
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            return "anthropic-response"
+
+    monkeypatch.setattr(anthropic_module, "AnthropicMessagesGatewayAdapter", FakeAnthropicAdapter)
+
+    model = anthropic_module.DeepAnthropic(
+        api_key="key",
+        model="claude-model",
+        base_url="https://example.test",
+        max_tokens=256,
+    )
+
+    assert model.invoke([{"role": "user", "content": "hi"}], [{"name": "tool"}]) == "anthropic-response"
+    assert calls == [
+        {"api_key": "key", "base_url": "https://example.test"},
+        {
+            "model": "claude-model",
+            "max_tokens": 256,
+            "messages": [{"role": "user", "content": "hi"}],
+            "tools": [{"name": "tool"}],
+        },
+    ]
+
+
+def test_async_anthropic_wrapper_uses_gateway_adapter(monkeypatch) -> None:
+    from zuno.core.models import anthropic as anthropic_module
+
+    calls = []
+
+    class FakeAsyncAnthropicAdapter:
+        def __init__(self, *, api_key, base_url):
+            calls.append({"api_key": api_key, "base_url": base_url})
+
+        async def create(self, **kwargs):
+            calls.append(kwargs)
+            return "async-anthropic-response"
+
+    monkeypatch.setattr(anthropic_module, "AsyncAnthropicMessagesGatewayAdapter", FakeAsyncAnthropicAdapter)
+
+    model = anthropic_module.DeepAsyncAnthropic(
+        api_key="key",
+        model="claude-model",
+        base_url="https://example.test",
+        max_tokens=128,
+    )
+
+    assert asyncio.run(model.ainvoke([{"role": "user", "content": "hi"}], [{"name": "tool"}])) == (
+        "async-anthropic-response"
+    )
+    assert calls == [
+        {"api_key": "key", "base_url": "https://example.test"},
+        {
+            "model": "claude-model",
+            "max_tokens": 128,
+            "messages": [{"role": "user", "content": "hi"}],
+            "tools": [{"name": "tool"}],
+        },
+    ]

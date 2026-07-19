@@ -109,8 +109,6 @@ def verify_model_gateway_bypass(*, strict: bool = False) -> list[str]:
         errors.append(f"new untracked provider bypass paths: {missing_from_inventory!r}")
     if stale_inventory:
         errors.append(f"stale provider bypass inventory paths: {stale_inventory!r}")
-    if not expected_paths:
-        errors.append("provider bypass inventory is empty or missing")
     return errors
 
 
