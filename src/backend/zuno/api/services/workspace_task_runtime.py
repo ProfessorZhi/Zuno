@@ -19,6 +19,7 @@ from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
 from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.api.services.user import UserPayload
 from zuno.capability.runtime import (
+    SecurityApprovalFactSink,
     ToolRuntimeExecutionResult,
     ToolRuntimeRequest,
     build_default_tool_control_plane_runtime,
@@ -211,6 +212,15 @@ class WorkspaceTaskRuntimeService:
     @classmethod
     def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
         cls._unified_runtime_store = store
+
+    @classmethod
+    def configure_security_approval_sink(
+        cls,
+        sink: SecurityApprovalFactSink | None,
+    ) -> None:
+        cls._tool_runtime = build_default_tool_control_plane_runtime(
+            security_approval_sink=sink
+        )
 
     @classmethod
     def reset_runtime_state_for_tests(cls) -> None:

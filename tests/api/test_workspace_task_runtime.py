@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
 
 
@@ -717,6 +718,53 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     assert tool_result["payload"]["result"]["data"]["message_id"].startswith("msg_")
     assert tool_result["payload"]["credential_refs"] == ["credref://workspace_phase08/mail.send"]
     assert "raw-secret" not in repr(approved_events)
+
+
+def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_path() -> None:
+    facts: list[dict] = []
+
+    class SecurityFactSink:
+        def record_tool_approval_fact(self, fact: dict) -> None:
+            facts.append(fact)
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_security_approval_sink(SecurityFactSink())
+    try:
+        client = _client()
+
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Send the approved project email",
+                "model_id": "model-local",
+                "session_id": "session_phase05_mail",
+                "workspace_id": "workspace_phase05",
+                "task_id": "task_phase05_mail_api",
+                "trace_id": "trace_phase05_mail_api",
+                "goal": "security approval fact closure",
+                "product_mode": "general_agent",
+                "plugins": ["mail.send"],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        assert facts[0]["status"] == "approval_waiting"
+        assert facts[0]["prepared_action_hash"]
+        assert "raw-secret" not in repr(facts)
+
+        approve_response = client.post(
+            "/api/v1/workspace/task/task_phase05_mail_api/approve",
+            json={"decision": "approved", "comment": "Approved by product user."},
+        )
+        assert approve_response.status_code == 200
+        assert [fact["status"] for fact in facts] == [
+            "approval_waiting",
+            "approved_before_effect",
+        ]
+        assert facts[-1]["credential_refs"] == ["credref://workspace_phase05/mail.send"]
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
 
 def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> None:

@@ -370,3 +370,22 @@ PHASE05 approval fact sink adopted by active Tool Runtime path
 phase closure not approved
 remaining: concrete PostgreSQL sink wiring in product runtime, PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
 ```
+
+PostgreSQL sink wiring:
+
+```text
+src/backend/zuno/platform/security/persistence.py
+src/backend/zuno/api/services/workspace_task_runtime.py
+tests/integration/test_phase05_security_persistence_runtime.py
+tests/api/test_workspace_task_runtime.py
+```
+
+Security now owns `PostgresSecurityApprovalFactSink`, which consumes redacted Tool Runtime approval facts and writes effective epoch, principal context, authorization decision, approval request, approval decision and security outbox event through `SecurityUnitOfWork`. `WorkspaceTaskRuntimeService.configure_security_approval_sink()` wires the sink into the active workspace tool runtime without moving Security persistence concerns into the API layer.
+
+Status:
+
+```text
+PHASE05 PostgreSQL approval fact sink available and product runtime wiring verified
+phase closure not approved
+remaining: PEP/PDP fail-closed cutover, mandatory audit fault tests, security eval evidence
+```

@@ -8,8 +8,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
+from zuno.capability.runtime import ToolRuntimeRequest, build_default_tool_control_plane_runtime
 from zuno.platform.database.foundation import create_foundation_engine
-from zuno.platform.security.persistence import SecurityPersistenceError, SecurityUnitOfWork
+from zuno.platform.security.persistence import (
+    PostgresSecurityApprovalFactSink,
+    SecurityPersistenceError,
+    SecurityUnitOfWork,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATABASE_URL = os.environ.get(
@@ -145,3 +150,68 @@ def test_security_uow_rolls_back_and_rejects_secret_material_in_outbox(engine) -
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM security_outbox_events")).scalar_one() == 0
+
+
+def test_tool_runtime_security_approval_sink_persists_before_effect(engine) -> None:
+    runtime = build_default_tool_control_plane_runtime(
+        security_approval_sink=PostgresSecurityApprovalFactSink(engine)
+    )
+
+    pending = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={
+                "to": "hr@example.com",
+                "body": "Candidate update",
+                "smtp_password": "raw-secret",
+            },
+            workspace_id="workspace_phase05",
+            user_id="user_phase05",
+            task_id="task_phase05_mail",
+            trace_id="trace_phase05_mail",
+            model_intent="Send a candidate update email.",
+            approval_id="approval_phase05_mail",
+            tool_request_id="toolreq_phase05_mail",
+            execution_id="toolclaim_phase05_mail",
+        )
+    )
+
+    assert pending.status == "approval_required"
+
+    approved = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={
+                "to": "hr@example.com",
+                "body": "Candidate update",
+                "smtp_password": "raw-secret",
+            },
+            workspace_id="workspace_phase05",
+            user_id="user_phase05",
+            task_id="task_phase05_mail",
+            trace_id="trace_phase05_mail",
+            model_intent="Send a candidate update email.",
+            approved=True,
+            approval_comment="Approved.",
+            approval_id="approval_phase05_mail",
+            tool_request_id="toolreq_phase05_mail",
+            execution_id="toolclaim_phase05_mail",
+        )
+    )
+
+    assert approved.status == "completed"
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM security_effective_epochs")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM security_principal_contexts")).scalar_one() == 1
+        assert conn.execute(text("SELECT decision FROM security_authorization_decisions")).scalar_one() == "REQUIRES_APPROVAL"
+        assert conn.execute(text("SELECT status FROM security_approval_requests")).scalar_one() == "approved"
+        assert conn.execute(text("SELECT count(*) FROM security_approval_decisions")).scalar_one() == 1
+        topics = conn.execute(
+            text("SELECT topic FROM security_outbox_events ORDER BY topic")
+        ).scalars().all()
+        assert topics == [
+            "security.tool_approval.approval_waiting",
+            "security.tool_approval.approved_before_effect",
+        ]
+        payloads = conn.execute(text("SELECT payload FROM security_outbox_events")).scalars().all()
+        assert "raw-secret" not in repr(payloads)

@@ -246,9 +246,12 @@ def verify_phase05_security_persistence() -> list[str]:
         REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "security" / "persistence.py"
     ).read_text(encoding="utf-8")
     for phrase in [
+        "class PostgresSecurityApprovalFactSink",
         "class SecurityUnitOfWork",
         "class SecurityRepository",
+        "record_tool_approval_fact",
         "record_effective_epoch",
+        "ensure_effective_epoch",
         "record_principal_context",
         "record_authorization_decision",
         "request_approval",
@@ -274,6 +277,17 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in tool_runtime:
             errors.append(f"tool runtime missing Security approval fact sink phrase: {phrase}")
+
+    workspace_runtime = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_task_runtime.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "configure_security_approval_sink",
+        "build_default_tool_control_plane_runtime(",
+        "security_approval_sink=sink",
+    ]:
+        if phrase not in workspace_runtime:
+            errors.append(f"workspace runtime missing Security approval sink wiring phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):

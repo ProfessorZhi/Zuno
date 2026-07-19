@@ -731,8 +731,11 @@ class ToolControlPlaneRuntime:
         self._security_approval_sink.record_tool_approval_fact(fact)
 
 
-def build_default_tool_control_plane_runtime() -> ToolControlPlaneRuntime:
-    runtime = ToolControlPlaneRuntime()
+def build_default_tool_control_plane_runtime(
+    *,
+    security_approval_sink: SecurityApprovalFactSink | None = None,
+) -> ToolControlPlaneRuntime:
+    runtime = ToolControlPlaneRuntime(security_approval_sink=security_approval_sink)
 
     runtime.register_manifest(
         ToolCardManifest(
