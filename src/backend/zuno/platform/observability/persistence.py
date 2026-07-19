@@ -658,6 +658,26 @@ class ObservabilityRepository:
             for row in rows
         )
 
+    def trace_scope(self, *, tenant_id: str, trace_id: str) -> dict[str, str]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id, workspace_id, root_run_id
+                FROM observability_traces
+                WHERE tenant_id = :tenant_id
+                  AND trace_id = :trace_id
+                """
+            ),
+            {"tenant_id": tenant_id, "trace_id": trace_id},
+        ).mappings().first()
+        if row is None:
+            raise ObservabilityPersistenceError("trace not found")
+        return {
+            "tenant_id": str(row["tenant_id"]),
+            "workspace_id": str(row["workspace_id"]),
+            "root_run_id": str(row["root_run_id"]),
+        }
+
     def projection_freshness(
         self,
         *,

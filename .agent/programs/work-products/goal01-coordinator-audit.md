@@ -954,3 +954,41 @@ PHASE06 observability persistence fault semantics expanded
 phase closure not approved
 remaining: API authorization checks, external sink failure isolation and full adapter default-path cutover
 ```
+
+## PHASE06 Observability Query Surface 005
+
+新增 Product-facing Observability query service/port：
+
+```text
+src/backend/zuno/api/services/product/__init__.py
+src/backend/zuno/api/services/product/projection_service.py
+src/backend/zuno/platform/observability/persistence.py
+tests/api/test_phase06_observability_query_surface.py
+tools/scripts/verify_phase06_observability_persistence.py
+docs/evidence/phase06-observability-persistence.md
+```
+
+覆盖语义：
+
+```text
+ObservabilityProjectionQueryService.get_trace_projection: 返回 timeline、freshness/completeness、dead_letters
+ObservabilityQueryPrincipal: 显式 tenant/workspace/scope 授权
+trace_scope: query 前确认 trace 真实 workspace 边界
+_public_payload: 从响应剥离 prompt、hidden_reasoning、chain_of_thought、secret、token、api_key、password、raw_tool_args 类字段
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/services/product/projection_service.py src/backend/zuno/platform/observability/persistence.py tools/scripts/verify_phase06_observability_persistence.py tests/api/test_phase06_observability_query_surface.py
+python tools/scripts/verify_phase06_observability_persistence.py
+pytest -q tests/api/test_phase06_observability_query_surface.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE06 query service/port available
+phase closure not approved
+remaining: FastAPI route wiring if required, external sink failure isolation and full adapter default-path cutover
+```

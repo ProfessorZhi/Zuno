@@ -251,6 +251,7 @@ def verify_phase06_observability_persistence() -> list[str]:
         "claim_projection_rebuild",
         "complete_projection_rebuild",
         "record_security_audit",
+        "trace_scope",
         "trace_timeline",
         "projection_freshness",
         "dead_letters",
@@ -268,6 +269,30 @@ def verify_phase06_observability_persistence() -> list[str]:
         if forbidden in repository:
             errors.append(f"observability persistence repository contains forbidden phrase: {forbidden}")
 
+    query_service = (
+        REPO_ROOT
+        / "src"
+        / "backend"
+        / "zuno"
+        / "api"
+        / "services"
+        / "product"
+        / "projection_service.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "class ObservabilityProjectionQueryService",
+        "class ObservabilityQueryPrincipal",
+        "ObservabilityQueryAuthorizationError",
+        "observability:read",
+        "trace_scope",
+        "projection_freshness",
+        "dead_letters",
+        "FORBIDDEN_PAYLOAD_KEYS",
+        "complete",
+    ]:
+        if phrase not in query_service:
+            errors.append(f"observability query service missing phrase: {phrase}")
+
     fault_test = (
         REPO_ROOT
         / "tests"
@@ -284,6 +309,22 @@ def verify_phase06_observability_persistence() -> list[str]:
     ]:
         if phrase not in fault_test:
             errors.append(f"observability fault test missing phrase: {phrase}")
+
+    query_test = (
+        REPO_ROOT
+        / "tests"
+        / "api"
+        / "test_phase06_observability_query_surface.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "trace workspace boundary mismatch",
+        "observability read scope is required",
+        "duplicate_sequence_payload_mismatch",
+        "[REDACTED_SECRET]",
+        "complete",
+    ]:
+        if phrase not in query_test:
+            errors.append(f"observability query surface test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
