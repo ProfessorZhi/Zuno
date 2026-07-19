@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Callable
 from typing import Any
 
 from sqlalchemy import Engine, text
@@ -8,7 +9,12 @@ from sqlalchemy.engine import Connection
 
 from zuno.platform.contracts import canonical_json, canonical_sha256
 from zuno.platform.security import SandboxAuditEvent, redact_sensitive_payload
-from zuno.platform.observability.trace_eval import ZunoSpan, ZunoSpanBuilder
+from zuno.platform.observability.trace_eval import (
+    ObservabilityDeliveryState,
+    ObservabilityExternalSinkDelivery,
+    ZunoSpan,
+    ZunoSpanBuilder,
+)
 
 
 class ObservabilityPersistenceError(RuntimeError):
@@ -154,6 +160,78 @@ class PostgresObservabilityRuntimeAdapter:
                 },
             )
             return receipt
+
+    def record_span_with_external_sink(
+        self,
+        span: ZunoSpan,
+        *,
+        sink_id: str,
+        idempotency_key: str,
+        deliver: Callable[[dict[str, Any]], None],
+    ) -> tuple[ObservabilityRuntimeEventReceipt, ObservabilityExternalSinkDelivery]:
+        payload = span.to_otel_span()
+        with ObservabilityUnitOfWork(self.engine) as repo:
+            repo.record_trace(
+                trace_id=span.trace_id,
+                tenant_id=span.session_id or span.thread_id or span.task_id,
+                workspace_id=span.session_id or span.thread_id or span.task_id,
+                root_run_id=span.run_id,
+            )
+            repo.record_span(
+                span_id=span.run_id,
+                trace_id=span.trace_id,
+                tenant_id=span.session_id or span.thread_id or span.task_id,
+                span_kind=span.span_kind.value,
+                name=span.name,
+                parent_span_id=span.parent_run_id,
+                status="failed" if span.error else "completed",
+            )
+            receipt = repo.record_runtime_event(
+                event_id=f"event:{span.trace_id}:{span.run_id}",
+                tenant_id=span.session_id or span.thread_id or span.task_id,
+                trace_id=span.trace_id,
+                span_id=span.run_id,
+                stream_id=f"trace:{span.trace_id}",
+                sequence=1,
+                event_type=f"span.{span.span_kind.value}",
+                payload=payload,
+            )
+            repo.record_audit(
+                audit_id=f"audit:{span.trace_id}:{span.run_id}",
+                tenant_id=span.session_id or span.thread_id or span.task_id,
+                trace_id=span.trace_id,
+                sequence=1,
+                previous_hash="0" * 64,
+                payload={"span_id": span.run_id, "external_sink_id": sink_id},
+            )
+            try:
+                deliver(payload)
+            except Exception as exc:
+                repo.record_dead_letter(
+                    dead_letter_id=f"dead-letter:external-sink:{span.trace_id}:{span.run_id}",
+                    tenant_id=span.session_id or span.thread_id or span.task_id,
+                    source_ref=f"external-sink:{sink_id}:{idempotency_key}",
+                    reason_code="external_sink_delivery_failed",
+                    payload={
+                        "sink_id": sink_id,
+                        "idempotency_key": idempotency_key,
+                        "error_type": type(exc).__name__,
+                    },
+                )
+                return receipt, ObservabilityExternalSinkDelivery(
+                    delivery_id=f"delivery:{sink_id}:{idempotency_key}",
+                    sink_id=sink_id,
+                    idempotency_key=idempotency_key,
+                    state=ObservabilityDeliveryState.FAILED,
+                    source_success=False,
+                )
+        return receipt, ObservabilityExternalSinkDelivery(
+            delivery_id=f"delivery:{sink_id}:{idempotency_key}",
+            sink_id=sink_id,
+            idempotency_key=idempotency_key,
+            state=ObservabilityDeliveryState.DELIVERED,
+            source_success=False,
+        )
 
     def record_security_audit(
         self,

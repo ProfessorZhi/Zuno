@@ -952,7 +952,7 @@ Status:
 ```text
 PHASE06 observability persistence fault semantics expanded
 phase closure not approved
-remaining: API authorization checks, external sink failure isolation and full adapter default-path cutover
+remaining: API authorization checks and full adapter default-path cutover
 ```
 
 ## PHASE06 Observability Query Surface 005
@@ -990,5 +990,40 @@ Status:
 ```text
 PHASE06 query service/port available
 phase closure not approved
-remaining: FastAPI route wiring if required, external sink failure isolation and full adapter default-path cutover
+remaining: FastAPI route wiring if required and full adapter default-path cutover
+```
+
+## PHASE06 External Sink Isolation 006
+
+新增 Observability external sink isolation 行为：
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+tests/fault/observability/test_phase06_external_sink_isolation.py
+tools/scripts/verify_phase06_observability_persistence.py
+docs/evidence/phase06-observability-persistence.md
+```
+
+覆盖语义：
+
+```text
+PostgresObservabilityRuntimeAdapter.record_span_with_external_sink: 本地 trace/span/runtime event/audit facts 先持久化
+external sink delivery failed: 写入 external_sink_delivery_failed dead letter，不回滚本地事实
+external sink delivery succeeded: delivery state 为 DELIVERED，但 source_success=False，不冒充源领域成功
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/observability/persistence.py tools/scripts/verify_phase06_observability_persistence.py tests/fault/observability/test_phase06_external_sink_isolation.py
+python tools/scripts/verify_phase06_observability_persistence.py
+pytest -q tests/api/test_phase06_observability_query_surface.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE06 external sink isolation available
+phase closure not approved
+remaining: full Agent/Model/Knowledge/Memory/Capability/Tool/Security/Infrastructure adapter default-path cutover and optional FastAPI route wiring
 ```

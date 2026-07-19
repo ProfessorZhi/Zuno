@@ -239,6 +239,10 @@ def verify_phase06_observability_persistence() -> list[str]:
         "class ObservabilityUnitOfWork",
         "class ObservabilityRepository",
         "class PostgresObservabilityRuntimeAdapter",
+        "record_span_with_external_sink",
+        "ObservabilityExternalSinkDelivery",
+        "external_sink_delivery_failed",
+        "source_success=False",
         "ingest_envelope",
         "record_trace",
         "record_span",
@@ -309,6 +313,24 @@ def verify_phase06_observability_persistence() -> list[str]:
     ]:
         if phrase not in fault_test:
             errors.append(f"observability fault test missing phrase: {phrase}")
+
+    external_sink_fault_test = (
+        REPO_ROOT
+        / "tests"
+        / "fault"
+        / "observability"
+        / "test_phase06_external_sink_isolation.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "external sink unavailable",
+        "external_sink_delivery_failed",
+        "does_not_rollback_local_observability_facts",
+        "source_success is False",
+        "ObservabilityDeliveryState.FAILED",
+        "ObservabilityDeliveryState.DELIVERED",
+    ]:
+        if phrase not in external_sink_fault_test:
+            errors.append(f"observability external sink fault test missing phrase: {phrase}")
 
     query_test = (
         REPO_ROOT
