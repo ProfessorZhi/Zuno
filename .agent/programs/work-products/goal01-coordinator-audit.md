@@ -512,3 +512,21 @@ PHASE05 security sink outage fails closed before effect
 phase closure not approved
 remaining: broader PEP/PDP cutover coverage, security eval evidence
 ```
+
+Security eval evidence follow-up:
+
+```text
+docs/evidence/phase05-security-control-plane.md
+tools/scripts/verify_phase05_security_eval.py
+tests/security/test_phase05_security_eval_gate.py
+```
+
+Added partial PHASE05 Security evidence covering adaptive side-effect attack blocking, benign read-only utility preservation and sink-outage fail-closed behavior. The evidence explicitly states `phase_completion: not_approved`.
+
+Status:
+
+```text
+PHASE05 partial security eval evidence available
+phase closure not approved
+remaining: broader PEP/PDP cutover coverage and full Security fault matrix
+```
