@@ -600,3 +600,28 @@ PHASE07 bypass count reduced from 11 to 10
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 003
+
+已迁移一个 Capability 工具直接 Provider SDK 调用：
+
+```text
+src/backend/zuno/capability/tools/resume_optimizer/action.py
+```
+
+该工具原本直接创建 `OpenAI` client，并 hardcode `gpt-3.5-turbo`。现已改为通过 `ModelGateway.invoke(ModelGatewayRequest(...))` 请求 chat proposal。为避免把本地 mock 冒充为真实简历优化，当前命中 `local_mock_*` provider 时保留原文并输出诊断；只有非 mock Gateway adapter 成功返回非空文本时才替换原文。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 10 to 9
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```

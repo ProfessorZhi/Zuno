@@ -74,3 +74,56 @@ def test_strict_schema_uses_local_sentinel_instead_of_provider_import() -> None:
 
     assert "default" not in strict_schema["properties"]["empty_default"]
     assert strict_schema["properties"]["kept_default"]["default"] == "value"
+
+
+def test_resume_optimizer_uses_gateway_without_mocking_success() -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/capability/tools/resume_optimizer/action.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.capability.tools.resume_optimizer.action import ResumeEnhancer
+
+    class FakeMetrics:
+        provider_id = "local_mock_chat"
+
+    class FakeResult:
+        status = "succeeded"
+        output = "polished resume text"
+        metrics = FakeMetrics()
+
+    class FakeGateway:
+        def __init__(self) -> None:
+            self.request = None
+
+        def invoke(self, request):
+            self.request = request
+            return FakeResult()
+
+    gateway = FakeGateway()
+    enhancer = ResumeEnhancer(gateway=gateway)
+
+    assert enhancer.enhance_text("plain resume text") == "plain resume text"
+    assert gateway.request is not None
+    assert gateway.request.category.value == "chat"
+    assert gateway.request.task_id == "resume_optimizer"
+
+
+def test_resume_optimizer_returns_non_mock_gateway_output() -> None:
+    from zuno.capability.tools.resume_optimizer.action import ResumeEnhancer
+
+    class FakeMetrics:
+        provider_id = "gateway_adapter_openai"
+
+    class FakeResult:
+        status = "succeeded"
+        output = "polished resume text"
+        metrics = FakeMetrics()
+
+    class FakeGateway:
+        def invoke(self, request):
+            return FakeResult()
+
+    enhancer = ResumeEnhancer(gateway=FakeGateway())
+
+    assert enhancer.enhance_text("plain resume text") == "polished resume text"

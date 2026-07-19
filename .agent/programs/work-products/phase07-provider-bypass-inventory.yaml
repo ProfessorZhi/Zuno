@@ -10,7 +10,6 @@ known_bypass_paths:
   - src/backend/zuno/agent/core/models/reason_model.py
   - src/backend/zuno/agent/core/models/tool_call.py
   - src/backend/zuno/agent/core/models/usage_model.py
-  - src/backend/zuno/capability/tools/resume_optimizer/action.py
   - src/backend/zuno/platform/services/autobuild/client.py
   - src/backend/zuno/platform/services/mcp_openai/mcp_manager.py
   - src/backend/zuno/platform/services/rag/embedding.py
