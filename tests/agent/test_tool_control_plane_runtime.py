@@ -96,7 +96,16 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
         ToolRuntimeRequest,
     )
 
+    timeline: list[dict] = []
     calls: list[dict] = []
+    security_facts: list[dict] = []
+
+    class SecurityFactSink:
+        def record_tool_approval_fact(self, fact: dict) -> None:
+            entry = {"kind": "security_fact", **fact}
+            security_facts.append(entry)
+            timeline.append(entry)
+
     broker = InMemoryCredentialBroker()
     broker.register_secret_ref(
         policy="brokered_secret",
@@ -104,7 +113,10 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
         user_id="user_tools",
         secret_ref="credref://workspace_tools/mail",
     )
-    runtime = ToolControlPlaneRuntime(credential_broker=broker)
+    runtime = ToolControlPlaneRuntime(
+        credential_broker=broker,
+        security_approval_sink=SecurityFactSink(),
+    )
     runtime.register_manifest(
         ToolCardManifest(
             tool_id="mail.send",
@@ -125,6 +137,23 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
             executor_adapter="api.mail.send",
         )
     )
+
+    def execute_mail(args, context):
+        calls.append(
+            {
+                "kind": "executor",
+                "args": args,
+                "credential_refs": context.credential_refs,
+                "network_policy": context.network_policy,
+            }
+        )
+        timeline.append({"kind": "executor"})
+        return {
+            "status": "success",
+            "summary": "email sent",
+            "message_id": "msg_123",
+        }
+
     runtime.register_executor_adapter(
         ExecutorAdapterContract(
             adapter_id="api.mail.send",
@@ -134,18 +163,7 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
             credential_policy="brokered_secret",
             timeout_seconds=10,
         ),
-        lambda args, context: calls.append(
-            {
-                "args": args,
-                "credential_refs": context.credential_refs,
-                "network_policy": context.network_policy,
-            }
-        )
-        or {
-            "status": "success",
-            "summary": "email sent",
-            "message_id": "msg_123",
-        },
+        execute_mail,
     )
 
     pending = runtime.execute(
@@ -176,6 +194,10 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
     assert pending.audit_event.final_decision == "pending"
     assert pending.task_events[-1]["payload"]["required_approval"] == "tool:mail.send"
     assert "raw-secret" not in repr(pending.to_dict())
+    assert security_facts[0]["status"] == "approval_waiting"
+    assert security_facts[0]["required_approval"] == "tool:mail.send"
+    assert "prepared_action_hash" in security_facts[0]
+    assert "raw-secret" not in repr(security_facts)
 
     approved = runtime.execute(
         ToolRuntimeRequest(
@@ -203,6 +225,7 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
     assert approved.sandbox_context.credential_refs == ("credref://workspace_tools/mail",)
     assert calls == [
         {
+            "kind": "executor",
             "args": {
                 "to": "hr@example.com",
                 "body": "Candidate update",
@@ -217,6 +240,13 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
         "sandbox_audit",
         "tool_result",
     ]
+    assert [item["kind"] for item in timeline] == [
+        "security_fact",
+        "security_fact",
+        "executor",
+    ]
+    assert security_facts[-1]["status"] == "approved_before_effect"
+    assert security_facts[-1]["credential_refs"] == ["credref://workspace_tools/mail"]
     assert "raw-secret" not in repr(approved.to_dict())
 
 

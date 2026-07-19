@@ -353,3 +353,20 @@ PHASE05 persistence foundation callable by runtime
 phase closure not approved
 remaining: PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
 ```
+
+Tool Runtime adoption:
+
+```text
+src/backend/zuno/capability/runtime.py
+tests/agent/test_tool_control_plane_runtime.py
+```
+
+Tool Control Plane now accepts an injectable `SecurityApprovalFactSink` and emits a redacted Security approval fact at `approval_waiting` and `approved_before_effect`. The fact includes `prepared_action_hash`, approval ID, audit ref, credential refs and sandbox decision summary, but not raw tool arguments or credential values.
+
+Status:
+
+```text
+PHASE05 approval fact sink adopted by active Tool Runtime path
+phase closure not approved
+remaining: concrete PostgreSQL sink wiring in product runtime, PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
+```

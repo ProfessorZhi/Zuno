@@ -262,6 +262,19 @@ def verify_phase05_security_persistence() -> list[str]:
         if forbidden in repository:
             errors.append(f"security persistence repository contains forbidden phrase: {forbidden}")
 
+    tool_runtime = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "runtime.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "class SecurityApprovalFactSink",
+        "security_approval_sink",
+        "_record_security_approval_fact",
+        "prepared_action_hash",
+        "approved_before_effect",
+    ]:
+        if phrase not in tool_runtime:
+            errors.append(f"tool runtime missing Security approval fact sink phrase: {phrase}")
+
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
         errors.append(
