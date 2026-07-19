@@ -397,3 +397,31 @@ def test_tool_call_model_uses_gateway_chat_completions_adapter(monkeypatch) -> N
             "tools": [{"type": "function", "function": {"name": "search"}}],
         },
     ]
+
+
+def test_usage_model_uses_gateway_usage_adapter(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/usage_model.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.core.models import usage_model as usage_model_module
+
+    calls = []
+
+    class FakeUsageAdapter:
+        def __init__(self, *, api_key, base_url):
+            calls.append({"api_key": api_key, "base_url": base_url})
+
+    monkeypatch.setattr(usage_model_module, "OpenAIUsageChatGatewayAdapter", FakeUsageAdapter)
+    monkeypatch.setattr(usage_model_module, "is_openai_well_known_tool", lambda tool_choice: tool_choice == "file_search")
+
+    model = usage_model_module.ChatModelWithTokenUsage(
+        model="usage-model",
+        api_key="secret-key",
+        base_url="https://example.test",
+    )
+
+    assert calls == [{"api_key": "secret-key", "base_url": "https://example.test"}]
+    bound = model.bind_tools([], tool_choice="file_search")
+    assert bound.kwargs["tool_choice"] == {"type": "file_search"}

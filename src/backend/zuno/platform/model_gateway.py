@@ -1263,6 +1263,28 @@ class OpenAIChatCompletionsGatewayAdapter:
         return await self._async_client.chat.completions.create(**payload)
 
 
+class OpenAIUsageChatGatewayAdapter:
+    """Provider SDK adapter for chat completions used by token-usage chat models."""
+
+    def __init__(self, *, api_key: str | None, base_url: str | None):
+        from openai import AsyncOpenAI, OpenAI
+
+        self._client = OpenAI(api_key=api_key, base_url=base_url)
+        self._async_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+    def create(self, **kwargs: Any) -> Any:
+        return self._client.chat.completions.create(**kwargs)
+
+    async def acreate(self, **kwargs: Any) -> Any:
+        return await self._async_client.chat.completions.create(**kwargs)
+
+
+def is_openai_well_known_tool(tool_choice: str) -> bool:
+    from langchain_openai.chat_models.base import WellKnownTools
+
+    return tool_choice in WellKnownTools
+
+
 def build_openai_chat_gateway_model(
     *,
     model: str | None,
@@ -3473,6 +3495,7 @@ __all__ = [
     "ModelOperation",
     "OpenAIChatCompletionsGatewayAdapter",
     "OpenAIEmbeddingGatewayAdapter",
+    "OpenAIUsageChatGatewayAdapter",
     "ModelOperationalCommand",
     "ModelOperationalCommandKind",
     "ModelOperationalCommandVerdict",
@@ -3526,4 +3549,5 @@ __all__ = [
     "ProviderStreamChunk",
     "build_default_model_gateway",
     "build_openai_chat_gateway_model",
+    "is_openai_well_known_tool",
 ]

@@ -752,3 +752,28 @@ PHASE07 bypass count reduced from 4 to 2
 phase closure not approved
 remaining: migrate anthropic.py and usage_model.py, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 009
+
+已迁移 token-usage chat model 的 OpenAI / LangChain provider imports：
+
+```text
+src/backend/zuno/agent/core/models/usage_model.py
+```
+
+新增 `OpenAIUsageChatGatewayAdapter` 与 `is_openai_well_known_tool(...)` 于 `src/backend/zuno/platform/model_gateway.py`。`ChatModelWithTokenUsage` 继续保留同步、异步、stream、astream 和 token usage 记录语义，但 Provider SDK client 和 `WellKnownTools` 判断均收敛到 Gateway 边界。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 2 to 1
+phase closure not approved
+remaining: migrate anthropic.py, then pass verify_model_gateway_bypass.py --strict
+```
