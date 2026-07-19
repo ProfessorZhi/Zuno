@@ -1368,3 +1368,28 @@ PHASE06 Model adapter row moved to completion_candidate
 phase closure not approved
 remaining: PHASE06 aggregate verification and Coordinator review
 ```
+
+## PHASE05 Non-MCP Admin Matrix Reconciliation 011
+
+更正 Closure Matrix 中 Non-MCP admin row 的状态：
+
+```text
+Admin 管理面：Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File
+mandatory_open -> completion_candidate
+```
+
+原因：
+
+```text
+`f04117ec` 已提交共享 security_admin_actions guard、verifier/evidence 和 focused admin tests；
+PHASE05 evidence 已记录 Agent/Tool/Dialog/MCP Agent/LLM/Knowledge/Knowledge File admin override deny-before-DAO。
+本次只同步 Matrix 状态，不新增 runtime 行为。
+```
+
+已运行：
+
+```text
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/agent/test_phase05_admin_action_reauthorization.py -p no:cacheprovider
+git diff --check
+```
