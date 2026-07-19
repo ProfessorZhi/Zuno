@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from enum import StrEnum
 import hashlib
@@ -1190,6 +1191,50 @@ class MockModelProvider:
         if request.category == ModelCategory.EVAL_JUDGE:
             return "eval_judge_score=0.82; rationale=local deterministic judge"
         return f"local mock chat response from {self.model_id}"
+
+
+class OpenAIEmbeddingGatewayAdapter:
+    """Provider SDK adapter for OpenAI-compatible embeddings inside the Gateway boundary."""
+
+    def __init__(self, *, api_key: str | None, base_url: str | None, model: str):
+        from openai import AsyncOpenAI, OpenAI
+
+        self.model = model
+        self._client = OpenAI(api_key=api_key, base_url=base_url)
+        self._async_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+    def embed(self, query: str) -> list[float]:
+        responses = self._client.embeddings.create(
+            model=self.model,
+            input=query,
+            encoding_format="float",
+        )
+        return responses.data[0].embedding
+
+    async def embed_async(self, query: str | list[str]) -> list[float] | list[list[float]]:
+        if isinstance(query, str) or len(query) <= 10:
+            return await self._embed_batch(query)
+
+        semaphore = asyncio.Semaphore(5)
+
+        async def process_batch(batch: list[str]) -> list[list[float]]:
+            async with semaphore:
+                batch_result = await self._embed_batch(batch)
+                return batch_result if isinstance(batch_result[0], list) else [batch_result]
+
+        batches = [query[index : index + 10] for index in range(0, len(query), 10)]
+        results = await asyncio.gather(*(process_batch(batch) for batch in batches))
+        return [embedding for batch_result in results for embedding in batch_result]
+
+    async def _embed_batch(self, query: str | list[str]) -> list[float] | list[list[float]]:
+        responses = await self._async_client.embeddings.create(
+            model=self.model,
+            input=query,
+            encoding_format="float",
+        )
+        if isinstance(query, str):
+            return responses.data[0].embedding
+        return [response.embedding for response in responses.data]
 
 
 _CATEGORY_COST_PER_TOKEN = {
@@ -3373,6 +3418,7 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "OpenAIEmbeddingGatewayAdapter",
     "ModelOperationalCommand",
     "ModelOperationalCommandKind",
     "ModelOperationalCommandVerdict",

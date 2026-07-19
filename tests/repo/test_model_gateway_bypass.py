@@ -181,3 +181,63 @@ def test_mcp_manager_preserves_openai_not_implemented_semantics() -> None:
 
     with pytest.raises(NotImplementedError, match="OpenAI MCP chat client is not implemented yet"):
         asyncio.run(manager._chat_model([], []))
+
+
+def test_core_embedding_model_uses_gateway_owned_provider_adapter(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/embedding.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.core.models import embedding as embedding_module
+
+    class FakeEmbeddingAdapter:
+        def __init__(self, *, api_key, base_url, model):
+            self.api_key = api_key
+            self.base_url = base_url
+            self.model = model
+
+        def embed(self, query):
+            return [len(query), 1.0]
+
+        async def embed_async(self, query):
+            if isinstance(query, str):
+                return [len(query), 2.0]
+            return [[len(item), 2.0] for item in query]
+
+    monkeypatch.setattr(embedding_module, "OpenAIEmbeddingGatewayAdapter", FakeEmbeddingAdapter)
+
+    model = embedding_module.EmbeddingModel(model="embedding-model", api_key="key", base_url="https://example.test")
+
+    assert model.embed("abc") == [3, 1.0]
+    assert asyncio.run(model.embed_async(["a", "abcd"])) == [[1, 2.0], [4, 2.0]]
+
+
+def test_rag_embedding_uses_gateway_owned_provider_adapter(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/platform/services/rag/embedding.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.services.rag import embedding as rag_embedding_module
+
+    class FakeEmbeddingAdapter:
+        def __init__(self, *, api_key, base_url, model):
+            self.api_key = api_key
+            self.base_url = base_url
+            self.model = model
+
+        async def embed_async(self, query):
+            if isinstance(query, str):
+                return [len(query), 3.0]
+            return [[len(item), 3.0] for item in query]
+
+    monkeypatch.setattr(rag_embedding_module, "OpenAIEmbeddingGatewayAdapter", FakeEmbeddingAdapter)
+
+    config = {"api_key": "key", "base_url": "https://example.test", "model_name": "embedding-model"}
+
+    assert asyncio.run(rag_embedding_module.get_embedding("abc", config_override=config)) == [3, 3.0]
+    assert asyncio.run(rag_embedding_module.get_embedding(["a", "abcd"], config_override=config)) == [
+        [1, 3.0],
+        [4, 3.0],
+    ]

@@ -675,3 +675,29 @@ PHASE07 bypass count reduced from 8 to 7
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 006
+
+已迁移两个真实 embedding provider 调用点到 Gateway-owned adapter：
+
+```text
+src/backend/zuno/agent/core/models/embedding.py
+src/backend/zuno/platform/services/rag/embedding.py
+```
+
+新增 `OpenAIEmbeddingGatewayAdapter` 于 `src/backend/zuno/platform/model_gateway.py`。OpenAI / AsyncOpenAI SDK 调用仍保留真实 provider 行为，但只存在于 Gateway 边界内；Core EmbeddingModel 与 RAG embedding helper 只消费该 adapter，不直接创建 Provider SDK client。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 7 to 5
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```
