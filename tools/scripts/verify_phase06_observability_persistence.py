@@ -302,6 +302,27 @@ def verify_phase06_observability_persistence() -> list[str]:
         if phrase not in query_service:
             errors.append(f"observability query service missing phrase: {phrase}")
 
+    query_route = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1" / "observability.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "APIRouter(prefix=\"/observability\"",
+        "@router.get(\"/traces/{trace_id}\"",
+        "ObservabilityProjectionQueryService",
+        "ObservabilityQueryPrincipal",
+        "observability:read",
+        "HTTPException(status_code=403",
+        "get_login_user",
+    ]:
+        if phrase not in query_route:
+            errors.append(f"observability query route missing phrase: {phrase}")
+
+    api_router = (REPO_ROOT / "src" / "backend" / "zuno" / "api" / "router.py").read_text(
+        encoding="utf-8"
+    )
+    if "observability" not in api_router or "observability.router" not in api_router:
+        errors.append("observability query route is not included in api router")
+
     fault_test = (
         REPO_ROOT
         / "tests"
@@ -371,6 +392,21 @@ def verify_phase06_observability_persistence() -> list[str]:
     ]:
         if phrase not in query_test:
             errors.append(f"observability query surface test missing phrase: {phrase}")
+
+    query_route_test = (
+        REPO_ROOT
+        / "tests"
+        / "api"
+        / "test_phase06_observability_query_route.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_observability_trace_query_route_returns_authorized_projection",
+        "test_observability_trace_query_route_rejects_non_admin",
+        "/api/v1/observability/traces/trace-a",
+        "status_code == 403",
+    ]:
+        if phrase not in query_route_test:
+            errors.append(f"observability query route test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):

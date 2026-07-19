@@ -23,18 +23,18 @@ date: 2026-07-19
 - `PostgresObservabilityRuntimeAdapter.record_span_with_external_sink(...)` 已证明外部 sink 失败不会回滚本地 trace/span/runtime event/audit facts；失败会写入 `external_sink_delivery_failed` dead letter；成功的 external delivery receipt 仍保持 `source_success=False`。
 - `trace_timeline(...)`、`projection_freshness(...)` 和 `dead_letters(...)` 提供只读查询，返回 freshness/gap/dead-letter 信息，payload 保持 redacted。
 - `ObservabilityProjectionQueryService` 提供 Product query port，显式校验 tenant、workspace、`observability:read` scope 和 trace workspace 边界；返回 timeline/freshness/dead-letter 时剥离 prompt、hidden reasoning、secret、token、api_key、password 和 raw_tool_args 类字段。
+- `/api/v1/observability/traces/{trace_id}` 已接入授权只读 Query API route；当前 API route 只允许 admin principal 进入 projection service，非 admin 返回 403，不修改源领域事实。
 
 ## 可复现验证
 
 ```powershell
-python -m py_compile src/backend/zuno/platform/observability/persistence.py tools/scripts/verify_phase06_observability_persistence.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability/test_phase06_external_sink_isolation.py
+python -m py_compile src/backend/zuno/platform/observability/persistence.py src/backend/zuno/api/v1/observability.py src/backend/zuno/api/router.py tools/scripts/verify_phase06_observability_persistence.py tests/api/test_phase06_observability_query_route.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability/test_phase06_external_sink_isolation.py
 python tools/scripts/verify_phase06_observability_persistence.py
-pytest -q tests/api/test_phase06_observability_query_surface.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability -p no:cacheprovider
+pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_phase06_observability_query_route.py tests/integration/test_phase06_observability_persistence_runtime.py tests/fault/observability -p no:cacheprovider
 ```
 
 ## 未证明
 
 - 尚未形成 PHASE06 closure decision。
-- FastAPI route 尚未接入；当前证明的是可复用 Product query service/port。
 - 完整 Agent、Knowledge、Memory、Capability、Tool、Security、Infrastructure adapter cutover 尚未全部证明。
 - PHASE07、PHASE20 和后续 Phase 不得引用本文作为 PHASE06 completed 证明。

@@ -1429,3 +1429,34 @@ python tools/scripts/verify_requirement_ledger_evidence_gate.py
 python tools/scripts/verify_phase04_post_closure_consistency.py
 python tools/scripts/verify_current_program.py
 ```
+
+## PHASE06 Observability Query API Route 013
+
+补齐 PHASE06 Product Query row 的真实 API 接线点：
+
+```text
+src/backend/zuno/api/v1/observability.py
+src/backend/zuno/api/router.py
+tests/api/test_phase06_observability_query_route.py
+tools/scripts/verify_phase06_observability_persistence.py
+docs/evidence/phase06-observability-persistence.md
+.agent/programs/work-products/goal01-closure-matrix.md
+```
+
+覆盖语义：
+
+```text
+GET /api/v1/observability/traces/{trace_id}
+uses ObservabilityProjectionQueryService
+admin principal receives authorized freshness/timeline/dead-letter projection
+non-admin API access returns 403
+route does not modify source domain facts
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/v1/observability.py src/backend/zuno/api/router.py tools/scripts/verify_phase06_observability_persistence.py tests/api/test_phase06_observability_query_route.py
+pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_phase06_observability_query_route.py -p no:cacheprovider
+python tools/scripts/verify_phase06_observability_persistence.py
+```

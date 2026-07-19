@@ -17,6 +17,7 @@ from zuno.api.v1 import (
     mcp_stdio_server,
     mcp_user_config,
     message,
+    observability,
     tool,
     upload,
     usage_stats,
@@ -43,6 +44,7 @@ router.include_router(mcp_stdio_server.router)
 router.include_router(mcp_chat.router)
 router.include_router(mcp_agent.router)
 router.include_router(mcp_user_config.router)
+router.include_router(observability.router)
 router.include_router(workspace.router)
 router.include_router(usage_stats.router)
 router.include_router(wechat.router)

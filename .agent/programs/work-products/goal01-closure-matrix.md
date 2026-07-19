@@ -37,7 +37,7 @@ origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 | Tool | Tool Runtime | approval/security span adapter | Tool Runtime approval path | sink outage fail-closed before side effect | `completion_candidate` | 聚合验证 |
 | Security | Security repository / audit | immutable audit ledger adapter | Security pre-effect/audit facts | audit not sampled; failure visible | `completion_candidate` | 聚合验证 |
 | Infrastructure | DB / outbox / external sink | dead-letter and local fact envelope | observability persistence adapter | external sink failure does not roll back local facts | `completion_candidate` | 聚合验证 |
-| Product Query | Observability query service | read-only freshness/completeness response | product query service | returns freshness/completeness and dead letters | `completion_candidate` | FastAPI route wiring 若 Matrix 审核要求，否则作为 service-level default evidence |
+| Product Query | Observability query service | read-only freshness/completeness response | `/api/v1/observability/traces/{trace_id}` + product query service | returns freshness/completeness and dead letters; non-admin API access returns 403 | `completion_candidate` | 聚合验证 |
 
 ## PHASE07 Runtime Closure Matrix
 
