@@ -1237,6 +1237,32 @@ class OpenAIEmbeddingGatewayAdapter:
         return [response.embedding for response in responses.data]
 
 
+class OpenAIChatCompletionsGatewayAdapter:
+    """Provider SDK adapter for OpenAI-compatible chat completions inside the Gateway boundary."""
+
+    def __init__(self, *, api_key: str | None, base_url: str | None):
+        from openai import AsyncOpenAI
+
+        self._async_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+    async def create(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, Any]],
+        stream: bool = False,
+        tools: list[dict[str, Any]] | dict[str, Any] | None = None,
+    ) -> Any:
+        payload: dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "stream": stream,
+        }
+        if tools is not None:
+            payload["tools"] = tools
+        return await self._async_client.chat.completions.create(**payload)
+
+
 def build_openai_chat_gateway_model(
     *,
     model: str | None,
@@ -3445,6 +3471,7 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "OpenAIChatCompletionsGatewayAdapter",
     "OpenAIEmbeddingGatewayAdapter",
     "ModelOperationalCommand",
     "ModelOperationalCommandKind",

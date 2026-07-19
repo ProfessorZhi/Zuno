@@ -726,3 +726,29 @@ PHASE07 bypass count reduced from 5 to 4
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 008
+
+已迁移两个核心 OpenAI chat-completions 调用点：
+
+```text
+src/backend/zuno/agent/core/models/reason_model.py
+src/backend/zuno/agent/core/models/tool_call.py
+```
+
+新增 `OpenAIChatCompletionsGatewayAdapter` 于 `src/backend/zuno/platform/model_gateway.py`。`ReasoningModel.astream(...)` 和 `ToolCallModel.ainvoke(...)` 继续保留原 OpenAI chat completions response contract，但不再直接创建 `AsyncOpenAI` client；Provider SDK 调用收敛到 Gateway 边界。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 4 to 2
+phase closure not approved
+remaining: migrate anthropic.py and usage_model.py, then pass verify_model_gateway_bypass.py --strict
+```

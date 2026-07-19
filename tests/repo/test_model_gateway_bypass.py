@@ -309,3 +309,91 @@ def test_gateway_chat_builder_keeps_deepseek_v4_kwargs(monkeypatch) -> None:
             "extra_body": {"thinking": {"type": "disabled"}},
         }
     ]
+
+
+def test_reasoning_model_uses_gateway_chat_completions_adapter(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/reason_model.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from langchain_core.messages import HumanMessage
+    from zuno.core.models import reason_model as reason_model_module
+
+    calls = []
+
+    class FakeChatCompletionsAdapter:
+        def __init__(self, *, api_key, base_url):
+            calls.append({"api_key": api_key, "base_url": base_url})
+
+        async def create(self, **kwargs):
+            calls.append(kwargs)
+            return "stream-response"
+
+    monkeypatch.setattr(reason_model_module, "OpenAIChatCompletionsGatewayAdapter", FakeChatCompletionsAdapter)
+
+    model = reason_model_module.ReasoningModel(
+        base_url="https://example.test",
+        api_key="key",
+        model_name="reasoning-model",
+    )
+
+    assert asyncio.run(model.astream([HumanMessage(content="think")])) == "stream-response"
+    assert calls == [
+        {"api_key": "key", "base_url": "https://example.test"},
+        {
+            "model": "reasoning-model",
+            "messages": [{"role": "user", "content": "think"}],
+            "stream": True,
+        },
+    ]
+
+
+def test_tool_call_model_uses_gateway_chat_completions_adapter(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/tool_call.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from langchain_core.messages import HumanMessage
+    from zuno.core.models import tool_call as tool_call_module
+
+    calls = []
+
+    class FakeMessage:
+        content = "tool-result"
+
+    class FakeChoice:
+        message = FakeMessage()
+
+    class FakeResponse:
+        choices = [FakeChoice()]
+
+    class FakeChatCompletionsAdapter:
+        def __init__(self, *, api_key, base_url):
+            calls.append({"api_key": api_key, "base_url": base_url})
+
+        async def create(self, **kwargs):
+            calls.append(kwargs)
+            return FakeResponse()
+
+    monkeypatch.setattr(tool_call_module, "OpenAIChatCompletionsGatewayAdapter", FakeChatCompletionsAdapter)
+
+    model = tool_call_module.ToolCallModel(
+        base_url="https://example.test",
+        api_key="key",
+        model_name="tool-model",
+    )
+    model.bind_tools([{"type": "function", "function": {"name": "search"}}])
+
+    result = asyncio.run(model.ainvoke([HumanMessage(content="call tool")]))
+
+    assert result.content == "tool-result"
+    assert calls == [
+        {"api_key": "key", "base_url": "https://example.test"},
+        {
+            "model": "tool-model",
+            "messages": [{"role": "user", "content": "call tool"}],
+            "tools": [{"type": "function", "function": {"name": "search"}}],
+        },
+    ]
