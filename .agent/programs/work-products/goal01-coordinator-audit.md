@@ -701,3 +701,28 @@ PHASE07 bypass count reduced from 7 to 5
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 007
+
+已迁移默认 ChatOpenAI 构建点到 Gateway-owned helper：
+
+```text
+src/backend/zuno/agent/core/models/manager.py
+```
+
+新增 `build_openai_chat_gateway_model(...)` 于 `src/backend/zuno/platform/model_gateway.py`。`ModelManager` 继续负责读取 DB / settings 模型配置和 provider model id normalize，但不再直接导入或构造 `ChatOpenAI`。DeepSeek v4 thinking-disable 兼容参数也移入 Gateway 边界。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 5 to 4
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```

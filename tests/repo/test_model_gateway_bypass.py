@@ -241,3 +241,71 @@ def test_rag_embedding_uses_gateway_owned_provider_adapter(monkeypatch) -> None:
         [1, 3.0],
         [4, 3.0],
     ]
+
+
+def test_model_manager_uses_gateway_chat_model_builder(monkeypatch) -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/agent/core/models/manager.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.core.models import manager as manager_module
+
+    calls = []
+
+    def fake_build_openai_chat_gateway_model(**kwargs):
+        calls.append(kwargs)
+        return object()
+
+    monkeypatch.setattr(manager_module, "build_openai_chat_gateway_model", fake_build_openai_chat_gateway_model)
+
+    manager_module.ModelManager.get_user_model(
+        model="deepseek-chat",
+        api_key="key",
+        base_url="https://api.deepseek.com",
+    )
+
+    assert calls == [
+        {
+            "stream_usage": True,
+            "model": "deepseek-chat",
+            "api_key": "key",
+            "base_url": "https://api.deepseek.com",
+        }
+    ]
+
+
+def test_gateway_chat_builder_keeps_deepseek_v4_kwargs(monkeypatch) -> None:
+    import zuno.platform.model_gateway as gateway_module
+
+    calls = []
+
+    class FakeChatOpenAI:
+        def __init__(self, **kwargs):
+            calls.append(kwargs)
+
+    original_import = __import__
+
+    def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "langchain_openai":
+            return type("FakeLangchainOpenAI", (), {"ChatOpenAI": FakeChatOpenAI})
+        return original_import(name, globals, locals, fromlist, level)
+
+    monkeypatch.setattr("builtins.__import__", fake_import)
+
+    gateway_module.build_openai_chat_gateway_model(
+        stream_usage=True,
+        model="deepseek-v4-flash",
+        api_key="key",
+        base_url="https://api.deepseek.com",
+    )
+
+    assert calls == [
+        {
+            "stream_usage": True,
+            "model": "deepseek-v4-flash",
+            "api_key": "key",
+            "base_url": "https://api.deepseek.com",
+            "extra_body": {"thinking": {"type": "disabled"}},
+        }
+    ]

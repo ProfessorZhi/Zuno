@@ -1237,6 +1237,33 @@ class OpenAIEmbeddingGatewayAdapter:
         return [response.embedding for response in responses.data]
 
 
+def build_openai_chat_gateway_model(
+    *,
+    model: str | None,
+    api_key: str | None,
+    base_url: str | None,
+    stream_usage: bool = True,
+) -> BaseChatModel:
+    """Build an OpenAI-compatible LangChain chat model inside the Gateway boundary."""
+    from langchain_openai import ChatOpenAI
+
+    return ChatOpenAI(
+        stream_usage=stream_usage,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        **_standard_openai_chat_kwargs(model, base_url),
+    )
+
+
+def _standard_openai_chat_kwargs(model_name: str | None, base_url: str | None) -> dict[str, Any]:
+    base_url_lower = str(base_url or "").lower()
+    model_lower = str(model_name or "").lower()
+    if "deepseek.com" in base_url_lower and model_lower.startswith("deepseek-v4"):
+        return {"extra_body": {"thinking": {"type": "disabled"}}}
+    return {}
+
+
 _CATEGORY_COST_PER_TOKEN = {
     ModelCategory.CHAT: 0.00001,
     ModelCategory.EMBEDDING: 0.000001,
@@ -3471,4 +3498,5 @@ __all__ = [
     "ProductStreamEvent",
     "ProviderStreamChunk",
     "build_default_model_gateway",
+    "build_openai_chat_gateway_model",
 ]
