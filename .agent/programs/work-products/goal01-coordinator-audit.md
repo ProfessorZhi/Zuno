@@ -1329,3 +1329,42 @@ PHASE05 legacy approval boolean adapter bounded
 phase closure not approved
 remaining: PHASE05 Pre-Closure gate and Coordinator review
 ```
+
+## PHASE06 Model Gateway Observability Adapter 010
+
+新增 Model Gateway runtime 到 PHASE06 typed runtime event/span adapter 的消费边界：
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+tests/integration/test_phase06_observability_persistence_runtime.py
+tools/scripts/verify_phase06_observability_persistence.py
+.agent/programs/work-products/goal01-closure-matrix.md
+docs/evidence/phase06-observability-persistence.md
+```
+
+覆盖语义：
+
+```text
+PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event(...)
+requires explicit tenant_id; does not infer tenant from Gateway trace_event
+consumes Gateway-owned trace_event payload and writes model span + model.model_call_* runtime event + audit receipt
+retains call_id, binding, attempts and ESTIMATE/OBSERVED usage receipt separation
+Observability does not retry, reroute or mark provider failure as source success
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/observability/persistence.py tools/scripts/verify_phase06_observability_persistence.py tests/integration/test_phase06_observability_persistence_runtime.py
+python tools/scripts/verify_phase06_observability_persistence.py
+pytest -q tests/integration/test_phase06_observability_persistence_runtime.py::test_observability_runtime_adapter_persists_model_gateway_trace_event -p no:cacheprovider
+git diff --check
+```
+
+Status:
+
+```text
+PHASE06 Model adapter row moved to completion_candidate
+phase closure not approved
+remaining: PHASE06 aggregate verification and Coordinator review
+```

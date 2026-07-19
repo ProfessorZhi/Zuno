@@ -8,6 +8,8 @@ import pytest
 from sqlalchemy import text
 
 from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.model_gateway import ModelCallRequest, ModelCategory, ModelGateway, MockModelProvider
+from zuno.platform.model_roles import ModelRole
 from zuno.platform.observability.persistence import (
     ObservabilityPersistenceError,
     ObservabilityUnitOfWork,
@@ -271,3 +273,54 @@ def test_observability_runtime_adapter_persists_security_audit_span(engine) -> N
             text("SELECT redacted_payload FROM observability_runtime_events")
         ).scalar_one()
         assert "raw-secret" not in repr(payload)
+
+
+def test_observability_runtime_adapter_persists_model_gateway_trace_event(engine) -> None:
+    gateway = ModelGateway(
+        providers=[MockModelProvider(provider_id="primary", model_id="mock-chat")]
+    )
+    result = gateway.invoke(
+        ModelCallRequest(
+            category=ModelCategory.CHAT,
+            role=ModelRole.PLANNER,
+            run_id="run-model-phase06",
+            task_id="task-model-phase06",
+            trace_id="trace-model-phase06",
+            workspace_id="workspace-model-phase06",
+            user_id="user-model-phase06",
+            provider_id="primary",
+            prompt="Summarize without leaking api_key sk-secret.",
+            metadata={"api_key": "sk-secret", "safe": "yes"},
+        )
+    )
+    adapter = PostgresObservabilityRuntimeAdapter(engine)
+
+    receipt = adapter.record_model_gateway_trace_event(
+        tenant_id="tenant-model-phase06",
+        trace_event=result.trace_event,
+    )
+
+    assert receipt.event_id == result.trace_event["event_id"]
+    with engine.connect() as conn:
+        span = conn.execute(
+            text("SELECT span_kind, name, status FROM observability_spans")
+        ).one()
+        event = conn.execute(
+            text("SELECT event_type, redacted_payload FROM observability_runtime_events")
+        ).one()
+        audit_payload = conn.execute(
+            text("SELECT redacted_payload FROM observability_audit_records")
+        ).scalar_one()
+    assert span.span_kind == "model"
+    assert span.name == "model.gateway.model_call_completed"
+    assert span.status == "completed"
+    assert event.event_type == "model.model_call_completed"
+    assert event.redacted_payload["call_id"] == result.call_id
+    assert event.redacted_payload["binding"]["role"] == "planner"
+    assert {item["kind"] for item in event.redacted_payload["usage_receipts"]} == {
+        "ESTIMATE",
+        "OBSERVED",
+    }
+    assert "sk-secret" not in repr(event.redacted_payload)
+    assert audit_payload["call_state"] == "SUCCEEDED"
+    assert audit_payload["usage_receipt_count"] == 2

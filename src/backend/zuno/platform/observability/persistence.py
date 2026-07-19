@@ -14,6 +14,7 @@ from zuno.platform.observability.trace_eval import (
     ObservabilityExternalSinkDelivery,
     ZunoSpan,
     ZunoSpanBuilder,
+    ZunoSpanKind,
 )
 
 
@@ -232,6 +233,68 @@ class PostgresObservabilityRuntimeAdapter:
             state=ObservabilityDeliveryState.DELIVERED,
             source_success=False,
         )
+
+    def record_model_gateway_trace_event(
+        self,
+        *,
+        tenant_id: str,
+        trace_event: dict[str, Any],
+        sequence: int = 1,
+    ) -> ObservabilityRuntimeEventReceipt:
+        event_type = str(trace_event.get("event_type", ""))
+        payload = dict(trace_event.get("payload") or {})
+        trace_id = str(trace_event.get("trace_id") or "")
+        call_id = str(payload.get("call_id") or "")
+        if not tenant_id:
+            raise ObservabilityPersistenceError("model gateway observability adapter requires tenant_id")
+        if not event_type.startswith("model_call_"):
+            raise ObservabilityPersistenceError("model gateway observability adapter requires model_call_* event_type")
+        if not trace_id or not call_id:
+            raise ObservabilityPersistenceError("model gateway observability adapter requires trace_id and call_id")
+
+        workspace_id = str(payload.get("workspace_id") or tenant_id)
+        status = "failed" if payload.get("call_state") in {"FAILED", "CANCELLED", "BUDGET_BLOCKED"} else "completed"
+        observability_event_type = "model." + event_type
+        with ObservabilityUnitOfWork(self.engine) as repo:
+            repo.record_trace(
+                trace_id=trace_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                root_run_id=str(payload.get("run_id") or call_id),
+            )
+            repo.record_span(
+                span_id=call_id,
+                trace_id=trace_id,
+                tenant_id=tenant_id,
+                span_kind=ZunoSpanKind.MODEL.value,
+                name=f"model.gateway.{event_type}",
+                status=status,
+            )
+            receipt = repo.record_runtime_event(
+                event_id=str(trace_event.get("event_id") or f"event:{trace_id}:{call_id}"),
+                tenant_id=tenant_id,
+                trace_id=trace_id,
+                span_id=call_id,
+                stream_id=f"model:{trace_id}",
+                sequence=sequence,
+                event_type=observability_event_type,
+                payload=payload,
+            )
+            repo.record_audit(
+                audit_id=f"audit:model:{trace_id}:{call_id}",
+                tenant_id=tenant_id,
+                trace_id=trace_id,
+                sequence=sequence,
+                previous_hash="0" * 64,
+                payload={
+                    "call_id": call_id,
+                    "event_type": event_type,
+                    "call_state": payload.get("call_state"),
+                    "attempt_count": len(payload.get("attempts") or ()),
+                    "usage_receipt_count": len(payload.get("usage_receipts") or ()),
+                },
+            )
+            return receipt
 
     def record_security_audit(
         self,

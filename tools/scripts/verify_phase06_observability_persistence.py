@@ -240,6 +240,11 @@ def verify_phase06_observability_persistence() -> list[str]:
         "class ObservabilityRepository",
         "class PostgresObservabilityRuntimeAdapter",
         "record_span_with_external_sink",
+        "record_model_gateway_trace_event",
+        "model gateway observability adapter requires tenant_id",
+        "model.gateway.",
+        "observability_event_type = \"model.\"",
+        "ZunoSpanKind.MODEL",
         "ObservabilityExternalSinkDelivery",
         "external_sink_delivery_failed",
         "source_success=False",
@@ -313,6 +318,25 @@ def verify_phase06_observability_persistence() -> list[str]:
     ]:
         if phrase not in fault_test:
             errors.append(f"observability fault test missing phrase: {phrase}")
+
+    integration_test = (
+        REPO_ROOT
+        / "tests"
+        / "integration"
+        / "test_phase06_observability_persistence_runtime.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_observability_runtime_adapter_persists_model_gateway_trace_event",
+        "ModelGateway(",
+        "record_model_gateway_trace_event",
+        "model.gateway.model_call_completed",
+        "model.model_call_completed",
+        "\"ESTIMATE\"",
+        "\"OBSERVED\"",
+        "sk-secret",
+    ]:
+        if phrase not in integration_test:
+            errors.append(f"observability model adapter integration test missing phrase: {phrase}")
 
     external_sink_fault_test = (
         REPO_ROOT

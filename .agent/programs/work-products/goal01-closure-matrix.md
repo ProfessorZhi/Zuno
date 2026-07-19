@@ -31,7 +31,7 @@ origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 | 运行域 | Producer | Envelope / Adapter | 默认接线点 | 失败策略 | 状态 | 剩余处理 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Agent | Agent runtime / workspace runtime | typed runtime event / span adapter | workspace runtime security and retrieval spans | local append-only first | `completion_candidate` | 聚合验证 |
-| Model | Model Gateway runtime | model attempt / runtime event envelope | Gateway-owned call path | provider failure becomes attempt failure, not audit success | `mandatory_open` | 与 PHASE07 closure dependency 对齐 |
+| Model | Model Gateway runtime | model attempt / runtime event envelope | Gateway-owned call path | provider failure becomes attempt failure, not audit success | `completion_candidate` | `PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 已消费 Gateway trace_event 写入 model span/runtime event/audit；PHASE06 verifier 防断线；PHASE07 closure 仍需独立依赖批准 |
 | Knowledge | Agentic retrieval / ingestion | retrieval trace / citation metrics | workspace retrieval observability | raw event retained, query freshness exposed | `completion_candidate` | 聚合验证 |
 | Capability | Capability / Skill runtime | capability plan/runtime event | workspace capability snapshot | local facts persist before external sink | `completion_candidate` | 聚合验证 |
 | Tool | Tool Runtime | approval/security span adapter | Tool Runtime approval path | sink outage fail-closed before side effect | `completion_candidate` | 聚合验证 |
