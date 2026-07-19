@@ -13,7 +13,6 @@ known_bypass_paths:
   - src/backend/zuno/capability/tools/resume_optimizer/action.py
   - src/backend/zuno/platform/services/autobuild/client.py
   - src/backend/zuno/platform/services/mcp_openai/mcp_manager.py
-  - src/backend/zuno/platform/services/mcp_openai/strict_schema.py
   - src/backend/zuno/platform/services/rag/embedding.py
 notes:
   - "Default verifier mode locks the current blocker inventory to prevent silent drift."

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from openai import NOT_GIVEN
 from typing_extensions import TypeGuard
+
+_NOT_GIVEN = object()
 
 _EMPTY_SCHEMA = {
     "additionalProperties": False,
@@ -83,7 +84,7 @@ def _ensure_strict_json_schema(
                 for index, entry in enumerate(all_of)
             ]
 
-    if json_schema.get("default", NOT_GIVEN) is None:
+    if json_schema.get("default", _NOT_GIVEN) is None:
         json_schema.pop("default")
 
     ref = json_schema.get("$ref")

@@ -46,3 +46,31 @@ def test_extract_helper_uses_gateway_boundary_without_import_side_effects() -> N
         and node.value.func.attr == "run"
     ]
     assert top_level_asyncio_run == []
+
+
+def test_strict_schema_uses_local_sentinel_instead_of_provider_import() -> None:
+    verifier = _load_verifier()
+    strict_schema_path = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "strict_schema.py"
+    )
+    relative_path = "src/backend/zuno/platform/services/mcp_openai/strict_schema.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    spec = spec_from_file_location("zuno_strict_schema_test", strict_schema_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "empty_default": {"type": "string", "default": None},
+            "kept_default": {"type": "string", "default": "value"},
+        },
+    }
+    strict_schema = module.ensure_strict_json_schema(schema)
+
+    assert "default" not in strict_schema["properties"]["empty_default"]
+    assert strict_schema["properties"]["kept_default"]["default"] == "value"

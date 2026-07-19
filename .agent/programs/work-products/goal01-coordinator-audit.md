@@ -575,3 +575,28 @@ PHASE07 bypass count reduced from 12 to 11
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 002
+
+已迁移一个 provider package 常量依赖：
+
+```text
+src/backend/zuno/platform/services/mcp_openai/strict_schema.py
+```
+
+该文件原本只为判断 `default` 是否缺失而导入 `openai.NOT_GIVEN`，并不需要 Provider SDK。现已改为模块内 `_NOT_GIVEN` sentinel，保留原行为：`default: None` 被移除，非空 default 保留。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 11 to 10
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```
