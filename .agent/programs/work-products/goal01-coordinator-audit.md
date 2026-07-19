@@ -1175,3 +1175,41 @@ PHASE05 MCP admin default-path reauthorization guard available
 phase closure not approved
 remaining: citation default-path reauthorization, non MCP admin surface audit and full PEP/PDP cutover
 ```
+
+## PHASE05 Workspace Citation Reauthorization 007
+
+新增 workspace citation refs 默认读取面的 Security product action 重新授权：
+
+```text
+src/backend/zuno/api/services/workspace_task_runtime.py
+src/backend/zuno/api/v1/workspace.py
+tests/api/test_workspace_agentic_product_contract.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+artifact response: artifact.read 之后，存在 citation_refs 时追加 citation.read
+task snapshot: embedded artifact citation_refs 返回前调用 citation.read
+workspace API: get task 传入 login_user.user_id 作为 principal
+resource_ref: workspace-artifact:<artifact_id>:citations，独立于 artifact 内容读取
+deny: 返回 403，不暴露 citation refs
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/api/v1/workspace.py tools/scripts/verify_phase05_security_persistence.py tests/api/test_workspace_agentic_product_contract.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/api/test_workspace_agentic_product_contract.py::test_workspace_artifact_citation_refs_reauthorize_through_security_guard tests/api/test_workspace_agentic_product_contract.py::test_workspace_task_snapshot_citation_refs_return_403_when_security_guard_denies tests/api/test_workspace_agentic_product_contract.py::test_workspace_artifact_response_includes_citation_refs tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_reauthorizes_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_returns_403_when_security_guard_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 workspace citation refs reauthorization guard available
+phase closure not approved
+remaining: non MCP admin surface audit and full PEP/PDP cutover
+```

@@ -2082,10 +2082,19 @@ class WorkspaceTaskRuntimeService:
             )
 
     @classmethod
-    def get_task_snapshot(cls, task_id: str) -> dict:
+    def get_task_snapshot(cls, task_id: str, *, principal_id: str = "") -> dict:
         task = cls._require_task(task_id)
         cls._persist_workspace_product_state(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
+        artifacts = []
+        for artifact_id in artifact_ids:
+            artifact = cls._artifacts[artifact_id]
+            if cls._artifact_has_citation_refs(artifact):
+                cls._require_citation_refs_authorized(
+                    artifact=artifact,
+                    principal_id=principal_id,
+                )
+            artifacts.append(artifact.model_dump())
         feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
         unified_snapshot = cls._unified_runtime_service().get_snapshot(task_id)
@@ -2093,7 +2102,7 @@ class WorkspaceTaskRuntimeService:
         return {
             "task": task.model_dump(),
             "artifact_ids": list(artifact_ids),
-            "artifacts": [cls._artifacts[artifact_id].model_dump() for artifact_id in artifact_ids],
+            "artifacts": artifacts,
             "feedback_ids": list(feedback_ids),
             "feedback": [cls._feedback[feedback_id].model_dump() for feedback_id in feedback_ids],
             "lifecycle": cls._task_lifecycle_snapshot(
@@ -2144,6 +2153,11 @@ class WorkspaceTaskRuntimeService:
             artifact_id,
             [ref.model_dump(mode="json") for ref in artifact.citation_refs],
         )
+        if citation_refs:
+            cls._require_citation_refs_authorized(
+                artifact=artifact,
+                principal_id=principal_id,
+            )
         return {
             "artifact": artifact.model_dump(),
             "content": cls._artifact_content.get(artifact_id, ""),
@@ -2185,6 +2199,45 @@ class WorkspaceTaskRuntimeService:
             return
         actor = principal_id or artifact.owner
         resource_ref = f"workspace-artifact:{artifact.artifact_id}"
+        request = SecurityProductActionRequest(
+            tenant_id=artifact.workspace_id,
+            workspace_id=artifact.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{artifact.artifact_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=artifact.workspace_id,
+                workspace_id=artifact.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
+
+    @classmethod
+    def _artifact_has_citation_refs(cls, artifact: ArtifactContract) -> bool:
+        return bool(
+            cls._artifact_citation_refs.get(artifact.artifact_id)
+            or artifact.citation_refs
+        )
+
+    @classmethod
+    def _require_citation_refs_authorized(
+        cls,
+        *,
+        artifact: ArtifactContract,
+        principal_id: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or artifact.owner
+        resource_ref = f"workspace-artifact:{artifact.artifact_id}:citations"
+        action = "citation.read"
         request = SecurityProductActionRequest(
             tenant_id=artifact.workspace_id,
             workspace_id=artifact.workspace_id,

@@ -312,9 +312,11 @@ def verify_phase05_security_persistence() -> list[str]:
         "configure_security_approval_sink",
         "configure_security_product_action_guard",
         "_require_product_action_authorized",
+        "_require_citation_refs_authorized",
         "_require_workspace_task_action_authorized",
         "artifact.read",
         "artifact.download",
+        "citation.read",
         "task.resume.",
         "build_default_tool_control_plane_runtime(",
         "security_approval_sink=sink",
@@ -327,6 +329,7 @@ def verify_phase05_security_persistence() -> list[str]:
     ).read_text(encoding="utf-8")
     for phrase in [
         "principal_id=str(login_user.user_id or \"\")",
+        "WorkspaceTaskRuntimeService.get_task_snapshot(",
         "WorkspaceTaskRuntimeService.get_artifact(",
         "WorkspaceTaskRuntimeService.download_artifact(",
     ]:
@@ -426,6 +429,21 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in workspace_test:
             errors.append(f"workspace security reauthorization test missing phrase: {phrase}")
+
+    workspace_agentic_test = (
+        REPO_ROOT
+        / "tests"
+        / "api"
+        / "test_workspace_agentic_product_contract.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_workspace_artifact_citation_refs_reauthorize_through_security_guard",
+        "test_workspace_task_snapshot_citation_refs_return_403_when_security_guard_denies",
+        "citation.read",
+        "workspace-artifact:{artifact_id}:citations",
+    ]:
+        if phrase not in workspace_agentic_test:
+            errors.append(f"workspace citation security reauthorization test missing phrase: {phrase}")
 
     mcp_admin_test = (REPO_ROOT / "tests" / "agent" / "test_mcp_server_service.py").read_text(
         encoding="utf-8"

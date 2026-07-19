@@ -215,8 +215,12 @@ async def get_workspace_task(
     task_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    return resp_200(data=WorkspaceTaskRuntimeService.get_task_snapshot(task_id))
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.get_task_snapshot(
+            task_id,
+            principal_id=str(login_user.user_id or ""),
+        )
+    )
 
 
 @router.get("/task/{task_id}/events", summary="Get workspace task events")
