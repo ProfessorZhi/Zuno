@@ -299,6 +299,43 @@ result: PHASE04 post-closure consistency gate and current program verifier pass.
 
 This removes the PHASE04 evidence-integrity blocker. It does not close PHASE05/06/07/11.
 
+## PHASE06 Observability Persistence Work Product
+
+新增 `infra/db/alembic/versions/20260719_17_observability_black_box.py`，作为 PHASE06 Observability / Eval 所有的最小 durable black-box schema。该迁移从 PHASE05 Security migration `20260719_16` 后接入。
+
+新增表：
+
+- `observability_ingest_envelopes`
+- `observability_traces`
+- `observability_spans`
+- `observability_runtime_events`
+- `observability_audit_records`
+- `observability_projection_watermarks`
+- `observability_gaps`
+- `observability_dead_letters`
+- `observability_projection_rebuilds`
+
+边界：
+
+- 存储版本化 envelope、redaction hash、trace/span、runtime event、immutable audit hash chain、projection watermark、gap、dead letter 和 rebuild fencing facts。
+- 不把 prompt、hidden reasoning、chain-of-thought、secret、token、API key 或 password 作为列级事实源。
+- 外部 sink 仍不是事实 owner；本地 Postgres black-box schema 是后续 adapter/repository 的落点。
+
+新增验证：
+
+```text
+tools/scripts/verify_phase06_observability_persistence.py
+tests/repo/test_phase06_observability_persistence.py
+```
+
+Status:
+
+```text
+PHASE06 persistence foundation added
+phase closure not approved
+remaining: ingest service, reducer, adapters, immutable audit repository, projection/query API, fault tests
+```
+
 ## PHASE05 Security Persistence Work Product
 
 新增 `infra/db/alembic/versions/20260719_16_security_control_plane.py`，作为 PHASE05 Security 所有的第一组持久化事实源。该迁移从 `20260718_15` 之后接入，不改变 PHASE04 已闭合基础设施边界。

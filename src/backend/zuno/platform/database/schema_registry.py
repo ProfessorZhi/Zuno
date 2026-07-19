@@ -76,6 +76,19 @@ REVISION_OWNERS = {
     "20260718_14": "Infrastructure",
     "20260718_15": "Infrastructure",
     "20260719_16": "Security",
+    "20260719_17": "Observability / Eval",
+}
+
+OBSERVABILITY_TABLE_OWNERS = {
+    "observability_audit_records": "Observability / Eval",
+    "observability_dead_letters": "Observability / Eval",
+    "observability_gaps": "Observability / Eval",
+    "observability_ingest_envelopes": "Observability / Eval",
+    "observability_projection_rebuilds": "Observability / Eval",
+    "observability_projection_watermarks": "Observability / Eval",
+    "observability_runtime_events": "Observability / Eval",
+    "observability_spans": "Observability / Eval",
+    "observability_traces": "Observability / Eval",
 }
 
 SECURITY_TABLE_OWNERS = {
@@ -99,6 +112,7 @@ ONLINE_SCHEMA_OBJECTS = {
 __all__ = [
     "DOMAIN_TABLE_OWNERS",
     "INFRASTRUCTURE_TABLES",
+    "OBSERVABILITY_TABLE_OWNERS",
     "ONLINE_SCHEMA_OBJECTS",
     "REVISION_OWNERS",
     "SECURITY_TABLE_OWNERS",
