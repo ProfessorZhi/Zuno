@@ -20,6 +20,7 @@ date: 2026-07-19
 - `SecurityRepository.record_secret_ref(...)`、`issue_secret_lease(...)` 和 `validate_secret_lease(...)` 已证明 Secret material 不落业务表，wrong audience、expired lease、revoked secret 均 fail-closed。
 - `SecurityRepository.record_redaction_decision(...)` 在 redaction 失败时把 requested allow 降为 `block`，只保存 redacted payload hash 与 decision hash。
 - `PostgresSecurityProductActionGuard`、`SecurityProductActionRequest` 和共享 `security_admin_actions` 提供 Product/API action 重新授权端口；workspace artifact read/download、workspace citation refs、workspace approval resume、MCP admin 管理 override、Agent/Tool/Dialog/MCP Agent/LLM/Knowledge/Knowledge File admin override 已接入 guard，生产 `init_config()` 默认配置 `PostgresSecurityProductActionGuard(engine)`；artifact read/download/resume/citation refs 调用路径会重新授权，deny 时返回 403 且 resume 不会越过 `approval_waiting`；admin override deny 时会在 DAO 写入/删除前中断。
+- `goal01-closure-matrix.md` 中 PHASE05 活跃安全敏感入口均已归类为 `canonical_security_guard`、`temporary_versioned_adapter` 或 `future_runtime_not_current`；当前 Mandatory 行均为 `completion_candidate`。
 - `goal01-closure-matrix.md` 已冻结 PHASE05/06/07/11 四张有限 Closure Matrix，记录 fetch 后集成分支 Start SHA。
 - Legacy `approved: bool` 只保留为 Tool Runtime 的 `temporary.adapter.tool_runtime.approved_bool` versioned adapter，删除 Phase 绑定为 `PHASE16`；workspace approval resume 默认路径已传入 `security-approval-decision:*` decision ref，PHASE05 verifier 阻止新增 legacy boolean owner。
 - 最小 eval evidence 覆盖：
@@ -37,6 +38,5 @@ pytest -q tests/agent/test_tool_control_plane_runtime.py::test_high_side_effect_
 
 ## 未证明
 
-- 尚未覆盖完整 PEP/PDP cutover。
 - 尚未形成 PHASE05 closure decision。
 - PHASE07 与 PHASE11 不得引用本文作为依赖已完成证明。

@@ -36,5 +36,4 @@ pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_p
 ## 未证明
 
 - 尚未形成 PHASE06 closure decision。
-- 完整 Agent、Knowledge、Memory、Capability、Tool、Security、Infrastructure adapter cutover 尚未全部证明。
 - PHASE07、PHASE20 和后续 Phase 不得引用本文作为 PHASE06 completed 证明。

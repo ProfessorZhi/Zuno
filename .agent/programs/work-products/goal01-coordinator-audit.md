@@ -1460,3 +1460,35 @@ python -m py_compile src/backend/zuno/api/v1/observability.py src/backend/zuno/a
 pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_phase06_observability_query_route.py -p no:cacheprovider
 python tools/scripts/verify_phase06_observability_persistence.py
 ```
+
+## PHASE05 PHASE06 Pre-Closure Gates 014
+
+新增 PHASE05 / PHASE06 非破坏性 Pre-Closure gate：
+
+```text
+tools/scripts/verify_phase05_pre_closure_gate.py
+tools/scripts/verify_phase06_pre_closure_gate.py
+docs/evidence/phase05-pre-closure.md
+docs/evidence/phase06-pre-closure.md
+docs/evidence/phase05-security-control-plane.md
+docs/evidence/phase06-observability-persistence.md
+```
+
+Gate 覆盖：
+
+```text
+Closure Matrix mandatory_open: none for PHASE05/PHASE06
+Requirement Ledger target_not_current: none for PHASE05/PHASE06 mandatory items
+PHASE05 security persistence/eval verifiers pass
+PHASE06 observability persistence verifier passes
+Evidence no longer contains resolved pre-closure blockers
+Coordinator Closure Decision still required
+```
+
+已运行：
+
+```text
+python -m py_compile tools/scripts/verify_phase05_pre_closure_gate.py tools/scripts/verify_phase06_pre_closure_gate.py
+python tools/scripts/verify_phase05_pre_closure_gate.py
+python tools/scripts/verify_phase06_pre_closure_gate.py
+```
