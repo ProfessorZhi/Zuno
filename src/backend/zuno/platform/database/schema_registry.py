@@ -75,6 +75,20 @@ REVISION_OWNERS = {
     "20260718_13": "Infrastructure",
     "20260718_14": "Infrastructure",
     "20260718_15": "Infrastructure",
+    "20260719_16": "Security",
+}
+
+SECURITY_TABLE_OWNERS = {
+    "security_approval_decisions": "Security",
+    "security_approval_requests": "Security",
+    "security_audit_requirements": "Security",
+    "security_authorization_decisions": "Security",
+    "security_effective_epochs": "Security",
+    "security_outbox_events": "Security",
+    "security_principal_contexts": "Security",
+    "security_redaction_decisions": "Security",
+    "security_secret_leases": "Security",
+    "security_secret_refs": "Security",
 }
 
 ONLINE_SCHEMA_OBJECTS = {
@@ -87,4 +101,5 @@ __all__ = [
     "INFRASTRUCTURE_TABLES",
     "ONLINE_SCHEMA_OBJECTS",
     "REVISION_OWNERS",
+    "SECURITY_TABLE_OWNERS",
 ]

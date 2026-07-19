@@ -298,3 +298,41 @@ result: PHASE04 post-closure consistency gate and current program verifier pass.
 ```
 
 This removes the PHASE04 evidence-integrity blocker. It does not close PHASE05/06/07/11.
+
+## PHASE05 Security Persistence Work Product
+
+新增 `infra/db/alembic/versions/20260719_16_security_control_plane.py`，作为 PHASE05 Security 所有的第一组持久化事实源。该迁移从 `20260718_15` 之后接入，不改变 PHASE04 已闭合基础设施边界。
+
+新增表：
+
+- `security_principal_contexts`
+- `security_effective_epochs`
+- `security_authorization_decisions`
+- `security_approval_requests`
+- `security_approval_decisions`
+- `security_secret_refs`
+- `security_secret_leases`
+- `security_redaction_decisions`
+- `security_audit_requirements`
+- `security_outbox_events`
+
+边界：
+
+- 只存 Principal、Epoch、Policy Bundle Ref、Prepared Action Hash、Credential Version Ref、Secret Lease Ref、Redaction Decision、Audit Requirement 和 Security Outbox 事实。
+- 不存 access token、refresh token、API key、password、plaintext、secret material 或 credential value。
+- PHASE04 Alembic verifier 改为只验证到 `20260718_15`，后续 phase migration 由各自 verifier 接管，避免把“仓库最新 head”误当成“PHASE04 head”。
+
+新增验证：
+
+```text
+tools/scripts/verify_phase05_security_persistence.py
+tests/repo/test_phase05_security_persistence.py
+```
+
+Status:
+
+```text
+PHASE05 persistence foundation added
+phase closure not approved
+remaining: runtime repository/UoW adoption, PEP/PDP fail-closed cutover, approval/audit fault tests, security eval evidence
+```
