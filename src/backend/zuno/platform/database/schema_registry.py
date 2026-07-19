@@ -34,6 +34,20 @@ DOMAIN_TABLE_OWNERS = {
     "workspace_session": "Product Surface",
 }
 
+INGESTION_TABLE_OWNERS = {
+    "ingestion_dead_letters": "Input / Document Ingestion",
+    "ingestion_document_versions": "Input / Document Ingestion",
+    "ingestion_indexable_document_snapshots": "Input / Document Ingestion",
+    "ingestion_outbox_events": "Input / Document Ingestion",
+    "ingestion_parse_attempts": "Input / Document Ingestion",
+    "ingestion_parse_jobs": "Input / Document Ingestion",
+    "ingestion_parse_plans": "Input / Document Ingestion",
+    "ingestion_parse_snapshots": "Input / Document Ingestion",
+    "ingestion_quality_gate_decisions": "Input / Document Ingestion",
+    "ingestion_source_objects": "Input / Document Ingestion",
+    "ingestion_source_spans": "Input / Document Ingestion",
+}
+
 INFRASTRUCTURE_TABLES = {
     "infra_active_snapshot_refs",
     "infra_audit_channels",
@@ -77,6 +91,7 @@ REVISION_OWNERS = {
     "20260718_15": "Infrastructure",
     "20260719_16": "Security",
     "20260719_17": "Observability / Eval",
+    "20260719_18": "Input / Document Ingestion",
 }
 
 OBSERVABILITY_TABLE_OWNERS = {
@@ -111,6 +126,7 @@ ONLINE_SCHEMA_OBJECTS = {
 
 __all__ = [
     "DOMAIN_TABLE_OWNERS",
+    "INGESTION_TABLE_OWNERS",
     "INFRASTRUCTURE_TABLES",
     "OBSERVABILITY_TABLE_OWNERS",
     "ONLINE_SCHEMA_OBJECTS",

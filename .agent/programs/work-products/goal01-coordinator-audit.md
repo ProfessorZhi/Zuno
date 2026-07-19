@@ -831,3 +831,50 @@ PHASE07 provider bypass guard hardened after strict-zero cutover
 phase closure not approved
 remaining: complete broader PHASE07 runtime closure evidence and dependency gates for PHASE05/PHASE06
 ```
+
+## PHASE11 Ingestion Source Lineage Schema 001
+
+新增 PHASE11 PostgreSQL source-lineage 持久化 schema：
+
+```text
+infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py
+src/backend/zuno/platform/database/schema_registry.py
+tools/scripts/verify_phase11_ingestion_source_lineage.py
+tests/repo/test_phase11_ingestion_source_lineage.py
+docs/evidence/phase11-ingestion-source-lineage.md
+```
+
+覆盖持久化对象链：
+
+```text
+SourceObject
+DocumentVersion
+ParsePlan
+ParseJob
+ParseAttempt
+ParseSnapshot
+SourceSpan
+QualityGateDecision
+IndexableDocumentSnapshot
+Ingestion Outbox
+Ingestion Dead Letter
+```
+
+关键边界：
+
+```text
+Migration 链接到 20260719_17，避免第二 Alembic head。
+表 owner 统一登记为 Input / Document Ingestion。
+DocumentVersion 与 ParseSnapshot 分离。
+ParseAttempt 记录 lease/fencing token。
+QualityGateDecision 是 IndexableDocumentSnapshot 的 FK 前置条件。
+Input migration 不创建 Knowledge Chunk、Entity、Relation、KnowledgeVersion、BM25 或 Vector Index。
+```
+
+Status:
+
+```text
+PHASE11 source-lineage Postgres schema partial implementation available
+phase closure not approved
+remaining: migrate real default upload/parser path to this schema; add queue crash, lease loss, retry/dead-letter, delete/legal-hold/restore and adapter conformance evidence
+```
