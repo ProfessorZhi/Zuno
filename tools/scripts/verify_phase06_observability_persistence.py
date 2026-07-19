@@ -232,6 +232,29 @@ def verify_phase06_observability_persistence() -> list[str]:
         if forbidden in source:
             errors.append(f"observability migration contains forbidden phrase: {forbidden}")
 
+    repository = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "observability" / "persistence.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "class ObservabilityUnitOfWork",
+        "class ObservabilityRepository",
+        "ingest_envelope",
+        "record_trace",
+        "record_span",
+        "record_runtime_event",
+        "record_audit",
+        "update_watermark",
+        "record_gap",
+        "record_dead_letter",
+        "duplicate_sequence_payload_mismatch",
+        "redact_sensitive_payload",
+    ]:
+        if phrase not in repository:
+            errors.append(f"observability persistence repository missing phrase: {phrase}")
+    for forbidden in ["hidden_reasoning", "chain_of_thought", "access_token", "api_key", "password"]:
+        if forbidden in repository:
+            errors.append(f"observability persistence repository contains forbidden phrase: {forbidden}")
+
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):
         errors.append(

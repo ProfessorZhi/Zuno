@@ -336,6 +336,23 @@ phase closure not approved
 remaining: ingest service, reducer, adapters, immutable audit repository, projection/query API, fault tests
 ```
 
+Runtime persistence follow-up:
+
+```text
+src/backend/zuno/platform/observability/persistence.py
+tests/integration/test_phase06_observability_persistence_runtime.py
+```
+
+This adds `ObservabilityUnitOfWork` and `ObservabilityRepository` for envelope ingest, duplicate detection, trace/span records, runtime events, immutable audit records, projection watermark, gap records and dead letters. Payloads are redacted before storage and duplicate stream sequence payload mismatch is routed to dead letter instead of silently overwriting.
+
+Status:
+
+```text
+PHASE06 durable ingest repository available
+phase closure not approved
+remaining: typed adapters, reducer/query projection, authorization checks, full fault tests
+```
+
 ## PHASE05 Security Persistence Work Product
 
 新增 `infra/db/alembic/versions/20260719_16_security_control_plane.py`，作为 PHASE05 Security 所有的第一组持久化事实源。该迁移从 `20260718_15` 之后接入，不改变 PHASE04 已闭合基础设施边界。

@@ -62,6 +62,18 @@ from zuno.platform.observability.product_benchmark import (
     build_agentic_graphrag_regression_summary,
 )
 from zuno.platform.observability.local_trace_store import SQLiteLocalTraceStore
+from zuno.platform.observability.persistence import (
+    ObservabilityAuditReceipt,
+    ObservabilityDeadLetterReceipt,
+    ObservabilityEnvelopeReceipt,
+    ObservabilityPersistenceError,
+    ObservabilityRepository,
+    ObservabilityRuntimeEventReceipt,
+    ObservabilitySpanReceipt,
+    ObservabilityTraceReceipt,
+    ObservabilityUnitOfWork,
+    ObservabilityWatermarkReceipt,
+)
 
 __all__ = [
     "AgentEfficiencySnapshot",
@@ -87,6 +99,14 @@ __all__ = [
     "ObservabilityLifecycleRecord",
     "ObservabilityMeasurementRecord",
     "ObservabilityMetricStatus",
+    "ObservabilityAuditReceipt",
+    "ObservabilityDeadLetterReceipt",
+    "ObservabilityEnvelopeReceipt",
+    "ObservabilityPersistenceError",
+    "ObservabilityRepository",
+    "ObservabilityRuntimeEventReceipt",
+    "ObservabilitySpanReceipt",
+    "ObservabilityTraceReceipt",
     "ObservabilityOrderingWatermark",
     "ObservabilityProfileCompleteness",
     "ObservabilityProjectionRebuild",
@@ -98,6 +118,8 @@ __all__ = [
     "ObservabilityTraceContext",
     "ObservabilityTraceLifecycleState",
     "ObservabilityTraceNode",
+    "ObservabilityUnitOfWork",
+    "ObservabilityWatermarkReceipt",
     "QualityConstrainedEfficiency",
     "RAGCoreFiveMetric",
     "RAGFusionRerankTrace",
