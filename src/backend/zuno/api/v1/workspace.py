@@ -234,12 +234,12 @@ async def approve_workspace_task(
     payload: WorkspaceApprovalBody,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
     return resp_200(
         data=WorkspaceTaskRuntimeService.approve_task(
             task_id=task_id,
             decision=payload.decision,
             comment=payload.comment,
+            principal_id=str(login_user.user_id or ""),
         )
     )
 

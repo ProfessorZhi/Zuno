@@ -931,3 +931,83 @@ def test_workspace_artifact_download_returns_403_when_security_reauthorization_d
         assert [request.action for request in guard.requests] == ["artifact.download"]
     finally:
         WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_task_approval_resume_reauthorizes_through_security_guard() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard()
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Manual approval report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_resume_guard",
+                "workspace_id": "workspace_phase05_resume_guard",
+                "task_id": "task_phase05_resume_guard",
+                "trace_id": "trace_phase05_resume_guard",
+                "goal": "manual approval report",
+                "product_mode": "general_agent",
+                "approval_mode": "manual",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        task_id = create_response.json()["data"]["task"]["task_id"]
+
+        approve_response = client.post(
+            f"/api/v1/workspace/task/{task_id}/approve",
+            json={"decision": "approved", "comment": "Approved by Security."},
+        )
+
+        assert approve_response.status_code == 200
+        assert approve_response.json()["data"]["task"]["status"] == "completed"
+        assert [request.action for request in guard.requests] == ["task.resume.approved"]
+        assert guard.requests[0].principal_id == "user_phase03"
+        assert guard.requests[0].resource_ref == f"workspace-task:{task_id}"
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_task_approval_resume_returns_403_when_security_guard_denies() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard(deny_action="task.resume.approved")
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Denied manual approval report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_resume_guard_deny",
+                "workspace_id": "workspace_phase05_resume_guard_deny",
+                "task_id": "task_phase05_resume_guard_deny",
+                "trace_id": "trace_phase05_resume_guard_deny",
+                "goal": "denied manual approval report",
+                "product_mode": "general_agent",
+                "approval_mode": "manual",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        task_id = create_response.json()["data"]["task"]["task_id"]
+
+        approve_response = client.post(
+            f"/api/v1/workspace/task/{task_id}/approve",
+            json={"decision": "approved", "comment": "Denied by Security."},
+        )
+        snapshot = client.get(f"/api/v1/workspace/task/{task_id}").json()["data"]
+
+        assert approve_response.status_code == 403
+        assert approve_response.json()["detail"] == "product action denied by Security"
+        assert snapshot["task"]["status"] == "approval_waiting"
+        assert [request.action for request in guard.requests] == ["task.resume.approved"]
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)

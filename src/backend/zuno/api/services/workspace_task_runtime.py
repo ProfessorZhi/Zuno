@@ -917,13 +917,18 @@ class WorkspaceTaskRuntimeService:
         return cls.get_task_snapshot(task_id)
 
     @classmethod
-    def approve_task(cls, *, task_id: str, decision: str, comment: str | None) -> dict:
+    def approve_task(cls, *, task_id: str, decision: str, comment: str | None, principal_id: str = "") -> dict:
         task = cls._require_task(task_id)
         normalized_decision = decision.strip().lower()
         if normalized_decision not in {"approved", "rejected"}:
             raise HTTPException(status_code=400, detail="Approval decision must be approved or rejected")
         if task.status != "approval_waiting":
             raise HTTPException(status_code=409, detail="Workspace task is not waiting for approval")
+        cls._require_workspace_task_action_authorized(
+            task=task,
+            principal_id=principal_id,
+            action=f"task.resume.{normalized_decision}",
+        )
 
         cls._events.setdefault(task_id, []).append(
             cls._event(
@@ -2190,6 +2195,38 @@ class WorkspaceTaskRuntimeService:
             prepared_action_hash=build_product_action_hash(
                 tenant_id=artifact.workspace_id,
                 workspace_id=artifact.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
+
+    @classmethod
+    def _require_workspace_task_action_authorized(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        principal_id: str,
+        action: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or task.owner
+        resource_ref = f"workspace-task:{task.task_id}"
+        request = SecurityProductActionRequest(
+            tenant_id=task.workspace_id,
+            workspace_id=task.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{task.task_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=task.workspace_id,
+                workspace_id=task.workspace_id,
                 principal_id=actor,
                 action=action,
                 resource_ref=resource_ref,

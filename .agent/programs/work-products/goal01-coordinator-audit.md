@@ -1099,3 +1099,39 @@ PHASE05 product artifact read/download Postgres guard startup wiring available
 phase closure not approved
 remaining: resume/citation/admin default-path reauthorization and full PEP/PDP cutover
 ```
+
+## PHASE05 Workspace Resume Reauthorization 005
+
+新增 workspace approval resume 前 Security product action 重新授权：
+
+```text
+src/backend/zuno/api/services/workspace_task_runtime.py
+src/backend/zuno/api/v1/workspace.py
+tests/api/test_workspace_task_runtime.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+WorkspaceTaskRuntimeService.approve_task: approval_waiting 状态转 resume 前调用 SecurityProductActionGuard
+workspace API: approve endpoint 传入 login_user.user_id 作为 principal
+deny: 返回 403，任务保持 approval_waiting，不进入 resume 或 complete
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/api/v1/workspace.py tools/scripts/verify_phase05_security_persistence.py tests/api/test_workspace_task_runtime.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_reauthorizes_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_returns_403_when_security_guard_denies tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 workspace approval/resume reauthorization guard available
+phase closure not approved
+remaining: citation/admin default-path reauthorization and full PEP/PDP cutover
+```

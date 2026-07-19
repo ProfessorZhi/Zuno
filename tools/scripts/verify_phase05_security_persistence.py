@@ -312,8 +312,10 @@ def verify_phase05_security_persistence() -> list[str]:
         "configure_security_approval_sink",
         "configure_security_product_action_guard",
         "_require_product_action_authorized",
+        "_require_workspace_task_action_authorized",
         "artifact.read",
         "artifact.download",
+        "task.resume.",
         "build_default_tool_control_plane_runtime(",
         "security_approval_sink=sink",
     ]:
@@ -382,8 +384,11 @@ def verify_phase05_security_persistence() -> list[str]:
     for phrase in [
         "test_workspace_artifact_read_and_download_reauthorize_through_security_guard",
         "test_workspace_artifact_download_returns_403_when_security_reauthorization_denies",
+        "test_workspace_task_approval_resume_reauthorizes_through_security_guard",
+        "test_workspace_task_approval_resume_returns_403_when_security_guard_denies",
         "artifact.read",
         "artifact.download",
+        "task.resume.approved",
         "product action denied by Security",
     ]:
         if phrase not in workspace_test:
