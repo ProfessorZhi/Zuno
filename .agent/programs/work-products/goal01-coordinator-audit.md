@@ -530,3 +530,23 @@ PHASE05 partial security eval evidence available
 phase closure not approved
 remaining: broader PEP/PDP cutover coverage and full Security fault matrix
 ```
+
+## PHASE07 Model Gateway Bypass Guard
+
+新增严格 Provider SDK bypass guard：
+
+```text
+tools/scripts/verify_model_gateway_bypass.py
+tests/repo/test_model_gateway_bypass.py
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+```
+
+默认 verifier mode 锁定当前绕行清单，防止新增未登记 direct provider SDK path；`--strict` mode 要求生产源码绕行归零，用于 PHASE07 closure gate。当前 strict mode 仍失败，原因是 12 个已登记的 legacy/active provider SDK direct import 仍存在。
+
+Status:
+
+```text
+PHASE07 bypass inventory guard available
+phase closure not approved
+remaining: migrate listed bypass paths into Gateway-owned adapters, then pass --strict
+```
