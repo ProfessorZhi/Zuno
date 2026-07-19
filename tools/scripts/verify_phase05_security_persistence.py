@@ -256,6 +256,7 @@ def verify_phase05_security_persistence() -> list[str]:
         "record_authorization_decision",
         "request_approval",
         "decide_approval",
+        "ensure_audit_requirement",
         "enqueue_security_event",
         "SecurityPersistenceError",
     ]:
@@ -274,6 +275,7 @@ def verify_phase05_security_persistence() -> list[str]:
         "_record_security_approval_fact",
         "prepared_action_hash",
         "approved_before_effect",
+        "failed_closed_before_effect",
     ]:
         if phrase not in tool_runtime:
             errors.append(f"tool runtime missing Security approval fact sink phrase: {phrase}")

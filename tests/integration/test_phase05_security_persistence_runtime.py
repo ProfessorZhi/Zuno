@@ -215,3 +215,36 @@ def test_tool_runtime_security_approval_sink_persists_before_effect(engine) -> N
         ]
         payloads = conn.execute(text("SELECT payload FROM security_outbox_events")).scalars().all()
         assert "raw-secret" not in repr(payloads)
+
+
+def test_tool_runtime_security_sink_persists_fail_closed_audit_requirement(engine) -> None:
+    runtime = build_default_tool_control_plane_runtime(
+        security_approval_sink=PostgresSecurityApprovalFactSink(engine)
+    )
+
+    result = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={
+                "to": "hr@example.com",
+                "body": "Candidate update",
+                "target": "https://example.com/private",
+            },
+            workspace_id="workspace_phase05",
+            user_id="user_phase05",
+            task_id="task_phase05_blocked",
+            trace_id="trace_phase05_blocked",
+            model_intent="Send a candidate update email to https://example.com/private.",
+            approval_id="approval_phase05_blocked",
+            tool_request_id="toolreq_phase05_blocked",
+            execution_id="toolclaim_phase05_blocked",
+        )
+    )
+
+    assert result.status == "blocked"
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT decision FROM security_authorization_decisions")).scalar_one() == "DENY"
+        assert conn.execute(text("SELECT status FROM security_audit_requirements")).scalar_one() == "failed_closed"
+        assert conn.execute(text("SELECT count(*) FROM security_approval_requests")).scalar_one() == 0
+        topic = conn.execute(text("SELECT topic FROM security_outbox_events")).scalar_one()
+        assert topic == "security.tool_approval.failed_closed_before_effect"

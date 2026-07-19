@@ -477,3 +477,22 @@ PHASE05 PostgreSQL approval fact sink available and product runtime wiring verif
 phase closure not approved
 remaining: PEP/PDP fail-closed cutover, mandatory audit fault tests, security eval evidence
 ```
+
+Fail-closed and mandatory audit follow-up:
+
+```text
+src/backend/zuno/capability/runtime.py
+src/backend/zuno/platform/security/persistence.py
+tests/agent/test_tool_control_plane_runtime.py
+tests/integration/test_phase05_security_persistence_runtime.py
+```
+
+Tool Runtime blocked paths now emit a redacted `failed_closed_before_effect` Security fact before returning a blocked result. `PostgresSecurityApprovalFactSink` records this as a `DENY` authorization decision, a `failed_closed` audit requirement and a security outbox event, without creating an approval request or running the executor.
+
+Status:
+
+```text
+PHASE05 fail-closed Security fact and mandatory audit requirement path available
+phase closure not approved
+remaining: broader PEP/PDP cutover coverage, audit fault injection, security eval evidence
+```

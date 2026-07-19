@@ -61,6 +61,14 @@ class SecurityOutboxReceipt:
     payload_hash: str
 
 
+@dataclass(frozen=True, slots=True)
+class SecurityAuditRequirementReceipt:
+    audit_requirement_id: str
+    tenant_id: str
+    decision_id: str
+    requirement_hash: str
+
+
 class PostgresSecurityApprovalFactSink:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -112,6 +120,9 @@ class PostgresSecurityApprovalFactSink:
                 run_id=str(fact.get("tool_request_id") or approval_id),
                 epoch_ref=epoch_ref,
             )
+            security_decision = (
+                "DENY" if status == "failed_closed_before_effect" else "REQUIRES_APPROVAL"
+            )
             repo.ensure_authorization_decision(
                 decision_id=decision_id,
                 tenant_id=tenant_id,
@@ -119,18 +130,26 @@ class PostgresSecurityApprovalFactSink:
                 epoch_ref=epoch_ref,
                 resource_ref=str(fact.get("tool_id") or "tool"),
                 action=str(fact.get("required_approval") or "tool"),
-                decision="REQUIRES_APPROVAL",
+                decision=security_decision,
                 reason_code=str(fact.get("security_decision") or "approval_required"),
                 prepared_action_hash=prepared_action_hash,
             )
-            repo.ensure_approval_request(
-                approval_request_id=approval_request_id,
+            repo.ensure_audit_requirement(
+                audit_requirement_id=f"audit-requirement:{approval_id}:{status}",
                 tenant_id=tenant_id,
                 decision_id=decision_id,
-                prepared_action_hash=prepared_action_hash,
-                requested_by_principal_id=str(fact.get("user_id") or "unknown-user"),
-                required_approver_policy_ref="approval-policy:tool-runtime",
+                audit_channel_id="security-audit:tool-runtime",
+                status="failed_closed" if status == "failed_closed_before_effect" else "required",
             )
+            if status != "failed_closed_before_effect":
+                repo.ensure_approval_request(
+                    approval_request_id=approval_request_id,
+                    tenant_id=tenant_id,
+                    decision_id=decision_id,
+                    prepared_action_hash=prepared_action_hash,
+                    requested_by_principal_id=str(fact.get("user_id") or "unknown-user"),
+                    required_approver_policy_ref="approval-policy:tool-runtime",
+                )
             if status == "approved_before_effect":
                 repo.ensure_approval_decision(
                     approval_decision_id=f"approval-decision:{approval_id}",
@@ -648,6 +667,45 @@ class SecurityRepository:
             decision_hash=decision_hash,
         )
 
+    def ensure_audit_requirement(
+        self,
+        *,
+        audit_requirement_id: str,
+        tenant_id: str,
+        decision_id: str,
+        audit_channel_id: str,
+        status: str = "required",
+    ) -> SecurityAuditRequirementReceipt:
+        payload = {
+            "audit_requirement_id": audit_requirement_id,
+            "tenant_id": tenant_id,
+            "decision_id": decision_id,
+            "audit_channel_id": audit_channel_id,
+            "status": status,
+        }
+        requirement_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO security_audit_requirements(
+                    audit_requirement_id, tenant_id, decision_id, audit_channel_id,
+                    requirement_hash, status
+                ) VALUES (
+                    :audit_requirement_id, :tenant_id, :decision_id, :audit_channel_id,
+                    :requirement_hash, :status
+                )
+                ON CONFLICT (audit_requirement_id) DO NOTHING
+                """
+            ),
+            {**payload, "requirement_hash": requirement_hash},
+        )
+        return SecurityAuditRequirementReceipt(
+            audit_requirement_id=audit_requirement_id,
+            tenant_id=tenant_id,
+            decision_id=decision_id,
+            requirement_hash=requirement_hash,
+        )
+
     def enqueue_security_event(
         self,
         *,
@@ -736,6 +794,7 @@ class SecurityRepository:
 __all__ = [
     "SecurityApprovalDecisionReceipt",
     "SecurityApprovalRequestReceipt",
+    "SecurityAuditRequirementReceipt",
     "SecurityAuthorizationReceipt",
     "SecurityEpochReceipt",
     "SecurityOutboxReceipt",

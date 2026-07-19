@@ -262,7 +262,13 @@ def test_tool_runtime_blocks_disabled_tool_before_executor_runs() -> None:
     from zuno.capability.runtime import ToolControlPlaneRuntime, ToolRuntimeRequest
 
     calls: list[dict] = []
-    runtime = ToolControlPlaneRuntime()
+    facts: list[dict] = []
+
+    class SecurityFactSink:
+        def record_tool_approval_fact(self, fact: dict) -> None:
+            facts.append(fact)
+
+    runtime = ToolControlPlaneRuntime(security_approval_sink=SecurityFactSink())
     runtime.register_manifest(
         ToolCardManifest(
             tool_id="shell.destroy",
@@ -317,3 +323,6 @@ def test_tool_runtime_blocks_disabled_tool_before_executor_runs() -> None:
         "tool_result",
     ]
     assert result.task_events[-1]["payload"]["status"] == "blocked"
+    assert [fact["status"] for fact in facts] == ["failed_closed_before_effect"]
+    assert facts[0]["security_decision"] == "block"
+    assert facts[0]["prepared_action_hash"]

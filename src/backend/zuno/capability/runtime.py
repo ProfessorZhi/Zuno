@@ -350,6 +350,15 @@ class ToolControlPlaneRuntime:
                 sandbox_context=sandbox_context,
                 reason=approval_decision.reason or "tool_disabled",
             )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+            )
             return ToolRuntimeExecutionResult(
                 tool_id=manifest.tool_id,
                 status="blocked",
@@ -379,6 +388,15 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
                 reason=sandbox_context.network_policy_decision.reason,
+            )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
             )
             return ToolRuntimeExecutionResult(
                 tool_id=manifest.tool_id,
