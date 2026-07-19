@@ -650,3 +650,28 @@ PHASE07 bypass count reduced from 9 to 8
 phase closure not approved
 remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 005
+
+已迁移 MCP chat manager 的 provider package 类型判断：
+
+```text
+src/backend/zuno/platform/services/mcp_openai/mcp_manager.py
+```
+
+该文件原本直接导入 OpenAI 和 Anthropic SDK 类型，只用于 `match` 判断。现已改为本地能力边界：支持具备 `ainvoke` 或 `invoke` 的 Anthropic-compatible wrapper；OpenAI-like client 继续明确返回 `NotImplementedError`，不把未实现路径伪装为可用。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 8 to 7
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```

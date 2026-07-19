@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import ast
+import asyncio
+import pytest
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
@@ -149,3 +151,33 @@ def test_autobuild_client_constructs_models_through_gateway_boundary() -> None:
 
     assert "langchain_openai" not in import_text
     assert "ChatOpenAI" not in import_text
+
+
+def test_mcp_manager_uses_local_invoke_boundary_without_provider_imports() -> None:
+    verifier = _load_verifier()
+    relative_path = "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    from zuno.services.mcp_openai.mcp_manager import MCPManager
+
+    class AsyncClient:
+        async def ainvoke(self, messages, available_tools):
+            return {"messages": messages, "tools": available_tools}
+
+    manager = MCPManager(AsyncClient())
+
+    assert asyncio.run(manager._chat_model([{"role": "user", "content": "hi"}], [])) == {
+        "messages": [{"role": "user", "content": "hi"}],
+        "tools": [],
+    }
+
+
+def test_mcp_manager_preserves_openai_not_implemented_semantics() -> None:
+    from zuno.services.mcp_openai.mcp_manager import MCPManager
+
+    OpenAIClient = type("OpenAIClient", (), {"__module__": "openai"})
+    manager = MCPManager(OpenAIClient())
+
+    with pytest.raises(NotImplementedError, match="OpenAI MCP chat client is not implemented yet"):
+        asyncio.run(manager._chat_model([], []))
