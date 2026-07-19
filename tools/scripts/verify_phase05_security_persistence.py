@@ -337,9 +337,42 @@ def verify_phase05_security_persistence() -> list[str]:
     for phrase in [
         "PostgresSecurityProductActionGuard(engine)",
         "WorkspaceTaskRuntimeService.configure_security_product_action_guard(",
+        "MCPService.configure_security_product_action_guard(",
+        "MCPServerService.configure_security_product_action_guard(",
     ]:
         if phrase not in app_startup:
             errors.append(f"app startup missing product action security guard phrase: {phrase}")
+
+    mcp_service = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_server.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "configure_security_product_action_guard",
+        "_require_admin_action_authorized",
+        "admin.mcp.create",
+        "admin.mcp.update",
+        "admin.mcp.delete",
+        "admin.mcp.list",
+        "SecurityProductActionRequest",
+        "build_product_action_hash",
+    ]:
+        if phrase not in mcp_service:
+            errors.append(f"MCP admin service missing Security product action phrase: {phrase}")
+
+    mcp_stdio_service = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_stdio_server.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "configure_security_product_action_guard",
+        "_require_admin_action_authorized",
+        "admin.mcp_stdio.create",
+        "admin.mcp_stdio.update",
+        "admin.mcp_stdio.delete",
+        "SecurityProductActionRequest",
+        "build_product_action_hash",
+    ]:
+        if phrase not in mcp_stdio_service:
+            errors.append(f"MCP stdio admin service missing Security product action phrase: {phrase}")
 
     fault_test = (
         REPO_ROOT
@@ -393,6 +426,30 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in workspace_test:
             errors.append(f"workspace security reauthorization test missing phrase: {phrase}")
+
+    mcp_admin_test = (REPO_ROOT / "tests" / "agent" / "test_mcp_server_service.py").read_text(
+        encoding="utf-8"
+    )
+    for phrase in [
+        "test_mcp_admin_override_reauthorizes_through_security_guard",
+        "test_mcp_admin_override_denial_blocks_before_permission_success",
+        "admin.mcp.delete",
+        "admin.mcp.update",
+    ]:
+        if phrase not in mcp_admin_test:
+            errors.append(f"MCP admin security reauthorization test missing phrase: {phrase}")
+
+    mcp_stdio_admin_test = (
+        REPO_ROOT / "tests" / "agent" / "test_mcp_stdio_server_security.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "test_mcp_stdio_admin_delete_reauthorizes_through_security_guard",
+        "test_mcp_stdio_admin_update_denial_blocks_dao_write",
+        "admin.mcp_stdio.delete",
+        "admin.mcp_stdio.update",
+    ]:
+        if phrase not in mcp_stdio_admin_test:
+            errors.append(f"MCP stdio admin security reauthorization test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):

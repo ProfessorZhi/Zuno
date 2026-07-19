@@ -1135,3 +1135,43 @@ PHASE05 workspace approval/resume reauthorization guard available
 phase closure not approved
 remaining: citation/admin default-path reauthorization and full PEP/PDP cutover
 ```
+
+## PHASE05 MCP Admin Reauthorization 006
+
+新增 MCP 管理 admin override 的 Security product action 重新授权：
+
+```text
+src/backend/zuno/api/services/mcp_server.py
+src/backend/zuno/api/services/mcp_stdio_server.py
+src/backend/zuno/main.py
+tests/agent/test_mcp_server_service.py
+tests/agent/test_mcp_stdio_server_security.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+MCPService.verify_user_permission: admin override view/config/test/update/delete 前调用 SecurityProductActionGuard
+MCPService.create_mcp_server/get_all_servers: AdminUser create/list 默认路径调用 SecurityProductActionGuard
+MCPServerService stdio create/update/delete: AdminUser 写路径调用 SecurityProductActionGuard
+startup: 同一个 PostgresSecurityProductActionGuard 注入 workspace、MCP HTTP/SSE 和 MCP stdio 服务
+deny: 在 DAO 写入/删除前中断，owner 自己更新自己的 server 不走 admin override
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/api/services/mcp_server.py src/backend/zuno/api/services/mcp_stdio_server.py src/backend/zuno/main.py tools/scripts/verify_phase05_security_persistence.py tests/agent/test_mcp_server_service.py tests/agent/test_mcp_stdio_server_security.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/agent/test_mcp_server_service.py::test_mcp_admin_override_reauthorizes_through_security_guard tests/agent/test_mcp_server_service.py::test_mcp_admin_override_denial_blocks_before_permission_success tests/agent/test_mcp_server_service.py::test_mcp_owner_update_does_not_require_admin_override_security_guard tests/agent/test_mcp_stdio_server_security.py tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_reauthorizes_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_returns_403_when_security_guard_denies tests/api/test_workspace_task_runtime.py::test_workspace_artifact_read_and_download_reauthorize_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_artifact_download_returns_403_when_security_reauthorization_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 MCP admin default-path reauthorization guard available
+phase closure not approved
+remaining: citation default-path reauthorization, non MCP admin surface audit and full PEP/PDP cutover
+```

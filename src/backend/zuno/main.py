@@ -56,13 +56,16 @@ async def init_config():
     if not database_ready:
         raise RuntimeError("Database bootstrap failed during Phase 0 startup recovery")
 
+    from zuno.api.services.mcp_server import MCPService
+    from zuno.api.services.mcp_stdio_server import MCPServerService
     from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
     from zuno.platform.database import engine
     from zuno.platform.security import PostgresSecurityProductActionGuard
 
-    WorkspaceTaskRuntimeService.configure_security_product_action_guard(
-        PostgresSecurityProductActionGuard(engine)
-    )
+    product_action_guard = PostgresSecurityProductActionGuard(engine)
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(product_action_guard)
+    MCPService.configure_security_product_action_guard(product_action_guard)
+    MCPServerService.configure_security_product_action_guard(product_action_guard)
 
     await init_default_agent()
 
