@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  implementation_available: 74
-  target_not_current: 682
+  implementation_available: 258
+  target_not_current: 498
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -15874,7 +15874,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Context"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -15904,7 +15904,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Tree"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -15934,7 +15934,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Envelope Versioning"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -15964,7 +15964,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Dedup"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -15994,7 +15994,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Ordering"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16024,7 +16024,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Trace Lifecycle"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16054,7 +16054,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agent Core Mapping"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16084,7 +16084,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Model/Retrieval/Tool Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16114,7 +16114,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Security Redaction"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16144,7 +16144,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Immutable Audit"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16174,7 +16174,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Sampling"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16204,7 +16204,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "External Sink"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16234,7 +16234,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Retention/Legal Hold"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16264,7 +16264,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Eval Dataset/Case"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16294,7 +16294,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Eval Run/Case Recovery"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16324,7 +16324,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Judge Policy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16354,7 +16354,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Failure Bucket"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16384,7 +16384,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Benchmark Comparability"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16414,7 +16414,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Profile Completeness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16444,7 +16444,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16474,7 +16474,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Measurement Status"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16504,7 +16504,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Evidence Registry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16534,7 +16534,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Projection Rebuild"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16564,7 +16564,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Quality Proven"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16594,7 +16594,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Core Five Registry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16624,7 +16624,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Context Precision"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16654,7 +16654,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Context Recall"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16684,7 +16684,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Faithfulness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16714,7 +16714,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Answer Relevancy"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16744,7 +16744,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Answer Correctness"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16774,7 +16774,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Metric Status"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16804,7 +16804,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Metric Versioning"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16834,7 +16834,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Route Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16864,7 +16864,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Graph Traversal Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16894,7 +16894,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Source Grounding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16924,7 +16924,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Fusion/Rerank Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16954,7 +16954,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agentic Loop Trace"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -16984,7 +16984,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Failure Buckets"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17014,7 +17014,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Evaluation Slices"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17044,7 +17044,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Agent Efficiency"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17074,7 +17074,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Quality-constrained Efficiency"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17104,7 +17104,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Cost/Latency Attribution"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17134,7 +17134,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Core Five Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17164,7 +17164,7 @@ requirements:
     module: "10 Observability / Eval"
     mandatory: true
     target_statement: "Reproducible Evidence"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/observability/trace_eval.py"
       - "tests/platform/test_observability_runtime_batch.py"
@@ -17194,7 +17194,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product Surface 是统一北向产品边界"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17228,7 +17228,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product Surface 不得成为第二套 Controller"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17262,7 +17262,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Web、Desktop、External API 复用统一 Contract"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17296,7 +17296,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product 只修改自己拥有的领域事实"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17330,7 +17330,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Receipt 不得冒充其他模块成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17364,7 +17364,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Frontend 和 Projection 不是 Source Fact"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17398,7 +17398,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "所有正式回答绑定 AgentRun、Publication 和 RunOutcome"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17432,7 +17432,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "简单任务不得绕过 Agent Core 治理"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17466,7 +17466,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "客户端身份、权限和 Secret 声明不可信"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17500,7 +17500,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "未知安全/Contract 枚举 Fail Closed"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17534,7 +17534,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Conversation、Submission、Message、Request、Run 关系明确"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17568,7 +17568,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "UserSubmission 原始意图不可覆盖"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17602,7 +17602,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "UserMessage 在 Conversation 内有稳定顺序"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17636,7 +17636,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "一个 RuntimeRequest 最多创建一个 AgentRun"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17670,7 +17670,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "已终结 Run 不得原地复活"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17704,7 +17704,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "ProductCommand 使用有序 Journal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17738,7 +17738,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "CommandReceipt 采用追加版本而非覆盖"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17772,7 +17772,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "相同幂等键同 Hash 返回原结果"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17806,7 +17806,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "相同幂等键不同 Hash 返回冲突"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17840,7 +17840,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Command 与 ProductOutbox 同事务提交"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17874,7 +17874,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Base Projection 与 AuthorizedView 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17908,7 +17908,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Projection 可由 Source Fact 重建"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17942,7 +17942,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product Projection 不反向写 Source Domain"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -17976,7 +17976,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "SourceWatermark 按 Source/Partition 保存"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18010,7 +18010,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Aggregate、Source、Projection、Stream 序列分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18044,7 +18044,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Projector 按 source_event_id 幂等"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18078,7 +18078,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Gap 必须停止不安全增量并触发 Replay/Rebuild"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18112,7 +18112,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Projection Schema Migration 可回滚"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18146,7 +18146,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "AuthorizedView 结合当前 Epoch 和 Redaction"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18180,7 +18180,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "AvailableAction 只能由服务端 Guard 生成"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18214,7 +18214,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "SSE 使用 Snapshot + Delta"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18248,7 +18248,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "SSE 支持 Resume Cursor 和 Retention Expiry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18282,7 +18282,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Stream 采用 at-least-once，客户端幂等去重"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18316,7 +18316,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Heartbeat 不代表 Run 进展或成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18350,7 +18350,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Stream 断开不取消 Run"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18384,7 +18384,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Reconnect 必须重新授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18418,7 +18418,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Security Epoch 变化停止敏感 Delta"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18452,7 +18452,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Slow Consumer 使用有界 Buffer 和 Backpressure"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18486,7 +18486,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Provisional Content 与正式 Publication 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18520,7 +18520,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Strict Grounded 可禁止 provisional answer"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18554,7 +18554,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "一个 Run 支持多个 Pending Interrupt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18588,7 +18588,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Signal 提交绑定有效 Interrupt 和 Action Token"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18622,7 +18622,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "输入分类和 GoalVersion 决策归 Agent Core"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18656,7 +18656,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "ApprovalDecision 归 Security"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18690,7 +18690,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Approval 绑定 PreparedToolAction Hash/Scope/Expiry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18724,7 +18724,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Approval Accepted 不等于 Tool Effect 成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18758,7 +18758,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Tool UNKNOWN 禁止普通 Retry"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18792,7 +18792,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Reconcile/Human Review 动作由 Owner 提供"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18826,7 +18826,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Compensation 作为新的受治理副作用"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18860,7 +18860,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Cancel Accepted、CANCELLING 和终局分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18894,7 +18894,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product 保留所有 RunOutcome 语义差异"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18928,7 +18928,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "PARTIAL 披露已完成和未完成 Objective"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18962,7 +18962,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "ABSTAINED 不得映射为技术失败"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -18996,7 +18996,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "REFUSED 只展示安全可披露解释"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19030,7 +19030,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Upload、Parse、Index、Searchable 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19064,7 +19064,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Citation Metadata 与内容访问独立授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19098,7 +19098,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Artifact、Publication、Delivery、Render、Read 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19132,7 +19132,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Artifact 下载使用短期授权 Session"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19166,7 +19166,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "QualityDisclosure 区分未测量与已证明"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19200,7 +19200,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Delivery Retry 不重新执行 AgentRun"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19234,7 +19234,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Command、Query、Stream、Download 全链路授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19268,7 +19268,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Action Token 绑定 Principal/Target/Epoch/Expiry/Nonce"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19302,7 +19302,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "撤权失效 Action Token、Cursor 和 Download Session"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19336,7 +19336,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "浏览器对所有富文本和 Tool Output 执行 Sanitization"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19370,7 +19370,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Artifact Preview 使用独立 Sandbox"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19404,7 +19404,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Desktop Bridge 使用窄 Typed IPC 和隔离 Renderer"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19438,7 +19438,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "External API 使用服务身份、限流和重放防护"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19472,7 +19472,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Query/Stream 不暴露 Secret、Raw Checkpoint 或 Hidden Reasoning"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19506,7 +19506,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Delete 流程尊重 Legal Hold 和各 Owner 回执"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19540,7 +19540,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Correction/Withdraw 保留历史 Publication 审计"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19574,7 +19574,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product-owned 对象有明确 PostgreSQL Storage Mapping"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19608,7 +19608,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "外部调用不得位于数据库事务内"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19642,7 +19642,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "DeliveryAttempt 每次真实发送一条不可变记录"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19676,7 +19676,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product Reconciler 使用 Claim、Fencing 和 Idempotency"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19710,7 +19710,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Projection 和 Cursor Retention 独立于 Run Retention"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19744,7 +19744,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "时间、Deadline、Expiry 和用户时区语义明确"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19778,7 +19778,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Product SLO 覆盖 Command、Projection、Stream 和 Delivery"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19812,7 +19812,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Legacy 产品入口只能作为兼容 Adapter"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19846,7 +19846,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "正式文档与 Agent 镜像字节级一致且只有一份"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19880,7 +19880,7 @@ requirements:
     module: "01 Product Surface"
     mandatory: true
     target_statement: "Target 变 Current 必须有完整工程证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/product/runtime_batch.py"
       - "src/backend/zuno/api/dto/workspace.py"
@@ -19914,7 +19914,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "可信 Principal 和身份链"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -19944,7 +19944,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Tenant / Workspace 强隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -19974,7 +19974,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "OrgUnit 无环单父树"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20004,7 +20004,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Membership 与资源授权分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20034,7 +20034,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "DelegatedAdminScope 限定管理范围"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20064,7 +20064,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "三档 UI 权限"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20094,7 +20094,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "细粒度 ActionSet"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20124,7 +20124,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Explicit Deny 优先"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20154,7 +20154,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "默认拒绝"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20184,7 +20184,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "禁止委派放大"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20214,7 +20214,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "父 Grant 撤销级联"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20244,7 +20244,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Agent 是一等 Principal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20274,7 +20274,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Task / Session 临时授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20304,7 +20304,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "User / Agent / Task 权限取交集"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20334,7 +20334,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Policy Schema Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20364,7 +20364,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Policy Simulation / Shadow"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20394,7 +20394,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "PolicyVersion 不可变激活"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20424,7 +20424,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "PAP / PDP / PEP / PIP 分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20454,7 +20454,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Decision Explanation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20484,7 +20484,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Epoch 和 Cache 一致性"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20514,7 +20514,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Input Detection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20544,7 +20544,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Output Detection"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20574,7 +20574,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "DataClassification 传播"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20604,7 +20604,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Redaction 失败不导出"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20634,7 +20634,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Instruction Trust Label"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20664,7 +20664,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "不可信数据不控制流程"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20694,7 +20694,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Information Flow"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20724,7 +20724,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Protected Sink"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20754,7 +20754,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Declassification"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20784,7 +20784,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Action 与用户目标绑定"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20814,7 +20814,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Memory Poisoning Quarantine"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20844,7 +20844,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "多模态注入隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20874,7 +20874,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Knowledge 查询前授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20904,7 +20904,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Citation 重新授权"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20934,7 +20934,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Model Provider / Residency Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20964,7 +20964,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "PreparedToolAction Hash"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -20994,7 +20994,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Approval 防重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21024,7 +21024,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "执行时 Epoch 复核"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21054,7 +21054,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Tool Effect Unknown Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21084,7 +21084,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "MCP Audience Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21114,7 +21114,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "禁止 Token Passthrough"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21144,7 +21144,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "On-Behalf-Of Binding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21174,7 +21174,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Secret Ref / Short Lease"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21204,7 +21204,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Secret 不进入 Prompt / Trace / Memory"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21234,7 +21234,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Sandbox 分级"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21264,7 +21264,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Network Egress / SSRF"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21294,7 +21294,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Supply Chain Provenance"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21324,7 +21324,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Trust Lifecycle"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21354,7 +21354,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Break-glass 限时限域"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21384,7 +21384,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Security Incident"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21414,7 +21414,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Security Facts + Outbox 同事务"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21444,7 +21444,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Mandatory Audit Before Effect"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21474,7 +21474,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Audit 不转移领域 Ownership"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21504,7 +21504,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Retry / Idempotency / Recovery"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21534,7 +21534,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "PostgreSQL 安全事实源"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21564,7 +21564,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Checkpointer 只保存控制状态"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21594,7 +21594,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "前端只展示后端有效结果"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21624,7 +21624,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Adaptive Security Eval"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21654,7 +21654,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Security + Utility Release Gate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"
@@ -21684,7 +21684,7 @@ requirements:
     module: "09 Security"
     mandatory: true
     target_statement: "Target 转 Current 的工程证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/security/runtime_batch.py"
       - "tests/security/test_security_runtime_batch.py"

@@ -1393,3 +1393,39 @@ python tools/scripts/verify_phase05_security_persistence.py
 pytest -q tests/agent/test_phase05_admin_action_reauthorization.py -p no:cacheprovider
 git diff --check
 ```
+
+## Goal01 Continuation Start and Ledger Promotion 012
+
+按新目标文件继续使用集成分支，并在开始前 fetch origin：
+
+```text
+branch: integration/goal01-control-plane-model-ingestion
+continuation_start_sha_after_fetch: 1a65a28a2ca19e11c57a4b1a575052ea07dfb747
+origin_main_sha_after_fetch: ed787ee962f7f567163388188e56b4b765c27877
+origin_integration_sha_after_fetch: 1a65a28a2ca19e11c57a4b1a575052ea07dfb747
+first_fetch_attempt: environment transport failure, schannel TLS handshake
+second_fetch_attempt: passed
+```
+
+修复 Requirement Ledger 的 Target-to-Current promotion blocker：
+
+```text
+PHASE05 mandatory requirements: 140 implementation_available, 0 target_not_current
+PHASE06 mandatory requirements: 44 implementation_available, 0 target_not_current
+current_status_counts: implementation_available 258, target_not_current 498
+```
+
+同步修复 PHASE04 pre/post closure verifier：
+
+```text
+旧规则把全局 Requirement Ledger 计数冻结为 74/682，会阻止 PHASE05+ 正常晋升。
+新规则保留 PHASE04 mandatory no target_not_current 检查，只要求 current_status_counts 与实际 ledger 自洽。
+```
+
+已运行：
+
+```text
+python tools/scripts/verify_requirement_ledger_evidence_gate.py
+python tools/scripts/verify_phase04_post_closure_consistency.py
+python tools/scripts/verify_current_program.py
+```

@@ -39,6 +39,24 @@ def _phase04_target_not_current_requirements(ledger: str) -> list[str]:
     return gaps
 
 
+def _current_status_counts_are_self_consistent(ledger: str) -> bool:
+    declared_match = re.search(
+        r"(?ms)^current_status_counts:\n(?P<body>(?:  [^\n]+\n)+)",
+        ledger,
+    )
+    if declared_match is None:
+        return False
+    declared: dict[str, int] = {}
+    for line in declared_match.group("body").splitlines():
+        item = re.match(r"\s+([^:]+):\s+(\d+)\s*$", line)
+        if item:
+            declared[item.group(1)] = int(item.group(2))
+    actual: dict[str, int] = {}
+    for status in re.findall(r"(?m)^\s+current_status:\s+([^\r\n]+)\s*$", ledger):
+        actual[status] = actual.get(status, 0) + 1
+    return declared == actual
+
+
 def _evidence_hashes(readiness: str) -> dict[str, str]:
     match = re.search(r"(?ms)^evidence_hashes:\n(?P<body>(?:  .+\n)+)", readiness)
     if match is None:
@@ -71,8 +89,8 @@ def verify_phase04_post_closure_consistency() -> list[str]:
     ]:
         if phrase not in readiness:
             errors.append(f"phase04-readiness.yaml missing closure phrase: {phrase}")
-    if "implementation_available: 74" not in ledger or "target_not_current: 682" not in ledger:
-        errors.append("Requirement Ledger current_status_counts are not 74/682")
+    if not _current_status_counts_are_self_consistent(ledger):
+        errors.append("Requirement Ledger current_status_counts are not self-consistent")
     gaps = _phase04_target_not_current_requirements(ledger)
     if gaps:
         errors.append("PHASE04 mandatory target_not_current remains: " + ", ".join(gaps))
