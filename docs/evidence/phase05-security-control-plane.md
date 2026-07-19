@@ -1,14 +1,14 @@
 # PHASE05 Security Control Plane Evidence
 
-status: partial_implementation_available
+status: implementation_available
 
-phase_completion: `not_approved`
+phase_completion: `approved`
 
 date: 2026-07-19
 
 ## 目标
 
-记录 PHASE05 Security Control Plane 的当前可复现证据，覆盖审批事实持久化、pre-effect 重新验证、SecretLease、Redaction fail-closed、mandatory audit requirement 和最小 security eval。本文不是 Phase Closure Decision。
+记录 PHASE05 Security Control Plane 的当前可复现证据，覆盖审批事实持久化、pre-effect 重新验证、SecretLease、Redaction fail-closed、mandatory audit requirement 和最小 security eval。Coordinator Closure Decision 见 `docs/evidence/phase05-coordinator-closure.md`。
 
 ## 已证明
 
@@ -38,5 +38,5 @@ pytest -q tests/agent/test_tool_control_plane_runtime.py::test_high_side_effect_
 
 ## 未证明
 
-- 尚未形成 PHASE05 closure decision。
-- PHASE07 与 PHASE11 不得引用本文作为依赖已完成证明。
+- 本证据不声明 production ready。
+- PHASE07 与 PHASE11 仍必须执行各自 Closure Matrix、Pre-Closure 和 Coordinator Closure。

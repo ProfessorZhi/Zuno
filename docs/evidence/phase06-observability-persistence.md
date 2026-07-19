@@ -1,14 +1,14 @@
 # PHASE06 Observability Persistence Evidence
 
-status: partial_implementation_available
+status: implementation_available
 
-phase_completion: `not_approved`
+phase_completion: `approved`
 
 date: 2026-07-19
 
 ## 目标
 
-记录 PHASE06 Observability Minimum Black Box 的当前可复现证据，覆盖 Postgres append-only ingest、trace/span/runtime event、immutable audit ledger、watermark/gap、dead letter、read-only freshness query、typed security/model audit adapter 和 focused fault semantics。本文不是 Phase Closure Decision。
+记录 PHASE06 Observability Minimum Black Box 的当前可复现证据，覆盖 Postgres append-only ingest、trace/span/runtime event、immutable audit ledger、watermark/gap、dead letter、read-only freshness query、typed security/model audit adapter 和 focused fault semantics。Coordinator Closure Decision 见 `docs/evidence/phase06-coordinator-closure.md`。
 
 ## 已证明
 
@@ -35,5 +35,5 @@ pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_p
 
 ## 未证明
 
-- 尚未形成 PHASE06 closure decision。
-- PHASE07、PHASE20 和后续 Phase 不得引用本文作为 PHASE06 completed 证明。
+- 本证据不声明 PHASE20 Eval/Release Gate、quality proven 或 production ready。
+- PHASE07、PHASE20 和后续 Phase 仍必须执行各自 Closure Matrix、Pre-Closure 和 Coordinator Closure。

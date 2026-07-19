@@ -69,6 +69,10 @@ def _evidence_hashes(readiness: str) -> dict[str, str]:
     return hashes
 
 
+def _contains_any(text: str, phrases: list[str]) -> bool:
+    return any(phrase in text for phrase in phrases)
+
+
 def verify_phase04_post_closure_consistency() -> list[str]:
     errors: list[str] = []
     readiness = _read(PHASE04_READINESS)
@@ -96,27 +100,39 @@ def verify_phase04_post_closure_consistency() -> list[str]:
         errors.append("PHASE04 mandatory target_not_current remains: " + ", ".join(gaps))
 
     for phrase in [
-        "current_phase: PHASE05",
         "{id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
-        "{id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
     ]:
         if phrase not in manifest:
             errors.append(f"program-manifest.yaml missing closure phrase: {phrase}")
+    if not _contains_any(manifest, ["current_phase: PHASE05", "current_phase: PHASE07"]):
+        errors.append("program-manifest.yaml missing closure phrase: current phase at or after PHASE05")
+    if not _contains_any(
+        manifest,
+        [
+            "{id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
+            "{id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
+        ],
+    ):
+        errors.append("program-manifest.yaml missing closure phrase: PHASE05 ready or completed")
     for phrase in [
-        "current_phase: PHASE05",
         "PHASE04 completed",
-        "PHASE05 ready",
     ]:
         if phrase not in current:
             errors.append(f"current.md missing closure phrase: {phrase}")
+    if not _contains_any(current, ["current_phase: PHASE05", "current_phase: PHASE07"]):
+        errors.append("current.md missing closure phrase: current phase at or after PHASE05")
+    if not _contains_any(current, ["PHASE05 ready", "PHASE05 completed"]):
+        errors.append("current.md missing closure phrase: PHASE05 ready or completed")
     for label, text in [
         ("implementation-roadmap.md", roadmap),
         ("closure-checklist.md", checklist),
         ("production-readiness.md", production),
     ]:
-        for phrase in ["PHASE04 completed", "PHASE05 ready"]:
+        for phrase in ["PHASE04 completed"]:
             if phrase not in text:
                 errors.append(f"{label} missing closure phrase: {phrase}")
+        if not _contains_any(text, ["PHASE05 ready", "PHASE05 completed"]):
+            errors.append(f"{label} missing closure phrase: PHASE05 ready or completed")
 
     hashes = _evidence_hashes(readiness)
     if not hashes:

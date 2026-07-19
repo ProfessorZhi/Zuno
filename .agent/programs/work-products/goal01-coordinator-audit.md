@@ -1492,3 +1492,31 @@ python -m py_compile tools/scripts/verify_phase05_pre_closure_gate.py tools/scri
 python tools/scripts/verify_phase05_pre_closure_gate.py
 python tools/scripts/verify_phase06_pre_closure_gate.py
 ```
+
+## PHASE05 PHASE06 Coordinator Closure Decisions 015
+
+Coordinator 独立批准 PHASE05 与 PHASE06 由 `completion_candidate` 晋升为 `completed`：
+
+```text
+PHASE05 closure_decision: docs/evidence/phase05-coordinator-closure.md
+PHASE06 closure_decision: docs/evidence/phase06-coordinator-closure.md
+PHASE05 readiness: .agent/programs/work-products/phase05-readiness.yaml
+PHASE06 readiness: .agent/programs/work-products/phase06-readiness.yaml
+```
+
+状态同步：
+
+```text
+program_manifest: PHASE05 completed, PHASE06 completed, PHASE07 ready, PHASE11 ready
+current_phase: PHASE07
+PHASE08: planned
+PHASE09-PHASE22: not current
+production_readiness: not production ready
+```
+
+Post-Closure Gate 新增：
+
+```text
+tools/scripts/verify_phase05_post_closure_consistency.py
+tools/scripts/verify_phase06_post_closure_consistency.py
+```

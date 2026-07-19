@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE05"
+CURRENT_PHASE = "PHASE07"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -185,7 +185,10 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[1]: "completed",
         PHASE_FILES[2]: "completed",
         PHASE_FILES[3]: "completed",
-        PHASE_FILES[4]: "ready",
+        PHASE_FILES[4]: "completed",
+        PHASE_FILES[5]: "completed",
+        PHASE_FILES[6]: "ready",
+        PHASE_FILES[10]: "ready",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -293,9 +296,12 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE05",
+                "current_phase: PHASE07",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
+                "PHASE05 completed",
+                "PHASE06 completed",
+                "PHASE07 和 PHASE11 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -309,7 +315,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE05",
+                "current_phase: PHASE07",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -330,7 +336,10 @@ def verify_current_program() -> list[str]:
                 "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed",
                 "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed",
                 "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
-                "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
+                "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
+                "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
+                "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: ready",
+                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: ready",
             ],
             "program-manifest.yaml",
         )

@@ -1,11 +1,13 @@
 # PHASE06 Observability Minimum Black Box
 
 phase_id: PHASE06
-status: planned
+status: completed
 depends_on: PHASE03, PHASE04
 owner: Module 10 Observability & Eval
 
 ## Phase 目标
+
+PHASE06 completed。Observability Minimum Black Box 在完整 Phase Scope 内达到 implementation available；这不表示 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 
 先建立所有后续 Runtime 必须依赖的最小黑盒：版本化 Telemetry Envelope、Append-only Ingest、Trace/Span、Runtime Event、Immutable Audit、Dedup、Ordering/Watermark/Gap、Projection/Rebuild 和只读 Query。此 Phase 不实现完整 Eval，但必须保证失败不会静默消失。
 

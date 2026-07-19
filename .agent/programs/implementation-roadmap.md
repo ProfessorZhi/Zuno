@@ -1,7 +1,7 @@
-# zuno-canonical-architecture-runtime-realization-v1 实施路线
+﻿# zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
-current_phase: PHASE05
+current_phase: PHASE07
 program_version: 2
 phase_count: 22
 execution_mode: full-scope / runtime-first / vertical-slice-checkpoints / evidence-gated
@@ -38,7 +38,7 @@ Product RuntimeRequest
 - PHASE03：从“共享 Contract 内核”提升为十一模块完整 Contract Bundle、Producer/Consumer Adoption 与 Multi-client Type Pipeline。
 - PHASE04：从“PostgreSQL Primitive 最小闭环”提升为 PostgreSQL、RabbitMQ、S3-compatible Object Store、LangGraph PostgreSQL Checkpointer、Backup/Restore、Fault/Concurrency 的完整耐久基础。
 
-已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05 ready；PHASE06 仍按后续 Coordinator 调度进入 ready。
+已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05 与 PHASE06 已完成 Coordinator Closure；PHASE07 与 PHASE11 ready，PHASE08 仍 planned。
 
 ## 3. Phase 依赖图
 
@@ -94,8 +94,8 @@ flowchart TB
 | 02 | Legacy Runtime Compatibility and Cutover Control | 全部 | 旧入口全部进入可执行 Adapter/Flag/Cutover/Rollback/Guard，新增旁路默认失败 |
 | 03 | Executable Cross-module Contract Bundle | 全部 | 十一模块共享 Contract 唯一版本化，真实 Producer/Consumer 与 Web/Desktop 类型完成采用 |
 | 04 | PostgreSQL Domain and Transaction Foundation | 11 | PHASE04 completed：PostgreSQL、Alembic、RabbitMQ、Outbox/Inbox、Idempotency、Lease/Fencing、Object Store、Checkpointer、Backup/Restore、Generic Replay、Fault/Operator evidence 完整可用 |
-| 05 | Security Control Plane | 09 | PHASE05 ready：Principal、Scope、Epoch、Authorization、Approval、SecretLease、Redaction、Audit Requirement |
-| 06 | Observability Minimum Black Box | 10 | Append-only Ingest、Trace、Audit、Dedup/Gap、Projection/Rebuild |
+| 05 | Security Control Plane | 09 | PHASE05 completed：Principal、Scope、Epoch、Authorization、Approval、SecretLease、Redaction、Audit Requirement implementation available |
+| 06 | Observability Minimum Black Box | 10 | PHASE06 completed：Append-only Ingest、Trace、Audit、Dedup/Gap、Projection/Rebuild 和授权只读 Query API implementation available |
 | 07 | Model Gateway Runtime | 04 | 所有真实模型调用统一 Gateway，Usage/Cancel/Fallback 可追踪 |
 | 08 | Deterministic Single Controller Runtime | 06 | 单步 Plan 的真实 AgentRunGraph/StepExecutionGraph 可恢复运行 |
 | 09 | Product Surface Backend Runtime | 01 | Command/Query/Projection/SSE/Signal/Compatibility API |
