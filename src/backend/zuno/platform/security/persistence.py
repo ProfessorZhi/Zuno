@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Engine, text
@@ -67,6 +67,31 @@ class SecurityAuditRequirementReceipt:
     tenant_id: str
     decision_id: str
     requirement_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class SecuritySecretRefReceipt:
+    secret_ref: str
+    tenant_id: str
+    audience: str
+    scope_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class SecuritySecretLeaseReceipt:
+    lease_id: str
+    tenant_id: str
+    secret_ref: str
+    audience: str
+    lease_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class SecurityRedactionDecisionReceipt:
+    redaction_id: str
+    tenant_id: str
+    decision: str
+    decision_hash: str
 
 
 class PostgresSecurityApprovalFactSink:
@@ -706,6 +731,216 @@ class SecurityRepository:
             requirement_hash=requirement_hash,
         )
 
+    def record_secret_ref(
+        self,
+        *,
+        secret_ref: str,
+        tenant_id: str,
+        credential_version_ref: str,
+        audience: str,
+        owner_principal_id: str,
+        scope: dict[str, Any],
+        status: str = "active",
+    ) -> SecuritySecretRefReceipt:
+        self._reject_secret_material(scope)
+        scope_hash = canonical_sha256(scope)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO security_secret_refs(
+                    secret_ref, tenant_id, credential_version_ref, audience,
+                    owner_principal_id, scope_hash, status
+                ) VALUES (
+                    :secret_ref, :tenant_id, :credential_version_ref, :audience,
+                    :owner_principal_id, :scope_hash, :status
+                )
+                """
+            ),
+            {
+                "secret_ref": secret_ref,
+                "tenant_id": tenant_id,
+                "credential_version_ref": credential_version_ref,
+                "audience": audience,
+                "owner_principal_id": owner_principal_id,
+                "scope_hash": scope_hash,
+                "status": status,
+            },
+        )
+        return SecuritySecretRefReceipt(secret_ref, tenant_id, audience, scope_hash)
+
+    def issue_secret_lease(
+        self,
+        *,
+        lease_id: str,
+        tenant_id: str,
+        secret_ref: str,
+        workload_identity_ref: str,
+        on_behalf_of_binding_ref: str,
+        audience: str,
+        lease_generation: int,
+        expires_at: datetime,
+    ) -> SecuritySecretLeaseReceipt:
+        if lease_generation <= 0:
+            raise SecurityPersistenceError("secret lease_generation must be positive")
+        payload = {
+            "lease_id": lease_id,
+            "tenant_id": tenant_id,
+            "secret_ref": secret_ref,
+            "workload_identity_ref": workload_identity_ref,
+            "on_behalf_of_binding_ref": on_behalf_of_binding_ref,
+            "audience": audience,
+            "lease_generation": lease_generation,
+            "expires_at": expires_at.isoformat(),
+        }
+        lease_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO security_secret_leases(
+                    lease_id, tenant_id, secret_ref, workload_identity_ref,
+                    on_behalf_of_binding_ref, audience, lease_generation, lease_hash, expires_at
+                ) VALUES (
+                    :lease_id, :tenant_id, :secret_ref, :workload_identity_ref,
+                    :on_behalf_of_binding_ref, :audience, :lease_generation, :lease_hash,
+                    :expires_at
+                )
+                """
+            ),
+            {**payload, "lease_hash": lease_hash},
+        )
+        return SecuritySecretLeaseReceipt(lease_id, tenant_id, secret_ref, audience, lease_hash)
+
+    def validate_secret_lease(
+        self,
+        *,
+        lease_id: str,
+        tenant_id: str,
+        audience: str,
+        now: datetime | None = None,
+    ) -> SecuritySecretLeaseReceipt:
+        current_time = now or datetime.now(tz=UTC)
+        row = self.connection.execute(
+            text(
+                """
+                SELECT l.lease_id, l.tenant_id, l.secret_ref, l.audience, l.lease_hash,
+                       l.expires_at, s.status AS secret_status
+                FROM security_secret_leases l
+                JOIN security_secret_refs s ON s.secret_ref = l.secret_ref
+                WHERE l.lease_id = :lease_id AND l.tenant_id = :tenant_id
+                """
+            ),
+            {"lease_id": lease_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise SecurityPersistenceError("secret lease missing")
+        if row["secret_status"] != "active":
+            raise SecurityPersistenceError("secret lease references a revoked secret")
+        if row["audience"] != audience:
+            raise SecurityPersistenceError("secret lease audience mismatch")
+        expires_at = row["expires_at"]
+        if expires_at.tzinfo is None and current_time.tzinfo is not None:
+            current_time = current_time.replace(tzinfo=None)
+        if expires_at <= current_time:
+            raise SecurityPersistenceError("secret lease expired")
+        return SecuritySecretLeaseReceipt(
+            lease_id=row["lease_id"],
+            tenant_id=row["tenant_id"],
+            secret_ref=row["secret_ref"],
+            audience=row["audience"],
+            lease_hash=row["lease_hash"],
+        )
+
+    def record_redaction_decision(
+        self,
+        *,
+        redaction_id: str,
+        tenant_id: str,
+        source_ref: str,
+        sink_ref: str,
+        trust_label: str,
+        requested_decision: str,
+        redaction_policy_ref: str,
+        redacted_payload: dict[str, Any],
+        redaction_succeeded: bool,
+    ) -> SecurityRedactionDecisionReceipt:
+        self._reject_secret_material(redacted_payload)
+        decision = requested_decision if redaction_succeeded else "block"
+        redacted_payload_hash = canonical_sha256(redacted_payload)
+        payload = {
+            "redaction_id": redaction_id,
+            "tenant_id": tenant_id,
+            "source_ref": source_ref,
+            "sink_ref": sink_ref,
+            "trust_label": trust_label,
+            "decision": decision,
+            "redaction_policy_ref": redaction_policy_ref,
+            "redacted_payload_hash": redacted_payload_hash,
+            "redaction_succeeded": redaction_succeeded,
+        }
+        decision_hash = canonical_sha256(payload)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO security_redaction_decisions(
+                    redaction_id, tenant_id, source_ref, sink_ref, trust_label,
+                    decision, redaction_policy_ref, redacted_payload_hash, decision_hash
+                ) VALUES (
+                    :redaction_id, :tenant_id, :source_ref, :sink_ref, :trust_label,
+                    :decision, :redaction_policy_ref, :redacted_payload_hash, :decision_hash
+                )
+                """
+            ),
+            {**payload, "decision_hash": decision_hash},
+        )
+        return SecurityRedactionDecisionReceipt(redaction_id, tenant_id, decision, decision_hash)
+
+    def validate_pre_effect_authorization(
+        self,
+        *,
+        decision_id: str,
+        tenant_id: str,
+        prepared_action_hash: str,
+        require_approved_request: bool = True,
+        now: datetime | None = None,
+    ) -> SecurityAuthorizationReceipt:
+        current_time = now or datetime.now(tz=UTC)
+        row = self.connection.execute(
+            text(
+                """
+                SELECT d.decision_id, d.tenant_id, d.decision, d.decision_hash,
+                       d.prepared_action_hash, e.status AS epoch_status,
+                       r.status AS approval_status, r.deadline_at
+                FROM security_authorization_decisions d
+                JOIN security_effective_epochs e ON e.epoch_ref = d.epoch_ref
+                LEFT JOIN security_approval_requests r ON r.decision_id = d.decision_id
+                WHERE d.decision_id = :decision_id AND d.tenant_id = :tenant_id
+                """
+            ),
+            {"decision_id": decision_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise SecurityPersistenceError("authorization decision missing")
+        if row["prepared_action_hash"] != prepared_action_hash:
+            raise SecurityPersistenceError("prepared action hash changed before effect")
+        if row["epoch_status"] != "active":
+            raise SecurityPersistenceError("stale security epoch before effect")
+        if row["decision"] == "DENY":
+            raise SecurityPersistenceError("authorization decision denies effect")
+        if require_approved_request and row["decision"] == "REQUIRES_APPROVAL":
+            if row["approval_status"] != "approved":
+                raise SecurityPersistenceError("approval required before effect")
+            deadline_at = row["deadline_at"]
+            if deadline_at.tzinfo is None and current_time.tzinfo is not None:
+                current_time = current_time.replace(tzinfo=None)
+            if deadline_at <= current_time:
+                raise SecurityPersistenceError("approval deadline expired before effect")
+        return SecurityAuthorizationReceipt(
+            decision_id=row["decision_id"],
+            tenant_id=row["tenant_id"],
+            decision=row["decision"],
+            decision_hash=row["decision_hash"],
+        )
+
     def enqueue_security_event(
         self,
         *,
@@ -801,6 +1036,9 @@ __all__ = [
     "SecurityPersistenceError",
     "SecurityPrincipalContextReceipt",
     "PostgresSecurityApprovalFactSink",
+    "SecurityRedactionDecisionReceipt",
     "SecurityRepository",
+    "SecuritySecretLeaseReceipt",
+    "SecuritySecretRefReceipt",
     "SecurityUnitOfWork",
 ]

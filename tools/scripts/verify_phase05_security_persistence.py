@@ -257,6 +257,11 @@ def verify_phase05_security_persistence() -> list[str]:
         "request_approval",
         "decide_approval",
         "ensure_audit_requirement",
+        "record_secret_ref",
+        "issue_secret_lease",
+        "validate_secret_lease",
+        "record_redaction_decision",
+        "validate_pre_effect_authorization",
         "enqueue_security_event",
         "SecurityPersistenceError",
     ]:
@@ -306,6 +311,24 @@ def verify_phase05_security_persistence() -> list[str]:
     ]:
         if phrase not in fault_test:
             errors.append(f"security sink fault test missing phrase: {phrase}")
+
+    pre_effect_fault_test = (
+        REPO_ROOT
+        / "tests"
+        / "fault"
+        / "security"
+        / "test_phase05_security_pre_effect_faults.py"
+    ).read_text(encoding="utf-8")
+    for phrase in [
+        "prepared action hash changed",
+        "approval deadline expired",
+        "stale security epoch",
+        "audience mismatch",
+        "revoked secret",
+        "redaction_succeeded=False",
+    ]:
+        if phrase not in pre_effect_fault_test:
+            errors.append(f"security pre-effect fault test missing phrase: {phrase}")
 
     downgrade = _run_with_recorder("downgrade")
     if set(downgrade.dropped_tables) != set(REQUIRED_COLUMNS):

@@ -8,7 +8,7 @@ date: 2026-07-19
 
 ## 目标
 
-记录 PHASE05 Security Control Plane 的当前可复现证据，覆盖审批事实持久化、fail-closed、mandatory audit requirement 和最小 security eval。本文不是 Phase Closure Decision。
+记录 PHASE05 Security Control Plane 的当前可复现证据，覆盖审批事实持久化、pre-effect 重新验证、SecretLease、Redaction fail-closed、mandatory audit requirement 和最小 security eval。本文不是 Phase Closure Decision。
 
 ## 已证明
 
@@ -16,6 +16,9 @@ date: 2026-07-19
 - Tool Runtime approval path 可通过 `PostgresSecurityApprovalFactSink` 写入 Security facts。
 - blocked path 会在 effect 前写入 `failed_closed_before_effect` fact，并记录 `DENY` authorization decision、`failed_closed` audit requirement 和 Security outbox event。
 - Security sink outage 会在 side effect executor 前中断。
+- `SecurityRepository.validate_pre_effect_authorization(...)` 在 effect 前重新校验 `prepared_action_hash`、epoch active、approval status 和 deadline；参数变更、过期 approval、revoked/stale epoch 均 fail-closed。
+- `SecurityRepository.record_secret_ref(...)`、`issue_secret_lease(...)` 和 `validate_secret_lease(...)` 已证明 Secret material 不落业务表，wrong audience、expired lease、revoked secret 均 fail-closed。
+- `SecurityRepository.record_redaction_decision(...)` 在 redaction 失败时把 requested allow 降为 `block`，只保存 redacted payload hash 与 decision hash。
 - 最小 eval evidence 覆盖：
   - adaptive attack side-effect request must require approval or deny；
   - benign read-only request must preserve utility；
@@ -26,12 +29,12 @@ date: 2026-07-19
 ```powershell
 python tools/scripts/verify_phase05_security_persistence.py
 python tools/scripts/verify_phase05_security_eval.py
-pytest -q tests/security/test_phase05_security_eval_gate.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/integration/test_phase05_security_persistence_runtime.py -p no:cacheprovider
+pytest -q tests/security/test_phase05_security_eval_gate.py tests/fault/security tests/integration/test_phase05_security_persistence_runtime.py -p no:cacheprovider
 ```
 
 ## 未证明
 
 - 尚未覆盖完整 PEP/PDP cutover。
-- 尚未覆盖所有 Security fault matrix。
+- Security fault matrix 仍未完整覆盖所有 Product/API resume、download、citation 和 admin 默认路径。
 - 尚未形成 PHASE05 closure decision。
 - PHASE07 与 PHASE11 不得引用本文作为依赖已完成证明。

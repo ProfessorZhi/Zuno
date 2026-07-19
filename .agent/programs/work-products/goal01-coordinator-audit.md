@@ -150,6 +150,7 @@ Current:
 - Local governance gate and redaction helpers exist.
 - Requirement Ledger entries for Security state that runtime batch evidence exists but does not close PHASE05.
 - Independent subagent audit confirmed `pytest -q tests/security -p no:cacheprovider` passes, but only for in-memory batch/governance contract coverage.
+- PHASE05 Postgres persistence now covers Security facts for PrincipalContext、EffectiveEpoch、AuthorizationDecision、ApprovalRequest/Decision、SecretRef/Lease、RedactionDecision、AuditRequirement 和 Security outbox；focused integration/fault tests prove pre-effect epoch/hash/deadline revalidation, SecretLease audience/expiry/revoke, redaction failure fail-closed and sink outage fail-closed.
 
 Gap:
 
@@ -157,7 +158,7 @@ Gap:
 - Phase closure requires production paths to consume only `Decision/Ref`; legacy approval booleans and scattered `approval_required` / `approved` fields still exist as migration inputs.
 - Mandatory audit integration depends on PHASE06 acceptance and Infrastructure mandatory audit primitive, but Phase-level integration evidence is not yet closed.
 - Product/Agent/Tool paths still use boolean/string approval decisions, including workspace resume and tool runtime `approved: bool` inputs.
-- `tests/integration/security/**` and `tests/fault/security/**` do not exist yet, so stale epoch, replay, audit unavailable, secret lease expiry/wrong audience and redaction failure are not proven as Phase fault coverage.
+- Security fault coverage still does not prove every Product/API resume、download、citation、admin 和 full PEP/PDP cutover path; legacy boolean approval inputs remain migration inputs.
 
 Status:
 
@@ -880,4 +881,40 @@ Status:
 PHASE11 source-lineage Postgres schema and repository partial implementation available
 phase closure not approved
 remaining: migrate real default upload/parser path to this schema; add queue crash, lease loss, retry/dead-letter, delete/legal-hold/restore and adapter conformance evidence
+```
+
+## PHASE05 Security Pre-effect Fault Semantics 002
+
+新增 Security-owned persistence 行为：
+
+```text
+src/backend/zuno/platform/security/persistence.py
+src/backend/zuno/platform/security/__init__.py
+tests/fault/security/test_phase05_security_pre_effect_faults.py
+tools/scripts/verify_phase05_security_persistence.py
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+validate_pre_effect_authorization: effect 前重新校验 prepared_action_hash、epoch active、approval status 和 deadline
+record_secret_ref / issue_secret_lease / validate_secret_lease: SecretRef/Lease 只保存 ref/hash/audience，wrong audience、expired lease、revoked secret fail-closed
+record_redaction_decision: redaction_succeeded=False 时把 requested allow 降为 block，只保存 hash
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/security/persistence.py tools/scripts/verify_phase05_security_persistence.py tests/fault/security/test_phase05_security_pre_effect_faults.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 security persistence fault semantics expanded
+phase closure not approved
+remaining: full PEP/PDP cutover, Product/API resume/download/citation/admin default-path reauthorization and PHASE06 audit dependency closure
 ```

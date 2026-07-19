@@ -45,7 +45,10 @@ from zuno.platform.security.persistence import (
     SecurityOutboxReceipt,
     SecurityPersistenceError,
     SecurityPrincipalContextReceipt,
+    SecurityRedactionDecisionReceipt,
     SecurityRepository,
+    SecuritySecretLeaseReceipt,
+    SecuritySecretRefReceipt,
     SecurityUnitOfWork,
 )
 
@@ -76,7 +79,10 @@ __all__ = [
     "SecurityOutboxReceipt",
     "SecurityPersistenceError",
     "SecurityPrincipalContextReceipt",
+    "SecurityRedactionDecisionReceipt",
     "SecurityRepository",
+    "SecuritySecretLeaseReceipt",
+    "SecuritySecretRefReceipt",
     "SecurityTraceSummary",
     "SecurityRuntimeBatch",
     "SecurityUnitOfWork",
