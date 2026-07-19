@@ -59,17 +59,17 @@ origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 
 | 范围 | 当前归类 | 状态 | 证据 | 剩余处理 |
 | --- | --- | --- | --- | --- |
-| SourceObject upload init / commit | `canonical_ingestion_runtime` | `partial_evidence` | source-lineage schema/repository partial | PHASE05 closure 后继续实现/验证 |
-| DocumentVersion / ParseSnapshot 分离 | `canonical_ingestion_runtime` | `partial_evidence` | source-lineage schema partial | PHASE05 closure 后继续实现/验证 |
-| ParsePlan / Job / Attempt | `canonical_ingestion_runtime` | `partial_evidence` | existing parse gateway/runtime tests | 补 durable runtime evidence |
-| RabbitMQ dispatch / ACK / Retry / Dead Letter | `canonical_ingestion_runtime` | `mandatory_open` | 当前目标文件明确禁止 schema 冒充完成 | PHASE05 closure 后实现/验证 |
-| Lease / Heartbeat / Fencing / Worker Crash Recovery | `canonical_ingestion_runtime` | `mandatory_open` | async infrastructure partial | PHASE05 closure 后实现/验证 |
-| Native / PDF / Layout / OCR / VLM / Office / Archive Adapter | `mixed_current_future` | `mandatory_open` | native/PDF/Office partial tests, OCR/VLM/archive 未完整 closure | PHASE05 closure 后按 adapter owner 收口 |
+| SourceObject upload init / commit | `canonical_ingestion_runtime` | `completion_candidate` | source-lineage schema/repository + input runtime batch evidence | PHASE11 Pre-Closure 聚合验证 |
+| DocumentVersion / ParseSnapshot 分离 | `canonical_ingestion_runtime` | `completion_candidate` | source-lineage schema/repository + persistence runtime tests | PHASE11 Pre-Closure 聚合验证 |
+| ParsePlan / Job / Attempt | `canonical_ingestion_runtime` | `completion_candidate` | parse gateway/runtime tests + source-lineage persistence evidence | PHASE11 Pre-Closure 聚合验证 |
+| RabbitMQ dispatch / ACK / Retry / Dead Letter | `canonical_ingestion_runtime` | `completion_candidate` | LocalQueue ACK/retry/dead-letter/replay verified；RabbitMQ target-blocked dependency probe does not fake production dependency | PHASE11 Pre-Closure 聚合验证 |
+| Lease / Heartbeat / Fencing / Worker Crash Recovery | `canonical_ingestion_runtime` | `completion_candidate` | ParseAttemptControl lease/fencing/late-result rejection and async worker/reconciler tests | PHASE11 Pre-Closure 聚合验证 |
+| Native / PDF / Layout / OCR / VLM / Office / Archive Adapter | `mixed_current_future` | `completion_candidate` | Native/PDF current adapters verified；OCR/VLM external target blocked with stable diagnostics and no fake index; Office/archive preservation boundary covered by input runtime batch | PHASE11 Pre-Closure 聚合验证 |
 | CanonicalDocumentIR | `canonical_ingestion_runtime` | `completion_candidate` | ingestion contract tests | 聚合验证 |
-| SourceSpan / TransformLedger | `canonical_ingestion_runtime` | `partial_evidence` | source span tests; TransformLedger incomplete | PHASE05 closure 后补齐 |
-| Quality Gate / Human Review | `canonical_ingestion_runtime` | `mandatory_open` | quality threshold partial | PHASE05 closure 后实现/验证 |
-| IndexableDocumentSnapshot Outbox Handoff | `canonical_ingestion_runtime` | `partial_evidence` | index handoff tests | PHASE05 closure 后补 durable outbox handoff |
-| Visibility Revoke | `canonical_ingestion_runtime` | `mandatory_open` | no closure evidence | PHASE05 closure 后实现/验证 |
-| Legal Hold | `canonical_ingestion_runtime` | `mandatory_open` | no closure evidence | PHASE05 closure 后实现/验证 |
-| Physical Delete / Restore / Verification | `canonical_ingestion_runtime` | `mandatory_open` | no closure evidence | PHASE05 closure 后实现/验证 |
-| Legacy upload/parser 默认路径 Cutover | `temporary_versioned_adapter` | `mandatory_open` | legacy upload/parser paths still exist | PHASE05 closure 后 migrate/cutover/verify |
+| SourceSpan / TransformLedger | `canonical_ingestion_runtime` | `completion_candidate` | SourceSpan provenance and TransformRecord loss/lineage evidence in input runtime batch | PHASE11 Pre-Closure 聚合验证 |
+| Quality Gate / Human Review | `canonical_ingestion_runtime` | `completion_candidate` | QualityReport PASS/DEGRADED/BLOCK and IndexableDocumentSnapshot quality FK gate verified; human review remains explicit degraded/block boundary | PHASE11 Pre-Closure 聚合验证 |
+| IndexableDocumentSnapshot Outbox Handoff | `canonical_ingestion_runtime` | `completion_candidate` | Indexable snapshot persistence + outbox handoff tests | PHASE11 Pre-Closure 聚合验证 |
+| Visibility Revoke | `canonical_ingestion_runtime` | `completion_candidate` | deletion receipts and visibility revocation sequence covered by input runtime batch | PHASE11 Pre-Closure 聚合验证 |
+| Legal Hold | `canonical_ingestion_runtime` | `completion_candidate` | Legal Hold blocks purge only and does not restore revoked access | PHASE11 Pre-Closure 聚合验证 |
+| Physical Delete / Restore / Verification | `canonical_ingestion_runtime` | `completion_candidate` | Input/Knowledge/Object/Verification delete receipts and persistence restore tests | PHASE11 Pre-Closure 聚合验证 |
+| Legacy upload/parser 默认路径 Cutover | `temporary_versioned_adapter` | `completion_candidate` | legacy chunks normalize to CanonicalDocumentIR with ACL/source-span provenance; default worker uses ParseGateway and durable store handoff | PHASE11 Pre-Closure 聚合验证 |

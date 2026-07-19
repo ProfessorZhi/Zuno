@@ -77,7 +77,6 @@ def verify_phase06_pre_closure_gate() -> list[str]:
 
     evidence = _read(EVIDENCE)
     for phrase in [
-        "phase_completion: `not_approved`",
         "PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event",
         "/api/v1/observability/traces/{trace_id}",
         "python tools/scripts/verify_phase06_observability_persistence.py",
@@ -85,6 +84,8 @@ def verify_phase06_pre_closure_gate() -> list[str]:
     ]:
         if phrase not in evidence:
             errors.append(f"PHASE06 evidence missing phrase: {phrase}")
+    if "phase_completion: `not_approved`" not in evidence and "phase_completion: `approved`" not in evidence:
+        errors.append("PHASE06 evidence missing phase completion phrase")
     for blocker in [
         "FastAPI route 尚未接入",
         "完整 Agent、Knowledge、Memory、Capability、Tool、Security、Infrastructure adapter cutover 尚未全部证明",

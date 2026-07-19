@@ -72,7 +72,6 @@ def verify_phase05_pre_closure_gate() -> list[str]:
 
     evidence = _read(EVIDENCE)
     for phrase in [
-        "phase_completion: `not_approved`",
         "canonical_security_guard",
         "temporary.adapter.tool_runtime.approved_bool",
         "删除 Phase 绑定为 `PHASE16`",
@@ -81,6 +80,8 @@ def verify_phase05_pre_closure_gate() -> list[str]:
     ]:
         if phrase not in evidence:
             errors.append(f"PHASE05 evidence missing phrase: {phrase}")
+    if "phase_completion: `not_approved`" not in evidence and "phase_completion: `approved`" not in evidence:
+        errors.append("PHASE05 evidence missing phase completion phrase")
     for blocker in [
         "尚未覆盖完整 PEP/PDP cutover",
         "Legacy Approval Boolean 到 Decision/Ref 仍是",

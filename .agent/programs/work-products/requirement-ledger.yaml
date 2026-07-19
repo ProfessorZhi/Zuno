@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  implementation_available: 346
-  target_not_current: 410
+  implementation_available: 426
+  target_not_current: 330
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -7334,7 +7334,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "原始字节必须以不可变 SourceObject 保存，派生结果不得覆盖原对象。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7368,7 +7368,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每次对象提交必须验证 size、content hash 和 media type。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7402,7 +7402,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 读取前必须重新校验 SourceObject Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7436,7 +7436,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "SourceObject Hash 不匹配时必须 quarantine 并阻止 Handoff。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7470,7 +7470,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DocumentVersion 只随源内容或业务版本变化。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7504,7 +7504,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser、模型或配置变化必须创建新 ParseSnapshot，不创建新 DocumentVersion。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7538,7 +7538,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "激活后的 ParsePlan 和 ParseSnapshot 不可原地修改。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7572,7 +7572,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "在线附件和知识库文件必须共享同一 Ingestion Kernel。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7606,7 +7606,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Agent Core 不得在 Graph Node 内直接调用文档 Parser。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7640,7 +7640,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input 不得生成 RetrievalChunk、Embedding、Index 或 KnowledgeVersion。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7674,7 +7674,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "SourceSpan 不得包含 Knowledge Chunk ID。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7708,7 +7708,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有未处理或失败区域必须进入 MissingContentManifest。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7742,7 +7742,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "raw、normalized、search 和 model-derived 内容必须分字段保存。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7776,7 +7776,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每次 Transform 必须记录输入 Hash、输出 Hash、版本和 Loss Class。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7810,7 +7810,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "任何 Lossy Transform 只能生成派生 View，不能删除原始内容。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7844,7 +7844,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "可靠原生结构存在时不得默认整文档 OCR。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7878,7 +7878,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "OCR 输出必须保留坐标、置信度、模型版本和图像 Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7912,7 +7912,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "VLM 输出默认标记 MODEL_DERIVED。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7946,7 +7946,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "远程 OCR/VLM 必须经过 Security Gate 和 Model Gateway。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -7980,7 +7980,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 选择必须综合格式、文本层、复杂度、安全、成本和 Deadline。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8014,7 +8014,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "系统必须支持文件、页面和区域三级 Parser 路由。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8048,7 +8048,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser Adapter 必须是 Provider-neutral typed contract。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8082,7 +8082,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser 成功返回不等于 Snapshot 可用。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8116,7 +8116,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Quality Verdict 必须为 PASS、DEGRADED 或 BLOCK。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8150,7 +8150,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "BLOCK Snapshot 不得发布给 Knowledge。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8184,7 +8184,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DEGRADED Handoff 必须由 Profile 明确允许并携带缺失清单。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8218,7 +8218,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Quality Verdict 最终提交必须由确定性 Policy Engine 完成。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8252,7 +8252,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "ParseJob 与 ParseAttempt 必须分离。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8286,7 +8286,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个 Attempt 必须绑定 execution epoch、Lease 和 Fencing Token。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8320,7 +8320,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Lease 过期后的晚到结果必须被拒绝。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8354,7 +8354,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Queue 采用 at-least-once 语义，消费者必须幂等。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8388,7 +8388,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "领域 Commit 与消息发布必须使用 Outbox。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8422,7 +8422,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "消费者必须在领域 Commit 后 ACK。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8456,7 +8456,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "大型 Payload 只能通过 ObjectRef 传递，不进入 Queue Message。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8490,7 +8490,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis 不得成为任何最终领域状态的唯一来源。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8524,7 +8524,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis 清空或驱逐后系统必须保持正确，只允许性能下降。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8558,7 +8558,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Redis Cache 命中必须校验 Tenant、Input Hash、Bundle Hash 和 Config Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8592,7 +8592,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "去重的最终判断必须由 PostgreSQL 唯一约束或条件写完成。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8626,7 +8626,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "默认不得跨 Tenant 进行可观察内容去重。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8660,7 +8660,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "上传、解析和 Handoff API 必须支持 Idempotency-Key。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8694,7 +8694,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "数据库事务内不得执行对象、Queue、Redis、HTTP、Parser 或模型调用。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8728,7 +8728,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "生产 Schema 必须由 Alembic Migration 管理。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8762,7 +8762,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "完整 IR 的大型权威 Artifact 必须存 Object Store，数据库保存 Ref/Hash 与查询投影。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8796,7 +8796,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "对象读取必须要求 COMMITTED 状态和 Hash 匹配。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8830,7 +8830,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "对象上传成功但 DB 未提交时必须由 Reconciler 清理孤儿。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8864,7 +8864,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "DB 已提交但消息未发布时必须由 Outbox 恢复。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8898,7 +8898,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Snapshot 已提交但 Handoff Receipt 丢失时必须幂等重发。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8932,7 +8932,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "删除必须先阻止新读取，再异步完成下游和物理清理。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -8966,7 +8966,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Legal Hold 只能阻止物理 Purge，不能恢复已撤权内容的新访问。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9000,7 +9000,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "删除完成必须有 Input、Knowledge、Object 和 Verification Receipt。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9034,7 +9034,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "安全 Epoch 变化必须使不兼容旧 Handoff 对新请求失效。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9068,7 +9068,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有远程 URL 获取必须防 SSRF、DNS Rebinding 和无界响应。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9102,7 +9102,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Archive 解析必须限制深度、条目数、展开大小和路径。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9136,7 +9136,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "不可信 Parser 必须运行在受限 Sandbox。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9170,7 +9170,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Parser Bundle 必须固定依赖版本、镜像 Digest 和模型权重 Hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9204,7 +9204,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "缺失模型权重必须显式失败，不得静默下载并改变版本。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9238,7 +9238,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Profile 必须版本化、可哈希，并固定到 ParsePlan。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9272,7 +9272,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Priority 和 Admission 必须为删除、安全和在线附件保留容量。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9306,7 +9306,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "批量任务不得无限占用页面并行和 GPU Batch。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9340,7 +9340,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "在线 Fast Snapshot 和高质量 Snapshot 必须是两个独立版本。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9374,7 +9374,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个 Snapshot 必须绑定 Parser Bundle、Config、IR Schema 和 Quality Policy。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9408,7 +9408,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "每个跨模块 Handoff 必须使用 CrossModuleEnvelopeV1。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9442,7 +9442,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Handoff Payload 必须同时校验 payload hash 和 schema hash。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9476,7 +9476,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Unknown Contract Version、Missing Tenant 和 Stale Epoch 默认 fail-closed。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9510,7 +9510,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input 必须保留表格、公式、图片和隐藏内容，或显式声明缺失。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9544,7 +9544,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Excel 必须同时保留公式、缓存值和显示值。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9578,7 +9578,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Word 必须保留或声明修订、批注、脚注和页眉页脚。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9612,7 +9612,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "PPT 必须保留文本框、位置、备注、隐藏页和嵌入对象信息。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9646,7 +9646,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "HTML 必须保存原始 Snapshot、最终 URL、重定向链和 DOM 定位。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9680,7 +9680,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Git / Code 必须绑定 Commit、Blob Hash、Path、Symbol 和 Line。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9714,7 +9714,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "ParserQualityReport 必须可计算 SourceSpan Coverage 和 Missing Content。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9748,7 +9748,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "新 Parser Bundle 必须通过 Shadow Eval 后才能成为 Active Candidate。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9782,7 +9782,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "公开 Benchmark 不得替代 Zuno 自己的 Golden Corpus。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9816,7 +9816,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Trace 不得记录完整敏感文档、明文 Secret 或隐藏思维链。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9850,7 +9850,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "所有状态必须可从 PostgreSQL 和 Object Store 重建，不依赖前端或 Redis。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9884,7 +9884,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Reconciler 必须使用 Claim、Generation 和 Fencing，且修复动作幂等。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9918,7 +9918,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "用户取消 Parse 不得自动删除已提交 SourceObject。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9952,7 +9952,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "预算耗尽必须产生缺失声明或 BLOCK，不得伪造完整解析。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -9986,7 +9986,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Input API 不得暴露 Bucket Credential、Provider Secret 或内部 Queue 细节。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"
@@ -10020,7 +10020,7 @@ requirements:
     module: "02 Input / Document Ingestion"
     mandatory: true
     target_statement: "Target 只有在代码、Migration、测试、Trace、Eval 和运行证据齐备后才能提升为 Current。"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/knowledge/ingestion/runtime_batch.py"
       - "src/backend/zuno/knowledge/ingestion/contracts.py"

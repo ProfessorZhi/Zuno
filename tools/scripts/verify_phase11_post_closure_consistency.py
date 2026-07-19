@@ -10,11 +10,11 @@ LEDGER = WORK_PRODUCTS / "requirement-ledger.yaml"
 MANIFEST = PROGRAM_ROOT / "program-manifest.yaml"
 CURRENT = PROGRAM_ROOT / "current.md"
 CHECKLIST = PROGRAM_ROOT / "closure-checklist.md"
-PHASE_FILE = PROGRAM_ROOT / "PHASE05_security-control-plane.md"
-EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase05-security-control-plane.md"
-CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase05-coordinator-closure.md"
-PRE_CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase05-pre-closure.md"
-READINESS = WORK_PRODUCTS / "phase05-readiness.yaml"
+PHASE_FILE = PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md"
+SOURCE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-ingestion-source-lineage.md"
+PRE_CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase11-pre-closure.md"
+CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase11-coordinator-closure.md"
+READINESS = WORK_PRODUCTS / "phase11-readiness.yaml"
 
 
 def _read(path: Path) -> str:
@@ -34,20 +34,20 @@ def _phase_target_not_current_requirements(ledger: str, phase_id: str) -> list[s
     return gaps
 
 
-def verify_phase05_post_closure_consistency() -> list[str]:
+def verify_phase11_post_closure_consistency() -> list[str]:
     errors: list[str] = []
-    ledger_gaps = _phase_target_not_current_requirements(_read(LEDGER), "PHASE05")
+    ledger_gaps = _phase_target_not_current_requirements(_read(LEDGER), "PHASE11")
     if ledger_gaps:
-        errors.append("PHASE05 mandatory target_not_current remains: " + ", ".join(ledger_gaps))
+        errors.append("PHASE11 mandatory target_not_current remains: " + ", ".join(ledger_gaps))
     for label, path, phrases in [
         ("phase file", PHASE_FILE, ["status: completed"]),
-        ("evidence", EVIDENCE, ["status: implementation_available", "phase_completion: `approved`"]),
+        ("source evidence", SOURCE_EVIDENCE, ["status: `implementation_available`", "phase_completion: `approved`"]),
         ("pre-closure evidence", PRE_CLOSURE, ["status: passed", "gate: pre_closure"]),
-        ("closure decision", CLOSURE, ["status: approved", "coordinator_approval: approved", "phase05_state: completed"]),
+        ("closure decision", CLOSURE, ["status: approved", "coordinator_approval: approved", "phase11_state: completed"]),
         ("readiness", READINESS, ["current_phase_status: completed", "coordinator_approval: approved", "target_not_current: 0"]),
-        ("manifest", MANIFEST, ["id: PHASE05", "state: completed", "id: PHASE08", "state: ready", "id: PHASE11", "state: completed"]),
-        ("current", CURRENT, ["current_phase: PHASE08", "PHASE05 completed", "PHASE08 ready"]),
-        ("closure checklist", CHECKLIST, ["[x] PHASE05 Security Control Plane"]),
+        ("manifest", MANIFEST, ["current_phase: PHASE08", "id: PHASE08", "state: ready", "id: PHASE11", "state: completed", "id: PHASE12", "state: planned"]),
+        ("current", CURRENT, ["current_phase: PHASE08", "PHASE11 completed", "PHASE08 ready", "PHASE12 仍 planned"]),
+        ("closure checklist", CHECKLIST, ["[x] PHASE11 Durable Ingestion and Source Lineage", "[ ] PHASE08 Deterministic Single Controller Runtime"]),
     ]:
         text = _read(path)
         for phrase in phrases:
@@ -57,13 +57,13 @@ def verify_phase05_post_closure_consistency() -> list[str]:
 
 
 def main() -> int:
-    errors = verify_phase05_post_closure_consistency()
+    errors = verify_phase11_post_closure_consistency()
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
-        print("PHASE05 post-closure consistency gate failed.")
+        print("PHASE11 post-closure consistency gate failed.")
         return 1
-    print("PHASE05 post-closure consistency gate passed.")
+    print("PHASE11 post-closure consistency gate passed.")
     return 0
 
 

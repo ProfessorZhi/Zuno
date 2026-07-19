@@ -11,14 +11,14 @@ zuno-canonical-architecture-runtime-realization-v1
 ## 当前状态
 
 - State: active
-- Current phase: `PHASE11`
+- Current phase: `PHASE08`
 - Program version: 2
 - Phase count: 22
 - Atomic Work Packages: 163
 - Execution mode: full-scope / runtime-first / vertical-slice checkpoints / evidence-gated
 - Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
 
-2026-07-19 PHASE07 Model Gateway Runtime 已完成 Coordinator Closure，当前阶段进入 PHASE11。PHASE05、PHASE06、PHASE07 completed；PHASE11 ready；PHASE08 仍 planned，PHASE09–22 不得提前提升为 Current。
+2026-07-19 PHASE11 Durable Ingestion and Source Lineage 已完成 Coordinator Closure。PHASE05、PHASE06、PHASE07、PHASE11 completed；PHASE08 ready；PHASE12 仍 planned，PHASE09–22 不得提前提升为 Current。
 
 ## 必读文件
 

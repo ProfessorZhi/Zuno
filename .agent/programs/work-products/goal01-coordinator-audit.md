@@ -1560,3 +1560,80 @@ python tools/scripts/verify_phase07_post_closure_consistency.py
 python tools/scripts/verify_current_program.py
 python tools/scripts/verify_requirement_ledger_evidence_gate.py
 ```
+
+## PHASE11 Coordinator Closure Decision 017
+
+PHASE11 完成独立 Closure，并使 PHASE08 达到 ready：
+
+```text
+PHASE11 closure_decision: docs/evidence/phase11-coordinator-closure.md
+PHASE11 readiness: .agent/programs/work-products/phase11-readiness.yaml
+PHASE08: ready
+PHASE12: planned
+PHASE09-PHASE22: not current
+```
+
+证据晋升：
+
+```text
+PHASE11 mandatory requirements: 80 implementation_available, 0 target_not_current
+current_status_counts: implementation_available 426, target_not_current 330
+```
+
+已运行：
+
+```text
+python tools/scripts/verify_phase11_ingestion_source_lineage.py
+python tools/scripts/verify_input_runtime_batch.py
+pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
+python tools/scripts/verify_phase11_pre_closure_gate.py
+python tools/scripts/verify_phase11_post_closure_consistency.py
+python tools/scripts/verify_current_program.py
+```
+
+## Goal01 Final Gate 018
+
+四个 Phase 独立 Closure 后运行一次 Goal Final Gate：
+
+```text
+PHASE05: completed
+PHASE06: completed
+PHASE07: completed
+PHASE11: completed
+PHASE08: ready
+PHASE12: planned
+```
+
+通过命令：
+
+```text
+git diff --check
+python tools/scripts/verify_current_program.py
+python tools/scripts/verify_requirement_ledger_evidence_gate.py
+python .agent/scripts/verify_agent_system.py
+python .agent/scripts/verify_doc_boundaries.py
+python tools/agent/render_architecture.py --check
+python tools/scripts/verify_docs_entrypoints.py
+alembic -c infra/db/alembic.ini heads
+alembic -c infra/db/alembic.ini upgrade head
+python tools/scripts/verify_phase05_pre_closure_gate.py
+python tools/scripts/verify_phase06_pre_closure_gate.py
+python tools/scripts/verify_phase07_pre_closure_gate.py
+python tools/scripts/verify_phase11_pre_closure_gate.py
+python tools/scripts/verify_phase05_post_closure_consistency.py
+python tools/scripts/verify_phase06_post_closure_consistency.py
+python tools/scripts/verify_phase07_post_closure_consistency.py
+python tools/scripts/verify_phase11_post_closure_consistency.py
+pytest -q tests/security/test_phase05_security_eval_gate.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/agent/test_phase05_admin_action_reauthorization.py -p no:cacheprovider
+pytest -q tests/api/test_phase06_observability_query_surface.py tests/api/test_phase06_observability_query_route.py tests/platform/test_observability_runtime_batch.py -p no:cacheprovider
+pytest -q tests/platform/test_model_gateway.py tests/repo/test_model_gateway_bypass.py -p no:cacheprovider
+pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
+```
+
+披露：
+
+```text
+python tools/scripts/verify_repo_structure.py
+```
+
+该额外仓库结构 verifier 失败在历史 baseline：要求已被当前 AGENTS.md 禁止的 architecture 第五文件、no-active program 状态和旧 ownership 文件。当前必过的文档入口、Agent system、doc boundary 和 architecture render gate 均已通过；本轮不修改该历史 baseline verifier。

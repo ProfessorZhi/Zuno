@@ -19,15 +19,18 @@ def verify_phase05_security_eval() -> list[str]:
 
     evidence = EVIDENCE.read_text(encoding="utf-8")
     for phrase in [
-        "status: partial_implementation_available",
-        "phase_completion: `not_approved`",
         "adaptive attack side-effect request must require approval or deny",
         "benign read-only request must preserve utility",
         "security sink outage must fail closed before effect",
-        "尚未形成 PHASE05 closure decision",
     ]:
         if phrase not in evidence:
             errors.append(f"PHASE05 security evidence missing phrase: {phrase}")
+    if "status: partial_implementation_available" not in evidence and "status: implementation_available" not in evidence:
+        errors.append("PHASE05 security evidence missing implementation status phrase")
+    if "phase_completion: `not_approved`" not in evidence and "phase_completion: `approved`" not in evidence:
+        errors.append("PHASE05 security evidence missing phase completion phrase")
+    if "尚未形成 PHASE05 closure decision" not in evidence and "phase05-coordinator-closure.md" not in evidence:
+        errors.append("PHASE05 security evidence missing closure decision boundary phrase")
 
     if EVAL_TEST.exists():
         eval_test = EVAL_TEST.read_text(encoding="utf-8")

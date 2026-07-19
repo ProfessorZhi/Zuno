@@ -1,13 +1,13 @@
 # PHASE11 Durable Ingestion and Source Lineage
 
 phase_id: PHASE11
-status: ready
+status: completed
 depends_on: PHASE04, PHASE05
 owner: Module 02 Input / Document Ingestion
 
 ## Phase 目标
 
-PHASE04 PostgreSQL Domain and Transaction Foundation 与 PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。PHASE11 依赖已满足，当前为 ready；本文件仍不声明 PHASE11 implementation available、quality proven 或 production ready。
+PHASE04 PostgreSQL Domain and Transaction Foundation 与 PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。PHASE11 已由 Coordinator Closure 批准为 completed；本文件只声明 PHASE11 implementation available，不声明 quality proven 或 production ready。
 
 实现 SourceObject→DocumentVersion→ParsePlan/Job/Attempt→ParseSnapshot→CanonicalDocumentIR→SourceSpan→Quality Gate→IndexableDocumentSnapshot 的持久异步闭环，具备 Object Store、Queue、Lease/Fencing、Parser Router、OCR/VLM/Human Review、删除和恢复。
 
