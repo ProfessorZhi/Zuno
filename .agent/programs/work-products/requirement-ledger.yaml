@@ -18,8 +18,8 @@ generated_from:
   - "docs/governance/wave1-cross-module-contract-registry.md"
 requirement_count: 756
 current_status_counts:
-  implementation_available: 258
-  target_not_current: 498
+  implementation_available: 346
+  target_not_current: 410
 reverse_trace_method: "?? reverse_trace_refs ???? target source?planned_test ? planned_evidence??? Phase ??? code/test/evidence ref ????? requirement_id?"
 requirements:
   - requirement_id: ARCH-AGENT-001
@@ -13024,7 +13024,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "所有模型调用必须通过统一 Provider-neutral Gateway Contract"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2287"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13065,7 +13065,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "业务层不得导入 Provider SDK 或保存明文 Secret"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2288"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13106,7 +13106,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Role 与 Provider/Model 必须解耦"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2289"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13147,7 +13147,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Role 与 Operation 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2290"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13188,7 +13188,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Capability 必须版本化并有验证证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2291"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13229,7 +13229,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Prompt Artifact 与 Execution Binding 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2292"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13270,7 +13270,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个 Call 必须固定 Config、Prompt、Schema、Model、Adapter、Pricing 和 Security 版本"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2293"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13311,7 +13311,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Agent Core 保留最终 StepFeasibilityDecision"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2294"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13352,7 +13352,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Security Gate 必须先于 Routing 与 Dispatch"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2295"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13393,7 +13393,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Budget 和 Quota 必须在 Dispatch 前核验和预留"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2296"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13434,7 +13434,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Routing Decision 必须不可变、可解释和可重放"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2297"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13475,7 +13475,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个真实 Provider 请求必须有唯一 Attempt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2298"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13516,7 +13516,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "SDK 隐式 Retry 必须禁用、限制或完整计入"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2299"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13557,7 +13557,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Call 和 Attempt 必须使用独立状态机"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2300"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13598,7 +13598,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "同一 Call 最多选择一个 Response"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2301"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13639,7 +13639,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Structured Output 必须本地 Schema Validation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2302"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13680,7 +13680,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Repair 必须保留原结果并形成独立 Attempt 或确定性记录"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2303"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13711,7 +13711,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider、Gateway 和 Product Streaming 必须分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2304"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13742,7 +13742,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Stream Chunk 必须顺序、去重、校验且保持 provisional"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2305"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13773,7 +13773,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Timeout 与 Cancellation 必须分层并表达未确认状态"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2306"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13814,7 +13814,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider 可能已执行时必须进入 UNKNOWN/Reconcile"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2307"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13845,7 +13845,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Retry、Repair、Fallback、Escalation 与 Replan 必须分开"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2308"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13876,7 +13876,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Gateway 不得激活 PlanVersion 或修改 RunOutcome"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2309"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13907,7 +13907,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Embedding 必须固定 Revision、Dimension、Normalization 和 Index Generation"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2310"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13938,7 +13938,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Embedding Batch 必须支持 Item 级终态和部分失败"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2311"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -13969,7 +13969,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Rerank 必须保留 Item ID、Score 和批量语义"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2312"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14000,7 +14000,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Vision/OCR 结果必须保留页、坐标与 Source Lineage"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2313"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14031,7 +14031,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Transcription 必须定义 Segment、Timestamp 和 Partial 语义"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2314"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14062,7 +14062,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Classification 必须支持 Threshold、Calibration 和 Abstain"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2315"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14093,7 +14093,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Judge 调用必须独立经过 Gateway 和预算审计"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2316"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14124,7 +14124,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "模型自评不得成为唯一质量证明"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2317"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14155,7 +14155,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Context Compression 必须保留 Lineage、约束、冲突和失真风险"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2318"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14186,7 +14186,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Memory 模型输出只能形成 Candidate"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2319"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14217,7 +14217,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Security 模型输出只能形成风险 Proposal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2320"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14248,7 +14248,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Tool 模型输出只能形成 Action Proposal"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2321"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14279,7 +14279,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个 Attempt 包括失败和取消都必须产生 Usage 事实"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2322"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14310,7 +14310,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Usage Estimate、Observed、Settled 和 Correction 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2323"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14341,7 +14341,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Pricing Version 必须固定且历史 Receipt 不回写"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2324"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14372,7 +14372,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Quota 与业务 Budget 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2325"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14403,7 +14403,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Quota Race 必须由原子持久化或 CAS 解决"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "docs/modules/04-model-gateway.md:2326"
       - "src/backend/zuno/platform/model_gateway.py"
@@ -14434,7 +14434,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider Health 必须基于窗口证据且无证据不默认为健康"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14464,7 +14464,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Circuit 必须按 Provider/Model/Region/Operation/Adapter 隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14494,7 +14494,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Capability 生命周期必须支持 Degrade、Stale 和 Revoke"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14524,7 +14524,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Adapter 必须有 Operation-specific Conformance Suite"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14554,7 +14554,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "SDK/API/Model/Mapping 变化必须使 Conformance 失效或重验"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14584,7 +14584,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "未知 Provider Enum/Event/Error 不得默认为成功"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14614,7 +14614,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Gateway Config 必须不可变、版本化和内容寻址"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14644,7 +14644,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Config Activation 必须经过 Validation、Replay、Canary、CAS 和 Rollback"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14674,7 +14674,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个 Call 必须固定 Config Snapshot"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14704,7 +14704,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider/Model 必须有 Probe、Enable、Deprecate、Drain、Disable、Retire 生命周期"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14734,7 +14734,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Emergency Disable 必须阻止新 Dispatch 并隔离迟到结果"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14764,7 +14764,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Retirement 不得删除历史 Attempt、Usage 和 Audit"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14794,7 +14794,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Admission 必须覆盖全局到 Role 的容量层级"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14824,7 +14824,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Admission 必须实现租户公平、Reserved Capacity 和防饥饿"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14854,7 +14854,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "排队请求必须保留 Deadline、Security、Budget 和 Config 绑定"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14884,7 +14884,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Overload 必须有显式状态、Backpressure 和 Load Shedding"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14914,7 +14914,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "过载不得绕过 Security、Validation、Usage、Audit 和 Budget"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14944,7 +14944,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider Prompt Cache、Metadata Cache 和 Result Cache 必须分离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -14974,7 +14974,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Result Cache 必须默认关闭并严格按租户与版本隔离"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15004,7 +15004,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Cache Hit 必须产生 Reuse Receipt 而不是 Provider Attempt"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15034,7 +15034,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Revocation、Deletion、Model Retirement 和 Validity 变化必须失效 Cache"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15064,7 +15064,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "所有运维状态变化必须通过版本化 Operational Command"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15094,7 +15094,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "高风险 Command 必须有 Authorization、Approval、Expected Generation 和 Audit"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15124,7 +15124,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Prompt、Response、Stream、Usage、Failure 和 Decision 必须独立绑定 Retention"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15154,7 +15154,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "删除必须先 Tombstone 和 Visibility Revocation，再物理清理和验证"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15184,7 +15184,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Legal Hold 必须优先于物理删除但不恢复业务可见性"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15214,7 +15214,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "SLI/SLO 必须区分 Call、Attempt、Operation、Role、Tenant、Provider 和 Config"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15244,7 +15244,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Readiness 必须覆盖 Adapter、Security、Persistence、Usage、Reconcile、Capacity 和删除证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15274,7 +15274,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "无证据和 Mock-only 不得标记 READY"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15304,7 +15304,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Adapter/API/SDK version 必须支持 Parallel、Canary、Drain 和 Rollback"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15334,7 +15334,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider API Sunset 必须有迁移、回滚和兼容证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15364,7 +15364,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Experiment 必须在 Security、Capability、Budget 和 Deadline Gate 之后"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15394,7 +15394,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Experiment Assignment 必须可复现并支持 Sticky Scope"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15424,7 +15424,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Shadow Call 必须独立记录 Security、Budget、Usage、Trace 和 Retention"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15454,7 +15454,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Shadow Result 不得进入业务输出"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15484,7 +15484,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "ResultValidity 变化必须事件化并由事实 Owner 决定传播"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15514,7 +15514,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Provider-neutral Failure Code 必须稳定且保留原始错误引用"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15544,7 +15544,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Suggested Control Action 不能替代 Agent Core 决策"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15574,7 +15574,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Domain Event 必须版本化、幂等、可排序、可重放和脱敏"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15604,7 +15604,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Trace、Audit、Eval Projection 不得取代 Gateway 源事实"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15634,7 +15634,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Model Gateway 必须遵守跨模块 Ownership Matrix"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15664,7 +15664,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "所有跨模块请求和事件必须使用版本化 Envelope"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15694,7 +15694,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "PostgreSQL Domain Fact、Object Payload 和 Projection 必须分层"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15724,7 +15724,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "兼容 facade 必须有旁路清单、禁止新增和迁移期限"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15754,7 +15754,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Migration 不得伪造历史版本、Usage 或实现状态"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15784,7 +15784,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "未知安全枚举、未知终态和未知事件必须 Fail-closed 或 Quarantine"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15814,7 +15814,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "每个高风险故障必须有 Fault Injection 和恢复证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"
@@ -15844,7 +15844,7 @@ requirements:
     module: "04 Model Gateway"
     mandatory: true
     target_statement: "Target 变为 Current 必须有代码、Migration、测试、Trace、Eval 和运行证据"
-    current_status: target_not_current
+    current_status: implementation_available
     current_paths:
       - "src/backend/zuno/platform/model_gateway.py"
       - "tests/platform/test_model_gateway.py"

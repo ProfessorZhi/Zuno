@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE07"
+CURRENT_PHASE = "PHASE11"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -187,7 +187,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[3]: "completed",
         PHASE_FILES[4]: "completed",
         PHASE_FILES[5]: "completed",
-        PHASE_FILES[6]: "ready",
+        PHASE_FILES[6]: "completed",
         PHASE_FILES[10]: "ready",
     }
     for filename, expected in expected_phase_states.items():
@@ -296,12 +296,13 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE07",
+                "current_phase: PHASE11",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
                 "PHASE06 completed",
-                "PHASE07 和 PHASE11 ready",
+                "PHASE07 completed",
+                "PHASE11 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -315,7 +316,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE07",
+                "current_phase: PHASE11",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -338,7 +339,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
                 "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
-                "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: ready",
+                "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
                 "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: ready",
             ],
             "program-manifest.yaml",
@@ -474,6 +475,21 @@ def verify_current_program() -> list[str]:
         ]:
             if phrase not in blocker_text:
                 errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")
+    phase07_post_closure_path = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase07_post_closure_consistency.py"
+    )
+    if not phase07_post_closure_path.exists():
+        errors.append("missing PHASE07 post-closure consistency verifier")
+    else:
+        phase07_post_errors = _load_verifier_function(
+            phase07_post_closure_path,
+            "verify_phase07_post_closure_consistency",
+            "verify_phase07_post_closure_consistency",
+        )()
+        errors.extend(
+            f"PHASE07 post-closure consistency gate failed after closure: {error}"
+            for error in phase07_post_errors
+        )
     return errors
 
 

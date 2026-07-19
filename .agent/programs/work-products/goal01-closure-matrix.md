@@ -52,7 +52,7 @@ origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 | Streaming / Timeout / Cancel | `canonical_gateway_runtime` | `completion_candidate` | streaming, timeout, cancel tests | PHASE07 Pre-Closure 聚合验证 |
 | Usage Reservation / Settlement | `canonical_gateway_runtime` | `completion_candidate` | reservation and settlement tests | PHASE07 Pre-Closure 聚合验证 |
 | Retry / Fallback / Circuit | `canonical_gateway_runtime` | `completion_candidate` | retry/fallback/circuit tests | PHASE07 Pre-Closure 聚合验证 |
-| Trace / Audit 接入 | `depends_on_phase06` | `mandatory_open` | PHASE06 adapter closure 未正式批准 | 等 PHASE06 Closure |
+| Trace / Audit 接入 | `depends_on_phase06` | `completion_candidate` | PHASE06 Coordinator Closure 已批准；`PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 与 PHASE06 persistence verifier 已证明 Gateway trace/audit 接入 | PHASE07 Pre-Closure 聚合验证 |
 | Chat / Embedding / Rerank / Judge 默认路径 | `canonical_gateway_runtime` | `completion_candidate` | default entry tests and bypass guard | PHASE05/06 Closure 后进入 PHASE07 closure review |
 
 ## PHASE11 Ingestion Closure Matrix

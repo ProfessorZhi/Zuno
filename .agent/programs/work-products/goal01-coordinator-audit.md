@@ -1520,3 +1520,43 @@ Post-Closure Gate 新增：
 tools/scripts/verify_phase05_post_closure_consistency.py
 tools/scripts/verify_phase06_post_closure_consistency.py
 ```
+
+## PHASE07 Coordinator Closure Decision 016
+
+PHASE07 依赖已满足并完成独立 Closure：
+
+```text
+PHASE05 closure: approved
+PHASE06 closure: approved
+PHASE07 closure_decision: docs/evidence/phase07-coordinator-closure.md
+PHASE07 readiness: .agent/programs/work-products/phase07-readiness.yaml
+current_phase_after_closure: PHASE11
+PHASE08: planned until PHASE11 completed
+```
+
+真实修复：
+
+```text
+src/backend/zuno/platform/model_gateway_adapters.py
+src/backend/zuno/platform/model_gateway.py
+```
+
+原因：
+
+```text
+PHASE07 focused gate 发现 Gateway core 文件仍内联 OpenAI/Anthropic Provider SDK adapter builder。
+已将 Provider SDK 调用迁移到 adapter boundary，保持 `zuno.platform.model_gateway` 对外 re-export 不变。
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/platform/model_gateway.py src/backend/zuno/platform/model_gateway_adapters.py tools/scripts/verify_model_gateway_runtime_batch.py tools/scripts/verify_model_gateway_bypass.py
+python tools/scripts/verify_model_gateway_runtime_batch.py
+python tools/scripts/verify_model_gateway_bypass.py --strict
+pytest -q tests/platform/test_model_gateway.py tests/repo/test_model_gateway_bypass.py -p no:cacheprovider
+python tools/scripts/verify_phase07_pre_closure_gate.py
+python tools/scripts/verify_phase07_post_closure_consistency.py
+python tools/scripts/verify_current_program.py
+python tools/scripts/verify_requirement_ledger_evidence_gate.py
+```
