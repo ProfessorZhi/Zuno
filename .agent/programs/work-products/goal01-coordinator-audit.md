@@ -129,7 +129,8 @@ pytest -q tests/security tests/platform/test_observability_runtime_batch.py test
   50 passed
 
 python tools/scripts/verify_current_program.py
-  failed: PHASE04 post-closure evidence hash mismatch
+  failed before verifier fix: PHASE04 post-closure evidence hash mismatch caused by CRLF worktree bytes
+  passed after normalizing text evidence line endings in tools/scripts/verify_phase04_post_closure_consistency.py
 ```
 
 Command requested by PHASE07 but missing:
@@ -275,9 +276,9 @@ The first concrete implementation blocker is PHASE07 direct Provider SDK bypass.
 
 However, PHASE07 depends on PHASE05 and PHASE06. Because both PHASE05 and PHASE06 currently fail their own Phase completion definitions, PHASE07 implementation beyond audit/preparation is dependency-blocked by the goal objective's ordering rule.
 
-## Additional Stop Condition
+## Resolved Precondition
 
-`python tools/scripts/verify_current_program.py` currently fails because PHASE04 post-closure evidence hashes no longer match the recorded post-closure consistency gate:
+`python tools/scripts/verify_current_program.py` initially failed because PHASE04 post-closure evidence hashes did not match the recorded post-closure consistency gate:
 
 ```text
 docs/evidence/phase04-complete-infrastructure-blocker.md
@@ -287,9 +288,13 @@ docs/evidence/phase04-official-checkpointer-schema-upgrade.md
 docs/evidence/phase04-backup-restore-replay.md
 ```
 
-This must be classified before any downstream Phase closure:
+Root cause:
 
 ```text
-category: program evidence integrity blocked
-impact: PHASE05/06 start assumptions and downstream closure evidence cannot be trusted until PHASE04 closure hash drift is resolved or formally re-approved.
+category: verifier newline normalization defect
+evidence: git blob hashes at ed787ee9/origin/main/HEAD match phase04-readiness.yaml, while Windows worktree bytes had CRLF and produced different raw-byte hashes.
+fix: tools/scripts/verify_phase04_post_closure_consistency.py now normalizes CRLF to LF for text evidence before hashing.
+result: PHASE04 post-closure consistency gate and current program verifier pass.
 ```
+
+This removes the PHASE04 evidence-integrity blocker. It does not close PHASE05/06/07/11.
