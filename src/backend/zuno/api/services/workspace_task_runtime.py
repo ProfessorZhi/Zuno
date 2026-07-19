@@ -22,6 +22,7 @@ from zuno.capability.runtime import (
     SecurityApprovalFactSink,
     ToolRuntimeExecutionResult,
     ToolRuntimeRequest,
+    WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID,
     build_default_tool_control_plane_runtime,
 )
 from zuno.knowledge.agentic_graphrag import (
@@ -983,6 +984,10 @@ class WorkspaceTaskRuntimeService:
                 replace(
                     pending_tool_request,
                     approved=True,
+                    approval_decision_ref=(
+                        f"security-approval-decision:{task_id}:{pending_tool_request.approval_id}"
+                    ),
+                    approval_adapter_ref=WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID,
                     approval_comment=comment or "",
                 )
             )

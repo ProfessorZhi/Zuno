@@ -24,7 +24,7 @@ origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 | Admin 管理面：Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File | `canonical_security_guard` | `mandatory_open` | 当前 worktree 已接入共享 `security_admin_actions`，focused tests 已初步通过，尚未写入 verifier/evidence/commit | 完成 verifier、Evidence、Audit、focused tests、commit |
 | Secret Lease | `canonical_security_guard` | `completion_candidate` | `SecurityRepository.record_secret_ref` / `issue_secret_lease` / `validate_secret_lease` 覆盖 wrong audience、expired lease、revoked secret | Pre-Closure 前聚合验证 |
 | External Export | `future_runtime_not_current` | `not_current` | 当前 active runtime 无正式 external export 默认路径；PHASE06 external sink isolation 已证明外部 sink 不冒充业务成功 | 归属后续 Product/Publication/Integration Phase，不能阻塞 PHASE05 当前默认路径 closure |
-| Legacy Approval Boolean 到 Decision/Ref | `temporary_versioned_adapter` | `mandatory_open` | Tool Runtime 仍保留 `approved: bool` 等迁移输入，已由 Security fact sink 转写部分 Security facts | 明确删除 Phase，补 verifier 阻止新增 legacy boolean owner；Pre-Closure 前给出 adapter 期限 |
+| Legacy Approval Boolean 到 Decision/Ref | `temporary_versioned_adapter` | `completion_candidate` | Tool Runtime `approved: bool` 已绑定 `temporary.adapter.tool_runtime.approved_bool` 与删除 Phase `PHASE16`；workspace 默认 resume path 已传入 `security-approval-decision:*` decision ref；PHASE05 verifier 阻止新增 legacy boolean owner | Pre-Closure 前聚合验证 |
 
 ## PHASE06 Adapter Cutover Matrix
 

@@ -1289,3 +1289,43 @@ PHASE05 non-MCP admin default-path reauthorization guard available
 phase closure not approved
 remaining: Legacy Approval Boolean adapter deletion plan/guard and full PEP/PDP closure review
 ```
+
+## PHASE05 Legacy Approval Boolean Adapter 009
+
+新增 Legacy Approval Boolean 到 Decision/Ref 的 versioned adapter 约束：
+
+```text
+src/backend/zuno/capability/runtime.py
+src/backend/zuno/api/services/workspace_task_runtime.py
+tests/agent/test_tool_control_plane_runtime.py
+tests/api/test_workspace_task_runtime.py
+tools/scripts/verify_phase05_security_persistence.py
+.agent/programs/work-products/goal01-closure-matrix.md
+docs/evidence/phase05-security-control-plane.md
+```
+
+覆盖语义：
+
+```text
+ToolRuntimeRequest.approved: 仅保留为 temporary.adapter.tool_runtime.approved_bool
+removal_phase: PHASE16
+workspace resume default path: approved=True 同时传入 security-approval-decision:<task_id>:<approval_id>
+security facts / approval ledger: 记录 approval_decision_ref、approval_adapter_ref、approval_adapter_removal_phase
+verifier: 阻止 src/backend/zuno 中新增 ToolRuntimeRequest 之外的 approved: bool owner
+```
+
+已运行：
+
+```text
+python -m py_compile src/backend/zuno/capability/runtime.py src/backend/zuno/api/services/workspace_task_runtime.py tools/scripts/verify_phase05_security_persistence.py tests/agent/test_tool_control_plane_runtime.py tests/api/test_workspace_task_runtime.py
+python tools/scripts/verify_phase05_security_persistence.py
+pytest -q tests/agent/test_tool_control_plane_runtime.py::test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_path tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_reauthorizes_through_security_guard tests/api/test_workspace_task_runtime.py::test_workspace_task_approval_resume_returns_403_when_security_guard_denies tests/integration/test_phase05_security_persistence_runtime.py tests/fault/security -p no:cacheprovider
+```
+
+Status:
+
+```text
+PHASE05 legacy approval boolean adapter bounded
+phase closure not approved
+remaining: PHASE05 Pre-Closure gate and Coordinator review
+```

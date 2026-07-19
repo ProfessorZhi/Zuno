@@ -247,6 +247,11 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
     ]
     assert security_facts[-1]["status"] == "approved_before_effect"
     assert security_facts[-1]["credential_refs"] == ["credref://workspace_tools/mail"]
+    assert security_facts[-1]["approval_decision_ref"].startswith(
+        "temporary.adapter.tool_runtime.approved_bool:"
+    )
+    assert security_facts[-1]["approval_adapter_ref"] == "temporary.adapter.tool_runtime.approved_bool"
+    assert security_facts[-1]["approval_adapter_removal_phase"] == "PHASE16"
     assert "raw-secret" not in repr(approved.to_dict())
 
 

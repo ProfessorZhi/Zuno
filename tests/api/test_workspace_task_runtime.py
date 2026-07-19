@@ -764,6 +764,11 @@ def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_p
             "approved_before_effect",
         ]
         assert facts[-1]["credential_refs"] == ["credref://workspace_phase05/mail.send"]
+        assert facts[-1]["approval_decision_ref"].startswith(
+            "security-approval-decision:task_phase05_mail_api:"
+        )
+        assert facts[-1]["approval_adapter_ref"] == "workspace.approval_decision_ref"
+        assert facts[-1]["approval_adapter_removal_phase"] == ""
     finally:
         WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 

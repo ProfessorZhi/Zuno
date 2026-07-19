@@ -325,14 +325,34 @@ def verify_phase05_security_persistence() -> list[str]:
     ).read_text(encoding="utf-8")
     for phrase in [
         "class SecurityApprovalFactSink",
+        "LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID",
+        "LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE = \"PHASE16\"",
+        "WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID",
         "security_approval_sink",
         "_record_security_approval_fact",
+        "approval_decision_ref",
+        "approval_adapter_ref",
+        "approval_adapter_removal_phase",
         "prepared_action_hash",
         "approved_before_effect",
         "failed_closed_before_effect",
     ]:
         if phrase not in tool_runtime:
             errors.append(f"tool runtime missing Security approval fact sink phrase: {phrase}")
+
+    legacy_boolean_owner_locations: list[str] = []
+    for path in (REPO_ROOT / "src" / "backend" / "zuno").rglob("*.py"):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        source = path.read_text(encoding="utf-8")
+        if "approved: bool" not in source:
+            continue
+        if rel != "src/backend/zuno/capability/runtime.py":
+            legacy_boolean_owner_locations.append(rel)
+    if legacy_boolean_owner_locations:
+        errors.append(
+            "legacy approval boolean owner exists outside ToolRuntimeRequest adapter: "
+            f"{legacy_boolean_owner_locations!r}"
+        )
 
     workspace_runtime = (
         REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_task_runtime.py"
@@ -347,6 +367,9 @@ def verify_phase05_security_persistence() -> list[str]:
         "artifact.download",
         "citation.read",
         "task.resume.",
+        "WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID",
+        "security-approval-decision:{task_id}:",
+        "approval_decision_ref",
         "build_default_tool_control_plane_runtime(",
         "security_approval_sink=sink",
     ]:
@@ -469,6 +492,8 @@ def verify_phase05_security_persistence() -> list[str]:
         "test_workspace_artifact_download_returns_403_when_security_reauthorization_denies",
         "test_workspace_task_approval_resume_reauthorizes_through_security_guard",
         "test_workspace_task_approval_resume_returns_403_when_security_guard_denies",
+        "approval_decision_ref",
+        "workspace.approval_decision_ref",
         "artifact.read",
         "artifact.download",
         "task.resume.approved",

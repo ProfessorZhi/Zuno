@@ -40,6 +40,11 @@ class SecurityApprovalFactSink(Protocol):
         ...
 
 
+LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID = "temporary.adapter.tool_runtime.approved_bool"
+LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE = "PHASE16"
+WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID = "workspace.approval_decision_ref"
+
+
 @dataclass(frozen=True, slots=True)
 class ToolRuntimeRequest:
     tool_id: str
@@ -50,6 +55,9 @@ class ToolRuntimeRequest:
     trace_id: str
     model_intent: str
     approved: bool = False
+    approval_decision_ref: str = ""
+    approval_adapter_ref: str = ""
+    approval_adapter_removal_phase: str = ""
     approval_comment: str = ""
     runtime_state: Any | None = None
     tool_request_id: str = field(default_factory=lambda: f"toolreq_{uuid4().hex[:12]}")
@@ -696,6 +704,9 @@ class ToolControlPlaneRuntime:
                 "tool_id": manifest.tool_id,
                 "tool_request_id": request.tool_request_id,
                 "approval_id": request.approval_id,
+                "approval_decision_ref": _approval_decision_ref(request),
+                "approval_adapter_ref": _approval_adapter_ref(request),
+                "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
                 "task_id": request.task_id,
                 "trace_id": request.trace_id,
                 "required_approval": f"tool:{manifest.tool_id}",
@@ -725,6 +736,9 @@ class ToolControlPlaneRuntime:
             "tool_id": manifest.tool_id,
             "tool_request_id": request.tool_request_id,
             "approval_id": request.approval_id,
+            "approval_decision_ref": _approval_decision_ref(request),
+            "approval_adapter_ref": _approval_adapter_ref(request),
+            "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
             "workspace_id": request.workspace_id,
             "user_id": request.user_id,
             "task_id": request.task_id,
@@ -922,6 +936,30 @@ def _redact_approval_comment(comment: str) -> str:
     return re.sub(r"\braw-secret\b", "[REDACTED_SECRET]", redacted, flags=re.I)
 
 
+def _approval_decision_ref(request: ToolRuntimeRequest) -> str:
+    if request.approval_decision_ref:
+        return request.approval_decision_ref
+    if request.approved:
+        return f"{LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID}:{request.approval_id}"
+    return ""
+
+
+def _approval_adapter_ref(request: ToolRuntimeRequest) -> str:
+    if request.approval_adapter_ref:
+        return request.approval_adapter_ref
+    if request.approved:
+        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID
+    return ""
+
+
+def _approval_adapter_removal_phase(request: ToolRuntimeRequest) -> str:
+    if request.approval_adapter_removal_phase:
+        return request.approval_adapter_removal_phase
+    if request.approved and not request.approval_decision_ref:
+        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE
+    return ""
+
+
 def _hash_payload(payload: Any) -> str:
     encoded = json.dumps(
         payload,
@@ -943,5 +981,8 @@ __all__ = [
     "ToolRuntimeExecutionResult",
     "ToolRuntimeRequest",
     "ToolSandboxContext",
+    "LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID",
+    "LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE",
+    "WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID",
     "build_default_tool_control_plane_runtime",
 ]
