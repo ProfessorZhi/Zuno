@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
@@ -26,3 +27,22 @@ def test_model_gateway_bypass_strict_mode_documents_current_blocker() -> None:
     errors = verifier.verify_model_gateway_bypass(strict=True)
     assert errors
     assert any("provider SDK bypass remains" in error for error in errors)
+
+
+def test_extract_helper_uses_gateway_boundary_without_import_side_effects() -> None:
+    verifier = _load_verifier()
+    extract_path = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "common" / "extract.py"
+    relative_path = "src/backend/zuno/platform/common/extract.py"
+
+    assert relative_path not in verifier.current_bypass_inventory()
+
+    tree = ast.parse(extract_path.read_text(encoding="utf-8"))
+    top_level_asyncio_run = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Attribute)
+        and node.value.func.attr == "run"
+    ]
+    assert top_level_asyncio_run == []

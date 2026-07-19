@@ -550,3 +550,28 @@ PHASE07 bypass inventory guard available
 phase closure not approved
 remaining: migrate listed bypass paths into Gateway-owned adapters, then pass --strict
 ```
+
+## PHASE07 Model Gateway Bypass Migration 001
+
+已迁移一个直接 Provider SDK 绕行：
+
+```text
+src/backend/zuno/platform/common/extract.py
+```
+
+该文件原本在模块顶层直接构造 `ChatOpenAI`，并在 import-time 执行 `asyncio.run(main())`。现已改为只通过 `build_default_model_gateway().get_chat_model(...)` 获取 chat model；demo 执行入口移动到 `if __name__ == "__main__"`，普通导入只保留代码块提取工具和显式 helper。
+
+同步更新：
+
+```text
+.agent/programs/work-products/phase07-provider-bypass-inventory.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+Status:
+
+```text
+PHASE07 bypass count reduced from 12 to 11
+phase closure not approved
+remaining: migrate the other listed bypass paths, then pass verify_model_gateway_bypass.py --strict
+```

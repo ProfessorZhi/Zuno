@@ -1,57 +1,59 @@
+from __future__ import annotations
+
 import asyncio
-import os
+import re
+from collections.abc import Mapping
+from typing import Any
 
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessageChunk
-from langchain_openai import ChatOpenAI
-from langgraph.config import get_stream_writer
+
+from zuno.platform.model_gateway import ModelGateway, build_default_model_gateway
+from zuno.platform.model_roles import ModelRole
+
+
+BACKTICK_PATTERN = r"(?:^|\n)```(.*?)(?:```(?:\n|$))"
 
 
 def get_weather(city: str) -> str:
     """Get weather for a given city."""
-
     return f"It's always sunny in {city}!"
 
-MODEL_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.deepseek.com")
-MODEL_NAME = os.getenv("OPENAI_MODEL", "deepseek-v4-flash")
-MODEL_KWARGS = {}
-if "deepseek.com" in MODEL_BASE_URL.lower() and MODEL_NAME.lower().startswith("deepseek-v4"):
-    MODEL_KWARGS["extra_body"] = {"thinking": {"type": "disabled"}}
 
-agent = create_agent(
-    model=ChatOpenAI(
-        base_url=MODEL_BASE_URL,
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-        model=MODEL_NAME,
-        **MODEL_KWARGS,
-    ),
-    tools=[get_weather],
-)
-async def main():
-    messages = []
+def build_weather_agent(
+    *,
+    gateway: ModelGateway | None = None,
+    binding: Mapping[str, Any] | None = None,
+):
+    model_gateway = gateway or build_default_model_gateway()
+    chat_model = model_gateway.get_chat_model(
+        binding=dict(binding or {}),
+        role=ModelRole.EXECUTOR,
+    )
+    return create_agent(
+        model=chat_model,
+        tools=[get_weather],
+    )
+
+
+async def run_weather_agent_demo(
+    city: str = "SF",
+    *,
+    gateway: ModelGateway | None = None,
+    binding: Mapping[str, Any] | None = None,
+) -> list[Any]:
+    agent = build_weather_agent(gateway=gateway, binding=binding)
+    messages: list[Any] = []
     async for token, metadata in agent.astream(
-        {"messages": [{"role": "user", "content": "What is the weather in SF?"}]},
+        {"messages": [{"role": "user", "content": f"What is the weather in {city}?"}]},
         stream_mode=["messages", "updates", "values"],
     ):
-        print(metadata)
-
         if token == "values":
             messages = metadata.get("messages", [])
         if token == "messages":
             if isinstance(metadata[0], AIMessageChunk) and metadata[0].content:
-                print("xxxxxx")
                 break
-    print(messages)
-    # print(metadata)
-        # print(f"node: {metadata['langgraph_node']}")
-        # print(f"content: {token.content_blocks}")
-        # print("\n")
-
-asyncio.run(main())
-
-import re
-
-BACKTICK_PATTERN = r"(?:^|\n)```(.*?)(?:```(?:\n|$))"
+    return messages
 
 
 def extract_and_combine_codeblocks(text: str) -> str:
@@ -86,27 +88,22 @@ def extract_and_combine_codeblocks(text: str) -> str:
 
         print('world')
     """
-    # Find all code blocks in the text using regex
-    # Pattern matches anything between triple backticks, with or without a language identifier
     code_blocks = re.findall(BACKTICK_PATTERN, text, re.DOTALL)
 
     if not code_blocks:
         return ""
 
-    # Process each codeblock
     processed_blocks = []
     for block in code_blocks:
-        # Strip leading and trailing whitespace
         block = block.strip()
-
-        # If the first line looks like a language identifier, remove it
         lines = block.split("\n")
         if lines and (not lines[0].strip() or " " not in lines[0].strip()):
-            # First line is empty or likely a language identifier (no spaces)
             block = "\n".join(lines[1:])
 
         processed_blocks.append(block)
 
-    # Combine all codeblocks with newlines between them
-    combined_code = "\n\n".join(processed_blocks)
-    return combined_code
+    return "\n\n".join(processed_blocks)
+
+
+if __name__ == "__main__":
+    asyncio.run(run_weather_agent_demo())
