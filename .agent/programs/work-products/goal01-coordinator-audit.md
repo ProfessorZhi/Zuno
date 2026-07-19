@@ -804,3 +804,30 @@ verify_model_gateway_bypass.py --strict expected to pass
 phase closure not approved
 remaining: complete broader PHASE07 runtime closure evidence and dependency gates for PHASE05/PHASE06
 ```
+
+## PHASE07 Model Gateway Guard Tightening 011
+
+已收紧 PHASE07 cutover 后的遗留放行面：
+
+```text
+tools/scripts/verify_model_gateway_boundaries.py
+.agent/programs/work-products/temporary-allowlist.yaml
+tests/repo/test_model_gateway_bypass.py
+```
+
+变更内容：
+
+```text
+已迁移的 Provider SDK path 不再出现在 Model Gateway boundary legacy allowlist。
+PHASE02 temporary allowlist 保留 PHASE01 inventory path 集合，但已完成 cutover 的条目从 active direct_provider_sdk 放行改为 resolved_provider_sdk_cutover 记录。
+新增测试确保这些 path 不会重新被 legacy boundary 或 active direct_provider_sdk allowlist 放行。
+RAG embedding 不再直接调用 ModelManager.get_model_config，改为通过 Gateway-owned embedding adapter builder 解析配置。
+```
+
+Status:
+
+```text
+PHASE07 provider bypass guard hardened after strict-zero cutover
+phase closure not approved
+remaining: complete broader PHASE07 runtime closure evidence and dependency gates for PHASE05/PHASE06
+```

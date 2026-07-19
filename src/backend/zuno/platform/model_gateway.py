@@ -1237,6 +1237,28 @@ class OpenAIEmbeddingGatewayAdapter:
         return [response.embedding for response in responses.data]
 
 
+def build_openai_embedding_gateway_adapter(config_override: Any = None) -> OpenAIEmbeddingGatewayAdapter:
+    from zuno.core.models.manager import ModelManager
+
+    config = _normalize_embedding_config_override(config_override) or ModelManager.get_model_config(
+        "embedding",
+        "Embedding model",
+    )
+    return OpenAIEmbeddingGatewayAdapter(
+        api_key=config.api_key,
+        base_url=config.base_url,
+        model=config.model_name,
+    )
+
+
+def _normalize_embedding_config_override(config_override: Any) -> Any:
+    if not config_override:
+        return None
+    if hasattr(config_override, "model_name"):
+        return config_override
+    return type("EmbeddingConfig", (), config_override)()
+
+
 class OpenAIChatCompletionsGatewayAdapter:
     """Provider SDK adapter for OpenAI-compatible chat completions inside the Gateway boundary."""
 
@@ -3580,6 +3602,7 @@ __all__ = [
     "ProductStreamEvent",
     "ProviderStreamChunk",
     "build_default_model_gateway",
+    "build_openai_embedding_gateway_adapter",
     "build_openai_chat_gateway_model",
     "is_openai_well_known_tool",
 ]

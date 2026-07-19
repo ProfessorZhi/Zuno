@@ -8,10 +8,38 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_model_gateway_bypass.py"
+BOUNDARY_VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_model_gateway_boundaries.py"
+TEMPORARY_ALLOWLIST = REPO_ROOT / ".agent" / "programs" / "work-products" / "temporary-allowlist.yaml"
+MIGRATED_PROVIDER_PATHS = {
+    "src/backend/zuno/agent/core/models/anthropic.py",
+    "src/backend/zuno/agent/core/models/embedding.py",
+    "src/backend/zuno/agent/core/models/manager.py",
+    "src/backend/zuno/agent/core/models/reason_model.py",
+    "src/backend/zuno/agent/core/models/tool_call.py",
+    "src/backend/zuno/agent/core/models/usage_model.py",
+    "src/backend/zuno/capability/tools/resume_optimizer/action.py",
+    "src/backend/zuno/platform/common/extract.py",
+    "src/backend/zuno/platform/services/autobuild/client.py",
+    "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+    "src/backend/zuno/platform/services/mcp_openai/strict_schema.py",
+    "src/backend/zuno/platform/services/rag/embedding.py",
+}
+ALLOWLIST_TRACKED_MIGRATED_PROVIDER_PATHS = MIGRATED_PROVIDER_PATHS - {
+    "src/backend/zuno/platform/services/mcp_openai/strict_schema.py",
+}
 
 
 def _load_verifier():
     spec = spec_from_file_location("verify_model_gateway_bypass", VERIFIER)
+    assert spec is not None
+    assert spec.loader is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_boundary_verifier():
+    spec = spec_from_file_location("verify_model_gateway_boundaries", BOUNDARY_VERIFIER)
     assert spec is not None
     assert spec.loader is not None
     module = module_from_spec(spec)
@@ -27,6 +55,19 @@ def test_model_gateway_bypass_inventory_is_locked_until_cutover() -> None:
 def test_model_gateway_bypass_strict_mode_passes_after_cutover() -> None:
     verifier = _load_verifier()
     assert verifier.verify_model_gateway_bypass(strict=True) == []
+
+
+def test_migrated_provider_paths_are_not_allowed_as_legacy_boundaries() -> None:
+    boundary = _load_boundary_verifier()
+    allowlist_text = TEMPORARY_ALLOWLIST.read_text(encoding="utf-8")
+
+    assert boundary.ALLOWED_LEGACY_PATHS.isdisjoint(MIGRATED_PROVIDER_PATHS)
+    for path in ALLOWLIST_TRACKED_MIGRATED_PROVIDER_PATHS:
+        marker = f'  - path: "{path}"'
+        assert marker in allowlist_text
+        block = allowlist_text.split(marker, 1)[1].split("\n  - path: ", 1)[0]
+        assert 'category: "direct_provider_sdk"' not in block
+        assert 'category: "resolved_provider_sdk_cutover"' in block
 
 
 def test_extract_helper_uses_gateway_boundary_without_import_side_effects() -> None:
@@ -220,25 +261,30 @@ def test_rag_embedding_uses_gateway_owned_provider_adapter(monkeypatch) -> None:
     from zuno.services.rag import embedding as rag_embedding_module
 
     class FakeEmbeddingAdapter:
-        def __init__(self, *, api_key, base_url, model):
-            self.api_key = api_key
-            self.base_url = base_url
-            self.model = model
-
         async def embed_async(self, query):
             if isinstance(query, str):
                 return [len(query), 3.0]
             return [[len(item), 3.0] for item in query]
 
-    monkeypatch.setattr(rag_embedding_module, "OpenAIEmbeddingGatewayAdapter", FakeEmbeddingAdapter)
+    calls = []
+
+    def fake_build_openai_embedding_gateway_adapter(config_override=None):
+        calls.append(config_override)
+        return FakeEmbeddingAdapter()
+
+    monkeypatch.setattr(
+        rag_embedding_module,
+        "build_openai_embedding_gateway_adapter",
+        fake_build_openai_embedding_gateway_adapter,
+    )
 
     config = {"api_key": "key", "base_url": "https://example.test", "model_name": "embedding-model"}
-
     assert asyncio.run(rag_embedding_module.get_embedding("abc", config_override=config)) == [3, 3.0]
     assert asyncio.run(rag_embedding_module.get_embedding(["a", "abcd"], config_override=config)) == [
         [1, 3.0],
         [4, 3.0],
     ]
+    assert calls == [config, config]
 
 
 def test_model_manager_uses_gateway_chat_model_builder(monkeypatch) -> None:
