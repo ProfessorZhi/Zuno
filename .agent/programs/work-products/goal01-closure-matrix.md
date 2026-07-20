@@ -181,4 +181,17 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate C outbox publish failure test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 workspace upload production-default bootstrap：
+
+```text
+Application startup now configures WorkspaceTaskRuntimeService with PackageAProductionIngestionRuntime when production MinIO storage configuration is complete.
+The factory binds the current PostgreSQL engine, PHASE04 MinioObjectStore/DurableMinioObjectStore, and worker owner workspace.file_upload.
+Workspace /file registration therefore has a production-default path into SourceObject -> DocumentVersion -> ParsePlan -> ParseJob -> Outbox when MinIO credentials are configured.
+If MinIO config is absent or incomplete, the runtime remains unconfigured instead of silently falling back to SQLite/LocalQueue as completion evidence.
+py_compile passed.
+Package A bootstrap tests passed: 2 passed.
+Worker ObjectRef verifier fault test passed: 1 passed.
+Docker daemon and PostgreSQL localhost:5432 remain unavailable, so real Gate C MinIO/RabbitMQ/PostgreSQL E2E remains environment_blocked.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

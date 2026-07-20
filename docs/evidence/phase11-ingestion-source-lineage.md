@@ -316,3 +316,26 @@ PHASE11 completed 只能表示完整 Phase Scope 内 implementation available；
 ## 2026-07-20 Goal01 Reopen Audit
 
 本文证据保留为 PHASE11 的部分实现线索，但不再证明完整 Phase completed。剩余缺口包括真实 RabbitMQ 生产默认 dispatch/ACK/retry/DLQ/replay、生产默认 worker 接入 PostgreSQL UoW 与 PHASE04 Object Store、真实 OCR/VLM 与 Office/Layout provider 集成、Human Review task/decision/receipt 生产表与 worker 接线、完整 delete/legal hold/restore fault coverage，以及 legacy upload/parser 默认路径继续从过渡 ChunkModel 投影迁移到 IndexableDocumentSnapshot / Outbox handoff。
+
+2026-07-20 workspace upload production-default bootstrap：
+
+- `WorkspaceTaskRuntimeService.register_file(...)` 已有 Package A 分支，本次将应用启动配置接入该分支：`init_config()` 使用当前 PostgreSQL `engine` 和 `storage.mode=minio` 配置构造 `PackageAProductionIngestionRuntime`。
+- 新增 `build_package_a_production_ingestion_runtime(...)`：配置齐备时组装 PHASE04 `MinioObjectStore`、`DurableMinioObjectStore` 和 Package A runtime；配置缺失或非 MinIO 时返回 `None`，避免把本地/测试 adapter 冒充为生产默认路径。
+- 新增 `tests/api/test_workspace_package_a_production_bootstrap.py`，验证默认 factory 绑定 PostgreSQL engine、MinIO object store、Durable manifest owner `workspace.file_upload` 和 Package A runtime worker `workspace-file-upload`。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/main.py
+pytest -q tests/api/test_workspace_package_a_production_bootstrap.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A bootstrap tests passed: 2 passed
+Worker ObjectRef verifier fault test passed: 1 passed
+Gate C real MinIO/RabbitMQ/PostgreSQL E2E remains environment_blocked in this machine because Docker daemon and PostgreSQL localhost:5432 are unavailable
+```

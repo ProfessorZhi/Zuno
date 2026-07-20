@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import time
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
@@ -89,6 +89,45 @@ from zuno.platform.security import (
     SecurityProductActionRequest,
     build_product_action_hash,
 )
+from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
+
+
+def build_package_a_production_ingestion_runtime(
+    *,
+    engine: Any,
+    settings: Any,
+    worker_id: str = "workspace-file-upload",
+    object_store_factory: Callable[..., Any] = MinioObjectStore,
+    durable_object_store_factory: Callable[..., Any] = DurableMinioObjectStore,
+    runtime_factory: Callable[..., PackageAProductionIngestionRuntime] = PackageAProductionIngestionRuntime,
+) -> PackageAProductionIngestionRuntime | None:
+    storage = getattr(settings, "storage", None)
+    if storage is None or getattr(storage, "mode", None) != "minio":
+        return None
+    minio = getattr(storage, "minio", None)
+    if minio is None:
+        return None
+    endpoint = str(getattr(minio, "endpoint", "") or "").strip()
+    access_key = str(getattr(minio, "access_key_id", "") or "").strip()
+    secret_key = str(getattr(minio, "access_key_secret", "") or "").strip()
+    if not endpoint or not access_key or not secret_key:
+        return None
+    object_store = object_store_factory(
+        endpoint=endpoint,
+        access_key=access_key,
+        secret_key=secret_key,
+        secure=False,
+    )
+    durable_object_store = durable_object_store_factory(
+        store=object_store,
+        engine=engine,
+        owner="workspace.file_upload",
+    )
+    return runtime_factory(
+        engine=engine,
+        object_store=durable_object_store,
+        worker_id=worker_id,
+    )
 from zuno.schema.workspace import (
     ArtifactContract,
     FeedbackContract,
@@ -3038,4 +3077,4 @@ def _product_mode_for_retrieval(product_mode: str) -> ProductMode:
     return ProductMode.AUTO
 
 
-__all__ = ["WorkspaceTaskRuntimeService"]
+__all__ = ["WorkspaceTaskRuntimeService", "build_package_a_production_ingestion_runtime"]
