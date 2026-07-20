@@ -106,6 +106,73 @@ def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:
     assert snapshot.payload["delete_refs"] == [delete_receipt.delete_ref]
 
 
+def test_delete_during_parse_rejects_late_worker_result_by_attempt_and_fencing() -> None:
+    from zuno.knowledge.ingestion import DeleteRestoreRuntime, ParseAttemptLeaseRuntime
+
+    lease = ParseAttemptLeaseRuntime().claim(
+        parse_job_id="parse_job_delete_during_parse",
+        worker_id="worker_1",
+        attempt_no=1,
+        now=10.0,
+        ttl_seconds=30.0,
+    )
+    runtime = DeleteRestoreRuntime()
+    requested = runtime.request_delete_during_parse(
+        parse_job_id=lease.parse_job_id,
+        parse_attempt_id=lease.parse_attempt_id,
+        fencing_token=lease.fencing_token,
+        visibility_ref="visibility:workspace:file_parse_delete",
+    )
+    cleanup = runtime.request_cleanup(requested)
+    physical = runtime.mark_physical_delete(cleanup)
+    verified = runtime.verify_delete(physical)
+    rejected_current = runtime.reject_late_worker_result(
+        verified,
+        parse_attempt_id=lease.parse_attempt_id,
+        fencing_token=lease.fencing_token,
+    )
+    rejected_stale = runtime.reject_late_worker_result(
+        verified,
+        parse_attempt_id="attempt_stale",
+        fencing_token=lease.fencing_token + 1,
+    )
+
+    assert requested.snapshot_ref == f"parse_inflight:{lease.parse_job_id}"
+    assert requested.parse_job_id == lease.parse_job_id
+    assert requested.parse_attempt_id == lease.parse_attempt_id
+    assert requested.fencing_token == lease.fencing_token
+    assert "parse_inflight_delete_requested" in requested.history
+    assert verified.state == "verified"
+    assert rejected_current.late_worker_result_rejected is True
+    assert rejected_current.history[-1] == "late_worker_result_rejected"
+    assert rejected_stale.late_worker_result_rejected is True
+
+
+def test_delete_during_parse_legal_hold_blocks_cleanup_without_rejecting_active_result() -> None:
+    from zuno.knowledge.ingestion import DeleteRestoreRuntime
+
+    runtime = DeleteRestoreRuntime()
+    held = runtime.request_delete_during_parse(
+        parse_job_id="parse_job_held",
+        parse_attempt_id="attempt_held",
+        fencing_token=7,
+        visibility_ref="visibility:workspace:file_held",
+        legal_hold_ref="legal_hold:case_held",
+    )
+    cleanup = runtime.request_cleanup(held)
+    physical = runtime.mark_physical_delete(cleanup)
+    not_rejected = runtime.reject_late_worker_result(
+        physical,
+        parse_attempt_id="attempt_held",
+        fencing_token=7,
+    )
+
+    assert held.state == "legal_hold"
+    assert cleanup.state == "legal_hold"
+    assert physical.physical_delete_ref is None
+    assert not_rejected.late_worker_result_rejected is False
+
+
 def test_sqlite_store_round_trips_delete_lifecycle_receipt() -> None:
     from zuno.knowledge.ingestion import DeleteRestoreRuntime
     from zuno.knowledge.storage import DeleteLifecycleRecord, SQLiteDurableIngestionStore

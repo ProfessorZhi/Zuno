@@ -22,6 +22,9 @@ class DeleteLifecycleReceipt(BaseModel):
     snapshot_ref: str
     state: DeleteState
     visibility_ref: str
+    parse_job_id: str | None = None
+    parse_attempt_id: str | None = None
+    fencing_token: int | None = None
     cleanup_ref: str | None = None
     physical_delete_ref: str | None = None
     verification_ref: str | None = None
@@ -68,6 +71,42 @@ class DeleteRestoreRuntime:
             history=history,
         )
 
+    def request_delete_during_parse(
+        self,
+        *,
+        parse_job_id: str,
+        parse_attempt_id: str,
+        fencing_token: int,
+        visibility_ref: str,
+        snapshot_ref: str | None = None,
+        legal_hold_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
+        if fencing_token <= 0:
+            raise ValueError("fencing_token must be positive")
+        requested = self.request_delete(
+            snapshot_ref=snapshot_ref or f"parse_inflight:{parse_job_id}",
+            visibility_ref=visibility_ref,
+            legal_hold_ref=legal_hold_ref,
+        )
+        return requested.model_copy(
+            update={
+                "parse_job_id": parse_job_id,
+                "parse_attempt_id": parse_attempt_id,
+                "fencing_token": fencing_token,
+                "history": [*requested.history, "parse_inflight_delete_requested"],
+                "receipt_hash": _hash(
+                    {
+                        "delete_ref": requested.delete_ref,
+                        "parse_job_id": parse_job_id,
+                        "parse_attempt_id": parse_attempt_id,
+                        "fencing_token": fencing_token,
+                        "visibility_ref": visibility_ref,
+                        "state": requested.state,
+                    }
+                ),
+            }
+        )
+
     def request_cleanup(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
         if receipt.legal_hold_ref:
             return receipt
@@ -103,8 +142,25 @@ class DeleteRestoreRuntime:
             }
         )
 
-    def reject_late_worker_result(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
-        return receipt.model_copy(update={"late_worker_result_rejected": True})
+    def reject_late_worker_result(
+        self,
+        receipt: DeleteLifecycleReceipt,
+        *,
+        parse_attempt_id: str | None = None,
+        fencing_token: int | None = None,
+    ) -> DeleteLifecycleReceipt:
+        if parse_attempt_id is not None and parse_attempt_id != receipt.parse_attempt_id:
+            return receipt.model_copy(update={"late_worker_result_rejected": True})
+        if fencing_token is not None and receipt.fencing_token is not None and fencing_token != receipt.fencing_token:
+            return receipt.model_copy(update={"late_worker_result_rejected": True})
+        if receipt.state in {"visibility_revoked", "cleanup_requested", "physically_deleted", "verified", "restored"}:
+            return receipt.model_copy(
+                update={
+                    "late_worker_result_rejected": True,
+                    "history": [*receipt.history, "late_worker_result_rejected"],
+                }
+            )
+        return receipt
 
     def restore(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
         return receipt.model_copy(
