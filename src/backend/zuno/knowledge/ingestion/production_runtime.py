@@ -228,6 +228,17 @@ class PackageAProductionIngestionRuntime:
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery tenant header does not match envelope")
         payload = envelope.payload or {}
+        header_security_epoch_ref = delivery.headers.get("security_epoch_ref")
+        envelope_security_epoch_ref = envelope.effective_security_epoch_ref
+        payload_security_epoch_ref = payload.get("security_epoch_ref")
+        if (
+            header_security_epoch_ref is None
+            or envelope_security_epoch_ref is None
+            or str(header_security_epoch_ref) != str(envelope_security_epoch_ref)
+            or str(payload_security_epoch_ref) != str(envelope_security_epoch_ref)
+        ):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery security epoch header does not match envelope")
         parse_job_id = str(payload["parse_job_id"])
         tenant_id = envelope.tenant_id
         try:

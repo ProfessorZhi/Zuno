@@ -86,6 +86,10 @@ def test_outbox_publisher_fixed_tenant_rejects_mismatch() -> None:
     asyncio.run(_assert_outbox_publisher_fixed_tenant_rejects_mismatch())
 
 
+def test_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_header() -> None:
+    asyncio.run(_assert_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_header())
+
+
 def test_queue_runner_defaults_to_package_a_ingestion_worker(monkeypatch) -> None:
     from zuno.platform.services.queue import runner
 
@@ -356,3 +360,45 @@ async def _assert_outbox_publisher_fixed_tenant_rejects_mismatch() -> None:
         assert "tenant does not match" in str(exc)
     else:
         raise AssertionError("mismatched tenant outbox record was not rejected")
+
+
+async def _assert_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_header() -> None:
+    published: list[dict] = []
+
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            published.append(kwargs)
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-security-epoch",
+    )
+    await publisher._publish_record(
+        OutboxEventRecord(
+            event_id="event-security-epoch",
+            aggregate_id="job-security-epoch",
+            topic="ingestion.parse.requested",
+            payload={
+                "effective_security_epoch_ref": "security-epoch-a",
+                "payload": {
+                    "parse_job_id": "job-security-epoch",
+                    "security_epoch_ref": "security-epoch-a",
+                },
+            },
+            payload_hash="hash",
+            idempotency_key="tenant-a:parse:job-security-epoch",
+            claim_owner="phase11-package-a-outbox-dispatcher",
+            tenant_id="tenant-a",
+            ordering_key="job-security-epoch",
+            ordering_sequence=1,
+            publish_attempts=0,
+            retry_count=0,
+            replay_count=0,
+        )
+    )
+
+    assert published[0]["security_epoch_ref"] == "security-epoch-a"

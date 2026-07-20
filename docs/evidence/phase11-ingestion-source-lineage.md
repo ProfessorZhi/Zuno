@@ -796,3 +796,23 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery settlement and queue worker tests passed: 20 passed
 ```
+
+2026-07-20 Package A RabbitMQ Security Epoch header contract：
+
+- `PostgresOutboxRabbitMQPublisher` 现在从 CrossModuleEnvelope 的 `effective_security_epoch_ref`（或 payload fallback）提取 `security_epoch_ref`，并交给 `RabbitMQTransport.publish(...)` 写入 RabbitMQ headers。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在进入 PostgreSQL Worker Inbox 和 ParseAttempt 事务前校验 RabbitMQ header、Envelope `effective_security_epoch_ref`、payload `security_epoch_ref` 三者一致；缺失或不一致时 reject 且不 requeue。
+- 这把 PHASE11 Package A 的 Security Epoch 校验从 payload/lineage 层前移到队列交付边界，防止错误重放或跨安全纪元投递进入领域事务。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/queue/rabbitmq.py src/backend/zuno/platform/queue/outbox.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and queue worker tests passed: 22 passed
+```

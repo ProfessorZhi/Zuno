@@ -438,4 +438,15 @@ Package A delivery settlement and queue worker tests passed: 20 passed.
 PHASE11 remains in_progress; this is Package A worker receipt replay implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A RabbitMQ Security Epoch header contract：
+
+```text
+RabbitMQTransport.publish now accepts security_epoch_ref and writes it to message headers.
+PostgresOutboxRabbitMQPublisher maps CrossModuleEnvelope effective_security_epoch_ref into that RabbitMQ header when publishing outbox records.
+PackageAProductionIngestionRuntime rejects deliveries before Worker Inbox / ParseAttempt transaction if RabbitMQ header, envelope effective_security_epoch_ref, and payload security_epoch_ref do not match.
+py_compile passed.
+Package A delivery settlement and queue worker tests passed: 22 passed.
+PHASE11 remains in_progress; this is Package A RabbitMQ Security Epoch boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

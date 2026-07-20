@@ -151,6 +151,20 @@ def test_package_a_rejects_wrong_consumer_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
 
 
+def test_package_a_rejects_security_epoch_header_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={
+                "parse_job_id": "job-1",
+                "security_epoch_ref": "security-epoch-a",
+            }
+        )
+    )
+    delivery.headers["security_epoch_ref"] = "security-epoch-b"
+
+    _assert_rejected_parse_delivery(delivery, "delivery security epoch header does not match envelope")
+
+
 def test_package_a_lineage_validator_requires_payload_to_match_postgres_context() -> None:
     payload = _lineage_payload()
     context = _lineage_context()
@@ -281,6 +295,10 @@ def _envelope(
     consumer_module: str = PACKAGE_A_PARSE_CONSUMER_MODULE,
 ) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
+    payload = {
+        "security_epoch_ref": "security-epoch-a",
+        **payload,
+    }
     return CrossModuleEnvelopeV1(
         contract_name=contract_name,
         contract_version="v1",
@@ -296,6 +314,7 @@ def _envelope(
         aggregate_id="job-1",
         trace_id="trace-1",
         data_classification="internal",
+        effective_security_epoch_ref=str(payload.get("security_epoch_ref", "security-epoch-a")),
         occurred_at=now,
         created_at=now,
         payload=payload,
@@ -306,7 +325,10 @@ def _envelope(
 
 def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDelivery:
     delivery = _RecordingDelivery()
-    delivery.headers = {"tenant_id": envelope.tenant_id}
+    delivery.headers = {
+        "tenant_id": envelope.tenant_id,
+        "security_epoch_ref": envelope.effective_security_epoch_ref,
+    }
     delivery.payload = {
         "aggregate_id": envelope.aggregate_id,
         "event_id": envelope.message_id,
