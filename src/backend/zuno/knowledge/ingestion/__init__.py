@@ -54,6 +54,14 @@ from .source_object_commit import (
     SourceObjectCommitReceipt,
     SourceObjectCommitRuntime,
 )
+from .source_object_upload import (
+    SourceObjectConflictError,
+    SourceObjectStagedUpload,
+    SourceObjectUploadError,
+    SourceObjectUploadPlan,
+    SourceObjectUploadReceipt,
+    SourceObjectUploadRuntime,
+)
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -107,6 +115,12 @@ __all__ = [
     "SourceObjectCommitError",
     "SourceObjectCommitReceipt",
     "SourceObjectCommitRuntime",
+    "SourceObjectConflictError",
+    "SourceObjectStagedUpload",
+    "SourceObjectUploadError",
+    "SourceObjectUploadPlan",
+    "SourceObjectUploadReceipt",
+    "SourceObjectUploadRuntime",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "build_source_span_provenance",

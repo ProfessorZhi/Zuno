@@ -12,10 +12,12 @@ infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py
 src/backend/zuno/platform/database/schema_registry.py
 src/backend/zuno/platform/database/ingestion/persistence.py
 src/backend/zuno/knowledge/ingestion/source_object_commit.py
+src/backend/zuno/knowledge/ingestion/source_object_upload.py
 tools/scripts/verify_phase11_ingestion_source_lineage.py
 tests/repo/test_phase11_ingestion_source_lineage.py
 tests/integration/test_phase11_ingestion_persistence_runtime.py
 tests/knowledge/test_ingestion_source_object_commit.py
+tests/knowledge/test_ingestion_source_object_upload.py
 docs/evidence/input-runtime-batch.md
 ```
 
@@ -24,7 +26,9 @@ docs/evidence/input-runtime-batch.md
 - Migration 串接到 `20260719_17`，避免产生第二个 Alembic head。
 - `ingestion_*` 表统一归属 `Input / Document Ingestion`。
 - SourceObject 保留 object manifest、hash、classification 和 security epoch。
+- `SourceObjectUploadRuntime` 当前提供 PHASE11 upload init/stage/commit 编排：根据 tenant/workspace/source 构造 PHASE04 object path，拒绝路径穿越，上传内容在进入 PHASE04 durable object store 之前校验 hash 与 size，partial upload 与 hash mismatch 不会 stage/commit；提交后只保留 `s3://` ObjectRef，不把大 payload 保存进 SourceObject。
 - `SourceObjectCommitRuntime` 消费 PHASE04 `ObjectStoreReceipt`，只接受 visible object receipt，并校验 object manifest ref、tenant/workspace object prefix、hash、size、mime type、classification 与 security epoch 后生成 PHASE11 `SourceObjectRecord`。
+- SourceObject upload runtime 当前覆盖同一 tenant/workspace/source 的 immutable hash guard；相同 SourceObject 重复提交和同 tenant/workspace 相同 hash 的重复内容会返回 deduplicated receipt，不创建第二套对象事实源。
 - DocumentVersion 与 ParseSnapshot 分离；ParseSnapshot 绑定 ParseJob、ParseAttempt 和 DocumentVersion。
 - ParseAttempt 持久化 lease、fencing token、attempt number 和状态。
 - SourceSpan 可回溯到 ParseSnapshot 与 DocumentVersion。
@@ -51,6 +55,7 @@ docs/evidence/input-runtime-batch.md
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
 pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
+pytest -q tests/knowledge/test_ingestion_source_object_upload.py tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
 pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_document_ingestion_contract.py -p no:cacheprovider
 pytest -q tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider
