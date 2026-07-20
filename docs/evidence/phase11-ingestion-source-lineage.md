@@ -1172,6 +1172,28 @@ Package A delivery settlement, retry boundary, and queue worker tests passed: 40
 Package A retry header counter mismatch integration/fault test passed: 1 passed
 ```
 
+2026-07-20 Package A producer lineage pre-Inbox gate：
+
+- `PackageAProductionIngestionRuntime._validate_delivery_producer_lineage(...)` 现在要求初次 parse-request delivery 来自 `workspace.file_upload`，retry parse-request delivery 来自 `ingestion.parser_worker`。
+- 该 gate 防止 Workspace/File Upload 与 Parser Worker 的事实 Owner 边界被伪造，例如带 retry payload 的 delivery 仍声称由 upload producer 生成。
+- 新增 integration/fault 测试覆盖 retry delivery producer mismatch，拒绝发生在 Worker Inbox / PostgreSQL UoW 之前。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/__init__.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_package_a_rejects_retry_upload_producer_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, retry boundary, and queue worker tests passed: 42 passed
+Package A retry producer mismatch integration/fault test passed: 1 passed
+```
+
 2026-07-20 Package A buffered Inbox commit-before-no-ACK boundary：
 
 - `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 PostgreSQL UoW 内记录 PHASE04 Worker Inbox receipt 后，若 Inbox 返回 `status=buffered` 且 `processable=false`，会让 UoW 正常退出并提交 receipt，再抛出 `IngestionPersistenceError`。

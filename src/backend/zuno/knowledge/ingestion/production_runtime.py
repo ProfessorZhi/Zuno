@@ -21,6 +21,8 @@ from zuno.platform.storage.durable import DurableMinioObjectStore
 
 PACKAGE_A_PARSE_CONTRACT_NAME = "zuno.ingestion.parse.requested"
 PACKAGE_A_PARSE_CONSUMER_MODULE = "ingestion.parser_worker"
+PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE = "workspace.file_upload"
+PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE = "ingestion.parser_worker"
 PACKAGE_A_PARSE_REQUESTED_TOPIC = "ingestion.parse.requested"
 
 
@@ -290,6 +292,7 @@ class PackageAProductionIngestionRuntime:
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
             self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)
+            self._validate_delivery_producer_lineage(payload=payload, envelope=envelope)
         except PackageARejectDeliveryError:
             await delivery.reject(requeue=False)
             raise
@@ -843,6 +846,23 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: causation_id")
         if envelope.idempotency_key != expected_idempotency_key:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: idempotency_key")
+
+    @staticmethod
+    def _validate_delivery_producer_lineage(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> None:
+        retry_fields = {
+            "retry_attempt_no",
+            "retry_parent_attempt_id",
+            "retry_parent_message_id",
+            "retry_parent_idempotency_key",
+        }
+        is_retry_delivery = any(payload.get(field_name) is not None for field_name in retry_fields)
+        expected_producer = (
+            PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE
+            if is_retry_delivery
+            else PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE
+        )
+        if envelope.producer_module != expected_producer:
+            raise PackageARejectDeliveryError("delivery producer lineage mismatch")
 
     @staticmethod
     def _validate_delivery_outbox_headers(

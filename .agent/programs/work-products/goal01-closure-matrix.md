@@ -655,4 +655,16 @@ Package A retry header counter mismatch integration/fault test passed: 1 passed.
 PHASE11 remains in_progress; this is Package A RabbitMQ retry lineage-boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A producer lineage pre-Inbox gate：
+
+```text
+PackageAProductionIngestionRuntime now validates producer lineage before Worker Inbox.
+Initial parse-request deliveries must come from workspace.file_upload; retry parse-request deliveries must come from ingestion.parser_worker.
+The integration/fault test proves a retry payload from workspace.file_upload is rejected before IngestionUnitOfWork.
+py_compile passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 42 passed.
+Package A retry producer mismatch integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A producer lineage-boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

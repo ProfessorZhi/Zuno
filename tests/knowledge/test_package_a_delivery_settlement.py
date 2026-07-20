@@ -8,7 +8,9 @@ import pytest
 from zuno.knowledge.ingestion import (
     PACKAGE_A_PARSE_CONSUMER_MODULE,
     PACKAGE_A_PARSE_CONTRACT_NAME,
+    PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE,
     PACKAGE_A_PARSE_REQUESTED_TOPIC,
+    PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE,
     PackageAProductionIngestionRuntime,
     PackageAParserIdentityError,
     PackageARejectDeliveryError,
@@ -183,6 +185,38 @@ def test_package_a_rejects_wrong_consumer_without_requeue() -> None:
     )
 
     _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
+
+
+def test_package_a_rejects_initial_delivery_from_worker_producer_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={"parse_job_id": "job-1"},
+            producer_module=PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE,
+        )
+    )
+
+    _assert_rejected_parse_delivery(delivery, "delivery producer lineage mismatch")
+
+
+def test_package_a_rejects_retry_delivery_from_upload_producer_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={
+                "parse_job_id": "job-1",
+                "retry_attempt_no": 2,
+                "retry_parent_attempt_id": "job-1:attempt:1",
+                "retry_parent_message_id": "event-1",
+                "retry_parent_idempotency_key": "idem-1",
+            },
+            message_id="outbox:job-1:retry:2",
+            causation_id="event-1",
+            idempotency_key="idem-1:retry:2",
+            producer_module=PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE,
+        )
+    )
+    delivery.headers["outbox_retry_count"] = 1
+
+    _assert_rejected_parse_delivery(delivery, "delivery producer lineage mismatch")
 
 
 def test_package_a_rejects_security_epoch_header_mismatch_without_requeue() -> None:
@@ -509,6 +543,10 @@ def _envelope(
     payload: dict,
     contract_name: str = PACKAGE_A_PARSE_CONTRACT_NAME,
     consumer_module: str = PACKAGE_A_PARSE_CONSUMER_MODULE,
+    producer_module: str = PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE,
+    message_id: str = "event-1",
+    causation_id: str | None = None,
+    idempotency_key: str = "idem-1",
 ) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
@@ -520,13 +558,14 @@ def _envelope(
         contract_name=contract_name,
         contract_version="v1",
         contract_bundle_version="phase11-package-a",
-        message_id="event-1",
-        producer_module="workspace.file_upload",
+        message_id=message_id,
+        producer_module=producer_module,
         consumer_module=consumer_module,
         tenant_id="tenant-a",
         workspace_id="workspace-a",
+        causation_id=causation_id,
         correlation_id="trace-1",
-        idempotency_key="idem-1",
+        idempotency_key=idempotency_key,
         aggregate_type="ParseJob",
         aggregate_id="job-1",
         trace_id="trace-1",
@@ -542,6 +581,7 @@ def _envelope(
 
 def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDelivery:
     delivery = _RecordingDelivery()
+    delivery.message_id = envelope.message_id
     delivery.headers = {
         "tenant_id": envelope.tenant_id,
         "security_epoch_ref": envelope.effective_security_epoch_ref,
