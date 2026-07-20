@@ -68,6 +68,7 @@ class PackageAWorkerReceipt:
     parse_attempt_id: str | None
     status: str
     acked_after_domain_commit: bool
+    retry_enqueued_after_domain_commit: bool = False
     indexable_snapshot_id: str | None = None
     outbox_event_id: str | None = None
     dead_letter_id: str | None = None
@@ -204,180 +205,209 @@ class PackageAProductionIngestionRuntime:
                 tenant_id=tenant_id,
             )
             if not inbox.processable:
-                await delivery.ack()
-                return PackageAWorkerReceipt(
+                worker_receipt = PackageAWorkerReceipt(
                     parse_job_id=parse_job_id,
                     parse_attempt_id=None,
                     status="duplicate",
                     acked_after_domain_commit=True,
                     duplicate_delivery=True,
                 )
-            context = repo.load_parse_job_context(parse_job_id=parse_job_id, tenant_id=tenant_id)
-            attempt = repo.claim_parse_attempt_lease(
-                tenant_id=tenant_id,
-                workspace_id=str(context["workspace_id"]),
-                source_object_id=str(context["source_object_id"]),
-                document_version_id=str(context["document_version_id"]),
-                parse_plan_id=str(context["parse_plan_id"]),
-                parse_job_id=parse_job_id,
-                worker_id=self.worker_id,
-                idempotency_key=f"{context['idempotency_key']}:attempt:{int(context['attempt_count']) + 1}",
-                security_epoch_ref=str(context["security_epoch_ref"]),
-                lease_ttl_seconds=self.lease_ttl_seconds,
-            )
-            parse_attempt_id = attempt.ref
-            fencing_token = int(attempt.payload_hash or "0")
-            repo.mark_parse_attempt_running(
-                parse_attempt_id=parse_attempt_id,
-                parse_job_id=parse_job_id,
-                tenant_id=tenant_id,
-                worker_id=self.worker_id,
-                fencing_token=fencing_token,
-            )
-            source_bytes = self._read_and_verify_object(context)
-            request = ParseDocumentRequest(
-                document_id=str(context["source_object_id"]),
-                source_id=str(context["source_object_id"]),
-                document_version_id=str(context["document_version_id"]),
-                parse_plan_id=str(context["parse_plan_id"]),
-                parse_job_id=parse_job_id,
-                parse_attempt_id=parse_attempt_id,
-                parse_idempotency_key=str(context["idempotency_key"]),
-                source_object_ref=str(context["storage_uri"]),
-                source_object_manifest={
-                    "object_manifest_ref": context["object_manifest_ref"],
-                    "content_hash": context["source_sha256"],
-                    "size_bytes": context["size_bytes"],
-                    "parser_policy_ref": payload.get("parser_policy_ref"),
-                    "lineage_ref": f"lineage:{context['source_object_id']}:{context['document_version_id']}",
-                    "workspace_id": context["workspace_id"],
-                    "classification_ref": context["classification_ref"],
-                    "security_epoch_ref": context["security_epoch_ref"],
-                },
-                workspace_id=str(context["workspace_id"]),
-                source_uri=str(context["storage_uri"]),
-                mime_type=str(context["mime_type"]),
-                source_bytes=source_bytes,
-                hash=str(context["source_sha256"]),
-                security_policy_ref=payload.get("security_decision_ref"),
-                security_epoch_ref=str(context["security_epoch_ref"]),
-            )
-            result = ParseGateway.submit_parse_job(request)
-            snapshot = ParseGateway.get_job_snapshot(result.job_id)
-            if result.status != "succeeded" or result.document is None:
-                retryable = bool(result.failure and result.failure.retryable)
-                exhausted = int(context["attempt_count"]) + 1 >= self.max_attempts
-                terminal_status = "failed" if retryable and not exhausted else "dead_letter"
-                repo.fail_parse_attempt(
-                    parse_attempt_id=parse_attempt_id,
+            else:
+                worker_receipt = self._process_first_seen_delivery(
+                    repo=repo,
+                    payload=payload,
+                    envelope=envelope,
                     parse_job_id=parse_job_id,
                     tenant_id=tenant_id,
-                    worker_id=self.worker_id,
-                    fencing_token=fencing_token,
-                    status=terminal_status,
-                    failure_code=result.failure.failure_classification if result.failure else result.status,
                 )
-                dead_letter_id = None
-                if terminal_status == "dead_letter":
-                    dead_letter = repo.record_dead_letter(
-                        dead_letter_id=f"dead-letter:{parse_attempt_id}",
-                        tenant_id=tenant_id,
-                        parse_job_id=parse_job_id,
-                        parse_attempt_id=parse_attempt_id,
-                        source_ref=str(context["storage_uri"]),
-                        failure_code=result.failure.failure_classification if result.failure else result.status,
-                        retryable=retryable,
-                        retry_count=int(context["attempt_count"]) + 1,
-                        rabbitmq_dead_letter_ref=f"rabbitmq-dlq:{envelope.message_id}",
-                        payload={"parse_job_id": parse_job_id, "status": result.status},
-                    )
-                    dead_letter_id = dead_letter.ref
-                domain_commit_ref = f"domain-commit:{parse_attempt_id}:{terminal_status}"
-                await delivery.ack()
-                return PackageAWorkerReceipt(
-                    parse_job_id=parse_job_id,
-                    parse_attempt_id=parse_attempt_id,
-                    status=terminal_status,
-                    acked_after_domain_commit=True,
-                    dead_letter_id=dead_letter_id,
-                )
-            quality_gate, _review_task = self.review_runtime.evaluate(
-                document=result.document,
-                parse_snapshot=snapshot,
-                security_epoch_ref=str(context["security_epoch_ref"]),
-            )
-            if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
-                raise IngestionPersistenceError("Package A text/markdown path must pass quality gate")
-            indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
-                document=result.document,
-                parse_snapshot=snapshot,
-                quality_gate=quality_gate,
-                visibility_ref=f"visibility:{context['workspace_id']}:{context['source_object_id']}",
-            )
-            parse_snapshot_id = f"parse-snapshot:{parse_attempt_id}"
-            snapshot_receipt = repo.record_parse_snapshot(
-                parse_snapshot_id=parse_snapshot_id,
-                tenant_id=tenant_id,
-                parse_job_id=parse_job_id,
-                parse_attempt_id=parse_attempt_id,
-                document_version_id=str(context["document_version_id"]),
-                canonical_ir=result.document.model_dump(mode="json"),
-                canonical_ir_ref=f"canonical-ir:{parse_attempt_id}",
-                canonical_ir_schema_ref=result.document.metadata.ir_schema_version,
-                parser_id=result.document.metadata.parser_id,
-                parser_version=result.document.metadata.parser_version,
-            )
-            for index, block in enumerate(result.document.blocks, start=1):
-                repo.record_source_span(
-                    source_span_id=f"source-span:{parse_attempt_id}:{index}",
-                    tenant_id=tenant_id,
-                    parse_snapshot_id=snapshot_receipt.ref,
-                    document_version_id=str(context["document_version_id"]),
-                    block_id=block.block_id,
-                    page_no=block.source_span.page or block.source_span.page_number or 1,
-                    coordinate_ref=block.source_span.model_dump(),
-                )
-            quality = repo.record_quality_decision(
-                quality_decision_id=f"quality:{parse_attempt_id}",
-                tenant_id=tenant_id,
-                parse_snapshot_id=snapshot_receipt.ref,
-                coverage_score=self._quality_metric(quality_gate, "coverage"),
-                confidence_score=self._quality_metric(quality_gate, "confidence"),
-                decision="publish",
-            )
-            handoff_payload = {
-                "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
-                "document_version_id": indexable_snapshot.document_version_id,
-                "quality_decision_id": indexable_snapshot.quality_decision_id,
-                "canonical_hash": indexable_snapshot.canonical_hash,
-                "idempotency_key": indexable_snapshot.idempotency_key,
-            }
-            indexable = repo.record_indexable_snapshot(
-                indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
-                tenant_id=tenant_id,
-                parse_snapshot_id=snapshot_receipt.ref,
-                document_version_id=str(context["document_version_id"]),
-                quality_decision_id=quality.ref,
-                visibility_ref=indexable_snapshot.visibility_ref,
-                payload=indexable_snapshot.payload,
-            )
-            outbox = repo.enqueue_outbox_event(
-                outbox_event_id=snapshot_outbox.outbox_event_id,
-                tenant_id=tenant_id,
-                aggregate_ref=indexable.ref,
-                event_type="ingestion.indexable_snapshot.ready",
-                payload=handoff_payload,
-            )
-            domain_commit_ref = f"domain-commit:{parse_attempt_id}:{snapshot_receipt.ref}:{outbox.ref}"
-            repo.commit_parse_attempt_if_current(
-                parse_attempt_id=parse_attempt_id,
-                parse_job_id=parse_job_id,
-                tenant_id=tenant_id,
-                worker_id=self.worker_id,
-                fencing_token=fencing_token,
-                domain_commit_ref=domain_commit_ref,
-            )
         await delivery.ack()
+        return worker_receipt
+
+    def _process_first_seen_delivery(
+        self,
+        *,
+        repo,
+        payload: dict[str, Any],
+        envelope: CrossModuleEnvelopeV1,
+        parse_job_id: str,
+        tenant_id: str,
+    ) -> PackageAWorkerReceipt:
+        context = repo.load_parse_job_context(parse_job_id=parse_job_id, tenant_id=tenant_id)
+        attempt = repo.claim_parse_attempt_lease(
+            tenant_id=tenant_id,
+            workspace_id=str(context["workspace_id"]),
+            source_object_id=str(context["source_object_id"]),
+            document_version_id=str(context["document_version_id"]),
+            parse_plan_id=str(context["parse_plan_id"]),
+            parse_job_id=parse_job_id,
+            worker_id=self.worker_id,
+            idempotency_key=f"{context['idempotency_key']}:attempt:{int(context['attempt_count']) + 1}",
+            security_epoch_ref=str(context["security_epoch_ref"]),
+            lease_ttl_seconds=self.lease_ttl_seconds,
+        )
+        parse_attempt_id = attempt.ref
+        fencing_token = int(attempt.payload_hash or "0")
+        repo.mark_parse_attempt_running(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=self.worker_id,
+            fencing_token=fencing_token,
+        )
+        source_bytes = self._read_and_verify_object(context)
+        request = ParseDocumentRequest(
+            document_id=str(context["source_object_id"]),
+            source_id=str(context["source_object_id"]),
+            document_version_id=str(context["document_version_id"]),
+            parse_plan_id=str(context["parse_plan_id"]),
+            parse_job_id=parse_job_id,
+            parse_attempt_id=parse_attempt_id,
+            parse_idempotency_key=str(context["idempotency_key"]),
+            source_object_ref=str(context["storage_uri"]),
+            source_object_manifest={
+                "object_manifest_ref": context["object_manifest_ref"],
+                "content_hash": context["source_sha256"],
+                "size_bytes": context["size_bytes"],
+                "parser_policy_ref": payload.get("parser_policy_ref"),
+                "lineage_ref": f"lineage:{context['source_object_id']}:{context['document_version_id']}",
+                "workspace_id": context["workspace_id"],
+                "classification_ref": context["classification_ref"],
+                "security_epoch_ref": context["security_epoch_ref"],
+            },
+            workspace_id=str(context["workspace_id"]),
+            source_uri=str(context["storage_uri"]),
+            mime_type=str(context["mime_type"]),
+            source_bytes=source_bytes,
+            hash=str(context["source_sha256"]),
+            security_policy_ref=payload.get("security_decision_ref"),
+            security_epoch_ref=str(context["security_epoch_ref"]),
+        )
+        result = ParseGateway.submit_parse_job(request)
+        snapshot = ParseGateway.get_job_snapshot(result.job_id)
+        if result.status != "succeeded" or result.document is None:
+            retryable = bool(result.failure and result.failure.retryable)
+            exhausted = int(context["attempt_count"]) + 1 >= self.max_attempts
+            terminal_status = "failed" if retryable and not exhausted else "dead_letter"
+            repo.fail_parse_attempt(
+                parse_attempt_id=parse_attempt_id,
+                parse_job_id=parse_job_id,
+                tenant_id=tenant_id,
+                worker_id=self.worker_id,
+                fencing_token=fencing_token,
+                status=terminal_status,
+                failure_code=result.failure.failure_classification if result.failure else result.status,
+            )
+            dead_letter_id = None
+            if terminal_status == "dead_letter":
+                dead_letter = repo.record_dead_letter(
+                    dead_letter_id=f"dead-letter:{parse_attempt_id}",
+                    tenant_id=tenant_id,
+                    parse_job_id=parse_job_id,
+                    parse_attempt_id=parse_attempt_id,
+                    source_ref=str(context["storage_uri"]),
+                    failure_code=result.failure.failure_classification if result.failure else result.status,
+                    retryable=retryable,
+                    retry_count=int(context["attempt_count"]) + 1,
+                    rabbitmq_dead_letter_ref=f"rabbitmq-dlq:{envelope.message_id}",
+                    payload={"parse_job_id": parse_job_id, "status": result.status},
+                )
+                dead_letter_id = dead_letter.ref
+            retry_outbox_id = None
+            if terminal_status == "failed":
+                retry_envelope = self._retry_parse_requested_envelope(
+                    envelope=envelope,
+                    context=context,
+                    next_attempt_no=int(context["attempt_count"]) + 2,
+                )
+                retry_outbox = repo.enqueue_parse_requested(envelope=retry_envelope)
+                retry_outbox_id = retry_outbox.ref
+                repo.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="queued")
+            return PackageAWorkerReceipt(
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                status=terminal_status,
+                acked_after_domain_commit=True,
+                retry_enqueued_after_domain_commit=terminal_status == "failed",
+                outbox_event_id=retry_outbox_id,
+                dead_letter_id=dead_letter_id,
+            )
+
+        quality_gate, _review_task = self.review_runtime.evaluate(
+            document=result.document,
+            parse_snapshot=snapshot,
+            security_epoch_ref=str(context["security_epoch_ref"]),
+        )
+        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
+            raise IngestionPersistenceError("Package A text/markdown path must pass quality gate")
+        indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
+            document=result.document,
+            parse_snapshot=snapshot,
+            quality_gate=quality_gate,
+            visibility_ref=f"visibility:{context['workspace_id']}:{context['source_object_id']}",
+        )
+        parse_snapshot_id = f"parse-snapshot:{parse_attempt_id}"
+        snapshot_receipt = repo.record_parse_snapshot(
+            parse_snapshot_id=parse_snapshot_id,
+            tenant_id=tenant_id,
+            parse_job_id=parse_job_id,
+            parse_attempt_id=parse_attempt_id,
+            document_version_id=str(context["document_version_id"]),
+            canonical_ir=result.document.model_dump(mode="json"),
+            canonical_ir_ref=f"canonical-ir:{parse_attempt_id}",
+            canonical_ir_schema_ref=result.document.metadata.ir_schema_version,
+            parser_id=result.document.metadata.parser_id,
+            parser_version=result.document.metadata.parser_version,
+        )
+        for index, block in enumerate(result.document.blocks, start=1):
+            repo.record_source_span(
+                source_span_id=f"source-span:{parse_attempt_id}:{index}",
+                tenant_id=tenant_id,
+                parse_snapshot_id=snapshot_receipt.ref,
+                document_version_id=str(context["document_version_id"]),
+                block_id=block.block_id,
+                page_no=block.source_span.page or block.source_span.page_number or 1,
+                coordinate_ref=block.source_span.model_dump(),
+            )
+        quality = repo.record_quality_decision(
+            quality_decision_id=f"quality:{parse_attempt_id}",
+            tenant_id=tenant_id,
+            parse_snapshot_id=snapshot_receipt.ref,
+            coverage_score=self._quality_metric(quality_gate, "coverage"),
+            confidence_score=self._quality_metric(quality_gate, "confidence"),
+            decision="publish",
+        )
+        handoff_payload = {
+            "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+            "document_version_id": indexable_snapshot.document_version_id,
+            "quality_decision_id": indexable_snapshot.quality_decision_id,
+            "canonical_hash": indexable_snapshot.canonical_hash,
+            "idempotency_key": indexable_snapshot.idempotency_key,
+        }
+        indexable = repo.record_indexable_snapshot(
+            indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
+            tenant_id=tenant_id,
+            parse_snapshot_id=snapshot_receipt.ref,
+            document_version_id=str(context["document_version_id"]),
+            quality_decision_id=quality.ref,
+            visibility_ref=indexable_snapshot.visibility_ref,
+            payload=indexable_snapshot.payload,
+        )
+        outbox = repo.enqueue_outbox_event(
+            outbox_event_id=snapshot_outbox.outbox_event_id,
+            tenant_id=tenant_id,
+            aggregate_ref=indexable.ref,
+            event_type="ingestion.indexable_snapshot.ready",
+            payload=handoff_payload,
+        )
+        domain_commit_ref = f"domain-commit:{parse_attempt_id}:{snapshot_receipt.ref}:{outbox.ref}"
+        repo.commit_parse_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=self.worker_id,
+            fencing_token=fencing_token,
+            domain_commit_ref=domain_commit_ref,
+        )
         return PackageAWorkerReceipt(
             parse_job_id=parse_job_id,
             parse_attempt_id=parse_attempt_id,
@@ -440,6 +470,26 @@ class PackageAProductionIngestionRuntime:
             payload=payload,
             payload_hash=canonical_sha256(payload),
             payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
+        )
+
+    def _retry_parse_requested_envelope(
+        self,
+        *,
+        envelope: CrossModuleEnvelopeV1,
+        context: dict[str, Any],
+        next_attempt_no: int,
+    ) -> CrossModuleEnvelopeV1:
+        now = datetime.now(timezone.utc)
+        return envelope.model_copy(
+            update={
+                "message_id": f"outbox:{context['parse_job_id']}:retry:{next_attempt_no}",
+                "producer_module": "ingestion.parser_worker",
+                "consumer_module": "ingestion.parser_worker",
+                "causation_id": envelope.message_id,
+                "idempotency_key": f"{envelope.idempotency_key}:retry:{next_attempt_no}",
+                "occurred_at": now,
+                "created_at": now,
+            }
         )
 
     def _read_and_verify_object(self, context: dict[str, Any]) -> bytes:

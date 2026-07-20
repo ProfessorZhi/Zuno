@@ -94,4 +94,14 @@ Gate C environment_blocked: Docker daemon unavailable, PostgreSQL localhost:5432
 
 本注记不改变上表 `target_not_current` 状态；Package A 行只有在真实 PostgreSQL、MinIO、RabbitMQ Gate B/C 通过后才能逐项提升为 `completion_candidate`。
 
+2026-07-20 follow-up：
+
+```text
+RabbitMQ ACK moved after IngestionUnitOfWork commit boundary.
+retryable failed closes current Attempt/Lease, writes a new parse.requested outbox for the next Attempt, then ACKs the current message after commit.
+duplicate/succeeded/dead_letter/retryable_failed ACK only after domain transaction exits successfully.
+fail_parse_attempt now updates ingestion_parse_leases to released/lost terminal state in the same transaction.
+Gate A remains passed; Gate B remains environment_blocked at PostgreSQL localhost:5432.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

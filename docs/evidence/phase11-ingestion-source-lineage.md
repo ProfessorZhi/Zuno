@@ -91,6 +91,30 @@ failed: environment_blocked, PostgreSQL localhost:5432 connection timeout before
 
 边界：Package A production default path 已有 runtime、migration 和 focused tests，但 Gate B/C 在当前环境未通过；不得仅凭本节证据将 Package A 行提升为 `completion_candidate`。PHASE11 仍为 `in_progress`，Coordinator Approval 仍为 `pending_reopened`。
 
+2026-07-20 follow-up 修正：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 改为领域 UoW 成功退出后才执行 RabbitMQ ACK；duplicate delivery、success、dead_letter 与 retryable failed 都在事务提交后 ACK 当前消息。retryable failed 不重投同一 RabbitMQ message，而是在同一事务写入新的 `parse.requested` outbox，避免 worker inbox 幂等把 redelivery 吞掉。
+- `IngestionRepository.fail_parse_attempt(...)` 现在同事务关闭当前 `ingestion_parse_leases`，避免只关闭 Attempt 而留下 active lease。
+- 该修正继续保持 Gateway 不拥有 ACK、Lease 或数据库终态。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_ingestion_parse_control.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Gate A passed: 46 passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B remains environment_blocked at PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

@@ -498,6 +498,29 @@ class IngestionRepository:
             status=status,
             failure_code=failure_code,
         )
+        lease_state = "released" if status in {"failed", "cancelled", "dead_letter"} else "lost"
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET state = :lease_state, heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                """
+            ),
+            {
+                "lease_state": lease_state,
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease terminal update rejected by fencing")
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status=status)
 
     def update_parse_job_status(self, *, parse_job_id: str, tenant_id: str, status: str) -> None:
