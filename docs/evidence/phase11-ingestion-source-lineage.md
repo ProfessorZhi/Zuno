@@ -689,3 +689,24 @@ py_compile passed
 Package A persistence expected-state fencing tests passed: 4 passed
 Package A delivery settlement tests passed: 12 passed
 ```
+
+2026-07-20 Package A rejected delivery batch resilience：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在对 schema/hash、topic/contract/consumer 和 tenant header mismatch 这类已执行 `reject(requeue=False)` 的确定性坏消息统一抛出 `PackageARejectDeliveryError`。
+- `PackageAProductionQueueWorker.publish_and_consume_once(...)` 只捕获该已拒收错误并继续消费本轮 batch 后续 delivery；数据库 UoW、fencing、object verification 或 Parser Gateway 等未完成领域事务的错误仍会冒泡，不会被 worker 当作成功 ACK。
+- `PackageAQueuePumpReceipt` 新增 `rejected_delivery_count`，用于区分“本轮收到并拒收坏消息”和“没有收到消息”，同时保留成功 worker receipts。
+- 新增 focused worker test 覆盖第一条 poison delivery 被拒收后，第二条正常 delivery 仍进入 runtime 并返回成功 receipt。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/worker.py tests/knowledge/test_package_a_queue_worker.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker and delivery settlement tests passed: 20 passed
+```

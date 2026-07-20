@@ -381,4 +381,15 @@ Package A delivery settlement tests passed: 12 passed.
 PHASE11 remains in_progress; this is Package A PostgreSQL fencing implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A rejected delivery batch resilience：
+
+```text
+PackageAProductionIngestionRuntime now raises PackageARejectDeliveryError for deterministic deliveries it has already rejected without requeue: invalid schema/hash, misrouted topic/contract/consumer, and tenant header mismatch.
+PackageAProductionQueueWorker catches only that already-rejected error class, counts rejected deliveries, and continues the bounded consume batch so a poison message does not block following valid parse requests.
+Database transaction, object verification, fencing, and parser failures still propagate unless the runtime returns a domain receipt, preserving crash-before-commit no-ACK semantics.
+py_compile passed.
+Package A queue worker and delivery settlement tests passed: 20 passed.
+PHASE11 remains in_progress; this is Package A RabbitMQ worker resilience implementation evidence, not Gate C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

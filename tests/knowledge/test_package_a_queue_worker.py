@@ -1,7 +1,7 @@
 import asyncio
 from types import SimpleNamespace
 
-from zuno.knowledge.ingestion.production_runtime import PackageAWorkerReceipt
+from zuno.knowledge.ingestion.production_runtime import PackageARejectDeliveryError, PackageAWorkerReceipt
 from zuno.knowledge.ingestion.worker import (
     PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionQueueWorker,
@@ -30,6 +30,10 @@ def test_package_a_queue_worker_publishes_then_consumes_delivery() -> None:
 
 def test_package_a_queue_worker_consumes_bounded_delivery_batch() -> None:
     asyncio.run(_assert_package_a_queue_worker_consumes_bounded_delivery_batch())
+
+
+def test_package_a_queue_worker_continues_after_rejected_delivery() -> None:
+    asyncio.run(_assert_package_a_queue_worker_continues_after_rejected_delivery())
 
 
 def test_outbox_publisher_claims_only_configured_topics(monkeypatch) -> None:
@@ -225,6 +229,60 @@ async def _assert_package_a_queue_worker_consumes_bounded_delivery_batch() -> No
     assert receipt.delivery_received is True
     assert len(receipt.worker_receipts) == 2
     assert receipt.worker_receipt.parse_job_id == "job-event-2"
+
+
+async def _assert_package_a_queue_worker_continues_after_rejected_delivery() -> None:
+    processed: list[str] = []
+    deliveries = [
+        SimpleNamespace(message_id="poison-event"),
+        SimpleNamespace(message_id="valid-event"),
+    ]
+
+    class FakeTransport:
+        async def declare_topology(self, topology):
+            return None
+
+        async def get(self, queue_name, *, timeout):
+            return deliveries.pop(0) if deliveries else None
+
+    class FakeRuntime:
+        async def process_rabbitmq_delivery(self, delivery):
+            processed.append(delivery.message_id)
+            if delivery.message_id == "poison-event":
+                raise PackageARejectDeliveryError("delivery is not a Package A parse request")
+            return PackageAWorkerReceipt(
+                parse_job_id="parse-job-valid",
+                parse_attempt_id="parse-job-valid:attempt:1",
+                status="succeeded",
+                acked_after_domain_commit=True,
+            )
+
+    class FakePublisher:
+        def __init__(self, **kwargs):
+            return None
+
+        async def publish_batch(self, *, limit):
+            return SimpleNamespace(published=(object(), object()), failed=())
+
+    worker = PackageAProductionQueueWorker(
+        engine=object(),
+        runtime=FakeRuntime(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        trace_id="trace-reject-continue",
+    )
+
+    receipt = await worker.publish_and_consume_once(
+        publish_limit=2,
+        consume_limit=2,
+        publisher_factory=FakePublisher,
+    )
+
+    assert processed == ["poison-event", "valid-event"]
+    assert receipt.delivery_received is True
+    assert receipt.rejected_delivery_count == 1
+    assert len(receipt.worker_receipts) == 1
+    assert receipt.worker_receipt.parse_job_id == "parse-job-valid"
 
 
 async def _assert_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:

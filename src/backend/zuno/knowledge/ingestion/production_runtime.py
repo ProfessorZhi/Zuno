@@ -214,17 +214,17 @@ class PackageAProductionIngestionRuntime:
             envelope = parsed_delivery.verified_envelope()
         except Exception as exc:
             await delivery.reject(requeue=False)
-            raise IngestionPersistenceError("invalid Package A parse delivery envelope") from exc
+            raise PackageARejectDeliveryError("invalid Package A parse delivery envelope") from exc
         if (
             parsed_delivery.topic != PACKAGE_A_PARSE_REQUESTED_TOPIC
             or envelope.contract_name != PACKAGE_A_PARSE_CONTRACT_NAME
             or envelope.consumer_module != PACKAGE_A_PARSE_CONSUMER_MODULE
         ):
             await delivery.reject(requeue=False)
-            raise IngestionPersistenceError("delivery is not a Package A parse request")
+            raise PackageARejectDeliveryError("delivery is not a Package A parse request")
         if envelope.tenant_id != delivery.headers.get("tenant_id"):
             await delivery.reject(requeue=False)
-            raise IngestionPersistenceError("delivery tenant header does not match envelope")
+            raise PackageARejectDeliveryError("delivery tenant header does not match envelope")
         payload = envelope.payload or {}
         parse_job_id = str(payload["parse_job_id"])
         tenant_id = envelope.tenant_id

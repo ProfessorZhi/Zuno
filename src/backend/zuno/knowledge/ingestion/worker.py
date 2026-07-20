@@ -8,6 +8,7 @@ from sqlalchemy import Engine
 from zuno.knowledge.ingestion.production_runtime import (
     PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionIngestionRuntime,
+    PackageARejectDeliveryError,
     PackageAWorkerReceipt,
 )
 from zuno.platform.queue import (
@@ -23,6 +24,7 @@ class PackageAQueuePumpReceipt:
     failed_publish_count: int
     delivery_received: bool
     worker_receipts: tuple[PackageAWorkerReceipt, ...] = ()
+    rejected_delivery_count: int = 0
 
     @property
     def worker_receipt(self) -> PackageAWorkerReceipt | None:
@@ -94,16 +96,22 @@ class PackageAProductionQueueWorker:
         )
         batch: OutboxPublishBatch = await publisher.publish_batch(limit=publish_limit)
         worker_receipts: list[PackageAWorkerReceipt] = []
+        rejected_delivery_count = 0
         for _ in range(resolved_consume_limit):
             delivery = await self.transport.get(self.topology.queue, timeout=consume_timeout_seconds)
             if delivery is None:
                 break
-            worker_receipts.append(await self.runtime.process_rabbitmq_delivery(delivery))
+            try:
+                worker_receipts.append(await self.runtime.process_rabbitmq_delivery(delivery))
+            except PackageARejectDeliveryError:
+                rejected_delivery_count += 1
+                continue
         return PackageAQueuePumpReceipt(
             published_count=len(batch.published),
             failed_publish_count=len(batch.failed),
-            delivery_received=bool(worker_receipts),
+            delivery_received=bool(worker_receipts) or rejected_delivery_count > 0,
             worker_receipts=tuple(worker_receipts),
+            rejected_delivery_count=rejected_delivery_count,
         )
 
 
