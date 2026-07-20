@@ -897,3 +897,23 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker tests passed: 10 passed
 ```
+
+2026-07-20 Package A RabbitMQ DLQ replay hook：
+
+- `PackageAProductionQueueWorker.replay_dead_letter_once(...)` 新增 Package A topology 下的 DLQ replay 入口：声明 topology，从 `zuno.ingestion.parse.dlq` 取一条 dead-letter delivery，调用 PHASE04 `RabbitMQTransport.replay_dead_letter(...)` 重投到主 parse queue，并在 replay publish 成功后 ACK 原 DLQ delivery。
+- 空 DLQ 返回 `replayed=false`，不调用 replay，也不伪装有 delivery。
+- 该方法只负责 RabbitMQ DLQ replay，不声明解析成功；重投后的消息仍由正常 `publish_and_consume_once(...)` / worker consumer 路径执行 schema、tenant、Security Epoch、Inbox 幂等、PostgreSQL Lease/Fencing 和 ACK-after-domain-commit。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/worker.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker tests passed: 12 passed
+```

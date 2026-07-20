@@ -494,4 +494,15 @@ Package A queue worker tests passed: 10 passed.
 PHASE11 remains in_progress; this is Package A RabbitMQ dispatcher/consumer failure-boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A RabbitMQ DLQ replay hook：
+
+```text
+PackageAProductionQueueWorker.replay_dead_letter_once now declares the Package A topology, reads one delivery from the parse DLQ, replays it through PHASE04 RabbitMQTransport.replay_dead_letter, then ACKs the original DLQ delivery after replay publish succeeds.
+Empty DLQ returns replayed=false without invoking replay.
+Replay is deliberately scoped to RabbitMQ movement only; the replayed message still flows through the normal Package A consumer path for schema, tenant, Security Epoch, Inbox idempotency, PostgreSQL Lease/Fencing, domain commit, and ACK.
+py_compile passed.
+Package A queue worker tests passed: 12 passed.
+PHASE11 remains in_progress; this is Package A DLQ replay hook implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

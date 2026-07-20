@@ -31,6 +31,15 @@ class PackageAQueuePumpReceipt:
         return self.worker_receipts[-1] if self.worker_receipts else None
 
 
+@dataclass(frozen=True, slots=True)
+class PackageADeadLetterReplayReceipt:
+    replayed: bool
+    source_queue: str
+    target_queue: str
+    message_id: str | None = None
+    replay_trace_id: str | None = None
+
+
 def package_a_rabbitmq_topology(settings: Any) -> RabbitMQTopology:
     rabbitmq = getattr(settings, "rabbitmq", {}) or {}
     exchange = str(rabbitmq.get("ingestion_exchange") or "zuno.ingestion")
@@ -120,9 +129,43 @@ class PackageAProductionQueueWorker:
             rejected_delivery_count=rejected_delivery_count,
         )
 
+    async def replay_dead_letter_once(
+        self,
+        *,
+        replay_trace_id: str,
+        consume_timeout_seconds: float = 5.0,
+    ) -> PackageADeadLetterReplayReceipt:
+        if not replay_trace_id:
+            raise ValueError("replay_trace_id must not be empty")
+        await self.transport.declare_topology(self.topology)
+        delivery = await self.transport.get(
+            self.topology.dead_letter_queue,
+            timeout=consume_timeout_seconds,
+        )
+        if delivery is None:
+            return PackageADeadLetterReplayReceipt(
+                replayed=False,
+                source_queue=self.topology.dead_letter_queue,
+                target_queue=self.topology.queue,
+            )
+        await self.transport.replay_dead_letter(
+            self.topology,
+            delivery,
+            replay_trace_id=replay_trace_id,
+        )
+        await delivery.ack()
+        return PackageADeadLetterReplayReceipt(
+            replayed=True,
+            source_queue=self.topology.dead_letter_queue,
+            target_queue=self.topology.queue,
+            message_id=delivery.message_id,
+            replay_trace_id=replay_trace_id,
+        )
+
 
 __all__ = [
     "PackageAProductionQueueWorker",
+    "PackageADeadLetterReplayReceipt",
     "PackageAQueuePumpReceipt",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "package_a_rabbitmq_topology",

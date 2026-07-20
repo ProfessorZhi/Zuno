@@ -40,6 +40,10 @@ def test_package_a_queue_worker_does_not_consume_after_publish_failure() -> None
     asyncio.run(_assert_package_a_queue_worker_does_not_consume_after_publish_failure())
 
 
+def test_package_a_queue_worker_replays_one_dead_letter_delivery() -> None:
+    asyncio.run(_assert_package_a_queue_worker_replays_one_dead_letter_delivery())
+
+
 def test_outbox_publisher_claims_only_configured_topics(monkeypatch) -> None:
     import zuno.platform.queue.outbox as outbox
 
@@ -335,6 +339,93 @@ async def _assert_package_a_queue_worker_does_not_consume_after_publish_failure(
     assert receipt.worker_receipts == ()
     assert receipt.rejected_delivery_count == 0
     assert events == ["declare", "publisher", "publish_batch"]
+
+
+async def _assert_package_a_queue_worker_replays_one_dead_letter_delivery() -> None:
+    events: list[tuple[str, object]] = []
+
+    class FakeDelivery:
+        message_id = "dead-letter-event-1"
+
+        async def ack(self):
+            events.append(("ack", self.message_id))
+
+    class FakeTransport:
+        async def declare_topology(self, topology):
+            events.append(("declare", topology.dead_letter_queue))
+
+        async def get(self, queue_name, *, timeout):
+            events.append(("get", (queue_name, timeout)))
+            return FakeDelivery()
+
+        async def replay_dead_letter(self, topology, delivery, *, replay_trace_id):
+            events.append(("replay", (delivery.message_id, topology.queue, replay_trace_id)))
+
+    worker = PackageAProductionQueueWorker(
+        engine=object(),
+        runtime=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        trace_id="trace-worker",
+    )
+
+    receipt = await worker.replay_dead_letter_once(
+        replay_trace_id="trace-dlq-replay",
+        consume_timeout_seconds=0.25,
+    )
+
+    assert receipt.replayed is True
+    assert receipt.message_id == "dead-letter-event-1"
+    assert receipt.source_queue == "zuno.ingestion.parse.dlq"
+    assert receipt.target_queue == "zuno.ingestion.parse"
+    assert receipt.replay_trace_id == "trace-dlq-replay"
+    assert events == [
+        ("declare", "zuno.ingestion.parse.dlq"),
+        ("get", ("zuno.ingestion.parse.dlq", 0.25)),
+        ("replay", ("dead-letter-event-1", "zuno.ingestion.parse", "trace-dlq-replay")),
+        ("ack", "dead-letter-event-1"),
+    ]
+
+
+def test_package_a_queue_worker_replay_reports_empty_dlq() -> None:
+    asyncio.run(_assert_package_a_queue_worker_replay_reports_empty_dlq())
+
+
+async def _assert_package_a_queue_worker_replay_reports_empty_dlq() -> None:
+    events: list[tuple[str, object]] = []
+
+    class FakeTransport:
+        async def declare_topology(self, topology):
+            events.append(("declare", topology.dead_letter_queue))
+
+        async def get(self, queue_name, *, timeout):
+            events.append(("get", (queue_name, timeout)))
+            return None
+
+        async def replay_dead_letter(self, topology, delivery, *, replay_trace_id):
+            raise AssertionError("empty DLQ must not replay")
+
+    worker = PackageAProductionQueueWorker(
+        engine=object(),
+        runtime=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        trace_id="trace-worker",
+    )
+
+    receipt = await worker.replay_dead_letter_once(
+        replay_trace_id="trace-dlq-replay",
+        consume_timeout_seconds=0.25,
+    )
+
+    assert receipt.replayed is False
+    assert receipt.message_id is None
+    assert receipt.source_queue == "zuno.ingestion.parse.dlq"
+    assert receipt.target_queue == "zuno.ingestion.parse"
+    assert events == [
+        ("declare", "zuno.ingestion.parse.dlq"),
+        ("get", ("zuno.ingestion.parse.dlq", 0.25)),
+    ]
 
 
 async def _assert_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:
