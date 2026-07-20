@@ -19,6 +19,7 @@ from .contracts import (
     IndexChunkRecord,
     IndexableSnapshotRecord,
     IngestionOutboxRecord,
+    ParseAttemptLeaseRecord,
     ParseJobRecord,
     QualityGateRecord,
     ReviewDecisionRecord,
@@ -38,6 +39,7 @@ from .sqlmodel_models import (
     IndexManifestTable,
     IndexableSnapshotTable,
     IngestionOutboxTable,
+    ParseAttemptLeaseTable,
     ParseJobTable,
     ParseSnapshotTable,
     QualityGateTable,
@@ -129,6 +131,29 @@ class SQLiteDurableIngestionStore:
             )
         )
         return snapshot
+
+    def save_parse_attempt_lease(self, record: ParseAttemptLeaseRecord) -> ParseAttemptLeaseRecord:
+        self._merge(
+            ParseAttemptLeaseTable(
+                parse_attempt_id=record.parse_attempt_id,
+                parse_job_id=record.parse_job_id,
+                worker_id=record.worker_id,
+                attempt_no=record.attempt_no,
+                fencing_token=record.fencing_token,
+                state=record.state,
+                heartbeat_at=record.heartbeat_at,
+                lease_expires_at=record.lease_expires_at,
+                lease_lost_reason=record.lease_lost_reason,
+                domain_commit_ref=record.domain_commit_ref,
+                idempotency_key=record.idempotency_key,
+                duplicate_commit=record.duplicate_commit,
+                late_result_rejected=record.late_result_rejected,
+                orphan_reconciled=record.orphan_reconciled,
+                receipt_hash=record.receipt_hash,
+                history_json=list(record.history),
+            )
+        )
+        return record
 
     def save_document_version(self, document: CanonicalDocumentIR) -> DocumentVersionRecord:
         metadata = document.metadata
@@ -412,6 +437,27 @@ class SQLiteDurableIngestionStore:
     def get_parse_snapshot(self, parse_job_id: str) -> ParseJobSnapshot:
         row = self._get(ParseSnapshotTable, parse_job_id, "parse snapshot")
         return ParseJobSnapshot.model_validate(row.snapshot_json)
+
+    def get_parse_attempt_lease(self, parse_attempt_id: str) -> ParseAttemptLeaseRecord:
+        row = self._get(ParseAttemptLeaseTable, parse_attempt_id, "parse attempt lease")
+        return ParseAttemptLeaseRecord(
+            parse_attempt_id=row.parse_attempt_id,
+            parse_job_id=row.parse_job_id,
+            worker_id=row.worker_id,
+            attempt_no=row.attempt_no,
+            fencing_token=row.fencing_token,
+            state=row.state,
+            heartbeat_at=row.heartbeat_at,
+            lease_expires_at=row.lease_expires_at,
+            lease_lost_reason=row.lease_lost_reason,
+            domain_commit_ref=row.domain_commit_ref,
+            idempotency_key=row.idempotency_key,
+            duplicate_commit=row.duplicate_commit,
+            late_result_rejected=row.late_result_rejected,
+            orphan_reconciled=row.orphan_reconciled,
+            receipt_hash=row.receipt_hash,
+            history=list(row.history_json or []),
+        )
 
     def get_document_version(self, document_version_id: str) -> DocumentVersionRecord:
         row = self._get(DocumentVersionTable, document_version_id, "document version")

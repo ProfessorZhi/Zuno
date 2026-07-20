@@ -48,6 +48,25 @@ class ParseJobRecord(BaseModel):
     failure_reason: str | None = None
 
 
+class ParseAttemptLeaseRecord(BaseModel):
+    parse_attempt_id: str
+    parse_job_id: str
+    worker_id: str
+    attempt_no: int
+    fencing_token: int
+    state: str
+    heartbeat_at: float
+    lease_expires_at: float
+    lease_lost_reason: str | None = None
+    domain_commit_ref: str | None = None
+    idempotency_key: str | None = None
+    duplicate_commit: bool = False
+    late_result_rejected: bool = False
+    orphan_reconciled: bool = False
+    receipt_hash: str
+    history: list[str] = Field(default_factory=list)
+
+
 class DocumentVersionRecord(BaseModel):
     document_version_id: str
     document_id: str
@@ -221,6 +240,7 @@ __all__ = [
     "IndexChunkRecord",
     "IndexableSnapshotRecord",
     "IngestionOutboxRecord",
+    "ParseAttemptLeaseRecord",
     "ParseJobRecord",
     "QualityGateRecord",
     "ReviewDecisionRecord",

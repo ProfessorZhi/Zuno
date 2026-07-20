@@ -64,6 +64,27 @@ class ParseSnapshotTable(SQLModel, table=True):
     snapshot_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 
+class ParseAttemptLeaseTable(SQLModel, table=True):
+    __tablename__ = "zuno_parse_attempt_leases"
+
+    parse_attempt_id: str = Field(primary_key=True)
+    parse_job_id: str = Field(index=True)
+    worker_id: str = Field(index=True)
+    attempt_no: int = Field(index=True)
+    fencing_token: int = Field(index=True)
+    state: str = Field(index=True)
+    heartbeat_at: float = Field(index=True)
+    lease_expires_at: float = Field(index=True)
+    lease_lost_reason: str | None = Field(default=None, index=True)
+    domain_commit_ref: str | None = Field(default=None, index=True)
+    idempotency_key: str | None = Field(default=None, index=True)
+    duplicate_commit: bool = Field(default=False, index=True)
+    late_result_rejected: bool = Field(default=False, index=True)
+    orphan_reconciled: bool = Field(default=False, index=True)
+    receipt_hash: str = Field(index=True)
+    history_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+
 class DocumentVersionTable(SQLModel, table=True):
     __tablename__ = "zuno_document_versions"
 
@@ -273,6 +294,7 @@ STORAGE_TABLES = [
     WorkspaceFileTable,
     ParseJobTable,
     ParseSnapshotTable,
+    ParseAttemptLeaseTable,
     DocumentVersionTable,
     DocumentBlockTable,
     IndexManifestTable,
@@ -304,6 +326,7 @@ __all__ = [
     "ReviewDecisionTable",
     "ReviewTaskTable",
     "ParseJobTable",
+    "ParseAttemptLeaseTable",
     "ParseSnapshotTable",
     "STORAGE_TABLES",
     "SourceObjectTable",

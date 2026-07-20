@@ -27,6 +27,7 @@ from .handoff import (
     SnapshotHandoffRuntime,
     SnapshotOutboxEvent,
 )
+from .lease import ParseAttemptLeaseReceipt, ParseAttemptLeaseRuntime
 from .normalizer import normalize_legacy_chunks_to_ir
 from .review import (
     HumanReviewRuntime,
@@ -68,6 +69,8 @@ __all__ = [
     "ParserDiagnostic",
     "ParserFailure",
     "ParserJobMetrics",
+    "ParseAttemptLeaseReceipt",
+    "ParseAttemptLeaseRuntime",
     "QualityGateResult",
     "QualityMetric",
     "ReviewDecisionReceipt",
