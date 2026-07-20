@@ -508,3 +508,27 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovi
 py_compile passed
 Package A delivery settlement misroute tests passed: 7 passed
 ```
+
+2026-07-20 Package A delivery lineage gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在 first-seen delivery 进入 ParseAttempt/Lease claim 前，逐项校验 RabbitMQ envelope payload 与 PostgreSQL ParseJob context 的 lineage 一致性。
+- 校验范围包括 tenant、workspace、SourceObject、DocumentVersion、ParsePlan、ParseJob、ObjectRef、ObjectManifest、content hash、size、mime type 和 Security Epoch。
+- 不一致的 delivery 抛出 `PackageARejectDeliveryError` 并在 PostgreSQL UoW rollback 后 `reject(requeue=False)`；不会持久化 worker inbox、不会创建 append-only ParseAttempt、不会 claim Lease，也不会调用 Parser Gateway。
+- 新增 Gate B focused integration test `test_gate_b_rejects_delivery_lineage_mismatch_before_attempt`，覆盖伪造 `source_object_id` 的 parse request 在 attempt/lease 前被拒收。
+- 当前环境已真实尝试运行该 Gate B 测试，但 PostgreSQL `localhost:5432` 连接超时，测试在 Alembic upgrade 前阻塞；因此该项 PostgreSQL runtime evidence 仍为 environment_blocked，不计为 Gate B passed。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/__init__.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_rejects_delivery_lineage_mismatch_before_attempt -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and lineage unit tests passed: 9 passed
+Gate B lineage mismatch integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```

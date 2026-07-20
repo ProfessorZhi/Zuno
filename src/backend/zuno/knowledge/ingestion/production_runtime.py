@@ -24,6 +24,10 @@ PACKAGE_A_PARSE_CONSUMER_MODULE = "ingestion.parser_worker"
 PACKAGE_A_PARSE_REQUESTED_TOPIC = "ingestion.parse.requested"
 
 
+class PackageARejectDeliveryError(IngestionPersistenceError):
+    pass
+
+
 class AckableDelivery(Protocol):
     message_id: str
     payload: dict[str, Any]
@@ -212,36 +216,40 @@ class PackageAProductionIngestionRuntime:
         payload = envelope.payload or {}
         parse_job_id = str(payload["parse_job_id"])
         tenant_id = envelope.tenant_id
-        with IngestionUnitOfWork(self.engine) as repo:
-            inbox = repo.record_worker_inbox(
-                consumer="phase11-package-a-parser-worker",
-                message_id=envelope.message_id,
-                payload=delivery.payload,
-                tenant_id=tenant_id,
-            )
-            if not inbox.processable:
-                replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
-                status = str(replay["job_status"])
-                if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
-                    status = "duplicate"
-                worker_receipt = PackageAWorkerReceipt(
-                    parse_job_id=parse_job_id,
-                    parse_attempt_id=replay.get("parse_attempt_id"),
-                    status=status,
-                    acked_after_domain_commit=True,
-                    indexable_snapshot_id=replay.get("indexable_snapshot_id"),
-                    outbox_event_id=replay.get("outbox_event_id"),
-                    dead_letter_id=replay.get("dead_letter_id"),
-                    duplicate_delivery=True,
-                )
-            else:
-                worker_receipt = self._process_first_seen_delivery(
-                    repo=repo,
-                    payload=payload,
-                    envelope=envelope,
-                    parse_job_id=parse_job_id,
+        try:
+            with IngestionUnitOfWork(self.engine) as repo:
+                inbox = repo.record_worker_inbox(
+                    consumer="phase11-package-a-parser-worker",
+                    message_id=envelope.message_id,
+                    payload=delivery.payload,
                     tenant_id=tenant_id,
                 )
+                if not inbox.processable:
+                    replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
+                    status = str(replay["job_status"])
+                    if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
+                        status = "duplicate"
+                    worker_receipt = PackageAWorkerReceipt(
+                        parse_job_id=parse_job_id,
+                        parse_attempt_id=replay.get("parse_attempt_id"),
+                        status=status,
+                        acked_after_domain_commit=True,
+                        indexable_snapshot_id=replay.get("indexable_snapshot_id"),
+                        outbox_event_id=replay.get("outbox_event_id"),
+                        dead_letter_id=replay.get("dead_letter_id"),
+                        duplicate_delivery=True,
+                    )
+                else:
+                    worker_receipt = self._process_first_seen_delivery(
+                        repo=repo,
+                        payload=payload,
+                        envelope=envelope,
+                        parse_job_id=parse_job_id,
+                        tenant_id=tenant_id,
+                    )
+        except PackageARejectDeliveryError:
+            await delivery.reject(requeue=False)
+            raise
         await self._settle_delivery_after_domain_commit(
             delivery=delivery,
             worker_receipt=worker_receipt,
@@ -269,8 +277,7 @@ class PackageAProductionIngestionRuntime:
         tenant_id: str,
     ) -> PackageAWorkerReceipt:
         context = repo.load_parse_job_context(parse_job_id=parse_job_id, tenant_id=tenant_id)
-        if payload.get("security_epoch_ref") != context["security_epoch_ref"]:
-            raise IngestionPersistenceError("delivery security epoch does not match SourceObject")
+        self._validate_delivery_lineage(payload=payload, context=context)
         attempt = repo.claim_parse_attempt_lease(
             tenant_id=tenant_id,
             workspace_id=str(context["workspace_id"]),
@@ -566,6 +573,32 @@ class PackageAProductionIngestionRuntime:
         return "dead_letter"
 
     @staticmethod
+    def _validate_delivery_lineage(*, payload: dict[str, Any], context: dict[str, Any]) -> None:
+        expected_fields = {
+            "tenant_id": context["tenant_id"],
+            "workspace_id": context["workspace_id"],
+            "source_object_id": context["source_object_id"],
+            "document_version_id": context["document_version_id"],
+            "parse_plan_id": context["parse_plan_id"],
+            "parse_job_id": context["parse_job_id"],
+            "object_ref": context["storage_uri"],
+            "object_manifest_ref": context["object_manifest_ref"],
+            "content_hash": context["source_sha256"],
+            "mime_type": context["mime_type"],
+            "security_epoch_ref": context["security_epoch_ref"],
+        }
+        for field_name, expected_value in expected_fields.items():
+            if str(payload.get(field_name)) != str(expected_value):
+                raise PackageARejectDeliveryError(f"delivery lineage mismatch: {field_name}")
+        try:
+            payload_size = int(payload.get("size_bytes", -1))
+            context_size = int(context["size_bytes"])
+        except (TypeError, ValueError) as exc:
+            raise PackageARejectDeliveryError("delivery lineage mismatch: size_bytes") from exc
+        if payload_size != context_size:
+            raise PackageARejectDeliveryError("delivery lineage mismatch: size_bytes")
+
+    @staticmethod
     def _cancel_reason(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> str | None:
         if bool(payload.get("cancel_requested")):
             return "cancel_requested"
@@ -616,6 +649,7 @@ __all__ = [
     "PACKAGE_A_PARSE_CONTRACT_NAME",
     "PACKAGE_A_PARSE_CONSUMER_MODULE",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
+    "PackageARejectDeliveryError",
     "PackageAUploadCommand",
     "PackageAUploadReceipt",
     "PackageAWorkerReceipt",

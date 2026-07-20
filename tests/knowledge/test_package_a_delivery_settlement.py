@@ -8,6 +8,7 @@ from zuno.knowledge.ingestion import (
     PACKAGE_A_PARSE_CONTRACT_NAME,
     PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionIngestionRuntime,
+    PackageARejectDeliveryError,
     PackageAWorkerReceipt,
 )
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
@@ -149,6 +150,30 @@ def test_package_a_rejects_wrong_consumer_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
 
 
+def test_package_a_lineage_validator_requires_payload_to_match_postgres_context() -> None:
+    payload = _lineage_payload()
+    context = _lineage_context()
+
+    PackageAProductionIngestionRuntime._validate_delivery_lineage(payload=payload, context=context)
+
+    forged_payload = {**payload, "object_ref": "s3://bucket/tenant-b/workspace-a/source/source-a/file.md"}
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: object_ref"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=forged_payload,
+            context=context,
+        )
+
+
+def test_package_a_lineage_validator_rejects_size_mismatch() -> None:
+    payload = {**_lineage_payload(), "size_bytes": 999}
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: size_bytes"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=payload,
+            context=_lineage_context(),
+        )
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 
@@ -209,3 +234,37 @@ def _assert_rejected_parse_delivery(delivery: _RecordingDelivery, match: str) ->
     assert delivery.acked is False
     assert delivery.rejected is True
     assert delivery.requeue is False
+
+
+def _lineage_payload() -> dict:
+    return {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "source_object_id": "source-a",
+        "document_version_id": "document-version-a",
+        "parse_plan_id": "parse-plan-a",
+        "parse_job_id": "parse-job-a",
+        "object_ref": "s3://bucket/tenant-a/workspace-a/source/source-a/file.md",
+        "object_manifest_ref": "manifest-a",
+        "content_hash": "a" * 64,
+        "size_bytes": 12,
+        "mime_type": "text/markdown",
+        "security_epoch_ref": "security-epoch-a",
+    }
+
+
+def _lineage_context() -> dict:
+    return {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "source_object_id": "source-a",
+        "document_version_id": "document-version-a",
+        "parse_plan_id": "parse-plan-a",
+        "parse_job_id": "parse-job-a",
+        "storage_uri": "s3://bucket/tenant-a/workspace-a/source/source-a/file.md",
+        "object_manifest_ref": "manifest-a",
+        "source_sha256": "a" * 64,
+        "size_bytes": 12,
+        "mime_type": "text/markdown",
+        "security_epoch_ref": "security-epoch-a",
+    }

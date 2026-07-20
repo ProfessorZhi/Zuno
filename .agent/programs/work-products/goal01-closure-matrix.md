@@ -284,4 +284,17 @@ Package A delivery settlement misroute tests passed: 7 passed.
 PHASE11 remains in_progress; live RabbitMQ misroute handling still needs Gate C.
 ```
 
+2026-07-20 Package A delivery lineage gate：
+
+```text
+PackageAProductionIngestionRuntime now verifies first-seen RabbitMQ parse-request payload lineage against PostgreSQL ParseJob context before claiming ParseAttempt/Lease.
+The check covers tenant, workspace, SourceObject, DocumentVersion, ParsePlan, ParseJob, ObjectRef, ObjectManifest, content hash, size, mime type, and Security Epoch.
+Lineage mismatch raises PackageARejectDeliveryError and rejects(requeue=false) after UoW rollback, leaving worker inbox, attempts, leases, snapshots, and Parser Gateway untouched.
+Added Gate B focused integration coverage for forged source_object_id rejection before attempt creation.
+py_compile passed.
+Package A delivery settlement and lineage unit tests passed: 9 passed.
+Gate B lineage mismatch integration was attempted and is environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade.
+PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -11,7 +11,11 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import text
 
-from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime, PackageAUploadCommand
+from zuno.knowledge.ingestion import (
+    PackageAProductionIngestionRuntime,
+    PackageARejectDeliveryError,
+    PackageAUploadCommand,
+)
 from zuno.knowledge.ingestion.contracts import ParseDocumentResult, ParseJobSnapshot, ParserFailure
 from zuno.knowledge.ingestion.gateway import ParseGateway
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
@@ -626,6 +630,61 @@ def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) 
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_leases")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
+def test_gate_b_rejects_delivery_lineage_mismatch_before_attempt(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Forged lineage\nDo not lease."
+    envelope = _seed_retryable_job(engine, content=content)
+    forged_payload = dict(envelope.payload or {})
+    forged_payload["source_object_id"] = "source:pkg-a:forged"
+    forged_envelope = envelope.model_copy(
+        update={
+            "payload": forged_payload,
+            "payload_hash": canonical_sha256(forged_payload),
+        }
+    )
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=forged_envelope.aggregate_id or "",
+        event_id=forged_envelope.message_id,
+        idempotency_key=forged_envelope.idempotency_key or "",
+        payload=forged_envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(forged_envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("lineage mismatch must be rejected before Parser Gateway")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+
+    try:
+        with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: source_object_id"):
+            asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert delivery.acked is False
+        assert delivery.nacked is False
+        assert delivery.rejected is True
+
+        with engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM infra_inbox_messages")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_attempts")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_leases")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT status FROM ingestion_parse_jobs")).scalar_one() == "queued"
     finally:
         engine.dispose()
 
