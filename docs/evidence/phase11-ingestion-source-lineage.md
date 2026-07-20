@@ -1185,6 +1185,29 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 Gate B/C not rerun: Docker client exists, but Docker daemon npipe dockerDesktopLinuxEngine is still unavailable.
 ```
 
+2026-07-20 Package A duplicate replay terminal receipt completeness：
+
+- `PackageAProductionIngestionRuntime._validate_parse_job_replay_receipt(...)` 现在不仅校验 replay receipt 的 `parse_job_id` / `tenant_id`，还校验 terminal receipt 的必要字段完整性。
+- `succeeded` replay 必须包含 `parse_attempt_id`、`indexable_snapshot_id`、`outbox_event_id`、`handoff_idempotency_key` 和 `outbox_idempotency_key`；`dead_letter` 必须包含 `parse_attempt_id`、`dead_letter_id` 和 `failure_code`；`failed` / `cancelled` 必须包含 `parse_attempt_id` 和 `failure_code`。
+- 若 duplicate/redelivery 命中半截 replay receipt，runtime 抛出 `IngestionPersistenceError`，不 ACK、不 reject 当前 delivery，避免 crash-after-commit-before-ACK 幂等路径确认不完整领域结果。
+- 本次没有新增 Migration。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 37 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

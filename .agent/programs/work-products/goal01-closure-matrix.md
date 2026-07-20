@@ -847,4 +847,17 @@ Gate B/C was not rerun because docker info still reports Docker daemon npipe doc
 PHASE11 remains in_progress; this is Package A duplicate/redelivery identity evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A duplicate replay terminal receipt completeness：
+
+```text
+PackageAProductionIngestionRuntime now validates duplicate/redelivery terminal replay receipt completeness before ACK.
+succeeded replay requires parse_attempt_id, indexable_snapshot_id, outbox_event_id, handoff_idempotency_key, and outbox_idempotency_key.
+dead_letter replay requires parse_attempt_id, dead_letter_id, and failure_code; failed/cancelled replay requires parse_attempt_id and failure_code.
+The focused test proves incomplete succeeded replay receipt is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 37 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A duplicate/redelivery receipt completeness evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

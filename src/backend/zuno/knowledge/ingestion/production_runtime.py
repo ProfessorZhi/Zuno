@@ -427,6 +427,50 @@ class PackageAProductionIngestionRuntime:
             raise IngestionPersistenceError("Package A replay receipt mismatch: parse_job_id")
         if str(replay.get("tenant_id")) != str(tenant_id):
             raise IngestionPersistenceError("Package A replay receipt mismatch: tenant_id")
+        status = str(replay.get("job_status"))
+        if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
+            return
+        PackageAProductionIngestionRuntime._require_replay_fields(
+            replay,
+            ("parse_attempt_id",),
+            status=status,
+        )
+        if status == "succeeded":
+            PackageAProductionIngestionRuntime._require_replay_fields(
+                replay,
+                (
+                    "indexable_snapshot_id",
+                    "outbox_event_id",
+                    "handoff_idempotency_key",
+                    "outbox_idempotency_key",
+                ),
+                status=status,
+            )
+        elif status == "dead_letter":
+            PackageAProductionIngestionRuntime._require_replay_fields(
+                replay,
+                ("dead_letter_id", "failure_code"),
+                status=status,
+            )
+        else:
+            PackageAProductionIngestionRuntime._require_replay_fields(
+                replay,
+                ("failure_code",),
+                status=status,
+            )
+
+    @staticmethod
+    def _require_replay_fields(
+        replay: dict[str, Any],
+        field_names: tuple[str, ...],
+        *,
+        status: str,
+    ) -> None:
+        for field_name in field_names:
+            if replay.get(field_name) in {None, ""}:
+                raise IngestionPersistenceError(
+                    f"Package A replay receipt incomplete for {status}: {field_name}"
+                )
 
     @staticmethod
     async def _settle_delivery_after_domain_commit(

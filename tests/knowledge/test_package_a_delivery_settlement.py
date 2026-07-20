@@ -542,6 +542,53 @@ def test_package_a_duplicate_delivery_rejects_mismatched_replay_receipt_without_
     assert delivery.rejected is False
 
 
+def test_package_a_duplicate_delivery_refuses_incomplete_success_replay_without_ack(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "received"
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "job_status": "succeeded",
+                "parse_attempt_id": "attempt-1",
+                "indexable_snapshot_id": None,
+                "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": "handoff-idem-1",
+                "outbox_idempotency_key": "handoff-idem-1",
+                "dead_letter_id": None,
+            }
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    with pytest.raises(IngestionPersistenceError, match="replay receipt incomplete for succeeded"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.rejected is False
+
+
 def test_package_a_buffered_inbox_delivery_is_not_acked_or_replayed(monkeypatch) -> None:
     import zuno.knowledge.ingestion.production_runtime as production_runtime
 
