@@ -7,7 +7,11 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .contracts import CanonicalDocumentIR, ParseJobSnapshot, build_source_span_provenance
-from .review import QualityGateResult
+from .review import HumanReviewRuntime, QualityGateResult, ReviewDecisionReceipt
+
+
+class SnapshotHandoffBlockedError(ValueError):
+    pass
 
 
 class IndexableDocumentSnapshotV1(BaseModel):
@@ -47,13 +51,20 @@ class SnapshotHandoffRuntime:
         parse_snapshot: ParseJobSnapshot,
         quality_gate: QualityGateResult,
         visibility_ref: str,
+        review_receipt: ReviewDecisionReceipt | None = None,
         delete_refs: list[str] | None = None,
     ) -> tuple[IndexableDocumentSnapshotV1, SnapshotOutboxEvent]:
+        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate, receipt=review_receipt):
+            raise SnapshotHandoffBlockedError(
+                "quality gate blocks indexable snapshot publication without approved review receipt"
+            )
         canonical_payload = {
             "schema_version": self.schema_version,
             "document": document.model_dump(),
             "parse_snapshot_ref": parse_snapshot.job_id,
             "quality_decision_id": quality_gate.quality_decision_id,
+            "review_decision_id": review_receipt.decision_id if review_receipt else None,
+            "review_decision_hash": review_receipt.decision_hash if review_receipt else None,
             "visibility_ref": visibility_ref,
             "delete_refs": list(delete_refs or []),
         }
@@ -90,6 +101,10 @@ class SnapshotHandoffRuntime:
                 "acl_scope": document.metadata.acl_scope,
                 "sensitivity_tags": list(document.metadata.sensitivity_tags),
                 "visibility_ref": visibility_ref,
+                "review_task_id": quality_gate.review_task_id,
+                "review_decision_id": review_receipt.decision_id if review_receipt else None,
+                "review_decision_hash": review_receipt.decision_hash if review_receipt else None,
+                "review_status": review_receipt.status if review_receipt else None,
             },
             delete_refs=list(delete_refs or []),
             payload=canonical_payload,
@@ -124,6 +139,7 @@ def _hash(payload: dict[str, Any]) -> str:
 
 __all__ = [
     "IndexableDocumentSnapshotV1",
+    "SnapshotHandoffBlockedError",
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",
 ]

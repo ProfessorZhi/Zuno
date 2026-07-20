@@ -27,6 +27,7 @@ from .delete_restore import DeleteLifecycleReceipt, DeleteRestoreRuntime
 from .gateway import ParseGateway
 from .handoff import (
     IndexableDocumentSnapshotV1,
+    SnapshotHandoffBlockedError,
     SnapshotHandoffRuntime,
     SnapshotOutboxEvent,
 )
@@ -94,6 +95,7 @@ __all__ = [
     "QualityMetric",
     "ReviewDecisionReceipt",
     "ReviewTask",
+    "SnapshotHandoffBlockedError",
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",
     "SourceSpan",

@@ -59,6 +59,85 @@ def test_snapshot_handoff_builds_immutable_snapshot_and_pending_outbox() -> None
     assert first_outbox.payload_hash == second_outbox.payload_hash
 
 
+def test_snapshot_handoff_requires_approved_review_receipt_for_review_gate() -> None:
+    import pytest
+
+    from zuno.knowledge.ingestion import (
+        HumanReviewRuntime,
+        ParseDocumentRequest,
+        ParseGateway,
+        SnapshotHandoffBlockedError,
+        SnapshotHandoffRuntime,
+    )
+
+    parsed = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_review_snapshot",
+            workspace_id="workspace_handoff",
+            source_uri="file://scans/review.png",
+            mime_type="image/png",
+            source_text="OCR text requires approval before snapshot handoff.",
+        )
+    )
+    parse_snapshot = ParseGateway.get_job_snapshot(parsed.job_id)
+    assert parsed.document is not None
+    review_runtime = HumanReviewRuntime(review_ttl_seconds=60)
+    gate, task = review_runtime.evaluate(
+        document=parsed.document,
+        parse_snapshot=parse_snapshot,
+        security_epoch_ref="security_epoch:workspace_handoff",
+    )
+    assert gate.verdict == "REVIEW"
+    assert task is not None
+    handoff = SnapshotHandoffRuntime()
+
+    with pytest.raises(SnapshotHandoffBlockedError):
+        handoff.create_snapshot(
+            document=parsed.document,
+            parse_snapshot=parse_snapshot,
+            quality_gate=gate,
+            visibility_ref="visibility:workspace_handoff:doc_review_snapshot",
+        )
+
+    rejected = review_runtime.decide(
+        task=task,
+        reviewer_id="reviewer_wrong_scope",
+        reviewer_scope="tenant_admin",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_handoff",
+    )
+    with pytest.raises(SnapshotHandoffBlockedError):
+        handoff.create_snapshot(
+            document=parsed.document,
+            parse_snapshot=parse_snapshot,
+            quality_gate=gate,
+            review_receipt=rejected,
+            visibility_ref="visibility:workspace_handoff:doc_review_snapshot",
+        )
+
+    approved = review_runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope=task.reviewer_scope,
+        status="approved",
+        security_epoch_ref=task.security_epoch_ref,
+    )
+    snapshot, outbox = handoff.create_snapshot(
+        document=parsed.document,
+        parse_snapshot=parse_snapshot,
+        quality_gate=gate,
+        review_receipt=approved,
+        visibility_ref="visibility:workspace_handoff:doc_review_snapshot",
+    )
+
+    assert snapshot.quality_decision_id == gate.quality_decision_id
+    assert snapshot.security_refs["review_task_id"] == task.review_task_id
+    assert snapshot.security_refs["review_decision_id"] == approved.decision_id
+    assert snapshot.security_refs["review_status"] == "approved"
+    assert snapshot.payload["review_decision_hash"] == approved.decision_hash
+    assert outbox.publish_status == "pending"
+
+
 def test_sqlite_store_round_trips_snapshot_and_outbox() -> None:
     from pathlib import Path
     import tempfile
