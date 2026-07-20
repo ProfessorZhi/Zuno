@@ -58,6 +58,15 @@ class ReviewDecisionReceipt(BaseModel):
     decided_at: float = Field(default_factory=time.time)
 
 
+class ReviewExpirationSweepReceipt(BaseModel):
+    sweep_id: str
+    now: float
+    expired_task_ids: list[str] = Field(default_factory=list)
+    skipped_task_ids: list[str] = Field(default_factory=list)
+    decision_receipts: list[ReviewDecisionReceipt] = Field(default_factory=list)
+    sweep_hash: str
+
+
 @dataclass
 class HumanReviewRuntime:
     review_ttl_seconds: int = 3600
@@ -166,6 +175,54 @@ class HumanReviewRuntime:
             decided_at=current_time,
         )
 
+    def expire_pending_reviews(
+        self,
+        *,
+        tasks: list[ReviewTask],
+        existing_receipts: dict[str, ReviewDecisionReceipt] | None = None,
+        now: float | None = None,
+    ) -> ReviewExpirationSweepReceipt:
+        current_time = time.time() if now is None else now
+        existing = existing_receipts or {}
+        expired_task_ids: list[str] = []
+        skipped_task_ids: list[str] = []
+        receipts: list[ReviewDecisionReceipt] = []
+        for task in tasks:
+            if task.status != "pending" or task.review_task_id in existing:
+                skipped_task_ids.append(task.review_task_id)
+                continue
+            if current_time <= task.expires_at:
+                skipped_task_ids.append(task.review_task_id)
+                continue
+            receipt = self.decide(
+                task=task,
+                reviewer_id="system:review-expiration",
+                reviewer_scope=task.reviewer_scope,
+                status="cancelled",
+                security_epoch_ref=task.security_epoch_ref,
+                now=current_time,
+            )
+            expired_task_ids.append(task.review_task_id)
+            receipts.append(receipt)
+        sweep_id = f"review_expiration_sweep_{int(current_time)}_{len(expired_task_ids)}"
+        sweep_hash = _hash(
+            {
+                "sweep_id": sweep_id,
+                "now": current_time,
+                "expired_task_ids": expired_task_ids,
+                "skipped_task_ids": skipped_task_ids,
+                "decision_hashes": [receipt.decision_hash for receipt in receipts],
+            }
+        )
+        return ReviewExpirationSweepReceipt(
+            sweep_id=sweep_id,
+            now=current_time,
+            expired_task_ids=expired_task_ids,
+            skipped_task_ids=skipped_task_ids,
+            decision_receipts=receipts,
+            sweep_hash=sweep_hash,
+        )
+
     @classmethod
     def can_publish_snapshot(
         cls,
@@ -203,5 +260,6 @@ __all__ = [
     "QualityGateResult",
     "QualityMetric",
     "ReviewDecisionReceipt",
+    "ReviewExpirationSweepReceipt",
     "ReviewTask",
 ]

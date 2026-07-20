@@ -108,6 +108,60 @@ def test_human_review_runtime_records_rejected_expired_and_cancelled_states() ->
     assert HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=expired) is False
 
 
+def test_human_review_runtime_expiration_sweep_expires_only_pending_overdue_tasks() -> None:
+    from zuno.knowledge.ingestion import HumanReviewRuntime
+
+    result, snapshot = _ocr_parse()
+    assert result.document is not None
+    runtime = HumanReviewRuntime(review_ttl_seconds=10)
+    gate, task = runtime.evaluate(
+        document=result.document,
+        parse_snapshot=snapshot,
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+    assert task is not None
+    future_task = task.model_copy(
+        update={
+            "review_task_id": "review_future_task",
+            "expires_at": task.expires_at + 100,
+        }
+    )
+    existing_receipt = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope=task.reviewer_scope,
+        status="approved",
+        security_epoch_ref=task.security_epoch_ref,
+    )
+
+    sweep = runtime.expire_pending_reviews(
+        tasks=[task, future_task],
+        existing_receipts={task.review_task_id: existing_receipt},
+        now=task.expires_at + 1,
+    )
+
+    assert sweep.expired_task_ids == []
+    assert sweep.skipped_task_ids == [task.review_task_id, future_task.review_task_id]
+    assert sweep.decision_receipts == []
+    assert len(sweep.sweep_hash) == 64
+
+    expired_sweep = runtime.expire_pending_reviews(
+        tasks=[task, future_task],
+        now=future_task.expires_at + 1,
+    )
+
+    assert expired_sweep.expired_task_ids == [task.review_task_id, future_task.review_task_id]
+    assert expired_sweep.skipped_task_ids == []
+    assert [receipt.status for receipt in expired_sweep.decision_receipts] == [
+        "expired",
+        "expired",
+    ]
+    assert all(
+        HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=receipt) is False
+        for receipt in expired_sweep.decision_receipts
+    )
+
+
 def test_sqlite_store_round_trips_quality_gate_review_task_and_receipt(tmp_path: Path) -> None:
     from zuno.knowledge.ingestion import HumanReviewRuntime
     from zuno.knowledge.storage import (

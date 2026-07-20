@@ -47,6 +47,7 @@ from .review import (
     QualityGateResult,
     QualityMetric,
     ReviewDecisionReceipt,
+    ReviewExpirationSweepReceipt,
     ReviewTask,
 )
 from .source_object_commit import (
@@ -106,6 +107,7 @@ __all__ = [
     "QualityGateResult",
     "QualityMetric",
     "ReviewDecisionReceipt",
+    "ReviewExpirationSweepReceipt",
     "ReviewTask",
     "SnapshotHandoffBlockedError",
     "SnapshotHandoffRuntime",
