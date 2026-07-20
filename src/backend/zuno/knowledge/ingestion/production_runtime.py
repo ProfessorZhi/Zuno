@@ -807,6 +807,13 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts") from exc
         if payload_max_attempts < 1 or payload_max_attempts != max_attempts:
             raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts")
+        retry_attempt_no = payload.get("retry_attempt_no")
+        if retry_attempt_no is not None:
+            try:
+                if int(retry_attempt_no) > max_attempts:
+                    raise ValueError
+            except (TypeError, ValueError) as exc:
+                raise PackageARejectDeliveryError("delivery retry policy mismatch: retry_attempt_no") from exc
 
     @staticmethod
     def _validate_delivery_retry_envelope(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> None:

@@ -631,4 +631,16 @@ Package A retry boundary, delivery settlement, and queue worker tests passed: 39
 PHASE11 remains in_progress; this is Package A retry identity-boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A retry budget pre-Inbox gate：
+
+```text
+PackageAProductionIngestionRuntime now rejects retry delivery envelopes whose retry_attempt_no exceeds max_attempts before Worker Inbox.
+The focused retry boundary test proves retry_attempt_no=3 is rejected when Package A max_attempts=2.
+The integration/fault test proves the RabbitMQ delivery is rejected before IngestionUnitOfWork, so no Inbox, Lease, or Attempt mutation can occur.
+py_compile passed.
+Package A retry boundary, delivery settlement, and queue worker tests passed: 40 passed.
+Package A retry attempt beyond budget integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A retry budget-boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

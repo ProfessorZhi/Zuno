@@ -110,6 +110,19 @@ def test_retry_delivery_envelope_rejects_first_attempt_number() -> None:
         )
 
 
+def test_retry_policy_rejects_retry_attempt_beyond_max_attempts() -> None:
+    payload = {
+        "max_attempts": 2,
+        "retry_attempt_no": 3,
+    }
+
+    with pytest.raises(PackageARejectDeliveryError, match="retry_attempt_no"):
+        PackageAProductionIngestionRuntime._validate_delivery_retry_policy(
+            payload=payload,
+            max_attempts=2,
+        )
+
+
 def _parse_requested_envelope() -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
