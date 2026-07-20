@@ -1133,6 +1133,33 @@ Package A retry boundary and queue worker tests passed: 24 passed
 Package A integration/fault test file: 13 passed, 17 environment_blocked because Alembic could not connect to PostgreSQL localhost:5432 before Gate B/C setup.
 ```
 
+2026-07-20 Package A upload replay source fact gate：
+
+- `IngestionRepository.load_workspace_upload_replay_receipt(...)` 现在在 upload idempotency replay receipt 中读取 PostgreSQL `SourceObject.filename`、`mime_type` 和 `declared_format`。
+- `PackageAProductionIngestionRuntime._validate_workspace_upload_replay(...)` 现在复用既有 ParseJob 前校验 `filename`、`mime_type`、`declared_format`，并校验 replay `object_ref` 仍是同一 tenant/workspace prefix 下的 `s3://` ObjectRef。
+- 该 gate 防止 Workspace/File Upload 默认入口在重复上传命中既有 ParseJob 时，接受跨 tenant/workspace ObjectRef 或文件事实不一致的 replay receipt；拒绝发生在再次写入 Object Store 之前。
+- 本次没有新增 Migration；复用 `20260719_18` 中已有 SourceObject 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_upload_replay.py
+pytest -q tests/knowledge/test_package_a_upload_replay.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+alembic -c infra/db/alembic.ini upgrade head
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload replay tests passed: 5 passed
+Package A delivery settlement, retry boundary, and queue worker tests passed: 59 passed
+Gate B/C service startup environment_blocked: Docker daemon npipe dockerDesktopLinuxEngine was not available, so PostgreSQL/RabbitMQ/MinIO could not be started in this environment.
+Alembic upgrade head environment_blocked: PostgreSQL localhost:5432 connection timeout.
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

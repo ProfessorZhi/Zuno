@@ -260,12 +260,22 @@ class PackageAProductionIngestionRuntime:
             "workspace_id": command.workspace_id,
             "source_sha256": content_hash,
             "size_bytes": len(command.content),
+            "filename": command.filename,
+            "mime_type": command.mime_type,
+            "declared_format": PackageAProductionIngestionRuntime._declared_format(
+                command.mime_type,
+                command.filename,
+            ),
             "classification_ref": command.classification_ref,
             "security_epoch_ref": command.security_epoch_ref,
         }
         for field_name, expected_value in expected.items():
             if str(replay.get(field_name)) != str(expected_value):
                 raise IngestionPersistenceError(f"workspace upload replay conflict: {field_name}")
+        parsed = urlparse(str(replay.get("object_ref", "")))
+        expected_prefix = f"{command.tenant_id}/{command.workspace_id}/"
+        if parsed.scheme != "s3" or not parsed.netloc or not parsed.path.lstrip("/").startswith(expected_prefix):
+            raise IngestionPersistenceError("workspace upload replay conflict: object_ref")
         if not replay.get("outbox_event_id"):
             raise IngestionPersistenceError("workspace upload replay missing parse-request outbox")
 

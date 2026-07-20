@@ -820,4 +820,18 @@ Package A integration/fault test file reached 13 passed and 17 environment_block
 PHASE11 remains in_progress; this is Package A plan/classification lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A upload replay source fact gate：
+
+```text
+IngestionRepository.load_workspace_upload_replay_receipt now returns SourceObject filename, mime_type, and declared_format.
+PackageAProductionIngestionRuntime validates upload replay filename, mime_type, declared_format, classification, security epoch, hash, size, and s3 tenant/workspace ObjectRef scope before reusing an existing ParseJob.
+The focused tests prove forged replay filename and cross-tenant ObjectRef are rejected before a second Object Store write.
+py_compile passed.
+Package A upload replay tests passed: 5 passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 59 passed.
+Gate B/C service startup remains environment_blocked after docker compose postgres/rabbitmq/minio failed because Docker daemon npipe dockerDesktopLinuxEngine was unavailable.
+Alembic upgrade head remains environment_blocked because PostgreSQL localhost:5432 timed out.
+PHASE11 remains in_progress; this is Package A Workspace/File Upload replay boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

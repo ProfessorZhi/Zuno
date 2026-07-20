@@ -25,6 +25,9 @@ def test_package_a_upload_replays_existing_parse_job_before_object_write(monkeyp
         "workspace_id": "workspace-a",
         "source_sha256": content_hash,
         "size_bytes": len(content),
+        "filename": "file.md",
+        "mime_type": "text/markdown",
+        "declared_format": "markdown",
         "classification_ref": "internal",
         "security_epoch_ref": "security-epoch-a",
     }
@@ -60,6 +63,9 @@ def test_package_a_upload_replay_rejects_conflicting_source_facts(monkeypatch) -
         "workspace_id": "workspace-b",
         "source_sha256": content_hash,
         "size_bytes": len(content),
+        "filename": "file.md",
+        "mime_type": "text/markdown",
+        "declared_format": "markdown",
         "classification_ref": "internal",
         "security_epoch_ref": "security-epoch-a",
     }
@@ -71,6 +77,42 @@ def test_package_a_upload_replay_rejects_conflicting_source_facts(monkeypatch) -
     )
 
     with pytest.raises(IngestionPersistenceError, match="workspace_id"):
+        runtime.accept_workspace_upload(_command(content=content))
+
+
+def test_package_a_upload_replay_rejects_conflicting_filename_before_object_write(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    content = b"# Replay\nsame content\n"
+    content_hash = hashlib.sha256(content).hexdigest()
+    replay = _replay_receipt(content_hash=content_hash, size_bytes=len(content))
+    replay["filename"] = "forged.md"
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _unit_of_work_factory(replay))
+    runtime = PackageAProductionIngestionRuntime(
+        engine=object(),
+        object_store=_FailingObjectStore(),
+        worker_id="worker-a",
+    )
+
+    with pytest.raises(IngestionPersistenceError, match="filename"):
+        runtime.accept_workspace_upload(_command(content=content))
+
+
+def test_package_a_upload_replay_rejects_cross_tenant_object_ref_before_object_write(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    content = b"# Replay\nsame content\n"
+    content_hash = hashlib.sha256(content).hexdigest()
+    replay = _replay_receipt(content_hash=content_hash, size_bytes=len(content))
+    replay["object_ref"] = "s3://bucket/tenant-b/workspace-a/source/source-existing/file.md"
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _unit_of_work_factory(replay))
+    runtime = PackageAProductionIngestionRuntime(
+        engine=object(),
+        object_store=_FailingObjectStore(),
+        worker_id="worker-a",
+    )
+
+    with pytest.raises(IngestionPersistenceError, match="object_ref"):
         runtime.accept_workspace_upload(_command(content=content))
 
 
@@ -119,6 +161,25 @@ def _command(
         trace_id="trace-a",
         deadline_at=deadline_at,
     )
+
+
+def _replay_receipt(*, content_hash: str, size_bytes: int) -> dict:
+    return {
+        "source_object_id": "source-existing",
+        "document_version_id": "document-version:source-existing:1",
+        "parse_plan_id": "parse-plan:source-existing:1",
+        "parse_job_id": "parse-job:source-existing:1",
+        "outbox_event_id": "outbox:parse-job:source-existing:1",
+        "object_ref": "s3://bucket/tenant-a/workspace-a/source/source-existing/file.md",
+        "workspace_id": "workspace-a",
+        "source_sha256": content_hash,
+        "size_bytes": size_bytes,
+        "filename": "file.md",
+        "mime_type": "text/markdown",
+        "declared_format": "markdown",
+        "classification_ref": "internal",
+        "security_epoch_ref": "security-epoch-a",
+    }
 
 
 def _unit_of_work_factory(replay):
