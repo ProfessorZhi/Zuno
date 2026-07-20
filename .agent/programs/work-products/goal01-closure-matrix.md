@@ -194,4 +194,16 @@ Worker ObjectRef verifier fault test passed: 1 passed.
 Docker daemon and PostgreSQL localhost:5432 remain unavailable, so real Gate C MinIO/RabbitMQ/PostgreSQL E2E remains environment_blocked.
 ```
 
+2026-07-20 Package A RabbitMQ worker bootstrap：
+
+```text
+Added PackageAProductionQueueWorker to connect the PHASE04 Postgres outbox publisher, canonical RabbitMQ topology/consumer, and PackageAProductionIngestionRuntime.process_rabbitmq_delivery.
+ACK/NACK/Reject ownership remains inside PackageAProductionIngestionRuntime after the PostgreSQL domain transaction boundary.
+Queue runner now defaults to Package A ingestion worker when rabbitmq.enabled is true unless package_a_ingestion_enabled is explicitly false.
+Added tests for canonical topology defaults, publish -> consume -> runtime handoff order, and queue runner default selection.
+py_compile passed.
+Package A queue worker tests passed: 3 passed.
+PHASE11 remains in_progress; real Gate C still needs Docker/PostgreSQL/MinIO/RabbitMQ runtime availability.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

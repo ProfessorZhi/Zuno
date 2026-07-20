@@ -70,6 +70,11 @@ from .source_object_upload import (
     SourceObjectUploadReceipt,
     SourceObjectUploadRuntime,
 )
+from .worker import (
+    PackageAProductionQueueWorker,
+    PackageAQueuePumpReceipt,
+    package_a_rabbitmq_topology,
+)
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -97,9 +102,12 @@ __all__ = [
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
     "PackageAProductionIngestionRuntime",
+    "PackageAProductionQueueWorker",
+    "PackageAQueuePumpReceipt",
     "PackageAUploadCommand",
     "PackageAUploadReceipt",
     "PackageAWorkerReceipt",
+    "package_a_rabbitmq_topology",
     "ParseDocumentRequest",
     "ParseDocumentResult",
     "ParseControlReceipt",

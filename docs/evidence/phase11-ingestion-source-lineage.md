@@ -339,3 +339,24 @@ Package A bootstrap tests passed: 2 passed
 Worker ObjectRef verifier fault test passed: 1 passed
 Gate C real MinIO/RabbitMQ/PostgreSQL E2E remains environment_blocked in this machine because Docker daemon and PostgreSQL localhost:5432 are unavailable
 ```
+
+2026-07-20 Package A RabbitMQ worker bootstrap：
+
+- 新增 `PackageAProductionQueueWorker`，把 PHASE04 transactional outbox publisher、RabbitMQ topology/consumer 和 `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 接成一个生产 worker pump。
+- `publish_and_consume_once(...)` 顺序为声明 topology、用 `PostgresOutboxRabbitMQPublisher.publish_batch(...)` 发布 pending outbox、从 canonical ingestion parse queue 获取 RabbitMQ delivery、交给 Package A runtime 处理；ACK/NACK/Reject 仍只由 runtime 在领域事务边界后执行。
+- `platform/services/queue/runner.py` 新增 `run_package_a_ingestion_worker_forever(...)`，`rabbitmq.enabled` 且未显式关闭 `package_a_ingestion_enabled` 时默认启动 Package A ingestion worker，不再默认落到旧 parse/index/graph worker。
+- 新增 `tests/knowledge/test_package_a_queue_worker.py`，覆盖 canonical RabbitMQ topology 默认值、worker pump 的 publish -> consume -> runtime handoff 顺序，以及 queue runner 默认选择 Package A worker。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/worker.py src/backend/zuno/knowledge/ingestion/__init__.py src/backend/zuno/platform/services/queue/runner.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker tests passed: 3 passed
+```
