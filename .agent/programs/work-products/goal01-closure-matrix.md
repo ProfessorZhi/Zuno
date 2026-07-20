@@ -336,4 +336,15 @@ Gate B parser identity integration was attempted and is environment_blocked by P
 PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
 ```
 
+2026-07-20 Package A Workspace upload hash gate：
+
+```text
+WorkspaceTaskRuntimeService.register_file now computes SHA256 from actual upload content before creating file state or calling PackageAProductionIngestionRuntime.
+Provided file_hash mismatch returns HTTP 400 and does not create UploadedFileContract, _file_text, or Package A upload command.
+Matching hash keeps Workspace file contract, file_status.source_sha256, and Package A SourceObject content lineage on the same actual content hash.
+py_compile passed.
+Workspace Package A upload hash gate tests passed: 2 passed.
+PHASE11 remains in_progress; this is Package A default upload path implementation evidence, not Gate C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

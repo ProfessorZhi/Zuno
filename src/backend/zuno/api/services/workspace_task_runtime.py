@@ -411,9 +411,11 @@ class WorkspaceTaskRuntimeService:
     ) -> dict:
         normalized_file_id = file_id or f"file_{uuid4().hex[:12]}"
         stored_content = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
-        normalized_hash = file_hash or hashlib.sha256(
-            stored_content.encode("utf-8")
-        ).hexdigest()
+        content_bytes = stored_content.encode("utf-8")
+        actual_hash = hashlib.sha256(content_bytes).hexdigest()
+        if file_hash is not None and file_hash != actual_hash:
+            raise HTTPException(status_code=400, detail="Uploaded file hash does not match content")
+        normalized_hash = actual_hash
         file = UploadedFileContract(
             workspace_id=workspace_id,
             owner=login_user.user_id,
@@ -449,7 +451,7 @@ class WorkspaceTaskRuntimeService:
                     principal_id=login_user.user_id,
                     filename=name or f"{normalized_file_id}.txt",
                     mime_type=mime_type,
-                    content=stored_content.encode("utf-8"),
+                    content=content_bytes,
                     bucket="zuno-ingestion",
                     source_object_id=source_id,
                     classification_ref=security_label,
@@ -477,7 +479,7 @@ class WorkspaceTaskRuntimeService:
                 storage_uri=receipt.object_ref,
                 source_ref=receipt.source_object_id,
                 source_sha256=normalized_hash,
-                size_bytes=len(stored_content.encode("utf-8")),
+                size_bytes=len(content_bytes),
                 index_status="pending",
             )
             return payload

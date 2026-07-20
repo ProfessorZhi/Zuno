@@ -604,3 +604,24 @@ py_compile passed
 Package A delivery settlement and parser identity unit tests passed: 11 passed
 Gate B parser identity integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
+
+2026-07-20 Package A Workspace upload hash gate：
+
+- `WorkspaceTaskRuntimeService.register_file(...)` 现在先基于实际 upload content 计算 SHA256。
+- 如果调用方提供 `file_hash` 且与实际 content hash 不一致，入口返回 HTTP 400，且不会创建 `UploadedFileContract`、不会写 `_file_text`、不会调用 `PackageAProductionIngestionRuntime.accept_workspace_upload(...)`。
+- 若 hash 匹配或未提供 hash，前台 file contract、`file_status.source_sha256` 和 Package A `PackageAUploadCommand.content` 共享同一份实际内容 hash，避免 Workspace/File Upload 与 PostgreSQL SourceObject lineage 分叉。
+- 新增 focused service tests `tests/api/test_workspace_package_a_upload_hash_gate.py`，覆盖 mismatch 拒绝和 match 后进入 Package A production runtime。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py tests/api/test_workspace_package_a_upload_hash_gate.py
+pytest -q tests/api/test_workspace_package_a_upload_hash_gate.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Workspace Package A upload hash gate tests passed: 2 passed
+```
