@@ -784,4 +784,15 @@ Package A Workspace/File Upload deadline default wiring tests passed: 5 passed.
 PHASE11 remains in_progress; this is Package A default upload wiring evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A filename lineage in parse-request envelope：
+
+```text
+PackageAProductionIngestionRuntime now emits upload filename in the canonical parse-request payload.
+PackageAProductionIngestionRuntime validates payload filename against PostgreSQL SourceObject.filename before Lease claim, ObjectRef read, or Parser Gateway.
+The focused tests prove filename is present in the upload envelope and forged filename payload is rejected by the worker lineage validator.
+py_compile passed.
+Package A upload replay/filename and delivery settlement lineage tests passed: 35 passed.
+PHASE11 remains in_progress; this is Package A source filename lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

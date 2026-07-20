@@ -330,6 +330,16 @@ def test_package_a_lineage_validator_rejects_size_mismatch() -> None:
         )
 
 
+def test_package_a_lineage_validator_rejects_filename_mismatch_before_lease() -> None:
+    payload = {**_lineage_payload(), "filename": "forged.md"}
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: filename"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=payload,
+            context=_lineage_context(),
+        )
+
+
 def test_package_a_lineage_validator_requires_retry_parent_attempt_to_match_postgres() -> None:
     payload = {
         **_lineage_payload(),
@@ -731,6 +741,7 @@ def _lineage_payload() -> dict:
         "object_manifest_ref": "manifest-a",
         "content_hash": "a" * 64,
         "size_bytes": 12,
+        "filename": "file.md",
         "mime_type": "text/markdown",
         "security_epoch_ref": "security-epoch-a",
     }
@@ -748,6 +759,7 @@ def _lineage_context() -> dict:
         "object_manifest_ref": "manifest-a",
         "source_sha256": "a" * 64,
         "size_bytes": 12,
+        "filename": "file.md",
         "mime_type": "text/markdown",
         "security_epoch_ref": "security-epoch-a",
         "attempt_count": 0,

@@ -215,6 +215,7 @@ def _seed_retryable_job(engine, *, content: bytes) -> CrossModuleEnvelopeV1:
         "object_manifest_ref": "manifest:pkg-a:retry",
         "content_hash": content_hash,
         "size_bytes": len(content),
+        "filename": "retry.md",
         "mime_type": "text/markdown",
         "parser_policy_ref": "parser-policy:pkg-a",
         "quality_policy_ref": "quality-policy:pkg-a",

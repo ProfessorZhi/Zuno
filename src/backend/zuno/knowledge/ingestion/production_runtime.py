@@ -765,6 +765,7 @@ class PackageAProductionIngestionRuntime:
             "object_manifest_ref": object_manifest_ref,
             "content_hash": content_hash,
             "size_bytes": size_bytes,
+            "filename": command.filename,
             "mime_type": command.mime_type,
             "parser_policy_ref": command.parser_policy_ref,
             "quality_policy_ref": command.quality_policy_ref,
@@ -951,6 +952,7 @@ class PackageAProductionIngestionRuntime:
             "object_manifest_ref": context["object_manifest_ref"],
             "content_hash": context["source_sha256"],
             "mime_type": context["mime_type"],
+            "filename": context["filename"],
             "security_epoch_ref": context["security_epoch_ref"],
         }
         for field_name, expected_value in expected_fields.items():
