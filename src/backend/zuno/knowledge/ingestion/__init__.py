@@ -41,6 +41,7 @@ from .legacy_cutover import (
     parse_file_to_canonical_ir,
 )
 from .normalizer import normalize_legacy_chunks_to_ir
+from .parse_control import ParseControlReceipt, ParseControlRuntime, ParseControlState
 from .review import (
     HumanReviewRuntime,
     QualityGateResult,
@@ -81,6 +82,9 @@ __all__ = [
     "PARSER_CAPABILITY_MATRIX",
     "ParseDocumentRequest",
     "ParseDocumentResult",
+    "ParseControlReceipt",
+    "ParseControlRuntime",
+    "ParseControlState",
     "ParseJobSnapshot",
     "ParseGateway",
     "ParserAdapterContract",

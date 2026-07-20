@@ -43,6 +43,7 @@ docs/evidence/input-runtime-batch.md
 - `temporary.adapter.phase11.legacy_chunk_projection` 当前把 workspace 文档附件与 knowledge pipeline `_parse_chunks` 从隐式 `doc_parser.parse_doc_into_chunks` 默认调用迁移为：ParseGateway 先生成 `CanonicalDocumentIR`，再显式投影成旧 `ChunkModel` 给未迁移 RAG/Graph 消费；该 adapter 绑定 Input Parser Adapter Owner 与 PHASE16 removal，不得作为 PHASE11 完成证据。
 - Snapshot handoff 当前对 Human Review fail-closed：`QualityGateResult` 为 REVIEW 时，未提供 approved `ReviewDecisionReceipt` 或 receipt 为 rejected/expired/cancelled 会拒绝生成 `IndexableDocumentSnapshotV1`；approved receipt 会写入 snapshot payload / security refs 后生成 pending outbox。
 - Delete/Restore runtime 当前覆盖解析中删除：`DeleteLifecycleReceipt` 可绑定 parse job、parse attempt 与 fencing token；delete during parse 会先撤销 visibility，后续 cleanup / physical delete / verification 后拒绝 late worker result；legal hold 会阻止 cleanup / physical delete，且不会错误恢复授权。
+- `ParseControlRuntime` 当前显式串起 ParsePlan / queued job / attempt lease / worker run：覆盖 planned → queued → leased → running → succeeded / cancelled / dead_letter，本地成功路径会用 fencing token 提交 lease，stale fencing token 被拒绝，failed parse 会按 retry policy 进入 dead_letter。
 
 ## Validation
 
@@ -55,6 +56,7 @@ pytest -q tests/knowledge/test_document_ingestion_contract.py -p no:cacheprovide
 pytest -q tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_durable_ingest_runtime.py tests/knowledge/test_ingestion_delete_restore.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_delete_restore.py tests/knowledge/test_ingestion_lease_recovery.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
+pytest -q tests/knowledge/test_ingestion_parse_control.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_ingestion_lease_recovery.py -p no:cacheprovider
 python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py
 python tools/scripts/verify_input_runtime_batch.py
 pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
