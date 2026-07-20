@@ -807,4 +807,17 @@ Package A upload replay/format and delivery settlement lineage tests passed: 36 
 PHASE11 remains in_progress; this is Package A source declared-format lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A parser policy and classification lineage：
+
+```text
+PackageAProductionIngestionRuntime now emits upload classification_ref in the canonical parse-request payload.
+IngestionRepository.load_parse_job_context now reads PostgreSQL ParsePlan.parser_policy_ref.
+PackageAProductionIngestionRuntime validates payload parser_policy_ref, quality_policy_ref, security_decision_ref, and classification_ref against PostgreSQL ParsePlan/SourceObject facts before Lease claim, ObjectRef read, or Parser Gateway.
+py_compile passed.
+Package A upload replay and delivery settlement lineage tests passed: 38 passed.
+Package A retry boundary and queue worker tests passed: 24 passed.
+Package A integration/fault test file reached 13 passed and 17 environment_blocked because PostgreSQL localhost:5432 timed out during Alembic setup.
+PHASE11 remains in_progress; this is Package A plan/classification lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

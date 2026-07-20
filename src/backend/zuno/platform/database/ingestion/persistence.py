@@ -327,7 +327,7 @@ class IngestionRepository:
                     job.idempotency_key, job.status, job.attempt_count,
                     latest_attempt.parse_attempt_id AS latest_attempt_id,
                     latest_attempt.status AS latest_attempt_status,
-                    plan.quality_policy_ref, plan.security_decision_ref,
+                    plan.parser_policy_ref, plan.quality_policy_ref, plan.security_decision_ref,
                     document.workspace_id, document.source_object_id, document.content_hash,
                     source.filename, source.mime_type, source.declared_format,
                     source.storage_uri, source.object_manifest_ref,

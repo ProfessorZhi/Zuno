@@ -350,6 +350,26 @@ def test_package_a_lineage_validator_rejects_declared_format_mismatch_before_lea
         )
 
 
+def test_package_a_lineage_validator_rejects_parser_policy_mismatch_before_lease() -> None:
+    payload = {**_lineage_payload(), "parser_policy_ref": "parser-policy-forged"}
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: parser_policy_ref"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=payload,
+            context=_lineage_context(),
+        )
+
+
+def test_package_a_lineage_validator_rejects_classification_mismatch_before_lease() -> None:
+    payload = {**_lineage_payload(), "classification_ref": "restricted"}
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: classification_ref"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=payload,
+            context=_lineage_context(),
+        )
+
+
 def test_package_a_lineage_validator_requires_retry_parent_attempt_to_match_postgres() -> None:
     payload = {
         **_lineage_payload(),
@@ -754,6 +774,10 @@ def _lineage_payload() -> dict:
         "filename": "file.md",
         "mime_type": "text/markdown",
         "declared_format": "markdown",
+        "classification_ref": "internal",
+        "parser_policy_ref": "parser-policy-a",
+        "quality_policy_ref": "quality-policy-a",
+        "security_decision_ref": "security-decision-a",
         "security_epoch_ref": "security-epoch-a",
     }
 
@@ -773,6 +797,10 @@ def _lineage_context() -> dict:
         "filename": "file.md",
         "mime_type": "text/markdown",
         "declared_format": "markdown",
+        "classification_ref": "internal",
+        "parser_policy_ref": "parser-policy-a",
+        "quality_policy_ref": "quality-policy-a",
+        "security_decision_ref": "security-decision-a",
         "security_epoch_ref": "security-epoch-a",
         "attempt_count": 0,
         "latest_attempt_id": None,
@@ -797,6 +825,7 @@ class _FirstSeenRepo:
             "source_status": "committed",
             "idempotency_key": "parse:tenant-a:workspace-a:source-a",
             "attempt_count": 0,
+            "parser_policy_ref": "parser-policy-a",
             "quality_policy_ref": "quality-policy-a",
             "security_decision_ref": "security-decision-a",
         }

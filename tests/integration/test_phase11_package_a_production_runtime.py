@@ -218,6 +218,7 @@ def _seed_retryable_job(engine, *, content: bytes) -> CrossModuleEnvelopeV1:
         "filename": "retry.md",
         "mime_type": "text/markdown",
         "declared_format": "markdown",
+        "classification_ref": "internal",
         "parser_policy_ref": "parser-policy:pkg-a",
         "quality_policy_ref": "quality-policy:pkg-a",
         "security_decision_ref": "security-decision:pkg-a",

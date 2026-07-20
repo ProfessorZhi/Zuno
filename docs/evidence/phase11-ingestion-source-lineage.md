@@ -1108,6 +1108,31 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
 
+2026-07-20 Package A parser policy and classification lineage in parse-request envelope：
+
+- `PackageAProductionIngestionRuntime._parse_requested_envelope(...)` 现在将 upload `classification_ref` 写入 Package A parse-request payload。
+- `IngestionRepository.load_parse_job_context(...)` 现在读取 PostgreSQL `ParsePlan.parser_policy_ref`。
+- `PackageAProductionIngestionRuntime._validate_delivery_lineage(...)` 现在用 PostgreSQL `ParsePlan.parser_policy_ref`、`quality_policy_ref`、`security_decision_ref` 和 `SourceObject.classification_ref` 校验 payload，防止 parser / quality / security / classification 事实在 Worker Inbox 后、Lease claim 前被篡改。
+- 本次没有新增 Migration；复用 `20260719_18` 中已有 `ingestion_parse_plans.parser_policy_ref` 和 `ingestion_source_objects.classification_ref` 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload replay and delivery settlement lineage tests passed: 38 passed
+Package A retry boundary and queue worker tests passed: 24 passed
+Package A integration/fault test file: 13 passed, 17 environment_blocked because Alembic could not connect to PostgreSQL localhost:5432 before Gate B/C setup.
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。
