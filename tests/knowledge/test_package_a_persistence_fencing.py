@@ -9,6 +9,16 @@ from zuno.platform.database.ingestion.persistence import (
 class _Result:
     rowcount = 1
 
+    def mappings(self):
+        return self
+
+    def first(self):
+        return {
+            "indexable_snapshot_id": "snapshot-a",
+            "handoff_idempotency_key": "handoff-idem-a",
+            "outbox_event_id": "outbox-a",
+        }
+
 
 class _Connection:
     def __init__(self) -> None:
@@ -114,3 +124,32 @@ def test_snapshot_outbox_persists_idempotency_key() -> None:
     )
 
     assert connection.calls[0]["params"]["idempotency_key"] == "handoff-idem-a"
+
+
+def test_parse_job_replay_receipt_selects_handoff_idempotency_fields() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    repo.load_parse_job_replay_receipt(parse_job_id="parse-job-a", tenant_id="tenant-a")
+
+    statement = connection.calls[0]["statement"]
+    assert "indexable.handoff_idempotency_key" in statement
+    assert "outbox.idempotency_key AS outbox_idempotency_key" in statement
+
+
+def test_snapshot_handoff_replay_receipt_loads_by_tenant_scoped_idempotency() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    receipt = repo.load_snapshot_handoff_replay_receipt(
+        tenant_id="tenant-a",
+        handoff_idempotency_key="handoff-idem-a",
+    )
+
+    assert receipt["indexable_snapshot_id"] == "snapshot-a"
+    assert connection.calls[0]["params"] == {
+        "tenant_id": "tenant-a",
+        "handoff_idempotency_key": "handoff-idem-a",
+    }
+    statement = connection.calls[0]["statement"]
+    assert "outbox.idempotency_key = indexable.handoff_idempotency_key" in statement

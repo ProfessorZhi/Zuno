@@ -756,3 +756,23 @@ Package A persistence and delivery settlement tests passed: 18 passed
 Alembic heads passed: 20260720_20 (head)
 Alembic upgrade head attempted; local PostgreSQL connection did not return before manual interruption, so upgrade runtime verification remains environment_blocked
 ```
+
+2026-07-20 Package A Snapshot handoff replay receipt：
+
+- `load_parse_job_replay_receipt(...)` 现在返回 `indexable.handoff_idempotency_key` 和 `outbox.idempotency_key AS outbox_idempotency_key`，duplicate/redelivery receipt 不再只暴露 snapshot/outbox id。
+- 新增 `load_snapshot_handoff_replay_receipt(...)`，按 `tenant_id + handoff_idempotency_key` 从 PostgreSQL 找回 IndexableDocumentSnapshot 与对应 `ingestion.indexable_snapshot.ready` outbox 状态。
+- 这把上轮落库的 handoff idempotency 接入 repository replay/read path，使 crash-after-commit-before-ACK 或 duplicate handoff 可以从数据库事实层恢复既有 snapshot/outbox。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_persistence_fencing.py
+pytest -q tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A persistence replay and delivery settlement tests passed: 20 passed
+```

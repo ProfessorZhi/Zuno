@@ -416,4 +416,15 @@ Alembic upgrade head was attempted; local PostgreSQL connection did not return b
 PHASE11 remains in_progress; this is Package A snapshot handoff idempotency implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Snapshot handoff replay receipt：
+
+```text
+IngestionRepository.load_parse_job_replay_receipt now returns handoff_idempotency_key and outbox_idempotency_key for duplicate/redelivery receipts.
+Added load_snapshot_handoff_replay_receipt to recover IndexableDocumentSnapshot plus indexable_snapshot.ready outbox state by tenant_id + handoff_idempotency_key.
+This connects persisted handoff idempotency to the PostgreSQL replay/read path needed for duplicate handoff and crash-after-commit-before-ACK recovery.
+py_compile passed.
+Package A persistence replay and delivery settlement tests passed: 20 passed.
+PHASE11 remains in_progress; this is Package A snapshot handoff replay implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

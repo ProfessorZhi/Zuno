@@ -349,7 +349,9 @@ class IngestionRepository:
                     latest_attempt.parse_attempt_id,
                     latest_attempt.status AS attempt_status,
                     indexable.indexable_snapshot_id,
+                    indexable.handoff_idempotency_key,
                     outbox.outbox_event_id,
+                    outbox.idempotency_key AS outbox_idempotency_key,
                     dead_letter.dead_letter_id
                 FROM ingestion_parse_jobs AS job
                 LEFT JOIN LATERAL (
@@ -376,6 +378,45 @@ class IngestionRepository:
         ).mappings().first()
         if row is None:
             raise IngestionPersistenceError(f"missing parse job replay receipt: {parse_job_id}")
+        return dict(row)
+
+    def load_snapshot_handoff_replay_receipt(
+        self,
+        *,
+        tenant_id: str,
+        handoff_idempotency_key: str,
+    ) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    indexable.indexable_snapshot_id,
+                    indexable.parse_snapshot_id,
+                    indexable.document_version_id,
+                    indexable.quality_decision_id,
+                    indexable.snapshot_hash,
+                    indexable.handoff_envelope_hash,
+                    indexable.visibility_ref,
+                    indexable.handoff_idempotency_key,
+                    indexable.knowledge_handoff_status,
+                    outbox.outbox_event_id,
+                    outbox.publish_status AS outbox_publish_status,
+                    outbox.payload_hash AS outbox_payload_hash
+                FROM ingestion_indexable_document_snapshots AS indexable
+                LEFT JOIN ingestion_outbox_events AS outbox
+                  ON outbox.tenant_id = indexable.tenant_id
+                 AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
+                 AND outbox.idempotency_key = indexable.handoff_idempotency_key
+                WHERE indexable.tenant_id = :tenant_id
+                  AND indexable.handoff_idempotency_key = :handoff_idempotency_key
+                """
+            ),
+            {"tenant_id": tenant_id, "handoff_idempotency_key": handoff_idempotency_key},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(
+                f"missing snapshot handoff replay receipt: {handoff_idempotency_key}"
+            )
         return dict(row)
 
     def claim_parse_attempt_lease(
