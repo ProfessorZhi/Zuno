@@ -221,6 +221,28 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B crash-after-commit-before-ACK replay test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 cancel-deadline worker path：
+
+- `PackageAProductionIngestionRuntime` 现在在 Attempt/Lease claimed 并标记 running 后、读取 ObjectRef 和调用 Parser Gateway 前处理 `cancel_requested` 与过期 `deadline_at`。
+- cancel/deadline 路径通过 PostgreSQL fencing 更新 Attempt `cancelled`、Lease `released`、ParseJob `cancelled`，不写 ParseSnapshot、SourceSpan、QualityDecision、IndexableSnapshot 或 Snapshot Outbox，事务成功后 ACK 当前 delivery。
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot`，覆盖 cancel 不调用 Parser Gateway、不生成 Snapshot/Outbox、关闭 Attempt/Lease 并 ACK。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B cancel test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

@@ -752,6 +752,84 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
         engine.dispose()
 
 
+def test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Cancel\nDo not parse."
+    envelope = _seed_retryable_job(engine, content=content)
+    payload = dict(envelope.payload or {})
+    payload["cancel_requested"] = True
+    envelope = envelope.model_copy(
+        update={
+            "payload": payload,
+            "payload_hash": canonical_sha256(payload),
+        }
+    )
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("cancelled delivery must not call Parser Gateway")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "cancelled"
+        assert receipt.acked_after_domain_commit is True
+        assert receipt.indexable_snapshot_id is None
+        assert receipt.outbox_event_id is None
+        assert receipt.dead_letter_id is None
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.status AS attempt_status,
+                           attempt.failure_code AS failure_code,
+                           lease.state AS lease_state,
+                           job.status AS job_status
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_status"] == "cancelled"
+            assert row["failure_code"] == "cancel_requested"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "cancelled"
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
 def test_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox() -> None:
     asyncio.run(_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox())
 

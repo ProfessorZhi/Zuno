@@ -263,6 +263,23 @@ class PackageAProductionIngestionRuntime:
             worker_id=self.worker_id,
             fencing_token=fencing_token,
         )
+        cancel_reason = self._cancel_reason(payload=payload, envelope=envelope)
+        if cancel_reason is not None:
+            repo.fail_parse_attempt(
+                parse_attempt_id=parse_attempt_id,
+                parse_job_id=parse_job_id,
+                tenant_id=tenant_id,
+                worker_id=self.worker_id,
+                fencing_token=fencing_token,
+                status="cancelled",
+                failure_code=cancel_reason,
+            )
+            return PackageAWorkerReceipt(
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                status="cancelled",
+                acked_after_domain_commit=True,
+            )
         source_bytes = self._read_and_verify_object(context)
         request = ParseDocumentRequest(
             document_id=str(context["source_object_id"]),
@@ -500,6 +517,14 @@ class PackageAProductionIngestionRuntime:
                 "created_at": now,
             }
         )
+
+    @staticmethod
+    def _cancel_reason(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> str | None:
+        if bool(payload.get("cancel_requested")):
+            return "cancel_requested"
+        if envelope.deadline_at is not None and envelope.deadline_at <= datetime.now(timezone.utc):
+            return "deadline_expired"
+        return None
 
     def _read_and_verify_object(self, context: dict[str, Any]) -> bytes:
         parsed = urlparse(str(context["storage_uri"]))

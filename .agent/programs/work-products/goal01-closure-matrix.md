@@ -151,4 +151,14 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B replay test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 cancel-deadline worker path：
+
+```text
+Runtime now handles cancel_requested and expired deadline after Attempt/Lease claim and before ObjectRef read/Parser Gateway call.
+Cancel/deadline closes Attempt as cancelled, releases Lease, sets Job cancelled, emits no Snapshot/IndexableSnapshot/SnapshotOutbox, and ACKs after domain commit.
+Added Gate B integration coverage for cancel_requested path.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B cancel test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
