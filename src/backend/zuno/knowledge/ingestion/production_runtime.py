@@ -539,6 +539,14 @@ class PackageAProductionIngestionRuntime:
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay mismatch: {field_name}"
                 )
+        if str(handoff_replay.get("knowledge_handoff_status")) in {"blocked", "dead_letter"}:
+            raise IngestionPersistenceError(
+                "Package A snapshot handoff replay conflict: knowledge_handoff_status"
+            )
+        if str(handoff_replay.get("outbox_publish_status")) == "dead_letter":
+            raise IngestionPersistenceError(
+                "Package A snapshot handoff replay conflict: outbox_publish_status"
+            )
 
     @staticmethod
     async def _settle_delivery_after_domain_commit(

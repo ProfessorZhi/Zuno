@@ -1319,6 +1319,31 @@ Package A delivery settlement tests passed: 42 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A succeeded replay terminal handoff fault gate：
+
+- `PackageAProductionIngestionRuntime._validate_snapshot_handoff_replay_receipt(...)` 现在拒绝 `knowledge_handoff_status in ('blocked','dead_letter')` 或 `outbox_publish_status='dead_letter'` 的 succeeded duplicate/redelivery replay receipt。
+- 该 gate 防止 crash-after-commit-before-ACK 回放路径在 Snapshot Handoff / Outbox 已进入不可交接终态时 ACK RabbitMQ delivery。
+- 新增 Gate B integration/fault 测试 `test_gate_b_redelivery_refuses_dead_letter_handoff_replay_without_ack`：使用真实 PostgreSQL fixture seed 已提交成功 ParseAttempt / Snapshot / IndexableSnapshot / Snapshot Outbox，再将 handoff 状态改为 `dead_letter`，期望 redelivery 不 ACK、不 reparse。
+- 本次没有新增 Migration；复用 `20260719_18` 中 `knowledge_handoff_status` / `publish_status` 的合法状态约束。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_redelivery_refuses_dead_letter_handoff_replay_without_ack -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 43 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+Gate B redelivery terminal handoff fault test environment_blocked: Alembic upgrade could not connect to PostgreSQL localhost:5432 before assertions.
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

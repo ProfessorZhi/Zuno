@@ -916,4 +916,16 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A Snapshot Outbox replay completeness evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay terminal handoff fault gate：
+
+```text
+PackageAProductionIngestionRuntime now refuses succeeded duplicate/redelivery replay when Snapshot Handoff is blocked/dead_letter or Snapshot Outbox is dead_letter.
+Added Gate B integration/fault coverage for redelivery after domain commit with a PostgreSQL dead_letter handoff status; expected behavior is no ACK and no reparse.
+py_compile passed.
+Package A delivery settlement tests passed: 43 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+Gate B redelivery terminal handoff fault test is environment_blocked because Alembic could not connect to PostgreSQL localhost:5432 before assertions.
+PHASE11 remains in_progress; this is Package A replay fault hardening evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
