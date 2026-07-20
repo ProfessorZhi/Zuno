@@ -175,6 +175,30 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B non-retryable-DLQ test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 worker-object-verifier hardening：
+
+- `PackageAProductionIngestionRuntime` 现在在 worker 读取 ParseJob context 后校验 delivery `security_epoch_ref` 必须匹配 PostgreSQL SourceObject `security_epoch_ref`。
+- `_read_and_verify_object(...)` 现在重新校验 S3 ObjectRef 必须位于 `tenant_id/workspace_id/` scope 内，并继续校验 hash、size 和 SourceObject visibility/status。
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility`，覆盖 scope escape、hash mismatch 和 revoked visibility 被拒绝。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+worker object verifier fault test passed: 1 passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate C real MinIO/RabbitMQ E2E remains environment_blocked: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

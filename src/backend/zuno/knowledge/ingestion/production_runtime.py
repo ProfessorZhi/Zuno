@@ -233,6 +233,8 @@ class PackageAProductionIngestionRuntime:
         tenant_id: str,
     ) -> PackageAWorkerReceipt:
         context = repo.load_parse_job_context(parse_job_id=parse_job_id, tenant_id=tenant_id)
+        if payload.get("security_epoch_ref") != context["security_epoch_ref"]:
+            raise IngestionPersistenceError("delivery security epoch does not match SourceObject")
         attempt = repo.claim_parse_attempt_lease(
             tenant_id=tenant_id,
             workspace_id=str(context["workspace_id"]),
@@ -496,7 +498,11 @@ class PackageAProductionIngestionRuntime:
         parsed = urlparse(str(context["storage_uri"]))
         if parsed.scheme != "s3" or not parsed.netloc or not parsed.path:
             raise IngestionPersistenceError("Package A worker requires s3:// ObjectRef")
-        content = self.object_store.store.read_object(bucket=parsed.netloc, object_name=parsed.path.lstrip("/"))
+        object_name = parsed.path.lstrip("/")
+        expected_prefix = f"{context['tenant_id']}/{context['workspace_id']}/"
+        if not object_name.startswith(expected_prefix):
+            raise IngestionPersistenceError("SourceObject ObjectRef is outside tenant/workspace scope")
+        content = self.object_store.store.read_object(bucket=parsed.netloc, object_name=object_name)
         actual_hash = hashlib.sha256(content).hexdigest()
         if actual_hash != context["source_sha256"] or len(content) != int(context["size_bytes"]):
             raise IngestionPersistenceError("SourceObject bytes do not match PostgreSQL lineage facts")

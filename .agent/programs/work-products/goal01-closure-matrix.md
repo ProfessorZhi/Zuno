@@ -131,4 +131,14 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 worker-object-verifier hardening：
+
+```text
+Runtime now checks delivery security_epoch_ref against SourceObject security_epoch_ref before leasing.
+Worker ObjectRef verifier now rejects tenant/workspace scope escape, hash mismatch, size mismatch, and non-committed/revoked source visibility.
+Added fault coverage for scope escape + hash mismatch + revoked visibility.
+py_compile passed; worker object verifier fault test passed: 1 passed.
+Docker daemon remains unavailable; Gate C real MinIO/RabbitMQ E2E is still environment_blocked at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+import pytest
 from sqlalchemy import text
 
 from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime, PackageAUploadCommand
@@ -247,6 +248,45 @@ def _seed_retryable_job(engine, *, content: bytes) -> CrossModuleEnvelopeV1:
         )
         repo.enqueue_parse_requested(envelope=envelope)
     return envelope
+
+
+def test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility() -> None:
+    content = b"# Object verifier\nPackage A."
+    content_hash = hashlib.sha256(content).hexdigest()
+    runtime = PackageAProductionIngestionRuntime(
+        engine=None,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/source/source-a/file.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+    )
+    context = {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "storage_uri": "s3://bucket/tenant-a/workspace-a/source/source-a/file.md",
+        "source_sha256": content_hash,
+        "size_bytes": len(content),
+        "source_status": "committed",
+    }
+
+    assert runtime._read_and_verify_object(context) == content
+
+    scoped_out_context = {
+        **context,
+        "storage_uri": "s3://bucket/tenant-b/workspace-a/source/source-a/file.md",
+    }
+    with pytest.raises(IngestionPersistenceError, match="tenant/workspace scope"):
+        runtime._read_and_verify_object(scoped_out_context)
+
+    hash_mismatch_context = {**context, "source_sha256": "0" * 64}
+    with pytest.raises(IngestionPersistenceError, match="lineage facts"):
+        runtime._read_and_verify_object(hash_mismatch_context)
+
+    revoked_context = {**context, "source_status": "revoked"}
+    with pytest.raises(IngestionPersistenceError, match="not visible"):
+        runtime._read_and_verify_object(revoked_context)
 
 
 def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> None:
