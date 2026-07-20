@@ -80,3 +80,37 @@ def test_parse_attempt_update_rejects_empty_expected_state_set() -> None:
             status="running",
             expected_statuses=(),
         )
+
+
+def test_indexable_snapshot_persists_handoff_idempotency_key() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    repo.record_indexable_snapshot(
+        indexable_snapshot_id="snapshot-a",
+        tenant_id="tenant-a",
+        parse_snapshot_id="parse-snapshot-a",
+        document_version_id="document-version-a",
+        quality_decision_id="quality-a",
+        visibility_ref="visibility-a",
+        payload={"indexable_snapshot_id": "snapshot-a"},
+        handoff_idempotency_key="handoff-idem-a",
+    )
+
+    assert connection.calls[0]["params"]["handoff_idempotency_key"] == "handoff-idem-a"
+
+
+def test_snapshot_outbox_persists_idempotency_key() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    repo.enqueue_outbox_event(
+        outbox_event_id="outbox-a",
+        tenant_id="tenant-a",
+        aggregate_ref="snapshot-a",
+        event_type="ingestion.indexable_snapshot.ready",
+        payload={"indexable_snapshot_id": "snapshot-a"},
+        idempotency_key="handoff-idem-a",
+    )
+
+    assert connection.calls[0]["params"]["idempotency_key"] == "handoff-idem-a"

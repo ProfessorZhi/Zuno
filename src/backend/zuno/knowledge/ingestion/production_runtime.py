@@ -556,6 +556,7 @@ class PackageAProductionIngestionRuntime:
             quality_decision_id=quality.ref,
             visibility_ref=indexable_snapshot.visibility_ref,
             payload=indexable_snapshot.payload,
+            handoff_idempotency_key=indexable_snapshot.idempotency_key,
         )
         outbox = repo.enqueue_outbox_event(
             outbox_event_id=snapshot_outbox.outbox_event_id,
@@ -563,6 +564,7 @@ class PackageAProductionIngestionRuntime:
             aggregate_ref=indexable.ref,
             event_type="ingestion.indexable_snapshot.ready",
             payload=handoff_payload,
+            idempotency_key=snapshot_outbox.idempotency_key,
         )
         domain_commit_ref = f"domain-commit:{parse_attempt_id}:{snapshot_receipt.ref}:{outbox.ref}"
         repo.commit_parse_attempt_if_current(

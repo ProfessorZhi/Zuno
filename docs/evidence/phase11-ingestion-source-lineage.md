@@ -731,3 +731,28 @@ pytest -q tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_
 py_compile passed
 Package A retry boundary and delivery settlement tests passed: 16 passed
 ```
+
+2026-07-20 Package A Snapshot handoff idempotency persistence：
+
+- 新增 forward migration `20260720_20_package_a_handoff_idempotency.py`，在 `ingestion_indexable_document_snapshots` 增加 `handoff_idempotency_key`，在 `ingestion_outbox_events` 增加 `idempotency_key`。
+- Migration 对既有 snapshot handoff outbox 做回填：从 `payload.idempotency_key` 回填 outbox，再通过 `aggregate_ref = indexable_snapshot_id` 回填 indexable snapshot；同时增加 tenant-scoped partial unique indexes，避免重复 handoff/outbox idempotency。
+- `IngestionRepository.record_indexable_snapshot(...)` 和 `enqueue_outbox_event(...)` 现在持久化 handoff idempotency；Package A success path 将 `IndexableDocumentSnapshotV1.idempotency_key` / `SnapshotOutboxEvent.idempotency_key` 写入 PostgreSQL。
+- 这让 Snapshot handoff 的 duplicate/replay 判定从内存模型扩展到 PostgreSQL 事实层。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_persistence_fencing.py infra/db/alembic/versions/20260720_20_package_a_handoff_idempotency.py
+pytest -q tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+alembic -c infra/db/alembic.ini heads
+alembic -c infra/db/alembic.ini upgrade head
+```
+
+结果：
+
+```text
+py_compile passed
+Package A persistence and delivery settlement tests passed: 18 passed
+Alembic heads passed: 20260720_20 (head)
+Alembic upgrade head attempted; local PostgreSQL connection did not return before manual interruption, so upgrade runtime verification remains environment_blocked
+```

@@ -92,6 +92,8 @@ REVISION_OWNERS = {
     "20260719_16": "Security",
     "20260719_17": "Observability / Eval",
     "20260719_18": "Input / Document Ingestion",
+    "20260720_19": "Input / Document Ingestion",
+    "20260720_20": "Input / Document Ingestion",
 }
 
 OBSERVABILITY_TABLE_OWNERS = {

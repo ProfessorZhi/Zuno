@@ -403,4 +403,17 @@ Package A retry boundary and delivery settlement tests passed: 16 passed.
 PHASE11 remains in_progress; this is Package A retry lineage implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Snapshot handoff idempotency persistence：
+
+```text
+Added forward migration 20260720_20_package_a_handoff_idempotency.py for PostgreSQL handoff idempotency persistence.
+ingestion_indexable_document_snapshots now has handoff_idempotency_key and ingestion_outbox_events now has idempotency_key, with existing outbox/snapshot backfill and tenant-scoped partial unique indexes.
+Package A success path passes IndexableDocumentSnapshotV1.idempotency_key and SnapshotOutboxEvent.idempotency_key into PostgreSQL repository writes.
+py_compile passed.
+Package A persistence and delivery settlement tests passed: 18 passed.
+Alembic heads passed: 20260720_20 (head).
+Alembic upgrade head was attempted; local PostgreSQL connection did not return before manual interruption, so runtime migration verification is environment_blocked.
+PHASE11 remains in_progress; this is Package A snapshot handoff idempotency implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

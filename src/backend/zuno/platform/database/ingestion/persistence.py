@@ -930,6 +930,7 @@ class IngestionRepository:
         quality_decision_id: str,
         visibility_ref: str,
         payload: dict[str, Any],
+        handoff_idempotency_key: str | None = None,
         knowledge_handoff_status: str = "pending",
     ) -> IngestionReceipt:
         snapshot_hash = canonical_sha256(payload)
@@ -948,11 +949,11 @@ class IngestionRepository:
                 INSERT INTO ingestion_indexable_document_snapshots(
                     indexable_snapshot_id, tenant_id, parse_snapshot_id, document_version_id,
                     quality_decision_id, snapshot_hash, handoff_envelope_hash,
-                    visibility_ref, knowledge_handoff_status
+                    visibility_ref, handoff_idempotency_key, knowledge_handoff_status
                 ) VALUES (
                     :indexable_snapshot_id, :tenant_id, :parse_snapshot_id, :document_version_id,
                     :quality_decision_id, :snapshot_hash, :handoff_envelope_hash,
-                    :visibility_ref, :knowledge_handoff_status
+                    :visibility_ref, :handoff_idempotency_key, :knowledge_handoff_status
                 )
                 """
             ),
@@ -965,6 +966,7 @@ class IngestionRepository:
                 "snapshot_hash": snapshot_hash,
                 "handoff_envelope_hash": handoff_hash,
                 "visibility_ref": visibility_ref,
+                "handoff_idempotency_key": handoff_idempotency_key,
                 "knowledge_handoff_status": knowledge_handoff_status,
             },
         )
@@ -978,6 +980,7 @@ class IngestionRepository:
         aggregate_ref: str,
         event_type: str,
         payload: dict[str, Any],
+        idempotency_key: str | None = None,
         publish_status: str = "pending",
     ) -> IngestionReceipt:
         payload_hash = canonical_sha256(payload)
@@ -986,10 +989,10 @@ class IngestionRepository:
                 """
                 INSERT INTO ingestion_outbox_events(
                     outbox_event_id, tenant_id, aggregate_ref, event_type,
-                    payload_hash, payload, publish_status
+                    payload_hash, payload, idempotency_key, publish_status
                 ) VALUES (
                     :outbox_event_id, :tenant_id, :aggregate_ref, :event_type,
-                    :payload_hash, CAST(:payload AS jsonb), :publish_status
+                    :payload_hash, CAST(:payload AS jsonb), :idempotency_key, :publish_status
                 )
                 """
             ),
@@ -1000,6 +1003,7 @@ class IngestionRepository:
                 "event_type": event_type,
                 "payload_hash": payload_hash,
                 "payload": canonical_json(payload),
+                "idempotency_key": idempotency_key,
                 "publish_status": publish_status,
             },
         )
@@ -1011,7 +1015,7 @@ class IngestionRepository:
                 """
                 SELECT indexable_snapshot_id, parse_snapshot_id, document_version_id,
                        quality_decision_id, snapshot_hash, handoff_envelope_hash,
-                       visibility_ref, knowledge_handoff_status
+                       visibility_ref, handoff_idempotency_key, knowledge_handoff_status
                 FROM ingestion_indexable_document_snapshots
                 WHERE indexable_snapshot_id = :indexable_snapshot_id
                 """
