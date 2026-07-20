@@ -347,4 +347,15 @@ Workspace Package A upload hash gate tests passed: 2 passed.
 PHASE11 remains in_progress; this is Package A default upload path implementation evidence, not Gate C completion.
 ```
 
+2026-07-20 Package A Workspace upload bucket config gate：
+
+```text
+WorkspaceTaskRuntimeService now carries the Package A upload bucket as runtime configuration instead of hardcoding zuno-ingestion in PackageAUploadCommand.
+Application startup resolves the bucket from the existing PHASE04 MinIO setting storage.minio.bucket_name and passes it into the Workspace default upload path.
+If the bucket is absent in a test substitute, the service keeps the historical zuno-ingestion default; production deployments with configured MinIO bucket no longer diverge from deployment config.
+py_compile passed.
+Workspace Package A production bootstrap and upload hash/bucket tests passed: 4 passed.
+PHASE11 remains in_progress; this is Package A default upload path implementation evidence, not Gate C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

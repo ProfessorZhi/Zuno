@@ -53,7 +53,10 @@ def test_workspace_package_a_upload_rejects_client_hash_mismatch() -> None:
 def test_workspace_package_a_upload_accepts_matching_hash_and_uses_content_hash() -> None:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
     runtime = _RecordingPackageARuntime()
-    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(runtime)
+    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(
+        runtime,
+        upload_bucket="zuno-prod-ingestion",
+    )
     content = "# Package A\nActual content."
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
@@ -71,6 +74,7 @@ def test_workspace_package_a_upload_accepts_matching_hash_and_uses_content_hash(
     )
 
     assert len(runtime.commands) == 1
+    assert runtime.commands[0].bucket == "zuno-prod-ingestion"
     assert runtime.commands[0].content == content.encode("utf-8")
     assert payload["file"]["hash"] == content_hash
     assert payload["file_status"]["source_sha256"] == content_hash

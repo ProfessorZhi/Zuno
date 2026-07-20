@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from zuno.api.services.workspace_task_runtime import (
     build_package_a_production_ingestion_runtime,
+    resolve_package_a_upload_bucket,
 )
 
 
@@ -28,6 +29,7 @@ def test_package_a_production_bootstrap_builds_minio_postgres_runtime():
                 endpoint="minio:9000",
                 access_key_id="minioadmin",
                 access_key_secret="minioadmin",
+                bucket_name="zuno-prod-ingestion",
             ),
         )
     )
@@ -57,6 +59,7 @@ def test_package_a_production_bootstrap_builds_minio_postgres_runtime():
         "object_store": "durable-minio-store",
         "worker_id": "workspace-file-upload",
     }
+    assert resolve_package_a_upload_bucket(settings) == "zuno-prod-ingestion"
 
 
 def test_package_a_production_bootstrap_stays_unconfigured_without_minio_credentials():

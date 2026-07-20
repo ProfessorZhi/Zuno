@@ -62,6 +62,7 @@ async def init_config():
     from zuno.api.services.workspace_task_runtime import (
         WorkspaceTaskRuntimeService,
         build_package_a_production_ingestion_runtime,
+        resolve_package_a_upload_bucket,
     )
     from zuno.platform.database import engine
     from zuno.platform.security import PostgresSecurityProductActionGuard
@@ -72,7 +73,8 @@ async def init_config():
         build_package_a_production_ingestion_runtime(
             engine=engine,
             settings=app_settings,
-        )
+        ),
+        upload_bucket=resolve_package_a_upload_bucket(app_settings),
     )
     MCPService.configure_security_product_action_guard(product_action_guard)
     MCPServerService.configure_security_product_action_guard(product_action_guard)

@@ -92,6 +92,16 @@ from zuno.platform.security import (
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
 
 
+DEFAULT_PACKAGE_A_UPLOAD_BUCKET = "zuno-ingestion"
+
+
+def resolve_package_a_upload_bucket(settings: Any) -> str:
+    storage = getattr(settings, "storage", None)
+    minio = getattr(storage, "minio", None) if storage is not None else None
+    bucket = str(getattr(minio, "bucket_name", "") or "").strip() if minio is not None else ""
+    return bucket or DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+
+
 def build_package_a_production_ingestion_runtime(
     *,
     engine: Any,
@@ -174,6 +184,7 @@ class WorkspaceTaskRuntimeService:
     _human_review_runtime = HumanReviewRuntime()
     _snapshot_handoff_runtime = SnapshotHandoffRuntime()
     _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
+    _package_a_upload_bucket: str = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
@@ -271,8 +282,11 @@ class WorkspaceTaskRuntimeService:
     def configure_package_a_production_ingestion(
         cls,
         runtime: PackageAProductionIngestionRuntime | None,
+        *,
+        upload_bucket: str | None = None,
     ) -> None:
         cls._package_a_production_runtime = runtime
+        cls._package_a_upload_bucket = (upload_bucket or DEFAULT_PACKAGE_A_UPLOAD_BUCKET).strip() or DEFAULT_PACKAGE_A_UPLOAD_BUCKET
 
     @classmethod
     def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
@@ -323,6 +337,7 @@ class WorkspaceTaskRuntimeService:
         cls._durable_ingestion_store = None
         cls._source_object_store = None
         cls._package_a_production_runtime = None
+        cls._package_a_upload_bucket = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
         cls._security_product_action_guard = None
 
     @classmethod
@@ -452,7 +467,7 @@ class WorkspaceTaskRuntimeService:
                     filename=name or f"{normalized_file_id}.txt",
                     mime_type=mime_type,
                     content=content_bytes,
-                    bucket="zuno-ingestion",
+                    bucket=cls._package_a_upload_bucket,
                     source_object_id=source_id,
                     classification_ref=security_label,
                     security_epoch_ref=f"security-epoch:{workspace_id}:{login_user.user_id}",
@@ -3079,4 +3094,8 @@ def _product_mode_for_retrieval(product_mode: str) -> ProductMode:
     return ProductMode.AUTO
 
 
-__all__ = ["WorkspaceTaskRuntimeService", "build_package_a_production_ingestion_runtime"]
+__all__ = [
+    "WorkspaceTaskRuntimeService",
+    "build_package_a_production_ingestion_runtime",
+    "resolve_package_a_upload_bucket",
+]

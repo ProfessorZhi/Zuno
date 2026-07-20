@@ -625,3 +625,24 @@ pytest -q tests/api/test_workspace_package_a_upload_hash_gate.py -p no:cacheprov
 py_compile passed
 Workspace Package A upload hash gate tests passed: 2 passed
 ```
+
+2026-07-20 Package A Workspace upload bucket config gate：
+
+- `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在保存 Package A upload bucket，`register_file(...)` 创建 `PackageAUploadCommand` 时使用该配置，不再写死 `zuno-ingestion`。
+- `resolve_package_a_upload_bucket(...)` 从现有 `storage.minio.bucket_name` 解析 PHASE04 MinIO bucket；配置缺失时保留历史默认值，避免破坏无 MinIO bucket 字段的本地测试替身。
+- 应用启动 `init_config()` 在构造 Package A production runtime 后，将同一份 `app_settings.storage.minio.bucket_name` 传入 Workspace 默认上传路径，防止 Workspace/File Upload 写入的 ObjectRef bucket 与部署配置分叉。
+- 新增 focused service/bootstrap coverage，验证自定义 MinIO bucket 被解析并进入 Package A upload command。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/main.py tests/api/test_workspace_package_a_production_bootstrap.py tests/api/test_workspace_package_a_upload_hash_gate.py
+pytest -q tests/api/test_workspace_package_a_production_bootstrap.py tests/api/test_workspace_package_a_upload_hash_gate.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Workspace Package A production bootstrap and upload hash/bucket tests passed: 4 passed
+```
