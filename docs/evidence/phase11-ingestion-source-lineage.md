@@ -1045,3 +1045,25 @@ py_compile passed
 Package A retry boundary and delivery settlement tests passed: 24 passed
 Package A retry envelope causation mismatch integration/fault test passed: 1 passed
 ```
+
+2026-07-20 Package A outbox header identity gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在校验 RabbitMQ delivery headers 中的 `ordering_key` 必须等于 ParseJob aggregate ID，`ordering_sequence` 必须为正数，`outbox_publish_attempt` / `outbox_retry_count` / `outbox_replay_count` 必须完整且合法。
+- 该 gate 在 Worker Inbox 和 PostgreSQL UoW 之前执行，防止绕过 PHASE04 Outbox publisher 的伪造 delivery 进入 Package A Worker。
+- integration/fault 测试覆盖 ordering_key mismatch before-inbox，不依赖 PostgreSQL 环境。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_package_a_rejects_outbox_ordering_header_mismatch_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and queue worker tests passed: 32 passed
+Package A outbox ordering header mismatch integration/fault test passed: 1 passed
+```

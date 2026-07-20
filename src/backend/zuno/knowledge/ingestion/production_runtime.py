@@ -304,6 +304,11 @@ class PackageAProductionIngestionRuntime:
         ):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery security epoch header does not match envelope")
+        try:
+            self._validate_delivery_outbox_headers(headers=delivery.headers, envelope=envelope)
+        except PackageARejectDeliveryError:
+            await delivery.reject(requeue=False)
+            raise
         parse_job_id = str(payload["parse_job_id"])
         tenant_id = envelope.tenant_id
         try:
@@ -819,6 +824,29 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: causation_id")
         if envelope.idempotency_key != expected_idempotency_key:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: idempotency_key")
+
+    @staticmethod
+    def _validate_delivery_outbox_headers(*, headers: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> None:
+        ordering_key = headers.get("ordering_key")
+        ordering_sequence = headers.get("ordering_sequence")
+        if str(ordering_key) != str(envelope.aggregate_id):
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: ordering_key")
+        try:
+            if int(ordering_sequence) < 1:
+                raise ValueError
+        except (TypeError, ValueError) as exc:
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: ordering_sequence") from exc
+        counter_names = ("outbox_publish_attempt", "outbox_retry_count", "outbox_replay_count")
+        try:
+            publish_attempt = int(headers.get("outbox_publish_attempt"))
+            retry_count = int(headers.get("outbox_retry_count"))
+            replay_count = int(headers.get("outbox_replay_count"))
+        except (TypeError, ValueError) as exc:
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters") from exc
+        if publish_attempt < 1 or retry_count < 0 or replay_count < 0:
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
+        if any(headers.get(name) is None for name in counter_names):
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
 
     @staticmethod
     def _validate_delivery_lineage(*, payload: dict[str, Any], context: dict[str, Any]) -> None:

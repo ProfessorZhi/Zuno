@@ -205,6 +205,13 @@ def test_package_a_rejects_retry_policy_mismatch_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery retry policy mismatch: max_attempts")
 
 
+def test_package_a_rejects_outbox_ordering_header_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.headers["ordering_key"] = "parse-job-other"
+
+    _assert_rejected_parse_delivery(delivery, "delivery outbox header mismatch: ordering_key")
+
+
 def test_package_a_lineage_validator_requires_payload_to_match_postgres_context() -> None:
     payload = _lineage_payload()
     context = _lineage_context()
@@ -493,6 +500,11 @@ def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDeliver
     delivery.headers = {
         "tenant_id": envelope.tenant_id,
         "security_epoch_ref": envelope.effective_security_epoch_ref,
+        "ordering_key": envelope.aggregate_id,
+        "ordering_sequence": 1,
+        "outbox_publish_attempt": 1,
+        "outbox_retry_count": 0,
+        "outbox_replay_count": 0,
     }
     delivery.payload = {
         "aggregate_id": envelope.aggregate_id,

@@ -77,6 +77,11 @@ class _RecordingDelivery:
         self.headers = {
             "tenant_id": tenant_id,
             "security_epoch_ref": envelope_payload.get("effective_security_epoch_ref"),
+            "ordering_key": envelope_payload.get("aggregate_id"),
+            "ordering_sequence": 1,
+            "outbox_publish_attempt": 1,
+            "outbox_retry_count": 0,
+            "outbox_replay_count": 0,
         }
         self.redelivered = False
         self.acked = False
@@ -819,6 +824,68 @@ def test_package_a_rejects_retry_envelope_causation_mismatch_before_inbox() -> N
     runtime.max_attempts = 2
 
     with pytest.raises(PackageARejectDeliveryError, match="delivery retry envelope mismatch: causation_id"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.nacked is False
+    assert delivery.rejected is True
+
+
+def test_package_a_rejects_outbox_ordering_header_mismatch_before_inbox() -> None:
+    payload = {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "source_object_id": "source:pkg-a:retry",
+        "document_version_id": "document-version:pkg-a:retry",
+        "parse_plan_id": "parse-plan:pkg-a:retry",
+        "parse_job_id": "parse-job:pkg-a:retry",
+        "object_ref": "s3://bucket/tenant-a/workspace-a/retry.md",
+        "object_manifest_ref": "manifest:pkg-a:retry",
+        "content_hash": "a" * 64,
+        "size_bytes": 12,
+        "mime_type": "text/markdown",
+        "parser_policy_ref": "parser-policy:pkg-a",
+        "quality_policy_ref": "quality-policy:pkg-a",
+        "security_decision_ref": "security-decision:pkg-a",
+        "security_epoch_ref": "security-epoch:pkg-a:retry",
+        "max_attempts": 2,
+    }
+    envelope = CrossModuleEnvelopeV1(
+        contract_name="zuno.ingestion.parse.requested",
+        contract_version="v1",
+        contract_bundle_version="wave1",
+        message_id="outbox:parse-job:pkg-a:retry",
+        producer_module="workspace.file_upload",
+        consumer_module="ingestion.parser_worker",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        correlation_id="trace-pkg-a-retry",
+        idempotency_key="parse:tenant-a:workspace-a:hash:1",
+        aggregate_type="ParseJob",
+        aggregate_id="parse-job:pkg-a:retry",
+        effective_security_epoch_ref="security-epoch:pkg-a:retry",
+        trace_id="trace-pkg-a-retry",
+        data_classification="internal",
+        occurred_at="2026-07-20T00:00:00Z",
+        created_at="2026-07-20T00:00:00Z",
+        payload=payload,
+        payload_hash=canonical_sha256(payload),
+        payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
+    )
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    delivery.headers["ordering_key"] = "parse-job:pkg-a:other"
+    runtime = object.__new__(PackageAProductionIngestionRuntime)
+    runtime.max_attempts = 2
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery outbox header mismatch: ordering_key"):
         asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
     assert delivery.acked is False
