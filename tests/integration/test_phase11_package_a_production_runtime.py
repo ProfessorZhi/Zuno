@@ -812,13 +812,13 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
         receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
         assert receipt.status == "dead_letter"
-        assert receipt.acked_after_domain_commit is True
+        assert receipt.acked_after_domain_commit is False
         assert receipt.retry_enqueued_after_domain_commit is False
         assert receipt.outbox_event_id is None
         assert receipt.dead_letter_id == f"dead-letter:{receipt.parse_attempt_id}"
-        assert delivery.acked is True
+        assert delivery.acked is False
         assert delivery.nacked is False
-        assert delivery.rejected is False
+        assert delivery.rejected is True
 
         with engine.connect() as conn:
             row = conn.execute(

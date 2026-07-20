@@ -423,3 +423,27 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker topic dispatch tests passed: 7 passed
 ```
+
+2026-07-20 Package A RabbitMQ DLQ settlement：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 PostgreSQL 领域 UoW 成功退出后按 worker receipt settlement：成功、retryable retry-enqueued、cancelled 和 duplicate/redelivery 继续 ACK；`dead_letter` 改为 `delivery.reject(requeue=False)`，交给 RabbitMQ DLX。
+- `PackageAWorkerReceipt.acked_after_domain_commit` 对 `dead_letter` 返回 `False`，避免把 DLQ 语义误写成 ACK 成功。
+- 保留 PostgreSQL `ingestion_dead_letters.rabbitmq_dead_letter_ref`，并把 RabbitMQ DLQ disposition 与领域 dead-letter receipt 对齐。
+- 新增 `tests/knowledge/test_package_a_delivery_settlement.py`，不依赖数据库验证 success ACK 与 dead_letter reject(requeue=false) 的分流。
+- 更新 Gate B non-retryable DLQ integration 断言：dead_letter 后不 ACK、不 NACK、reject 到 RabbitMQ DLQ。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 2 passed
+Worker ObjectRef verifier fault test passed: 1 passed
+```

@@ -227,8 +227,22 @@ class PackageAProductionIngestionRuntime:
                     parse_job_id=parse_job_id,
                     tenant_id=tenant_id,
                 )
-        await delivery.ack()
+        await self._settle_delivery_after_domain_commit(
+            delivery=delivery,
+            worker_receipt=worker_receipt,
+        )
         return worker_receipt
+
+    @staticmethod
+    async def _settle_delivery_after_domain_commit(
+        *,
+        delivery: RabbitMQDelivery | AckableDelivery,
+        worker_receipt: PackageAWorkerReceipt,
+    ) -> None:
+        if worker_receipt.status == "dead_letter":
+            await delivery.reject(requeue=False)
+            return
+        await delivery.ack()
 
     def _process_first_seen_delivery(
         self,
@@ -360,7 +374,7 @@ class PackageAProductionIngestionRuntime:
                 parse_job_id=parse_job_id,
                 parse_attempt_id=parse_attempt_id,
                 status=terminal_status,
-                acked_after_domain_commit=True,
+                acked_after_domain_commit=terminal_status != "dead_letter",
                 retry_enqueued_after_domain_commit=terminal_status == "failed",
                 outbox_event_id=retry_outbox_id,
                 dead_letter_id=dead_letter_id,

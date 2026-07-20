@@ -239,4 +239,17 @@ Package A queue worker topic dispatch tests passed: 7 passed.
 PHASE11 remains in_progress; this is Package A dispatch correctness evidence, not Gate C completion.
 ```
 
+2026-07-20 Package A RabbitMQ DLQ settlement：
+
+```text
+PackageAProductionIngestionRuntime now settles dead_letter receipts with delivery.reject(requeue=False) after the PostgreSQL domain transaction exits successfully.
+Success, retry-enqueued, cancelled, and duplicate/redelivery receipts continue to ACK after domain commit.
+PackageAWorkerReceipt.acked_after_domain_commit is false for dead_letter so runtime evidence no longer claims RabbitMQ ACK for DLQ cases.
+Updated non-retryable DLQ integration expectations to require reject instead of ACK.
+py_compile passed.
+Package A delivery settlement tests passed: 2 passed.
+Worker ObjectRef verifier fault test passed: 1 passed.
+PHASE11 remains in_progress; live RabbitMQ DLQ verification still belongs to Gate C.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
