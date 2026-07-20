@@ -1,28 +1,26 @@
 # PHASE11 Pre-Closure Evidence
 
-status: passed
+status: reopened_failed
 phase_id: PHASE11
 gate: pre_closure
 coordinator_review_required: true
+reopened_at: 2026-07-20
 
-## 结论
+## 缁撹
 
-PHASE11 Ingestion Closure Matrix 不再存在 `mandatory_open`；PHASE04 与 PHASE05 依赖均已完成 Coordinator Closure。Source lineage persistence verifier、Input runtime batch verifier 和 focused tests 均已通过。
+PHASE11 Ingestion Closure Matrix 涓嶅啀瀛樺湪 `mandatory_open`锛汸HASE04 涓?PHASE05 渚濊禆鍧囧凡瀹屾垚 Coordinator Closure銆係ource lineage persistence verifier銆両nput runtime batch verifier 鍜?focused tests 鍧囧凡閫氳繃銆?
+## 瑕嗙洊
 
-## 覆盖
-
-- Requirement Ledger：PHASE11 80 个 mandatory requirement 已具备代码、migration、测试、运行证据和 evidence ref，可晋升为 `implementation_available`。
-- Durable Source Lineage：SourceObject、DocumentVersion、ParsePlan、ParseJob、ParseAttempt、ParseSnapshot、SourceSpan、QualityGateDecision、IndexableDocumentSnapshot、Outbox 和 Dead Letter 持久化表已纳入 schema registry 和 migration chain。
-- Runtime Batch：LocalObjectStore、SQLiteDurableIngestionStore、ParserWorker、Queue/Outbox/Reconciler、lease/fencing、format preservation、delete/legal hold/restore verification、target-blocked OCR/VLM diagnostics 均由 verifier 覆盖。
-
-## 已运行命令
-
+- Requirement Ledger锛歅HASE11 80 涓?mandatory requirement 宸插叿澶囦唬鐮併€乵igration銆佹祴璇曘€佽繍琛岃瘉鎹拰 evidence ref锛屽彲鏅嬪崌涓?`implementation_available`銆?- Durable Source Lineage锛歋ourceObject銆丏ocumentVersion銆丳arsePlan銆丳arseJob銆丳arseAttempt銆丳arseSnapshot銆丼ourceSpan銆丵ualityGateDecision銆両ndexableDocumentSnapshot銆丱utbox 鍜?Dead Letter 鎸佷箙鍖栬〃宸茬撼鍏?schema registry 鍜?migration chain銆?- Runtime Batch锛歀ocalObjectStore銆丼QLiteDurableIngestionStore銆丳arserWorker銆丵ueue/Outbox/Reconciler銆乴ease/fencing銆乫ormat preservation銆乨elete/legal hold/restore verification銆乼arget-blocked OCR/VLM diagnostics 鍧囩敱 verifier 瑕嗙洊銆?
+## 宸茶繍琛屽懡浠?
 ```powershell
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
 python tools/scripts/verify_input_runtime_batch.py
 pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
 ```
 
-## 未证明
+## 鏈瘉鏄?
+PHASE11 implementation available 涓嶇瓑浜?production ready銆乹uality proven 鎴?PHASE12 Knowledge completed锛涘閮?RabbitMQ/OCR/VLM 鐢熶骇渚濊禆涓嶅彲鐢ㄦ椂浠嶅繀椤绘樉绀?target-blocked锛屼笉寰椾吉閫犳垚鍔熴€?
+## 2026-07-20 Goal01 Reopen Audit
 
-PHASE11 implementation available 不等于 production ready、quality proven 或 PHASE12 Knowledge completed；外部 RabbitMQ/OCR/VLM 生产依赖不可用时仍必须显示 target-blocked，不得伪造成功。
+本 Pre-Closure 不能继续作为 passed gate 使用。LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 与不完整 Human Review 证据不足以关闭 PHASE11。重新关闭前必须补齐 P11-T01～P11-T08 的完整生产默认路径和故障证据。

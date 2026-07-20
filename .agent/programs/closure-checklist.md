@@ -1,4 +1,4 @@
-﻿# Program Closure Checklist
+# Program Closure Checklist
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
@@ -6,7 +6,7 @@ current_phase: PHASE08
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 completed / PHASE08 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 reopened in_progress / PHASE08 ready
 
 ## PHASE01–04 订正状态
 
@@ -19,7 +19,7 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 completed / 
 - [x] PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE06 Observability Minimum Black Box 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE07 Model Gateway Runtime 已由 Coordinator Closure 批准为 completed。
-- [x] PHASE11 Durable Ingestion and Source Lineage 已由 Coordinator Closure 批准为 completed。
+- [ ] PHASE11 Durable Ingestion and Source Lineage 已由 Goal01 audit 重新打开；Coordinator Approval 调整为 pending/reopened。
 - [x] PHASE08 ready；PHASE12 仍 planned。
 
 ## Phase 状态
@@ -34,7 +34,7 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 completed / 
 - [ ] PHASE08 Deterministic Single Controller Runtime
 - [ ] PHASE09 Product Surface Backend Runtime
 - [ ] PHASE10 Web and Desktop Product Adaptation
-- [x] PHASE11 Durable Ingestion and Source Lineage
+- [ ] PHASE11 Durable Ingestion and Source Lineage
 - [ ] PHASE12 Knowledge Version and Standard RAG
 - [ ] PHASE13 Memory and Context Governance Runtime
 - [ ] PHASE14 Capability and Skill Control Plane

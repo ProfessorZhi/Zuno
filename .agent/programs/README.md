@@ -1,4 +1,4 @@
-﻿# Agent 执行计划
+# Agent 执行计划
 
 `.agent/programs/` 当前承载一个 active 总 Program：
 
@@ -18,7 +18,7 @@ zuno-canonical-architecture-runtime-realization-v1
 - Execution mode: full-scope / runtime-first / vertical-slice checkpoints / evidence-gated
 - Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
 
-2026-07-19 PHASE11 Durable Ingestion and Source Lineage 已完成 Coordinator Closure。PHASE05、PHASE06、PHASE07、PHASE11 completed；PHASE08 ready；PHASE12 仍 planned，PHASE09–22 不得提前提升为 Current。
+2026-07-20 Goal01 audit 将 PHASE11 Durable Ingestion and Source Lineage 重新打开为 in_progress。PHASE05、PHASE06、PHASE07 completed；PHASE08 ready，因为它只依赖 PHASE04–07；PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed；PHASE09–22 不得提前提升为 Current。
 
 ## 必读文件
 

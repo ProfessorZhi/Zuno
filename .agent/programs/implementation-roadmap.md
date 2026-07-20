@@ -1,4 +1,4 @@
-﻿# zuno-canonical-architecture-runtime-realization-v1 实施路线
+# zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
 current_phase: PHASE08
@@ -38,7 +38,7 @@ Product RuntimeRequest
 - PHASE03：从“共享 Contract 内核”提升为十一模块完整 Contract Bundle、Producer/Consumer Adoption 与 Multi-client Type Pipeline。
 - PHASE04：从“PostgreSQL Primitive 最小闭环”提升为 PostgreSQL、RabbitMQ、S3-compatible Object Store、LangGraph PostgreSQL Checkpointer、Backup/Restore、Fault/Concurrency 的完整耐久基础。
 
-已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 与 PHASE11 已完成 Coordinator Closure；PHASE08 ready，PHASE12 仍 planned。
+已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 已完成 Coordinator Closure；2026-07-20 Goal01 audit 将 PHASE11 重新打开为 in_progress；PHASE08 仍 ready，因为只依赖 PHASE04–07；PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed。
 
 ## 3. Phase 依赖图
 
@@ -100,7 +100,7 @@ flowchart TB
 | 08 | Deterministic Single Controller Runtime | 06 | 单步 Plan 的真实 AgentRunGraph/StepExecutionGraph 可恢复运行 |
 | 09 | Product Surface Backend Runtime | 01 | Command/Query/Projection/SSE/Signal/Compatibility API |
 | 10 | Web and Desktop Product Adaptation | 01 | Web/Desktop 使用新 Contract、Projection、AvailableAction 和 SSE Resume |
-| 11 | Durable Ingestion and Source Lineage | 02 | PHASE11 completed：SourceObject→DocumentVersion→ParseSnapshot→IR→SourceSpan、Quality Gate、Indexable Snapshot、Outbox/Delete/Restore implementation available |
+| 11 | Durable Ingestion and Source Lineage | 02 | PHASE11 reopened/in_progress：SourceObject→DocumentVersion→ParseSnapshot→IR→SourceSpan、Quality Gate、Indexable Snapshot、Outbox/Delete/Restore 需按完整生产默认路径重新证明 |
 | 12 | Knowledge Version and Standard RAG | 03 | KnowledgeVersion、Index Cutover、Evidence/Citation、Hybrid RAG |
 | 13 | Memory and Context Governance Runtime | 05 | ContextPackVersion、Candidate/Governance/Activation、Privacy Delete |
 | 14 | Capability and Skill Control Plane | 07 | Versioned Capability/Skill、Availability、Feasibility、Progressive Loading |

@@ -63,7 +63,7 @@ phases:
   - {id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready, depends_on: [PHASE04,PHASE05,PHASE06,PHASE07], tasks: [P08-T01,P08-T02,P08-T03,P08-T04,P08-T05,P08-T06,P08-T07,P08-T08]}
   - {id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: planned, depends_on: [PHASE08], tasks: [P09-T01,P09-T02,P09-T03,P09-T04,P09-T05,P09-T06,P09-T07]}
   - {id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: planned, depends_on: [PHASE09], tasks: [P10-T01,P10-T02,P10-T03,P10-T04,P10-T05,P10-T06,P10-T07,P10-T08]}
-  - {id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed, depends_on: [PHASE04,PHASE05], tasks: [P11-T01,P11-T02,P11-T03,P11-T04,P11-T05,P11-T06,P11-T07,P11-T08]}
+  - {id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress, depends_on: [PHASE04,PHASE05], tasks: [P11-T01,P11-T02,P11-T03,P11-T04,P11-T05,P11-T06,P11-T07,P11-T08]}
   - {id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: planned, depends_on: [PHASE08,PHASE11], tasks: [P12-T01,P12-T02,P12-T03,P12-T04,P12-T05,P12-T06,P12-T07,P12-T08]}
   - {id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: planned, depends_on: [PHASE08,PHASE12], tasks: [P13-T01,P13-T02,P13-T03,P13-T04,P13-T05,P13-T06,P13-T07]}
   - {id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: planned, depends_on: [PHASE05,PHASE08], tasks: [P14-T01,P14-T02,P14-T03,P14-T04,P14-T05,P14-T06,P14-T07]}

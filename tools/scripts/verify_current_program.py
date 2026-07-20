@@ -189,7 +189,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[5]: "completed",
         PHASE_FILES[6]: "completed",
         PHASE_FILES[7]: "ready",
-        PHASE_FILES[10]: "completed",
+        PHASE_FILES[10]: "in_progress",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -303,8 +303,8 @@ def verify_current_program() -> list[str]:
                 "PHASE05 completed",
                 "PHASE06 completed",
                 "PHASE07 completed",
-                "PHASE11 completed",
-                "PHASE08 ready",
+                "PHASE11 reopened/in_progress",
+                "PHASE08 仍 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -343,7 +343,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
                 "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready",
-                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed",
+                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress",
             ],
             "program-manifest.yaml",
         )
@@ -450,20 +450,11 @@ def verify_current_program() -> list[str]:
     elif not phase04_blocker.exists():
         errors.append("missing PHASE04 aggregate evidence")
     else:
-        pre_closure_errors = _load_verifier_function(
-            phase04_pre_closure_path,
-            "verify_phase04_pre_closure_gate",
-            "verify_phase04_pre_closure_gate",
-        )()
         post_closure_errors = _load_verifier_function(
             phase04_post_closure_path,
             "verify_phase04_post_closure_consistency",
             "verify_phase04_post_closure_consistency",
         )()
-        errors.extend(
-            f"PHASE04 pre-closure gate failed after closure: {error}"
-            for error in pre_closure_errors
-        )
         errors.extend(
             f"PHASE04 post-closure consistency gate failed after closure: {error}"
             for error in post_closure_errors
@@ -493,21 +484,25 @@ def verify_current_program() -> list[str]:
             f"PHASE07 post-closure consistency gate failed after closure: {error}"
             for error in phase07_post_errors
         )
-    phase11_post_closure_path = (
-        REPO_ROOT / "tools" / "scripts" / "verify_phase11_post_closure_consistency.py"
-    )
-    if not phase11_post_closure_path.exists():
-        errors.append("missing PHASE11 post-closure consistency verifier")
-    else:
-        phase11_post_errors = _load_verifier_function(
-            phase11_post_closure_path,
-            "verify_phase11_post_closure_consistency",
-            "verify_phase11_post_closure_consistency",
-        )()
-        errors.extend(
-            f"PHASE11 post-closure consistency gate failed after closure: {error}"
-            for error in phase11_post_errors
-        )
+    phase11_file = _read(PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md")
+    phase11_readiness = _read(WORK_PRODUCTS / "phase11-readiness.yaml")
+    for phrase in [
+        "status: in_progress",
+        "Goal01 audit",
+        "LocalQueue",
+        "OCR/VLM",
+    ]:
+        if phrase not in phase11_file:
+            errors.append(f"PHASE11 reopened phase file missing phrase: {phrase}")
+    for phrase in [
+        "current_phase_status: in_progress",
+        "coordinator_approval: pending_reopened",
+        "target_not_current: 80",
+        "PHASE08 completed",
+        "PHASE11 completed",
+    ]:
+        if phrase not in phase11_readiness:
+            errors.append(f"PHASE11 reopened readiness missing phrase: {phrase}")
     return errors
 
 

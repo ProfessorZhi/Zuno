@@ -1,58 +1,57 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
 WORK_PRODUCTS = PROGRAM_ROOT / "work-products"
-LEDGER = WORK_PRODUCTS / "requirement-ledger.yaml"
-MANIFEST = PROGRAM_ROOT / "program-manifest.yaml"
-CURRENT = PROGRAM_ROOT / "current.md"
-CHECKLIST = PROGRAM_ROOT / "closure-checklist.md"
-PHASE_FILE = PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md"
-SOURCE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-ingestion-source-lineage.md"
-PRE_CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase11-pre-closure.md"
-CLOSURE = REPO_ROOT / "docs" / "evidence" / "phase11-coordinator-closure.md"
-READINESS = WORK_PRODUCTS / "phase11-readiness.yaml"
 
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _phase_target_not_current_requirements(ledger: str, phase_id: str) -> list[str]:
-    gaps: list[str] = []
-    for block in re.split(r"\n(?=  - requirement_id: )", ledger):
-        if f'target_phase: "{phase_id}"' not in block:
-            continue
-        if "mandatory: true" not in block:
-            continue
-        if "current_status: target_not_current" in block:
-            match = re.search(r"requirement_id:\s+([A-Z0-9-]+)", block)
-            gaps.append(match.group(1) if match else f"unknown {phase_id} requirement")
-    return gaps
-
-
 def verify_phase11_post_closure_consistency() -> list[str]:
+    """PHASE11 is reopened; this gate now protects against stale completed claims."""
     errors: list[str] = []
-    ledger_gaps = _phase_target_not_current_requirements(_read(LEDGER), "PHASE11")
-    if ledger_gaps:
-        errors.append("PHASE11 mandatory target_not_current remains: " + ", ".join(ledger_gaps))
-    for label, path, phrases in [
-        ("phase file", PHASE_FILE, ["status: completed"]),
-        ("source evidence", SOURCE_EVIDENCE, ["status: `implementation_available`", "phase_completion: `approved`"]),
-        ("pre-closure evidence", PRE_CLOSURE, ["status: passed", "gate: pre_closure"]),
-        ("closure decision", CLOSURE, ["status: approved", "coordinator_approval: approved", "phase11_state: completed"]),
-        ("readiness", READINESS, ["current_phase_status: completed", "coordinator_approval: approved", "target_not_current: 0"]),
-        ("manifest", MANIFEST, ["current_phase: PHASE08", "id: PHASE08", "state: ready", "id: PHASE11", "state: completed", "id: PHASE12", "state: planned"]),
-        ("current", CURRENT, ["current_phase: PHASE08", "PHASE11 completed", "PHASE08 ready", "PHASE12 仍 planned"]),
-        ("closure checklist", CHECKLIST, ["[x] PHASE11 Durable Ingestion and Source Lineage", "[ ] PHASE08 Deterministic Single Controller Runtime"]),
-    ]:
-        text = _read(path)
+    surfaces = {
+        "phase file": _read(PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md"),
+        "readiness": _read(WORK_PRODUCTS / "phase11-readiness.yaml"),
+        "manifest": _read(PROGRAM_ROOT / "program-manifest.yaml"),
+        "current": _read(PROGRAM_ROOT / "current.md"),
+        "closure checklist": _read(PROGRAM_ROOT / "closure-checklist.md"),
+        "production readiness": _read(REPO_ROOT / "docs/status/production-readiness.md"),
+        "coordinator closure": _read(REPO_ROOT / "docs/evidence/phase11-coordinator-closure.md"),
+    }
+    required = {
+        "phase file": ["status: in_progress", "Goal01 audit"],
+        "readiness": [
+            "current_phase_status: in_progress",
+            "coordinator_approval: pending_reopened",
+            "target_not_current: 80",
+        ],
+        "manifest": [
+            "id: PHASE11",
+            "state: in_progress",
+            "id: PHASE08",
+            "state: ready",
+            "id: PHASE12",
+            "state: planned",
+        ],
+        "current": ["PHASE11 reopened/in_progress", "PHASE08 仍 ready", "PHASE12 仍 planned"],
+        "closure checklist": [
+            "PHASE11 reopened in_progress",
+            "- [ ] PHASE11 Durable Ingestion and Source Lineage",
+        ],
+        "production readiness": ["PHASE11 reopened/in_progress", "PHASE08 ready", "PHASE12 仍 planned"],
+        "coordinator closure": ["status: reopened", "coordinator_approval: pending_reopened"],
+    }
+    for label, phrases in required.items():
+        text = surfaces[label]
         for phrase in phrases:
             if phrase not in text:
-                errors.append(f"{label} missing phrase: {phrase}")
+                errors.append(f"{label} missing reopened PHASE11 phrase: {phrase}")
     return errors
 
 
@@ -61,9 +60,9 @@ def main() -> int:
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
-        print("PHASE11 post-closure consistency gate failed.")
+        print("PHASE11 reopened consistency gate failed.")
         return 1
-    print("PHASE11 post-closure consistency gate passed.")
+    print("PHASE11 reopened consistency gate passed.")
     return 0
 
 

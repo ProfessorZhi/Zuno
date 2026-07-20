@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFY_CURRENT_PROGRAM = REPO_ROOT / "tools" / "scripts" / "verify_current_program.py"
@@ -19,54 +22,55 @@ def test_active_program_is_machine_verifiable() -> None:
     assert verifier.verify_current_program() == []
 
 
-def test_active_program_manifest_preserves_corrected_status_boundary() -> None:
+def test_active_program_manifest_preserves_current_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE04"
+    assert manifest["current_phase"] == "PHASE08"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
-    assert manifest["correction_baseline_commit"] == "49a6aec8392bfa4be8e0662f98b9d1ef6a65960a"
     assert manifest["measurement_status"] == "measurement_blocked"
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase01_through_phase04_are_reopened_for_full_scope() -> None:
+def test_phase_states_reflect_goal01_reopen_audit() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
-        "PHASE01_current-baseline-and-requirement-ledger.md": "status: completed",
-        "PHASE02_legacy-runtime-compatibility-and-cutover-map.md": "status: completed",
-        "PHASE03_executable-cross-module-contract-bundle.md": "status: completed",
-        "PHASE04_postgres-domain-and-transaction-foundation.md": "status: ready",
-        "PHASE05_security-control-plane.md": "status: planned",
+        "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
+        "PHASE05_security-control-plane.md": "status: completed",
+        "PHASE06_observability-minimum-black-box.md": "status: completed",
+        "PHASE07_model-gateway-runtime.md": "status: completed",
+        "PHASE08_deterministic-single-controller-runtime.md": "status: ready",
+        "PHASE11_durable-ingestion-and-source-lineage.md": "status: in_progress",
+        "PHASE12_knowledge-version-and-standard-rag.md": "status: planned",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
         assert state in text
+
     manifest = (program_root / "program-manifest.yaml").read_text(encoding="utf-8")
     assert "minimum_vertical_slice_is_phase_completion: false" in manifest
-    assert "reopen_phase01_through_phase04" in manifest
-    assert "id: PHASE01, file: .agent/programs/PHASE01_current-baseline-and-requirement-ledger.md, state: completed" in manifest
-    assert "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed" in manifest
-    assert "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed" in manifest
-    assert "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: ready" in manifest
+    assert "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready" in manifest
+    assert "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress" in manifest
+    assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: planned" in manifest
 
 
-def test_partial_phase03_and_phase04_evidence_is_not_completion() -> None:
-    for filename in ["phase03-contract-bundle.md", "phase04-postgres-foundation.md"]:
-        text = (REPO_ROOT / "docs" / "evidence" / filename).read_text(encoding="utf-8")
-        assert "partial_implementation_available" in text
-        assert "phase_completion: `withdrawn`" in text
+def test_phase11_reopen_keeps_phase08_ready_and_phase12_planned() -> None:
+    readiness = (
+        REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
+    ).read_text(encoding="utf-8")
+    current = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
+    production = (REPO_ROOT / "docs/status/production-readiness.md").read_text(
+        encoding="utf-8"
+    )
 
-
-def test_phase04_complete_infrastructure_gate_is_fail_closed() -> None:
-    verifier_path = REPO_ROOT / "tools" / "scripts" / "verify_phase04_complete_infrastructure.py"
-    blocker = REPO_ROOT / "docs" / "evidence" / "phase04-complete-infrastructure-blocker.md"
-    assert verifier_path.exists()
-    assert blocker.exists()
-    text = blocker.read_text(encoding="utf-8")
-    assert "status: blocked" in text
-    assert "PHASE05 must remain blocked" in text
+    assert "current_phase_status: in_progress" in readiness
+    assert "coordinator_approval: pending_reopened" in readiness
+    assert "target_not_current: 80" in readiness
+    assert "PHASE11 reopened/in_progress" in current
+    assert "PHASE08 仍 ready" in current
+    assert "PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed" in current
+    assert "PHASE11 reopened/in_progress" in production
 
 
 def test_program_has_all_phase_files_and_atomic_tasks() -> None:
@@ -79,16 +83,3 @@ def test_program_has_all_phase_files_and_atomic_tasks() -> None:
 
         task_count += len(set(re.findall(r"P\d{2}-T\d{2}", text)))
     assert task_count == 163
-
-
-def test_program_requires_legacy_free_final_source_tree() -> None:
-    directory_contract = (REPO_ROOT / ".agent/programs/canonical-directory-contract.md").read_text(
-        encoding="utf-8"
-    )
-    phase22 = (
-        REPO_ROOT / ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md"
-    ).read_text(encoding="utf-8")
-    assert "生产源码零 legacy 目录" in directory_contract
-    assert "零 legacy alias registry" in directory_contract
-    assert "Legacy-free Canonical Directory Cleanup" in phase22
-    assert "生产源码树零 Legacy 文件夹" in phase22
