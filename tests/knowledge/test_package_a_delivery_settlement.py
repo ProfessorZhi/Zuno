@@ -263,6 +263,16 @@ def test_package_a_rejects_data_classification_header_mismatch_without_requeue()
     )
 
 
+def test_package_a_rejects_message_version_header_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.headers["message_version"] = "v2"
+
+    _assert_rejected_parse_delivery(
+        delivery,
+        "delivery message version header does not match envelope",
+    )
+
+
 def test_package_a_rejects_outbox_ordering_header_mismatch_without_requeue() -> None:
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
     delivery.headers["ordering_key"] = "parse-job-other"
@@ -612,6 +622,7 @@ def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDeliver
         "workspace_id": envelope.workspace_id,
         "trace_id": envelope.trace_id,
         "data_classification": envelope.data_classification,
+        "message_version": envelope.contract_version,
         "security_epoch_ref": envelope.effective_security_epoch_ref,
         "ordering_key": envelope.aggregate_id,
         "ordering_sequence": 1,

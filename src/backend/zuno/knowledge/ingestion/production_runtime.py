@@ -308,6 +308,10 @@ class PackageAProductionIngestionRuntime:
         ):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery data classification header does not match envelope")
+        header_message_version = delivery.headers.get("message_version")
+        if header_message_version is None or str(header_message_version) != str(envelope.contract_version):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery message version header does not match envelope")
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
             self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)

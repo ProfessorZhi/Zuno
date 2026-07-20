@@ -165,6 +165,7 @@ class PostgresOutboxRabbitMQPublisher:
         workspace_id = self._workspace_id(record.payload)
         trace_id = self._trace_id(record.payload) or self.trace_id
         data_classification = self._data_classification(record.payload)
+        contract_version = self._contract_version(record.payload) or "v1"
         await asyncio.wait_for(
             self.transport.publish(
                 self.topology,
@@ -181,6 +182,7 @@ class PostgresOutboxRabbitMQPublisher:
                 trace_id=trace_id,
                 workspace_id=workspace_id,
                 data_classification=data_classification,
+                version=contract_version,
                 security_epoch_ref=security_epoch_ref,
                 ordering_key=record.ordering_key,
                 ordering_sequence=record.ordering_sequence,
@@ -226,6 +228,13 @@ class PostgresOutboxRabbitMQPublisher:
         data_classification = payload.get("data_classification")
         if data_classification is not None:
             return str(data_classification)
+        return None
+
+    @staticmethod
+    def _contract_version(payload: dict) -> str | None:
+        contract_version = payload.get("contract_version")
+        if contract_version is not None:
+            return str(contract_version)
         return None
 
 

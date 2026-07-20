@@ -110,6 +110,10 @@ def test_outbox_publisher_maps_envelope_data_classification_to_rabbitmq_header()
     asyncio.run(_assert_outbox_publisher_maps_envelope_data_classification_to_rabbitmq_header())
 
 
+def test_outbox_publisher_maps_envelope_contract_version_to_rabbitmq_header() -> None:
+    asyncio.run(_assert_outbox_publisher_maps_envelope_contract_version_to_rabbitmq_header())
+
+
 def test_queue_runner_defaults_to_package_a_ingestion_worker(monkeypatch) -> None:
     from zuno.platform.services.queue import runner
 
@@ -677,3 +681,44 @@ async def _assert_outbox_publisher_maps_envelope_data_classification_to_rabbitmq
     )
 
     assert published[0]["data_classification"] == "restricted"
+
+
+async def _assert_outbox_publisher_maps_envelope_contract_version_to_rabbitmq_header() -> None:
+    published: list[dict] = []
+
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            published.append(kwargs)
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-version",
+    )
+    await publisher._publish_record(
+        OutboxEventRecord(
+            event_id="event-version",
+            aggregate_id="job-version",
+            topic="ingestion.parse.requested",
+            payload={
+                "contract_version": "v2",
+                "payload": {
+                    "parse_job_id": "job-version",
+                },
+            },
+            payload_hash="hash",
+            idempotency_key="tenant-a:parse:job-version",
+            claim_owner="phase11-package-a-outbox-dispatcher",
+            tenant_id="tenant-a",
+            ordering_key="job-version",
+            ordering_sequence=1,
+            publish_attempts=0,
+            retry_count=0,
+            replay_count=0,
+        )
+    )
+
+    assert published[0]["version"] == "v2"

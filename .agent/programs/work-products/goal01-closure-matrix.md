@@ -703,4 +703,16 @@ Package A data classification header mismatch integration/fault test passed: 1 p
 PHASE11 remains in_progress; this is Package A RabbitMQ classification lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A RabbitMQ message version header lineage：
+
+```text
+PostgresOutboxRabbitMQPublisher now forwards canonical envelope contract_version as RabbitMQ message_version.
+PackageAProductionIngestionRuntime validates header message_version against envelope contract_version before Worker Inbox.
+The integration/fault test proves a mismatched message_version header is rejected before IngestionUnitOfWork.
+py_compile passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 50 passed.
+Package A message version header mismatch integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A RabbitMQ contract-version lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -1260,6 +1260,28 @@ Package A delivery settlement, retry boundary, and queue worker tests passed: 48
 Package A data classification header mismatch integration/fault test passed: 1 passed
 ```
 
+2026-07-20 Package A RabbitMQ message version header lineage：
+
+- `PostgresOutboxRabbitMQPublisher` 现在使用 canonical envelope `contract_version` 作为 RabbitMQ delivery header `message_version`。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 Worker Inbox 前校验 header `message_version` 与 envelope `contract_version` 一致。
+- 该 gate 防止 contract version 被篡改的 delivery 在进入 PostgreSQL Inbox / ParseAttempt / Lease 前污染 Package A 事实链。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/queue/outbox.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_package_a_rejects_message_version_header_mismatch_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, retry boundary, and queue worker tests passed: 50 passed
+Package A message version header mismatch integration/fault test passed: 1 passed
+```
+
 2026-07-20 Package A buffered Inbox commit-before-no-ACK boundary：
 
 - `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 PostgreSQL UoW 内记录 PHASE04 Worker Inbox receipt 后，若 Inbox 返回 `status=buffered` 且 `processable=false`，会让 UoW 正常退出并提交 receipt，再抛出 `IngestionPersistenceError`。
