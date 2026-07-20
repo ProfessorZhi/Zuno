@@ -287,6 +287,13 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery is not a Package A parse request")
         payload = envelope.payload or {}
         if (
+            envelope.aggregate_type != "ParseJob"
+            or payload.get("parse_job_id") is None
+            or str(payload.get("parse_job_id")) != str(envelope.aggregate_id)
+        ):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery parse job identity mismatch")
+        if (
             envelope.tenant_id != delivery.headers.get("tenant_id")
             or str(payload.get("tenant_id")) != str(envelope.tenant_id)
         ):

@@ -239,6 +239,12 @@ def test_package_a_rejects_retry_policy_mismatch_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery retry policy mismatch: max_attempts")
 
 
+def test_package_a_rejects_parse_job_identity_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-other"}))
+
+    _assert_rejected_parse_delivery(delivery, "delivery parse job identity mismatch")
+
+
 def test_package_a_rejects_payload_tenant_mismatch_without_requeue() -> None:
     delivery = _delivery_for_envelope(
         _envelope(

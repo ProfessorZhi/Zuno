@@ -726,4 +726,15 @@ Package A payload tenant mismatch integration/fault test passed: 1 passed.
 PHASE11 remains in_progress; this is Package A tenant lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A ParseJob aggregate pre-Inbox lineage：
+
+```text
+PackageAProductionIngestionRuntime now validates envelope aggregate_type=ParseJob and payload parse_job_id == envelope aggregate_id before Worker Inbox.
+The integration/fault test proves a forged payload parse_job_id is rejected before IngestionUnitOfWork.
+py_compile passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 52 passed.
+Package A ParseJob identity mismatch integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A ParseJob lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
