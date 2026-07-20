@@ -468,6 +468,17 @@ class PackageAProductionIngestionRuntime:
                 ("failure_code",),
                 status=status,
             )
+        if status != "succeeded":
+            PackageAProductionIngestionRuntime._forbid_replay_fields(
+                replay,
+                (
+                    "indexable_snapshot_id",
+                    "outbox_event_id",
+                    "handoff_idempotency_key",
+                    "outbox_idempotency_key",
+                ),
+                status=status,
+            )
 
     @staticmethod
     def _require_replay_fields(
@@ -480,6 +491,19 @@ class PackageAProductionIngestionRuntime:
             if replay.get(field_name) in {None, ""}:
                 raise IngestionPersistenceError(
                     f"Package A replay receipt incomplete for {status}: {field_name}"
+                )
+
+    @staticmethod
+    def _forbid_replay_fields(
+        replay: dict[str, Any],
+        field_names: tuple[str, ...],
+        *,
+        status: str,
+    ) -> None:
+        for field_name in field_names:
+            if replay.get(field_name) not in {None, ""}:
+                raise IngestionPersistenceError(
+                    f"Package A replay receipt conflict for {status}: {field_name}"
                 )
 
     @staticmethod

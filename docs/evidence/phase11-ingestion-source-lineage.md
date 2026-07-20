@@ -1254,6 +1254,26 @@ Package A delivery settlement tests passed: 38 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A non-success replay publish-artifact exclusion：
+
+- `PackageAProductionIngestionRuntime._validate_parse_job_replay_receipt(...)` 现在禁止 `failed` / `cancelled` / `dead_letter` duplicate/redelivery replay receipt 携带 success-only 发布产物：`indexable_snapshot_id`、`outbox_event_id`、`handoff_idempotency_key`、`outbox_idempotency_key`。
+- 该 gate 防止 cancelled/dead-letter/failed 终态在 crash-after-commit-before-ACK 回放路径中伪装成可发布的 Indexable Snapshot / Handoff 结果。
+- 本次没有新增 Migration；复用 `load_parse_job_replay_receipt(...)` 已有 replay 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 40 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

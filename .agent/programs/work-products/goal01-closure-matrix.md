@@ -883,4 +883,14 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A duplicate/redelivery state consistency evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A non-success replay publish-artifact exclusion：
+
+```text
+PackageAProductionIngestionRuntime now rejects terminal duplicate/redelivery replay receipts when a non-success job_status carries success-only publish artifacts.
+The focused test proves a cancelled replay receipt with a forged indexable_snapshot_id is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 40 passed.
+PHASE11 remains in_progress; this is Package A replay settlement hardening evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
