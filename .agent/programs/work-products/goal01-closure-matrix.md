@@ -483,4 +483,15 @@ Package A upload replay, persistence fencing, and workspace upload hash gate tes
 PHASE11 remains in_progress; this is Package A upload idempotency/default-path implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Outbox publish failure pump boundary：
+
+```text
+PackageAProductionQueueWorker.publish_and_consume_once now stops before RabbitMQ consumption when the PHASE04 outbox publisher returns failed events.
+The receipt exposes failed_publish_count and delivery_received=false, leaving failed outbox rows on PostgreSQL retry/replay instead of masking publish failure by consuming unrelated queued deliveries.
+Existing success publish/consume, bounded consume, and deterministic rejected-delivery continuation tests still pass.
+py_compile passed.
+Package A queue worker tests passed: 10 passed.
+PHASE11 remains in_progress; this is Package A RabbitMQ dispatcher/consumer failure-boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

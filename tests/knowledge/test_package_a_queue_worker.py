@@ -36,6 +36,10 @@ def test_package_a_queue_worker_continues_after_rejected_delivery() -> None:
     asyncio.run(_assert_package_a_queue_worker_continues_after_rejected_delivery())
 
 
+def test_package_a_queue_worker_does_not_consume_after_publish_failure() -> None:
+    asyncio.run(_assert_package_a_queue_worker_does_not_consume_after_publish_failure())
+
+
 def test_outbox_publisher_claims_only_configured_topics(monkeypatch) -> None:
     import zuno.platform.queue.outbox as outbox
 
@@ -287,6 +291,50 @@ async def _assert_package_a_queue_worker_continues_after_rejected_delivery() -> 
     assert receipt.rejected_delivery_count == 1
     assert len(receipt.worker_receipts) == 1
     assert receipt.worker_receipt.parse_job_id == "parse-job-valid"
+
+
+async def _assert_package_a_queue_worker_does_not_consume_after_publish_failure() -> None:
+    events: list[str] = []
+
+    class FakeTransport:
+        async def declare_topology(self, topology):
+            events.append("declare")
+
+        async def get(self, queue_name, *, timeout):
+            raise AssertionError("publish failure must stop this pump before consuming RabbitMQ deliveries")
+
+    class FakeRuntime:
+        async def process_rabbitmq_delivery(self, delivery):
+            raise AssertionError("publish failure must not enter Package A worker runtime")
+
+    class FakePublisher:
+        def __init__(self, **kwargs):
+            events.append("publisher")
+
+        async def publish_batch(self, *, limit):
+            events.append("publish_batch")
+            return SimpleNamespace(published=(), failed=(object(),))
+
+    worker = PackageAProductionQueueWorker(
+        engine=object(),
+        runtime=FakeRuntime(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        trace_id="trace-publish-failure",
+    )
+
+    receipt = await worker.publish_and_consume_once(
+        publish_limit=2,
+        consume_limit=2,
+        publisher_factory=FakePublisher,
+    )
+
+    assert receipt.published_count == 0
+    assert receipt.failed_publish_count == 1
+    assert receipt.delivery_received is False
+    assert receipt.worker_receipts == ()
+    assert receipt.rejected_delivery_count == 0
+    assert events == ["declare", "publisher", "publish_batch"]
 
 
 async def _assert_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:

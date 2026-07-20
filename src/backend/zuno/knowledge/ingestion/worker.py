@@ -95,6 +95,12 @@ class PackageAProductionQueueWorker:
             topics=(PACKAGE_A_PARSE_REQUESTED_TOPIC,),
         )
         batch: OutboxPublishBatch = await publisher.publish_batch(limit=publish_limit)
+        if batch.failed:
+            return PackageAQueuePumpReceipt(
+                published_count=len(batch.published),
+                failed_publish_count=len(batch.failed),
+                delivery_received=False,
+            )
         worker_receipts: list[PackageAWorkerReceipt] = []
         rejected_delivery_count = 0
         for _ in range(resolved_consume_limit):

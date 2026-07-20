@@ -877,3 +877,23 @@ pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_p
 py_compile passed
 Package A upload replay, persistence fencing, and workspace upload hash gate tests passed: 14 passed
 ```
+
+2026-07-20 Package A Outbox publish failure pump boundary：
+
+- `PackageAProductionQueueWorker.publish_and_consume_once(...)` 现在在 PHASE04 outbox publish batch 出现失败时立即返回 `failed_publish_count`，不再继续消费 RabbitMQ deliveries。
+- 这保持 publisher confirm failure / broker outage 下的语义清晰：失败 outbox 留在 PostgreSQL 的 retry/replay 路径，本轮不会通过消费旧队列消息来掩盖 dispatch 失败。
+- 已有成功 publish/consume、bounded consume 和 rejected delivery continuation 语义保持不变。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/worker.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker tests passed: 10 passed
+```
