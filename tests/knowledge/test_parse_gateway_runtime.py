@@ -64,7 +64,7 @@ def _parse_fixture(case_id: str, file_name: str, mime_type: str):
             "file://scans/page.png",
             "image/png",
             "OCR text: invoice number 42",
-            "mineru_ocr_vlm",
+            "local_ocr_vlm",
             "ocr_text",
         ),
         (
@@ -180,7 +180,7 @@ def test_parse_gateway_unknown_format_returns_stable_fallback_diagnostics() -> N
     assert any(diagnostic.code == "unknown_format_fallback" for diagnostic in result.diagnostics)
 
 
-def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
+def test_parse_gateway_local_ocr_vlm_adapter_emits_executable_fallback_diagnostic() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
     result = ParseGateway.parse_document(
@@ -195,14 +195,15 @@ def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
 
     assert result.status == "succeeded"
     assert result.document is not None
-    assert result.document.metadata.parser_id == "mineru_ocr_vlm"
-    assert result.document.metadata.target_blocked is True
-    assert result.document.metadata.blocked_reason
-    blocked_diagnostic = next(
-        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    assert result.document.metadata.parser_id == "local_ocr_vlm"
+    assert result.document.metadata.target_blocked is False
+    assert result.document.metadata.blocked_reason is None
+    fallback_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "local_ocr_vlm_fallback"
     )
-    assert blocked_diagnostic.severity == "warning"
-    assert blocked_diagnostic.metadata["external_dependency_status"] == "target_blocked"
+    assert fallback_diagnostic.severity == "warning"
+    assert fallback_diagnostic.metadata["live_provider_status"] == "measurement_blocked"
+    assert result.document.blocks[0].metadata["requires_human_review"] is True
 
 
 def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencies() -> None:
@@ -283,30 +284,28 @@ def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:
     assert not any(diagnostic.code == "target_blocked_adapter" for diagnostic in result.diagnostics)
 
 
-def test_ocr_vlm_blocked_result_keeps_derived_enrichment_gates() -> None:
+def test_local_ocr_vlm_result_keeps_derived_enrichment_gates() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    blocked = ParseGateway.submit_parse_job(
+    parsed = ParseGateway.submit_parse_job(
         ParseDocumentRequest(
-            document_id="doc_vlm_blocked",
+            document_id="doc_vlm_local",
             workspace_id="workspace_phase05",
             source_uri="file://scans/diagram.png",
             mime_type="image/png",
-            source_text="OCR placeholder should not be source truth.",
+            source_text="OCR fallback should require review before high-risk use.",
         )
     )
-    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
-    diagnostic = blocked.diagnostics[0]
+    snapshot = ParseGateway.get_job_snapshot(parsed.job_id)
+    diagnostic = next(d for d in parsed.diagnostics if d.code == "local_ocr_vlm_fallback")
 
-    assert blocked.status == "blocked"
-    assert blocked.document is None
-    assert diagnostic.code == "target_blocked_adapter"
-    assert diagnostic.metadata["enrichment_role"] == "derived_enrichment"
+    assert parsed.status == "succeeded"
+    assert parsed.document is not None
+    assert parsed.document.metadata.parser_id == "local_ocr_vlm"
     assert diagnostic.metadata["network_policy"] == "deny_by_default"
-    assert diagnostic.metadata["privacy_gate"]["source_truth_policy"] == "cannot_override_deterministic_source"
-    assert diagnostic.metadata["budget_gate"]["network_default"] == "deny"
+    assert diagnostic.metadata["requires_human_review"] is True
     assert snapshot.adapter_boundary["enrichment_role"] == "derived_enrichment"
-    assert snapshot.adapter_boundary["dependency_status"] == "missing"
+    assert snapshot.adapter_boundary["dependency_status"] == "present"
     assert snapshot.adapter_boundary["budget_gate"]["review_required"] is True
 
 
@@ -344,31 +343,33 @@ def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     assert snapshot.metrics.format == "md"
 
 
-def test_parse_gateway_target_blocked_adapter_enters_blocked_job_state() -> None:
+def test_parse_gateway_local_ocr_vlm_empty_content_enters_typed_failed_job_state() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    blocked = ParseGateway.submit_parse_job(
+    failed = ParseGateway.submit_parse_job(
         ParseDocumentRequest(
-            document_id="doc_blocked_ocr",
+            document_id="doc_failed_ocr",
             workspace_id="workspace_phase03",
             source_uri="file://scans/invoice.png",
             mime_type="image/png",
-            source_text="OCR placeholder should not make worker Current.",
+            source_text="",
         )
     )
-    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
+    snapshot = ParseGateway.get_job_snapshot(failed.job_id)
 
-    assert blocked.status == "blocked"
-    assert blocked.document is None
-    assert blocked.failure is not None
-    assert blocked.failure.reason == snapshot.blocked_reason
-    assert snapshot.status == "blocked"
-    assert snapshot.retryable is False
-    assert snapshot.failure_snapshot["blocked"] is True
-    assert snapshot.adapter_boundary["external_dependency_status"] == "target_blocked"
+    assert failed.status == "failed"
+    assert failed.document is None
+    assert failed.failure is not None
+    assert failed.failure.parser_id == "local_ocr_vlm"
+    assert failed.failure.reason == snapshot.failure_reason
+    assert snapshot.status == "failed"
+    assert snapshot.retryable is True
+    assert snapshot.failure_snapshot["blocked"] is False
+    assert snapshot.adapter_boundary["external_dependency_status"] == "not_required"
     assert [entry["status"] for entry in snapshot.status_timeline] == [
         "accepted",
-        "blocked",
+        "running",
+        "failed",
     ]
 
 

@@ -252,7 +252,7 @@ def test_workspace_restart_rehydrates_cited_artifact_and_feedback(tmp_path) -> N
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)
 
 
-def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_path) -> None:
+def test_local_ocr_vlm_parser_diagnostics_are_persisted_with_review_required_index(tmp_path) -> None:
     db_path = tmp_path / "zuno.db"
     WorkspaceTaskRuntimeService.configure_durable_ingestion(
         store=SQLiteDurableIngestionStore(db_path),
@@ -263,11 +263,11 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         client.post(
             "/api/v1/workspace/file",
             json={
-                "workspace_id": "workspace_phase05_blocked",
+                "workspace_id": "workspace_phase05_local_ocr",
                 "file_id": "file_scan_phase05.png",
                 "name": "scan.png",
                 "mime_type": "image/png",
-                "content": "fake image bytes for blocked OCR boundary",
+                "content": "OCR text from local fallback with review required.",
                 "security_label": "internal",
             },
         )
@@ -275,17 +275,17 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         ingest_response = client.post(
             "/api/v1/workspace/ingest",
             json={
-                "workspace_id": "workspace_phase05_blocked",
+                "workspace_id": "workspace_phase05_local_ocr",
                 "file_id": "file_scan_phase05.png",
-                "knowledge_space_id": "ks_phase05_blocked",
+                "knowledge_space_id": "ks_phase05_local_ocr",
             },
         )
 
         assert ingest_response.status_code == 200
         ingest = ingest_response.json()["data"]
-        assert ingest["status"] == "blocked"
-        assert ingest["index_job"] is None
-        assert "index_manifest_ref" not in ingest
+        assert ingest["status"] == "accepted"
+        assert ingest["index_job"]["status"] == "succeeded"
+        assert ingest["index_manifest_ref"]["index_job_id"] == ingest["index_job"]["job_id"]
         assert ingest["durable_status"] == "persisted"
 
         restored = SQLiteDurableIngestionStore(db_path)
@@ -293,10 +293,14 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         restored_parse_job = restored.get_parse_job(ingest["parse_job"]["job_id"])
         restored_snapshot = restored.get_parse_snapshot(ingest["parse_job"]["job_id"])
 
-        assert restored_file.parse_status == "blocked"
-        assert restored_parse_job.status == "blocked"
-        assert restored_parse_job.blocked_reason
-        assert restored_snapshot.blocked_reason == restored_parse_job.blocked_reason
-        assert restored_snapshot.parser_diagnostics[0]["code"] == "target_blocked_adapter"
+        assert restored_file.parse_status == "indexed"
+        assert restored_parse_job.status == "succeeded"
+        assert restored_parse_job.blocked_reason is None
+        assert restored_snapshot.parser_id == "local_ocr_vlm"
+        assert any(
+            diagnostic["code"] == "local_ocr_vlm_fallback"
+            for diagnostic in restored_snapshot.parser_diagnostics
+        )
+        assert restored_snapshot.adapter_boundary["budget_gate"]["review_required"] is True
     finally:
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)

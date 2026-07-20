@@ -99,6 +99,7 @@ PARSER_ADAPTER_REGISTRY = {
     "native": ParserAdapter(parser_id="native"),
     "docling_pymupdf": ParserAdapter(parser_id="docling_pymupdf"),
     "mineru_ocr_vlm": ParserAdapter(parser_id="mineru_ocr_vlm"),
+    "local_ocr_vlm": ParserAdapter(parser_id="local_ocr_vlm"),
     "unstructured_markitdown": ParserAdapter(parser_id="unstructured_markitdown"),
 }
 
@@ -524,13 +525,21 @@ def _parse_image_ocr(
     text: str,
     request: ParseDocumentRequest,
 ) -> tuple[list[DocumentBlock], list[DocumentTable], list[DocumentFigure], list[str], float]:
+    normalized = text.strip()
+    if not normalized:
+        raise ValueError("empty OCR/VLM source content")
     block = _block(
         request,
         block_id="block_ocr_1",
         block_type="ocr_text",
-        text=text.strip(),
+        text=normalized,
         source_span=SourceSpan(page=1, bbox=[0.0, 0.0, 1024.0, 768.0]),
         confidence=0.86,
+        metadata={
+            "adapter_mode": "local_deterministic_ocr_vlm",
+            "requires_human_review": True,
+            "failure_path": "typed_parser_failure_on_empty_or_unreadable_content",
+        },
     )
     figure = DocumentFigure(
         figure_id="figure_1",

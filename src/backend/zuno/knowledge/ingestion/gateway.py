@@ -181,6 +181,22 @@ class ParseGateway:
                     metadata=adapter_boundary_metadata(parser_id, fallback=capability.fallback),
                 )
             )
+        if parser_id == "local_ocr_vlm":
+            diagnostics.append(
+                ParserDiagnostic(
+                    code="local_ocr_vlm_fallback",
+                    message="Local OCR/VLM fallback is executable; live MinerU provider remains measurement blocked.",
+                    severity="warning",
+                    parser_id=parser_id,
+                    format=capability.format,
+                    metadata={
+                        "live_provider": "mineru_ocr_vlm",
+                        "live_provider_status": "measurement_blocked",
+                        "network_policy": "deny_by_default",
+                        "requires_human_review": True,
+                    },
+                )
+            )
         parser_config_hash = cls._parser_config_hash(request)
         job_id = f"parse_{uuid4().hex[:12]}"
 

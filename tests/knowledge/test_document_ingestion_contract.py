@@ -48,7 +48,7 @@ def test_parser_router_selects_default_and_fallback_contracts() -> None:
     from zuno.knowledge.ingestion import select_parser_for_format
 
     assert select_parser_for_format("contract.pdf").default_parser == "docling_pymupdf"
-    assert select_parser_for_format("scan.png").default_parser == "mineru_ocr_vlm"
+    assert select_parser_for_format("scan.png").default_parser == "local_ocr_vlm"
     assert select_parser_for_format("slides.pptx").default_parser == "unstructured_markitdown"
     assert select_parser_for_format("notes.md").default_parser == "native"
     assert select_parser_for_format("unknown.bin").fallback == "unstructured_markitdown"
@@ -72,6 +72,12 @@ def test_parser_adapter_contracts_mark_external_engines_as_target_boundary() -> 
         assert contract.production_target
         assert contract.blocked_reason
 
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.current_runtime == "deterministic_local"
+    assert local_ocr_contract.external_dependency_status == "not_required"
+    assert local_ocr_contract.dependency_status == "present"
+    assert local_ocr_contract.budget_gate["review_required"] is True
+
 
 def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -> None:
     from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS, get_parser_adapter
@@ -89,6 +95,11 @@ def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -
     blocked_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
     assert blocked_contract.capability_status == "target-blocked"
     assert blocked_contract.blocked_reason
+
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.capability_status == "current"
+    assert local_ocr_contract.blocked_reason is None
+    assert get_parser_adapter("local_ocr_vlm").supports("image") is True
 
 
 def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries() -> None:
@@ -114,6 +125,13 @@ def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries()
         assert contract.network_policy in {"local_only", "deny_by_default"}
         assert contract.privacy_gate["sensitive_input_policy"] == "deny_by_default"
         assert contract.budget_gate["max_pages"] >= 0
+
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.capability_status == "current"
+    assert local_ocr_contract.external_dependency_status == "not_required"
+    assert local_ocr_contract.dependency_status == "present"
+    assert local_ocr_contract.network_policy == "deny_by_default"
+    assert local_ocr_contract.budget_gate["review_required"] is True
 
     ocr_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
     assert ocr_contract.enrichment_role == "derived_enrichment"
