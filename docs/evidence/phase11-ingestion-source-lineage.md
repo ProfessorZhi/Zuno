@@ -556,3 +556,27 @@ py_compile passed
 Worker ObjectRef verifier fault test passed: 1 passed
 Gate B object hash mismatch DLQ integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
+
+2026-07-20 Package A Quality Gate blocks handoff：
+
+- `PackageAProductionIngestionRuntime._process_first_seen_delivery(...)` 在 Parser Gateway 成功返回 CanonicalDocumentIR 后，先持久化 ParseSnapshot、SourceSpan 和 Quality Decision。
+- 当 `HumanReviewRuntime.can_publish_snapshot(...)` 为 false 时，runtime 在同一个 PostgreSQL UoW 内关闭 Attempt/Lease 为 `failed`，写入稳定 `failure_code=quality_gate_<verdict>`，并返回 ACK-after-domain-commit receipt。
+- 质量不可发布时不再抛异常导致 RabbitMQ 重投，也不会生成 IndexableDocumentSnapshot 或 Snapshot Outbox；因此低质量解析结果不会进入 Knowledge handoff。
+- 新增 Gate B focused integration test `test_gate_b_quality_review_records_snapshot_without_indexable_handoff`，覆盖低置信度 Markdown parse 只留下 parse/quality 证据，不发布 indexable handoff。
+- 当前环境已真实尝试运行该 Gate B 测试，但 PostgreSQL `localhost:5432` 连接超时，测试在 Alembic upgrade 前阻塞；因此 PostgreSQL-backed quality gate evidence 仍为 environment_blocked，不计为 Gate B passed。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and quality helper tests passed: 10 passed
+Gate B quality review integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```

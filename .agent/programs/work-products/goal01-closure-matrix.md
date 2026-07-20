@@ -310,4 +310,17 @@ Gate B object hash mismatch DLQ integration was attempted and is environment_blo
 PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
 ```
 
+2026-07-20 Package A Quality Gate blocks handoff：
+
+```text
+PackageAProductionIngestionRuntime now records ParseSnapshot, SourceSpan, and Quality Decision before indexable handoff.
+If HumanReviewRuntime.can_publish_snapshot is false, the runtime closes Attempt/Lease as failed with failure_code quality_gate_<verdict>, ACKs after domain commit, and does not create IndexableDocumentSnapshot or Snapshot Outbox.
+This prevents low-quality parse results from requeue looping or entering Knowledge handoff without an approved quality path.
+Added Gate B focused integration coverage for low-confidence Markdown parse -> quality review required without indexable handoff.
+py_compile passed.
+Package A delivery settlement and quality helper tests passed: 10 passed.
+Gate B quality review integration was attempted and is environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade.
+PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

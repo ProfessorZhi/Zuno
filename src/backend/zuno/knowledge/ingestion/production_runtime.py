@@ -445,14 +445,6 @@ class PackageAProductionIngestionRuntime:
             parse_snapshot=snapshot,
             security_epoch_ref=str(context["security_epoch_ref"]),
         )
-        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
-            raise IngestionPersistenceError("Package A text/markdown path must pass quality gate")
-        indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
-            document=result.document,
-            parse_snapshot=snapshot,
-            quality_gate=quality_gate,
-            visibility_ref=f"visibility:{context['workspace_id']}:{context['source_object_id']}",
-        )
         parse_snapshot_id = f"parse-snapshot:{parse_attempt_id}"
         snapshot_receipt = repo.record_parse_snapshot(
             parse_snapshot_id=parse_snapshot_id,
@@ -482,7 +474,29 @@ class PackageAProductionIngestionRuntime:
             parse_snapshot_id=snapshot_receipt.ref,
             coverage_score=self._quality_metric(quality_gate, "coverage"),
             confidence_score=self._quality_metric(quality_gate, "confidence"),
-            decision="publish",
+            decision="publish" if HumanReviewRuntime.can_publish_snapshot(gate=quality_gate) else "review_required",
+        )
+        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
+            repo.fail_parse_attempt(
+                parse_attempt_id=parse_attempt_id,
+                parse_job_id=parse_job_id,
+                tenant_id=tenant_id,
+                worker_id=self.worker_id,
+                fencing_token=fencing_token,
+                status="failed",
+                failure_code=self._quality_failure_code(quality_gate),
+            )
+            return PackageAWorkerReceipt(
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                status="failed",
+                acked_after_domain_commit=True,
+            )
+        indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
+            document=result.document,
+            parse_snapshot=snapshot,
+            quality_gate=quality_gate,
+            visibility_ref=f"visibility:{context['workspace_id']}:{context['source_object_id']}",
         )
         handoff_payload = {
             "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
@@ -690,6 +704,10 @@ class PackageAProductionIngestionRuntime:
             if metric.name == name:
                 return float(metric.value)
         return 1.0 if quality_gate.verdict == "PASS" else 0.0
+
+    @staticmethod
+    def _quality_failure_code(quality_gate) -> str:
+        return f"quality_gate_{str(quality_gate.verdict).lower()}"
 
 
 __all__ = [

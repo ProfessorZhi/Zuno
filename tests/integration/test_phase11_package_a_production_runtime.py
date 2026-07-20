@@ -17,7 +17,16 @@ from zuno.knowledge.ingestion import (
     PackageARejectDeliveryError,
     PackageAUploadCommand,
 )
-from zuno.knowledge.ingestion.contracts import ParseDocumentResult, ParseJobSnapshot, ParserFailure
+from zuno.knowledge.ingestion.contracts import (
+    CanonicalDocumentIR,
+    DocumentBlock,
+    DocumentMetadata,
+    DocumentProvenance,
+    ParseDocumentResult,
+    ParseJobSnapshot,
+    ParserFailure,
+    SourceSpan,
+)
 from zuno.knowledge.ingestion.gateway import ParseGateway
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
@@ -1011,6 +1020,101 @@ def test_gate_b_object_hash_mismatch_records_dlq_without_requeue(monkeypatch) ->
         engine.dispose()
 
 
+def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Quality review\nLow confidence parse."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _low_confidence_parse(_request):
+        return ParseDocumentResult(
+            job_id="parse-job:pkg-a:retry",
+            status="succeeded",
+            document=_low_confidence_document(content_hash=hashlib.sha256(content).hexdigest()),
+        )
+
+    def _succeeded_snapshot(_job_id):
+        return ParseJobSnapshot(
+            job_id="parse-job:pkg-a:retry",
+            status="succeeded",
+            document_id="source:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            parser_id="native_markdown",
+            parser_format="markdown",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_attempt_id="parse-job:pkg-a:retry:attempt:1",
+            retryable=False,
+        )
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_low_confidence_parse))
+    monkeypatch.setattr(ParseGateway, "get_job_snapshot", staticmethod(_succeeded_snapshot))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "failed"
+        assert receipt.acked_after_domain_commit is True
+        assert receipt.indexable_snapshot_id is None
+        assert receipt.outbox_event_id is None
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.status AS attempt_status,
+                           attempt.failure_code AS failure_code,
+                           lease.state AS lease_state,
+                           job.status AS job_status,
+                           quality.decision AS quality_decision
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    JOIN ingestion_parse_snapshots AS snapshot
+                      ON snapshot.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_quality_gate_decisions AS quality
+                      ON quality.parse_snapshot_id = snapshot.parse_snapshot_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_status"] == "failed"
+            assert row["failure_code"] == "quality_gate_review"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "failed"
+            assert row["quality_decision"] == "review_required"
+            assert conn.execute(text("SELECT count(*) FROM ingestion_source_spans")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
 def test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot(monkeypatch) -> None:
     engine = _engine()
     content = b"# Cancel\nDo not parse."
@@ -1213,6 +1317,41 @@ async def _gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox() -> None:
             assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
     finally:
         engine.dispose()
+
+
+def _low_confidence_document(*, content_hash: str) -> CanonicalDocumentIR:
+    return CanonicalDocumentIR(
+        metadata=DocumentMetadata(
+            document_id="source:pkg-a:retry",
+            source_id="source:pkg-a:retry",
+            source_object_ref="s3://bucket/tenant-a/workspace-a/retry.md",
+            object_manifest_ref="manifest:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            hash=content_hash,
+            source_sha256=content_hash,
+            parser_id="native_markdown",
+            parser_version="phase11-package-a-v1",
+            document_version_id="document-version:pkg-a:retry",
+            security_epoch_ref="security-epoch:pkg-a:retry",
+        ),
+        blocks=[
+            DocumentBlock(
+                block_id="block-low-confidence",
+                type="paragraph",
+                text="Low confidence parse result.",
+                source_span=SourceSpan(page=1, line_range=[1, 1]),
+                confidence=0.5,
+            )
+        ],
+        provenance=DocumentProvenance(
+            parser_id="native_markdown",
+            parser_version="phase11-package-a-v1",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            confidence=0.5,
+        ),
+    )
 
 
 def _topology() -> RabbitMQTopology:

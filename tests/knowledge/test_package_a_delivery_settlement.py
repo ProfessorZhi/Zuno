@@ -174,6 +174,13 @@ def test_package_a_lineage_validator_rejects_size_mismatch() -> None:
         )
 
 
+def test_package_a_quality_failure_code_uses_verdict() -> None:
+    class _Gate:
+        verdict = "REVIEW"
+
+    assert PackageAProductionIngestionRuntime._quality_failure_code(_Gate()) == "quality_gate_review"
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 
