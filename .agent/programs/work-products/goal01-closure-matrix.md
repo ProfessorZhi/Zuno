@@ -834,4 +834,17 @@ Alembic upgrade head remains environment_blocked because PostgreSQL localhost:54
 PHASE11 remains in_progress; this is Package A Workspace/File Upload replay boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A duplicate replay receipt identity gate：
+
+```text
+IngestionRepository.load_parse_job_replay_receipt now returns ParseJob parse_job_id and tenant_id.
+PackageAProductionIngestionRuntime validates duplicate/redelivery replay receipt parse_job_id and tenant_id before ACKing the RabbitMQ delivery.
+The focused test proves a forged replay receipt is not ACKed or rejected, preventing crash-after-commit replay from confirming the wrong domain result.
+py_compile passed.
+Package A delivery settlement tests passed: 36 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+Gate B/C was not rerun because docker info still reports Docker daemon npipe dockerDesktopLinuxEngine unavailable.
+PHASE11 remains in_progress; this is Package A duplicate/redelivery identity evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

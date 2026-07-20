@@ -376,6 +376,11 @@ class PackageAProductionIngestionRuntime:
                         )
                     else:
                         replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
+                        self._validate_parse_job_replay_receipt(
+                            replay=replay,
+                            parse_job_id=parse_job_id,
+                            tenant_id=tenant_id,
+                        )
                         status = str(replay["job_status"])
                         if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
                             status = "duplicate"
@@ -410,6 +415,18 @@ class PackageAProductionIngestionRuntime:
             worker_receipt=worker_receipt,
         )
         return worker_receipt
+
+    @staticmethod
+    def _validate_parse_job_replay_receipt(
+        *,
+        replay: dict[str, Any],
+        parse_job_id: str,
+        tenant_id: str,
+    ) -> None:
+        if str(replay.get("parse_job_id")) != str(parse_job_id):
+            raise IngestionPersistenceError("Package A replay receipt mismatch: parse_job_id")
+        if str(replay.get("tenant_id")) != str(tenant_id):
+            raise IngestionPersistenceError("Package A replay receipt mismatch: tenant_id")
 
     @staticmethod
     async def _settle_delivery_after_domain_commit(

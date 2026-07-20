@@ -359,6 +359,8 @@ class IngestionRepository:
             text(
                 """
                 SELECT
+                    job.parse_job_id,
+                    job.tenant_id,
                     job.status AS job_status,
                     latest_attempt.parse_attempt_id,
                     latest_attempt.status AS attempt_status,

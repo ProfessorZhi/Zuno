@@ -1160,6 +1160,31 @@ Gate B/C service startup environment_blocked: Docker daemon npipe dockerDesktopL
 Alembic upgrade head environment_blocked: PostgreSQL localhost:5432 connection timeout.
 ```
 
+2026-07-20 Package A duplicate replay receipt identity gate：
+
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 现在在 duplicate/redelivery replay receipt 中返回 PostgreSQL `ParseJob.parse_job_id` 和 `tenant_id`。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在 duplicate/redelivery 分支 ACK 当前 RabbitMQ delivery 前，校验 replay receipt 的 `parse_job_id` 和 `tenant_id` 必须等于当前 delivery 的 ParseJob / tenant。
+- 若 replay receipt 身份不匹配，runtime 抛出 `IngestionPersistenceError`，不 ACK、不 reject 当前 delivery，避免 crash-after-commit-before-ACK 幂等路径错误确认不属于当前消息的领域结果。
+- 本次没有新增 Migration；复用 `20260719_18` 中已有 `ingestion_parse_jobs` 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+docker info
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 36 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+Gate B/C not rerun: Docker client exists, but Docker daemon npipe dockerDesktopLinuxEngine is still unavailable.
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。
