@@ -940,4 +940,16 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A replay lineage hardening evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay quality decision lineage gate：
+
+```text
+IngestionRepository.load_parse_job_replay_receipt now reads quality_decision_id for succeeded duplicate/redelivery receipts.
+PackageAProductionIngestionRuntime now requires that field and cross-checks it against Snapshot Handoff replay receipt before ACK.
+The focused test proves a handoff receipt bound to a forged quality_decision_id is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement and persistence replay tests passed: 55 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A Quality Gate replay lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

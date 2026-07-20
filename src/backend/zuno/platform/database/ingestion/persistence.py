@@ -368,6 +368,7 @@ class IngestionRepository:
                     snapshot.parse_snapshot_id,
                     snapshot.document_version_id,
                     indexable.indexable_snapshot_id,
+                    indexable.quality_decision_id,
                     indexable.handoff_idempotency_key,
                     outbox.outbox_event_id,
                     outbox.idempotency_key AS outbox_idempotency_key,

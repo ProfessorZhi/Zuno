@@ -455,6 +455,7 @@ class PackageAProductionIngestionRuntime:
                     "indexable_snapshot_id",
                     "parse_snapshot_id",
                     "document_version_id",
+                    "quality_decision_id",
                     "outbox_event_id",
                     "handoff_idempotency_key",
                     "outbox_idempotency_key",
@@ -541,7 +542,7 @@ class PackageAProductionIngestionRuntime:
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay mismatch: {field_name}"
                 )
-        for field_name in ("parse_snapshot_id", "document_version_id"):
+        for field_name in ("parse_snapshot_id", "document_version_id", "quality_decision_id"):
             if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay lineage mismatch: {field_name}"

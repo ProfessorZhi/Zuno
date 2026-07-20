@@ -164,6 +164,7 @@ def test_parse_job_replay_receipt_selects_handoff_idempotency_fields() -> None:
     assert "latest_attempt.failure_code" in statement
     assert "snapshot.parse_snapshot_id" in statement
     assert "snapshot.document_version_id" in statement
+    assert "indexable.quality_decision_id" in statement
     assert "indexable.handoff_idempotency_key" in statement
     assert "outbox.idempotency_key AS outbox_idempotency_key" in statement
 
