@@ -461,4 +461,15 @@ Package A persistence fencing and delivery settlement tests passed: 23 passed.
 PHASE11 remains in_progress; this is Package A heartbeat and success-path runtime implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A ObjectRef revoked/deleted visibility boundary：
+
+```text
+PackageAProductionIngestionRuntime now checks PostgreSQL source_status before reading MinIO/S3 object bytes.
+revoked / visibility_revoked produce object_visibility_revoked; deleted / physically_deleted produce object_deleted; other non-visible statuses remain object_not_visible.
+The focused ObjectRef verifier test asserts scope mismatch, revoked, and deleted statuses do not read object content, while committed and hash mismatch paths still perform the expected byte read.
+py_compile passed.
+Package A ObjectRef verifier and delivery settlement tests passed: 15 passed.
+PHASE11 remains in_progress; this is Package A ObjectRef visibility/dead-letter boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

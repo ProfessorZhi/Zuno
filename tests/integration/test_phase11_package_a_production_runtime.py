@@ -55,10 +55,12 @@ class _FakeObjectReader:
         self.bucket = bucket
         self.object_name = object_name
         self.content = content
+        self.read_count = 0
 
     def read_object(self, *, bucket: str, object_name: str) -> bytes:
         assert bucket == self.bucket
         assert object_name == self.object_name
+        self.read_count += 1
         return self.content
 
 
@@ -313,7 +315,13 @@ def test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility() 
     revoked_context = {**context, "source_status": "revoked"}
     with pytest.raises(PackageAObjectVerificationError, match="not visible") as revoked:
         runtime._read_and_verify_object(revoked_context)
-    assert revoked.value.failure_code == "object_not_visible"
+    assert revoked.value.failure_code == "object_visibility_revoked"
+
+    deleted_context = {**context, "source_status": "physically_deleted"}
+    with pytest.raises(PackageAObjectVerificationError, match="not visible") as deleted:
+        runtime._read_and_verify_object(deleted_context)
+    assert deleted.value.failure_code == "object_deleted"
+    assert runtime.object_store.store.read_count == 2
 
 
 def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> None:

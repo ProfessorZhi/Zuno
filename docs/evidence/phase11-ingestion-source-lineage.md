@@ -837,3 +837,23 @@ pytest -q tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/
 py_compile passed
 Package A persistence fencing and delivery settlement tests passed: 23 passed
 ```
+
+2026-07-20 Package A ObjectRef revoked/deleted visibility boundary：
+
+- `PackageAProductionIngestionRuntime._read_and_verify_object(...)` 现在先校验 PostgreSQL `source_status`，只有 `committed` 才读取 MinIO/S3 bytes。
+- `revoked` / `visibility_revoked` 映射为 `object_visibility_revoked`，`deleted` / `physically_deleted` 映射为 `object_deleted`，其他非可见状态仍映射为 `object_not_visible`。
+- 这让 revoked/delete 状态在进入 Parser Gateway 前稳定进入现有 ObjectRef dead-letter 路径，并避免在访问已撤销或已删除 SourceObject 时触碰对象内容。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A ObjectRef verifier and delivery settlement tests passed: 15 passed
+```

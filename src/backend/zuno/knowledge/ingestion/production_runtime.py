@@ -759,6 +759,13 @@ class PackageAProductionIngestionRuntime:
                 "SourceObject ObjectRef is outside tenant/workspace scope",
                 failure_code="object_ref_scope_mismatch",
             )
+        source_status = str(context["source_status"])
+        if source_status != "committed":
+            failure_code = self._source_visibility_failure_code(source_status)
+            raise PackageAObjectVerificationError(
+                f"SourceObject is not visible for parsing: {source_status}",
+                failure_code=failure_code,
+            )
         content = self.object_store.store.read_object(bucket=parsed.netloc, object_name=object_name)
         actual_hash = hashlib.sha256(content).hexdigest()
         if actual_hash != context["source_sha256"] or len(content) != int(context["size_bytes"]):
@@ -766,12 +773,15 @@ class PackageAProductionIngestionRuntime:
                 "SourceObject bytes do not match PostgreSQL lineage facts",
                 failure_code="object_bytes_mismatch",
             )
-        if context["source_status"] not in {"committed"}:
-            raise PackageAObjectVerificationError(
-                "SourceObject is not visible for parsing",
-                failure_code="object_not_visible",
-            )
         return content
+
+    @staticmethod
+    def _source_visibility_failure_code(source_status: str) -> str:
+        if source_status in {"revoked", "visibility_revoked"}:
+            return "object_visibility_revoked"
+        if source_status in {"deleted", "physically_deleted"}:
+            return "object_deleted"
+        return "object_not_visible"
 
     @staticmethod
     def _object_name(command: PackageAUploadCommand) -> str:
