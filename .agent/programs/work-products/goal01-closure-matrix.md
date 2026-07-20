@@ -872,4 +872,15 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A failed retry replay evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A replay Job/Attempt terminal-state consistency：
+
+```text
+PackageAProductionIngestionRuntime now validates terminal duplicate/redelivery replay receipt attempt_status == job_status before ACK.
+The focused test proves succeeded Job replay with a running latest Attempt is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 39 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A duplicate/redelivery state consistency evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

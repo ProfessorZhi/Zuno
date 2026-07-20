@@ -1208,6 +1208,29 @@ Package A delivery settlement tests passed: 37 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A replay Job/Attempt terminal-state consistency：
+
+- `PackageAProductionIngestionRuntime._validate_parse_job_replay_receipt(...)` 现在要求 duplicate/redelivery terminal replay receipt 中的 `attempt_status` 必须与 `job_status` 一致。
+- 该 gate 防止 replay receipt 表示 ParseJob 已 `succeeded` / `failed` / `cancelled` / `dead_letter`，但最新 ParseAttempt 仍停留在其它状态时错误 ACK RabbitMQ delivery。
+- 失败时 runtime 抛出 `IngestionPersistenceError`，不 ACK、不 reject 当前 delivery。
+- 本次没有新增 Migration；复用 `load_parse_job_replay_receipt(...)` 已有 `attempt_status` 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 39 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A failed replay retry-outbox receipt gate：
 
 - `IngestionRepository.load_parse_job_replay_receipt(...)` 现在在 duplicate/redelivery replay receipt 中读取同一 `ParseJob` 的 retry parse-request `infra_outbox_events.event_id AS retry_outbox_event_id`。

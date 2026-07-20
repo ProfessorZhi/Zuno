@@ -430,6 +430,10 @@ class PackageAProductionIngestionRuntime:
         status = str(replay.get("job_status"))
         if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
             return
+        if str(replay.get("attempt_status")) != status:
+            raise IngestionPersistenceError(
+                f"Package A replay receipt mismatch: attempt_status for {status}"
+            )
         PackageAProductionIngestionRuntime._require_replay_fields(
             replay,
             ("parse_attempt_id",),
