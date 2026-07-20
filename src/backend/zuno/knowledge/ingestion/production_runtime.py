@@ -287,6 +287,11 @@ class PackageAProductionIngestionRuntime:
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery tenant header does not match envelope")
         payload = envelope.payload or {}
+        try:
+            self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
+        except PackageARejectDeliveryError:
+            await delivery.reject(requeue=False)
+            raise
         header_security_epoch_ref = delivery.headers.get("security_epoch_ref")
         envelope_security_epoch_ref = envelope.effective_security_epoch_ref
         payload_security_epoch_ref = payload.get("security_epoch_ref")
@@ -777,6 +782,15 @@ class PackageAProductionIngestionRuntime:
         if retryable and current_attempt_number < self.max_attempts:
             return "failed"
         return "dead_letter"
+
+    @staticmethod
+    def _validate_delivery_retry_policy(*, payload: dict[str, Any], max_attempts: int) -> None:
+        try:
+            payload_max_attempts = int(payload.get("max_attempts"))
+        except (TypeError, ValueError) as exc:
+            raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts") from exc
+        if payload_max_attempts < 1 or payload_max_attempts != max_attempts:
+            raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts")
 
     @staticmethod
     def _validate_delivery_lineage(*, payload: dict[str, Any], context: dict[str, Any]) -> None:

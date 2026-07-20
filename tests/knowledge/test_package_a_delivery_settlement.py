@@ -199,6 +199,12 @@ def test_package_a_rejects_security_epoch_header_mismatch_without_requeue() -> N
     _assert_rejected_parse_delivery(delivery, "delivery security epoch header does not match envelope")
 
 
+def test_package_a_rejects_retry_policy_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1", "max_attempts": 3}))
+
+    _assert_rejected_parse_delivery(delivery, "delivery retry policy mismatch: max_attempts")
+
+
 def test_package_a_lineage_validator_requires_payload_to_match_postgres_context() -> None:
     payload = _lineage_payload()
     context = _lineage_context()
@@ -416,7 +422,9 @@ def test_package_a_cancel_requested_receipt_carries_failure_code_without_parser_
 
 
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
-    return object.__new__(PackageAProductionIngestionRuntime)
+    runtime = object.__new__(PackageAProductionIngestionRuntime)
+    runtime.max_attempts = 2
+    return runtime
 
 
 def _envelope(
@@ -428,6 +436,7 @@ def _envelope(
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
         "security_epoch_ref": "security-epoch-a",
+        "max_attempts": 2,
         **payload,
     }
     return CrossModuleEnvelopeV1(

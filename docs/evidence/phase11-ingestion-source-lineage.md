@@ -979,3 +979,25 @@ py_compile passed
 Package A delivery settlement and queue worker tests passed: 29 passed
 Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
 ```
+
+2026-07-20 Package A retry policy identity gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在校验 parse-request payload `max_attempts` 必须是正整数，且必须等于当前 Package A Worker runtime 配置。
+- 该 gate 在 Worker Inbox、ParseAttempt、Lease 和 Parser Gateway 之前执行；不匹配时 reject no-requeue，避免旧消息或伪造消息让 Worker 使用错误的 retry budget。
+- Gate B 增加 retry-policy mismatch before-inbox 测试，断言该类 delivery 不应写 Inbox、Attempt 或 Lease。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_rejects_retry_policy_mismatch_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, retry boundary, and queue worker tests passed: 34 passed
+Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
+```

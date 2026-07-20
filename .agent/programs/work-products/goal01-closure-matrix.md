@@ -539,4 +539,16 @@ Gate B focused PostgreSQL test was attempted once; environment_blocked by localh
 PHASE11 remains in_progress; this is Package A RabbitMQ/Inbox identity-boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A retry policy identity gate：
+
+```text
+PackageAProductionIngestionRuntime now rejects parse-request deliveries whose payload max_attempts is missing, non-positive, or different from the configured Package A Worker retry budget.
+The check happens before Worker Inbox, ParseAttempt, Lease, and Parser Gateway, so stale or forged retry policy cannot alter max_attempts semantics.
+Gate B adds retry-policy mismatch before-inbox coverage; it expects no Inbox, Attempt, or Lease facts when PostgreSQL is available.
+py_compile passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 34 passed.
+Gate B focused PostgreSQL test was attempted once; environment_blocked by localhost:5432 connection timeout during alembic upgrade head.
+PHASE11 remains in_progress; this is Package A retry policy identity-boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
