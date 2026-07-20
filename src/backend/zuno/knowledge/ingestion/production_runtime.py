@@ -289,6 +289,14 @@ class PackageAProductionIngestionRuntime:
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery tenant header does not match envelope")
         payload = envelope.payload or {}
+        header_workspace_id = delivery.headers.get("workspace_id")
+        if (
+            header_workspace_id is None
+            or str(header_workspace_id) != str(envelope.workspace_id)
+            or str(payload.get("workspace_id")) != str(envelope.workspace_id)
+        ):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery workspace header does not match envelope")
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
             self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)

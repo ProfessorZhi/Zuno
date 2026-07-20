@@ -98,6 +98,10 @@ def test_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_header() -> N
     asyncio.run(_assert_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_header())
 
 
+def test_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header() -> None:
+    asyncio.run(_assert_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header())
+
+
 def test_queue_runner_defaults_to_package_a_ingestion_worker(monkeypatch) -> None:
     from zuno.platform.services.queue import runner
 
@@ -541,3 +545,45 @@ async def _assert_outbox_publisher_maps_envelope_security_epoch_to_rabbitmq_head
     )
 
     assert published[0]["security_epoch_ref"] == "security-epoch-a"
+
+
+async def _assert_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header() -> None:
+    published: list[dict] = []
+
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            published.append(kwargs)
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-workspace",
+    )
+    await publisher._publish_record(
+        OutboxEventRecord(
+            event_id="event-workspace",
+            aggregate_id="job-workspace",
+            topic="ingestion.parse.requested",
+            payload={
+                "workspace_id": "workspace-a",
+                "payload": {
+                    "parse_job_id": "job-workspace",
+                    "workspace_id": "workspace-a",
+                },
+            },
+            payload_hash="hash",
+            idempotency_key="tenant-a:parse:job-workspace",
+            claim_owner="phase11-package-a-outbox-dispatcher",
+            tenant_id="tenant-a",
+            ordering_key="job-workspace",
+            ordering_sequence=1,
+            publish_attempts=0,
+            retry_count=0,
+            replay_count=0,
+        )
+    )
+
+    assert published[0]["workspace_id"] == "workspace-a"

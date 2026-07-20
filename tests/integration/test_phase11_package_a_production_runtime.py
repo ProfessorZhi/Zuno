@@ -76,6 +76,7 @@ class _RecordingDelivery:
         envelope_payload = payload.get("payload") or {}
         self.headers = {
             "tenant_id": tenant_id,
+            "workspace_id": envelope_payload.get("workspace_id"),
             "security_epoch_ref": envelope_payload.get("effective_security_epoch_ref"),
             "ordering_key": envelope_payload.get("aggregate_id"),
             "ordering_sequence": 1,
@@ -1023,6 +1024,68 @@ def test_package_a_rejects_retry_upload_producer_before_inbox() -> None:
     runtime.max_attempts = 2
 
     with pytest.raises(PackageARejectDeliveryError, match="delivery producer lineage mismatch"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.nacked is False
+    assert delivery.rejected is True
+
+
+def test_package_a_rejects_workspace_header_mismatch_before_inbox() -> None:
+    payload = {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "source_object_id": "source:pkg-a:workspace",
+        "document_version_id": "document-version:pkg-a:workspace",
+        "parse_plan_id": "parse-plan:pkg-a:workspace",
+        "parse_job_id": "parse-job:pkg-a:workspace",
+        "object_ref": "s3://bucket/tenant-a/workspace-a/workspace.md",
+        "object_manifest_ref": "manifest:pkg-a:workspace",
+        "content_hash": "a" * 64,
+        "size_bytes": 12,
+        "mime_type": "text/markdown",
+        "parser_policy_ref": "parser-policy:pkg-a",
+        "quality_policy_ref": "quality-policy:pkg-a",
+        "security_decision_ref": "security-decision:pkg-a",
+        "security_epoch_ref": "security-epoch:pkg-a:workspace",
+        "max_attempts": 2,
+    }
+    envelope = CrossModuleEnvelopeV1(
+        contract_name="zuno.ingestion.parse.requested",
+        contract_version="v1",
+        contract_bundle_version="wave1",
+        message_id="outbox:parse-job:pkg-a:workspace",
+        producer_module="workspace.file_upload",
+        consumer_module="ingestion.parser_worker",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        correlation_id="trace-pkg-a-workspace",
+        idempotency_key="parse:tenant-a:workspace-a:hash:workspace",
+        aggregate_type="ParseJob",
+        aggregate_id="parse-job:pkg-a:workspace",
+        effective_security_epoch_ref="security-epoch:pkg-a:workspace",
+        trace_id="trace-pkg-a-workspace",
+        data_classification="internal",
+        occurred_at="2026-07-20T00:00:00Z",
+        created_at="2026-07-20T00:00:00Z",
+        payload=payload,
+        payload_hash=canonical_sha256(payload),
+        payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
+    )
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    delivery.headers["workspace_id"] = "workspace-b"
+    runtime = object.__new__(PackageAProductionIngestionRuntime)
+    runtime.max_attempts = 2
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery workspace header does not match envelope"):
         asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
     assert delivery.acked is False

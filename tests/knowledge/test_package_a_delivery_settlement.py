@@ -239,6 +239,13 @@ def test_package_a_rejects_retry_policy_mismatch_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery retry policy mismatch: max_attempts")
 
 
+def test_package_a_rejects_workspace_header_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.headers["workspace_id"] = "workspace-b"
+
+    _assert_rejected_parse_delivery(delivery, "delivery workspace header does not match envelope")
+
+
 def test_package_a_rejects_outbox_ordering_header_mismatch_without_requeue() -> None:
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
     delivery.headers["ordering_key"] = "parse-job-other"
@@ -550,6 +557,7 @@ def _envelope(
 ) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
+        "workspace_id": "workspace-a",
         "security_epoch_ref": "security-epoch-a",
         "max_attempts": 2,
         **payload,
@@ -584,6 +592,7 @@ def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDeliver
     delivery.message_id = envelope.message_id
     delivery.headers = {
         "tenant_id": envelope.tenant_id,
+        "workspace_id": envelope.workspace_id,
         "security_epoch_ref": envelope.effective_security_epoch_ref,
         "ordering_key": envelope.aggregate_id,
         "ordering_sequence": 1,

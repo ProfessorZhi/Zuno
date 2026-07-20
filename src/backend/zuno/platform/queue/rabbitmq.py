@@ -136,6 +136,7 @@ class RabbitMQTransport:
         payload: dict[str, Any],
         tenant_id: str,
         trace_id: str,
+        workspace_id: str | None = None,
         version: str = "v1",
         security_epoch_ref: str | None = None,
         ordering_key: str | None = None,
@@ -150,6 +151,8 @@ class RabbitMQTransport:
             "trace_id": trace_id,
             "message_version": version,
         }
+        if workspace_id is not None:
+            headers["workspace_id"] = workspace_id
         if security_epoch_ref is not None:
             headers["security_epoch_ref"] = security_epoch_ref
         if ordering_key is not None or ordering_sequence is not None:
