@@ -598,4 +598,15 @@ Package A delivery settlement, persistence fencing, and queue worker tests passe
 PHASE11 remains in_progress; this is Package A Worker Inbox persistence implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A ordered Inbox buffered delivery boundary：
+
+```text
+PackageAProductionIngestionRuntime now treats only non-processable Inbox status=received as duplicate/redelivery replay.
+PHASE04 ordered Inbox status=buffered stays unacked and unrejected; Package A does not load ParseJob replay receipts for it.
+This prevents buffered ordered deliveries from being falsely ACKed before the Inbox watermark makes them processable.
+py_compile passed.
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed.
+PHASE11 remains in_progress; this is Package A ordered Inbox settlement implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

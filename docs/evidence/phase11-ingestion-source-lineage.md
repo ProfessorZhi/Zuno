@@ -1087,3 +1087,23 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 42 passed
 ```
+
+2026-07-20 Package A ordered Inbox buffered delivery boundary：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在只把既有 Inbox `status=received` 且 `processable=false` 的 delivery 当作 duplicate/redelivery replay。
+- 若 PHASE04 ordered Inbox 返回 `buffered` 等暂不可处理状态，Package A 会抛出 `IngestionPersistenceError`，不 ACK、不 reject，也不读取 replay receipt。
+- 该语义避免 RabbitMQ delivery 在 PostgreSQL Inbox 只是 buffered、尚未真正进入 Package A 领域处理时被错误确认。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
+```

@@ -322,6 +322,10 @@ class PackageAProductionIngestionRuntime:
                     ordering_sequence=int(delivery.headers["ordering_sequence"]),
                 )
                 if not inbox.processable:
+                    if inbox.status != "received":
+                        raise IngestionPersistenceError(
+                            f"Package A inbox delivery is not processable: {inbox.status}"
+                        )
                     replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
                     status = str(replay["job_status"])
                     if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:

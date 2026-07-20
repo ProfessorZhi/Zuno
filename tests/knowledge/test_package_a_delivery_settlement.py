@@ -313,6 +313,7 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
     calls: list[dict] = []
 
     class _Inbox:
+        status = "received"
         processable = False
 
     class _Repo:
@@ -356,6 +357,43 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
     assert calls[0]["consumer"] == "worker-from-config"
     assert calls[0]["ordering_key"] == "job-1"
     assert calls[0]["ordering_sequence"] == 1
+
+
+def test_package_a_buffered_inbox_delivery_is_not_acked_or_replayed(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "buffered"
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            raise AssertionError("buffered Inbox deliveries must not load replay receipts")
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    with pytest.raises(IngestionPersistenceError, match="inbox delivery is not processable: buffered"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.rejected is False
 
 
 def test_package_a_first_seen_worker_records_heartbeats_before_and_after_parser_gateway(monkeypatch) -> None:
