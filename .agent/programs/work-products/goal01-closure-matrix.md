@@ -122,4 +122,13 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 non-retryable-DLQ test addition：
+
+```text
+Added Gate B integration coverage for non-retryable failure:
+dead_letter Attempt + released Lease + dead_letter Job + PostgreSQL dead-letter receipt with RabbitMQ DLQ ref + ACK current delivery after commit + no retry outbox.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

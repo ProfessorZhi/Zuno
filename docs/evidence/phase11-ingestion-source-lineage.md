@@ -155,6 +155,26 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B duplicate-redelivery test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 non-retryable-DLQ test addition：
+
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox`，覆盖 non-retryable parser failure 直接进入 PostgreSQL DLQ：Attempt `dead_letter`、Lease `released`、ParseJob `dead_letter`、`ingestion_dead_letters` 记录 RabbitMQ DLQ ref、当前 delivery 事务提交后 ACK，且不创建 retry outbox。
+
+新增验证：
+
+```text
+python -m py_compile tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B non-retryable-DLQ test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

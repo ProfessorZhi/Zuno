@@ -476,6 +476,119 @@ def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) 
         engine.dispose()
 
 
+def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# DLQ\nPermanent parser failure."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _failed_parse(_request):
+        return ParseDocumentResult(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            failure=ParserFailure(
+                parser_id="native_markdown",
+                format="markdown",
+                reason="corrupt source object",
+                retryable=False,
+                failure_classification="corrupt_source",
+            ),
+        )
+
+    def _failed_snapshot(_job_id):
+        return ParseJobSnapshot(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            document_id="source:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            parser_id="native_markdown",
+            parser_format="markdown",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_attempt_id="parse-attempt:pkg-a:retry:1",
+            retryable=False,
+        )
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_failed_parse))
+    monkeypatch.setattr(ParseGateway, "get_job_snapshot", staticmethod(_failed_snapshot))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "dead_letter"
+        assert receipt.acked_after_domain_commit is True
+        assert receipt.retry_enqueued_after_domain_commit is False
+        assert receipt.outbox_event_id is None
+        assert receipt.dead_letter_id == f"dead-letter:{receipt.parse_attempt_id}"
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.state AS attempt_state,
+                           lease.state AS lease_state,
+                           job.status AS job_status,
+                           job.attempt_count AS attempt_count
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_state"] == "dead_letter"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "dead_letter"
+            assert row["attempt_count"] == 1
+
+            dead_letter = conn.execute(
+                text(
+                    """
+                    SELECT failure_code, retryable, retry_count, rabbitmq_dead_letter_ref
+                    FROM ingestion_dead_letters
+                    WHERE dead_letter_id = :dead_letter_id
+                    """
+                ),
+                {"dead_letter_id": receipt.dead_letter_id},
+            ).mappings().one()
+            assert dead_letter["failure_code"] == "corrupt_source"
+            assert dead_letter["retryable"] is False
+            assert dead_letter["retry_count"] == 1
+            assert dead_letter["rabbitmq_dead_letter_ref"] == f"rabbitmq-dlq:{envelope.message_id}"
+
+            outbox_ids = conn.execute(
+                text("SELECT outbox_event_id FROM ingestion_outbox_events ORDER BY outbox_event_id")
+            ).scalars().all()
+            assert outbox_ids == ["outbox:parse-job:pkg-a:retry"]
+    finally:
+        engine.dispose()
+
+
 def test_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox() -> None:
     asyncio.run(_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox())
 
