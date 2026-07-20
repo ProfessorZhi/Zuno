@@ -928,4 +928,16 @@ Gate B redelivery terminal handoff fault test is environment_blocked because Ale
 PHASE11 remains in_progress; this is Package A replay fault hardening evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay snapshot/document lineage gate：
+
+```text
+IngestionRepository.load_parse_job_replay_receipt now reads parse_snapshot_id and document_version_id for succeeded duplicate/redelivery receipts.
+PackageAProductionIngestionRuntime now requires those fields and cross-checks them against Snapshot Handoff replay receipt before ACK.
+The focused test proves a handoff receipt bound to a forged document_version_id is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement and persistence replay tests passed: 54 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A replay lineage hardening evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

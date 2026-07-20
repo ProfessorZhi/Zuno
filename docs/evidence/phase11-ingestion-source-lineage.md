@@ -1344,6 +1344,30 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 Gate B redelivery terminal handoff fault test environment_blocked: Alembic upgrade could not connect to PostgreSQL localhost:5432 before assertions.
 ```
 
+2026-07-20 Package A succeeded replay snapshot/document lineage gate：
+
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 现在在 succeeded duplicate/redelivery replay receipt 中读取 `parse_snapshot_id` 和 `document_version_id`。
+- `PackageAProductionIngestionRuntime._validate_parse_job_replay_receipt(...)` 要求 succeeded replay receipt 包含 `parse_snapshot_id` 与 `document_version_id`。
+- `PackageAProductionIngestionRuntime._validate_snapshot_handoff_replay_receipt(...)` 现在交叉校验 ParseJob replay receipt 与 Snapshot Handoff replay receipt 的 `parse_snapshot_id` 和 `document_version_id` 一致。
+- 该 gate 防止 crash-after-commit-before-ACK 回放路径把属于其它 ParseSnapshot 或 DocumentVersion 的 Indexable Snapshot / Outbox 当作当前 ParseJob 成功结果 ACK。
+- 本次没有新增 Migration；复用 `ingestion_parse_snapshots` 与 `ingestion_indexable_document_snapshots` 已有字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and persistence replay tests passed: 54 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。
