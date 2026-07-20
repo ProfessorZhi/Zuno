@@ -1067,3 +1067,23 @@ py_compile passed
 Package A delivery settlement and queue worker tests passed: 32 passed
 Package A outbox ordering header mismatch integration/fault test passed: 1 passed
 ```
+
+2026-07-20 Package A Worker Inbox ordering persistence：
+
+- `IngestionRepository.record_worker_inbox(...)` 现在接受 `ordering_key` / `ordering_sequence` 并传给 PHASE04 `InfrastructureRepository.record_inbox_receipt(...)`。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在通过 RabbitMQ outbox header 校验后，将 ParseJob ordering facts 写入 PostgreSQL Inbox receipt。
+- duplicate/redelivery 现在不仅按 `message_id` 幂等，也保留 PHASE04 Outbox publisher 的 ordering lineage。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 42 passed
+```

@@ -306,12 +306,16 @@ class IngestionRepository:
         message_id: str,
         payload: dict[str, Any],
         tenant_id: str,
+        ordering_key: str | None = None,
+        ordering_sequence: int | None = None,
     ) -> InboxReceipt:
         return InfrastructureRepository(self.connection).record_inbox_receipt(
             consumer=consumer,
             message_id=message_id,
             payload=payload,
             tenant_id=tenant_id,
+            ordering_key=ordering_key,
+            ordering_sequence=ordering_sequence,
         )
 
     def load_parse_job_context(self, *, parse_job_id: str, tenant_id: str) -> dict[str, Any]:

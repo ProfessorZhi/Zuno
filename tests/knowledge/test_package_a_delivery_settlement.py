@@ -354,6 +354,8 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
     assert receipt.handoff_idempotency_key == "handoff-idem-1"
     assert receipt.outbox_idempotency_key == "handoff-idem-1"
     assert calls[0]["consumer"] == "worker-from-config"
+    assert calls[0]["ordering_key"] == "job-1"
+    assert calls[0]["ordering_sequence"] == 1
 
 
 def test_package_a_first_seen_worker_records_heartbeats_before_and_after_parser_gateway(monkeypatch) -> None:

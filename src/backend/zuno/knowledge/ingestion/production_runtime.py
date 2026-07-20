@@ -318,6 +318,8 @@ class PackageAProductionIngestionRuntime:
                     message_id=envelope.message_id,
                     payload=delivery.payload,
                     tenant_id=tenant_id,
+                    ordering_key=str(delivery.headers["ordering_key"]),
+                    ordering_sequence=int(delivery.headers["ordering_sequence"]),
                 )
                 if not inbox.processable:
                     replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)

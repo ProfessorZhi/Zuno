@@ -587,4 +587,15 @@ Package A outbox ordering header mismatch integration/fault test passed: 1 passe
 PHASE11 remains in_progress; this is Package A RabbitMQ outbox header identity-boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Worker Inbox ordering persistence：
+
+```text
+IngestionRepository.record_worker_inbox now forwards ordering_key and ordering_sequence to PHASE04 InfrastructureRepository.record_inbox_receipt.
+PackageAProductionIngestionRuntime passes validated RabbitMQ outbox ordering headers into PostgreSQL Worker Inbox.
+Duplicate/redelivery receipts now preserve ParseJob ordering lineage instead of using message_id-only Inbox facts.
+py_compile passed.
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 42 passed.
+PHASE11 remains in_progress; this is Package A Worker Inbox persistence implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
