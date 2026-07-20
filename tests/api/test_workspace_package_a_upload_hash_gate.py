@@ -5,6 +5,7 @@ from fastapi import HTTPException
 
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
+from zuno.knowledge.storage import LocalObjectStore, SQLiteDurableIngestionStore
 
 
 class _RecordingPackageARuntime:
@@ -79,6 +80,38 @@ def test_workspace_package_a_upload_accepts_matching_hash_and_uses_content_hash(
     assert payload["file"]["hash"] == content_hash
     assert payload["file_status"]["source_sha256"] == content_hash
     assert payload["durable_status"] == "production_accepted"
+
+
+def test_workspace_package_a_upload_does_not_fallback_when_production_default_is_unavailable(tmp_path) -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_durable_ingestion(
+        store=SQLiteDurableIngestionStore(tmp_path / "legacy.db"),
+        object_store=LocalObjectStore(tmp_path / "objects"),
+    )
+    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(None)
+
+    try:
+        with pytest.raises(HTTPException) as exc:
+            WorkspaceTaskRuntimeService.register_file(
+                workspace_id="workspace-a",
+                login_user=_user(),
+                file_id="file-a",
+                mime_type="text/markdown",
+                file_hash=None,
+                name="file.md",
+                uri=None,
+                trace_id="trace-a",
+                security_label="internal",
+                content="# Package A\nNo local fallback.",
+            )
+
+        assert exc.value.status_code == 503
+        assert "production ingestion is configured but unavailable" in str(exc.value.detail)
+        assert "file-a" not in WorkspaceTaskRuntimeService._files
+        with pytest.raises(KeyError):
+            WorkspaceTaskRuntimeService._durable_ingestion_store.get_workspace_file("file-a")
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
 
 def _user() -> UserPayload:

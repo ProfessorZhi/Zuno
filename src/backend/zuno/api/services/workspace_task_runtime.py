@@ -184,6 +184,7 @@ class WorkspaceTaskRuntimeService:
     _human_review_runtime = HumanReviewRuntime()
     _snapshot_handoff_runtime = SnapshotHandoffRuntime()
     _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
+    _package_a_production_configured: bool = False
     _package_a_upload_bucket: str = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
@@ -285,6 +286,7 @@ class WorkspaceTaskRuntimeService:
         *,
         upload_bucket: str | None = None,
     ) -> None:
+        cls._package_a_production_configured = True
         cls._package_a_production_runtime = runtime
         cls._package_a_upload_bucket = (upload_bucket or DEFAULT_PACKAGE_A_UPLOAD_BUCKET).strip() or DEFAULT_PACKAGE_A_UPLOAD_BUCKET
 
@@ -337,6 +339,7 @@ class WorkspaceTaskRuntimeService:
         cls._durable_ingestion_store = None
         cls._source_object_store = None
         cls._package_a_production_runtime = None
+        cls._package_a_production_configured = False
         cls._package_a_upload_bucket = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
         cls._security_product_action_guard = None
 
@@ -430,6 +433,11 @@ class WorkspaceTaskRuntimeService:
         actual_hash = hashlib.sha256(content_bytes).hexdigest()
         if file_hash is not None and file_hash != actual_hash:
             raise HTTPException(status_code=400, detail="Uploaded file hash does not match content")
+        if cls._package_a_production_configured and cls._package_a_production_runtime is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Package A production ingestion is configured but unavailable",
+            )
         normalized_hash = actual_hash
         file = UploadedFileContract(
             workspace_id=workspace_id,

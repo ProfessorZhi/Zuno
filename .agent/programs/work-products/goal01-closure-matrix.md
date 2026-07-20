@@ -737,4 +737,15 @@ Package A ParseJob identity mismatch integration/fault test passed: 1 passed.
 PHASE11 remains in_progress; this is Package A ParseJob lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A upload default no-local-fallback gate：
+
+```text
+WorkspaceTaskRuntimeService now records when Package A production ingestion has been configured as the default upload path.
+When that default is configured but unavailable, register_file returns 503 before writing in-memory file state, SQLite durable records, or LocalObjectStore content.
+The focused API test proves the production default path does not silently fall back to the local durable adapter.
+py_compile passed.
+Package A upload hash/default no-local-fallback and explicit durable adapter tests passed: 4 passed.
+PHASE11 remains in_progress; this is Package A upload default-path boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

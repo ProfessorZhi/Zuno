@@ -1108,6 +1108,27 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
 
+2026-07-20 Package A upload default no-local-fallback gate：
+
+- `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。
+- 当生产默认接线已配置但 MinIO/PostgreSQL Package A runtime 不可用时，`WorkspaceTaskRuntimeService.register_file(...)` 在写入内存 file 状态、SQLite durable store 或 LocalObjectStore 之前返回 `503`。
+- 该 gate 防止 Workspace/File Upload 默认路径在生产配置缺失时悄悄降级到 SQLite / LocalObjectStore，保持 Package A 默认入口必须走 MinIO + PostgreSQL runtime 的边界。
+- 显式配置的 durable ingestion 测试路径仍可作为本地/测试 adapter 使用，不被计为生产默认完成证据。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/api/services/workspace_task_runtime.py tests/api/test_workspace_package_a_upload_hash_gate.py tests/api/test_workspace_durable_ingest_runtime.py
+pytest -q tests/api/test_workspace_package_a_upload_hash_gate.py tests/api/test_workspace_durable_ingest_runtime.py::test_workspace_file_register_persists_source_object_and_content_ref -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload hash/default no-local-fallback and explicit durable adapter tests passed: 4 passed
+```
+
 2026-07-20 Package A retry attempt number pre-Inbox gate：
 
 - `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。
