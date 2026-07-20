@@ -338,8 +338,10 @@ class PackageAProductionIngestionRuntime:
         snapshot = ParseGateway.get_job_snapshot(result.job_id)
         if result.status != "succeeded" or result.document is None:
             retryable = bool(result.failure and result.failure.retryable)
-            exhausted = int(context["attempt_count"]) + 1 >= self.max_attempts
-            terminal_status = "failed" if retryable and not exhausted else "dead_letter"
+            terminal_status = self._failure_terminal_status(
+                retryable=retryable,
+                prior_attempt_count=int(context["attempt_count"]),
+            )
             repo.fail_parse_attempt(
                 parse_attempt_id=parse_attempt_id,
                 parse_job_id=parse_job_id,
@@ -543,6 +545,14 @@ class PackageAProductionIngestionRuntime:
                 "created_at": now,
             }
         )
+
+    def _failure_terminal_status(self, *, retryable: bool, prior_attempt_count: int) -> str:
+        if prior_attempt_count < 0:
+            raise ValueError("prior_attempt_count must not be negative")
+        current_attempt_number = prior_attempt_count + 1
+        if retryable and current_attempt_number < self.max_attempts:
+            return "failed"
+        return "dead_letter"
 
     @staticmethod
     def _cancel_reason(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> str | None:

@@ -467,3 +467,23 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovi
 py_compile passed
 Package A delivery settlement poison-message tests passed: 4 passed
 ```
+
+2026-07-20 Package A retry exhaustion boundary：
+
+- `PackageAProductionIngestionRuntime` 将 retryable failure 的 terminal status 判定抽为 `_failure_terminal_status(...)`，保持 `max_attempts` 包含初次执行：`prior_attempt_count=0` 的首次 retryable failure 进入 `failed` 并 enqueue retry；`prior_attempt_count=1` 且 `max_attempts=2` 时进入 `dead_letter`。
+- non-retryable failure 无论 attempt count 都直接进入 `dead_letter`，不创建 retry outbox。
+- 新增 `tests/knowledge/test_package_a_retry_boundary.py`，覆盖 retryable first attempt、retry exhausted、non-retryable first attempt，以及负 attempt count 拒绝。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_retry_boundary.py
+pytest -q tests/knowledge/test_package_a_retry_boundary.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A retry boundary tests passed: 3 passed
+```

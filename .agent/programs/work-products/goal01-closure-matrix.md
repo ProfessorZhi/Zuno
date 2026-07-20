@@ -262,4 +262,15 @@ Package A delivery settlement poison-message tests passed: 4 passed.
 PHASE11 remains in_progress; live RabbitMQ poison-message behavior still needs Gate C.
 ```
 
+2026-07-20 Package A retry exhaustion boundary：
+
+```text
+PackageAProductionIngestionRuntime now centralizes retry/DLQ terminal status classification.
+max_attempts includes the first execution: retryable first failure with max_attempts=2 queues retry, second failure dead-letters.
+Non-retryable failure dead-letters on the first attempt.
+py_compile passed.
+Package A retry boundary tests passed: 3 passed.
+PHASE11 remains in_progress; PostgreSQL-backed retry/DLQ integration remains Gate B/C evidence.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
