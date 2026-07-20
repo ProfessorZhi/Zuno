@@ -449,4 +449,16 @@ Package A delivery settlement and queue worker tests passed: 22 passed.
 PHASE11 remains in_progress; this is Package A RabbitMQ Security Epoch boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A PostgreSQL Lease heartbeat and successful Worker path：
+
+```text
+IngestionRepository.heartbeat_parse_attempt_lease now records explicit PostgreSQL heartbeat facts without extending lease expiry.
+The heartbeat update is fenced by tenant, ParseJob, ParseAttempt, worker_id, fencing_token, unexpired lease, and running Attempt state.
+PackageAProductionIngestionRuntime records heartbeat after ObjectRef verification and after Parser Gateway returns, before ParseSnapshot/SourceSpan/Quality/Indexable Snapshot/Outbox commit.
+The success path now uses the same local visibility_ref for handoff creation and PostgreSQL indexable snapshot persistence instead of reading a nonexistent IndexableDocumentSnapshotV1.visibility_ref field.
+py_compile passed.
+Package A persistence fencing and delivery settlement tests passed: 23 passed.
+PHASE11 remains in_progress; this is Package A heartbeat and success-path runtime implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

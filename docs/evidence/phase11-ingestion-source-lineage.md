@@ -816,3 +816,24 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery settlement and queue worker tests passed: 22 passed
 ```
+
+2026-07-20 Package A PostgreSQL Lease heartbeat and successful Worker path：
+
+- `IngestionRepository.heartbeat_parse_attempt_lease(...)` 新增明确的 heartbeat 持久化入口：只更新 `ingestion_parse_leases.heartbeat_at` 和当前 `ingestion_parse_attempts.heartbeat_at`，不延长 `lease_expires_at`。
+- heartbeat 由 PostgreSQL 同时校验 `tenant_id`、`parse_job_id`、`parse_attempt_id`、`worker_id`、`fencing_token`、未过期 lease 和 `running` Attempt 状态。
+- `PackageAProductionIngestionRuntime` 在 MinIO ObjectRef 校验后、Parser Gateway 返回后各记录一次 heartbeat，再继续写 ParseSnapshot / SourceSpan / Quality Decision / Indexable Snapshot / Snapshot Outbox。
+- 修复 Package A success path 中对 `IndexableDocumentSnapshotV1.visibility_ref` 的错误读取；visibility ref 现在由同一个局部事实传给 handoff 和 PostgreSQL snapshot 写入。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A persistence fencing and delivery settlement tests passed: 23 passed
+```

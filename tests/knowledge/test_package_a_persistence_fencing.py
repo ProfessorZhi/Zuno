@@ -77,6 +77,34 @@ def test_parse_attempt_failure_requires_running_state() -> None:
     assert connection.calls[0]["params"]["expected_statuses"] == ("running",)
 
 
+def test_parse_attempt_heartbeat_requires_running_state_without_extending_lease() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    receipt = repo.heartbeat_parse_attempt_lease(
+        parse_attempt_id="parse-job-a:attempt:1",
+        parse_job_id="parse-job-a",
+        tenant_id="tenant-a",
+        worker_id="worker-a",
+        fencing_token=1,
+    )
+
+    lease_update = connection.calls[0]
+    attempt_update = connection.calls[1]
+    assert receipt.status == "lease_heartbeat"
+    assert "SET heartbeat_at = now()" in lease_update["statement"]
+    assert "lease_expires_at =" not in lease_update["statement"]
+    assert lease_update["params"] == {
+        "parse_attempt_id": "parse-job-a:attempt:1",
+        "parse_job_id": "parse-job-a",
+        "tenant_id": "tenant-a",
+        "worker_id": "worker-a",
+        "fencing_token": 1,
+    }
+    assert attempt_update["params"]["expected_statuses"] == ("running",)
+    assert attempt_update["params"]["lease_expires_at"] is None
+
+
 def test_parse_attempt_update_rejects_empty_expected_state_set() -> None:
     repo = IngestionRepository(_Connection())
 

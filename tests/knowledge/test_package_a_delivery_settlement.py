@@ -1,5 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
+import hashlib
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,6 +14,8 @@ from zuno.knowledge.ingestion import (
     PackageARejectDeliveryError,
     PackageAWorkerReceipt,
 )
+from zuno.knowledge.ingestion.review import HumanReviewRuntime
+from zuno.knowledge.ingestion.handoff import SnapshotHandoffRuntime
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 from zuno.platform.database.ingestion import IngestionPersistenceError
 
@@ -284,6 +288,65 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
     assert calls[0]["consumer"] == "worker-from-config"
 
 
+def test_package_a_first_seen_worker_records_heartbeats_before_and_after_parser_gateway(monkeypatch) -> None:
+    events: list[str] = []
+    repo = _FirstSeenRepo(events)
+    runtime = _runtime_without_init()
+    runtime.worker_id = "worker-a"
+    runtime.lease_ttl_seconds = 30
+    runtime.review_runtime = HumanReviewRuntime(min_confidence=0.1)
+    runtime.handoff_runtime = SnapshotHandoffRuntime()
+    source_bytes = b"# Title\n\nPackage A heartbeat evidence.\n"
+    source_hash = hashlib.sha256(source_bytes).hexdigest()
+
+    def read_object(context):
+        events.append("read_object")
+        return source_bytes
+
+    monkeypatch.setattr(
+        runtime,
+        "_read_and_verify_object",
+        read_object,
+    )
+    payload = {
+        **_lineage_payload(),
+        "content_hash": source_hash,
+        "size_bytes": len(source_bytes),
+        "parser_policy_ref": "parser-policy-a",
+        "security_decision_ref": "security-decision-a",
+    }
+    repo.source_hash = source_hash
+    repo.source_size = len(source_bytes)
+    envelope = _envelope(payload=payload)
+
+    receipt = runtime._process_first_seen_delivery(
+        repo=repo,
+        payload=payload,
+        envelope=envelope,
+        parse_job_id="parse-job-a",
+        tenant_id="tenant-a",
+    )
+
+    assert receipt.status == "succeeded"
+    assert events[:7] == [
+        "load_context",
+        "claim",
+        "running",
+        "renew",
+        "read_object",
+        "heartbeat",
+        "heartbeat",
+    ]
+    assert events[7] == "snapshot"
+    assert events.count("span") >= 1
+    assert events[-4:] == [
+        "quality",
+        "indexable",
+        "outbox",
+        "commit",
+    ]
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 
@@ -386,3 +449,61 @@ def _lineage_context() -> dict:
         "mime_type": "text/markdown",
         "security_epoch_ref": "security-epoch-a",
     }
+
+
+class _FirstSeenRepo:
+    def __init__(self, events: list[str]) -> None:
+        self.events = events
+        self.source_hash = "a" * 64
+        self.source_size = 12
+
+    def load_parse_job_context(self, *, parse_job_id: str, tenant_id: str) -> dict:
+        self.events.append("load_context")
+        return {
+            **_lineage_context(),
+            "source_sha256": self.source_hash,
+            "size_bytes": self.source_size,
+            "filename": "file.md",
+            "classification_ref": "internal",
+            "source_status": "committed",
+            "idempotency_key": "parse:tenant-a:workspace-a:source-a",
+            "attempt_count": 0,
+            "quality_policy_ref": "quality-policy-a",
+            "security_decision_ref": "security-decision-a",
+        }
+
+    def claim_parse_attempt_lease(self, **kwargs):
+        self.events.append("claim")
+        return SimpleNamespace(ref="parse-job-a:attempt:1", payload_hash="1")
+
+    def mark_parse_attempt_running(self, **kwargs):
+        self.events.append("running")
+
+    def renew_parse_attempt_lease(self, **kwargs):
+        self.events.append("renew")
+
+    def heartbeat_parse_attempt_lease(self, **kwargs):
+        self.events.append("heartbeat")
+
+    def record_parse_snapshot(self, **kwargs):
+        self.events.append("snapshot")
+        return SimpleNamespace(ref="parse-snapshot:parse-job-a:attempt:1")
+
+    def record_source_span(self, **kwargs):
+        self.events.append("span")
+        return SimpleNamespace(ref=kwargs["source_span_id"])
+
+    def record_quality_decision(self, **kwargs):
+        self.events.append("quality")
+        return SimpleNamespace(ref="quality:parse-job-a:attempt:1")
+
+    def record_indexable_snapshot(self, **kwargs):
+        self.events.append("indexable")
+        return SimpleNamespace(ref=kwargs["indexable_snapshot_id"])
+
+    def enqueue_outbox_event(self, **kwargs):
+        self.events.append("outbox")
+        return SimpleNamespace(ref=kwargs["outbox_event_id"])
+
+    def commit_parse_attempt_if_current(self, **kwargs):
+        self.events.append("commit")

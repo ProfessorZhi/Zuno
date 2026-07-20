@@ -382,6 +382,13 @@ class PackageAProductionIngestionRuntime:
                 acked_after_domain_commit=False,
                 dead_letter_id=dead_letter.ref,
             )
+        repo.heartbeat_parse_attempt_lease(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=self.worker_id,
+            fencing_token=fencing_token,
+        )
         request = ParseDocumentRequest(
             document_id=str(context["source_object_id"]),
             source_id=str(context["source_object_id"]),
@@ -411,6 +418,13 @@ class PackageAProductionIngestionRuntime:
         )
         result = ParseGateway.submit_parse_job(request)
         snapshot = ParseGateway.get_job_snapshot(result.job_id)
+        repo.heartbeat_parse_attempt_lease(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=self.worker_id,
+            fencing_token=fencing_token,
+        )
         try:
             self._validate_parser_identity(
                 result=result,
@@ -550,11 +564,12 @@ class PackageAProductionIngestionRuntime:
                 status="failed",
                 acked_after_domain_commit=True,
             )
+        visibility_ref = f"visibility:{context['workspace_id']}:{context['source_object_id']}"
         indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
             document=result.document,
             parse_snapshot=snapshot,
             quality_gate=quality_gate,
-            visibility_ref=f"visibility:{context['workspace_id']}:{context['source_object_id']}",
+            visibility_ref=visibility_ref,
         )
         handoff_payload = {
             "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
@@ -569,7 +584,7 @@ class PackageAProductionIngestionRuntime:
             parse_snapshot_id=snapshot_receipt.ref,
             document_version_id=str(context["document_version_id"]),
             quality_decision_id=quality.ref,
-            visibility_ref=indexable_snapshot.visibility_ref,
+            visibility_ref=visibility_ref,
             payload=indexable_snapshot.payload,
             handoff_idempotency_key=indexable_snapshot.idempotency_key,
         )

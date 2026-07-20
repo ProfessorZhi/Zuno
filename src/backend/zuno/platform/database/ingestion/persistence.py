@@ -564,6 +564,50 @@ class IngestionRepository:
         )
         return IngestionReceipt(parse_attempt_id, tenant_id, "lease_renewed", str(fencing_token))
 
+    def heartbeat_parse_attempt_lease(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+    ) -> IngestionReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                  AND lease_expires_at > now()
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease heartbeat rejected by fencing")
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="running",
+            expected_statuses=("running",),
+        )
+        return IngestionReceipt(parse_attempt_id, tenant_id, "lease_heartbeat", str(fencing_token))
+
     def reconcile_expired_parse_attempt_lease(
         self,
         *,
