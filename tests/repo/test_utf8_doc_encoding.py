@@ -36,7 +36,7 @@ def test_normal_chinese_document_passes(tmp_path, monkeypatch) -> None:
 def test_mojibake_document_fails(tmp_path, monkeypatch) -> None:
     verifier = _load_verifier()
     sample = tmp_path / "broken.md"
-    sample.write_text("乱码样本：閿 鐠 锟", encoding="utf-8")
+    sample.write_text("乱码样本：鏈枃 銆 鐨 锛", encoding="utf-8")
     monkeypatch.setattr(verifier, "REPO_ROOT", tmp_path)
 
     issues = verifier.verify_utf8_doc_encoding(["broken.md"])

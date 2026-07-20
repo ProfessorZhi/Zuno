@@ -14,19 +14,25 @@ from zuno.platform.database.ingestion import IngestionPersistenceError, Ingestio
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATABASE_URL = os.environ.get(
     "ZUNO_TEST_POSTGRES_URL",
-    "postgresql+psycopg://postgres:postgres@localhost:5432/zuno",
+    "postgresql+psycopg://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
 )
 HEX_64 = "b" * 64
 
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated_postgres() -> None:
+    env = {
+        **os.environ,
+        "PGCONNECT_TIMEOUT": os.environ.get("PGCONNECT_TIMEOUT", "5"),
+        "ZUNO_ALEMBIC_LOCK_TIMEOUT_SECONDS": os.environ.get("ZUNO_ALEMBIC_LOCK_TIMEOUT_SECONDS", "5"),
+    }
     result = subprocess.run(
         ["alembic", "-c", "infra/db/alembic.ini", "upgrade", "head"],
         cwd=REPO_ROOT,
+        env=env,
         text=True,
         capture_output=True,
-        timeout=120,
+        timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -211,3 +217,92 @@ def test_ingestion_rejects_malformed_source_hash(engine) -> None:
                 classification_ref="classification:internal",
                 security_epoch_ref="security-epoch:phase11",
             )
+
+
+def test_ingestion_uow_rolls_back_source_when_later_domain_write_fails(engine) -> None:
+    with pytest.raises(IngestionPersistenceError):
+        with IngestionUnitOfWork(engine) as repo:
+            source = repo.record_source_object(
+                source_object_id="source:rollback",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                filename="rollback.md",
+                mime_type="text/markdown",
+                storage_uri="s3://bucket/rollback.md",
+                object_manifest_ref="manifest:rollback",
+                source_sha256=HEX_64,
+                size_bytes=9,
+                classification_ref="classification:internal",
+                security_epoch_ref="security-epoch:phase11",
+            )
+            repo.record_document_version(
+                document_version_id="document-version:rollback",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                source_object_id=source.ref,
+                version_no=1,
+                content_hash="bad-content-hash",
+                metadata={"filename": "rollback.md"},
+                immutability_ref="immutability:rollback",
+            )
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_source_objects")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM ingestion_document_versions")).scalar_one() == 0
+
+
+def test_ingestion_parse_job_idempotency_conflict_is_tenant_scoped(engine) -> None:
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:idempotency",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="idem.md",
+            mime_type="text/markdown",
+            storage_uri="s3://bucket/idem.md",
+            object_manifest_ref="manifest:idempotency",
+            source_sha256=HEX_64,
+            size_bytes=12,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:phase11",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:idempotency",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "idem.md"},
+            immutability_ref="immutability:idempotency",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:idempotency",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:idempotency",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:idempotency",
+            security_decision_ref="security-decision:idempotency",
+        )
+        repo.record_parse_job(
+            parse_job_id="parse-job:idempotency:1",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:tenant-a:idem:v1",
+        )
+
+    with pytest.raises(exc.IntegrityError):
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_parse_job(
+                parse_job_id="parse-job:idempotency:duplicate",
+                tenant_id="tenant-a",
+                parse_plan_id="parse-plan:idempotency",
+                document_version_id="document-version:idempotency",
+                idempotency_key="parse:tenant-a:idem:v1",
+            )
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_parse_jobs")).scalar_one() == 1

@@ -27,6 +27,10 @@ TEXT_SUFFIXES = {".md", ".txt", ".yaml", ".yml", ".json", ".py"}
 MOJIBAKE_TOKENS = [
     "\ufffd",
     "\u951f",  # common replacement mojibake prefix
+    "\u9286",
+    "\u9306",
+    "\u940d",
+    "\u9428",
     "\u95bf",
     "\u95b5",
     "\u95bc",
@@ -41,6 +45,21 @@ MOJIBAKE_TOKENS = [
     "\u4e27",
     "\u4e28",
     "\u4e34",
+]
+
+MOJIBAKE_PATTERNS = [
+    "銆",
+    "锛",
+    "鐨",
+    "鍜",
+    "涓€",
+    "鏈",
+    "閲",
+    "绾",
+    "垮",
+    "乭",
+    "丱",
+    "並",
 ]
 
 
@@ -70,7 +89,7 @@ def _has_cjk(text: str) -> bool:
 
 
 def _mojibake_hits(text: str) -> list[str]:
-    return [token for token in MOJIBAKE_TOKENS if token in text]
+    return [token for token in [*MOJIBAKE_TOKENS, *MOJIBAKE_PATTERNS] if token in text]
 
 
 def _mojibake_density(text: str) -> float:
