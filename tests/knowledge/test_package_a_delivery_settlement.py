@@ -229,6 +229,31 @@ def test_package_a_lineage_validator_rejects_size_mismatch() -> None:
         )
 
 
+def test_package_a_lineage_validator_requires_retry_parent_attempt_to_match_postgres() -> None:
+    payload = {
+        **_lineage_payload(),
+        "retry_attempt_no": 2,
+        "retry_parent_attempt_id": "parse-job-a:attempt:1",
+        "retry_parent_message_id": "outbox:parse-job-a",
+        "retry_parent_idempotency_key": "parse:tenant-a:workspace-a:hash:1",
+    }
+    context = {
+        **_lineage_context(),
+        "attempt_count": 1,
+        "latest_attempt_id": "parse-job-a:attempt:1",
+        "latest_attempt_status": "failed",
+    }
+
+    PackageAProductionIngestionRuntime._validate_delivery_lineage(payload=payload, context=context)
+
+    forged_payload = {**payload, "retry_parent_attempt_id": "parse-job-a:attempt:stale"}
+    with pytest.raises(PackageARejectDeliveryError, match="retry_parent_attempt_id"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=forged_payload,
+            context=context,
+        )
+
+
 def test_package_a_quality_failure_code_uses_verdict() -> None:
     class _Gate:
         verdict = "REVIEW"
@@ -525,6 +550,9 @@ def _lineage_context() -> dict:
         "size_bytes": 12,
         "mime_type": "text/markdown",
         "security_epoch_ref": "security-epoch-a",
+        "attempt_count": 0,
+        "latest_attempt_id": None,
+        "latest_attempt_status": None,
     }
 
 

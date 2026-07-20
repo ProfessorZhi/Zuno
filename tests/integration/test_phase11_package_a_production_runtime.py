@@ -760,6 +760,101 @@ def test_gate_b_rejects_retry_policy_mismatch_before_inbox(monkeypatch) -> None:
         engine.dispose()
 
 
+def test_gate_b_rejects_retry_parent_attempt_mismatch_before_new_attempt(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Forged retry parent\nDo not lease."
+    envelope = _seed_retryable_job(engine, content=content)
+    with IngestionUnitOfWork(engine) as repo:
+        attempt = repo.claim_parse_attempt_lease(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id="source:pkg-a:retry",
+            document_version_id="document-version:pkg-a:retry",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_job_id="parse-job:pkg-a:retry",
+            worker_id="phase11-package-a-worker",
+            idempotency_key=f"{envelope.idempotency_key}:attempt:1",
+            security_epoch_ref="security-epoch:pkg-a:retry",
+            lease_ttl_seconds=60,
+        )
+        fencing_token = int(attempt.payload_hash or "0")
+        repo.mark_parse_attempt_running(
+            parse_attempt_id=attempt.ref,
+            parse_job_id="parse-job:pkg-a:retry",
+            tenant_id="tenant-a",
+            worker_id="phase11-package-a-worker",
+            fencing_token=fencing_token,
+        )
+        repo.fail_parse_attempt(
+            parse_attempt_id=attempt.ref,
+            parse_job_id="parse-job:pkg-a:retry",
+            tenant_id="tenant-a",
+            worker_id="phase11-package-a-worker",
+            fencing_token=fencing_token,
+            status="failed",
+            failure_code="retryable_parser_failure",
+        )
+        repo.update_parse_job_status(parse_job_id="parse-job:pkg-a:retry", tenant_id="tenant-a", status="queued")
+
+    forged_payload = dict(envelope.payload or {})
+    forged_payload.update(
+        {
+            "retry_attempt_no": 2,
+            "retry_parent_attempt_id": "parse-job:pkg-a:retry:attempt:stale",
+            "retry_parent_message_id": envelope.message_id,
+            "retry_parent_idempotency_key": envelope.idempotency_key,
+        }
+    )
+    forged_envelope = envelope.model_copy(
+        update={
+            "message_id": "outbox:parse-job:pkg-a:retry:2",
+            "idempotency_key": f"{envelope.idempotency_key}:retry:2",
+            "payload": forged_payload,
+            "payload_hash": canonical_sha256(forged_payload),
+        }
+    )
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=forged_envelope.aggregate_id or "",
+        event_id=forged_envelope.message_id,
+        idempotency_key=forged_envelope.idempotency_key or "",
+        payload=forged_envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(forged_envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("retry parent mismatch must be rejected before Parser Gateway")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+
+    try:
+        with pytest.raises(PackageARejectDeliveryError, match="retry_parent_attempt_id"):
+            asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert delivery.acked is False
+        assert delivery.nacked is False
+        assert delivery.rejected is True
+
+        with engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM infra_inbox_messages")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_attempts")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_leases")).scalar_one() == 1
+            assert conn.execute(text("SELECT status FROM ingestion_parse_jobs")).scalar_one() == "queued"
+    finally:
+        engine.dispose()
+
+
 def test_gate_b_rejects_delivery_lineage_mismatch_before_attempt(monkeypatch) -> None:
     engine = _engine()
     content = b"# Forged lineage\nDo not lease."

@@ -817,6 +817,30 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery lineage mismatch: size_bytes") from exc
         if payload_size != context_size:
             raise PackageARejectDeliveryError("delivery lineage mismatch: size_bytes")
+        retry_fields = {
+            "retry_attempt_no",
+            "retry_parent_attempt_id",
+            "retry_parent_message_id",
+            "retry_parent_idempotency_key",
+        }
+        present_retry_fields = {field_name for field_name in retry_fields if payload.get(field_name) is not None}
+        if present_retry_fields:
+            missing_retry_fields = retry_fields - present_retry_fields
+            if missing_retry_fields:
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry fields")
+            try:
+                retry_attempt_no = int(payload["retry_attempt_no"])
+                expected_attempt_no = int(context["attempt_count"]) + 1
+            except (TypeError, ValueError) as exc:
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry_attempt_no") from exc
+            if retry_attempt_no != expected_attempt_no:
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry_attempt_no")
+            if retry_attempt_no < 2:
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry_attempt_no")
+            if str(payload["retry_parent_attempt_id"]) != str(context.get("latest_attempt_id")):
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry_parent_attempt_id")
+            if str(context.get("latest_attempt_status")) != "failed":
+                raise PackageARejectDeliveryError("delivery retry lineage mismatch: retry_parent_attempt_status")
 
     @staticmethod
     def _cancel_reason(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> str | None:

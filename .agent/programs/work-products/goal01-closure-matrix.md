@@ -551,4 +551,16 @@ Gate B focused PostgreSQL test was attempted once; environment_blocked by localh
 PHASE11 remains in_progress; this is Package A retry policy identity-boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A retry parent Attempt lineage gate：
+
+```text
+IngestionRepository.load_parse_job_context now exposes latest PostgreSQL ParseAttempt ID and status to the Package A Worker.
+PackageAProductionIngestionRuntime validates retry_attempt_no against PostgreSQL attempt_count + 1, and requires retry_parent_attempt_id to match the latest failed Attempt.
+Forged retry delivery cannot create a new append-only Attempt from a stale or non-failed parent.
+py_compile passed.
+Package A delivery settlement, persistence fencing, and retry boundary tests passed: 33 passed.
+Gate B focused PostgreSQL test was attempted once; environment_blocked by localhost:5432 connection timeout during alembic upgrade head.
+PHASE11 remains in_progress; this is Package A retry parent/Attempt lineage implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

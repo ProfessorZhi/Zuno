@@ -321,12 +321,21 @@ class IngestionRepository:
                 SELECT
                     job.parse_job_id, job.tenant_id, job.parse_plan_id, job.document_version_id,
                     job.idempotency_key, job.status, job.attempt_count,
+                    latest_attempt.parse_attempt_id AS latest_attempt_id,
+                    latest_attempt.status AS latest_attempt_status,
                     plan.quality_policy_ref, plan.security_decision_ref,
                     document.workspace_id, document.source_object_id, document.content_hash,
                     source.filename, source.mime_type, source.storage_uri, source.object_manifest_ref,
                     source.source_sha256, source.size_bytes, source.classification_ref,
                     source.security_epoch_ref, source.status AS source_status
                 FROM ingestion_parse_jobs AS job
+                LEFT JOIN LATERAL (
+                    SELECT parse_attempt_id, status
+                    FROM ingestion_parse_attempts
+                    WHERE parse_job_id = job.parse_job_id
+                    ORDER BY attempt_no DESC
+                    LIMIT 1
+                ) AS latest_attempt ON true
                 JOIN ingestion_parse_plans AS plan ON plan.parse_plan_id = job.parse_plan_id
                 JOIN ingestion_document_versions AS document ON document.document_version_id = job.document_version_id
                 JOIN ingestion_source_objects AS source ON source.source_object_id = document.source_object_id

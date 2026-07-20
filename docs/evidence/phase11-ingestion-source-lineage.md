@@ -1001,3 +1001,25 @@ py_compile passed
 Package A delivery settlement, retry boundary, and queue worker tests passed: 34 passed
 Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
 ```
+
+2026-07-20 Package A retry parent Attempt lineage gate：
+
+- `IngestionRepository.load_parse_job_context(...)` 现在随 ParseJob context 读取 PostgreSQL latest ParseAttempt ID 和 status。
+- `PackageAProductionIngestionRuntime._validate_delivery_lineage(...)` 现在校验 retry delivery 的 `retry_attempt_no` 必须等于 PostgreSQL `attempt_count + 1`，`retry_parent_attempt_id` 必须等于 latest ParseAttempt，且 latest Attempt 必须处于 `failed`。
+- 该 gate 防止 retry delivery 复用旧 Attempt、伪造 parent Attempt，或在非 failed terminal 状态之后继续创建新 Attempt。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_retry_boundary.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_retry_boundary.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_rejects_retry_parent_attempt_mismatch_before_new_attempt -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, persistence fencing, and retry boundary tests passed: 33 passed
+Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
+```
