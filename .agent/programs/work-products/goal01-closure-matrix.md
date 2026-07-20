@@ -297,4 +297,17 @@ Gate B lineage mismatch integration was attempted and is environment_blocked by 
 PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
 ```
 
+2026-07-20 Package A ObjectRef verification DLQ：
+
+```text
+ObjectRef scope, hash/size, visibility, and invalid s3:// verification failures now raise PackageAObjectVerificationError with stable failure_code.
+PackageAProductionIngestionRuntime catches these failures after ParseAttempt/Lease creation and records terminal PostgreSQL dead_letter receipts in the same UoW.
+After domain commit, RabbitMQ settlement rejects(requeue=false), so deterministic bad source objects go to DLQ instead of looping through redelivery.
+Added Gate B focused integration coverage for object hash mismatch -> dead_letter without Parser Gateway execution.
+py_compile passed.
+Worker ObjectRef verifier fault test passed: 1 passed.
+Gate B object hash mismatch DLQ integration was attempted and is environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade.
+PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

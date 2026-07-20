@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import text
 
 from zuno.knowledge.ingestion import (
+    PackageAObjectVerificationError,
     PackageAProductionIngestionRuntime,
     PackageARejectDeliveryError,
     PackageAUploadCommand,
@@ -291,16 +292,19 @@ def test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility() 
         **context,
         "storage_uri": "s3://bucket/tenant-b/workspace-a/source/source-a/file.md",
     }
-    with pytest.raises(IngestionPersistenceError, match="tenant/workspace scope"):
+    with pytest.raises(PackageAObjectVerificationError, match="tenant/workspace scope") as scoped_out:
         runtime._read_and_verify_object(scoped_out_context)
+    assert scoped_out.value.failure_code == "object_ref_scope_mismatch"
 
     hash_mismatch_context = {**context, "source_sha256": "0" * 64}
-    with pytest.raises(IngestionPersistenceError, match="lineage facts"):
+    with pytest.raises(PackageAObjectVerificationError, match="lineage facts") as hash_mismatch:
         runtime._read_and_verify_object(hash_mismatch_context)
+    assert hash_mismatch.value.failure_code == "object_bytes_mismatch"
 
     revoked_context = {**context, "source_status": "revoked"}
-    with pytest.raises(IngestionPersistenceError, match="not visible"):
+    with pytest.raises(PackageAObjectVerificationError, match="not visible") as revoked:
         runtime._read_and_verify_object(revoked_context)
+    assert revoked.value.failure_code == "object_not_visible"
 
 
 def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> None:
@@ -921,6 +925,88 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
                 text("SELECT outbox_event_id FROM ingestion_outbox_events ORDER BY outbox_event_id")
             ).scalars().all()
             assert outbox_ids == ["outbox:parse-job:pkg-a:retry"]
+    finally:
+        engine.dispose()
+
+
+def test_gate_b_object_hash_mismatch_records_dlq_without_requeue(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Object mismatch\nExpected content."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=b"# Object mismatch\nTampered content.",
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("object verification failure must not call Parser Gateway")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "dead_letter"
+        assert receipt.acked_after_domain_commit is False
+        assert receipt.dead_letter_id == f"dead-letter:{receipt.parse_attempt_id}"
+        assert delivery.acked is False
+        assert delivery.nacked is False
+        assert delivery.rejected is True
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.status AS attempt_status,
+                           attempt.failure_code AS failure_code,
+                           lease.state AS lease_state,
+                           job.status AS job_status,
+                           job.attempt_count AS attempt_count
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_status"] == "dead_letter"
+            assert row["failure_code"] == "object_bytes_mismatch"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "dead_letter"
+            assert row["attempt_count"] == 1
+
+            dead_letter = conn.execute(
+                text(
+                    """
+                    SELECT failure_code, retryable, retry_count, rabbitmq_dead_letter_ref
+                    FROM ingestion_dead_letters
+                    WHERE dead_letter_id = :dead_letter_id
+                    """
+                ),
+                {"dead_letter_id": receipt.dead_letter_id},
+            ).mappings().one()
+            assert dead_letter["failure_code"] == "object_bytes_mismatch"
+            assert dead_letter["retryable"] is False
+            assert dead_letter["retry_count"] == 1
+            assert dead_letter["rabbitmq_dead_letter_ref"] == f"rabbitmq-dlq:{envelope.message_id}"
     finally:
         engine.dispose()
 

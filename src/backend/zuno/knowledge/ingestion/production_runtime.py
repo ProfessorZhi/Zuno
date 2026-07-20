@@ -28,6 +28,12 @@ class PackageARejectDeliveryError(IngestionPersistenceError):
     pass
 
 
+class PackageAObjectVerificationError(IngestionPersistenceError):
+    def __init__(self, message: str, *, failure_code: str) -> None:
+        super().__init__(message)
+        self.failure_code = failure_code
+
+
 class AckableDelivery(Protocol):
     message_id: str
     payload: dict[str, Any]
@@ -324,7 +330,37 @@ class PackageAProductionIngestionRuntime:
             fencing_token=fencing_token,
             lease_ttl_seconds=self.lease_ttl_seconds,
         )
-        source_bytes = self._read_and_verify_object(context)
+        try:
+            source_bytes = self._read_and_verify_object(context)
+        except PackageAObjectVerificationError as exc:
+            repo.fail_parse_attempt(
+                parse_attempt_id=parse_attempt_id,
+                parse_job_id=parse_job_id,
+                tenant_id=tenant_id,
+                worker_id=self.worker_id,
+                fencing_token=fencing_token,
+                status="dead_letter",
+                failure_code=exc.failure_code,
+            )
+            dead_letter = repo.record_dead_letter(
+                dead_letter_id=f"dead-letter:{parse_attempt_id}",
+                tenant_id=tenant_id,
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                source_ref=str(context["storage_uri"]),
+                failure_code=exc.failure_code,
+                retryable=False,
+                retry_count=int(context["attempt_count"]) + 1,
+                rabbitmq_dead_letter_ref=f"rabbitmq-dlq:{envelope.message_id}",
+                payload={"parse_job_id": parse_job_id, "status": "object_verification_failed"},
+            )
+            return PackageAWorkerReceipt(
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                status="dead_letter",
+                acked_after_domain_commit=False,
+                dead_letter_id=dead_letter.ref,
+            )
         request = ParseDocumentRequest(
             document_id=str(context["source_object_id"]),
             source_id=str(context["source_object_id"]),
@@ -609,17 +645,29 @@ class PackageAProductionIngestionRuntime:
     def _read_and_verify_object(self, context: dict[str, Any]) -> bytes:
         parsed = urlparse(str(context["storage_uri"]))
         if parsed.scheme != "s3" or not parsed.netloc or not parsed.path:
-            raise IngestionPersistenceError("Package A worker requires s3:// ObjectRef")
+            raise PackageAObjectVerificationError(
+                "Package A worker requires s3:// ObjectRef",
+                failure_code="invalid_object_ref",
+            )
         object_name = parsed.path.lstrip("/")
         expected_prefix = f"{context['tenant_id']}/{context['workspace_id']}/"
         if not object_name.startswith(expected_prefix):
-            raise IngestionPersistenceError("SourceObject ObjectRef is outside tenant/workspace scope")
+            raise PackageAObjectVerificationError(
+                "SourceObject ObjectRef is outside tenant/workspace scope",
+                failure_code="object_ref_scope_mismatch",
+            )
         content = self.object_store.store.read_object(bucket=parsed.netloc, object_name=object_name)
         actual_hash = hashlib.sha256(content).hexdigest()
         if actual_hash != context["source_sha256"] or len(content) != int(context["size_bytes"]):
-            raise IngestionPersistenceError("SourceObject bytes do not match PostgreSQL lineage facts")
+            raise PackageAObjectVerificationError(
+                "SourceObject bytes do not match PostgreSQL lineage facts",
+                failure_code="object_bytes_mismatch",
+            )
         if context["source_status"] not in {"committed"}:
-            raise IngestionPersistenceError("SourceObject is not visible for parsing")
+            raise PackageAObjectVerificationError(
+                "SourceObject is not visible for parsing",
+                failure_code="object_not_visible",
+            )
         return content
 
     @staticmethod
@@ -649,6 +697,7 @@ __all__ = [
     "PACKAGE_A_PARSE_CONTRACT_NAME",
     "PACKAGE_A_PARSE_CONSUMER_MODULE",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
+    "PackageAObjectVerificationError",
     "PackageARejectDeliveryError",
     "PackageAUploadCommand",
     "PackageAUploadReceipt",

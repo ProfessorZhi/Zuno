@@ -532,3 +532,27 @@ py_compile passed
 Package A delivery settlement and lineage unit tests passed: 9 passed
 Gate B lineage mismatch integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
+
+2026-07-20 Package A ObjectRef verification DLQ：
+
+- `_read_and_verify_object(...)` 的 scope、hash/size、visibility 和 invalid `s3://` 校验失败现在抛出 `PackageAObjectVerificationError`，并携带稳定 `failure_code`。
+- `PackageAProductionIngestionRuntime._process_first_seen_delivery(...)` 在已创建 ParseAttempt/Lease 后捕获该异常，在同一个 PostgreSQL UoW 内关闭 Attempt/Lease，写入 `ingestion_dead_letters`，并返回 `dead_letter` worker receipt。
+- 领域事务提交后，既有 settlement 逻辑会对该 receipt 执行 `delivery.reject(requeue=False)`，把确定性坏对象交给 RabbitMQ DLQ，而不是不 ACK 后无限重投。
+- 新增 Gate B focused integration test `test_gate_b_object_hash_mismatch_records_dlq_without_requeue`，覆盖 MinIO/ObjectRef bytes mismatch 不调用 Parser Gateway、attempt/lease/job/dead_letter receipt 全部进入 terminal DLQ 语义。
+- 当前环境已真实尝试运行该 Gate B 测试，但 PostgreSQL `localhost:5432` 连接超时，测试在 Alembic upgrade 前阻塞；因此 PostgreSQL-backed object verification DLQ evidence 仍为 environment_blocked，不计为 Gate B passed。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/__init__.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_worker_object_ref_verifier_rejects_scope_hash_and_revoked_visibility -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_object_hash_mismatch_records_dlq_without_requeue -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Worker ObjectRef verifier fault test passed: 1 passed
+Gate B object hash mismatch DLQ integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
