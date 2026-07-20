@@ -305,7 +305,7 @@ class PackageAProductionIngestionRuntime:
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery security epoch header does not match envelope")
         try:
-            self._validate_delivery_outbox_headers(headers=delivery.headers, envelope=envelope)
+            self._validate_delivery_outbox_headers(headers=delivery.headers, envelope=envelope, payload=payload)
         except PackageARejectDeliveryError:
             await delivery.reject(requeue=False)
             raise
@@ -845,7 +845,12 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: idempotency_key")
 
     @staticmethod
-    def _validate_delivery_outbox_headers(*, headers: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> None:
+    def _validate_delivery_outbox_headers(
+        *,
+        headers: dict[str, Any],
+        envelope: CrossModuleEnvelopeV1,
+        payload: dict[str, Any],
+    ) -> None:
         ordering_key = headers.get("ordering_key")
         ordering_sequence = headers.get("ordering_sequence")
         if str(ordering_key) != str(envelope.aggregate_id):
@@ -866,6 +871,15 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
         if any(headers.get(name) is None for name in counter_names):
             raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
+        retry_attempt_no = payload.get("retry_attempt_no")
+        expected_retry_count = 0
+        if retry_attempt_no is not None:
+            try:
+                expected_retry_count = int(retry_attempt_no) - 1
+            except (TypeError, ValueError) as exc:
+                raise PackageARejectDeliveryError("delivery outbox header mismatch: retry_count") from exc
+        if retry_count != expected_retry_count:
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: retry_count")
 
     @staticmethod
     def _validate_delivery_lineage(*, payload: dict[str, Any], context: dict[str, Any]) -> None:
