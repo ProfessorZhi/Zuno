@@ -2,6 +2,7 @@
 
 from .contracts import (
     ArtifactRecord,
+    DeleteLifecycleRecord,
     DocumentBlockRecord,
     DocumentVersionRecord,
     FeedbackRecord,
@@ -22,6 +23,7 @@ from .local_object_store import LocalObjectStore
 
 __all__ = [
     "ArtifactRecord",
+    "DeleteLifecycleRecord",
     "DocumentBlockRecord",
     "DocumentVersionRecord",
     "FeedbackRecord",

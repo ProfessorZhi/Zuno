@@ -155,6 +155,22 @@ class IngestionOutboxRecord(BaseModel):
     replay_count: int = 0
 
 
+class DeleteLifecycleRecord(BaseModel):
+    delete_ref: str
+    snapshot_ref: str
+    state: str
+    visibility_ref: str
+    cleanup_ref: str | None = None
+    physical_delete_ref: str | None = None
+    verification_ref: str | None = None
+    legal_hold_ref: str | None = None
+    restored_authorization: bool = False
+    duplicate: bool = False
+    late_worker_result_rejected: bool = False
+    receipt_hash: str
+    history: list[str] = Field(default_factory=list)
+
+
 class WorkspaceTaskRecord(BaseModel):
     task_id: str
     workspace_id: str
@@ -200,6 +216,7 @@ __all__ = [
     "ArtifactRecord",
     "DocumentBlockRecord",
     "DocumentVersionRecord",
+    "DeleteLifecycleRecord",
     "FeedbackRecord",
     "IndexChunkRecord",
     "IndexableSnapshotRecord",

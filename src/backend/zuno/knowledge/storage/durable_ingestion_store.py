@@ -12,6 +12,7 @@ from zuno.knowledge.indexing import IndexJobManifest
 
 from .contracts import (
     ArtifactRecord,
+    DeleteLifecycleRecord,
     DocumentBlockRecord,
     DocumentVersionRecord,
     FeedbackRecord,
@@ -29,6 +30,7 @@ from .contracts import (
 )
 from .sqlmodel_models import (
     ArtifactTable,
+    DeleteLifecycleTable,
     DocumentBlockTable,
     DocumentVersionTable,
     FeedbackTable,
@@ -297,6 +299,26 @@ class SQLiteDurableIngestionStore:
         )
         return record
 
+    def save_delete_lifecycle(self, record: DeleteLifecycleRecord) -> DeleteLifecycleRecord:
+        self._merge(
+            DeleteLifecycleTable(
+                delete_ref=record.delete_ref,
+                snapshot_ref=record.snapshot_ref,
+                state=record.state,
+                visibility_ref=record.visibility_ref,
+                cleanup_ref=record.cleanup_ref,
+                physical_delete_ref=record.physical_delete_ref,
+                verification_ref=record.verification_ref,
+                legal_hold_ref=record.legal_hold_ref,
+                restored_authorization=record.restored_authorization,
+                duplicate=record.duplicate,
+                late_worker_result_rejected=record.late_worker_result_rejected,
+                receipt_hash=record.receipt_hash,
+                history_json=list(record.history),
+            )
+        )
+        return record
+
     def get_source_object(self, source_id: str) -> SourceObjectRecord:
         row = self._get(SourceObjectTable, source_id, "source object")
         return SourceObjectRecord(
@@ -535,6 +557,24 @@ class SQLiteDurableIngestionStore:
             idempotency_key=row.idempotency_key,
             publish_status=row.publish_status,
             replay_count=row.replay_count,
+        )
+
+    def get_delete_lifecycle(self, delete_ref: str) -> DeleteLifecycleRecord:
+        row = self._get(DeleteLifecycleTable, delete_ref, "delete lifecycle")
+        return DeleteLifecycleRecord(
+            delete_ref=row.delete_ref,
+            snapshot_ref=row.snapshot_ref,
+            state=row.state,
+            visibility_ref=row.visibility_ref,
+            cleanup_ref=row.cleanup_ref,
+            physical_delete_ref=row.physical_delete_ref,
+            verification_ref=row.verification_ref,
+            legal_hold_ref=row.legal_hold_ref,
+            restored_authorization=row.restored_authorization,
+            duplicate=row.duplicate,
+            late_worker_result_rejected=row.late_worker_result_rejected,
+            receipt_hash=row.receipt_hash,
+            history=list(row.history_json or []),
         )
 
     def save_workspace_task(self, record: WorkspaceTaskRecord) -> WorkspaceTaskRecord:

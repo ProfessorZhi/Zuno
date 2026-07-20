@@ -20,6 +20,7 @@ from .contracts import (
     SourceSpan,
     build_source_span_provenance,
 )
+from .delete_restore import DeleteLifecycleReceipt, DeleteRestoreRuntime
 from .gateway import ParseGateway
 from .handoff import (
     IndexableDocumentSnapshotV1,
@@ -49,6 +50,8 @@ __all__ = [
     "DocumentMetadata",
     "DocumentProvenance",
     "DocumentTable",
+    "DeleteLifecycleReceipt",
+    "DeleteRestoreRuntime",
     "IndexHandoffPayload",
     "IndexableDocumentSnapshotV1",
     "HumanReviewRuntime",

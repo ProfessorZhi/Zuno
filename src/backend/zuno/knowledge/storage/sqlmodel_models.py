@@ -201,6 +201,24 @@ class IngestionOutboxTable(SQLModel, table=True):
     replay_count: int = Field(default=0, index=True)
 
 
+class DeleteLifecycleTable(SQLModel, table=True):
+    __tablename__ = "zuno_delete_lifecycle"
+
+    delete_ref: str = Field(primary_key=True)
+    snapshot_ref: str = Field(index=True)
+    state: str = Field(index=True)
+    visibility_ref: str = Field(index=True)
+    cleanup_ref: str | None = Field(default=None, index=True)
+    physical_delete_ref: str | None = Field(default=None, index=True)
+    verification_ref: str | None = Field(default=None, index=True)
+    legal_hold_ref: str | None = Field(default=None, index=True)
+    restored_authorization: bool = Field(default=False, index=True)
+    duplicate: bool = Field(default=False, index=True)
+    late_worker_result_rejected: bool = Field(default=False, index=True)
+    receipt_hash: str = Field(index=True)
+    history_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+
 class WorkspaceTaskTable(SQLModel, table=True):
     __tablename__ = "zuno_workspace_tasks"
 
@@ -264,6 +282,7 @@ STORAGE_TABLES = [
     ReviewDecisionTable,
     IndexableSnapshotTable,
     IngestionOutboxTable,
+    DeleteLifecycleTable,
     WorkspaceTaskTable,
     TaskEventTable,
     ArtifactTable,
@@ -275,6 +294,7 @@ __all__ = [
     "ArtifactTable",
     "DocumentBlockTable",
     "DocumentVersionTable",
+    "DeleteLifecycleTable",
     "FeedbackTable",
     "IndexChunkTable",
     "IndexManifestTable",
