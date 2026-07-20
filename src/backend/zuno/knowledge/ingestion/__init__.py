@@ -22,6 +22,13 @@ from .contracts import (
 )
 from .gateway import ParseGateway
 from .normalizer import normalize_legacy_chunks_to_ir
+from .review import (
+    HumanReviewRuntime,
+    QualityGateResult,
+    QualityMetric,
+    ReviewDecisionReceipt,
+    ReviewTask,
+)
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -38,6 +45,7 @@ __all__ = [
     "DocumentProvenance",
     "DocumentTable",
     "IndexHandoffPayload",
+    "HumanReviewRuntime",
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
@@ -51,6 +59,10 @@ __all__ = [
     "ParserDiagnostic",
     "ParserFailure",
     "ParserJobMetrics",
+    "QualityGateResult",
+    "QualityMetric",
+    "ReviewDecisionReceipt",
+    "ReviewTask",
     "SourceSpan",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",

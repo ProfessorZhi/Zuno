@@ -17,6 +17,9 @@ from .contracts import (
     FeedbackRecord,
     IndexChunkRecord,
     ParseJobRecord,
+    QualityGateRecord,
+    ReviewDecisionRecord,
+    ReviewTaskRecord,
     SourceObjectRecord,
     TaskEventRecord,
     WorkspaceFileRecord,
@@ -31,6 +34,9 @@ from .sqlmodel_models import (
     IndexManifestTable,
     ParseJobTable,
     ParseSnapshotTable,
+    QualityGateTable,
+    ReviewDecisionTable,
+    ReviewTaskTable,
     SourceObjectTable,
     TaskEventTable,
     WorkspaceFileTable,
@@ -206,6 +212,55 @@ class SQLiteDurableIngestionStore:
         )
         return record
 
+    def save_quality_gate(self, record: QualityGateRecord) -> QualityGateRecord:
+        self._merge(
+            QualityGateTable(
+                quality_decision_id=record.quality_decision_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                document_version_id=record.document_version_id,
+                workspace_id=record.workspace_id,
+                verdict=record.verdict,
+                decision_hash=record.decision_hash,
+                review_task_id=record.review_task_id,
+                metrics_json=list(record.metrics),
+            )
+        )
+        return record
+
+    def save_review_task(self, record: ReviewTaskRecord) -> ReviewTaskRecord:
+        self._merge(
+            ReviewTaskTable(
+                review_task_id=record.review_task_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                document_version_id=record.document_version_id,
+                workspace_id=record.workspace_id,
+                reviewer_scope=record.reviewer_scope,
+                security_epoch_ref=record.security_epoch_ref,
+                status=record.status,
+                expires_at=record.expires_at,
+                reason=record.reason,
+                decision_hash=record.decision_hash,
+            )
+        )
+        return record
+
+    def save_review_decision(self, record: ReviewDecisionRecord) -> ReviewDecisionRecord:
+        self._merge(
+            ReviewDecisionTable(
+                decision_id=record.decision_id,
+                review_task_id=record.review_task_id,
+                status=record.status,
+                reviewer_id=record.reviewer_id,
+                reviewer_scope=record.reviewer_scope,
+                security_epoch_ref=record.security_epoch_ref,
+                decision_hash=record.decision_hash,
+                duplicate=record.duplicate,
+                reason=record.reason,
+                decided_at=record.decided_at,
+            )
+        )
+        return record
+
     def get_source_object(self, source_id: str) -> SourceObjectRecord:
         row = self._get(SourceObjectTable, source_id, "source object")
         return SourceObjectRecord(
@@ -374,6 +429,49 @@ class SQLiteDurableIngestionStore:
         with Session(self.engine) as session:
             rows = session.exec(select(IndexManifestTable)).all()
         return [IndexJobManifest.model_validate(row.manifest_json) for row in rows]
+
+    def get_quality_gate(self, quality_decision_id: str) -> QualityGateRecord:
+        row = self._get(QualityGateTable, quality_decision_id, "quality gate")
+        return QualityGateRecord(
+            quality_decision_id=row.quality_decision_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            document_version_id=row.document_version_id,
+            workspace_id=row.workspace_id,
+            verdict=row.verdict,
+            decision_hash=row.decision_hash,
+            review_task_id=row.review_task_id,
+            metrics=list(row.metrics_json or []),
+        )
+
+    def get_review_task(self, review_task_id: str) -> ReviewTaskRecord:
+        row = self._get(ReviewTaskTable, review_task_id, "review task")
+        return ReviewTaskRecord(
+            review_task_id=row.review_task_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            document_version_id=row.document_version_id,
+            workspace_id=row.workspace_id,
+            reviewer_scope=row.reviewer_scope,
+            security_epoch_ref=row.security_epoch_ref,
+            status=row.status,
+            expires_at=row.expires_at,
+            reason=row.reason,
+            decision_hash=row.decision_hash,
+        )
+
+    def get_review_decision(self, decision_id: str) -> ReviewDecisionRecord:
+        row = self._get(ReviewDecisionTable, decision_id, "review decision")
+        return ReviewDecisionRecord(
+            decision_id=row.decision_id,
+            review_task_id=row.review_task_id,
+            status=row.status,
+            reviewer_id=row.reviewer_id,
+            reviewer_scope=row.reviewer_scope,
+            security_epoch_ref=row.security_epoch_ref,
+            decision_hash=row.decision_hash,
+            duplicate=row.duplicate,
+            reason=row.reason,
+            decided_at=row.decided_at,
+        )
 
     def save_workspace_task(self, record: WorkspaceTaskRecord) -> WorkspaceTaskRecord:
         self._merge(

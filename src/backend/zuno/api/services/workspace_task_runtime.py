@@ -37,6 +37,7 @@ from zuno.knowledge.ingestion import (
     DocumentBlock,
     DocumentMetadata,
     DocumentProvenance,
+    HumanReviewRuntime,
     ParseDocumentRequest,
     ParseDocumentResult,
     ParseGateway,
@@ -50,6 +51,8 @@ from zuno.knowledge.storage import (
     IndexChunkRecord,
     LocalObjectStore,
     ParseJobRecord,
+    QualityGateRecord,
+    ReviewTaskRecord,
     SQLiteDurableIngestionStore,
     SourceObjectRecord,
     TaskEventRecord,
@@ -122,6 +125,7 @@ class WorkspaceTaskRuntimeService:
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
+    _human_review_runtime = HumanReviewRuntime()
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
@@ -506,6 +510,56 @@ class WorkspaceTaskRuntimeService:
             )
             cls._ingest_jobs[ingest_task_id] = job
             return job
+        quality_gate, review_task = cls._human_review_runtime.evaluate(
+            document=parse_job.document,
+            parse_snapshot=parse_snapshot,
+            security_epoch_ref=f"security_epoch:{workspace_id}",
+        )
+        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
+            file.parse_status = "review_pending"
+            file.updated_at = str(time.time())
+            document_version = cls._persist_review_pending_ingest(
+                file=file,
+                durable_file=durable_file,
+                source_object=source_object,
+                parse_job=parse_job,
+                parse_snapshot=parse_snapshot,
+                quality_gate=quality_gate,
+                review_task=review_task,
+            )
+            job = {
+                "ingest_task_id": ingest_task_id,
+                "workspace_id": workspace_id,
+                "file_id": file_id,
+                "knowledge_space_id": knowledge_space_id,
+                "session_id": session_id,
+                "trace_id": normalized_trace_id,
+                "status": "review_pending",
+                "file": file.model_dump(),
+                "parse_job": parse_job.model_dump(),
+                "parse_snapshot": parse_snapshot.model_dump(),
+                "quality_gate": quality_gate.model_dump(),
+                "review_task": review_task.model_dump() if review_task is not None else None,
+                "index_job": None,
+            }
+            job["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=source_object.filename if source_object is not None else None,
+                storage_uri=source_object.storage_uri if source_object is not None else None,
+                source_ref=source_object.source_id if source_object is not None else file.file_id,
+                source_sha256=source_object.source_sha256 if source_object is not None else file.hash,
+                size_bytes=source_object.size_bytes if source_object is not None else 0,
+                parse_snapshot=parse_snapshot,
+                document_version=document_version,
+                index_status="review_pending",
+            )
+            cls._attach_review_pending_durable_payload(
+                job=job,
+                source_object=source_object,
+                document_version=document_version,
+            )
+            cls._ingest_jobs[ingest_task_id] = job
+            return job
         index_job = cls._knowledge_index_runtime.index_document(
             knowledge_space_id,
             parse_job.document,
@@ -520,6 +574,7 @@ class WorkspaceTaskRuntimeService:
             source_object=source_object,
             parse_job=parse_job,
             parse_snapshot=parse_snapshot,
+            quality_gate=quality_gate,
             index_job=index_job,
             knowledge_space_id=knowledge_space_id,
         )
@@ -534,6 +589,7 @@ class WorkspaceTaskRuntimeService:
             "file": file.model_dump(),
             "parse_job": parse_job.model_dump(),
             "parse_snapshot": parse_snapshot.model_dump(),
+            "quality_gate": quality_gate.model_dump(),
             "index_job": index_job.model_dump(),
         }
         job["file_status"] = cls._file_status_payload(
@@ -621,6 +677,7 @@ class WorkspaceTaskRuntimeService:
         source_object: SourceObjectRecord | None,
         parse_job: ParseDocumentResult,
         parse_snapshot: ParseJobSnapshot,
+        quality_gate,
         index_job: IndexJobManifest,
         knowledge_space_id: str,
     ) -> DocumentVersionRecord | None:
@@ -631,6 +688,18 @@ class WorkspaceTaskRuntimeService:
         ):
             return None
         document_version = cls._durable_ingestion_store.save_document_version(parse_job.document)
+        cls._durable_ingestion_store.save_quality_gate(
+            QualityGateRecord(
+                quality_decision_id=quality_gate.quality_decision_id,
+                parse_snapshot_id=quality_gate.parse_snapshot_id,
+                document_version_id=document_version.document_version_id,
+                workspace_id=file.workspace_id,
+                verdict=quality_gate.verdict,
+                decision_hash=quality_gate.decision_hash,
+                review_task_id=quality_gate.review_task_id,
+                metrics=[metric.model_dump() for metric in quality_gate.metrics],
+            )
+        )
         cls._durable_ingestion_store.save_index_manifest(index_job)
         for chunk in cls._index_chunks_for_manifest(
             index_job=index_job,
@@ -641,6 +710,60 @@ class WorkspaceTaskRuntimeService:
         cls._persist_workspace_file_status(
             durable_file=durable_file,
             parse_status="indexed",
+            latest_parse_job_id=parse_snapshot.job_id,
+            latest_document_version_id=document_version.document_version_id,
+        )
+        return document_version
+
+    @classmethod
+    def _persist_review_pending_ingest(
+        cls,
+        *,
+        file: UploadedFileContract,
+        durable_file: WorkspaceFileRecord | None,
+        source_object: SourceObjectRecord | None,
+        parse_job: ParseDocumentResult,
+        parse_snapshot: ParseJobSnapshot,
+        quality_gate,
+        review_task,
+    ) -> DocumentVersionRecord | None:
+        if (
+            cls._durable_ingestion_store is None
+            or source_object is None
+            or parse_job.document is None
+        ):
+            return None
+        document_version = cls._durable_ingestion_store.save_document_version(parse_job.document)
+        cls._durable_ingestion_store.save_quality_gate(
+            QualityGateRecord(
+                quality_decision_id=quality_gate.quality_decision_id,
+                parse_snapshot_id=quality_gate.parse_snapshot_id,
+                document_version_id=document_version.document_version_id,
+                workspace_id=file.workspace_id,
+                verdict=quality_gate.verdict,
+                decision_hash=quality_gate.decision_hash,
+                review_task_id=quality_gate.review_task_id,
+                metrics=[metric.model_dump() for metric in quality_gate.metrics],
+            )
+        )
+        if review_task is not None:
+            cls._durable_ingestion_store.save_review_task(
+                ReviewTaskRecord(
+                    review_task_id=review_task.review_task_id,
+                    parse_snapshot_id=review_task.parse_snapshot_id,
+                    document_version_id=review_task.document_version_id,
+                    workspace_id=review_task.workspace_id,
+                    reviewer_scope=review_task.reviewer_scope,
+                    security_epoch_ref=review_task.security_epoch_ref,
+                    status=review_task.status,
+                    expires_at=review_task.expires_at,
+                    reason=review_task.reason,
+                    decision_hash=review_task.decision_hash,
+                )
+            )
+        cls._persist_workspace_file_status(
+            durable_file=durable_file,
+            parse_status="review_pending",
             latest_parse_job_id=parse_snapshot.job_id,
             latest_document_version_id=document_version.document_version_id,
         )
@@ -739,6 +862,23 @@ class WorkspaceTaskRuntimeService:
                     "document_version_id": index_job.document_version_id,
                     "source_sha256": index_job.source_sha256,
                 },
+                "durable_status": "persisted",
+            }
+        )
+
+    @staticmethod
+    def _attach_review_pending_durable_payload(
+        *,
+        job: dict,
+        source_object: SourceObjectRecord | None,
+        document_version: DocumentVersionRecord | None,
+    ) -> None:
+        if source_object is None or document_version is None:
+            return
+        job.update(
+            {
+                "source_object": source_object.model_dump(),
+                "document_version": document_version.model_dump(exclude={"ir_json"}),
                 "durable_status": "persisted",
             }
         )

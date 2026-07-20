@@ -130,6 +130,49 @@ class IndexChunkTable(SQLModel, table=True):
     sensitivity_tags_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
 
+class QualityGateTable(SQLModel, table=True):
+    __tablename__ = "zuno_quality_gates"
+
+    quality_decision_id: str = Field(primary_key=True)
+    parse_snapshot_id: str = Field(index=True)
+    document_version_id: str = Field(index=True)
+    workspace_id: str = Field(index=True)
+    verdict: str = Field(index=True)
+    decision_hash: str = Field(index=True)
+    review_task_id: str | None = Field(default=None, index=True)
+    metrics_json: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
+
+
+class ReviewTaskTable(SQLModel, table=True):
+    __tablename__ = "zuno_review_tasks"
+
+    review_task_id: str = Field(primary_key=True)
+    parse_snapshot_id: str = Field(index=True)
+    document_version_id: str = Field(index=True)
+    workspace_id: str = Field(index=True)
+    reviewer_scope: str = Field(index=True)
+    security_epoch_ref: str = Field(index=True)
+    status: str = Field(default="pending", index=True)
+    expires_at: float = Field(index=True)
+    reason: str
+    decision_hash: str = Field(index=True)
+
+
+class ReviewDecisionTable(SQLModel, table=True):
+    __tablename__ = "zuno_review_decisions"
+
+    decision_id: str = Field(primary_key=True)
+    review_task_id: str = Field(index=True)
+    status: str = Field(index=True)
+    reviewer_id: str = Field(index=True)
+    reviewer_scope: str = Field(index=True)
+    security_epoch_ref: str = Field(index=True)
+    decision_hash: str = Field(index=True)
+    duplicate: bool = Field(default=False, index=True)
+    reason: str = ""
+    decided_at: float = Field(index=True)
+
+
 class WorkspaceTaskTable(SQLModel, table=True):
     __tablename__ = "zuno_workspace_tasks"
 
@@ -188,6 +231,9 @@ STORAGE_TABLES = [
     DocumentBlockTable,
     IndexManifestTable,
     IndexChunkTable,
+    QualityGateTable,
+    ReviewTaskTable,
+    ReviewDecisionTable,
     WorkspaceTaskTable,
     TaskEventTable,
     ArtifactTable,
@@ -202,6 +248,9 @@ __all__ = [
     "FeedbackTable",
     "IndexChunkTable",
     "IndexManifestTable",
+    "QualityGateTable",
+    "ReviewDecisionTable",
+    "ReviewTaskTable",
     "ParseJobTable",
     "ParseSnapshotTable",
     "STORAGE_TABLES",

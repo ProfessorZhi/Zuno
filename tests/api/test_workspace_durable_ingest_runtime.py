@@ -252,7 +252,7 @@ def test_workspace_restart_rehydrates_cited_artifact_and_feedback(tmp_path) -> N
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)
 
 
-def test_local_ocr_vlm_parser_diagnostics_are_persisted_with_review_required_index(tmp_path) -> None:
+def test_local_ocr_vlm_parser_requires_review_before_index_snapshot_publish(tmp_path) -> None:
     db_path = tmp_path / "zuno.db"
     WorkspaceTaskRuntimeService.configure_durable_ingestion(
         store=SQLiteDurableIngestionStore(db_path),
@@ -283,9 +283,11 @@ def test_local_ocr_vlm_parser_diagnostics_are_persisted_with_review_required_ind
 
         assert ingest_response.status_code == 200
         ingest = ingest_response.json()["data"]
-        assert ingest["status"] == "accepted"
-        assert ingest["index_job"]["status"] == "succeeded"
-        assert ingest["index_manifest_ref"]["index_job_id"] == ingest["index_job"]["job_id"]
+        assert ingest["status"] == "review_pending"
+        assert ingest["quality_gate"]["verdict"] == "REVIEW"
+        assert ingest["review_task"]["status"] == "pending"
+        assert ingest["index_job"] is None
+        assert "index_manifest_ref" not in ingest
         assert ingest["durable_status"] == "persisted"
 
         restored = SQLiteDurableIngestionStore(db_path)
@@ -293,7 +295,7 @@ def test_local_ocr_vlm_parser_diagnostics_are_persisted_with_review_required_ind
         restored_parse_job = restored.get_parse_job(ingest["parse_job"]["job_id"])
         restored_snapshot = restored.get_parse_snapshot(ingest["parse_job"]["job_id"])
 
-        assert restored_file.parse_status == "indexed"
+        assert restored_file.parse_status == "review_pending"
         assert restored_parse_job.status == "succeeded"
         assert restored_parse_job.blocked_reason is None
         assert restored_snapshot.parser_id == "local_ocr_vlm"
@@ -302,5 +304,10 @@ def test_local_ocr_vlm_parser_diagnostics_are_persisted_with_review_required_ind
             for diagnostic in restored_snapshot.parser_diagnostics
         )
         assert restored_snapshot.adapter_boundary["budget_gate"]["review_required"] is True
+        restored_quality = restored.get_quality_gate(ingest["quality_gate"]["quality_decision_id"])
+        restored_review = restored.get_review_task(ingest["review_task"]["review_task_id"])
+        assert restored_quality.verdict == "REVIEW"
+        assert restored_quality.review_task_id == restored_review.review_task_id
+        assert restored_review.status == "pending"
     finally:
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)

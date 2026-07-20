@@ -94,6 +94,43 @@ class IndexChunkRecord(BaseModel):
     sensitivity_tags: list[str] = Field(default_factory=list)
 
 
+class QualityGateRecord(BaseModel):
+    quality_decision_id: str
+    parse_snapshot_id: str
+    document_version_id: str
+    workspace_id: str
+    verdict: str
+    decision_hash: str
+    review_task_id: str | None = None
+    metrics: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ReviewTaskRecord(BaseModel):
+    review_task_id: str
+    parse_snapshot_id: str
+    document_version_id: str
+    workspace_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    status: str = "pending"
+    expires_at: float
+    reason: str
+    decision_hash: str
+
+
+class ReviewDecisionRecord(BaseModel):
+    decision_id: str
+    review_task_id: str
+    status: str
+    reviewer_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    decision_hash: str
+    duplicate: bool = False
+    reason: str = ""
+    decided_at: float
+
+
 class WorkspaceTaskRecord(BaseModel):
     task_id: str
     workspace_id: str
@@ -142,6 +179,9 @@ __all__ = [
     "FeedbackRecord",
     "IndexChunkRecord",
     "ParseJobRecord",
+    "QualityGateRecord",
+    "ReviewDecisionRecord",
+    "ReviewTaskRecord",
     "SourceObjectRecord",
     "TaskEventRecord",
     "WorkspaceFileRecord",
