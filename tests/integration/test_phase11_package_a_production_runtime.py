@@ -419,6 +419,63 @@ def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_com
         engine.dispose()
 
 
+def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Duplicate\nAlready consumed."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    delivery.redelivered = True
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("duplicate delivery must not call Parser Gateway")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+    with IngestionUnitOfWork(engine) as repo:
+        inbox = repo.record_worker_inbox(
+            consumer="phase11-package-a-parser-worker",
+            message_id=envelope.message_id,
+            payload=delivery.payload,
+            tenant_id="tenant-a",
+        )
+        assert inbox.processable is True
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "duplicate"
+        assert receipt.duplicate_delivery is True
+        assert receipt.acked_after_domain_commit is True
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_attempts")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_leases")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
 def test_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox() -> None:
     asyncio.run(_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox())
 

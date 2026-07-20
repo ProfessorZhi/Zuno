@@ -135,6 +135,26 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B retry-boundary test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 duplicate-redelivery test addition：
+
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt`，覆盖 worker inbox 已存在时 duplicate/redelivery 不调用 Parser Gateway、不创建 ParseAttempt/Lease/Snapshot、不生成额外 Outbox，并在事务成功退出后 ACK 当前 delivery。
+
+新增验证：
+
+```text
+python -m py_compile tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B duplicate-redelivery test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

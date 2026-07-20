@@ -113,4 +113,13 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 duplicate-redelivery test addition：
+
+```text
+Added Gate B integration coverage for duplicate/redelivery:
+existing worker inbox receipt + no Parser Gateway call + no Attempt/Lease/Snapshot creation + no extra Outbox + ACK current delivery after commit.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
