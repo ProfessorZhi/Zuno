@@ -95,6 +95,7 @@ def test_package_a_upload_parse_request_preserves_deadline_at() -> None:
     assert envelope.aggregate_type == "ParseJob"
     assert envelope.aggregate_id == "parse-job:source-a:1"
     assert envelope.payload["filename"] == "file.md"
+    assert envelope.payload["declared_format"] == "markdown"
 
 
 def _command(

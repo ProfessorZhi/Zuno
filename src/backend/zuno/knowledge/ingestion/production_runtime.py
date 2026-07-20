@@ -767,6 +767,7 @@ class PackageAProductionIngestionRuntime:
             "size_bytes": size_bytes,
             "filename": command.filename,
             "mime_type": command.mime_type,
+            "declared_format": self._declared_format(command.mime_type, command.filename),
             "parser_policy_ref": command.parser_policy_ref,
             "quality_policy_ref": command.quality_policy_ref,
             "security_decision_ref": command.security_decision_ref,
@@ -953,6 +954,7 @@ class PackageAProductionIngestionRuntime:
             "content_hash": context["source_sha256"],
             "mime_type": context["mime_type"],
             "filename": context["filename"],
+            "declared_format": context["declared_format"],
             "security_epoch_ref": context["security_epoch_ref"],
         }
         for field_name, expected_value in expected_fields.items():

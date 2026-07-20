@@ -1217,6 +1217,27 @@ py_compile passed
 Package A upload replay/filename and delivery settlement lineage tests passed: 35 passed
 ```
 
+2026-07-20 Package A declared format lineage in parse-request envelope：
+
+- `IngestionRepository.load_parse_job_context(...)` 现在读取 PostgreSQL `SourceObject.declared_format`。
+- `PackageAProductionIngestionRuntime._parse_requested_envelope(...)` 现在将 upload `declared_format` 写入 Package A parse-request payload。
+- `PackageAProductionIngestionRuntime._validate_delivery_lineage(...)` 现在用 PostgreSQL `SourceObject.declared_format` 校验 payload `declared_format`，防止 delivery 在 claim Lease / 读取 ObjectRef / Parser Gateway 前篡改源格式事实。
+- `_seed_retryable_job(...)` 的 integration fixture 已同步 `declared_format` payload，避免后续 Gate B 测试绕过该 lineage 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload replay/format and delivery settlement lineage tests passed: 36 passed
+```
+
 2026-07-20 Package A retry attempt number pre-Inbox gate：
 
 - `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。

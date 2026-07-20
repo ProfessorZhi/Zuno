@@ -329,7 +329,8 @@ class IngestionRepository:
                     latest_attempt.status AS latest_attempt_status,
                     plan.quality_policy_ref, plan.security_decision_ref,
                     document.workspace_id, document.source_object_id, document.content_hash,
-                    source.filename, source.mime_type, source.storage_uri, source.object_manifest_ref,
+                    source.filename, source.mime_type, source.declared_format,
+                    source.storage_uri, source.object_manifest_ref,
                     source.source_sha256, source.size_bytes, source.classification_ref,
                     source.security_epoch_ref, source.status AS source_status
                 FROM ingestion_parse_jobs AS job

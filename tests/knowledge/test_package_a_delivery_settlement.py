@@ -340,6 +340,16 @@ def test_package_a_lineage_validator_rejects_filename_mismatch_before_lease() ->
         )
 
 
+def test_package_a_lineage_validator_rejects_declared_format_mismatch_before_lease() -> None:
+    payload = {**_lineage_payload(), "declared_format": "pdf"}
+
+    with pytest.raises(PackageARejectDeliveryError, match="delivery lineage mismatch: declared_format"):
+        PackageAProductionIngestionRuntime._validate_delivery_lineage(
+            payload=payload,
+            context=_lineage_context(),
+        )
+
+
 def test_package_a_lineage_validator_requires_retry_parent_attempt_to_match_postgres() -> None:
     payload = {
         **_lineage_payload(),
@@ -743,6 +753,7 @@ def _lineage_payload() -> dict:
         "size_bytes": 12,
         "filename": "file.md",
         "mime_type": "text/markdown",
+        "declared_format": "markdown",
         "security_epoch_ref": "security-epoch-a",
     }
 
@@ -761,6 +772,7 @@ def _lineage_context() -> dict:
         "size_bytes": 12,
         "filename": "file.md",
         "mime_type": "text/markdown",
+        "declared_format": "markdown",
         "security_epoch_ref": "security-epoch-a",
         "attempt_count": 0,
         "latest_attempt_id": None,

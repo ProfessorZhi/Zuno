@@ -795,4 +795,16 @@ Package A upload replay/filename and delivery settlement lineage tests passed: 3
 PHASE11 remains in_progress; this is Package A source filename lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A declared format lineage in parse-request envelope：
+
+```text
+IngestionRepository.load_parse_job_context now reads PostgreSQL SourceObject.declared_format.
+PackageAProductionIngestionRuntime now emits upload declared_format in the canonical parse-request payload.
+PackageAProductionIngestionRuntime validates payload declared_format against PostgreSQL SourceObject.declared_format before Lease claim, ObjectRef read, or Parser Gateway.
+The focused tests prove declared_format is present in the upload envelope and forged declared_format payload is rejected by the worker lineage validator.
+py_compile passed.
+Package A upload replay/format and delivery settlement lineage tests passed: 36 passed.
+PHASE11 remains in_progress; this is Package A source declared-format lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
