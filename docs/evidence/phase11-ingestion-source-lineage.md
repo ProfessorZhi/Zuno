@@ -40,6 +40,7 @@ docs/evidence/input-runtime-batch.md
 - `local_office_archive` 当前提供 Office/Archive 的可执行本地 fallback：docx/xlsx 保留 heading/table projection，pptx 保留 slide/figure projection，archive 只读取 manifest、不自动解包；live Unstructured / MarkItDown provider 保持 measurement blocked。
 - Parser Gateway 当前接受显式 `source_object_ref` 与 `source_object_manifest`，在 adapter 执行前校验 PHASE04 `s3://` ObjectRef、object manifest ref、content hash、size、parser policy、lineage ref、workspace scope，并把 ObjectRef、security policy、security epoch、timeout、source input mode 与质量 confidence 写入 ParseJobSnapshot；hash mismatch 与 cancel-before-adapter 进入 typed failure / cancelled 状态。
 - `CanonicalDocumentIR` 当前具备 schema round-trip helper、contract report、显式 `TransformLedgerEntry`、block order/style、SourceSpan region/page/slide/bbox/table/source text provenance、table/image refs，并验证 IR SourceSpan 不携带 Knowledge chunk id，Input IR 不创建 Chunk、Entity、Relation 或 KnowledgeVersion。
+- `temporary.adapter.phase11.legacy_chunk_projection` 当前把 workspace 文档附件与 knowledge pipeline `_parse_chunks` 从隐式 `doc_parser.parse_doc_into_chunks` 默认调用迁移为：ParseGateway 先生成 `CanonicalDocumentIR`，再显式投影成旧 `ChunkModel` 给未迁移 RAG/Graph 消费；该 adapter 绑定 Input Parser Adapter Owner 与 PHASE16 removal，不得作为 PHASE11 完成证据。
 
 ## Validation
 
@@ -49,6 +50,8 @@ pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/
 pytest -q tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
 pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_document_ingestion_contract.py -p no:cacheprovider
+pytest -q tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider
+python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py
 python tools/scripts/verify_input_runtime_batch.py
 pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
 ```
@@ -59,4 +62,4 @@ PHASE11 completed 只能表示完整 Phase Scope 内 implementation available；
 
 ## 2026-07-20 Goal01 Reopen Audit
 
-本文证据保留为 PHASE11 的部分实现线索，但不再证明完整 Phase completed。剩余缺口包括真实 RabbitMQ 生产默认 dispatch/ACK/retry/DLQ/replay、生产默认 worker 接入 PostgreSQL UoW 与 PHASE04 Object Store、真实 OCR/VLM 与 Office/Layout provider 集成、Human Review task/decision/receipt 生产表与 worker 接线、完整 delete/legal hold/restore fault coverage，以及 legacy upload/parser 默认路径 cutover。
+本文证据保留为 PHASE11 的部分实现线索，但不再证明完整 Phase completed。剩余缺口包括真实 RabbitMQ 生产默认 dispatch/ACK/retry/DLQ/replay、生产默认 worker 接入 PostgreSQL UoW 与 PHASE04 Object Store、真实 OCR/VLM 与 Office/Layout provider 集成、Human Review task/decision/receipt 生产表与 worker 接线、完整 delete/legal hold/restore fault coverage，以及 legacy upload/parser 默认路径继续从过渡 ChunkModel 投影迁移到 IndexableDocumentSnapshot / Outbox handoff。

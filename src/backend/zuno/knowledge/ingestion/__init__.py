@@ -31,6 +31,14 @@ from .handoff import (
     SnapshotOutboxEvent,
 )
 from .lease import ParseAttemptLeaseReceipt, ParseAttemptLeaseRuntime
+from .legacy_cutover import (
+    LEGACY_ADAPTER_ID,
+    LEGACY_ADAPTER_OWNER,
+    LEGACY_ADAPTER_REMOVAL_PHASE,
+    canonical_ir_to_legacy_chunks,
+    parse_file_into_legacy_chunks,
+    parse_file_to_canonical_ir,
+)
 from .normalizer import normalize_legacy_chunks_to_ir
 from .review import (
     HumanReviewRuntime,
@@ -64,6 +72,9 @@ __all__ = [
     "IndexHandoffPayload",
     "IndexableDocumentSnapshotV1",
     "HumanReviewRuntime",
+    "LEGACY_ADAPTER_ID",
+    "LEGACY_ADAPTER_OWNER",
+    "LEGACY_ADAPTER_REMOVAL_PHASE",
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
@@ -93,9 +104,12 @@ __all__ = [
     "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "build_source_span_provenance",
+    "canonical_ir_to_legacy_chunks",
     "canonical_document_ir_contract_report",
     "get_parser_adapter",
     "normalize_legacy_chunks_to_ir",
+    "parse_file_into_legacy_chunks",
+    "parse_file_to_canonical_ir",
     "round_trip_canonical_document_ir",
     "select_parser_for_format",
 ]

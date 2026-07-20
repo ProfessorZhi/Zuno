@@ -14,11 +14,11 @@ EXPECTED_ROWS = {
     },
     "P11-LC-02": {
         "path": "src/backend/zuno/platform/services/workspace/attachment_service.py",
-        "status": "legacy_active_default",
+        "status": "versioned_adapter_required",
     },
     "P11-LC-03": {
         "path": "src/backend/zuno/platform/services/pipeline/manager.py",
-        "status": "legacy_active_default",
+        "status": "versioned_adapter_required",
     },
     "P11-LC-04": {
         "path": "src/backend/zuno/platform/services/rag/parser.py",
@@ -36,13 +36,19 @@ EXPECTED_ROWS = {
 
 SOURCE_EXPECTATIONS = {
     "src/backend/zuno/platform/services/workspace/attachment_service.py": [
-        "doc_parser.parse_doc_into_chunks",
+        "parse_file_into_legacy_chunks",
         "_image_to_text",
     ],
     "src/backend/zuno/platform/services/pipeline/manager.py": [
-        "doc_parser.parse_doc_into_chunks",
+        "parse_file_into_legacy_chunks",
         "run_rag_index_stage",
         "run_graph_stage",
+    ],
+    "src/backend/zuno/knowledge/ingestion/legacy_cutover.py": [
+        "ParseGateway",
+        "CanonicalDocumentIR",
+        "temporary.adapter.phase11.legacy_chunk_projection",
+        "PHASE16",
     ],
     "src/backend/zuno/platform/services/rag/parser.py": [
         "ChunkModel",
@@ -105,7 +111,6 @@ def verify_phase11_legacy_upload_parser_cutover() -> list[str]:
 
     for required_phrase in [
         "PHASE11 仍为 `in_progress`",
-        "legacy_active_default",
         "versioned_adapter_required",
         "not_phase11_ingestion",
         "canonical_runtime_candidate",

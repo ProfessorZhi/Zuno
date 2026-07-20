@@ -21,7 +21,7 @@ from zuno.utils.runtime_observability import RedisKeys
 from zuno.services.graphrag.client import Neo4jClient
 from zuno.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
 from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
-from zuno.services.rag.parser import doc_parser
+from zuno.knowledge.ingestion import parse_file_into_legacy_chunks
 from zuno.services.redis import redis_client
 
 
@@ -118,10 +118,10 @@ class KnowledgePipelineManager:
         try:
             payload = task.payload or {}
             knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
-            chunks = await doc_parser.parse_doc_into_chunks(
-                task.knowledge_file_id,
-                file_path,
-                task.knowledge_id,
+            chunks = await parse_file_into_legacy_chunks(
+                file_id=task.knowledge_file_id,
+                file_path=file_path,
+                knowledge_id=task.knowledge_id,
                 source_url=payload.get("oss_url"),
                 knowledge_config=knowledge_config,
             )

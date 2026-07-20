@@ -27,5 +27,6 @@ def test_phase11_legacy_cutover_inventory_keeps_reopen_boundary() -> None:
     text = INVENTORY.read_text(encoding="utf-8")
     assert "status: active_reopen_guard" in text
     assert "PHASE11 仍为 `in_progress`" in text
-    assert "legacy_active_default" in text
+    assert "versioned_adapter_required" in text
+    assert "temporary.adapter.phase11.legacy_chunk_projection" in text
     assert "不得作为 PHASE11 完成证据" in text

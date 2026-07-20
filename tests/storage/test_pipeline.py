@@ -53,7 +53,8 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     async def fake_update_pipeline_fields(knowledge_file_id, **kwargs):
         file_updates.append((knowledge_file_id, kwargs))
 
-    async def fake_parse_doc_into_chunks(
+    async def fake_parse_file_into_legacy_chunks(
+        *,
         file_id,
         file_path,
         knowledge_id,
@@ -111,8 +112,8 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(
-        "zuno.services.rag.parser.doc_parser.parse_doc_into_chunks",
-        fake_parse_doc_into_chunks,
+        "zuno.services.pipeline.manager.parse_file_into_legacy_chunks",
+        fake_parse_file_into_legacy_chunks,
     )
     monkeypatch.setattr(
         "zuno.services.rag.handler.RagHandler.index_milvus_documents",
