@@ -189,8 +189,12 @@ class PackageAProductionIngestionRuntime:
         )
 
     async def process_rabbitmq_delivery(self, delivery: RabbitMQDelivery | AckableDelivery) -> PackageAWorkerReceipt:
-        parsed_delivery = CanonicalOutboxDeliveryV1.model_validate(delivery.payload)
-        envelope = parsed_delivery.verified_envelope()
+        try:
+            parsed_delivery = CanonicalOutboxDeliveryV1.model_validate(delivery.payload)
+            envelope = parsed_delivery.verified_envelope()
+        except Exception as exc:
+            await delivery.reject(requeue=False)
+            raise IngestionPersistenceError("invalid Package A parse delivery envelope") from exc
         if envelope.tenant_id != delivery.headers.get("tenant_id"):
             await delivery.reject(requeue=False)
             raise IngestionPersistenceError("delivery tenant header does not match envelope")

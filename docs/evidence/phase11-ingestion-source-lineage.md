@@ -447,3 +447,23 @@ py_compile passed
 Package A delivery settlement tests passed: 2 passed
 Worker ObjectRef verifier fault test passed: 1 passed
 ```
+
+2026-07-20 Package A poison delivery rejection：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在 `CanonicalOutboxDeliveryV1` schema validation、payload hash verification 或 envelope consistency check 失败时，先 `delivery.reject(requeue=False)`，再抛出 `IngestionPersistenceError`。
+- 这类 poison delivery 不进入 PostgreSQL UoW、不 claim ParseAttempt/Lease，也不会无限 requeue 阻塞 canonical parse queue。
+- `tests/knowledge/test_package_a_delivery_settlement.py` 新增 invalid schema 与 payload hash mismatch 覆盖，验证两类坏消息均 reject(requeue=false) 且不 ACK。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement poison-message tests passed: 4 passed
+```

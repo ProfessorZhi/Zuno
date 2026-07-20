@@ -252,4 +252,14 @@ Worker ObjectRef verifier fault test passed: 1 passed.
 PHASE11 remains in_progress; live RabbitMQ DLQ verification still belongs to Gate C.
 ```
 
+2026-07-20 Package A poison delivery rejection：
+
+```text
+Invalid Package A RabbitMQ deliveries now reject(requeue=false) before PostgreSQL UoW when CanonicalOutboxDelivery schema validation, payload hash verification, or envelope consistency fails.
+Poison messages do not claim ParseAttempt/Lease and do not loop forever on the canonical parse queue.
+py_compile passed.
+Package A delivery settlement poison-message tests passed: 4 passed.
+PHASE11 remains in_progress; live RabbitMQ poison-message behavior still needs Gate C.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
