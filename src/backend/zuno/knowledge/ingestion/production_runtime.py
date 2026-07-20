@@ -94,6 +94,7 @@ class PackageAWorkerReceipt:
     handoff_idempotency_key: str | None = None
     outbox_idempotency_key: str | None = None
     dead_letter_id: str | None = None
+    failure_code: str | None = None
     duplicate_delivery: bool = False
 
 
@@ -319,6 +320,7 @@ class PackageAProductionIngestionRuntime:
                         handoff_idempotency_key=replay.get("handoff_idempotency_key"),
                         outbox_idempotency_key=replay.get("outbox_idempotency_key"),
                         dead_letter_id=replay.get("dead_letter_id"),
+                        failure_code=replay.get("failure_code"),
                         duplicate_delivery=True,
                     )
                 else:
@@ -397,6 +399,7 @@ class PackageAProductionIngestionRuntime:
                 parse_attempt_id=parse_attempt_id,
                 status="cancelled",
                 acked_after_domain_commit=True,
+                failure_code=cancel_reason,
             )
         repo.renew_parse_attempt_lease(
             parse_attempt_id=parse_attempt_id,
@@ -436,6 +439,7 @@ class PackageAProductionIngestionRuntime:
                 status="dead_letter",
                 acked_after_domain_commit=False,
                 dead_letter_id=dead_letter.ref,
+                failure_code=exc.failure_code,
             )
         repo.heartbeat_parse_attempt_lease(
             parse_attempt_id=parse_attempt_id,
@@ -515,6 +519,7 @@ class PackageAProductionIngestionRuntime:
                 status="dead_letter",
                 acked_after_domain_commit=False,
                 dead_letter_id=dead_letter.ref,
+                failure_code=exc.failure_code,
             )
         if result.status != "succeeded" or result.document is None:
             retryable = bool(result.failure and result.failure.retryable)
@@ -565,6 +570,7 @@ class PackageAProductionIngestionRuntime:
                 retry_enqueued_after_domain_commit=terminal_status == "failed",
                 outbox_event_id=retry_outbox_id,
                 dead_letter_id=dead_letter_id,
+                failure_code=result.failure.failure_classification if result.failure else result.status,
             )
 
         quality_gate, _review_task = self.review_runtime.evaluate(
@@ -618,6 +624,7 @@ class PackageAProductionIngestionRuntime:
                 parse_attempt_id=parse_attempt_id,
                 status="failed",
                 acked_after_domain_commit=True,
+                failure_code=self._quality_failure_code(quality_gate),
             )
         visibility_ref = f"visibility:{context['workspace_id']}:{context['source_object_id']}"
         indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(

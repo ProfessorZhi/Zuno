@@ -917,3 +917,23 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker tests passed: 12 passed
 ```
+
+2026-07-20 Package A Worker terminal failure code receipts：
+
+- `PackageAWorkerReceipt` 新增 `failure_code`，first-seen terminal paths 现在把 cancel/deadline、ObjectRef verification、Parser identity、Parser failure 和 Quality Gate failure 的原因直接带回 receipt。
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 现在读取 latest ParseAttempt `failure_code`，duplicate/redelivery replay receipt 可恢复既有 terminal reason。
+- `cancel_requested` focused test 覆盖：Worker 创建/运行 Attempt 后持久化 cancelled failure code，不读取对象、不调用 Parser Gateway、不写 ParseSnapshot / SourceSpan / Quality / Indexable Snapshot / Outbox。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery, persistence replay, and queue worker tests passed: 37 passed
+```

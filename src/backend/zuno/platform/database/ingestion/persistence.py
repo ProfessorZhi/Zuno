@@ -348,6 +348,7 @@ class IngestionRepository:
                     job.status AS job_status,
                     latest_attempt.parse_attempt_id,
                     latest_attempt.status AS attempt_status,
+                    latest_attempt.failure_code,
                     indexable.indexable_snapshot_id,
                     indexable.handoff_idempotency_key,
                     outbox.outbox_event_id,
@@ -355,7 +356,7 @@ class IngestionRepository:
                     dead_letter.dead_letter_id
                 FROM ingestion_parse_jobs AS job
                 LEFT JOIN LATERAL (
-                    SELECT parse_attempt_id, status
+                    SELECT parse_attempt_id, status, failure_code
                     FROM ingestion_parse_attempts
                     WHERE parse_job_id = job.parse_job_id
                     ORDER BY attempt_no DESC

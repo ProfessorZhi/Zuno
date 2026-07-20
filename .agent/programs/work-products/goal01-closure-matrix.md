@@ -505,4 +505,15 @@ Package A queue worker tests passed: 12 passed.
 PHASE11 remains in_progress; this is Package A DLQ replay hook implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Worker terminal failure code receipts：
+
+```text
+PackageAWorkerReceipt now carries failure_code for first-seen terminal outcomes and duplicate/redelivery replay receipts.
+IngestionRepository.load_parse_job_replay_receipt selects latest_attempt.failure_code, so crash-after-commit-before-ACK replay can report the already-persisted terminal reason.
+cancel_requested focused test proves the worker closes Attempt/Lease with failure_code=cancel_requested and does not read ObjectRef bytes, call Parser Gateway, or write Snapshot/SourceSpan/Quality/Indexable Snapshot/Outbox.
+py_compile passed.
+Package A delivery, persistence replay, and queue worker tests passed: 37 passed.
+PHASE11 remains in_progress; this is Package A terminal receipt implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

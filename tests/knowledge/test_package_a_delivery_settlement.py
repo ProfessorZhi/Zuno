@@ -347,6 +347,44 @@ def test_package_a_first_seen_worker_records_heartbeats_before_and_after_parser_
     ]
 
 
+def test_package_a_cancel_requested_receipt_carries_failure_code_without_parser_or_snapshot(monkeypatch) -> None:
+    events: list[str] = []
+    repo = _FirstSeenRepo(events)
+    runtime = _runtime_without_init()
+    runtime.worker_id = "worker-a"
+    runtime.lease_ttl_seconds = 30
+    runtime.review_runtime = HumanReviewRuntime(min_confidence=0.1)
+    runtime.handoff_runtime = SnapshotHandoffRuntime()
+
+    def read_object(context):
+        raise AssertionError("cancelled delivery must not read object bytes")
+
+    monkeypatch.setattr(runtime, "_read_and_verify_object", read_object)
+    payload = {
+        **_lineage_payload(),
+        "cancel_requested": True,
+    }
+    envelope = _envelope(payload=payload)
+
+    receipt = runtime._process_first_seen_delivery(
+        repo=repo,
+        payload=payload,
+        envelope=envelope,
+        parse_job_id="parse-job-a",
+        tenant_id="tenant-a",
+    )
+
+    assert receipt.status == "cancelled"
+    assert receipt.acked_after_domain_commit is True
+    assert receipt.failure_code == "cancel_requested"
+    assert events == [
+        "load_context",
+        "claim",
+        "running",
+        "fail:cancelled:cancel_requested",
+    ]
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 
@@ -507,3 +545,6 @@ class _FirstSeenRepo:
 
     def commit_parse_attempt_if_current(self, **kwargs):
         self.events.append("commit")
+
+    def fail_parse_attempt(self, **kwargs):
+        self.events.append(f"fail:{kwargs['status']}:{kwargs['failure_code']}")

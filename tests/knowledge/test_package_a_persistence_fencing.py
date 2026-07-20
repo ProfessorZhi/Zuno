@@ -161,6 +161,7 @@ def test_parse_job_replay_receipt_selects_handoff_idempotency_fields() -> None:
     repo.load_parse_job_replay_receipt(parse_job_id="parse-job-a", tenant_id="tenant-a")
 
     statement = connection.calls[0]["statement"]
+    assert "latest_attempt.failure_code" in statement
     assert "indexable.handoff_idempotency_key" in statement
     assert "outbox.idempotency_key AS outbox_idempotency_key" in statement
 
