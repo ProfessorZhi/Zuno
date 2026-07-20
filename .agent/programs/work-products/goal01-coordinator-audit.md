@@ -1637,3 +1637,76 @@ python tools/scripts/verify_repo_structure.py
 ```
 
 该额外仓库结构 verifier 失败在历史 baseline：要求已被当前 AGENTS.md 禁止的 architecture 第五文件、no-active program 状态和旧 ownership 文件。当前必过的文档入口、Agent system、doc boundary 和 architecture render gate 均已通过；本轮不修改该历史 baseline verifier。
+
+## Goal01 Final Correction Recheck 019
+
+按 2026-07-20 更新后的目标文件重新执行有限 Coordinator 审计：
+
+```text
+branch: integration/goal01-control-plane-model-ingestion
+start_sha_after_fetch: 5d71e081a17f44ea6152c4d3f62e06af6cd0b7f5
+origin_integration_sha_after_fetch: 5d71e081a17f44ea6152c4d3f62e06af6cd0b7f5
+worktree_status: clean
+```
+
+审计结论：
+
+```text
+PHASE05: completed
+PHASE06: completed
+PHASE07: completed
+PHASE11: in_progress / reopened
+PHASE08: ready
+PHASE12: planned
+Coordinator Approval for PHASE11: pending_reopened
+PHASE11 Requirement Ledger: 0 implementation_available, 80 target_not_current
+```
+
+本轮确认 `tools/scripts/verify_repo_structure.py` 已与当前仓库治理一致：
+
+```text
+docs/architecture: only README.md, architecture.md, architecture-views.md, architecture.html
+.agent/architecture: only README.md, architecture.md, architecture-views.md, architecture.html
+active_program: zuno-canonical-architecture-runtime-realization-v1
+active_program_state: active
+current_phase: PHASE08
+history_program_archives: archive integrity only
+```
+
+已运行：
+
+```text
+python tools/scripts/verify_repo_structure.py
+pytest -q tests/repo/test_repo_structure_consistency.py -p no:cacheprovider
+python tools/scripts/verify_current_program.py
+python tools/scripts/verify_requirement_ledger_evidence_gate.py
+python tools/scripts/verify_phase11_ingestion_source_lineage.py
+python tools/scripts/verify_phase11_post_closure_consistency.py
+python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py
+```
+
+结果：
+
+```text
+all passed
+```
+
+未运行并不得冒充为已通过：
+
+```text
+GitHub Actions CI
+full repository test suite
+real RabbitMQ PHASE11 dispatch / ACK / retry / DLQ / replay
+real MinIO PHASE11 upload/parser default path
+live OCR / VLM provider measurement
+PHASE11 Pre-Closure re-run
+PHASE11 Coordinator Approval
+```
+
+Closure Decision:
+
+```text
+Do not close PHASE11.
+Do not claim quality proven, full CI passed, or production ready.
+Integration branch remains ready for independent review of the correction state, not for a PHASE11 completed claim.
+```
