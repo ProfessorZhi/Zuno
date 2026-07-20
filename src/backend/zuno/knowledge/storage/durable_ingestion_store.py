@@ -16,6 +16,8 @@ from .contracts import (
     DocumentVersionRecord,
     FeedbackRecord,
     IndexChunkRecord,
+    IndexableSnapshotRecord,
+    IngestionOutboxRecord,
     ParseJobRecord,
     QualityGateRecord,
     ReviewDecisionRecord,
@@ -32,6 +34,8 @@ from .sqlmodel_models import (
     FeedbackTable,
     IndexChunkTable,
     IndexManifestTable,
+    IndexableSnapshotTable,
+    IngestionOutboxTable,
     ParseJobTable,
     ParseSnapshotTable,
     QualityGateTable,
@@ -261,6 +265,38 @@ class SQLiteDurableIngestionStore:
         )
         return record
 
+    def save_indexable_snapshot(self, record: IndexableSnapshotRecord) -> IndexableSnapshotRecord:
+        self._merge(
+            IndexableSnapshotTable(
+                indexable_snapshot_id=record.indexable_snapshot_id,
+                document_version_id=record.document_version_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                quality_decision_id=record.quality_decision_id,
+                workspace_id=record.workspace_id,
+                document_id=record.document_id,
+                canonical_hash=record.canonical_hash,
+                idempotency_key=record.idempotency_key,
+                security_refs_json=dict(record.security_refs),
+                delete_refs_json=list(record.delete_refs),
+                payload_json=dict(record.payload),
+            )
+        )
+        return record
+
+    def save_ingestion_outbox(self, record: IngestionOutboxRecord) -> IngestionOutboxRecord:
+        self._merge(
+            IngestionOutboxTable(
+                outbox_event_id=record.outbox_event_id,
+                aggregate_ref=record.aggregate_ref,
+                event_type=record.event_type,
+                payload_hash=record.payload_hash,
+                idempotency_key=record.idempotency_key,
+                publish_status=record.publish_status,
+                replay_count=record.replay_count,
+            )
+        )
+        return record
+
     def get_source_object(self, source_id: str) -> SourceObjectRecord:
         row = self._get(SourceObjectTable, source_id, "source object")
         return SourceObjectRecord(
@@ -471,6 +507,34 @@ class SQLiteDurableIngestionStore:
             duplicate=row.duplicate,
             reason=row.reason,
             decided_at=row.decided_at,
+        )
+
+    def get_indexable_snapshot(self, indexable_snapshot_id: str) -> IndexableSnapshotRecord:
+        row = self._get(IndexableSnapshotTable, indexable_snapshot_id, "indexable snapshot")
+        return IndexableSnapshotRecord(
+            indexable_snapshot_id=row.indexable_snapshot_id,
+            document_version_id=row.document_version_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            quality_decision_id=row.quality_decision_id,
+            workspace_id=row.workspace_id,
+            document_id=row.document_id,
+            canonical_hash=row.canonical_hash,
+            idempotency_key=row.idempotency_key,
+            security_refs=dict(row.security_refs_json or {}),
+            delete_refs=list(row.delete_refs_json or []),
+            payload=dict(row.payload_json or {}),
+        )
+
+    def get_ingestion_outbox(self, outbox_event_id: str) -> IngestionOutboxRecord:
+        row = self._get(IngestionOutboxTable, outbox_event_id, "ingestion outbox")
+        return IngestionOutboxRecord(
+            outbox_event_id=row.outbox_event_id,
+            aggregate_ref=row.aggregate_ref,
+            event_type=row.event_type,
+            payload_hash=row.payload_hash,
+            idempotency_key=row.idempotency_key,
+            publish_status=row.publish_status,
+            replay_count=row.replay_count,
         )
 
     def save_workspace_task(self, record: WorkspaceTaskRecord) -> WorkspaceTaskRecord:

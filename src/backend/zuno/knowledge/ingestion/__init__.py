@@ -21,6 +21,11 @@ from .contracts import (
     build_source_span_provenance,
 )
 from .gateway import ParseGateway
+from .handoff import (
+    IndexableDocumentSnapshotV1,
+    SnapshotHandoffRuntime,
+    SnapshotOutboxEvent,
+)
 from .normalizer import normalize_legacy_chunks_to_ir
 from .review import (
     HumanReviewRuntime,
@@ -45,6 +50,7 @@ __all__ = [
     "DocumentProvenance",
     "DocumentTable",
     "IndexHandoffPayload",
+    "IndexableDocumentSnapshotV1",
     "HumanReviewRuntime",
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
@@ -63,6 +69,8 @@ __all__ = [
     "QualityMetric",
     "ReviewDecisionReceipt",
     "ReviewTask",
+    "SnapshotHandoffRuntime",
+    "SnapshotOutboxEvent",
     "SourceSpan",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",

@@ -114,6 +114,9 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         ingest = ingest_response.json()["data"]
         assert ingest["parse_snapshot"]["parser_id"] != "workspace_text_runtime"
         assert ingest["index_job"]["status"] == "succeeded"
+        assert ingest["indexable_snapshot"]["canonical_hash"]
+        assert ingest["outbox_event"]["publish_status"] == "pending"
+        assert ingest["outbox_event"]["idempotency_key"] == ingest["indexable_snapshot"]["idempotency_key"]
         assert ingest["durable_status"] == "persisted"
         assert ingest["document_version"]["document_version_id"] == ingest["index_job"]["document_version_id"]
         assert ingest["index_manifest_ref"]["index_job_id"] == ingest["index_job"]["job_id"]
@@ -126,6 +129,10 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         restored_blocks = restored.list_document_blocks(ingest["index_job"]["document_version_id"])
         restored_manifest = restored.get_index_manifest(ingest["index_job"]["job_id"])
         restored_chunks = restored.list_index_chunks(ingest["index_job"]["job_id"])
+        restored_snapshot_handoff = restored.get_indexable_snapshot(
+            ingest["indexable_snapshot"]["indexable_snapshot_id"]
+        )
+        restored_outbox = restored.get_ingestion_outbox(ingest["outbox_event"]["outbox_event_id"])
 
         assert restored_file.latest_parse_job_id == ingest["parse_job"]["job_id"]
         assert restored_file.latest_document_version_id == ingest["index_job"]["document_version_id"]
@@ -134,6 +141,9 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         assert restored_document.block_count >= 1
         assert restored_blocks[0].text.startswith("SOC 2 evidence")
         assert restored_manifest.source_sha256 == restored_file.source_sha256
+        assert restored_snapshot_handoff.document_version_id == restored_manifest.document_version_id
+        assert restored_outbox.aggregate_ref == restored_snapshot_handoff.indexable_snapshot_id
+        assert restored_outbox.publish_status == "pending"
         assert any("SOC 2 evidence" in chunk.content for chunk in restored_chunks)
         assert restored_chunks[0].citation_lineage["parse_job_id"] == ingest["parse_job"]["job_id"]
     finally:

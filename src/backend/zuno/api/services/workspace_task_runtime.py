@@ -38,10 +38,13 @@ from zuno.knowledge.ingestion import (
     DocumentMetadata,
     DocumentProvenance,
     HumanReviewRuntime,
+    IndexableDocumentSnapshotV1,
     ParseDocumentRequest,
     ParseDocumentResult,
     ParseGateway,
     ParseJobSnapshot,
+    SnapshotHandoffRuntime,
+    SnapshotOutboxEvent,
     SourceSpan,
 )
 from zuno.knowledge.storage import (
@@ -49,6 +52,8 @@ from zuno.knowledge.storage import (
     DocumentVersionRecord,
     FeedbackRecord,
     IndexChunkRecord,
+    IndexableSnapshotRecord,
+    IngestionOutboxRecord,
     LocalObjectStore,
     ParseJobRecord,
     QualityGateRecord,
@@ -126,6 +131,7 @@ class WorkspaceTaskRuntimeService:
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
     _human_review_runtime = HumanReviewRuntime()
+    _snapshot_handoff_runtime = SnapshotHandoffRuntime()
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
@@ -560,11 +566,16 @@ class WorkspaceTaskRuntimeService:
             )
             cls._ingest_jobs[ingest_task_id] = job
             return job
-        index_job = cls._knowledge_index_runtime.index_document(
+        indexable_snapshot, outbox_event = cls._snapshot_handoff_runtime.create_snapshot(
+            document=parse_job.document,
+            parse_snapshot=parse_snapshot,
+            quality_gate=quality_gate,
+            visibility_ref=f"visibility:{workspace_id}:{file_id}",
+        )
+        index_job = cls._consume_snapshot_handoff_for_local_index(
             knowledge_space_id,
-            parse_job.document,
-            targets=["bm25", "vector", "graph"],
-            parse_job_snapshot=parse_snapshot,
+            snapshot=indexable_snapshot,
+            parse_snapshot=parse_snapshot,
         )
         file.parse_status = "indexed"
         file.updated_at = str(time.time())
@@ -575,6 +586,8 @@ class WorkspaceTaskRuntimeService:
             parse_job=parse_job,
             parse_snapshot=parse_snapshot,
             quality_gate=quality_gate,
+            indexable_snapshot=indexable_snapshot,
+            outbox_event=outbox_event,
             index_job=index_job,
             knowledge_space_id=knowledge_space_id,
         )
@@ -590,6 +603,8 @@ class WorkspaceTaskRuntimeService:
             "parse_job": parse_job.model_dump(),
             "parse_snapshot": parse_snapshot.model_dump(),
             "quality_gate": quality_gate.model_dump(),
+            "indexable_snapshot": indexable_snapshot.model_dump(exclude={"payload"}),
+            "outbox_event": outbox_event.model_dump(),
             "index_job": index_job.model_dump(),
         }
         job["file_status"] = cls._file_status_payload(
@@ -678,6 +693,8 @@ class WorkspaceTaskRuntimeService:
         parse_job: ParseDocumentResult,
         parse_snapshot: ParseJobSnapshot,
         quality_gate,
+        indexable_snapshot: IndexableDocumentSnapshotV1,
+        outbox_event: SnapshotOutboxEvent,
         index_job: IndexJobManifest,
         knowledge_space_id: str,
     ) -> DocumentVersionRecord | None:
@@ -700,6 +717,32 @@ class WorkspaceTaskRuntimeService:
                 metrics=[metric.model_dump() for metric in quality_gate.metrics],
             )
         )
+        cls._durable_ingestion_store.save_indexable_snapshot(
+            IndexableSnapshotRecord(
+                indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
+                document_version_id=indexable_snapshot.document_version_id,
+                parse_snapshot_id=indexable_snapshot.parse_snapshot_id,
+                quality_decision_id=indexable_snapshot.quality_decision_id,
+                workspace_id=indexable_snapshot.workspace_id,
+                document_id=indexable_snapshot.document_id,
+                canonical_hash=indexable_snapshot.canonical_hash,
+                idempotency_key=indexable_snapshot.idempotency_key,
+                security_refs=indexable_snapshot.security_refs,
+                delete_refs=indexable_snapshot.delete_refs,
+                payload=indexable_snapshot.payload,
+            )
+        )
+        cls._durable_ingestion_store.save_ingestion_outbox(
+            IngestionOutboxRecord(
+                outbox_event_id=outbox_event.outbox_event_id,
+                aggregate_ref=outbox_event.aggregate_ref,
+                event_type=outbox_event.event_type,
+                payload_hash=outbox_event.payload_hash,
+                idempotency_key=outbox_event.idempotency_key,
+                publish_status=outbox_event.publish_status,
+                replay_count=outbox_event.replay_count,
+            )
+        )
         cls._durable_ingestion_store.save_index_manifest(index_job)
         for chunk in cls._index_chunks_for_manifest(
             index_job=index_job,
@@ -714,6 +757,22 @@ class WorkspaceTaskRuntimeService:
             latest_document_version_id=document_version.document_version_id,
         )
         return document_version
+
+    @classmethod
+    def _consume_snapshot_handoff_for_local_index(
+        cls,
+        knowledge_space_id: str,
+        *,
+        snapshot: IndexableDocumentSnapshotV1,
+        parse_snapshot: ParseJobSnapshot,
+    ) -> IndexJobManifest:
+        document = CanonicalDocumentIR.model_validate(snapshot.payload["document"])
+        return cls._knowledge_index_runtime.index_document(
+            knowledge_space_id,
+            document,
+            targets=["bm25", "vector", "graph"],
+            parse_job_snapshot=parse_snapshot,
+        )
 
     @classmethod
     def _persist_review_pending_ingest(

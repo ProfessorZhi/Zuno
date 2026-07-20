@@ -131,6 +131,30 @@ class ReviewDecisionRecord(BaseModel):
     decided_at: float
 
 
+class IndexableSnapshotRecord(BaseModel):
+    indexable_snapshot_id: str
+    document_version_id: str
+    parse_snapshot_id: str
+    quality_decision_id: str
+    workspace_id: str
+    document_id: str
+    canonical_hash: str
+    idempotency_key: str
+    security_refs: dict[str, Any] = Field(default_factory=dict)
+    delete_refs: list[str] = Field(default_factory=list)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class IngestionOutboxRecord(BaseModel):
+    outbox_event_id: str
+    aggregate_ref: str
+    event_type: str
+    payload_hash: str
+    idempotency_key: str
+    publish_status: str = "pending"
+    replay_count: int = 0
+
+
 class WorkspaceTaskRecord(BaseModel):
     task_id: str
     workspace_id: str
@@ -178,6 +202,8 @@ __all__ = [
     "DocumentVersionRecord",
     "FeedbackRecord",
     "IndexChunkRecord",
+    "IndexableSnapshotRecord",
+    "IngestionOutboxRecord",
     "ParseJobRecord",
     "QualityGateRecord",
     "ReviewDecisionRecord",

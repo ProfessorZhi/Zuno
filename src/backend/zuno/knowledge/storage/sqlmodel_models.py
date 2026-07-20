@@ -173,6 +173,34 @@ class ReviewDecisionTable(SQLModel, table=True):
     decided_at: float = Field(index=True)
 
 
+class IndexableSnapshotTable(SQLModel, table=True):
+    __tablename__ = "zuno_indexable_snapshots"
+
+    indexable_snapshot_id: str = Field(primary_key=True)
+    document_version_id: str = Field(index=True)
+    parse_snapshot_id: str = Field(index=True)
+    quality_decision_id: str = Field(index=True)
+    workspace_id: str = Field(index=True)
+    document_id: str = Field(index=True)
+    canonical_hash: str = Field(index=True)
+    idempotency_key: str = Field(index=True)
+    security_refs_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    delete_refs_json: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    payload_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class IngestionOutboxTable(SQLModel, table=True):
+    __tablename__ = "zuno_ingestion_outbox"
+
+    outbox_event_id: str = Field(primary_key=True)
+    aggregate_ref: str = Field(index=True)
+    event_type: str = Field(index=True)
+    payload_hash: str = Field(index=True)
+    idempotency_key: str = Field(index=True)
+    publish_status: str = Field(default="pending", index=True)
+    replay_count: int = Field(default=0, index=True)
+
+
 class WorkspaceTaskTable(SQLModel, table=True):
     __tablename__ = "zuno_workspace_tasks"
 
@@ -234,6 +262,8 @@ STORAGE_TABLES = [
     QualityGateTable,
     ReviewTaskTable,
     ReviewDecisionTable,
+    IndexableSnapshotTable,
+    IngestionOutboxTable,
     WorkspaceTaskTable,
     TaskEventTable,
     ArtifactTable,
@@ -248,6 +278,8 @@ __all__ = [
     "FeedbackTable",
     "IndexChunkTable",
     "IndexManifestTable",
+    "IndexableSnapshotTable",
+    "IngestionOutboxTable",
     "QualityGateTable",
     "ReviewDecisionTable",
     "ReviewTaskTable",
