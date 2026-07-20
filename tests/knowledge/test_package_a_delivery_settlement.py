@@ -221,6 +221,51 @@ def test_package_a_parser_identity_validator_requires_current_job_and_attempt() 
         )
 
 
+def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    calls: list[dict] = []
+
+    class _Inbox:
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **kwargs):
+            calls.append(kwargs)
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "job_status": "succeeded",
+                "parse_attempt_id": "attempt-1",
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-1",
+                "dead_letter_id": None,
+            }
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert receipt.duplicate_delivery is True
+    assert delivery.acked is True
+    assert calls[0]["consumer"] == "worker-from-config"
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 

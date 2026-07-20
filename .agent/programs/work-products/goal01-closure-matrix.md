@@ -358,4 +358,15 @@ Workspace Package A production bootstrap and upload hash/bucket tests passed: 4 
 PHASE11 remains in_progress; this is Package A default upload path implementation evidence, not Gate C completion.
 ```
 
+2026-07-20 Package A Worker Inbox identity gate：
+
+```text
+PackageAProductionIngestionRuntime now records worker inbox entries with the configured runtime worker_id instead of a hidden fixed consumer string.
+The same worker identity now spans Inbox duplicate/redelivery detection, ParseAttempt lease claim, running mark, renew, and terminal commit/fail paths.
+This prevents RabbitMQ runner configuration rabbitmq.ingestion_worker_id from diverging from PostgreSQL Inbox idempotency ownership.
+py_compile passed.
+Package A delivery settlement, lineage, parser identity, and worker inbox identity tests passed: 12 passed.
+PHASE11 remains in_progress; this is Package A worker identity implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -231,7 +231,7 @@ class PackageAProductionIngestionRuntime:
         try:
             with IngestionUnitOfWork(self.engine) as repo:
                 inbox = repo.record_worker_inbox(
-                    consumer="phase11-package-a-parser-worker",
+                    consumer=self.worker_id,
                     message_id=envelope.message_id,
                     payload=delivery.payload,
                     tenant_id=tenant_id,

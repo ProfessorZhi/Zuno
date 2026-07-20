@@ -646,3 +646,23 @@ pytest -q tests/api/test_workspace_package_a_production_bootstrap.py tests/api/t
 py_compile passed
 Workspace Package A production bootstrap and upload hash/bucket tests passed: 4 passed
 ```
+
+2026-07-20 Package A Worker Inbox identity gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 记录 worker inbox 时现在使用 runtime 配置的 `worker_id`，与同一执行中的 ParseAttempt lease claim、running mark、renew、terminal commit/fail 使用同一个 worker identity。
+- 这修正了 Inbox 幂等 consumer 固定为 `phase11-package-a-parser-worker`，但实际 worker 可由 RabbitMQ runner 配置为 `rabbitmq.ingestion_worker_id` 的身份分叉问题。
+- 新增 focused settlement test 覆盖 duplicate/redelivery replay 路径：RabbitMQ delivery 被判定为已处理时，`record_worker_inbox.consumer` 必须等于 runtime worker id，随后在领域事务退出后 ACK。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, lineage, parser identity, and worker inbox identity tests passed: 12 passed
+```
