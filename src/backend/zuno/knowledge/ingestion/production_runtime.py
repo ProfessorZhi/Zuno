@@ -455,6 +455,8 @@ class PackageAProductionIngestionRuntime:
                     "indexable_snapshot_id",
                     "parse_snapshot_id",
                     "document_version_id",
+                    "workspace_id",
+                    "source_object_id",
                     "quality_decision_id",
                     "outbox_event_id",
                     "handoff_idempotency_key",
@@ -547,6 +549,11 @@ class PackageAProductionIngestionRuntime:
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay lineage mismatch: {field_name}"
                 )
+        expected_visibility_ref = f"visibility:{replay['workspace_id']}:{replay['source_object_id']}"
+        if str(handoff_replay.get("visibility_ref")) != expected_visibility_ref:
+            raise IngestionPersistenceError(
+                "Package A snapshot handoff replay lineage mismatch: visibility_ref"
+            )
         if str(handoff_replay.get("knowledge_handoff_status")) in {"blocked", "dead_letter"}:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay conflict: knowledge_handoff_status"

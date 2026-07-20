@@ -367,6 +367,8 @@ class IngestionRepository:
                     latest_attempt.failure_code,
                     snapshot.parse_snapshot_id,
                     snapshot.document_version_id,
+                    document.workspace_id,
+                    document.source_object_id,
                     indexable.indexable_snapshot_id,
                     indexable.quality_decision_id,
                     indexable.handoff_idempotency_key,
@@ -384,6 +386,8 @@ class IngestionRepository:
                 ) AS latest_attempt ON true
                 LEFT JOIN ingestion_parse_snapshots AS snapshot
                   ON snapshot.parse_attempt_id = latest_attempt.parse_attempt_id
+                LEFT JOIN ingestion_document_versions AS document
+                  ON document.document_version_id = snapshot.document_version_id
                 LEFT JOIN ingestion_indexable_document_snapshots AS indexable
                   ON indexable.parse_snapshot_id = snapshot.parse_snapshot_id
                 LEFT JOIN ingestion_outbox_events AS outbox
