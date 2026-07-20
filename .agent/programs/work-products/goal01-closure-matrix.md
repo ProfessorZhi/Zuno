@@ -563,4 +563,16 @@ Gate B focused PostgreSQL test was attempted once; environment_blocked by localh
 PHASE11 remains in_progress; this is Package A retry parent/Attempt lineage implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A retry envelope identity gate：
+
+```text
+PackageAProductionIngestionRuntime now validates retry delivery envelope message_id, causation_id, and idempotency_key against retry payload parent/attempt fields before Worker Inbox.
+This prevents RabbitMQ/Outbox envelope identity from diverging from retry payload lineage.
+The integration/fault causation mismatch test passes without PostgreSQL because the rejection occurs before IngestionUnitOfWork.
+py_compile passed.
+Package A retry boundary and delivery settlement tests passed: 24 passed.
+Package A retry envelope causation mismatch integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A retry envelope identity-boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

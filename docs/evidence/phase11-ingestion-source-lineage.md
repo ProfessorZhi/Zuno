@@ -1023,3 +1023,25 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and retry boundary tests passed: 33 passed
 Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
 ```
+
+2026-07-20 Package A retry envelope identity gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 retry delivery 入站时校验 envelope `message_id`、`causation_id`、`idempotency_key` 必须与 retry payload 的 `retry_attempt_no`、`retry_parent_message_id`、`retry_parent_idempotency_key` 一致。
+- 该 gate 在 Worker Inbox 和 PostgreSQL UoW 之前执行，防止 RabbitMQ/Outbox envelope 身份与 payload retry lineage 分裂。
+- 新增 integration/fault 测试覆盖 causation_id mismatch before-inbox，不依赖 PostgreSQL 环境。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_package_a_rejects_retry_envelope_causation_mismatch_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A retry boundary and delivery settlement tests passed: 24 passed
+Package A retry envelope causation mismatch integration/fault test passed: 1 passed
+```

@@ -289,6 +289,7 @@ class PackageAProductionIngestionRuntime:
         payload = envelope.payload or {}
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
+            self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)
         except PackageARejectDeliveryError:
             await delivery.reject(requeue=False)
             raise
@@ -791,6 +792,33 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts") from exc
         if payload_max_attempts < 1 or payload_max_attempts != max_attempts:
             raise PackageARejectDeliveryError("delivery retry policy mismatch: max_attempts")
+
+    @staticmethod
+    def _validate_delivery_retry_envelope(*, payload: dict[str, Any], envelope: CrossModuleEnvelopeV1) -> None:
+        retry_fields = {
+            "retry_attempt_no",
+            "retry_parent_attempt_id",
+            "retry_parent_message_id",
+            "retry_parent_idempotency_key",
+        }
+        present_retry_fields = {field_name for field_name in retry_fields if payload.get(field_name) is not None}
+        if not present_retry_fields:
+            return
+        missing_retry_fields = retry_fields - present_retry_fields
+        if missing_retry_fields:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: retry fields")
+        try:
+            retry_attempt_no = int(payload["retry_attempt_no"])
+        except (TypeError, ValueError) as exc:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: retry_attempt_no") from exc
+        expected_message_id = f"outbox:{payload['parse_job_id']}:retry:{retry_attempt_no}"
+        expected_idempotency_key = f"{payload['retry_parent_idempotency_key']}:retry:{retry_attempt_no}"
+        if envelope.message_id != expected_message_id:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: message_id")
+        if envelope.causation_id != payload["retry_parent_message_id"]:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: causation_id")
+        if envelope.idempotency_key != expected_idempotency_key:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: idempotency_key")
 
     @staticmethod
     def _validate_delivery_lineage(*, payload: dict[str, Any], context: dict[str, Any]) -> None:
