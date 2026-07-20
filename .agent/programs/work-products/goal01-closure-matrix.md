@@ -773,4 +773,15 @@ Gate B expired deadline PostgreSQL test was added but environment_blocked locall
 PHASE11 remains in_progress; this is Package A deadline/cancel boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Workspace/File Upload deadline default wiring：
+
+```text
+WorkspaceFileBody now accepts deadline_at and WorkspaceTaskRuntimeService forwards it into PackageAUploadCommand.
+The API/service tests prove /api/v1/workspace/file can carry an ISO deadline into the Package A production default upload command.
+This connects Workspace/File Upload to the existing Package A parse-request deadline propagation and worker deadline cancel boundary.
+py_compile passed.
+Package A Workspace/File Upload deadline default wiring tests passed: 5 passed.
+PHASE11 remains in_progress; this is Package A default upload wiring evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

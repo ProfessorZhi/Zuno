@@ -1176,6 +1176,27 @@ Gate B expired deadline PostgreSQL test environment_blocked: localhost:5432 conn
 docker compose postgres startup environment_blocked: Docker daemon npipe not available
 ```
 
+2026-07-20 Package A Workspace/File Upload deadline default wiring：
+
+- `/api/v1/workspace/file` 的 `WorkspaceFileBody` 现在接收 `deadline_at`。
+- `WorkspaceTaskRuntimeService.register_file(...)` 现在将 `deadline_at` 传入 `PackageAUploadCommand`，使 Workspace/File Upload 默认入口可以把 deadline 送入 Package A production ingestion runtime。
+- 该接线与上一条 `PackageAProductionIngestionRuntime._parse_requested_envelope(...)` deadline propagation 共同形成 API → PackageAUploadCommand → parse-request envelope → Worker deadline cancel boundary。
+- 新增 service-level 和 API-level focused 测试证明 ISO deadline 会到达 Package A production command。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/api/v1/workspace.py src/backend/zuno/api/services/workspace_task_runtime.py tests/api/test_workspace_package_a_upload_hash_gate.py
+pytest -q tests/api/test_workspace_package_a_upload_hash_gate.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A Workspace/File Upload deadline default wiring tests passed: 5 passed
+```
+
 2026-07-20 Package A retry attempt number pre-Inbox gate：
 
 - `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。

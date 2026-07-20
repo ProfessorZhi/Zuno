@@ -1,9 +1,14 @@
 import hashlib
+from datetime import datetime, timezone
 
 import pytest
+from fastapi import FastAPI
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 
 from zuno.api.services.user import UserPayload
+from zuno.api.services.user import get_login_user
+from zuno.api.v1.workspace import router as workspace_router
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.knowledge.storage import LocalObjectStore, SQLiteDurableIngestionStore
 
@@ -80,6 +85,57 @@ def test_workspace_package_a_upload_accepts_matching_hash_and_uses_content_hash(
     assert payload["file"]["hash"] == content_hash
     assert payload["file_status"]["source_sha256"] == content_hash
     assert payload["durable_status"] == "production_accepted"
+
+
+def test_workspace_package_a_upload_forwards_deadline_to_production_command() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    runtime = _RecordingPackageARuntime()
+    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(runtime)
+    deadline = datetime(2026, 7, 20, 12, 30, tzinfo=timezone.utc)
+
+    WorkspaceTaskRuntimeService.register_file(
+        workspace_id="workspace-a",
+        login_user=_user(),
+        file_id="file-a",
+        mime_type="text/markdown",
+        file_hash=None,
+        name="file.md",
+        uri=None,
+        trace_id="trace-a",
+        security_label="internal",
+        content="# Package A\nDeadline.",
+        deadline_at=deadline,
+    )
+
+    assert len(runtime.commands) == 1
+    assert runtime.commands[0].deadline_at == deadline
+
+
+def test_workspace_file_api_forwards_deadline_to_package_a_default_path() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    runtime = _RecordingPackageARuntime()
+    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(runtime)
+    app = FastAPI()
+    app.include_router(workspace_router, prefix="/api/v1")
+    app.dependency_overrides[get_login_user] = _user
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/workspace/file",
+        json={
+            "workspace_id": "workspace-a",
+            "file_id": "file-a",
+            "mime_type": "text/markdown",
+            "name": "file.md",
+            "content": "# Package A\nDeadline.",
+            "security_label": "internal",
+            "deadline_at": "2026-07-20T12:30:00Z",
+        },
+    )
+
+    assert response.status_code == 200
+    assert len(runtime.commands) == 1
+    assert runtime.commands[0].deadline_at == datetime(2026, 7, 20, 12, 30, tzinfo=timezone.utc)
 
 
 def test_workspace_package_a_upload_does_not_fallback_when_production_default_is_unavailable(tmp_path) -> None:

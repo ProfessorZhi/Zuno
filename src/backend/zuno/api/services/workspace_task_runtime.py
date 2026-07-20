@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
@@ -426,6 +427,7 @@ class WorkspaceTaskRuntimeService:
         trace_id: str | None,
         security_label: str,
         content: str | None = None,
+        deadline_at: datetime | None = None,
     ) -> dict:
         normalized_file_id = file_id or f"file_{uuid4().hex[:12]}"
         stored_content = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
@@ -480,6 +482,7 @@ class WorkspaceTaskRuntimeService:
                     classification_ref=security_label,
                     security_epoch_ref=f"security-epoch:{workspace_id}:{login_user.user_id}",
                     trace_id=file.trace_id or trace_id or f"trace_{uuid4().hex[:12]}",
+                    deadline_at=deadline_at,
                 )
             )
             file.parse_status = "ingest_accepted"

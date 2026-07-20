@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette.responses import PlainTextResponse, StreamingResponse
@@ -38,6 +40,7 @@ class WorkspaceFileBody(BaseModel):
     content: str | None = None
     trace_id: str | None = None
     security_label: str = "internal"
+    deadline_at: datetime | None = None
 
 
 class WorkspaceIngestBody(BaseModel):
@@ -159,6 +162,7 @@ async def register_workspace_file(
             trace_id=payload.trace_id,
             security_label=payload.security_label,
             content=payload.content,
+            deadline_at=payload.deadline_at,
         )
     )
 
