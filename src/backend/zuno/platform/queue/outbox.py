@@ -163,6 +163,7 @@ class PostgresOutboxRabbitMQPublisher:
             raise RuntimeError("outbox publisher requires tenant_id when the outbox record is tenantless")
         security_epoch_ref = self._security_epoch_ref(record.payload)
         workspace_id = self._workspace_id(record.payload)
+        trace_id = self._trace_id(record.payload) or self.trace_id
         await asyncio.wait_for(
             self.transport.publish(
                 self.topology,
@@ -176,7 +177,7 @@ class PostgresOutboxRabbitMQPublisher:
                     "topic": record.topic,
                 },
                 tenant_id=tenant_id,
-                trace_id=self.trace_id,
+                trace_id=trace_id,
                 workspace_id=workspace_id,
                 security_epoch_ref=security_epoch_ref,
                 ordering_key=record.ordering_key,
@@ -206,6 +207,16 @@ class PostgresOutboxRabbitMQPublisher:
         inner_payload = payload.get("payload")
         if isinstance(inner_payload, dict) and inner_payload.get("workspace_id") is not None:
             return str(inner_payload["workspace_id"])
+        return None
+
+    @staticmethod
+    def _trace_id(payload: dict) -> str | None:
+        envelope_trace_id = payload.get("trace_id")
+        if envelope_trace_id is not None:
+            return str(envelope_trace_id)
+        inner_payload = payload.get("payload")
+        if isinstance(inner_payload, dict) and inner_payload.get("trace_id") is not None:
+            return str(inner_payload["trace_id"])
         return None
 
 

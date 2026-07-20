@@ -102,6 +102,10 @@ def test_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header() -> None:
     asyncio.run(_assert_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header())
 
 
+def test_outbox_publisher_maps_envelope_trace_to_rabbitmq_header() -> None:
+    asyncio.run(_assert_outbox_publisher_maps_envelope_trace_to_rabbitmq_header())
+
+
 def test_queue_runner_defaults_to_package_a_ingestion_worker(monkeypatch) -> None:
     from zuno.platform.services.queue import runner
 
@@ -587,3 +591,44 @@ async def _assert_outbox_publisher_maps_envelope_workspace_to_rabbitmq_header() 
     )
 
     assert published[0]["workspace_id"] == "workspace-a"
+
+
+async def _assert_outbox_publisher_maps_envelope_trace_to_rabbitmq_header() -> None:
+    published: list[dict] = []
+
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            published.append(kwargs)
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-dispatcher",
+    )
+    await publisher._publish_record(
+        OutboxEventRecord(
+            event_id="event-trace",
+            aggregate_id="job-trace",
+            topic="ingestion.parse.requested",
+            payload={
+                "trace_id": "trace-canonical",
+                "payload": {
+                    "parse_job_id": "job-trace",
+                },
+            },
+            payload_hash="hash",
+            idempotency_key="tenant-a:parse:job-trace",
+            claim_owner="phase11-package-a-outbox-dispatcher",
+            tenant_id="tenant-a",
+            ordering_key="job-trace",
+            ordering_sequence=1,
+            publish_attempts=0,
+            retry_count=0,
+            replay_count=0,
+        )
+    )
+
+    assert published[0]["trace_id"] == "trace-canonical"

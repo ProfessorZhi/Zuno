@@ -297,6 +297,10 @@ class PackageAProductionIngestionRuntime:
         ):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery workspace header does not match envelope")
+        header_trace_id = delivery.headers.get("trace_id")
+        if header_trace_id is None or str(header_trace_id) != str(envelope.trace_id):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery trace header does not match envelope")
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
             self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)

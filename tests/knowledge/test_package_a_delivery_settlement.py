@@ -246,6 +246,13 @@ def test_package_a_rejects_workspace_header_mismatch_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery workspace header does not match envelope")
 
 
+def test_package_a_rejects_trace_header_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.headers["trace_id"] = "trace-other"
+
+    _assert_rejected_parse_delivery(delivery, "delivery trace header does not match envelope")
+
+
 def test_package_a_rejects_outbox_ordering_header_mismatch_without_requeue() -> None:
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
     delivery.headers["ordering_key"] = "parse-job-other"
@@ -593,6 +600,7 @@ def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDeliver
     delivery.headers = {
         "tenant_id": envelope.tenant_id,
         "workspace_id": envelope.workspace_id,
+        "trace_id": envelope.trace_id,
         "security_epoch_ref": envelope.effective_security_epoch_ref,
         "ordering_key": envelope.aggregate_id,
         "ordering_sequence": 1,
