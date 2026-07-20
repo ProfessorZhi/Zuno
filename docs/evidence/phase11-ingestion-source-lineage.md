@@ -381,3 +381,24 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker tenant dispatch tests passed: 5 passed
 ```
+
+2026-07-20 Package A bounded RabbitMQ pump：
+
+- `PackageAProductionQueueWorker.publish_and_consume_once(...)` 支持 `consume_limit`，默认与 `publish_limit` 对齐；一次 pump 可在发布 pending outbox batch 后消费有界数量的 RabbitMQ delivery，避免生产 worker 每轮只处理一条消息。
+- 每条 delivery 仍逐一交给 `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)`；ACK/NACK/Reject 和 PostgreSQL 领域事务边界不移出 runtime。
+- `run_package_a_ingestion_worker_forever(...)` 透传 `ingestion_publish_limit`、`ingestion_consume_limit` 和 `ingestion_consume_timeout_seconds` 配置，允许生产部署控制 outbox dispatch 与 consumer backpressure。
+- `tests/knowledge/test_package_a_queue_worker.py` 新增 bounded batch 覆盖，验证同一 pump 可处理多条 delivery，并在空队列时停止而不重复处理。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/worker.py src/backend/zuno/platform/services/queue/runner.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker bounded batch tests passed: 6 passed
+```

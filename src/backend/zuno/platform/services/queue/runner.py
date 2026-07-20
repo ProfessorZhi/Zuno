@@ -41,6 +41,7 @@ async def run_package_a_ingestion_worker_forever(
     *,
     poll_interval: float = 1.0,
     publish_limit: int = 10,
+    consume_limit: int | None = None,
     consume_timeout_seconds: float = 5.0,
 ) -> None:
     from zuno.api.services.workspace_task_runtime import build_package_a_production_ingestion_runtime
@@ -66,6 +67,14 @@ async def run_package_a_ingestion_worker_forever(
     publisher_worker_id = str(
         rabbitmq.get("ingestion_outbox_worker_id") or "phase11-package-a-outbox-dispatcher"
     )
+    resolved_publish_limit = int(rabbitmq.get("ingestion_publish_limit") or publish_limit)
+    configured_consume_limit = rabbitmq.get("ingestion_consume_limit")
+    resolved_consume_limit = (
+        int(configured_consume_limit) if configured_consume_limit is not None else consume_limit
+    )
+    resolved_consume_timeout_seconds = float(
+        rabbitmq.get("ingestion_consume_timeout_seconds") or consume_timeout_seconds
+    )
     async with RabbitMQTransport(rabbitmq_url) as transport:
         worker = PackageAProductionQueueWorker(
             engine=engine,
@@ -84,8 +93,9 @@ async def run_package_a_ingestion_worker_forever(
         while True:
             try:
                 await worker.publish_and_consume_once(
-                    publish_limit=publish_limit,
-                    consume_timeout_seconds=consume_timeout_seconds,
+                    publish_limit=resolved_publish_limit,
+                    consume_limit=resolved_consume_limit,
+                    consume_timeout_seconds=resolved_consume_timeout_seconds,
                 )
             except Exception as err:
                 logger.exception(f"Package A ingestion worker error: {err}")

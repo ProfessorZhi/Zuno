@@ -217,4 +217,15 @@ Package A queue worker tenant dispatch tests passed: 5 passed.
 PHASE11 remains in_progress; this is implementation evidence for Package A dispatch wiring, not real Gate C completion.
 ```
 
+2026-07-20 Package A bounded RabbitMQ pump：
+
+```text
+PackageAProductionQueueWorker now consumes a bounded delivery batch after publishing a pending outbox batch.
+consume_limit defaults to publish_limit, and runner config can override ingestion_publish_limit, ingestion_consume_limit, and ingestion_consume_timeout_seconds.
+Each RabbitMQ delivery still enters PackageAProductionIngestionRuntime separately, preserving ACK-after-domain-commit ownership inside the runtime.
+py_compile passed.
+Package A queue worker bounded batch tests passed: 6 passed.
+PHASE11 remains in_progress; real Gate C still needs live PostgreSQL/MinIO/RabbitMQ verification.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

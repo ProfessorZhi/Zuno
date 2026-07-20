@@ -27,6 +27,10 @@ def test_package_a_queue_worker_publishes_then_consumes_delivery() -> None:
     asyncio.run(_assert_package_a_queue_worker_publishes_then_consumes_delivery())
 
 
+def test_package_a_queue_worker_consumes_bounded_delivery_batch() -> None:
+    asyncio.run(_assert_package_a_queue_worker_consumes_bounded_delivery_batch())
+
+
 def test_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:
     asyncio.run(_assert_outbox_publisher_cross_tenant_mode_uses_record_tenant())
 
@@ -68,11 +72,17 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
     )
 
     class FakeTransport:
+        def __init__(self) -> None:
+            self.delivered = False
+
         async def declare_topology(self, topology):
             events.append(("declare", topology.queue))
 
         async def get(self, queue_name, *, timeout):
             events.append(("get", (queue_name, timeout)))
+            if self.delivered:
+                return None
+            self.delivered = True
             return delivery
 
     class FakeRuntime:
@@ -115,7 +125,61 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
         ("publish_batch", 3),
         ("get", ("zuno.ingestion.parse", 0.25)),
         ("process", "event-1"),
+        ("get", ("zuno.ingestion.parse", 0.25)),
     ]
+
+
+async def _assert_package_a_queue_worker_consumes_bounded_delivery_batch() -> None:
+    processed: list[str] = []
+    deliveries = [
+        SimpleNamespace(message_id="event-1"),
+        SimpleNamespace(message_id="event-2"),
+        SimpleNamespace(message_id="event-3"),
+    ]
+
+    class FakeTransport:
+        async def declare_topology(self, topology):
+            return None
+
+        async def get(self, queue_name, *, timeout):
+            return deliveries.pop(0) if deliveries else None
+
+    class FakeRuntime:
+        async def process_rabbitmq_delivery(self, delivery):
+            processed.append(delivery.message_id)
+            return PackageAWorkerReceipt(
+                parse_job_id=f"job-{delivery.message_id}",
+                parse_attempt_id=f"attempt-{delivery.message_id}",
+                status="succeeded",
+                acked_after_domain_commit=True,
+            )
+
+    class FakePublisher:
+        def __init__(self, **kwargs):
+            return None
+
+        async def publish_batch(self, *, limit):
+            return SimpleNamespace(published=(object(), object(), object()), failed=())
+
+    worker = PackageAProductionQueueWorker(
+        engine=object(),
+        runtime=FakeRuntime(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        trace_id="trace-batch",
+    )
+
+    receipt = await worker.publish_and_consume_once(
+        publish_limit=3,
+        consume_limit=2,
+        publisher_factory=FakePublisher,
+    )
+
+    assert processed == ["event-1", "event-2"]
+    assert receipt.published_count == 3
+    assert receipt.delivery_received is True
+    assert len(receipt.worker_receipts) == 2
+    assert receipt.worker_receipt.parse_job_id == "job-event-2"
 
 
 async def _assert_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:

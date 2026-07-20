@@ -22,7 +22,11 @@ class PackageAQueuePumpReceipt:
     published_count: int
     failed_publish_count: int
     delivery_received: bool
-    worker_receipt: PackageAWorkerReceipt | None = None
+    worker_receipts: tuple[PackageAWorkerReceipt, ...] = ()
+
+    @property
+    def worker_receipt(self) -> PackageAWorkerReceipt | None:
+        return self.worker_receipts[-1] if self.worker_receipts else None
 
 
 def package_a_rabbitmq_topology(settings: Any) -> RabbitMQTopology:
@@ -69,9 +73,15 @@ class PackageAProductionQueueWorker:
         self,
         *,
         publish_limit: int = 10,
+        consume_limit: int | None = None,
         consume_timeout_seconds: float = 5.0,
         publisher_factory: Callable[..., Any] = PostgresOutboxRabbitMQPublisher,
     ) -> PackageAQueuePumpReceipt:
+        if publish_limit < 1:
+            raise ValueError("publish_limit must be positive")
+        resolved_consume_limit = publish_limit if consume_limit is None else consume_limit
+        if resolved_consume_limit < 1:
+            raise ValueError("consume_limit must be positive")
         await self.transport.declare_topology(self.topology)
         publisher = publisher_factory(
             engine=self.engine,
@@ -82,19 +92,17 @@ class PackageAProductionQueueWorker:
             trace_id=self.trace_id,
         )
         batch: OutboxPublishBatch = await publisher.publish_batch(limit=publish_limit)
-        delivery = await self.transport.get(self.topology.queue, timeout=consume_timeout_seconds)
-        if delivery is None:
-            return PackageAQueuePumpReceipt(
-                published_count=len(batch.published),
-                failed_publish_count=len(batch.failed),
-                delivery_received=False,
-            )
-        worker_receipt = await self.runtime.process_rabbitmq_delivery(delivery)
+        worker_receipts: list[PackageAWorkerReceipt] = []
+        for _ in range(resolved_consume_limit):
+            delivery = await self.transport.get(self.topology.queue, timeout=consume_timeout_seconds)
+            if delivery is None:
+                break
+            worker_receipts.append(await self.runtime.process_rabbitmq_delivery(delivery))
         return PackageAQueuePumpReceipt(
             published_count=len(batch.published),
             failed_publish_count=len(batch.failed),
-            delivery_received=True,
-            worker_receipt=worker_receipt,
+            delivery_received=bool(worker_receipts),
+            worker_receipts=tuple(worker_receipts),
         )
 
 
