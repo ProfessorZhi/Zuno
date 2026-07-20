@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any
+from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -39,6 +39,22 @@ class SnapshotOutboxEvent(BaseModel):
     idempotency_key: str
     publish_status: str = "pending"
     replay_count: int = 0
+
+
+class SnapshotHandoffPublishReceipt(BaseModel):
+    outbox_event_id: str
+    aggregate_ref: str
+    idempotency_key: str
+    publish_status: str
+    replay_count: int
+    acknowledged: bool
+    knowledge_receipt_ref: str | None = None
+    failure_reason: str | None = None
+
+
+class SnapshotKnowledgePublisher(Protocol):
+    def publish_snapshot(self, snapshot: IndexableDocumentSnapshotV1) -> str:
+        ...
 
 
 class SnapshotHandoffRuntime:
@@ -131,6 +147,48 @@ class SnapshotHandoffRuntime:
     ) -> bool:
         return existing.idempotency_key == candidate.idempotency_key
 
+    @staticmethod
+    def dispatch_outbox(
+        *,
+        snapshot: IndexableDocumentSnapshotV1,
+        outbox: SnapshotOutboxEvent,
+        publisher: SnapshotKnowledgePublisher,
+    ) -> tuple[SnapshotOutboxEvent, SnapshotHandoffPublishReceipt]:
+        try:
+            knowledge_receipt_ref = publisher.publish_snapshot(snapshot)
+        except Exception as exc:
+            replayed = outbox.model_copy(
+                update={
+                    "publish_status": "pending",
+                    "replay_count": outbox.replay_count + 1,
+                }
+            )
+            return (
+                replayed,
+                SnapshotHandoffPublishReceipt(
+                    outbox_event_id=outbox.outbox_event_id,
+                    aggregate_ref=outbox.aggregate_ref,
+                    idempotency_key=outbox.idempotency_key,
+                    publish_status=replayed.publish_status,
+                    replay_count=replayed.replay_count,
+                    acknowledged=False,
+                    failure_reason=f"knowledge_unavailable:{type(exc).__name__}",
+                ),
+            )
+        handed_off = outbox.model_copy(update={"publish_status": "handed_off"})
+        return (
+            handed_off,
+            SnapshotHandoffPublishReceipt(
+                outbox_event_id=outbox.outbox_event_id,
+                aggregate_ref=outbox.aggregate_ref,
+                idempotency_key=outbox.idempotency_key,
+                publish_status=handed_off.publish_status,
+                replay_count=handed_off.replay_count,
+                acknowledged=True,
+                knowledge_receipt_ref=knowledge_receipt_ref,
+            ),
+        )
+
 
 def _hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
@@ -139,6 +197,7 @@ def _hash(payload: dict[str, Any]) -> str:
 
 __all__ = [
     "IndexableDocumentSnapshotV1",
+    "SnapshotHandoffPublishReceipt",
     "SnapshotHandoffBlockedError",
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",

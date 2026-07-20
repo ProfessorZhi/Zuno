@@ -28,6 +28,7 @@ from .gateway import ParseGateway
 from .handoff import (
     IndexableDocumentSnapshotV1,
     SnapshotHandoffBlockedError,
+    SnapshotHandoffPublishReceipt,
     SnapshotHandoffRuntime,
     SnapshotOutboxEvent,
 )
@@ -110,6 +111,7 @@ __all__ = [
     "ReviewExpirationSweepReceipt",
     "ReviewTask",
     "SnapshotHandoffBlockedError",
+    "SnapshotHandoffPublishReceipt",
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",
     "SourceSpan",

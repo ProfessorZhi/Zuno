@@ -193,3 +193,51 @@ def test_sqlite_store_round_trips_snapshot_and_outbox() -> None:
     assert restored_snapshot.delete_refs == ["delete_ref:none"]
     assert restored_outbox.publish_status == "pending"
     assert restored_outbox.idempotency_key == snapshot.idempotency_key
+
+
+def test_snapshot_handoff_dispatch_replays_when_knowledge_is_unavailable() -> None:
+    from zuno.knowledge.ingestion import SnapshotHandoffRuntime
+
+    class FailingPublisher:
+        def publish_snapshot(self, snapshot):
+            raise RuntimeError(f"knowledge offline for {snapshot.indexable_snapshot_id}")
+
+    class RecordingPublisher:
+        def __init__(self) -> None:
+            self.published = []
+
+        def publish_snapshot(self, snapshot):
+            self.published.append(snapshot.indexable_snapshot_id)
+            return f"knowledge_receipt:{snapshot.indexable_snapshot_id}"
+
+    document, parse_snapshot, gate = _parsed_text_document()
+    snapshot, outbox = SnapshotHandoffRuntime().create_snapshot(
+        document=document,
+        parse_snapshot=parse_snapshot,
+        quality_gate=gate,
+        visibility_ref="visibility:workspace_handoff:doc_snapshot_handoff",
+    )
+
+    replayed, failed_receipt = SnapshotHandoffRuntime.dispatch_outbox(
+        snapshot=snapshot,
+        outbox=outbox,
+        publisher=FailingPublisher(),
+    )
+    publisher = RecordingPublisher()
+    handed_off, success_receipt = SnapshotHandoffRuntime.dispatch_outbox(
+        snapshot=snapshot,
+        outbox=replayed,
+        publisher=publisher,
+    )
+
+    assert replayed.publish_status == "pending"
+    assert replayed.replay_count == 1
+    assert failed_receipt.acknowledged is False
+    assert failed_receipt.failure_reason == "knowledge_unavailable:RuntimeError"
+    assert handed_off.publish_status == "handed_off"
+    assert handed_off.replay_count == 1
+    assert success_receipt.acknowledged is True
+    assert success_receipt.knowledge_receipt_ref == (
+        f"knowledge_receipt:{snapshot.indexable_snapshot_id}"
+    )
+    assert publisher.published == [snapshot.indexable_snapshot_id]
