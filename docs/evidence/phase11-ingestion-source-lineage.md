@@ -1208,6 +1208,29 @@ Package A delivery settlement tests passed: 37 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A failed replay retry-outbox receipt gate：
+
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 现在在 duplicate/redelivery replay receipt 中读取同一 `ParseJob` 的 retry parse-request `infra_outbox_events.event_id AS retry_outbox_event_id`。
+- `PackageAProductionIngestionRuntime._validate_parse_job_replay_receipt(...)` 现在要求 `job_status=failed` 的 replay receipt 同时包含 `failure_code` 和 `retry_outbox_event_id`。
+- 该 gate 保证 retryable failed duplicate/redelivery 只有在“当前 Attempt 已失败”且“下一次 retry parse-request outbox 已持久化”后才允许 ACK；否则不 ACK、不 reject，避免丢失 retry。
+- 本次没有新增 Migration；复用 PHASE04 `infra_outbox_events` 和 PHASE11 ParseJob/Attempt 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 38 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

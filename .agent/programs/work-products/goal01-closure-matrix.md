@@ -860,4 +860,16 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A duplicate/redelivery receipt completeness evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A failed replay retry-outbox receipt gate：
+
+```text
+IngestionRepository.load_parse_job_replay_receipt now returns retry_outbox_event_id for retry parse-request outbox events on the same ParseJob.
+PackageAProductionIngestionRuntime requires failed duplicate/redelivery replay receipts to include failure_code and retry_outbox_event_id before ACK.
+The focused test proves failed replay without retry outbox evidence is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 38 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A failed retry replay evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -452,6 +452,12 @@ class PackageAProductionIngestionRuntime:
                 ("dead_letter_id", "failure_code"),
                 status=status,
             )
+        elif status == "failed":
+            PackageAProductionIngestionRuntime._require_replay_fields(
+                replay,
+                ("failure_code", "retry_outbox_event_id"),
+                status=status,
+            )
         else:
             PackageAProductionIngestionRuntime._require_replay_fields(
                 replay,

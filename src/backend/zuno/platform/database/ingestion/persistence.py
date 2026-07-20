@@ -369,6 +369,7 @@ class IngestionRepository:
                     indexable.handoff_idempotency_key,
                     outbox.outbox_event_id,
                     outbox.idempotency_key AS outbox_idempotency_key,
+                    retry_outbox.event_id AS retry_outbox_event_id,
                     dead_letter.dead_letter_id
                 FROM ingestion_parse_jobs AS job
                 LEFT JOIN LATERAL (
@@ -385,6 +386,11 @@ class IngestionRepository:
                 LEFT JOIN ingestion_outbox_events AS outbox
                   ON outbox.aggregate_ref = indexable.indexable_snapshot_id
                  AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
+                LEFT JOIN infra_outbox_events AS retry_outbox
+                  ON retry_outbox.tenant_id = job.tenant_id
+                 AND retry_outbox.aggregate_id = job.parse_job_id
+                 AND retry_outbox.topic = 'ingestion.parse.requested'
+                 AND retry_outbox.event_id <> ('outbox:' || job.parse_job_id)
                 LEFT JOIN ingestion_dead_letters AS dead_letter
                   ON dead_letter.parse_attempt_id = latest_attempt.parse_attempt_id
                 WHERE job.parse_job_id = :parse_job_id
