@@ -1107,3 +1107,23 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
+
+2026-07-20 Package A buffered Inbox commit-before-no-ACK boundary：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 PostgreSQL UoW 内记录 PHASE04 Worker Inbox receipt 后，若 Inbox 返回 `status=buffered` 且 `processable=false`，会让 UoW 正常退出并提交 receipt，再抛出 `IngestionPersistenceError`。
+- RabbitMQ delivery 在该路径下仍然不 ACK、不 reject，也不读取 ParseJob replay receipt。
+- 该边界证明 Package A 不会因为 delivery 不能结算而回滚 ordered Inbox receipt，避免 buffered delivery 在下一次投递时丢失 PHASE04 ordering watermark 事实。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
+```

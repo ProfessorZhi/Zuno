@@ -362,12 +362,15 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
 def test_package_a_buffered_inbox_delivery_is_not_acked_or_replayed(monkeypatch) -> None:
     import zuno.knowledge.ingestion.production_runtime as production_runtime
 
+    events: list[str] = []
+
     class _Inbox:
         status = "buffered"
         processable = False
 
     class _Repo:
         def record_worker_inbox(self, **_kwargs):
+            events.append("record_inbox")
             return _Inbox()
 
         def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
@@ -381,6 +384,7 @@ def test_package_a_buffered_inbox_delivery_is_not_acked_or_replayed(monkeypatch)
             return self.repo
 
         def __exit__(self, exc_type, exc, tb):
+            events.append(f"exit:{exc_type.__name__ if exc_type else 'none'}")
             return None
 
     monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
@@ -394,6 +398,7 @@ def test_package_a_buffered_inbox_delivery_is_not_acked_or_replayed(monkeypatch)
 
     assert delivery.acked is False
     assert delivery.rejected is False
+    assert events == ["record_inbox", "exit:none"]
 
 
 def test_package_a_first_seen_worker_records_heartbeats_before_and_after_parser_gateway(monkeypatch) -> None:

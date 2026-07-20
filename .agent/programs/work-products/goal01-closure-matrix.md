@@ -609,4 +609,15 @@ Package A delivery settlement, persistence fencing, and queue worker tests passe
 PHASE11 remains in_progress; this is Package A ordered Inbox settlement implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A buffered Inbox commit-before-no-ACK boundary：
+
+```text
+PackageAProductionIngestionRuntime now defers buffered Inbox errors until after the PostgreSQL UoW exits cleanly.
+The focused settlement test proves record_worker_inbox is followed by UoW exit:none, then the runtime raises IngestionPersistenceError without ACK, reject, or replay receipt lookup.
+This preserves PHASE04 ordered Inbox receipt facts while keeping RabbitMQ settlement blocked until the delivery becomes processable.
+py_compile passed.
+Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed.
+PHASE11 remains in_progress; this is Package A ordered Inbox commit/settlement boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

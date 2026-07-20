@@ -311,6 +311,7 @@ class PackageAProductionIngestionRuntime:
             raise
         parse_job_id = str(payload["parse_job_id"])
         tenant_id = envelope.tenant_id
+        deferred_inbox_error: IngestionPersistenceError | None = None
         try:
             with IngestionUnitOfWork(self.engine) as repo:
                 inbox = repo.record_worker_inbox(
@@ -323,26 +324,27 @@ class PackageAProductionIngestionRuntime:
                 )
                 if not inbox.processable:
                     if inbox.status != "received":
-                        raise IngestionPersistenceError(
+                        deferred_inbox_error = IngestionPersistenceError(
                             f"Package A inbox delivery is not processable: {inbox.status}"
                         )
-                    replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
-                    status = str(replay["job_status"])
-                    if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
-                        status = "duplicate"
-                    worker_receipt = PackageAWorkerReceipt(
-                        parse_job_id=parse_job_id,
-                        parse_attempt_id=replay.get("parse_attempt_id"),
-                        status=status,
-                        acked_after_domain_commit=True,
-                        indexable_snapshot_id=replay.get("indexable_snapshot_id"),
-                        outbox_event_id=replay.get("outbox_event_id"),
-                        handoff_idempotency_key=replay.get("handoff_idempotency_key"),
-                        outbox_idempotency_key=replay.get("outbox_idempotency_key"),
-                        dead_letter_id=replay.get("dead_letter_id"),
-                        failure_code=replay.get("failure_code"),
-                        duplicate_delivery=True,
-                    )
+                    else:
+                        replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
+                        status = str(replay["job_status"])
+                        if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
+                            status = "duplicate"
+                        worker_receipt = PackageAWorkerReceipt(
+                            parse_job_id=parse_job_id,
+                            parse_attempt_id=replay.get("parse_attempt_id"),
+                            status=status,
+                            acked_after_domain_commit=True,
+                            indexable_snapshot_id=replay.get("indexable_snapshot_id"),
+                            outbox_event_id=replay.get("outbox_event_id"),
+                            handoff_idempotency_key=replay.get("handoff_idempotency_key"),
+                            outbox_idempotency_key=replay.get("outbox_idempotency_key"),
+                            dead_letter_id=replay.get("dead_letter_id"),
+                            failure_code=replay.get("failure_code"),
+                            duplicate_delivery=True,
+                        )
                 else:
                     worker_receipt = self._process_first_seen_delivery(
                         repo=repo,
@@ -354,6 +356,8 @@ class PackageAProductionIngestionRuntime:
         except PackageARejectDeliveryError:
             await delivery.reject(requeue=False)
             raise
+        if deferred_inbox_error is not None:
+            raise deferred_inbox_error
         await self._settle_delivery_after_domain_commit(
             delivery=delivery,
             worker_receipt=worker_receipt,
