@@ -924,6 +924,8 @@ class PackageAProductionIngestionRuntime:
             raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
         if any(headers.get(name) is None for name in counter_names):
             raise PackageARejectDeliveryError("delivery outbox header mismatch: publish counters")
+        if headers.get("replayed_from_dlq") is True and replay_count < 1:
+            raise PackageARejectDeliveryError("delivery outbox header mismatch: replay_count")
         retry_attempt_no = payload.get("retry_attempt_no")
         expected_retry_count = 0
         if retry_attempt_no is not None:

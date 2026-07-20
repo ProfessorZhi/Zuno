@@ -8,7 +8,7 @@ from zuno.knowledge.ingestion.worker import (
     package_a_rabbitmq_topology,
 )
 from zuno.platform.database.foundation import OutboxEventRecord
-from zuno.platform.queue import PostgresOutboxRabbitMQPublisher
+from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTransport
 
 
 def test_package_a_rabbitmq_topology_uses_canonical_defaults() -> None:
@@ -42,6 +42,10 @@ def test_package_a_queue_worker_does_not_consume_after_publish_failure() -> None
 
 def test_package_a_queue_worker_replays_one_dead_letter_delivery() -> None:
     asyncio.run(_assert_package_a_queue_worker_replays_one_dead_letter_delivery())
+
+
+def test_package_a_rabbitmq_replay_increments_outbox_replay_count() -> None:
+    asyncio.run(_assert_package_a_rabbitmq_replay_increments_outbox_replay_count())
 
 
 def test_outbox_publisher_claims_only_configured_topics(monkeypatch) -> None:
@@ -400,6 +404,45 @@ async def _assert_package_a_queue_worker_replays_one_dead_letter_delivery() -> N
         ("get", ("zuno.ingestion.parse.dlq", 0.25)),
         ("replay", ("dead-letter-event-1", "zuno.ingestion.parse", "trace-dlq-replay")),
         ("ack", "dead-letter-event-1"),
+    ]
+
+
+async def _assert_package_a_rabbitmq_replay_increments_outbox_replay_count() -> None:
+    published: list[dict] = []
+
+    class FakeExchange:
+        async def publish(self, message, *, routing_key):
+            published.append({"headers": dict(message.headers or {}), "routing_key": routing_key})
+
+    delivery = SimpleNamespace(
+        message_id="dead-letter-event-1",
+        payload={"event_id": "dead-letter-event-1"},
+        headers={
+            "tenant_id": "tenant-a",
+            "trace_id": "trace-before-replay",
+            "outbox_publish_attempt": 1,
+            "outbox_retry_count": 0,
+            "outbox_replay_count": 0,
+        },
+    )
+    topology = package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={}))
+    transport = RabbitMQTransport("amqp://unused")
+    transport._exchanges[topology.exchange] = FakeExchange()
+
+    await transport.replay_dead_letter(topology, delivery, replay_trace_id="trace-dlq-replay")
+
+    assert published == [
+        {
+            "headers": {
+                "tenant_id": "tenant-a",
+                "trace_id": "trace-dlq-replay",
+                "outbox_publish_attempt": 1,
+                "outbox_retry_count": 0,
+                "outbox_replay_count": 1,
+                "replayed_from_dlq": True,
+            },
+            "routing_key": "ingestion.parse.requested",
+        }
     ]
 
 

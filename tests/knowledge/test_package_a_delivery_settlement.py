@@ -299,6 +299,13 @@ def test_package_a_rejects_outbox_ordering_header_mismatch_without_requeue() -> 
     _assert_rejected_parse_delivery(delivery, "delivery outbox header mismatch: ordering_key")
 
 
+def test_package_a_rejects_dlq_replay_without_replay_counter_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.headers["replayed_from_dlq"] = True
+
+    _assert_rejected_parse_delivery(delivery, "delivery outbox header mismatch: replay_count")
+
+
 def test_package_a_lineage_validator_requires_payload_to_match_postgres_context() -> None:
     payload = _lineage_payload()
     context = _lineage_context()

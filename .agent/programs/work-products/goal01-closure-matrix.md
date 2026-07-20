@@ -748,4 +748,17 @@ Package A upload hash/default no-local-fallback and explicit durable adapter tes
 PHASE11 remains in_progress; this is Package A upload default-path boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A RabbitMQ DLQ replay counter lineage：
+
+```text
+RabbitMQTransport.replay_dead_letter now increments outbox_replay_count while preserving DLQ delivery headers.
+PackageAProductionIngestionRuntime rejects replayed_from_dlq=True deliveries whose outbox_replay_count is still below 1 before Worker Inbox.
+The focused queue-worker test proves replay publish headers carry outbox_replay_count=1.
+The integration/fault test proves a forged replay marker without a replay counter is rejected before IngestionUnitOfWork.
+py_compile passed.
+Package A queue worker and delivery settlement tests passed: 47 passed.
+Package A DLQ replay counter integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A RabbitMQ replay lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

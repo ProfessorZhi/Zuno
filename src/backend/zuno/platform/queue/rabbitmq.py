@@ -205,6 +205,7 @@ class RabbitMQTransport:
         headers = dict(delivery.headers)
         headers["trace_id"] = replay_trace_id
         headers["replayed_from_dlq"] = True
+        headers["outbox_replay_count"] = int(headers.get("outbox_replay_count", 0)) + 1
         message = aio_pika.Message(
             body=json.dumps(delivery.payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             content_type="application/json",

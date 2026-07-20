@@ -1129,6 +1129,28 @@ py_compile passed
 Package A upload hash/default no-local-fallback and explicit durable adapter tests passed: 4 passed
 ```
 
+2026-07-20 Package A RabbitMQ DLQ replay counter lineage：
+
+- `RabbitMQTransport.replay_dead_letter(...)` 现在重新发布 DLQ delivery 时会保留原 header，并将 `outbox_replay_count` 递增后再发布回 Package A parse queue。
+- `PackageAProductionIngestionRuntime._validate_delivery_outbox_headers(...)` 现在在 Worker Inbox 前拒绝 `replayed_from_dlq=True` 但 `outbox_replay_count < 1` 的 delivery。
+- 该 gate 防止伪造 replay 标记或未计数的 DLQ replay delivery 进入 PostgreSQL Inbox / ParseAttempt / Lease，保持 RabbitMQ replay 与 outbox lineage 可审计。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/queue/rabbitmq.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_queue_worker.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_package_a_rejects_dlq_replay_without_replay_counter_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker and delivery settlement tests passed: 47 passed
+Package A DLQ replay counter integration/fault test passed: 1 passed
+```
+
 2026-07-20 Package A retry attempt number pre-Inbox gate：
 
 - `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。
