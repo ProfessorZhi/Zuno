@@ -715,4 +715,15 @@ Package A message version header mismatch integration/fault test passed: 1 passe
 PHASE11 remains in_progress; this is Package A RabbitMQ contract-version lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A payload tenant pre-Inbox lineage：
+
+```text
+PackageAProductionIngestionRuntime now validates payload tenant_id against envelope/header tenant_id before Worker Inbox.
+The integration/fault test proves a payload tenant-b delivery with tenant-a envelope/header is rejected before IngestionUnitOfWork.
+py_compile passed.
+Package A delivery settlement, retry boundary, and queue worker tests passed: 51 passed.
+Package A payload tenant mismatch integration/fault test passed: 1 passed.
+PHASE11 remains in_progress; this is Package A tenant lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

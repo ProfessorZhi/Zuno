@@ -285,10 +285,13 @@ class PackageAProductionIngestionRuntime:
         ):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery is not a Package A parse request")
-        if envelope.tenant_id != delivery.headers.get("tenant_id"):
+        payload = envelope.payload or {}
+        if (
+            envelope.tenant_id != delivery.headers.get("tenant_id")
+            or str(payload.get("tenant_id")) != str(envelope.tenant_id)
+        ):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery tenant header does not match envelope")
-        payload = envelope.payload or {}
         header_workspace_id = delivery.headers.get("workspace_id")
         if (
             header_workspace_id is None

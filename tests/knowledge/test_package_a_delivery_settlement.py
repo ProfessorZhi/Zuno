@@ -239,6 +239,19 @@ def test_package_a_rejects_retry_policy_mismatch_without_requeue() -> None:
     _assert_rejected_parse_delivery(delivery, "delivery retry policy mismatch: max_attempts")
 
 
+def test_package_a_rejects_payload_tenant_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={
+                "tenant_id": "tenant-b",
+                "parse_job_id": "job-1",
+            }
+        )
+    )
+
+    _assert_rejected_parse_delivery(delivery, "delivery tenant header does not match envelope")
+
+
 def test_package_a_rejects_workspace_header_mismatch_without_requeue() -> None:
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
     delivery.headers["workspace_id"] = "workspace-b"
@@ -584,6 +597,7 @@ def _envelope(
 ) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
+        "tenant_id": "tenant-a",
         "workspace_id": "workspace-a",
         "security_epoch_ref": "security-epoch-a",
         "max_attempts": 2,
