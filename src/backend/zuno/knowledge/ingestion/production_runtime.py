@@ -34,6 +34,12 @@ class PackageAObjectVerificationError(IngestionPersistenceError):
         self.failure_code = failure_code
 
 
+class PackageAParserIdentityError(IngestionPersistenceError):
+    def __init__(self, message: str, *, failure_code: str) -> None:
+        super().__init__(message)
+        self.failure_code = failure_code
+
+
 class AckableDelivery(Protocol):
     message_id: str
     payload: dict[str, Any]
@@ -390,6 +396,42 @@ class PackageAProductionIngestionRuntime:
         )
         result = ParseGateway.submit_parse_job(request)
         snapshot = ParseGateway.get_job_snapshot(result.job_id)
+        try:
+            self._validate_parser_identity(
+                result=result,
+                snapshot=snapshot,
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+            )
+        except PackageAParserIdentityError as exc:
+            repo.fail_parse_attempt(
+                parse_attempt_id=parse_attempt_id,
+                parse_job_id=parse_job_id,
+                tenant_id=tenant_id,
+                worker_id=self.worker_id,
+                fencing_token=fencing_token,
+                status="dead_letter",
+                failure_code=exc.failure_code,
+            )
+            dead_letter = repo.record_dead_letter(
+                dead_letter_id=f"dead-letter:{parse_attempt_id}",
+                tenant_id=tenant_id,
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                source_ref=str(context["storage_uri"]),
+                failure_code=exc.failure_code,
+                retryable=False,
+                retry_count=int(context["attempt_count"]) + 1,
+                rabbitmq_dead_letter_ref=f"rabbitmq-dlq:{envelope.message_id}",
+                payload={"parse_job_id": parse_job_id, "status": "parser_identity_mismatch"},
+            )
+            return PackageAWorkerReceipt(
+                parse_job_id=parse_job_id,
+                parse_attempt_id=parse_attempt_id,
+                status="dead_letter",
+                acked_after_domain_commit=False,
+                dead_letter_id=dead_letter.ref,
+            )
         if result.status != "succeeded" or result.document is None:
             retryable = bool(result.failure and result.failure.retryable)
             terminal_status = self._failure_terminal_status(
@@ -709,6 +751,19 @@ class PackageAProductionIngestionRuntime:
     def _quality_failure_code(quality_gate) -> str:
         return f"quality_gate_{str(quality_gate.verdict).lower()}"
 
+    @staticmethod
+    def _validate_parser_identity(*, result, snapshot, parse_job_id: str, parse_attempt_id: str) -> None:
+        if str(result.job_id) != parse_job_id:
+            raise PackageAParserIdentityError(
+                "Parser Gateway result job_id does not match PostgreSQL ParseJob",
+                failure_code="parser_job_identity_mismatch",
+            )
+        if result.status == "succeeded" and str(snapshot.parse_attempt_id) != parse_attempt_id:
+            raise PackageAParserIdentityError(
+                "Parser Gateway snapshot parse_attempt_id does not match PostgreSQL ParseAttempt",
+                failure_code="parser_attempt_identity_mismatch",
+            )
+
 
 __all__ = [
     "PackageAProductionIngestionRuntime",
@@ -716,6 +771,7 @@ __all__ = [
     "PACKAGE_A_PARSE_CONSUMER_MODULE",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "PackageAObjectVerificationError",
+    "PackageAParserIdentityError",
     "PackageARejectDeliveryError",
     "PackageAUploadCommand",
     "PackageAUploadReceipt",

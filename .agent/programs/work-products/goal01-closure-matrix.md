@@ -323,4 +323,17 @@ Gate B quality review integration was attempted and is environment_blocked by Po
 PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
 ```
 
+2026-07-20 Package A Parser Gateway identity gate：
+
+```text
+PackageAProductionIngestionRuntime now validates Parser Gateway result.job_id against the PostgreSQL ParseJob and successful snapshot.parse_attempt_id against the current append-only ParseAttempt.
+Identity mismatch raises PackageAParserIdentityError and is recorded as a terminal PostgreSQL dead_letter receipt in the same UoW.
+After domain commit, RabbitMQ settlement rejects(requeue=false), so parser-generated alternate Job/Attempt IDs cannot enter ParseSnapshot, SourceSpan, QualityDecision, or Indexable handoff.
+Added Gate B focused integration coverage for successful parse with mismatched snapshot attempt -> dead_letter without snapshot persistence.
+py_compile passed.
+Package A delivery settlement and parser identity unit tests passed: 11 passed.
+Gate B parser identity integration was attempted and is environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade.
+PHASE11 remains in_progress; this is Package A completion_candidate implementation evidence, not Gate B completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

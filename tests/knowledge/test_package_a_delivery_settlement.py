@@ -8,6 +8,7 @@ from zuno.knowledge.ingestion import (
     PACKAGE_A_PARSE_CONTRACT_NAME,
     PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionIngestionRuntime,
+    PackageAParserIdentityError,
     PackageARejectDeliveryError,
     PackageAWorkerReceipt,
 )
@@ -179,6 +180,45 @@ def test_package_a_quality_failure_code_uses_verdict() -> None:
         verdict = "REVIEW"
 
     assert PackageAProductionIngestionRuntime._quality_failure_code(_Gate()) == "quality_gate_review"
+
+
+def test_package_a_parser_identity_validator_requires_current_job_and_attempt() -> None:
+    class _Result:
+        job_id = "parse-job-a"
+        status = "succeeded"
+
+    class _Snapshot:
+        parse_attempt_id = "parse-job-a:attempt:1"
+
+    PackageAProductionIngestionRuntime._validate_parser_identity(
+        result=_Result(),
+        snapshot=_Snapshot(),
+        parse_job_id="parse-job-a",
+        parse_attempt_id="parse-job-a:attempt:1",
+    )
+
+    class _WrongJobResult:
+        job_id = "parse-job-b"
+        status = "succeeded"
+
+    with pytest.raises(PackageAParserIdentityError, match="result job_id"):
+        PackageAProductionIngestionRuntime._validate_parser_identity(
+            result=_WrongJobResult(),
+            snapshot=_Snapshot(),
+            parse_job_id="parse-job-a",
+            parse_attempt_id="parse-job-a:attempt:1",
+        )
+
+    class _WrongAttemptSnapshot:
+        parse_attempt_id = "parse-job-a:attempt:2"
+
+    with pytest.raises(PackageAParserIdentityError, match="snapshot parse_attempt_id"):
+        PackageAProductionIngestionRuntime._validate_parser_identity(
+            result=_Result(),
+            snapshot=_WrongAttemptSnapshot(),
+            parse_job_id="parse-job-a",
+            parse_attempt_id="parse-job-a:attempt:1",
+        )
 
 
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:

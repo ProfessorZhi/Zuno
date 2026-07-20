@@ -580,3 +580,27 @@ py_compile passed
 Package A delivery settlement and quality helper tests passed: 10 passed
 Gate B quality review integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
+
+2026-07-20 Package A Parser Gateway identity gate：
+
+- `PackageAProductionIngestionRuntime._validate_parser_identity(...)` 校验 Parser Gateway 返回的 `result.job_id` 必须等于 PostgreSQL `ParseJob`，成功 snapshot 的 `parse_attempt_id` 必须等于当前 append-only `ParseAttempt`。
+- 身份不一致时抛出 `PackageAParserIdentityError`，runtime 在同一 PostgreSQL UoW 内关闭 Attempt/Lease，写入 `ingestion_dead_letters`，并返回 `dead_letter` worker receipt。
+- 领域事务提交后 settlement 执行 `delivery.reject(requeue=False)`，防止另一套 Parser Gateway Job/Attempt ID 进入 ParseSnapshot、SourceSpan、QualityDecision 或 Indexable handoff。
+- 新增 Gate B focused integration test `test_gate_b_parser_attempt_identity_mismatch_dead_letters_without_snapshot`，覆盖成功 parse 但 snapshot attempt ID 不匹配时不写 ParseSnapshot、不生成 handoff。
+- 当前环境已真实尝试运行该 Gate B 测试，但 PostgreSQL `localhost:5432` 连接超时，测试在 Alembic upgrade 前阻塞；因此 PostgreSQL-backed parser identity evidence 仍为 environment_blocked，不计为 Gate B passed。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/__init__.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_parser_attempt_identity_mismatch_dead_letters_without_snapshot -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and parser identity unit tests passed: 11 passed
+Gate B parser identity integration attempted; environment_blocked by PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```

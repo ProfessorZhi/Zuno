@@ -1115,6 +1115,93 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
         engine.dispose()
 
 
+def test_gate_b_parser_attempt_identity_mismatch_dead_letters_without_snapshot(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Parser identity\nWrong attempt."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _succeeded_parse(_request):
+        return ParseDocumentResult(
+            job_id="parse-job:pkg-a:retry",
+            status="succeeded",
+            document=_low_confidence_document(content_hash=hashlib.sha256(content).hexdigest()),
+        )
+
+    def _wrong_attempt_snapshot(_job_id):
+        return ParseJobSnapshot(
+            job_id="parse-job:pkg-a:retry",
+            status="succeeded",
+            document_id="source:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            parser_id="native_markdown",
+            parser_format="markdown",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_attempt_id="parse-job:pkg-a:retry:attempt:999",
+            retryable=False,
+        )
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_succeeded_parse))
+    monkeypatch.setattr(ParseGateway, "get_job_snapshot", staticmethod(_wrong_attempt_snapshot))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "dead_letter"
+        assert receipt.acked_after_domain_commit is False
+        assert receipt.dead_letter_id == f"dead-letter:{receipt.parse_attempt_id}"
+        assert delivery.acked is False
+        assert delivery.nacked is False
+        assert delivery.rejected is True
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.status AS attempt_status,
+                           attempt.failure_code AS failure_code,
+                           lease.state AS lease_state,
+                           job.status AS job_status
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_status"] == "dead_letter"
+            assert row["failure_code"] == "parser_attempt_identity_mismatch"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "dead_letter"
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
+            assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
+    finally:
+        engine.dispose()
+
+
 def test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot(monkeypatch) -> None:
     engine = _engine()
     content = b"# Cancel\nDo not parse."
