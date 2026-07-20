@@ -44,7 +44,7 @@ def verify_phase11_post_closure_consistency() -> list[str]:
             "PHASE11 reopened in_progress",
             "- [ ] PHASE11 Durable Ingestion and Source Lineage",
         ],
-        "production readiness": ["PHASE11 reopened/in_progress", "PHASE08 ready", "PHASE12 仍 planned"],
+        "production readiness": ["PHASE11 reopened/in_progress", "PHASE08 ready", "PHASE12 planned"],
         "coordinator closure": ["status: reopened", "coordinator_approval: pending_reopened"],
     }
     for label, phrases in required.items():

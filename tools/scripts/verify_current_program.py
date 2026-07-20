@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
@@ -108,6 +109,7 @@ def _load_verifier(path: Path, module_name: str, function_name: str) -> list[str
     if spec is None or spec.loader is None:
         return [f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"]
     module = module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     function = getattr(module, function_name)
     return list(function())
@@ -118,8 +120,9 @@ def _load_verifier_function(path: Path, module_name: str, function_name: str):
     if spec is None or spec.loader is None:
         raise RuntimeError(
             f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"
-        )
+    )
     module = module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return getattr(module, function_name)
 
@@ -359,6 +362,14 @@ def verify_current_program() -> list[str]:
             / "verify_requirement_ledger_evidence_gate.py",
             "verify_requirement_ledger_evidence_gate",
             "verify_requirement_ledger_evidence_gate",
+        )
+    )
+    errors.extend(
+        str(issue)
+        for issue in _load_verifier(
+            REPO_ROOT / "tools" / "scripts" / "verify_utf8_doc_encoding.py",
+            "verify_utf8_doc_encoding",
+            "verify_utf8_doc_encoding",
         )
     )
 

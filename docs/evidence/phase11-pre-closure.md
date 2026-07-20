@@ -6,21 +6,31 @@ gate: pre_closure
 coordinator_review_required: true
 reopened_at: 2026-07-20
 
-## 缁撹
+## 结论
 
-PHASE11 Ingestion Closure Matrix 涓嶅啀瀛樺湪 `mandatory_open`锛汸HASE04 涓?PHASE05 渚濊禆鍧囧凡瀹屾垚 Coordinator Closure銆係ource lineage persistence verifier銆両nput runtime batch verifier 鍜?focused tests 鍧囧凡閫氳繃銆?
-## 瑕嗙洊
+本 Pre-Closure 不能继续作为 passed gate 使用。Goal01 audit 确认既有 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 与不完整 Human Review 证据不足以关闭 PHASE11。
 
-- Requirement Ledger锛歅HASE11 80 涓?mandatory requirement 宸插叿澶囦唬鐮併€乵igration銆佹祴璇曘€佽繍琛岃瘉鎹拰 evidence ref锛屽彲鏅嬪崌涓?`implementation_available`銆?- Durable Source Lineage锛歋ourceObject銆丏ocumentVersion銆丳arsePlan銆丳arseJob銆丳arseAttempt銆丳arseSnapshot銆丼ourceSpan銆丵ualityGateDecision銆両ndexableDocumentSnapshot銆丱utbox 鍜?Dead Letter 鎸佷箙鍖栬〃宸茬撼鍏?schema registry 鍜?migration chain銆?- Runtime Batch锛歀ocalObjectStore銆丼QLiteDurableIngestionStore銆丳arserWorker銆丵ueue/Outbox/Reconciler銆乴ease/fencing銆乫ormat preservation銆乨elete/legal hold/restore verification銆乼arget-blocked OCR/VLM diagnostics 鍧囩敱 verifier 瑕嗙洊銆?
-## 宸茶繍琛屽懡浠?
-```powershell
-python tools/scripts/verify_phase11_ingestion_source_lineage.py
-python tools/scripts/verify_input_runtime_batch.py
-pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
-```
+PHASE11 当前必须保持 `in_progress`，直到 P11-T01 到 P11-T08 的完整生产默认路径、故障恢复、Parser Adapter、Human Review、Snapshot Handoff、Delete/Restore 和 Legacy Cutover 证据全部补齐。
 
-## 鏈瘉鏄?
-PHASE11 implementation available 涓嶇瓑浜?production ready銆乹uality proven 鎴?PHASE12 Knowledge completed锛涘閮?RabbitMQ/OCR/VLM 鐢熶骇渚濊禆涓嶅彲鐢ㄦ椂浠嶅繀椤绘樉绀?target-blocked锛屼笉寰椾吉閫犳垚鍔熴€?
-## 2026-07-20 Goal01 Reopen Audit
+## 保留证据
 
-本 Pre-Closure 不能继续作为 passed gate 使用。LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 与不完整 Human Review 证据不足以关闭 PHASE11。重新关闭前必须补齐 P11-T01～P11-T08 的完整生产默认路径和故障证据。
+以下证据保留为部分实现线索，不再作为 completed 证明：
+
+- `docs/evidence/input-runtime-batch.md`
+- `docs/evidence/phase11-ingestion-source-lineage.md`
+- `tools/scripts/verify_phase11_ingestion_source_lineage.py`
+- `tests/repo/test_phase11_ingestion_source_lineage.py`
+- `tests/integration/test_phase11_ingestion_persistence_runtime.py`
+
+## 缺口
+
+- 生产默认 upload/parser 路径尚未证明完整进入 PostgreSQL Repository/UoW。
+- PHASE11 默认路径尚未证明接入 PHASE04 S3/MinIO Object Store。
+- RabbitMQ dispatch、ACK、retry、DLQ、replay、reconnect、cancel/deadline 和 worker crash 尚未作为 PHASE11 默认路径完成证据。
+- OCR/VLM 仍不能只用 `target_blocked` 作为完成证明。
+- Human Review 缺少完整 ReviewTask、ReviewDecision / Receipt 和状态机证据。
+- Delete / Legal Hold / Restore / Verification 与 Legacy Cutover 仍需完整证明。
+
+## 重新运行条件
+
+只有 PHASE11 Closure Matrix 的 Mandatory 行全部达到 `completion_candidate` 或 `completed`，且 Requirement Ledger 中 PHASE11 80 项均有真实 Code/Test/Runtime Evidence 后，才能重新运行 PHASE11 Pre-Closure。

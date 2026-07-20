@@ -41,6 +41,7 @@ REQUIRED_PATHS = [
     "docs/history/programs/README.md",
     "tools/agent/render_architecture.py",
     "tools/scripts/verify_docs_entrypoints.py",
+    "tools/scripts/verify_utf8_doc_encoding.py",
 ]
 
 

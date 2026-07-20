@@ -1,77 +1,76 @@
 # Goal01 Closure Matrix
 
 status: reopened
-
-frozen_at: 2026-07-19
-
+reopened_at: 2026-07-20
 branch: `integration/goal01-control-plane-model-ingestion`
+start_sha_after_fetch: `5156ed944eb797a8c41210cef19b04f023c756c0`
 
-start_sha_after_fetch: `36130924f5602c894d3d89eaaf6cefc3c8624a89`
+说明：本文记录 PHASE05、PHASE06、PHASE07、PHASE11 的有限 Closure Matrix。PHASE05、PHASE06、PHASE07 保留 `fd43babd` 中原始 Matrix 内容；PHASE11 经 Goal01 audit 重新打开，本节全部 Mandatory 行降为 `target_not_current`，不得作为 Closure Evidence 使用。
 
-origin_main_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
-
-璇存槑锛氭湰鏂囧喕缁?PHASE05銆丳HASE06銆丳HASE07銆丳HASE11 鐨勬湁闄?Closure Matrix銆傚悗缁彧澶勭悊鏈枃涓?`mandatory_open` 鎴?`completion_candidate` 琛岋紱闄ら潪娴嬭瘯璇佹槑鏋舵瀯缂洪櫡锛屼笉缁х画寮€鏀惧紡鎵╄寖鍥淬€?
 ## PHASE05 PEP/PDP Cutover Matrix
 
-| 鍏ュ彛 | 褰撳墠褰掔被 | 鐘舵€?| 璇佹嵁 | 鍓╀綑澶勭悊 |
+| 入口 | 当前归类 | 状态 | 证据 | 剩余处理 |
 | --- | --- | --- | --- | --- |
-| Execute / Side Effect | `canonical_security_guard` | `completion_candidate` | Tool Runtime approval fact sink銆乸re-effect hash/epoch/deadline validation銆乻ink outage fail-closed fault tests | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Approval / Resume | `canonical_security_guard` | `completion_candidate` | workspace approval resume `task.resume.*` product action guard 涓?403 deny test | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Artifact Read / Download | `canonical_security_guard` | `completion_candidate` | workspace `artifact.read` / `artifact.download` product action guard銆乻tartup Postgres guard wiring | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Citation / Source Access | `canonical_security_guard` | `completion_candidate` | workspace `citation.read` guard for artifact response and task snapshot | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Admin 绠＄悊闈細MCP HTTP/SSE + stdio | `canonical_security_guard` | `completion_candidate` | MCP admin override guard銆乻tartup guard wiring銆乨eny-before-DAO tests | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Admin 绠＄悊闈細Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File | `canonical_security_guard` | `completion_candidate` | 鍏变韩 `security_admin_actions`銆乿erifier銆乪vidence 鍜?`test_phase05_admin_action_reauthorization.py` 宸茶鐩?Agent/Tool/Dialog/MCP Agent/LLM/Knowledge/Knowledge File admin override deny-before-DAO | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| Secret Lease | `canonical_security_guard` | `completion_candidate` | `SecurityRepository.record_secret_ref` / `issue_secret_lease` / `validate_secret_lease` 瑕嗙洊 wrong audience銆乪xpired lease銆乺evoked secret | Pre-Closure 鍓嶈仛鍚堥獙璇?|
-| External Export | `future_runtime_not_current` | `not_current` | 褰撳墠 active runtime 鏃犳寮?external export 榛樿璺緞锛汸HASE06 external sink isolation 宸茶瘉鏄庡閮?sink 涓嶅啋鍏呬笟鍔℃垚鍔?| 褰掑睘鍚庣画 Product/Publication/Integration Phase锛屼笉鑳介樆濉?PHASE05 褰撳墠榛樿璺緞 closure |
-| Legacy Approval Boolean 鍒?Decision/Ref | `temporary_versioned_adapter` | `completion_candidate` | Tool Runtime `approved: bool` 宸茬粦瀹?`temporary.adapter.tool_runtime.approved_bool` 涓庡垹闄?Phase `PHASE16`锛泈orkspace 榛樿 resume path 宸蹭紶鍏?`security-approval-decision:*` decision ref锛汸HASE05 verifier 闃绘鏂板 legacy boolean owner | Pre-Closure 鍓嶈仛鍚堥獙璇?|
+| Execute / Side Effect | `canonical_security_guard` | `completion_candidate` | Tool Runtime approval fact sink、pre-effect hash/epoch/deadline validation、sink outage fail-closed fault tests | Pre-Closure 前聚合验证 |
+| Approval / Resume | `canonical_security_guard` | `completion_candidate` | workspace approval resume `task.resume.*` product action guard 与 403 deny test | Pre-Closure 前聚合验证 |
+| Artifact Read / Download | `canonical_security_guard` | `completion_candidate` | workspace `artifact.read` / `artifact.download` product action guard、startup Postgres guard wiring | Pre-Closure 前聚合验证 |
+| Citation / Source Access | `canonical_security_guard` | `completion_candidate` | workspace `citation.read` guard for artifact response and task snapshot | Pre-Closure 前聚合验证 |
+| Admin 管理面：MCP HTTP/SSE + stdio | `canonical_security_guard` | `completion_candidate` | MCP admin override guard、startup guard wiring、deny-before-DAO tests | Pre-Closure 前聚合验证 |
+| Admin 管理面：Agent / Tool / Dialog / MCP Agent / LLM / Knowledge / Knowledge File | `canonical_security_guard` | `completion_candidate` | 共享 `security_admin_actions`、verifier、evidence 和 `test_phase05_admin_action_reauthorization.py` 已覆盖 Agent/Tool/Dialog/MCP Agent/LLM/Knowledge/Knowledge File admin override deny-before-DAO | Pre-Closure 前聚合验证 |
+| Secret Lease | `canonical_security_guard` | `completion_candidate` | `SecurityRepository.record_secret_ref` / `issue_secret_lease` / `validate_secret_lease` 覆盖 wrong audience、expired lease、revoked secret | Pre-Closure 前聚合验证 |
+| External Export | `future_runtime_not_current` | `not_current` | 当前 active runtime 无正式 external export 默认路径；PHASE06 external sink isolation 已证明外部 sink 不冒充业务成功 | 归属后续 Product/Publication/Integration Phase，不能阻塞 PHASE05 当前默认路径 closure |
+| Legacy Approval Boolean 到 Decision/Ref | `temporary_versioned_adapter` | `completion_candidate` | Tool Runtime `approved: bool` 已绑定 `temporary.adapter.tool_runtime.approved_bool` 与删除 Phase `PHASE16`；workspace 默认 resume path 已传入 `security-approval-decision:*` decision ref；PHASE05 verifier 阻止新增 legacy boolean owner | Pre-Closure 前聚合验证 |
 
 ## PHASE06 Adapter Cutover Matrix
 
-| 杩愯鍩?| Producer | Envelope / Adapter | 榛樿鎺ョ嚎鐐?| 澶辫触绛栫暐 | 鐘舵€?| 鍓╀綑澶勭悊 |
+| 运行域 | Producer | Envelope / Adapter | 默认接线点 | 失败策略 | 状态 | 剩余处理 |
 | --- | --- | --- | --- | --- | --- | --- |
-| Agent | Agent runtime / workspace runtime | typed runtime event / span adapter | workspace runtime security and retrieval spans | local append-only first | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Model | Model Gateway runtime | model attempt / runtime event envelope | Gateway-owned call path | provider failure becomes attempt failure, not audit success | `completion_candidate` | `PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 宸叉秷璐?Gateway trace_event 鍐欏叆 model span/runtime event/audit锛汸HASE06 verifier 闃叉柇绾匡紱PHASE07 closure 浠嶉渶鐙珛渚濊禆鎵瑰噯 |
-| Knowledge | Agentic retrieval / ingestion | retrieval trace / citation metrics | workspace retrieval observability | raw event retained, query freshness exposed | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Capability | Capability / Skill runtime | capability plan/runtime event | workspace capability snapshot | local facts persist before external sink | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Tool | Tool Runtime | approval/security span adapter | Tool Runtime approval path | sink outage fail-closed before side effect | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Security | Security repository / audit | immutable audit ledger adapter | Security pre-effect/audit facts | audit not sampled; failure visible | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Infrastructure | DB / outbox / external sink | dead-letter and local fact envelope | observability persistence adapter | external sink failure does not roll back local facts | `completion_candidate` | 鑱氬悎楠岃瘉 |
-| Product Query | Observability query service | read-only freshness/completeness response | `/api/v1/observability/traces/{trace_id}` + product query service | returns freshness/completeness and dead letters; non-admin API access returns 403 | `completion_candidate` | 鑱氬悎楠岃瘉 |
+| Agent | Agent runtime / workspace runtime | typed runtime event / span adapter | workspace runtime security and retrieval spans | local append-only first | `completion_candidate` | 聚合验证 |
+| Model | Model Gateway runtime | model attempt / runtime event envelope | Gateway-owned call path | provider failure becomes attempt failure, not audit success | `completion_candidate` | `PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 已消费 Gateway trace_event 写入 model span/runtime event/audit；PHASE06 verifier 防断线；PHASE07 closure 仍需独立依赖批准 |
+| Knowledge | Agentic retrieval / ingestion | retrieval trace / citation metrics | workspace retrieval observability | raw event retained, query freshness exposed | `completion_candidate` | 聚合验证 |
+| Capability | Capability / Skill runtime | capability plan/runtime event | workspace capability snapshot | local facts persist before external sink | `completion_candidate` | 聚合验证 |
+| Tool | Tool Runtime | approval/security span adapter | Tool Runtime approval path | sink outage fail-closed before side effect | `completion_candidate` | 聚合验证 |
+| Security | Security repository / audit | immutable audit ledger adapter | Security pre-effect/audit facts | audit not sampled; failure visible | `completion_candidate` | 聚合验证 |
+| Infrastructure | DB / outbox / external sink | dead-letter and local fact envelope | observability persistence adapter | external sink failure does not roll back local facts | `completion_candidate` | 聚合验证 |
+| Product Query | Observability query service | read-only freshness/completeness response | `/api/v1/observability/traces/{trace_id}` + product query service | returns freshness/completeness and dead letters; non-admin API access returns 403 | `completion_candidate` | 聚合验证 |
 
 ## PHASE07 Runtime Closure Matrix
 
-| 鑼冨洿 | 褰撳墠褰掔被 | 鐘舵€?| 璇佹嵁 | 鍓╀綑澶勭悊 |
+| 范围 | 当前归类 | 状态 | 证据 | 剩余处理 |
 | --- | --- | --- | --- | --- |
-| Provider SDK bypass | `canonical_gateway_boundary` | `completion_candidate` | `verify_model_gateway_bypass.py --strict` 鐩爣宸茶揪鍒?strict-zero锛屼絾鍙厑璁?Pre-Closure 鍓嶈繍琛屼竴娆?| PHASE05/06 closure 鍚庤繍琛屼竴娆?strict gate |
-| Model / Role / Capability Registry | `canonical_gateway_runtime` | `completion_candidate` | Model Gateway runtime batch evidence | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Routing Policy / Immutable Snapshot | `canonical_gateway_runtime` | `completion_candidate` | Routing snapshot and policy tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Provider Adapter SPI | `canonical_gateway_runtime` | `completion_candidate` | adapter boundary and conformance tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| ModelAttempt lifecycle | `canonical_gateway_runtime` | `completion_candidate` | attempt lifecycle tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Structured Output Validation | `canonical_gateway_runtime` | `completion_candidate` | structured validation / repair evidence | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Streaming / Timeout / Cancel | `canonical_gateway_runtime` | `completion_candidate` | streaming, timeout, cancel tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Usage Reservation / Settlement | `canonical_gateway_runtime` | `completion_candidate` | reservation and settlement tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Retry / Fallback / Circuit | `canonical_gateway_runtime` | `completion_candidate` | retry/fallback/circuit tests | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Trace / Audit 鎺ュ叆 | `depends_on_phase06` | `completion_candidate` | PHASE06 Coordinator Closure 宸叉壒鍑嗭紱`PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 涓?PHASE06 persistence verifier 宸茶瘉鏄?Gateway trace/audit 鎺ュ叆 | PHASE07 Pre-Closure 鑱氬悎楠岃瘉 |
-| Chat / Embedding / Rerank / Judge 榛樿璺緞 | `canonical_gateway_runtime` | `completion_candidate` | default entry tests and bypass guard | PHASE05/06 Closure 鍚庤繘鍏?PHASE07 closure review |
+| Provider SDK bypass | `canonical_gateway_boundary` | `completion_candidate` | `verify_model_gateway_bypass.py --strict` 目标已达到 strict-zero，但只允许 Pre-Closure 前运行一次 | PHASE05/06 closure 后运行一次 strict gate |
+| Model / Role / Capability Registry | `canonical_gateway_runtime` | `completion_candidate` | Model Gateway runtime batch evidence | PHASE07 Pre-Closure 聚合验证 |
+| Routing Policy / Immutable Snapshot | `canonical_gateway_runtime` | `completion_candidate` | Routing snapshot and policy tests | PHASE07 Pre-Closure 聚合验证 |
+| Provider Adapter SPI | `canonical_gateway_runtime` | `completion_candidate` | adapter boundary and conformance tests | PHASE07 Pre-Closure 聚合验证 |
+| ModelAttempt lifecycle | `canonical_gateway_runtime` | `completion_candidate` | attempt lifecycle tests | PHASE07 Pre-Closure 聚合验证 |
+| Structured Output Validation | `canonical_gateway_runtime` | `completion_candidate` | structured validation / repair evidence | PHASE07 Pre-Closure 聚合验证 |
+| Streaming / Timeout / Cancel | `canonical_gateway_runtime` | `completion_candidate` | streaming, timeout, cancel tests | PHASE07 Pre-Closure 聚合验证 |
+| Usage Reservation / Settlement | `canonical_gateway_runtime` | `completion_candidate` | reservation and settlement tests | PHASE07 Pre-Closure 聚合验证 |
+| Retry / Fallback / Circuit | `canonical_gateway_runtime` | `completion_candidate` | retry/fallback/circuit tests | PHASE07 Pre-Closure 聚合验证 |
+| Trace / Audit 接入 | `depends_on_phase06` | `completion_candidate` | PHASE06 Coordinator Closure 已批准；`PostgresObservabilityRuntimeAdapter.record_model_gateway_trace_event` 与 PHASE06 persistence verifier 已证明 Gateway trace/audit 接入 | PHASE07 Pre-Closure 聚合验证 |
+| Chat / Embedding / Rerank / Judge 默认路径 | `canonical_gateway_runtime` | `completion_candidate` | default entry tests and bypass guard | PHASE05/06 Closure 后进入 PHASE07 closure review |
 
 ## PHASE11 Ingestion Closure Matrix
 
-| 鑼冨洿 | 褰撳墠褰掔被 | 鐘舵€?| 璇佹嵁 | 鍓╀綑澶勭悊 |
-| --- | --- | --- | --- | --- |
-| SourceObject upload init / commit | `canonical_ingestion_runtime` | `target_not_current` | source-lineage schema/repository + input runtime batch evidence | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| DocumentVersion / ParseSnapshot 鍒嗙 | `canonical_ingestion_runtime` | `target_not_current` | source-lineage schema/repository + persistence runtime tests | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| ParsePlan / Job / Attempt | `canonical_ingestion_runtime` | `target_not_current` | parse gateway/runtime tests + source-lineage persistence evidence | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| RabbitMQ dispatch / ACK / Retry / Dead Letter | `canonical_ingestion_runtime` | `target_not_current` | LocalQueue ACK/retry/dead-letter/replay verified锛汻abbitMQ target-blocked dependency probe does not fake production dependency | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Lease / Heartbeat / Fencing / Worker Crash Recovery | `canonical_ingestion_runtime` | `target_not_current` | ParseAttemptControl lease/fencing/late-result rejection and async worker/reconciler tests | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Native / PDF / Layout / OCR / VLM / Office / Archive Adapter | `mixed_current_future` | `target_not_current` | Native/PDF current adapters verified锛汷CR/VLM external target blocked with stable diagnostics and no fake index; Office/archive preservation boundary covered by input runtime batch | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| CanonicalDocumentIR | `canonical_ingestion_runtime` | `target_not_current` | ingestion contract tests | 鑱氬悎楠岃瘉 |
-| SourceSpan / TransformLedger | `canonical_ingestion_runtime` | `target_not_current` | SourceSpan provenance and TransformRecord loss/lineage evidence in input runtime batch | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Quality Gate / Human Review | `canonical_ingestion_runtime` | `target_not_current` | QualityReport PASS/DEGRADED/BLOCK and IndexableDocumentSnapshot quality FK gate verified; human review remains explicit degraded/block boundary | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| IndexableDocumentSnapshot Outbox Handoff | `canonical_ingestion_runtime` | `target_not_current` | Indexable snapshot persistence + outbox handoff tests | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Visibility Revoke | `canonical_ingestion_runtime` | `target_not_current` | deletion receipts and visibility revocation sequence covered by input runtime batch | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Legal Hold | `canonical_ingestion_runtime` | `target_not_current` | Legal Hold blocks purge only and does not restore revoked access | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Physical Delete / Restore / Verification | `canonical_ingestion_runtime` | `target_not_current` | Input/Knowledge/Object/Verification delete receipts and persistence restore tests | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
-| Legacy upload/parser 榛樿璺緞 Cutover | `temporary_versioned_adapter` | `target_not_current` | legacy chunks normalize to CanonicalDocumentIR with ACL/source-span provenance; default worker uses ParseGateway and durable store handoff | PHASE11 Pre-Closure 鑱氬悎楠岃瘉 |
+| 范围 | Current | Gap | Owner | 默认入口 | 状态转换 | Failure / Retry / Recovery | 测试 | Evidence | 状态 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SourceObject upload init / commit | 已有 source-lineage schema/repository 与 input runtime batch 线索 | 仍需证明生产默认 upload init/commit 进入 PostgreSQL UoW 与 PHASE04 Object Store，不以 SQLite/local object 作为完成证据 | Input / Document Ingestion | workspace/file upload commit path | initialized → committed / rejected | partial upload、hash mismatch、dedup conflict、tenant violation | 待补 PHASE11 focused integration/fault tests | `docs/evidence/phase11-ingestion-source-lineage.md` partial | `target_not_current` |
+| DocumentVersion 与 ParseSnapshot 分离 | 已有表和 repository 线索 | 需证明默认路径中文档内容版本与 parser/model/config/schema snapshot 不混用，并覆盖 reparse/concurrency | Input / Document Ingestion | canonical ingestion runtime | document_version_created → parse_snapshot_created | duplicate source、reparse、optimistic conflict | 待补 persistence/concurrency tests | partial source-lineage evidence | `target_not_current` |
+| ParsePlan / ParseJob / ParseAttempt | 已有 ParseAttemptControl 和 runtime batch 线索 | 需证明 ParsePlan/Job/Attempt 是生产默认 parser 调度路径，不只是本地 worker fixture | Input / Document Ingestion | parser gateway / worker | planned → queued → leased → running → succeeded / failed / cancelled | duplicate delivery、deadline、cancel、retry exhausted | 待补 integration/fault tests | partial runtime batch evidence | `target_not_current` |
+| PostgreSQL Repository/UoW | 已有 ingestion persistence 线索 | 需证明完整 SourceObject→Snapshot→Outbox 在正式 PostgreSQL transaction/UoW 内提交，禁止 `create_all()` 代替 migration | Input / Platform Database | IngestionUnitOfWork | begin → commit / rollback | transaction rollback、FK violation、idempotency conflict | 待补 PostgreSQL integration tests | partial migration evidence | `target_not_current` |
+| Object Store | PHASE04 已有 S3/MinIO adapter | PHASE11 默认 upload/parser 仍需接入同一 PHASE04 Object Store；不得建设第二套 Object 事实源 | Input / Infrastructure | object ref commit path | staged → committed → visible | partial upload、hash mismatch、duplicate/conflict、large payload ObjectRef | 待补 MinIO integration tests | PHASE04 evidence 可复用但未证明 PHASE11 cutover | `target_not_current` |
+| RabbitMQ dispatch / ACK / retry / DLQ / replay | LocalQueue 与 RabbitMQ target-blocked probe 只保留为线索 | 缺真实 RabbitMQ production default dispatch、publisher confirm、consumer ACK、retry exhausted、DLQ、replay、reconnect、cancel/deadline、worker crash 证据 | Input / Infrastructure Queue | outbox dispatcher / parser worker consumer | outbox_pending → published → delivered → acked / nacked / dead_lettered | duplicate、redelivery、connection loss、late ACK、crash | 待补 RabbitMQ fault tests | PHASE04 queue evidence 不能自动证明 PHASE11 default path | `target_not_current` |
+| Lease / Heartbeat / Fencing / Crash Recovery | 已有 lease/fencing/late-result rejection 线索 | 需证明生产 worker lease claim/renew/expire、heartbeat、fencing token、orphan reconciliation、idempotent commit | Input / Infrastructure Lease | parser worker attempt lease | claim → renew → expire / release → reconciled | lease loss、stale worker late result、worker restart | 待补 lease/crash fault tests | partial ParseAttemptControl evidence | `target_not_current` |
+| Parser Adapter Contract | Native/PDF 线索存在；OCR/VLM 为 target-blocked diagnostic | 缺统一 Native/PDF/Layout/OCR/VLM/Office/Archive contract 的可执行 adapter、ObjectRef input、typed failure、timeout/cancel/security/quality/version 证据 | Input Parser Adapter Owner | parser adapter router | routed → parsed_ir / typed_failure / fallback_review | corrupt/encrypted/oversized/provider failure/sandbox denial | 待补 adapter conformance suite | partial input runtime batch evidence | `target_not_current` |
+| CanonicalDocumentIR | 已有 ingestion contract tests 线索 | 需证明 schema round-trip、page/block/region/order/style/table/image refs，且 IR 不等于 Knowledge Chunk | Input / Document Ingestion | parser output contract | parsed → canonical_ir_validated | schema mismatch、normalization failure | 待补 golden/contract tests | partial contract evidence | `target_not_current` |
+| SourceSpan / TransformLedger | SourceSpan provenance 与 TransformRecord 线索存在 | 需证明 PDF citation、OCR bbox、table span、normalization provenance 可稳定回溯原始证据 | Input / Document Ingestion | source span builder | source_span_created → transform_recorded | missing coordinate、unstable span、normalization loss | 待补 golden/source-lineage tests | partial input runtime batch evidence | `target_not_current` |
+| Quality Gate / Human Review | QualityReport 与 FK gate 线索存在 | 缺 ReviewTask、ReviewDecision/Receipt、pending/approved/rejected/expired/cancelled、reviewer scope、security epoch、decision hash、duplicate decision、expiration 证据 | Input Quality / Human Review | quality gate before snapshot publish | measured → pass / block / review / fallback → approved / rejected / expired / cancelled | low coverage、layout conflict、OCR confidence、duplicate decision | 待补 review state-machine tests | partial quality gate evidence | `target_not_current` |
+| IndexableDocumentSnapshot Outbox Handoff | Indexable snapshot persistence 与 outbox handoff 线索存在 | 需证明 immutable snapshot hash、version/span/security/delete refs、idempotency key、duplicate handoff、outbox replay、Knowledge unavailable recovery | Input / Knowledge Handoff | snapshot handoff outbox | snapshot_ready → outbox_pending → handed_off / replayed | duplicate handoff、knowledge unavailable、outbox replay | 待补 handoff integration/fault tests | partial source-lineage evidence | `target_not_current` |
+| Delete / Legal Hold / Restore / Verification | 删除 receipt、legal hold、restore verification 线索存在 | 需证明 visibility revoke → cleanup request → physical delete → verification 的完整顺序，覆盖 delete during parse/after snapshot/duplicate/late result/restore 不恢复撤销授权 | Input / Security / Knowledge Handoff | delete lifecycle command | visibility_revoked → cleanup_requested → physically_deleted → verified / restored | legal hold、orphan attempt、late worker result、duplicate delete | 待补 delete/restore fault tests | partial input runtime batch evidence | `target_not_current` |
+| Legacy upload/parser Cutover | default worker uses ParseGateway 的线索存在 | 需搜索全部活跃 upload/parser 默认入口，并迁移到 canonical runtime、版本化 Adapter 或删除；禁止永久 dual-write/dual-runtime/implicit fallback | Input / Product Surface | active upload/parser API and worker entrypoints | legacy_active → canonical / versioned_adapter / removed | hidden fallback、dual runtime、ownerless parser | 待补 cutover inventory + guard tests | partial cutover evidence | `target_not_current` |
+
 ## 2026-07-20 PHASE11 Reopen Audit
 
-PHASE11 section 的旧 `completion_candidate` 全部降为 `target_not_current`。已有证据保留为线索，但 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 不能关闭 PHASE11。PHASE08 仍 ready；PHASE12 planned，等待 PHASE08 completed 与 PHASE11 completed。
+PHASE11 section 的旧 `completion_candidate` 全部降为 `target_not_current`。已有证据保留为线索，但 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 不能关闭 PHASE11。
+
+PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
