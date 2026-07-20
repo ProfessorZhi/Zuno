@@ -427,4 +427,15 @@ Package A persistence replay and delivery settlement tests passed: 20 passed.
 PHASE11 remains in_progress; this is Package A snapshot handoff replay implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Worker receipt handoff idempotency：
+
+```text
+PackageAWorkerReceipt now carries handoff_idempotency_key and outbox_idempotency_key.
+First-seen success receipts use IndexableDocumentSnapshotV1.idempotency_key and SnapshotOutboxEvent.idempotency_key; duplicate/redelivery receipts reuse the PostgreSQL replay fields.
+This makes ACK-after-domain-commit receipts expose the handoff/outbox idempotency facts needed to audit crash-after-commit-before-ACK recovery.
+py_compile passed.
+Package A delivery settlement and queue worker tests passed: 20 passed.
+PHASE11 remains in_progress; this is Package A worker receipt replay implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

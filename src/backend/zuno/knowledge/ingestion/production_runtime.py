@@ -91,6 +91,8 @@ class PackageAWorkerReceipt:
     retry_enqueued_after_domain_commit: bool = False
     indexable_snapshot_id: str | None = None
     outbox_event_id: str | None = None
+    handoff_idempotency_key: str | None = None
+    outbox_idempotency_key: str | None = None
     dead_letter_id: str | None = None
     duplicate_delivery: bool = False
 
@@ -248,6 +250,8 @@ class PackageAProductionIngestionRuntime:
                         acked_after_domain_commit=True,
                         indexable_snapshot_id=replay.get("indexable_snapshot_id"),
                         outbox_event_id=replay.get("outbox_event_id"),
+                        handoff_idempotency_key=replay.get("handoff_idempotency_key"),
+                        outbox_idempotency_key=replay.get("outbox_idempotency_key"),
                         dead_letter_id=replay.get("dead_letter_id"),
                         duplicate_delivery=True,
                     )
@@ -582,6 +586,8 @@ class PackageAProductionIngestionRuntime:
             acked_after_domain_commit=True,
             indexable_snapshot_id=indexable.ref,
             outbox_event_id=outbox.ref,
+            handoff_idempotency_key=indexable_snapshot.idempotency_key,
+            outbox_idempotency_key=snapshot_outbox.idempotency_key,
         )
 
     def _parse_requested_envelope(

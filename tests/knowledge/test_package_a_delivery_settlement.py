@@ -240,6 +240,8 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
                 "parse_attempt_id": "attempt-1",
                 "indexable_snapshot_id": "indexable-1",
                 "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": "handoff-idem-1",
+                "outbox_idempotency_key": "handoff-idem-1",
                 "dead_letter_id": None,
             }
 
@@ -263,6 +265,8 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
 
     assert receipt.duplicate_delivery is True
     assert delivery.acked is True
+    assert receipt.handoff_idempotency_key == "handoff-idem-1"
+    assert receipt.outbox_idempotency_key == "handoff-idem-1"
     assert calls[0]["consumer"] == "worker-from-config"
 
 

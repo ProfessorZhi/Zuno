@@ -776,3 +776,23 @@ pytest -q tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/
 py_compile passed
 Package A persistence replay and delivery settlement tests passed: 20 passed
 ```
+
+2026-07-20 Package A Worker receipt handoff idempotency：
+
+- `PackageAWorkerReceipt` 新增 `handoff_idempotency_key` 和 `outbox_idempotency_key`。
+- first-seen success path 返回 `IndexableDocumentSnapshotV1.idempotency_key` / `SnapshotOutboxEvent.idempotency_key`；duplicate/redelivery replay path 从 `load_parse_job_replay_receipt(...)` 返回的 PostgreSQL 字段填充同样的 receipt 字段。
+- 这让 RabbitMQ ACK 后的 worker receipt 明确携带它复用或创建的 Snapshot handoff/outbox 幂等事实，补齐 crash-after-commit-before-ACK 的可审计返回面。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and queue worker tests passed: 20 passed
+```
