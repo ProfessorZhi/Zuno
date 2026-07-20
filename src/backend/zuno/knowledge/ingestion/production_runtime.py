@@ -205,11 +205,18 @@ class PackageAProductionIngestionRuntime:
                 tenant_id=tenant_id,
             )
             if not inbox.processable:
+                replay = repo.load_parse_job_replay_receipt(parse_job_id=parse_job_id, tenant_id=tenant_id)
+                status = str(replay["job_status"])
+                if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
+                    status = "duplicate"
                 worker_receipt = PackageAWorkerReceipt(
                     parse_job_id=parse_job_id,
-                    parse_attempt_id=None,
-                    status="duplicate",
+                    parse_attempt_id=replay.get("parse_attempt_id"),
+                    status=status,
                     acked_after_domain_commit=True,
+                    indexable_snapshot_id=replay.get("indexable_snapshot_id"),
+                    outbox_event_id=replay.get("outbox_event_id"),
+                    dead_letter_id=replay.get("dead_letter_id"),
                     duplicate_delivery=True,
                 )
             else:

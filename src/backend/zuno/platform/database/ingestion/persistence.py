@@ -340,6 +340,44 @@ class IngestionRepository:
             raise IngestionPersistenceError(f"missing parse job: {parse_job_id}")
         return dict(row)
 
+    def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    job.status AS job_status,
+                    latest_attempt.parse_attempt_id,
+                    latest_attempt.status AS attempt_status,
+                    indexable.indexable_snapshot_id,
+                    outbox.outbox_event_id,
+                    dead_letter.dead_letter_id
+                FROM ingestion_parse_jobs AS job
+                LEFT JOIN LATERAL (
+                    SELECT parse_attempt_id, status
+                    FROM ingestion_parse_attempts
+                    WHERE parse_job_id = job.parse_job_id
+                    ORDER BY attempt_no DESC
+                    LIMIT 1
+                ) AS latest_attempt ON true
+                LEFT JOIN ingestion_parse_snapshots AS snapshot
+                  ON snapshot.parse_attempt_id = latest_attempt.parse_attempt_id
+                LEFT JOIN ingestion_indexable_document_snapshots AS indexable
+                  ON indexable.parse_snapshot_id = snapshot.parse_snapshot_id
+                LEFT JOIN ingestion_outbox_events AS outbox
+                  ON outbox.aggregate_ref = indexable.indexable_snapshot_id
+                 AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
+                LEFT JOIN ingestion_dead_letters AS dead_letter
+                  ON dead_letter.parse_attempt_id = latest_attempt.parse_attempt_id
+                WHERE job.parse_job_id = :parse_job_id
+                  AND job.tenant_id = :tenant_id
+                """
+            ),
+            {"parse_job_id": parse_job_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse job replay receipt: {parse_job_id}")
+        return dict(row)
+
     def claim_parse_attempt_lease(
         self,
         *,

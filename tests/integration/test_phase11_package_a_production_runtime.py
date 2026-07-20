@@ -516,6 +516,129 @@ def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) 
         engine.dispose()
 
 
+def test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Redelivery\nCommitted before ACK."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    delivery.redelivered = True
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(
+            bucket="bucket",
+            object_name="tenant-a/workspace-a/retry.md",
+            content=content,
+        ),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _unexpected_parse(_request):
+        raise AssertionError("redelivery after committed domain result must not reparse")
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+    with IngestionUnitOfWork(engine) as repo:
+        inbox = repo.record_worker_inbox(
+            consumer="phase11-package-a-parser-worker",
+            message_id=envelope.message_id,
+            payload=delivery.payload,
+            tenant_id="tenant-a",
+        )
+        assert inbox.processable is True
+        attempt = repo.claim_parse_attempt_lease(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id="source:pkg-a:retry",
+            document_version_id="document-version:pkg-a:retry",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_job_id="parse-job:pkg-a:retry",
+            worker_id="phase11-package-a-worker",
+            idempotency_key=f"{envelope.idempotency_key}:attempt:1",
+            security_epoch_ref="security-epoch:pkg-a:retry",
+            lease_ttl_seconds=60,
+        )
+        fencing_token = int(attempt.payload_hash or "0")
+        repo.mark_parse_attempt_running(
+            parse_attempt_id=attempt.ref,
+            parse_job_id="parse-job:pkg-a:retry",
+            tenant_id="tenant-a",
+            worker_id="phase11-package-a-worker",
+            fencing_token=fencing_token,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id=f"parse-snapshot:{attempt.ref}",
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:pkg-a:retry",
+            parse_attempt_id=attempt.ref,
+            document_version_id="document-version:pkg-a:retry",
+            canonical_ir={"metadata": {"document_id": "source:pkg-a:retry"}, "blocks": []},
+            canonical_ir_ref=f"canonical-ir:{attempt.ref}",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="phase11-package-a-v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id=f"quality:{attempt.ref}",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=1.0,
+            confidence_score=1.0,
+            decision="publish",
+        )
+        indexable = repo.record_indexable_snapshot(
+            indexable_snapshot_id=f"indexable:{attempt.ref}",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            document_version_id="document-version:pkg-a:retry",
+            quality_decision_id=quality.ref,
+            visibility_ref="visibility:workspace-a:source:pkg-a:retry",
+            payload={"indexable_snapshot_id": f"indexable:{attempt.ref}"},
+        )
+        outbox = repo.enqueue_outbox_event(
+            outbox_event_id=f"outbox:indexable:{attempt.ref}",
+            tenant_id="tenant-a",
+            aggregate_ref=indexable.ref,
+            event_type="ingestion.indexable_snapshot.ready",
+            payload={"indexable_snapshot_id": indexable.ref},
+        )
+        repo.commit_parse_attempt_if_current(
+            parse_attempt_id=attempt.ref,
+            parse_job_id="parse-job:pkg-a:retry",
+            tenant_id="tenant-a",
+            worker_id="phase11-package-a-worker",
+            fencing_token=fencing_token,
+            domain_commit_ref=f"domain-commit:{attempt.ref}:{snapshot.ref}:{outbox.ref}",
+        )
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "succeeded"
+        assert receipt.duplicate_delivery is True
+        assert receipt.acked_after_domain_commit is True
+        assert receipt.parse_attempt_id == "parse-job:pkg-a:retry:attempt:1"
+        assert receipt.indexable_snapshot_id == "indexable:parse-job:pkg-a:retry:attempt:1"
+        assert receipt.outbox_event_id == "outbox:indexable:parse-job:pkg-a:retry:attempt:1"
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_attempts")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
 def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypatch) -> None:
     engine = _engine()
     content = b"# DLQ\nPermanent parser failure."

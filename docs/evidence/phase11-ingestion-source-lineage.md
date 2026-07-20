@@ -199,6 +199,28 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate C real MinIO/RabbitMQ E2E remains environment_blocked: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 crash-after-commit-before-ACK replay hardening：
+
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 新增 PostgreSQL replay receipt 查询，读取 Job 当前状态、最新 Attempt、IndexableSnapshot outbox 和 DeadLetter receipt。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在 worker inbox duplicate/redelivery 分支优先返回既有终态 receipt；已提交成功的 redelivery 返回 `succeeded`、原 Attempt、IndexableSnapshot 和 Snapshot outbox，不再只返回泛化 `duplicate`。
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse`，覆盖领域事务已提交但 ACK 丢失时，redelivery 不调用 Parser Gateway、不新建 Attempt/Snapshot，并返回既有 succeeded receipt 后 ACK 当前 delivery。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B crash-after-commit-before-ACK replay test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

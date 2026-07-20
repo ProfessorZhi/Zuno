@@ -141,4 +141,14 @@ py_compile passed; worker object verifier fault test passed: 1 passed.
 Docker daemon remains unavailable; Gate C real MinIO/RabbitMQ E2E is still environment_blocked at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 crash-after-commit-before-ACK replay hardening：
+
+```text
+Duplicate/redelivery branch now queries PostgreSQL replay receipt and returns existing terminal result when the domain transaction already committed.
+Succeeded redelivery can return original Attempt, IndexableSnapshot, and Snapshot outbox without reparsing.
+Added Gate B integration coverage for committed-domain redelivery after lost ACK.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B replay test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
