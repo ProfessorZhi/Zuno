@@ -179,6 +179,11 @@ class ParserDiagnostic(BaseModel):
 class ParseDocumentRequest(BaseModel):
     document_id: str
     source_id: str | None = None
+    document_version_id: str | None = None
+    parse_plan_id: str | None = None
+    parse_job_id: str | None = None
+    parse_attempt_id: str | None = None
+    parse_idempotency_key: str | None = None
     source_object_ref: str | None = None
     source_object_manifest: dict[str, Any] = Field(default_factory=dict)
     workspace_id: str
@@ -269,6 +274,7 @@ class ParseJobSnapshot(BaseModel):
     parser_format: str
     attempt: int = 1
     attempt_count: int = 1
+    parse_plan_id: str = ""
     parse_attempt_id: str = ""
     parse_idempotency_key: str = ""
     retryable: bool = False

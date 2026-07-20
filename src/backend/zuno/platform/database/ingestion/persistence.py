@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import Engine, text
 from sqlalchemy.engine import Connection
 
-from zuno.platform.contracts import canonical_json, canonical_sha256
+from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_json, canonical_sha256
+from zuno.platform.database.foundation import InfrastructureRepository, InboxReceipt
 
 
 class IngestionPersistenceError(RuntimeError):
@@ -233,7 +235,14 @@ class IngestionRepository:
         worker_id: str,
         lease_ref: str,
         fencing_token: int,
-        status: str = "started",
+        workspace_id: str | None = None,
+        source_object_id: str | None = None,
+        document_version_id: str | None = None,
+        parse_plan_id: str | None = None,
+        idempotency_key: str | None = None,
+        security_epoch_ref: str | None = None,
+        lease_expires_at: datetime | None = None,
+        status: str = "created",
     ) -> IngestionReceipt:
         if attempt_no <= 0 or fencing_token <= 0:
             raise IngestionPersistenceError("parse attempt_no and fencing_token must be positive")
@@ -242,10 +251,14 @@ class IngestionRepository:
                 """
                 INSERT INTO ingestion_parse_attempts(
                     parse_attempt_id, tenant_id, parse_job_id, attempt_no,
-                    worker_id, lease_ref, fencing_token, status
+                    worker_id, lease_ref, fencing_token, workspace_id, source_object_id,
+                    document_version_id, parse_plan_id, idempotency_key, security_epoch_ref,
+                    lease_expires_at, heartbeat_at, status
                 ) VALUES (
                     :parse_attempt_id, :tenant_id, :parse_job_id, :attempt_no,
-                    :worker_id, :lease_ref, :fencing_token, :status
+                    :worker_id, :lease_ref, :fencing_token, :workspace_id, :source_object_id,
+                    :document_version_id, :parse_plan_id, :idempotency_key, :security_epoch_ref,
+                    :lease_expires_at, now(), :status
                 )
                 """
             ),
@@ -257,10 +270,348 @@ class IngestionRepository:
                 "worker_id": worker_id,
                 "lease_ref": lease_ref,
                 "fencing_token": fencing_token,
+                "workspace_id": workspace_id,
+                "source_object_id": source_object_id,
+                "document_version_id": document_version_id,
+                "parse_plan_id": parse_plan_id,
+                "idempotency_key": idempotency_key,
+                "security_epoch_ref": security_epoch_ref,
+                "lease_expires_at": lease_expires_at,
                 "status": status,
             },
         )
         return IngestionReceipt(parse_attempt_id, tenant_id, status)
+
+    def enqueue_parse_requested(
+        self,
+        *,
+        envelope: CrossModuleEnvelopeV1,
+        topic: str = "ingestion.parse.requested",
+    ) -> IngestionReceipt:
+        event_id = InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=envelope.message_id,
+            aggregate_id=envelope.aggregate_id or envelope.message_id,
+            topic=topic,
+            payload=envelope.model_dump(mode="json"),
+            idempotency_key=envelope.idempotency_key or envelope.message_id,
+            tenant_id=envelope.tenant_id,
+            ordering_key=envelope.aggregate_id,
+        )
+        return IngestionReceipt(event_id, envelope.tenant_id, "pending", envelope.payload_hash)
+
+    def record_worker_inbox(
+        self,
+        *,
+        consumer: str,
+        message_id: str,
+        payload: dict[str, Any],
+        tenant_id: str,
+    ) -> InboxReceipt:
+        return InfrastructureRepository(self.connection).record_inbox_receipt(
+            consumer=consumer,
+            message_id=message_id,
+            payload=payload,
+            tenant_id=tenant_id,
+        )
+
+    def load_parse_job_context(self, *, parse_job_id: str, tenant_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    job.parse_job_id, job.tenant_id, job.parse_plan_id, job.document_version_id,
+                    job.idempotency_key, job.status, job.attempt_count,
+                    plan.quality_policy_ref, plan.security_decision_ref,
+                    document.workspace_id, document.source_object_id, document.content_hash,
+                    source.filename, source.mime_type, source.storage_uri, source.object_manifest_ref,
+                    source.source_sha256, source.size_bytes, source.classification_ref,
+                    source.security_epoch_ref, source.status AS source_status
+                FROM ingestion_parse_jobs AS job
+                JOIN ingestion_parse_plans AS plan ON plan.parse_plan_id = job.parse_plan_id
+                JOIN ingestion_document_versions AS document ON document.document_version_id = job.document_version_id
+                JOIN ingestion_source_objects AS source ON source.source_object_id = document.source_object_id
+                WHERE job.parse_job_id = :parse_job_id AND job.tenant_id = :tenant_id
+                FOR UPDATE OF job
+                """
+            ),
+            {"parse_job_id": parse_job_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse job: {parse_job_id}")
+        return dict(row)
+
+    def claim_parse_attempt_lease(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        source_object_id: str,
+        document_version_id: str,
+        parse_plan_id: str,
+        parse_job_id: str,
+        worker_id: str,
+        idempotency_key: str,
+        security_epoch_ref: str,
+        lease_ttl_seconds: int = 60,
+    ) -> IngestionReceipt:
+        if lease_ttl_seconds <= 0:
+            raise IngestionPersistenceError("lease_ttl_seconds must be positive")
+        row = self.connection.execute(
+            text(
+                """
+                SELECT COALESCE(MAX(attempt_no), 0) + 1 AS attempt_no,
+                       COALESCE(MAX(fencing_token), 0) + 1 AS fencing_token
+                FROM ingestion_parse_attempts
+                WHERE parse_job_id = :parse_job_id
+                """
+            ),
+            {"parse_job_id": parse_job_id},
+        ).mappings().one()
+        attempt_no = int(row["attempt_no"])
+        fencing_token = int(row["fencing_token"])
+        parse_attempt_id = f"{parse_job_id}:attempt:{attempt_no}"
+        lease_ref = f"{parse_attempt_id}:lease:{fencing_token}"
+        lease_expires_at = datetime.now(timezone.utc) + timedelta(seconds=lease_ttl_seconds)
+        self.record_parse_attempt(
+            parse_attempt_id=parse_attempt_id,
+            tenant_id=tenant_id,
+            parse_job_id=parse_job_id,
+            attempt_no=attempt_no,
+            worker_id=worker_id,
+            lease_ref=lease_ref,
+            fencing_token=fencing_token,
+            workspace_id=workspace_id,
+            source_object_id=source_object_id,
+            document_version_id=document_version_id,
+            parse_plan_id=parse_plan_id,
+            idempotency_key=idempotency_key,
+            security_epoch_ref=security_epoch_ref,
+            lease_expires_at=lease_expires_at,
+            status="lease_claimed",
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO ingestion_parse_leases(
+                    lease_ref, tenant_id, workspace_id, parse_job_id, parse_attempt_id,
+                    worker_id, fencing_token, state, lease_expires_at
+                ) VALUES (
+                    :lease_ref, :tenant_id, :workspace_id, :parse_job_id, :parse_attempt_id,
+                    :worker_id, :fencing_token, 'claimed', :lease_expires_at
+                )
+                """
+            ),
+            {
+                "lease_ref": lease_ref,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "parse_job_id": parse_job_id,
+                "parse_attempt_id": parse_attempt_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+                "lease_expires_at": lease_expires_at,
+            },
+        )
+        self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="leased")
+        return IngestionReceipt(parse_attempt_id, tenant_id, "lease_claimed", str(fencing_token))
+
+    def mark_parse_attempt_running(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+    ) -> None:
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="running",
+        )
+        self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="running")
+
+    def commit_parse_attempt_if_current(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+        domain_commit_ref: str,
+    ) -> None:
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="succeeded",
+            domain_commit_ref=domain_commit_ref,
+        )
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET state = 'committed', domain_commit_ref = :domain_commit_ref, heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                  AND lease_expires_at > now()
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+                "domain_commit_ref": domain_commit_ref,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease commit rejected by fencing")
+        self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="succeeded")
+
+    def fail_parse_attempt(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+        status: str,
+        failure_code: str,
+    ) -> None:
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status=status,
+            failure_code=failure_code,
+        )
+        self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status=status)
+
+    def update_parse_job_status(self, *, parse_job_id: str, tenant_id: str, status: str) -> None:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = :status,
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id AND tenant_id = :tenant_id
+                """
+            ),
+            {"parse_job_id": parse_job_id, "tenant_id": tenant_id, "status": status},
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse job status update failed")
+
+    def record_dead_letter(
+        self,
+        *,
+        dead_letter_id: str,
+        tenant_id: str,
+        parse_job_id: str,
+        parse_attempt_id: str,
+        source_ref: str,
+        failure_code: str,
+        retryable: bool,
+        retry_count: int,
+        rabbitmq_dead_letter_ref: str,
+        payload: dict[str, Any],
+    ) -> IngestionReceipt:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO ingestion_dead_letters(
+                    dead_letter_id, tenant_id, source_ref, failure_code, retryable,
+                    payload, parse_job_id, parse_attempt_id, rabbitmq_dead_letter_ref, retry_count
+                ) VALUES (
+                    :dead_letter_id, :tenant_id, :source_ref, :failure_code, :retryable,
+                    CAST(:payload AS jsonb), :parse_job_id, :parse_attempt_id,
+                    :rabbitmq_dead_letter_ref, :retry_count
+                )
+                """
+            ),
+            {
+                "dead_letter_id": dead_letter_id,
+                "tenant_id": tenant_id,
+                "source_ref": source_ref,
+                "failure_code": failure_code,
+                "retryable": retryable,
+                "payload": canonical_json(payload),
+                "parse_job_id": parse_job_id,
+                "parse_attempt_id": parse_attempt_id,
+                "rabbitmq_dead_letter_ref": rabbitmq_dead_letter_ref,
+                "retry_count": retry_count,
+            },
+        )
+        return IngestionReceipt(dead_letter_id, tenant_id, "dead_letter")
+
+    def _update_attempt_if_current(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+        status: str,
+        domain_commit_ref: str | None = None,
+        failure_code: str | None = None,
+    ) -> None:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = :status,
+                    domain_commit_ref = COALESCE(:domain_commit_ref, domain_commit_ref),
+                    failure_code = COALESCE(:failure_code, failure_code),
+                    heartbeat_at = now(),
+                    finished_at = CASE
+                        WHEN :status in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
+                        THEN now()
+                        ELSE finished_at
+                    END
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND fencing_token = (
+                      SELECT max(current_attempt.fencing_token)
+                      FROM ingestion_parse_attempts AS current_attempt
+                      WHERE current_attempt.parse_job_id = :parse_job_id
+                  )
+                  AND lease_expires_at > now()
+                  AND status not in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+                "status": status,
+                "domain_commit_ref": domain_commit_ref,
+                "failure_code": failure_code,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse attempt update rejected by fencing")
 
     def record_parse_snapshot(
         self,

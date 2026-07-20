@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import time
 from typing import Literal
 
@@ -61,7 +62,14 @@ class ParseControlRuntime:
         )
 
     def queue(self, receipt: ParseControlReceipt) -> ParseControlReceipt:
-        return receipt.model_copy(update={"state": "queued", "history": [*receipt.history, "queued"]})
+        parse_job_id = f"job_{hashlib.sha256((receipt.parse_plan_id + ':' + receipt.idempotency_key).encode('utf-8')).hexdigest()[:24]}"
+        return receipt.model_copy(
+            update={
+                "parse_job_id": parse_job_id,
+                "state": "queued",
+                "history": [*receipt.history, "queued"],
+            }
+        )
 
     def lease(
         self,
@@ -72,8 +80,10 @@ class ParseControlRuntime:
     ) -> ParseControlReceipt:
         if receipt.state != "queued":
             raise ValueError(f"parse control can only lease queued jobs, got {receipt.state}")
+        if not receipt.parse_job_id:
+            raise ValueError("parse control queued receipt must have a persisted parse_job_id")
         lease = self.lease_runtime.claim(
-            parse_job_id=receipt.parse_plan_id,
+            parse_job_id=receipt.parse_job_id,
             worker_id=worker_id,
             attempt_no=1,
             now=time.time() if now is None else now,
@@ -100,7 +110,15 @@ class ParseControlRuntime:
     ) -> tuple[ParseControlReceipt, ParseDocumentResult]:
         self._require_current_lease(receipt, worker_id=worker_id, fencing_token=fencing_token)
         running = receipt.model_copy(update={"state": "running", "history": [*receipt.history, "running"]})
-        result = ParseGateway.submit_parse_job(request)
+        controlled_request = request.model_copy(
+            update={
+                "parse_plan_id": running.parse_plan_id,
+                "parse_job_id": running.parse_job_id,
+                "parse_attempt_id": running.parse_attempt_id,
+                "parse_idempotency_key": running.idempotency_key,
+            }
+        )
+        result = ParseGateway.submit_parse_job(controlled_request)
         snapshot = ParseGateway.get_job_snapshot(result.job_id)
         terminal_state = self._terminal_state(result.status)
         lease = running.lease
@@ -115,7 +133,7 @@ class ParseControlRuntime:
             running.model_copy(
                 update={
                     "state": terminal_state,
-                    "parse_job_id": result.job_id,
+                    "parse_job_id": running.parse_job_id,
                     "parse_attempt_id": snapshot.parse_attempt_id,
                     "snapshot": snapshot,
                     "lease": lease,
@@ -142,13 +160,30 @@ class ParseControlRuntime:
             fencing_token=fencing_token,
         )
         while result.status == "failed":
-            result = ParseGateway.retry_parse_job(result.job_id, request)
+            retry_attempt_no = (controlled.snapshot.attempt if controlled.snapshot is not None else 1) + 1
+            retry_lease = self.lease_runtime.claim(
+                parse_job_id=controlled.parse_job_id or controlled.parse_plan_id,
+                worker_id=worker_id,
+                attempt_no=retry_attempt_no,
+                now=time.time(),
+                ttl_seconds=self.lease_ttl_seconds,
+            )
+            retry_request = request.model_copy(
+                update={
+                    "parse_plan_id": controlled.parse_plan_id,
+                    "parse_job_id": controlled.parse_job_id,
+                    "parse_attempt_id": retry_lease.parse_attempt_id,
+                    "parse_idempotency_key": controlled.idempotency_key,
+                }
+            )
+            result = ParseGateway.retry_parse_job(result.job_id, retry_request)
             snapshot = ParseGateway.get_job_snapshot(result.job_id)
             controlled = controlled.model_copy(
                 update={
                     "state": self._terminal_state(result.status),
                     "parse_job_id": result.job_id,
                     "parse_attempt_id": snapshot.parse_attempt_id,
+                    "lease": retry_lease,
                     "snapshot": snapshot,
                     "terminal_status": result.status,
                     "retry_exhausted": result.status == "dead_letter",

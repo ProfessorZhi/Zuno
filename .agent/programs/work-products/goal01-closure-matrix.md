@@ -73,4 +73,25 @@ start_sha_after_fetch: `5156ed944eb797a8c41210cef19b04f023c756c0`
 
 PHASE11 section 的旧 `completion_candidate` 全部降为 `target_not_current`。已有证据保留为线索，但 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 不能关闭 PHASE11。
 
+### Package A implementation progress 2026-07-20
+
+已新增 Package A runtime、migration 与测试入口：
+
+- `PackageAProductionIngestionRuntime` 串接 Workspace/File Upload accept、PHASE04 `DurableMinioObjectStore`、PostgreSQL `IngestionUnitOfWork`、PHASE04 infra outbox、RabbitMQ delivery payload、Parser Worker、Parser Gateway、ParseSnapshot、SourceSpan、Quality Gate、IndexableDocumentSnapshot 和 Snapshot Outbox。
+- `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 提供生产默认接线；配置存在时 file register 返回 `ingest_accepted`，不进行同步解析完成。
+- Parser Gateway 与 ParseControl 修正权威 Job/Attempt ID、Plan/Job/Attempt 分离、retry 新 Attempt 和 `max_attempts` off-by-one。
+- 新 migration `20260720_19_ingestion_package_a_control.py` 补充 ParseAttempt 上下文绑定、lease/fencing 表、DLQ 关联、状态约束与索引。
+- 新测试 `tests/integration/test_phase11_package_a_production_runtime.py` 覆盖 Gate B/Gate C 入口。
+
+验证结果：
+
+```text
+Gate A passed: pytest -q tests/knowledge/test_ingestion_parse_control.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+Alembic heads: 20260720_19
+Gate B environment_blocked: PostgreSQL localhost:5432 connection timeout
+Gate C environment_blocked: Docker daemon unavailable, PostgreSQL localhost:5432 connection timeout before MinIO/RabbitMQ step
+```
+
+本注记不改变上表 `target_not_current` 状态；Package A 行只有在真实 PostgreSQL、MinIO、RabbitMQ Gate B/C 通过后才能逐项提升为 `completion_candidate`。
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

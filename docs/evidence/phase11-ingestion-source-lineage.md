@@ -51,6 +51,46 @@ docs/evidence/input-runtime-batch.md
 - Delete/Restore runtime 当前覆盖解析中删除与 snapshot 后删除：`DeleteLifecycleReceipt` 可绑定 parse job、parse attempt、fencing token、IndexableDocumentSnapshot、handoff outbox event 与 projection cleanup ref；delete 会先撤销 visibility，后续 cleanup / physical delete / verification 必须确认 projection cleanup 和物理删除，verified 后拒绝 late worker result；legal hold 会阻止 cleanup / physical delete，且不会错误恢复授权。
 - `ParseControlRuntime` 当前显式串起 ParsePlan / queued job / attempt lease / worker run：覆盖 planned → queued → leased → running → succeeded / cancelled / dead_letter，本地成功路径会用 fencing token 提交 lease，stale fencing token 被拒绝，failed parse 会按 retry policy 进入 dead_letter。
 
+## Package A Production Default Path Progress
+
+2026-07-20 新增 PHASE11 Package A 生产默认链路实现进展：
+
+- `src/backend/zuno/knowledge/ingestion/production_runtime.py` 新增 `PackageAProductionIngestionRuntime`，把 Workspace/File Upload accept 编排到 PHASE04 `DurableMinioObjectStore`、PostgreSQL `IngestionUnitOfWork`、PHASE04 infra outbox、RabbitMQ delivery payload、Parser Worker、Parser Gateway、ParseSnapshot、SourceSpan、Quality Gate、IndexableDocumentSnapshot 和 Snapshot Outbox。
+- `src/backend/zuno/api/services/workspace_task_runtime.py` 新增可配置 `configure_package_a_production_ingestion(...)` 默认生产接线；配置存在时 workspace file register 返回 `ingest_accepted`，不再同步冒充解析完成。
+- `contracts.py`、`gateway.py` 和 `parse_control.py` 修正 Package A 身份边界：ParsePlan、ParseJob、ParseAttempt 分离；Parser Gateway 尊重外部权威 Job/Attempt/DocumentVersion/Idempotency ID；`max_attempts` 包含初次执行，retry 不复用旧 Attempt。
+- `infra/db/alembic/versions/20260720_19_ingestion_package_a_control.py` 新增 forward migration，补充 ParseAttempt 上下文绑定、lease/fencing 表、DLQ 关联、状态约束和索引；不重写历史 `20260719_18`。
+- `src/backend/zuno/platform/database/ingestion/persistence.py` 新增同事务 infra outbox enqueue、worker inbox、Job context load、append-only Attempt lease claim、current fencing 条件更新、terminal DLQ receipt 等 Package A repository 操作。
+- `tests/integration/test_phase11_package_a_production_runtime.py` 新增 Gate B/Gate C 测试入口，覆盖 PostgreSQL lease/fencing 与真实 MinIO/RabbitMQ upload-to-snapshot-outbox 路径。
+
+已运行并通过：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/contracts.py src/backend/zuno/knowledge/ingestion/gateway.py src/backend/zuno/knowledge/ingestion/parse_control.py src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/api/services/workspace_task_runtime.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_ingestion_parse_control.py tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
+alembic -c infra/db/alembic.ini heads
+git diff --check
+python tools/scripts/verify_utf8_doc_encoding.py
+python tools/scripts/verify_repo_structure.py
+python tools/scripts/verify_current_program.py
+python tools/scripts/verify_requirement_ledger_evidence_gate.py
+python tools/scripts/verify_phase11_ingestion_source_lineage.py
+```
+
+真实依赖 Gate 当前未通过：
+
+```text
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+failed: Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker -p no:cacheprovider
+failed: environment_blocked, PostgreSQL localhost:5432 connection timeout during alembic upgrade
+
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_c_real_minio_rabbitmq_upload_to_snapshot_outbox -p no:cacheprovider
+failed: environment_blocked, PostgreSQL localhost:5432 connection timeout before MinIO/RabbitMQ step
+```
+
+边界：Package A production default path 已有 runtime、migration 和 focused tests，但 Gate B/C 在当前环境未通过；不得仅凭本节证据将 Package A 行提升为 `completion_candidate`。PHASE11 仍为 `in_progress`，Coordinator Approval 仍为 `pending_reopened`。
+
 ## Validation
 
 ```powershell

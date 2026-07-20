@@ -23,7 +23,12 @@ def test_parse_control_runtime_schedules_leases_and_commits_successful_attempt()
     request = _request(document_id="doc_control_success", source_text="# Success\nParse me.")
     planned = runtime.plan(request, idempotency_key="idem_control_success")
     queued = runtime.queue(planned)
+    assert queued.parse_plan_id
+    assert queued.parse_job_id
+    assert queued.parse_plan_id != queued.parse_job_id
     leased = runtime.lease(queued, worker_id="worker_control", now=10.0)
+    assert leased.lease is not None
+    assert leased.lease.parse_job_id == queued.parse_job_id
     completed, result = runtime.run_once(
         request,
         leased,
@@ -34,8 +39,14 @@ def test_parse_control_runtime_schedules_leases_and_commits_successful_attempt()
     assert result.status == "succeeded"
     assert completed.state == "succeeded"
     assert completed.parse_job_id == result.job_id
+    assert completed.parse_job_id == queued.parse_job_id
+    assert completed.parse_attempt_id == leased.parse_attempt_id
     assert completed.snapshot is not None
     assert completed.snapshot.status == "succeeded"
+    assert completed.snapshot.parse_plan_id == queued.parse_plan_id
+    assert completed.snapshot.parse_attempt_id == leased.parse_attempt_id
+    assert completed.snapshot.source_provenance["parse_job_id"] == queued.parse_job_id
+    assert completed.snapshot.source_provenance["parse_attempt_id"] == leased.parse_attempt_id
     assert completed.lease is not None
     assert completed.lease.state == "committed"
     assert completed.lease.domain_commit_ref is not None
@@ -112,5 +123,7 @@ def test_parse_control_runtime_retries_failed_job_until_dead_letter() -> None:
     assert completed.retry_exhausted is True
     assert completed.snapshot is not None
     assert completed.snapshot.retryable is False
+    assert completed.snapshot.attempt == 2
+    assert completed.snapshot.parse_attempt_id != leased.parse_attempt_id
     assert "retrying" in completed.history
     assert completed.history[-1] == "dead_letter"

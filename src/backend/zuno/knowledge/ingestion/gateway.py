@@ -79,7 +79,7 @@ class ParseGateway:
         started = time.perf_counter()
         attempt = previous.attempt + 1
         result = cls._blocked_result(request) or cls.parse_document(request)
-        if result.status == "failed" and attempt > MAX_PARSE_ATTEMPTS:
+        if result.status == "failed" and attempt >= MAX_PARSE_ATTEMPTS:
             result = result.model_copy(
                 update={
                     "status": "dead_letter",
@@ -215,7 +215,7 @@ class ParseGateway:
                 )
             )
         parser_config_hash = cls._parser_config_hash(request)
-        job_id = f"parse_{uuid4().hex[:12]}"
+        job_id = cls._request_job_id(request)
         diagnostics.append(
             ParserDiagnostic(
                 code="parser_contract_boundary",
@@ -318,7 +318,8 @@ class ParseGateway:
                 parser_id=parser_id,
                 parser_version=request.parser_version,
                 parser_config_hash=parser_config_hash,
-                document_version_id=cls._document_version_id(
+                document_version_id=request.document_version_id
+                or cls._document_version_id(
                     document_id=request.document_id,
                     source_sha256=source_sha256,
                     parser_id=parser_id,
@@ -463,8 +464,9 @@ class ParseGateway:
             parser_format=capability.format,
             attempt=attempt,
             attempt_count=attempt,
-            parse_attempt_id=f"attempt_{result.job_id}_{attempt}",
-            parse_idempotency_key=cls._parse_idempotency_key(
+            parse_plan_id=request.parse_plan_id or "",
+            parse_attempt_id=request.parse_attempt_id or f"attempt_{result.job_id}_{attempt}",
+            parse_idempotency_key=request.parse_idempotency_key or cls._parse_idempotency_key(
                 workspace_id=request.workspace_id,
                 source_sha256=source_sha256,
                 parser_id=parser_id,
@@ -524,6 +526,10 @@ class ParseGateway:
                 "parser_version": metadata.parser_version,
                 "parser_config_hash": metadata.parser_config_hash,
                 "document_version_id": metadata.document_version_id,
+                "parse_plan_id": request.parse_plan_id,
+                "parse_job_id": request.parse_job_id or result.job_id,
+                "parse_attempt_id": request.parse_attempt_id,
+                "parse_idempotency_key": request.parse_idempotency_key,
                 "schema_version": metadata.schema_version,
                 "ir_schema_version": metadata.ir_schema_version,
                 "acl_scope": metadata.acl_scope,
@@ -545,6 +551,11 @@ class ParseGateway:
             "parser_id": parser_id,
             "parser_version": request.parser_version,
             "parser_config_hash": cls._parser_config_hash(request),
+            "document_version_id": request.document_version_id,
+            "parse_plan_id": request.parse_plan_id,
+            "parse_job_id": request.parse_job_id or result.job_id,
+            "parse_attempt_id": request.parse_attempt_id,
+            "parse_idempotency_key": request.parse_idempotency_key,
             "schema_version": request.schema_version,
             "ir_schema_version": request.ir_schema_version,
             "acl_scope": request.acl_scope,
@@ -562,7 +573,7 @@ class ParseGateway:
             return None
         reason = adapter_contract.blocked_reason or "External parser dependency is not available."
         return ParseDocumentResult(
-            job_id=f"parse_{uuid4().hex[:12]}",
+            job_id=cls._request_job_id(request),
             status="blocked",
             failure=ParserFailure(
                 parser_id=parser_id,
@@ -748,6 +759,10 @@ class ParseGateway:
                 ),
             ],
         )
+
+    @staticmethod
+    def _request_job_id(request: ParseDocumentRequest) -> str:
+        return request.parse_job_id or f"parse_{uuid4().hex[:12]}"
 
     @classmethod
     def _parser_policy_failure_reason(cls, request: ParseDocumentRequest) -> str | None:

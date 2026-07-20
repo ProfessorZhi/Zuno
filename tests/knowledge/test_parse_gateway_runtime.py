@@ -905,3 +905,34 @@ def test_legacy_chunks_normalize_to_ir_with_acl_source_span_provenance() -> None
     assert document.blocks[0].acl_scope == "workspace"
     assert document.blocks[0].sensitivity_tags == ["internal"]
     assert document.provenance.parser_id == "legacy_doc_parser"
+
+
+def test_parse_gateway_honors_authoritative_package_a_ids() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="source_pkg_a_ids",
+            source_id="source_pkg_a_ids",
+            document_version_id="document-version:pkg-a:1",
+            parse_plan_id="parse-plan:pkg-a:1",
+            parse_job_id="parse-job:pkg-a:1",
+            parse_attempt_id="parse-attempt:pkg-a:1",
+            parse_idempotency_key="parse-idem:pkg-a:1",
+            workspace_id="workspace_pkg_a",
+            source_uri="file://pkg-a.md",
+            mime_type="text/markdown",
+            source_text="# Package A\nAuthoritative identity.",
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.job_id == "parse-job:pkg-a:1"
+    assert result.document is not None
+    assert result.document.metadata.document_version_id == "document-version:pkg-a:1"
+    assert snapshot.job_id == "parse-job:pkg-a:1"
+    assert snapshot.parse_plan_id == "parse-plan:pkg-a:1"
+    assert snapshot.parse_attempt_id == "parse-attempt:pkg-a:1"
+    assert snapshot.parse_idempotency_key == "parse-idem:pkg-a:1"
+    assert snapshot.source_provenance["parse_job_id"] == "parse-job:pkg-a:1"
+    assert snapshot.source_provenance["parse_attempt_id"] == "parse-attempt:pkg-a:1"

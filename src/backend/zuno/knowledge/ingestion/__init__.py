@@ -43,6 +43,12 @@ from .legacy_cutover import (
 )
 from .normalizer import normalize_legacy_chunks_to_ir
 from .parse_control import ParseControlReceipt, ParseControlRuntime, ParseControlState
+from .production_runtime import (
+    PackageAProductionIngestionRuntime,
+    PackageAUploadCommand,
+    PackageAUploadReceipt,
+    PackageAWorkerReceipt,
+)
 from .review import (
     HumanReviewRuntime,
     QualityGateResult,
@@ -90,6 +96,10 @@ __all__ = [
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
+    "PackageAProductionIngestionRuntime",
+    "PackageAUploadCommand",
+    "PackageAUploadReceipt",
+    "PackageAWorkerReceipt",
     "ParseDocumentRequest",
     "ParseDocumentResult",
     "ParseControlReceipt",

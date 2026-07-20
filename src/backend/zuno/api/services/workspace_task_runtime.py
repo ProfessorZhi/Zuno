@@ -39,6 +39,8 @@ from zuno.knowledge.ingestion import (
     DocumentProvenance,
     HumanReviewRuntime,
     IndexableDocumentSnapshotV1,
+    PackageAProductionIngestionRuntime,
+    PackageAUploadCommand,
     ParseDocumentRequest,
     ParseDocumentResult,
     ParseGateway,
@@ -132,6 +134,7 @@ class WorkspaceTaskRuntimeService:
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
     _human_review_runtime = HumanReviewRuntime()
     _snapshot_handoff_runtime = SnapshotHandoffRuntime()
+    _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
@@ -226,6 +229,13 @@ class WorkspaceTaskRuntimeService:
             cls._rehydrate_from_durable_store()
 
     @classmethod
+    def configure_package_a_production_ingestion(
+        cls,
+        runtime: PackageAProductionIngestionRuntime | None,
+    ) -> None:
+        cls._package_a_production_runtime = runtime
+
+    @classmethod
     def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
         cls._unified_runtime_store = store
 
@@ -273,6 +283,7 @@ class WorkspaceTaskRuntimeService:
         cls._trace_replays = {}
         cls._durable_ingestion_store = None
         cls._source_object_store = None
+        cls._package_a_production_runtime = None
         cls._security_product_action_guard = None
 
     @classmethod
@@ -390,6 +401,47 @@ class WorkspaceTaskRuntimeService:
                 source_ref=uri or file.file_id,
             ),
         }
+        if cls._package_a_production_runtime is not None:
+            source_id = f"source_{normalized_file_id}"
+            receipt = cls._package_a_production_runtime.accept_workspace_upload(
+                PackageAUploadCommand(
+                    tenant_id=login_user.user_id,
+                    workspace_id=workspace_id,
+                    principal_id=login_user.user_id,
+                    filename=name or f"{normalized_file_id}.txt",
+                    mime_type=mime_type,
+                    content=stored_content.encode("utf-8"),
+                    bucket="zuno-ingestion",
+                    source_object_id=source_id,
+                    classification_ref=security_label,
+                    security_epoch_ref=f"security-epoch:{workspace_id}:{login_user.user_id}",
+                    trace_id=file.trace_id or trace_id or f"trace_{uuid4().hex[:12]}",
+                )
+            )
+            file.parse_status = "ingest_accepted"
+            file.updated_at = str(time.time())
+            payload.update(
+                {
+                    "source_id": receipt.source_object_id,
+                    "document_version_id": receipt.document_version_id,
+                    "parse_plan_id": receipt.parse_plan_id,
+                    "parse_job_id": receipt.parse_job_id,
+                    "outbox_event_id": receipt.outbox_event_id,
+                    "storage_uri": receipt.object_ref,
+                    "durable_status": "production_accepted",
+                }
+            )
+            payload["file"] = file.model_dump()
+            payload["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=name or normalized_file_id,
+                storage_uri=receipt.object_ref,
+                source_ref=receipt.source_object_id,
+                source_sha256=normalized_hash,
+                size_bytes=len(stored_content.encode("utf-8")),
+                index_status="pending",
+            )
+            return payload
         if cls._durable_ingestion_store is not None and cls._source_object_store is not None:
             source_id = f"source_{normalized_file_id}"
             source_object = cls._source_object_store.save_text(
