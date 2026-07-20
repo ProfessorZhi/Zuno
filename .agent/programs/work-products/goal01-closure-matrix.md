@@ -172,4 +172,13 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B heartbeat/reconcile test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 outbox-publish-failure replay coverage：
+
+```text
+Added Gate C integration coverage for Package A parse.requested outbox publish failure:
+PostgresOutboxRabbitMQPublisher.publish_batch records failure, leaves outbox pending/replayable, releases claim, and allows later publisher reclaim.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate C outbox publish failure test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -15,10 +15,15 @@ from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime, Package
 from zuno.knowledge.ingestion.contracts import ParseDocumentResult, ParseJobSnapshot, ParserFailure
 from zuno.knowledge.ingestion.gateway import ParseGateway
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
 from zuno.platform.queue.domain import CanonicalOutboxDeliveryV1
-from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTopology, RabbitMQTransport
+from zuno.platform.queue import (
+    OutboxPublishPolicy,
+    PostgresOutboxRabbitMQPublisher,
+    RabbitMQTopology,
+    RabbitMQTransport,
+)
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
 
 
@@ -66,6 +71,11 @@ class _RecordingDelivery:
 
     async def reject(self, *, requeue: bool = False) -> None:
         self.rejected = True
+
+
+class _FailingRabbitMQTransport:
+    async def publish(self, *_args, **_kwargs) -> None:
+        raise ConnectionError("publisher confirm failed")
 
 
 def _migrate() -> None:
@@ -930,6 +940,63 @@ def test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot(monke
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+    finally:
+        engine.dispose()
+
+
+def test_gate_c_outbox_publish_failure_keeps_parse_request_replayable() -> None:
+    engine = _engine()
+    content = b"# Publish failure\nKeep the outbox replayable."
+    envelope = _seed_retryable_job(engine, content=content)
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=engine,
+        transport=_FailingRabbitMQTransport(),
+        topology=_topology(),
+        worker_id="phase11-package-a-publisher",
+        tenant_id="tenant-a",
+        trace_id="trace-pkg-a-publish-failure",
+        policy=OutboxPublishPolicy(
+            max_attempts=3,
+            base_backoff_seconds=0,
+            max_backoff_seconds=0,
+            publish_timeout_seconds=1,
+        ),
+    )
+
+    try:
+        batch = asyncio.run(publisher.publish_batch(limit=10))
+
+        assert batch.published == ()
+        assert len(batch.failed) == 1
+        failed = batch.failed[0]
+        assert failed.event_id == envelope.message_id
+        assert failed.status == "pending"
+        assert failed.publish_attempts == 1
+        assert failed.retry_count == 1
+        assert failed.error_code == "ConnectionError"
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT status, publish_attempts, retry_count, claim_owner,
+                           last_error_code, next_attempt_at <= now() AS retry_ready
+                    FROM infra_outbox_events
+                    WHERE event_id = :event_id
+                    """
+                ),
+                {"event_id": envelope.message_id},
+            ).mappings().one()
+            assert row["status"] == "pending"
+            assert row["publish_attempts"] == 1
+            assert row["retry_count"] == 1
+            assert row["claim_owner"] is None
+            assert row["last_error_code"] == "ConnectionError"
+            assert row["retry_ready"] is True
+        with InfrastructureUnitOfWork(engine) as repo:
+            assert repo.claim_outbox(worker_id="phase11-package-a-replay-publisher", limit=10) == [
+                envelope.message_id
+            ]
     finally:
         engine.dispose()
 

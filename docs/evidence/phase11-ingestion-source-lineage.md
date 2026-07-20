@@ -266,6 +266,27 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B heartbeat/reconcile test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 outbox-publish-failure replay coverage：
+
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_c_outbox_publish_failure_keeps_parse_request_replayable`，使用 Package A `parse.requested` outbox 和 `PostgresOutboxRabbitMQPublisher.publish_batch(...)` 生产发布路径，模拟 RabbitMQ publish/publisher-confirm failure。
+- 测试断言 publish failure 后 `infra_outbox_events` 保持 `pending`、释放 claim、记录 `publish_attempts/retry_count/last_error_code`，并可由后续 publisher 重新 claim/replay。
+
+新增验证：
+
+```text
+python -m py_compile tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_c_outbox_publish_failure_keeps_parse_request_replayable -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate C outbox publish failure test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell
