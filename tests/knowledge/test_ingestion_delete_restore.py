@@ -106,6 +106,49 @@ def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:
     assert snapshot.payload["delete_refs"] == [delete_receipt.delete_ref]
 
 
+def test_delete_after_snapshot_binds_outbox_projection_cleanup_and_verification_evidence() -> None:
+    import pytest
+
+    from zuno.knowledge.ingestion import DeleteRestoreRuntime, SnapshotHandoffRuntime
+
+    document, parse_snapshot, gate = _parsed_text_document()
+    snapshot, outbox = SnapshotHandoffRuntime().create_snapshot(
+        document=document,
+        parse_snapshot=parse_snapshot,
+        quality_gate=gate,
+        visibility_ref="visibility:workspace_handoff:doc_delete_handoff",
+    )
+    runtime = DeleteRestoreRuntime()
+    requested = runtime.request_delete_after_snapshot(
+        indexable_snapshot_id=snapshot.indexable_snapshot_id,
+        handoff_outbox_event_id=outbox.outbox_event_id,
+        visibility_ref=snapshot.security_refs["visibility_ref"],
+        projection_cleanup_ref=f"projection_cleanup:{snapshot.indexable_snapshot_id}",
+    )
+    cleanup = runtime.request_cleanup(requested)
+    physical = runtime.mark_physical_delete(cleanup)
+
+    with pytest.raises(ValueError, match="projection cleanup"):
+        runtime.verify_delete(physical, cleanup_verified=False)
+    with pytest.raises(ValueError, match="physical delete"):
+        runtime.verify_delete(physical, physical_delete_verified=False)
+
+    verified = runtime.verify_delete(
+        physical,
+        cleanup_verified=True,
+        physical_delete_verified=True,
+    )
+
+    assert requested.snapshot_ref == snapshot.indexable_snapshot_id
+    assert requested.indexable_snapshot_id == snapshot.indexable_snapshot_id
+    assert requested.handoff_outbox_event_id == outbox.outbox_event_id
+    assert requested.projection_cleanup_ref == f"projection_cleanup:{snapshot.indexable_snapshot_id}"
+    assert "snapshot_delete_requested" in requested.history
+    assert verified.state == "verified"
+    assert verified.cleanup_verified is True
+    assert verified.physical_delete_verified is True
+
+
 def test_delete_during_parse_rejects_late_worker_result_by_attempt_and_fencing() -> None:
     from zuno.knowledge.ingestion import DeleteRestoreRuntime, ParseAttemptLeaseRuntime
 

@@ -48,7 +48,7 @@ docs/evidence/input-runtime-batch.md
 - Snapshot handoff 当前对 Human Review fail-closed：`QualityGateResult` 为 REVIEW 时，未提供 approved `ReviewDecisionReceipt` 或 receipt 为 rejected/expired/cancelled 会拒绝生成 `IndexableDocumentSnapshotV1`；approved receipt 会写入 snapshot payload / security refs 后生成 pending outbox。
 - Snapshot handoff 当前具备本地 outbox dispatch receipt：Knowledge publisher 不可用时 outbox 保持 pending 且 `replay_count` 增加；后续 replay 成功才返回 `handed_off` 与 acknowledged receipt。
 - Human Review 当前具备本地 expiration sweep：`expire_pending_reviews()` 只把 overdue pending task 转换为 expired `ReviewDecisionReceipt`，已有 receipt 或未到期 task 会跳过；expired receipt 不能发布 snapshot。
-- Delete/Restore runtime 当前覆盖解析中删除：`DeleteLifecycleReceipt` 可绑定 parse job、parse attempt 与 fencing token；delete during parse 会先撤销 visibility，后续 cleanup / physical delete / verification 后拒绝 late worker result；legal hold 会阻止 cleanup / physical delete，且不会错误恢复授权。
+- Delete/Restore runtime 当前覆盖解析中删除与 snapshot 后删除：`DeleteLifecycleReceipt` 可绑定 parse job、parse attempt、fencing token、IndexableDocumentSnapshot、handoff outbox event 与 projection cleanup ref；delete 会先撤销 visibility，后续 cleanup / physical delete / verification 必须确认 projection cleanup 和物理删除，verified 后拒绝 late worker result；legal hold 会阻止 cleanup / physical delete，且不会错误恢复授权。
 - `ParseControlRuntime` 当前显式串起 ParsePlan / queued job / attempt lease / worker run：覆盖 planned → queued → leased → running → succeeded / cancelled / dead_letter，本地成功路径会用 fencing token 提交 lease，stale fencing token 被拒绝，failed parse 会按 retry policy 进入 dead_letter。
 
 ## Validation
@@ -64,6 +64,7 @@ pytest -q tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledg
 pytest -q tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_durable_ingest_runtime.py tests/knowledge/test_ingestion_delete_restore.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider
+pytest -q tests/knowledge/test_ingestion_delete_restore.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_delete_restore.py tests/knowledge/test_ingestion_lease_recovery.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_parse_control.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_ingestion_lease_recovery.py -p no:cacheprovider
 python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py

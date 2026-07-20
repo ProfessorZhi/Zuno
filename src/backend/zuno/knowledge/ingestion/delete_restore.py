@@ -22,12 +22,17 @@ class DeleteLifecycleReceipt(BaseModel):
     snapshot_ref: str
     state: DeleteState
     visibility_ref: str
+    indexable_snapshot_id: str | None = None
+    handoff_outbox_event_id: str | None = None
     parse_job_id: str | None = None
     parse_attempt_id: str | None = None
     fencing_token: int | None = None
     cleanup_ref: str | None = None
+    projection_cleanup_ref: str | None = None
     physical_delete_ref: str | None = None
     verification_ref: str | None = None
+    cleanup_verified: bool = False
+    physical_delete_verified: bool = False
     legal_hold_ref: str | None = None
     restored_authorization: bool = False
     duplicate: bool = False
@@ -107,6 +112,39 @@ class DeleteRestoreRuntime:
             }
         )
 
+    def request_delete_after_snapshot(
+        self,
+        *,
+        indexable_snapshot_id: str,
+        handoff_outbox_event_id: str,
+        visibility_ref: str,
+        projection_cleanup_ref: str,
+        legal_hold_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
+        requested = self.request_delete(
+            snapshot_ref=indexable_snapshot_id,
+            visibility_ref=visibility_ref,
+            legal_hold_ref=legal_hold_ref,
+        )
+        return requested.model_copy(
+            update={
+                "indexable_snapshot_id": indexable_snapshot_id,
+                "handoff_outbox_event_id": handoff_outbox_event_id,
+                "projection_cleanup_ref": projection_cleanup_ref,
+                "history": [*requested.history, "snapshot_delete_requested"],
+                "receipt_hash": _hash(
+                    {
+                        "delete_ref": requested.delete_ref,
+                        "indexable_snapshot_id": indexable_snapshot_id,
+                        "handoff_outbox_event_id": handoff_outbox_event_id,
+                        "projection_cleanup_ref": projection_cleanup_ref,
+                        "visibility_ref": visibility_ref,
+                        "state": requested.state,
+                    }
+                ),
+            }
+        )
+
     def request_cleanup(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
         if receipt.legal_hold_ref:
             return receipt
@@ -130,14 +168,26 @@ class DeleteRestoreRuntime:
             }
         )
 
-    def verify_delete(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
+    def verify_delete(
+        self,
+        receipt: DeleteLifecycleReceipt,
+        *,
+        cleanup_verified: bool = True,
+        physical_delete_verified: bool = True,
+    ) -> DeleteLifecycleReceipt:
         if receipt.legal_hold_ref:
             return receipt
+        if not cleanup_verified:
+            raise ValueError("delete verification requires projection cleanup confirmation")
+        if not physical_delete_verified:
+            raise ValueError("delete verification requires physical delete confirmation")
         verification_ref = f"verify_{receipt.delete_ref}"
         return receipt.model_copy(
             update={
                 "state": "verified",
                 "verification_ref": verification_ref,
+                "cleanup_verified": True,
+                "physical_delete_verified": True,
                 "history": [*receipt.history, "verified"],
             }
         )
