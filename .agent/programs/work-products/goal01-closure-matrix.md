@@ -369,4 +369,16 @@ Package A delivery settlement, lineage, parser identity, and worker inbox identi
 PHASE11 remains in_progress; this is Package A worker identity implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A PostgreSQL expected-state fencing：
+
+```text
+IngestionRepository._update_attempt_if_current now includes expected Attempt status in the PostgreSQL conditional update.
+Running requires lease_claimed, renew/commit/fail require running, and expired lease reconciliation requires claimed or running before lease_lost.
+This makes worker, token, unexpired lease, highest fencing generation, Attempt ID, tenant, and expected state part of the database-side fencing contract.
+py_compile passed.
+Package A persistence expected-state fencing tests passed: 4 passed.
+Package A delivery settlement tests passed: 12 passed.
+PHASE11 remains in_progress; this is Package A PostgreSQL fencing implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

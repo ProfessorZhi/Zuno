@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import Engine, text
+from sqlalchemy import Engine, bindparam, text
 from sqlalchemy.engine import Connection
 
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_json, canonical_sha256
@@ -469,6 +469,7 @@ class IngestionRepository:
             worker_id=worker_id,
             fencing_token=fencing_token,
             status="running",
+            expected_statuses=("lease_claimed",),
         )
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="running")
 
@@ -518,6 +519,7 @@ class IngestionRepository:
             fencing_token=fencing_token,
             status="running",
             lease_expires_at=lease_expires_at,
+            expected_statuses=("running",),
         )
         return IngestionReceipt(parse_attempt_id, tenant_id, "lease_renewed", str(fencing_token))
 
@@ -557,6 +559,7 @@ class IngestionRepository:
             fencing_token=int(row["fencing_token"]),
             status="lease_lost",
             require_unexpired_lease=False,
+            expected_statuses=("lease_claimed", "running"),
         )
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="queued")
         return IngestionReceipt(parse_attempt_id, tenant_id, "lease_reconciled")
@@ -579,6 +582,7 @@ class IngestionRepository:
             fencing_token=fencing_token,
             status="succeeded",
             domain_commit_ref=domain_commit_ref,
+            expected_statuses=("running",),
         )
         result = self.connection.execute(
             text(
@@ -624,6 +628,7 @@ class IngestionRepository:
             fencing_token=fencing_token,
             status=status,
             failure_code=failure_code,
+            expected_statuses=("running",),
         )
         lease_state = "released" if status in {"failed", "cancelled", "dead_letter"} else "lost"
         result = self.connection.execute(
@@ -723,7 +728,10 @@ class IngestionRepository:
         failure_code: str | None = None,
         lease_expires_at: datetime | None = None,
         require_unexpired_lease: bool = True,
+        expected_statuses: tuple[str, ...] = ("created", "lease_claimed", "running"),
     ) -> None:
+        if not expected_statuses:
+            raise IngestionPersistenceError("expected parse attempt status set must not be empty")
         result = self.connection.execute(
             text(
                 """
@@ -749,9 +757,10 @@ class IngestionRepository:
                       WHERE current_attempt.parse_job_id = :parse_job_id
                   )
                   AND (:require_unexpired_lease = false OR lease_expires_at > now())
+                  AND status IN :expected_statuses
                   AND status not in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
                 """
-            ),
+            ).bindparams(bindparam("expected_statuses", expanding=True)),
             {
                 "parse_attempt_id": parse_attempt_id,
                 "parse_job_id": parse_job_id,
@@ -763,6 +772,7 @@ class IngestionRepository:
                 "failure_code": failure_code,
                 "lease_expires_at": lease_expires_at,
                 "require_unexpired_lease": require_unexpired_lease,
+                "expected_statuses": expected_statuses,
             },
         )
         if result.rowcount != 1:

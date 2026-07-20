@@ -666,3 +666,26 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovi
 py_compile passed
 Package A delivery settlement, lineage, parser identity, and worker inbox identity tests passed: 12 passed
 ```
+
+2026-07-20 Package A PostgreSQL expected-state fencing：
+
+- `IngestionRepository._update_attempt_if_current(...)` 现在把 expected Attempt status 纳入 PostgreSQL 条件更新，和 tenant、ParseJob、Attempt、worker、fencing token、最高 token、未过期 lease、非终态一起作为同一次数据库更新的拒绝条件。
+- `mark_parse_attempt_running(...)` 只允许 `lease_claimed -> running`；`renew_parse_attempt_lease(...)` 只允许续租已 running attempt；`commit_parse_attempt_if_current(...)` 和 `fail_parse_attempt(...)` 只允许 running attempt 进入 terminal 状态；expired lease reconciliation 只允许 claimed/running attempt 进入 `lease_lost`。
+- 这补齐了 Package A 目标里的 “Fencing 提交必须由数据库同时校验当前 token、owner、有效 Lease、expected state 和 Attempt ID” 中 expected state 的数据库条件，防止 Runtime 调用顺序错误时越级提交成功。
+- 新增 focused repository tests 覆盖 running、commit、failure 三条路径传入 expected status，并拒绝空 expected-state 集合。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_persistence_fencing.py
+pytest -q tests/knowledge/test_package_a_persistence_fencing.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A persistence expected-state fencing tests passed: 4 passed
+Package A delivery settlement tests passed: 12 passed
+```
