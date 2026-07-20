@@ -23,6 +23,7 @@ from .contracts import (
     ParserFailure,
     ParserJobMetrics,
     SourceSpan,
+    TransformLedgerEntry,
 )
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
@@ -344,6 +345,18 @@ class ParseGateway:
                 blocks=blocks,
                 tables=tables,
                 figures=figures,
+                transform_ledger=[
+                    cls._transform_ledger_entry(
+                        source_sha256=source_sha256,
+                        parser_id=parser_id,
+                        parser_version=request.parser_version,
+                        parser_config_hash=parser_config_hash,
+                        ir_schema_version=ir_schema_version,
+                        blocks=blocks,
+                        tables=tables,
+                        figures=figures,
+                    )
+                ],
                 provenance=DocumentProvenance(
                     parser_id=parser_id,
                     parser_version=request.parser_version,
@@ -675,6 +688,58 @@ class ParseGateway:
         }
 
     @staticmethod
+    def _transform_ledger_entry(
+        *,
+        source_sha256: str,
+        parser_id: str,
+        parser_version: str,
+        parser_config_hash: str,
+        ir_schema_version: str,
+        blocks: list[DocumentBlock],
+        tables: list[DocumentTable],
+        figures: list[DocumentFigure],
+    ) -> TransformLedgerEntry:
+        payload = {
+            "blocks": [block.model_dump() for block in blocks],
+            "tables": [table.model_dump() for table in tables],
+            "figures": [figure.model_dump() for figure in figures],
+            "parser_id": parser_id,
+            "parser_version": parser_version,
+            "parser_config_hash": parser_config_hash,
+            "ir_schema_version": ir_schema_version,
+        }
+        output_hash = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        ).hexdigest()
+        return TransformLedgerEntry(
+            transform_id=hashlib.sha256(
+                ":".join(
+                    [
+                        source_sha256,
+                        parser_id,
+                        parser_version,
+                        parser_config_hash,
+                        ir_schema_version,
+                    ]
+                ).encode("utf-8")
+            ).hexdigest(),
+            transform_type="extract",
+            algorithm_version=f"{parser_id}:{parser_version}:{ir_schema_version}",
+            input_hash=source_sha256,
+            output_hash=output_hash,
+            reversible=False,
+            provenance={
+                "parser_id": parser_id,
+                "parser_version": parser_version,
+                "parser_config_hash": parser_config_hash,
+                "ir_schema_version": ir_schema_version,
+                "block_count": len(blocks),
+                "table_count": len(tables),
+                "figure_count": len(figures),
+            },
+        )
+
+    @staticmethod
     def _source_input_mode(request: ParseDocumentRequest) -> str:
         if request.source_object_ref:
             if request.source_bytes is not None:
@@ -953,8 +1018,9 @@ class ParseGateway:
             )
         ]
 
-    @staticmethod
+    @classmethod
     def _block(
+        cls,
         request: ParseDocumentRequest,
         *,
         block_id: str,
@@ -968,10 +1034,29 @@ class ParseGateway:
             type=block_type,
             text=text,
             source_span=source_span,
+            order_index=cls._order_index_from_block_id(block_id),
+            style=cls._style_for_block(block_type=block_type),
             acl_scope=request.acl_scope,
             sensitivity_tags=list(request.sensitivity_tags),
             confidence=confidence,
         )
+
+    @staticmethod
+    def _order_index_from_block_id(block_id: str) -> int | None:
+        match = re.search(r"(\d+)$", block_id)
+        return int(match.group(1)) if match else None
+
+    @staticmethod
+    def _style_for_block(*, block_type: str) -> dict:
+        if block_type == "heading":
+            return {"role": "heading"}
+        if block_type in {"slide_title", "slide_body"}:
+            return {"role": "slide", "layout": block_type}
+        if block_type in {"table", "table_cell"}:
+            return {"role": "structured_table"}
+        if block_type == "code_block":
+            return {"role": "code"}
+        return {}
 
 
 __all__ = ["ParseGateway"]

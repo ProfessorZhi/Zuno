@@ -57,6 +57,7 @@ class SourceSpan(BaseModel):
     sheet: str | None = None
     line_range: list[int] | None = None
     bbox: list[float] | None = None
+    region_id: str | None = None
     section_path: list[str] = Field(default_factory=list)
     table_cell: str | None = None
     char_start: int | None = None
@@ -104,6 +105,8 @@ class DocumentBlock(BaseModel):
     type: str
     text: str
     source_span: SourceSpan = Field(default_factory=SourceSpan)
+    order_index: int | None = None
+    style: dict[str, Any] = Field(default_factory=dict)
     language: str | None = None
     code_fence: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -126,6 +129,18 @@ class DocumentFigure(BaseModel):
     uri: str | None = None
 
 
+class TransformLedgerEntry(BaseModel):
+    transform_id: str
+    transform_type: Literal["extract", "normalize", "project", "enrich", "redact"]
+    algorithm_version: str
+    input_hash: str
+    output_hash: str
+    source_block_id: str | None = None
+    output_block_id: str | None = None
+    reversible: bool = False
+    provenance: dict[str, Any] = Field(default_factory=dict)
+
+
 class DocumentProvenance(BaseModel):
     parser_id: str
     parser_version: str
@@ -139,6 +154,7 @@ class CanonicalDocumentIR(BaseModel):
     blocks: list[DocumentBlock] = Field(default_factory=list)
     tables: list[DocumentTable] = Field(default_factory=list)
     figures: list[DocumentFigure] = Field(default_factory=list)
+    transform_ledger: list[TransformLedgerEntry] = Field(default_factory=list)
     provenance: DocumentProvenance
 
 
@@ -309,6 +325,49 @@ def build_source_span_provenance(
     }
 
 
+def round_trip_canonical_document_ir(document: CanonicalDocumentIR) -> CanonicalDocumentIR:
+    return CanonicalDocumentIR.model_validate_json(document.model_dump_json())
+
+
+def canonical_document_ir_contract_report(document: CanonicalDocumentIR) -> dict[str, Any]:
+    round_tripped = round_trip_canonical_document_ir(document)
+    span_payloads = [block.source_span.model_dump() for block in document.blocks]
+    forbidden_ir_fields = {"chunk_id", "entity_id", "relation_id", "knowledge_version_id"}
+    source_span_chunk_ids_absent = all(span.get("chunk_id") is None for span in span_payloads)
+    transform_ledger_complete = all(
+        entry.input_hash and entry.output_hash and entry.algorithm_version
+        for entry in document.transform_ledger
+    )
+    return {
+        "schema_round_trip": round_tripped.model_dump() == document.model_dump(),
+        "block_count": len(document.blocks),
+        "table_count": len(document.tables),
+        "figure_count": len(document.figures),
+        "source_span_chunk_ids_absent": source_span_chunk_ids_absent,
+        "knowledge_artifacts_absent": not forbidden_ir_fields.intersection(
+            set(document.metadata.model_dump())
+        ),
+        "transform_ledger_count": len(document.transform_ledger),
+        "transform_ledger_complete": transform_ledger_complete,
+        "source_span_shapes": [
+            {
+                "block_id": block.block_id,
+                "page": block.source_span.page or block.source_span.page_number,
+                "slide": block.source_span.slide,
+                "sheet": block.source_span.sheet,
+                "line_range": block.source_span.line_range,
+                "bbox": block.source_span.bbox,
+                "region_id": block.source_span.region_id,
+                "table_cell": block.source_span.table_cell,
+                "section_path": list(block.source_span.section_path),
+                "order_index": block.order_index,
+                "style_keys": sorted(block.style),
+            }
+            for block in document.blocks
+        ],
+    }
+
+
 def _normalize_span_text(text: str | None) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
 
@@ -337,5 +396,8 @@ __all__ = [
     "ParserFailure",
     "ParserJobMetrics",
     "SourceSpan",
+    "TransformLedgerEntry",
     "build_source_span_provenance",
+    "canonical_document_ir_contract_report",
+    "round_trip_canonical_document_ir",
 ]

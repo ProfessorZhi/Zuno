@@ -18,7 +18,10 @@ from .contracts import (
     ParserFailure,
     ParserJobMetrics,
     SourceSpan,
+    TransformLedgerEntry,
     build_source_span_provenance,
+    canonical_document_ir_contract_report,
+    round_trip_canonical_document_ir,
 )
 from .delete_restore import DeleteLifecycleReceipt, DeleteRestoreRuntime
 from .gateway import ParseGateway
@@ -83,13 +86,16 @@ __all__ = [
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",
     "SourceSpan",
+    "TransformLedgerEntry",
     "SourceObjectCommitError",
     "SourceObjectCommitReceipt",
     "SourceObjectCommitRuntime",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "build_source_span_provenance",
+    "canonical_document_ir_contract_report",
     "get_parser_adapter",
     "normalize_legacy_chunks_to_ir",
+    "round_trip_canonical_document_ir",
     "select_parser_for_format",
 ]

@@ -145,9 +145,14 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     from zuno.knowledge.ingestion import (
         CanonicalDocumentIR,
         DocumentBlock,
+        DocumentFigure,
         DocumentMetadata,
         DocumentProvenance,
+        DocumentTable,
         SourceSpan,
+        TransformLedgerEntry,
+        canonical_document_ir_contract_report,
+        round_trip_canonical_document_ir,
     )
 
     ir = CanonicalDocumentIR(
@@ -167,10 +172,46 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
                 block_id="block_1",
                 type="paragraph",
                 text="Payment is due in 30 days.",
-                source_span=SourceSpan(page=3, bbox=[10.0, 20.0, 300.0, 360.0]),
+                source_span=SourceSpan(
+                    page=3,
+                    bbox=[10.0, 20.0, 300.0, 360.0],
+                    region_id="pdf-page-3-region-1",
+                    raw_text="Payment   is due in 30 days.",
+                    normalized_text="Payment is due in 30 days.",
+                ),
+                order_index=1,
+                style={"font_weight": "normal", "role": "body"},
                 acl_scope="workspace",
                 sensitivity_tags=["confidential"],
                 confidence=0.97,
+            )
+        ],
+        tables=[
+            DocumentTable(
+                table_id="table_payment",
+                rows=[["Term", "Value"], ["Due", "30 days"]],
+                source_span=SourceSpan(page=3, table_cell="table:payment"),
+            )
+        ],
+        figures=[
+            DocumentFigure(
+                figure_id="figure_signature",
+                description="Signature block",
+                source_span=SourceSpan(page=3, bbox=[20.0, 400.0, 120.0, 480.0]),
+                uri="s3://bucket/contract.pdf#figure_signature",
+            )
+        ],
+        transform_ledger=[
+            TransformLedgerEntry(
+                transform_id="transform_pdf_extract_1",
+                transform_type="extract",
+                algorithm_version="docling_pymupdf:contract-v1:canonical-document-ir-v1",
+                input_hash="source-hash",
+                output_hash="ir-hash",
+                source_block_id=None,
+                output_block_id="block_1",
+                reversible=False,
+                provenance={"parser_id": "docling_pymupdf"},
             )
         ],
         provenance=DocumentProvenance(
@@ -187,6 +228,56 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     assert dumped["blocks"][0]["source_span"]["bbox"] == [10.0, 20.0, 300.0, 360.0]
     assert dumped["blocks"][0]["acl_scope"] == "workspace"
     assert dumped["provenance"]["parser_id"] == "docling_pymupdf"
+    round_tripped = round_trip_canonical_document_ir(ir)
+    report = canonical_document_ir_contract_report(round_tripped)
+    assert round_tripped.model_dump() == ir.model_dump()
+    assert report["schema_round_trip"] is True
+    assert report["source_span_chunk_ids_absent"] is True
+    assert report["knowledge_artifacts_absent"] is True
+    assert report["table_count"] == 1
+    assert report["figure_count"] == 1
+    assert report["transform_ledger_complete"] is True
+    assert report["source_span_shapes"][0]["region_id"] == "pdf-page-3-region-1"
+    assert report["source_span_shapes"][0]["order_index"] == 1
+    assert report["source_span_shapes"][0]["style_keys"] == ["font_weight", "role"]
+
+
+def test_parse_gateway_outputs_round_trippable_ir_with_transform_ledger_and_refs() -> None:
+    from zuno.knowledge.ingestion import (
+        ParseDocumentRequest,
+        ParseGateway,
+        canonical_document_ir_contract_report,
+        round_trip_canonical_document_ir,
+    )
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_ir_contract_ppt",
+            workspace_id="workspace_phase11",
+            source_uri="file://decks/roadmap.pptx",
+            mime_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            source_text="# Roadmap\n- Milestone\n![timeline](timeline.png)",
+            parser_version="contract-v3",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    document = round_trip_canonical_document_ir(result.document)
+    report = canonical_document_ir_contract_report(document)
+
+    assert report["schema_round_trip"] is True
+    assert report["source_span_chunk_ids_absent"] is True
+    assert report["knowledge_artifacts_absent"] is True
+    assert report["figure_count"] == 1
+    assert report["transform_ledger_count"] == 1
+    assert report["transform_ledger_complete"] is True
+    assert document.transform_ledger[0].input_hash == document.metadata.source_sha256
+    assert document.transform_ledger[0].provenance["parser_id"] == "local_office_archive"
+    assert any(shape["slide"] == 1 and shape["bbox"] for shape in report["source_span_shapes"])
+    assert any(block.order_index is not None for block in document.blocks)
+    assert any(block.style.get("role") == "slide" for block in document.blocks)
+    assert document.figures[0].uri is None
 
 
 def test_parse_gateway_freezes_document_version_and_schema_fields() -> None:

@@ -683,6 +683,8 @@ def _block(
         type=block_type,
         text=text,
         source_span=source_span,
+        order_index=_order_index_from_block_id(block_id),
+        style=_style_for_block(block_type=block_type, language=language),
         language=language,
         code_fence=code_fence,
         metadata=metadata or {},
@@ -690,6 +692,23 @@ def _block(
         sensitivity_tags=list(request.sensitivity_tags),
         confidence=confidence,
     )
+
+
+def _order_index_from_block_id(block_id: str) -> int | None:
+    match = re.search(r"(\d+)$", block_id)
+    return int(match.group(1)) if match else None
+
+
+def _style_for_block(*, block_type: str, language: str | None) -> dict[str, Any]:
+    if block_type == "heading":
+        return {"role": "heading"}
+    if block_type in {"slide_title", "slide_body"}:
+        return {"role": "slide", "layout": block_type}
+    if block_type in {"table", "table_cell"}:
+        return {"role": "structured_table"}
+    if block_type == "code_block":
+        return {"role": "code", "language": language}
+    return {}
 
 
 def _looks_like_markdown_table(lines: list[str], index: int) -> bool:
