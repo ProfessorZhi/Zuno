@@ -516,4 +516,15 @@ Package A delivery, persistence replay, and queue worker tests passed: 37 passed
 PHASE11 remains in_progress; this is Package A terminal receipt implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A ACK-before-domain-commit guard：
+
+```text
+PackageAProductionIngestionRuntime._settle_delivery_after_domain_commit now raises before RabbitMQ ACK when the Worker receipt does not prove a successful domain commit.
+The guard preserves dead-letter reject no-requeue behavior and normal ACK behavior for committed receipts.
+Focused settlement coverage proves the guard leaves the delivery unacked/unrejected instead of falsely settling it.
+py_compile passed.
+Package A delivery settlement and queue worker tests passed: 28 passed.
+PHASE11 remains in_progress; this is Package A ACK/domain-commit ordering evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

@@ -937,3 +937,23 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery, persistence replay, and queue worker tests passed: 37 passed
 ```
+
+2026-07-20 Package A ACK-before-domain-commit guard：
+
+- `PackageAProductionIngestionRuntime._settle_delivery_after_domain_commit(...)` 现在拒绝在 `PackageAWorkerReceipt.acked_after_domain_commit=false` 时 ACK RabbitMQ delivery。
+- 该保护覆盖 Worker 已返回非死信 receipt 但没有领域事务成功回执的异常边界，避免 RabbitMQ ACK 早于 PostgreSQL SourceObject/ParseAttempt/Snapshot/Outbox 等领域事实提交。
+- dead-letter 结算仍保持 reject no-requeue；有效领域提交回执仍走 ACK。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and queue worker tests passed: 28 passed
+```

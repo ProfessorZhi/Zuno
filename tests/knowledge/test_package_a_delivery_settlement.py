@@ -84,6 +84,29 @@ def test_package_a_settlement_rejects_dead_letter_after_domain_commit() -> None:
     assert delivery.requeue is False
 
 
+def test_package_a_settlement_refuses_ack_without_domain_commit_receipt() -> None:
+    delivery = _RecordingDelivery()
+    receipt = PackageAWorkerReceipt(
+        parse_job_id="job-1",
+        parse_attempt_id="attempt-1",
+        status="failed",
+        acked_after_domain_commit=False,
+        failure_code="retryable_parser_failure",
+    )
+
+    with pytest.raises(IngestionPersistenceError, match="cannot ACK before domain commit"):
+        asyncio.run(
+            PackageAProductionIngestionRuntime._settle_delivery_after_domain_commit(
+                delivery=delivery,
+                worker_receipt=receipt,
+            )
+        )
+
+    assert delivery.acked is False
+    assert delivery.rejected is False
+    assert delivery.requeue is None
+
+
 def test_package_a_rejects_invalid_delivery_schema_without_requeue() -> None:
     delivery = _RecordingDelivery()
     delivery.payload = {"event_id": "event-1"}

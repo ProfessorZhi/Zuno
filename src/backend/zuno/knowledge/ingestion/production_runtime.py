@@ -349,6 +349,8 @@ class PackageAProductionIngestionRuntime:
         if worker_receipt.status == "dead_letter":
             await delivery.reject(requeue=False)
             return
+        if not worker_receipt.acked_after_domain_commit:
+            raise IngestionPersistenceError("Package A delivery cannot ACK before domain commit receipt")
         await delivery.ack()
 
     def _process_first_seen_delivery(
