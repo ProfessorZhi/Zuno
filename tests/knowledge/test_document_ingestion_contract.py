@@ -49,7 +49,9 @@ def test_parser_router_selects_default_and_fallback_contracts() -> None:
 
     assert select_parser_for_format("contract.pdf").default_parser == "docling_pymupdf"
     assert select_parser_for_format("scan.png").default_parser == "local_ocr_vlm"
-    assert select_parser_for_format("slides.pptx").default_parser == "unstructured_markitdown"
+    slides = select_parser_for_format("slides.pptx")
+    assert slides.default_parser == "local_office_archive"
+    assert slides.fallback == "unstructured_markitdown"
     assert select_parser_for_format("notes.md").default_parser == "native"
     assert select_parser_for_format("unknown.bin").fallback == "unstructured_markitdown"
 

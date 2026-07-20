@@ -71,6 +71,8 @@ class SourceSpan(BaseModel):
 class DocumentMetadata(BaseModel):
     document_id: str
     source_id: str | None = None
+    source_object_ref: str | None = None
+    object_manifest_ref: str | None = None
     workspace_id: str
     source_uri: str
     mime_type: str
@@ -93,6 +95,8 @@ class DocumentMetadata(BaseModel):
     blocked_reason: str | None = None
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
+    security_policy_ref: str | None = None
+    security_epoch_ref: str | None = None
 
 
 class DocumentBlock(BaseModel):
@@ -144,6 +148,7 @@ class ParserFailure(BaseModel):
     reason: str
     fallback: str | None = None
     retryable: bool = False
+    failure_classification: str = "parser_failure"
 
 
 class ParserDiagnostic(BaseModel):
@@ -158,6 +163,8 @@ class ParserDiagnostic(BaseModel):
 class ParseDocumentRequest(BaseModel):
     document_id: str
     source_id: str | None = None
+    source_object_ref: str | None = None
+    source_object_manifest: dict[str, Any] = Field(default_factory=dict)
     workspace_id: str
     source_uri: str
     mime_type: str
@@ -176,6 +183,10 @@ class ParseDocumentRequest(BaseModel):
     asset_refs: list[str] = Field(default_factory=list)
     redaction_status: str = "raw"
     retention_policy: str | None = None
+    security_policy_ref: str | None = None
+    security_epoch_ref: str | None = None
+    parser_timeout_seconds: int | None = None
+    cancel_requested: bool = False
 
 
 class IndexHandoffPayload(BaseModel):
@@ -217,6 +228,9 @@ class ParserJobMetrics(BaseModel):
     warning_count: int = 0
     error_count: int = 0
     duration_ms: float = 0.0
+    confidence: float | None = None
+    timeout_seconds: int | None = None
+    source_input_mode: str = "inline_or_file"
 
 
 class ParseJobSnapshot(BaseModel):

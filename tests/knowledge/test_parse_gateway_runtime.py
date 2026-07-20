@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -315,6 +316,116 @@ def test_archive_contract_rejects_unsafe_manifest_entries() -> None:
     assert result.failure.parser_id == "local_office_archive"
     assert result.failure.format == "archive"
     assert "no safe entries" in result.failure.reason
+
+
+def test_parse_gateway_binds_source_object_ref_manifest_and_security_policy() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_text = "# Source Object\nParser reads a fetched projection but binds the S3 ObjectRef."
+    content_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+    object_ref = "s3://zuno-input/tenant-a/workspace_phase11/source/policy.md"
+    request = ParseDocumentRequest(
+        document_id="doc_object_ref",
+        source_id="source_object_1",
+        source_object_ref=object_ref,
+        source_object_manifest={
+            "object_manifest_ref": "object-manifest:policy-md",
+            "content_hash": content_hash,
+            "size_bytes": len(source_text.encode("utf-8")),
+            "parser_policy_ref": "parser-policy:phase11",
+            "lineage_ref": "lineage:source-object-1",
+            "classification_ref": "classification:internal",
+            "workspace_id": "workspace_phase11",
+        },
+        workspace_id="workspace_phase11",
+        source_uri=object_ref,
+        mime_type="text/markdown",
+        source_text=source_text,
+        hash=content_hash,
+        security_policy_ref="security-policy:workspace-parser",
+        security_epoch_ref="security-epoch:42",
+        parser_timeout_seconds=10,
+    )
+
+    result = ParseGateway.submit_parse_job(request)
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.source_object_ref == object_ref
+    assert result.document.metadata.object_manifest_ref == "object-manifest:policy-md"
+    assert result.document.metadata.source_sha256 == content_hash
+    assert f":{content_hash}:native:" in result.document.metadata.document_version_id
+    assert result.document.metadata.security_policy_ref == "security-policy:workspace-parser"
+    assert result.document.metadata.security_epoch_ref == "security-epoch:42"
+    diagnostic = next(d for d in result.diagnostics if d.code == "object_ref_input_bound")
+    assert diagnostic.metadata["parser_policy_ref"] == "parser-policy:phase11"
+    assert diagnostic.metadata["input_mode"] == "object_ref_with_projection"
+    assert snapshot.metrics.source_input_mode == "object_ref_with_projection"
+    assert snapshot.metrics.timeout_seconds == 10
+    assert snapshot.metrics.confidence == result.document.provenance.confidence
+    assert snapshot.source_provenance["source_object_ref"] == object_ref
+    assert snapshot.source_provenance["object_manifest_ref"] == "object-manifest:policy-md"
+    assert snapshot.source_provenance["source_sha256"] == content_hash
+    assert snapshot.source_provenance["security_epoch_ref"] == "security-epoch:42"
+
+
+def test_parse_gateway_rejects_object_ref_hash_mismatch_as_typed_failure() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_text = "ObjectRef hash mismatch should fail before adapter execution."
+    object_ref = "s3://zuno-input/tenant-a/workspace_phase11/source/bad.md"
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_object_ref_bad",
+            source_object_ref=object_ref,
+            source_object_manifest={
+                "object_manifest_ref": "object-manifest:bad",
+                "content_hash": "0" * 64,
+                "size_bytes": len(source_text.encode("utf-8")),
+                "parser_policy_ref": "parser-policy:phase11",
+                "lineage_ref": "lineage:bad",
+            },
+            workspace_id="workspace_phase11",
+            source_uri=object_ref,
+            mime_type="text/markdown",
+            source_text=source_text,
+            hash="f" * 64,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "failed"
+    assert result.failure is not None
+    assert result.failure.failure_classification == "object_ref_contract_violation"
+    assert result.failure.retryable is False
+    assert snapshot.error_class == "ObjectRefContractViolation"
+    assert snapshot.failure_snapshot["failure_classification"] == "object_ref_contract_violation"
+    assert snapshot.metrics.source_input_mode == "object_ref_with_projection"
+
+
+def test_parse_gateway_cancel_requested_stops_before_adapter_execution() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_cancel_before_parse",
+            workspace_id="workspace_phase11",
+            source_uri="file://notes/cancel-before.md",
+            mime_type="text/markdown",
+            source_text="# Cancel\nThis should not be parsed.",
+            cancel_requested=True,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "cancelled"
+    assert result.document is None
+    assert result.failure is not None
+    assert result.failure.failure_classification == "cancelled"
+    assert any(diagnostic.code == "parse_cancelled" for diagnostic in result.diagnostics)
+    assert snapshot.status == "cancelled"
+    assert snapshot.failure_snapshot["failure_classification"] == "cancelled"
 
 
 def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:

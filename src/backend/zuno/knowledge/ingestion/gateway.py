@@ -215,12 +215,67 @@ class ParseGateway:
             )
         parser_config_hash = cls._parser_config_hash(request)
         job_id = f"parse_{uuid4().hex[:12]}"
+        diagnostics.append(
+            ParserDiagnostic(
+                code="parser_contract_boundary",
+                message="Parser request is bound to timeout, security policy, and source input contract.",
+                parser_id=parser_id,
+                format=capability.format,
+                metadata={
+                    "timeout_seconds": cls._effective_timeout_seconds(request, capability.timeout_seconds),
+                    "sandbox_policy": capability.sandbox_policy,
+                    "network_policy": adapter_contract.network_policy if adapter_contract else "unknown",
+                    "security_policy_ref": request.security_policy_ref,
+                    "security_epoch_ref": request.security_epoch_ref,
+                    "source_input_mode": cls._source_input_mode(request),
+                    "cancel_requested": request.cancel_requested,
+                },
+            )
+        )
+        if request.cancel_requested:
+            return ParseDocumentResult(
+                job_id=job_id,
+                status="cancelled",
+                failure=ParserFailure(
+                    parser_id=parser_id,
+                    format=capability.format,
+                    reason="parse request cancelled before adapter execution",
+                    fallback=capability.fallback,
+                    retryable=False,
+                    failure_classification="cancelled",
+                ),
+                diagnostics=[
+                    *diagnostics,
+                    ParserDiagnostic(
+                        code="parse_cancelled",
+                        message="parse request cancelled before adapter execution",
+                        severity="warning",
+                        parser_id=parser_id,
+                        format=capability.format,
+                    ),
+                ],
+            )
 
         try:
             source_text = cls._source_text(request)
             if not source_text.strip():
                 raise ValueError("empty source content")
             source_sha256 = cls._source_sha256(request, source_text)
+            object_ref_metadata = cls._source_object_contract_metadata(
+                request=request,
+                source_sha256=source_sha256,
+            )
+            if object_ref_metadata:
+                source_sha256 = object_ref_metadata["content_hash"]
+                diagnostics.append(
+                    ParserDiagnostic(
+                        code="object_ref_input_bound",
+                        message="Parser input is bound to PHASE04 SourceObject ObjectRef and manifest.",
+                        parser_id=parser_id,
+                        format=capability.format,
+                        metadata=object_ref_metadata,
+                    )
+                )
             ir_schema_version = request.ir_schema_version or IR_SCHEMA_VERSION
 
             adapter = get_parser_adapter(parser_id)
@@ -242,10 +297,12 @@ class ParseGateway:
             metadata = DocumentMetadata(
                 document_id=request.document_id,
                 source_id=request.source_id or request.document_id,
+                source_object_ref=request.source_object_ref,
+                object_manifest_ref=object_ref_metadata.get("object_manifest_ref"),
                 workspace_id=request.workspace_id,
                 source_uri=request.source_uri,
                 mime_type=request.mime_type,
-                hash=request.hash or source_sha256,
+                hash=object_ref_metadata.get("content_hash") or request.hash or source_sha256,
                 source_sha256=source_sha256,
                 parser_id=parser_id,
                 parser_version=request.parser_version,
@@ -279,6 +336,8 @@ class ParseGateway:
                 ),
                 acl_scope=request.acl_scope,
                 sensitivity_tags=list(request.sensitivity_tags),
+                security_policy_ref=request.security_policy_ref,
+                security_epoch_ref=request.security_epoch_ref,
             )
             document = CanonicalDocumentIR(
                 metadata=metadata,
@@ -319,6 +378,7 @@ class ParseGateway:
                     reason=str(exc),
                     fallback=capability.fallback,
                     retryable=False,
+                    failure_classification=cls._failure_classification(str(exc)),
                 ),
                 diagnostics=diagnostics,
             )
@@ -342,7 +402,7 @@ class ParseGateway:
         adapter_contract = PARSER_ADAPTER_CONTRACTS.get(parser_id)
         failure_reason = result.failure.reason if result.failure else None
         error_class = cls._error_class(failure_reason)
-        source_sha256 = cls._source_sha256(request, cls._source_text(request))
+        source_sha256 = cls._source_identity_hash(request, cls._source_text(request))
         parser_config_hash = cls._parser_config_hash(request)
         metrics = ParserJobMetrics(
             status=result.status,
@@ -354,6 +414,9 @@ class ParseGateway:
             warning_count=warning_count,
             error_count=error_count,
             duration_ms=round(duration_ms, 3),
+            confidence=document.provenance.confidence if document else None,
+            timeout_seconds=cls._effective_timeout_seconds(request, capability.timeout_seconds),
+            source_input_mode=cls._source_input_mode(request),
         )
         status_timeline = [{"status": lifecycle_start, "attempt": attempt}]
         if result.status == "blocked":
@@ -429,6 +492,8 @@ class ParseGateway:
                 "source_id": metadata.source_id,
                 "workspace_id": metadata.workspace_id,
                 "source_uri": metadata.source_uri,
+                "source_object_ref": metadata.source_object_ref,
+                "object_manifest_ref": metadata.object_manifest_ref,
                 "mime_type": metadata.mime_type,
                 "hash": metadata.hash,
                 "source_sha256": metadata.source_sha256,
@@ -440,6 +505,8 @@ class ParseGateway:
                 "ir_schema_version": metadata.ir_schema_version,
                 "acl_scope": metadata.acl_scope,
                 "sensitivity_tags": list(metadata.sensitivity_tags),
+                "security_policy_ref": metadata.security_policy_ref,
+                "security_epoch_ref": metadata.security_epoch_ref,
                 "confidence": result.document.provenance.confidence,
             }
         return {
@@ -447,9 +514,11 @@ class ParseGateway:
             "source_id": request.source_id or request.document_id,
             "workspace_id": request.workspace_id,
             "source_uri": request.source_uri,
+            "source_object_ref": request.source_object_ref,
+            "object_manifest_ref": request.source_object_manifest.get("object_manifest_ref"),
             "mime_type": request.mime_type,
             "hash": request.hash,
-            "source_sha256": request.hash,
+            "source_sha256": cls._source_identity_hash(request, cls._source_text(request)),
             "parser_id": parser_id,
             "parser_version": request.parser_version,
             "parser_config_hash": cls._parser_config_hash(request),
@@ -457,6 +526,8 @@ class ParseGateway:
             "ir_schema_version": request.ir_schema_version,
             "acl_scope": request.acl_scope,
             "sensitivity_tags": list(request.sensitivity_tags),
+            "security_policy_ref": request.security_policy_ref,
+            "security_epoch_ref": request.security_epoch_ref,
         }
 
     @classmethod
@@ -476,6 +547,7 @@ class ParseGateway:
                 reason=reason,
                 fallback=capability.fallback,
                 retryable=False,
+                failure_classification="dependency_blocked",
             ),
             diagnostics=[
                 ParserDiagnostic(
@@ -518,6 +590,13 @@ class ParseGateway:
             return hashlib.sha256(source_text.encode("utf-8")).hexdigest()
         return request.hash or ""
 
+    @classmethod
+    def _source_identity_hash(cls, request: ParseDocumentRequest, source_text: str) -> str:
+        manifest_hash = request.source_object_manifest.get("content_hash")
+        if request.source_object_ref and isinstance(manifest_hash, str) and manifest_hash:
+            return manifest_hash
+        return cls._source_sha256(request, source_text)
+
     @staticmethod
     def _document_version_id(
         *,
@@ -559,7 +638,22 @@ class ParseGateway:
             return None
         if "empty source content" in reason:
             return "ValueError"
+        if "source object" in reason.lower() or "objectref" in reason.lower():
+            return "ObjectRefContractViolation"
         return "ParserError"
+
+    @staticmethod
+    def _failure_classification(reason: str | None) -> str:
+        if not reason:
+            return "parser_failure"
+        lowered = reason.lower()
+        if "empty source content" in lowered:
+            return "empty_source"
+        if "source object" in lowered or "objectref" in lowered:
+            return "object_ref_contract_violation"
+        if "archive manifest" in lowered:
+            return "unsafe_or_empty_archive"
+        return "parser_failure"
 
     @staticmethod
     def _failure_snapshot(
@@ -574,9 +668,78 @@ class ParseGateway:
             "status": result.status,
             "attempt": attempt,
             "error_class": error_class,
+            "failure_classification": result.failure.failure_classification if result.failure else None,
             "reason": result.failure.reason if result.failure else None,
             "blocked": result.status == "blocked",
             "dead_letter": result.status == "dead_letter",
+        }
+
+    @staticmethod
+    def _source_input_mode(request: ParseDocumentRequest) -> str:
+        if request.source_object_ref:
+            if request.source_bytes is not None:
+                return "object_ref_with_bytes"
+            if request.source_text is not None:
+                return "object_ref_with_projection"
+            return "object_ref_only"
+        if request.source_bytes is not None:
+            return "inline_bytes"
+        if request.source_text is not None:
+            return "inline_text"
+        return "file_uri"
+
+    @staticmethod
+    def _effective_timeout_seconds(request: ParseDocumentRequest, capability_timeout: int) -> int:
+        if request.parser_timeout_seconds is None:
+            return capability_timeout
+        return min(request.parser_timeout_seconds, capability_timeout)
+
+    @staticmethod
+    def _source_object_contract_metadata(
+        *,
+        request: ParseDocumentRequest,
+        source_sha256: str,
+    ) -> dict:
+        if not request.source_object_ref:
+            return {}
+        if not request.source_object_ref.startswith("s3://"):
+            raise ValueError("Source ObjectRef must use the PHASE04 s3:// object namespace")
+        if request.source_uri != request.source_object_ref:
+            raise ValueError("Source ObjectRef must match source_uri for parser input")
+        manifest = request.source_object_manifest
+        required_fields = {
+            "object_manifest_ref",
+            "content_hash",
+            "size_bytes",
+            "parser_policy_ref",
+            "lineage_ref",
+        }
+        missing = sorted(field for field in required_fields if not manifest.get(field))
+        if missing:
+            raise ValueError(f"Source ObjectRef manifest missing required fields: {', '.join(missing)}")
+        content_hash = str(manifest["content_hash"])
+        if len(content_hash) != 64 or any(char not in "0123456789abcdef" for char in content_hash):
+            raise ValueError("Source ObjectRef manifest content_hash must be a lowercase SHA-256 digest")
+        expected_hash = request.hash
+        if request.source_bytes is not None:
+            expected_hash = source_sha256
+        if expected_hash is not None and content_hash != expected_hash:
+            raise ValueError("Source ObjectRef manifest content_hash does not match parser input bytes")
+        size_bytes = int(manifest["size_bytes"])
+        if size_bytes <= 0:
+            raise ValueError("Source ObjectRef manifest size_bytes must be positive")
+        if manifest.get("workspace_id") and manifest["workspace_id"] != request.workspace_id:
+            raise ValueError("Source ObjectRef manifest workspace_id does not match parser request")
+        return {
+            "source_object_ref": request.source_object_ref,
+            "object_manifest_ref": manifest["object_manifest_ref"],
+            "content_hash": content_hash,
+            "size_bytes": size_bytes,
+            "parser_policy_ref": manifest["parser_policy_ref"],
+            "lineage_ref": manifest["lineage_ref"],
+            "classification_ref": manifest.get("classification_ref"),
+            "security_epoch_ref": request.security_epoch_ref or manifest.get("security_epoch_ref"),
+            "input_mode": ParseGateway._source_input_mode(request),
         }
 
     @classmethod

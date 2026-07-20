@@ -38,6 +38,7 @@ docs/evidence/input-runtime-batch.md
 - LocalQueue ACK / retry / dead-letter / replay、RabbitMQ target-blocked probe、Redis fallback boundary 只作为线索；外部依赖不可用不能冒充 production dependency。
 - PHASE11 重新打开后，ParseAttemptControl、native/PDF parser、OCR/VLM、Office/archive、delete/legal hold/restore 等证据都只保留为部分证据，不能单独关闭 PHASE11。
 - `local_office_archive` 当前提供 Office/Archive 的可执行本地 fallback：docx/xlsx 保留 heading/table projection，pptx 保留 slide/figure projection，archive 只读取 manifest、不自动解包；live Unstructured / MarkItDown provider 保持 measurement blocked。
+- Parser Gateway 当前接受显式 `source_object_ref` 与 `source_object_manifest`，在 adapter 执行前校验 PHASE04 `s3://` ObjectRef、object manifest ref、content hash、size、parser policy、lineage ref、workspace scope，并把 ObjectRef、security policy、security epoch、timeout、source input mode 与质量 confidence 写入 ParseJobSnapshot；hash mismatch 与 cancel-before-adapter 进入 typed failure / cancelled 状态。
 
 ## Validation
 
@@ -56,4 +57,4 @@ PHASE11 completed 只能表示完整 Phase Scope 内 implementation available；
 
 ## 2026-07-20 Goal01 Reopen Audit
 
-本文证据保留为 PHASE11 的部分实现线索，但不再证明完整 Phase completed。剩余缺口包括真实 RabbitMQ 生产默认 dispatch/ACK/retry/DLQ/replay、生产默认 worker 接入 PostgreSQL UoW 与 PHASE04 Object Store、可执行 OCR/VLM adapter boundary、Human Review task/decision/receipt 状态机、完整 delete/legal hold/restore fault coverage，以及 legacy upload/parser 默认路径 cutover。
+本文证据保留为 PHASE11 的部分实现线索，但不再证明完整 Phase completed。剩余缺口包括真实 RabbitMQ 生产默认 dispatch/ACK/retry/DLQ/replay、生产默认 worker 接入 PostgreSQL UoW 与 PHASE04 Object Store、真实 OCR/VLM 与 Office/Layout provider 集成、Human Review task/decision/receipt 生产表与 worker 接线、完整 delete/legal hold/restore fault coverage，以及 legacy upload/parser 默认路径 cutover。
