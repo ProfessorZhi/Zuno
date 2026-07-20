@@ -857,3 +857,23 @@ pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_w
 py_compile passed
 Package A ObjectRef verifier and delivery settlement tests passed: 15 passed
 ```
+
+2026-07-20 Package A Workspace upload replay idempotency：
+
+- `IngestionRepository.load_workspace_upload_replay_receipt(...)` 新增按 `tenant_id + ParseJob.idempotency_key` 读取既有 SourceObject、DocumentVersion、ParsePlan、ParseJob 和 PHASE04 `infra_outbox_events` parse-request outbox 的 replay receipt。
+- `PackageAProductionIngestionRuntime.accept_workspace_upload(...)` 现在先根据上传内容计算 `parse:{tenant}:{workspace}:{sha256}:1`，命中既有 PostgreSQL 事实时直接返回 replay receipt，不再重复写 MinIO/S3，也不再撞 `ingestion_source_objects` 或 `ingestion_parse_jobs` 的唯一约束。
+- replay 会校验 workspace、content hash、size、classification、Security Epoch 和 parse-request outbox 是否一致；冲突时明确失败，不伪造重复 accepted。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/ingestion/persistence.py src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_persistence_fencing.py tests/api/test_workspace_package_a_upload_hash_gate.py
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_persistence_fencing.py tests/api/test_workspace_package_a_upload_hash_gate.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload replay, persistence fencing, and workspace upload hash gate tests passed: 14 passed
+```

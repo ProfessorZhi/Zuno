@@ -120,6 +120,14 @@ class PackageAProductionIngestionRuntime:
 
     def accept_workspace_upload(self, command: PackageAUploadCommand) -> PackageAUploadReceipt:
         content_hash = hashlib.sha256(command.content).hexdigest()
+        idempotency_key = f"parse:{command.tenant_id}:{command.workspace_id}:{content_hash}:1"
+        replay_receipt = self._load_workspace_upload_replay_receipt(
+            command=command,
+            content_hash=content_hash,
+            idempotency_key=idempotency_key,
+        )
+        if replay_receipt is not None:
+            return replay_receipt
         committed_name = self._object_name(command)
         ticket = self.object_store.stage(
             bucket=command.bucket,
@@ -145,7 +153,6 @@ class PackageAProductionIngestionRuntime:
         document_version_id = f"document-version:{command.source_object_id}:1"
         parse_plan_id = f"parse-plan:{command.source_object_id}:1"
         parse_job_id = f"parse-job:{command.source_object_id}:1"
-        idempotency_key = f"parse:{command.tenant_id}:{command.workspace_id}:{content_hash}:1"
         envelope = self._parse_requested_envelope(
             command=command,
             document_version_id=document_version_id,
@@ -209,6 +216,54 @@ class PackageAProductionIngestionRuntime:
             outbox_event_id=outbox.ref,
             object_ref=source_commit.object_ref,
         )
+
+    def _load_workspace_upload_replay_receipt(
+        self,
+        *,
+        command: PackageAUploadCommand,
+        content_hash: str,
+        idempotency_key: str,
+    ) -> PackageAUploadReceipt | None:
+        with IngestionUnitOfWork(self.engine) as repo:
+            replay = repo.load_workspace_upload_replay_receipt(
+                tenant_id=command.tenant_id,
+                idempotency_key=idempotency_key,
+            )
+        if replay is None:
+            return None
+        self._validate_workspace_upload_replay(
+            command=command,
+            replay=replay,
+            content_hash=content_hash,
+        )
+        return PackageAUploadReceipt(
+            source_object_id=str(replay["source_object_id"]),
+            document_version_id=str(replay["document_version_id"]),
+            parse_plan_id=str(replay["parse_plan_id"]),
+            parse_job_id=str(replay["parse_job_id"]),
+            outbox_event_id=str(replay["outbox_event_id"]),
+            object_ref=str(replay["object_ref"]),
+        )
+
+    @staticmethod
+    def _validate_workspace_upload_replay(
+        *,
+        command: PackageAUploadCommand,
+        replay: dict[str, Any],
+        content_hash: str,
+    ) -> None:
+        expected = {
+            "workspace_id": command.workspace_id,
+            "source_sha256": content_hash,
+            "size_bytes": len(command.content),
+            "classification_ref": command.classification_ref,
+            "security_epoch_ref": command.security_epoch_ref,
+        }
+        for field_name, expected_value in expected.items():
+            if str(replay.get(field_name)) != str(expected_value):
+                raise IngestionPersistenceError(f"workspace upload replay conflict: {field_name}")
+        if not replay.get("outbox_event_id"):
+            raise IngestionPersistenceError("workspace upload replay missing parse-request outbox")
 
     async def process_rabbitmq_delivery(self, delivery: RabbitMQDelivery | AckableDelivery) -> PackageAWorkerReceipt:
         try:

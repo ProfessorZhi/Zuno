@@ -472,4 +472,15 @@ Package A ObjectRef verifier and delivery settlement tests passed: 15 passed.
 PHASE11 remains in_progress; this is Package A ObjectRef visibility/dead-letter boundary implementation evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A Workspace upload replay idempotency：
+
+```text
+IngestionRepository.load_workspace_upload_replay_receipt now resolves an existing upload by tenant_id + ParseJob idempotency key back to SourceObject, DocumentVersion, ParsePlan, ParseJob, and the PHASE04 infra_outbox_events parse-request outbox.
+PackageAProductionIngestionRuntime.accept_workspace_upload computes the content-addressed parse idempotency key before object writes and returns the existing receipt when PostgreSQL already proves the same tenant/workspace/content upload.
+Replay validates workspace, content hash, size, classification, Security Epoch, and parse-request outbox presence before returning accepted facts; conflicts fail explicitly.
+py_compile passed.
+Package A upload replay, persistence fencing, and workspace upload hash gate tests passed: 14 passed.
+PHASE11 remains in_progress; this is Package A upload idempotency/default-path implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

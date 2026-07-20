@@ -419,6 +419,48 @@ class IngestionRepository:
             )
         return dict(row)
 
+    def load_workspace_upload_replay_receipt(
+        self,
+        *,
+        tenant_id: str,
+        idempotency_key: str,
+    ) -> dict[str, Any] | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    source.source_object_id,
+                    source.storage_uri AS object_ref,
+                    source.source_sha256,
+                    source.size_bytes,
+                    source.classification_ref,
+                    source.security_epoch_ref,
+                    document.document_version_id,
+                    document.workspace_id,
+                    plan.parse_plan_id,
+                    job.parse_job_id,
+                    job.idempotency_key,
+                    outbox.event_id AS outbox_event_id
+                FROM ingestion_parse_jobs AS job
+                JOIN ingestion_parse_plans AS plan
+                  ON plan.parse_plan_id = job.parse_plan_id
+                JOIN ingestion_document_versions AS document
+                  ON document.document_version_id = job.document_version_id
+                JOIN ingestion_source_objects AS source
+                  ON source.source_object_id = document.source_object_id
+                LEFT JOIN infra_outbox_events AS outbox
+                  ON outbox.tenant_id = job.tenant_id
+                 AND outbox.aggregate_id = job.parse_job_id
+                 AND outbox.topic = 'ingestion.parse.requested'
+                 AND outbox.idempotency_key = job.idempotency_key
+                WHERE job.tenant_id = :tenant_id
+                  AND job.idempotency_key = :idempotency_key
+                """
+            ),
+            {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+        ).mappings().first()
+        return None if row is None else dict(row)
+
     def claim_parse_attempt_lease(
         self,
         *,

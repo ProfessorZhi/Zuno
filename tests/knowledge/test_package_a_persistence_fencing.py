@@ -181,3 +181,25 @@ def test_snapshot_handoff_replay_receipt_loads_by_tenant_scoped_idempotency() ->
     }
     statement = connection.calls[0]["statement"]
     assert "outbox.idempotency_key = indexable.handoff_idempotency_key" in statement
+
+
+def test_workspace_upload_replay_receipt_joins_parse_job_to_source_and_outbox() -> None:
+    connection = _Connection()
+    repo = IngestionRepository(connection)
+
+    repo.load_workspace_upload_replay_receipt(
+        tenant_id="tenant-a",
+        idempotency_key="parse:tenant-a:workspace-a:hash:1",
+    )
+
+    assert connection.calls[0]["params"] == {
+        "tenant_id": "tenant-a",
+        "idempotency_key": "parse:tenant-a:workspace-a:hash:1",
+    }
+    statement = connection.calls[0]["statement"]
+    assert "FROM ingestion_parse_jobs AS job" in statement
+    assert "JOIN ingestion_parse_plans AS plan" in statement
+    assert "JOIN ingestion_document_versions AS document" in statement
+    assert "JOIN ingestion_source_objects AS source" in statement
+    assert "LEFT JOIN infra_outbox_events AS outbox" in statement
+    assert "outbox.topic = 'ingestion.parse.requested'" in statement
