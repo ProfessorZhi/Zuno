@@ -384,6 +384,15 @@ class PackageAProductionIngestionRuntime:
                         status = str(replay["job_status"])
                         if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
                             status = "duplicate"
+                        if status == "succeeded":
+                            handoff_replay = repo.load_snapshot_handoff_replay_receipt(
+                                tenant_id=tenant_id,
+                                handoff_idempotency_key=str(replay["handoff_idempotency_key"]),
+                            )
+                            self._validate_snapshot_handoff_replay_receipt(
+                                replay=replay,
+                                handoff_replay=handoff_replay,
+                            )
                         worker_receipt = PackageAWorkerReceipt(
                             parse_job_id=parse_job_id,
                             parse_attempt_id=replay.get("parse_attempt_id"),
@@ -504,6 +513,18 @@ class PackageAProductionIngestionRuntime:
             if replay.get(field_name) not in {None, ""}:
                 raise IngestionPersistenceError(
                     f"Package A replay receipt conflict for {status}: {field_name}"
+                )
+
+    @staticmethod
+    def _validate_snapshot_handoff_replay_receipt(
+        *,
+        replay: dict[str, Any],
+        handoff_replay: dict[str, Any],
+    ) -> None:
+        for field_name in ("indexable_snapshot_id", "outbox_event_id", "handoff_idempotency_key"):
+            if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
+                raise IngestionPersistenceError(
+                    f"Package A snapshot handoff replay mismatch: {field_name}"
                 )
 
     @staticmethod

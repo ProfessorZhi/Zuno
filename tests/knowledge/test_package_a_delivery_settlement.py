@@ -469,6 +469,18 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
                 "dead_letter_id": None,
             }
 
+        def load_snapshot_handoff_replay_receipt(
+            self,
+            *,
+            tenant_id: str,
+            handoff_idempotency_key: str,
+        ):
+            return {
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": handoff_idempotency_key,
+            }
+
     class _UnitOfWork:
         def __init__(self, engine):
             self.repo = _Repo()
@@ -494,6 +506,68 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
     assert calls[0]["consumer"] == "worker-from-config"
     assert calls[0]["ordering_key"] == "job-1"
     assert calls[0]["ordering_sequence"] == 1
+
+
+def test_package_a_duplicate_success_replay_refuses_handoff_receipt_mismatch_without_ack(
+    monkeypatch,
+) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "received"
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "job_status": "succeeded",
+                "attempt_status": "succeeded",
+                "parse_attempt_id": "attempt-1",
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": "handoff-idem-1",
+                "outbox_idempotency_key": "handoff-idem-1",
+                "dead_letter_id": None,
+            }
+
+        def load_snapshot_handoff_replay_receipt(
+            self,
+            *,
+            tenant_id: str,
+            handoff_idempotency_key: str,
+        ):
+            return {
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-forged",
+                "handoff_idempotency_key": handoff_idempotency_key,
+            }
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    with pytest.raises(IngestionPersistenceError, match="snapshot handoff replay mismatch"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.rejected is False
 
 
 def test_package_a_duplicate_delivery_rejects_mismatched_replay_receipt_without_ack(monkeypatch) -> None:

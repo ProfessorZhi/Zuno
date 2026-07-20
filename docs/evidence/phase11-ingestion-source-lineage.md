@@ -1274,6 +1274,29 @@ py_compile passed
 Package A delivery settlement tests passed: 40 passed
 ```
 
+2026-07-20 Package A succeeded replay handoff receipt consistency：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 `succeeded` duplicate/redelivery 分支中，使用 `handoff_idempotency_key` 读取 PostgreSQL `IndexableDocumentSnapshot` / Snapshot Outbox replay receipt。
+- `PackageAProductionIngestionRuntime._validate_snapshot_handoff_replay_receipt(...)` 要求 ParseJob replay receipt 与 handoff replay receipt 的 `indexable_snapshot_id`、`outbox_event_id`、`handoff_idempotency_key` 一致后才允许 ACK。
+- 该 gate 防止 crash-after-commit-before-ACK 回放路径只凭 ParseJob receipt 字段确认成功，而忽略 Snapshot Handoff / Outbox 持久事实不一致。
+- 本次没有新增 Migration；复用 `load_snapshot_handoff_replay_receipt(...)` 已有 PostgreSQL 查询。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 41 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

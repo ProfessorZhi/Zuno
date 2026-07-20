@@ -893,4 +893,16 @@ Package A delivery settlement tests passed: 40 passed.
 PHASE11 remains in_progress; this is Package A replay settlement hardening evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay handoff receipt consistency：
+
+```text
+PackageAProductionIngestionRuntime now loads Snapshot Handoff replay receipt for succeeded duplicate/redelivery deliveries before ACK.
+The replay gate cross-checks indexable_snapshot_id, outbox_event_id, and handoff_idempotency_key between ParseJob receipt and Snapshot Handoff receipt.
+The focused test proves a forged handoff outbox_event_id is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 41 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A crash-after-commit replay handoff consistency evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
