@@ -137,6 +137,7 @@ class RabbitMQTransport:
         tenant_id: str,
         trace_id: str,
         workspace_id: str | None = None,
+        data_classification: str | None = None,
         version: str = "v1",
         security_epoch_ref: str | None = None,
         ordering_key: str | None = None,
@@ -153,6 +154,8 @@ class RabbitMQTransport:
         }
         if workspace_id is not None:
             headers["workspace_id"] = workspace_id
+        if data_classification is not None:
+            headers["data_classification"] = data_classification
         if security_epoch_ref is not None:
             headers["security_epoch_ref"] = security_epoch_ref
         if ordering_key is not None or ordering_sequence is not None:

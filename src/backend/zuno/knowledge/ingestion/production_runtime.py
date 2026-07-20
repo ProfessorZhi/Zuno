@@ -301,6 +301,13 @@ class PackageAProductionIngestionRuntime:
         if header_trace_id is None or str(header_trace_id) != str(envelope.trace_id):
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("delivery trace header does not match envelope")
+        header_data_classification = delivery.headers.get("data_classification")
+        if (
+            header_data_classification is None
+            or str(header_data_classification) != str(envelope.data_classification)
+        ):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery data classification header does not match envelope")
         try:
             self._validate_delivery_retry_policy(payload=payload, max_attempts=self.max_attempts)
             self._validate_delivery_retry_envelope(payload=payload, envelope=envelope)
