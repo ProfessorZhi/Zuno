@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime, timezone
 
 import pytest
 
@@ -73,7 +74,34 @@ def test_package_a_upload_replay_rejects_conflicting_source_facts(monkeypatch) -
         runtime.accept_workspace_upload(_command(content=content))
 
 
-def _command(*, content: bytes, source_object_id: str = "source-a") -> PackageAUploadCommand:
+def test_package_a_upload_parse_request_preserves_deadline_at() -> None:
+    deadline = datetime(2026, 7, 20, 12, 30, tzinfo=timezone.utc)
+    runtime = object.__new__(PackageAProductionIngestionRuntime)
+    runtime.max_attempts = 2
+
+    envelope = runtime._parse_requested_envelope(
+        command=_command(content=b"# Deadline\n", deadline_at=deadline),
+        document_version_id="document-version:source-a:1",
+        parse_plan_id="parse-plan:source-a:1",
+        parse_job_id="parse-job:source-a:1",
+        object_ref="s3://bucket/tenant-a/workspace-a/source/source-a/file.md",
+        object_manifest_ref="manifest:source-a",
+        content_hash="a" * 64,
+        size_bytes=11,
+        idempotency_key="parse:tenant-a:workspace-a:hash:deadline",
+    )
+
+    assert envelope.deadline_at == deadline
+    assert envelope.aggregate_type == "ParseJob"
+    assert envelope.aggregate_id == "parse-job:source-a:1"
+
+
+def _command(
+    *,
+    content: bytes,
+    source_object_id: str = "source-a",
+    deadline_at: datetime | None = None,
+) -> PackageAUploadCommand:
     return PackageAUploadCommand(
         tenant_id="tenant-a",
         workspace_id="workspace-a",
@@ -86,6 +114,7 @@ def _command(*, content: bytes, source_object_id: str = "source-a") -> PackageAU
         classification_ref="internal",
         security_epoch_ref="security-epoch-a",
         trace_id="trace-a",
+        deadline_at=deadline_at,
     )
 
 

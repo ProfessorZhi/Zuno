@@ -71,6 +71,7 @@ class PackageAUploadCommand:
     parser_policy_ref: str = "parser-policy:phase11-package-a"
     quality_policy_ref: str = "quality-policy:phase11-package-a"
     security_decision_ref: str = "security-decision:phase11-package-a"
+    deadline_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -790,6 +791,7 @@ class PackageAProductionIngestionRuntime:
             data_classification=command.classification_ref,
             occurred_at=now,
             created_at=now,
+            deadline_at=command.deadline_at,
             payload=payload,
             payload_hash=canonical_sha256(payload),
             payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),

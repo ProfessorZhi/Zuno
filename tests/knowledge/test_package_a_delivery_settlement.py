@@ -592,6 +592,41 @@ def test_package_a_cancel_requested_receipt_carries_failure_code_without_parser_
     ]
 
 
+def test_package_a_expired_deadline_receipt_carries_failure_code_without_parser_or_snapshot(monkeypatch) -> None:
+    events: list[str] = []
+    repo = _FirstSeenRepo(events)
+    runtime = _runtime_without_init()
+    runtime.worker_id = "worker-a"
+    runtime.lease_ttl_seconds = 30
+    runtime.review_runtime = HumanReviewRuntime(min_confidence=0.1)
+    runtime.handoff_runtime = SnapshotHandoffRuntime()
+
+    def read_object(context):
+        raise AssertionError("expired deadline delivery must not read object bytes")
+
+    monkeypatch.setattr(runtime, "_read_and_verify_object", read_object)
+    payload = _lineage_payload()
+    envelope = _envelope(payload=payload, deadline_at=datetime(2000, 1, 1, tzinfo=timezone.utc))
+
+    receipt = runtime._process_first_seen_delivery(
+        repo=repo,
+        payload=payload,
+        envelope=envelope,
+        parse_job_id="parse-job-a",
+        tenant_id="tenant-a",
+    )
+
+    assert receipt.status == "cancelled"
+    assert receipt.acked_after_domain_commit is True
+    assert receipt.failure_code == "deadline_expired"
+    assert events == [
+        "load_context",
+        "claim",
+        "running",
+        "fail:cancelled:deadline_expired",
+    ]
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     runtime = object.__new__(PackageAProductionIngestionRuntime)
     runtime.max_attempts = 2
@@ -607,6 +642,7 @@ def _envelope(
     message_id: str = "event-1",
     causation_id: str | None = None,
     idempotency_key: str = "idem-1",
+    deadline_at: datetime | None = None,
 ) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {
@@ -635,6 +671,7 @@ def _envelope(
         effective_security_epoch_ref=str(payload.get("security_epoch_ref", "security-epoch-a")),
         occurred_at=now,
         created_at=now,
+        deadline_at=deadline_at,
         payload=payload,
         payload_hash=canonical_sha256(payload),
         payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),

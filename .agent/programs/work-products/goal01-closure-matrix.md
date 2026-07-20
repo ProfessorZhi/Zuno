@@ -761,4 +761,16 @@ Package A DLQ replay counter integration/fault test passed: 1 passed.
 PHASE11 remains in_progress; this is Package A RabbitMQ replay lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A upload deadline propagation and worker cancel boundary：
+
+```text
+PackageAUploadCommand now carries deadline_at into the canonical parse-request envelope emitted by PackageAProductionIngestionRuntime.
+PackageAProductionIngestionRuntime handles expired deadline deliveries after Attempt/Lease claim but before ObjectRef read or Parser Gateway, closing the Attempt/Lease as cancelled with failure_code=deadline_expired.
+The focused unit tests prove deadline propagation and no object/parser/snapshot side effects on expired deadline.
+py_compile passed.
+Package A upload replay/deadline and delivery settlement tests passed: 34 passed.
+Gate B expired deadline PostgreSQL test was added but environment_blocked locally because localhost:5432 timed out and docker compose postgres could not start without Docker daemon.
+PHASE11 remains in_progress; this is Package A deadline/cancel boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

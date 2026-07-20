@@ -1151,6 +1151,31 @@ Package A queue worker and delivery settlement tests passed: 47 passed
 Package A DLQ replay counter integration/fault test passed: 1 passed
 ```
 
+2026-07-20 Package A upload deadline propagation and worker cancel boundary：
+
+- `PackageAUploadCommand` 现在可携带 `deadline_at`，`PackageAProductionIngestionRuntime._parse_requested_envelope(...)` 会把该 deadline 写入 canonical parse-request envelope。
+- `PackageAProductionIngestionRuntime._process_first_seen_delivery(...)` 已在 claim attempt 并进入 running 后、读取 MinIO ObjectRef 和调用 Parser Gateway 前识别 expired deadline，关闭当前 append-only Attempt 与 Lease，并返回 `status=cancelled` / `failure_code=deadline_expired` / ACK-after-domain-commit receipt。
+- 新增 unit/focused 测试证明上传 outbox envelope 保留 deadline，且 expired deadline 不读取对象、不调用 Parser Gateway、不生成 Snapshot。
+- 新增 Gate B PostgreSQL integration/fault 测试 `test_gate_b_expired_deadline_closes_attempt_and_lease_without_snapshot`；本机运行时 PostgreSQL 不可达，且 `docker compose -f infra/docker/docker-compose.yml up -d postgres` 因 Docker daemon 未运行失败，因此该 Gate B 测试本轮记录为 `environment_blocked`，不是代码断言失败。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_expired_deadline_closes_attempt_and_lease_without_snapshot -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml up -d postgres
+```
+
+结果：
+
+```text
+py_compile passed
+Package A upload replay/deadline and delivery settlement tests passed: 34 passed
+Gate B expired deadline PostgreSQL test environment_blocked: localhost:5432 connection timeout
+docker compose postgres startup environment_blocked: Docker daemon npipe not available
+```
+
 2026-07-20 Package A retry attempt number pre-Inbox gate：
 
 - `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。
