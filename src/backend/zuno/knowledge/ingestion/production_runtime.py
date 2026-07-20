@@ -467,6 +467,7 @@ class PackageAProductionIngestionRuntime:
                 retry_envelope = self._retry_parse_requested_envelope(
                     envelope=envelope,
                     context=context,
+                    retry_parent_attempt_id=parse_attempt_id,
                     next_attempt_no=int(context["attempt_count"]) + 2,
                 )
                 retry_outbox = repo.enqueue_parse_requested(envelope=retry_envelope)
@@ -641,9 +642,19 @@ class PackageAProductionIngestionRuntime:
         *,
         envelope: CrossModuleEnvelopeV1,
         context: dict[str, Any],
+        retry_parent_attempt_id: str,
         next_attempt_no: int,
     ) -> CrossModuleEnvelopeV1:
         now = datetime.now(timezone.utc)
+        retry_payload = dict(envelope.payload or {})
+        retry_payload.update(
+            {
+                "retry_attempt_no": next_attempt_no,
+                "retry_parent_attempt_id": retry_parent_attempt_id,
+                "retry_parent_message_id": envelope.message_id,
+                "retry_parent_idempotency_key": envelope.idempotency_key,
+            }
+        )
         return envelope.model_copy(
             update={
                 "message_id": f"outbox:{context['parse_job_id']}:retry:{next_attempt_no}",
@@ -653,6 +664,8 @@ class PackageAProductionIngestionRuntime:
                 "idempotency_key": f"{envelope.idempotency_key}:retry:{next_attempt_no}",
                 "occurred_at": now,
                 "created_at": now,
+                "payload": retry_payload,
+                "payload_hash": canonical_sha256(retry_payload),
             }
         )
 

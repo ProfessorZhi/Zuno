@@ -710,3 +710,24 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py tests/knowledge/test_pa
 py_compile passed
 Package A queue worker and delivery settlement tests passed: 20 passed
 ```
+
+2026-07-20 Package A retry parent lineage：
+
+- `PackageAProductionIngestionRuntime._retry_parse_requested_envelope(...)` 现在接收失败的 `retry_parent_attempt_id`，并把 `retry_attempt_no`、`retry_parent_attempt_id`、`retry_parent_message_id` 和 `retry_parent_idempotency_key` 写入 retry parse-request payload。
+- Retry outbox message 仍保留同一个 PostgreSQL `ParseJob` aggregate，但使用新的 message id、idempotency key 和 causation id；payload 更新后同步重算 canonical `payload_hash`。
+- 这让 retry message 本身携带“由哪个 append-only ParseAttempt 失败后产生”的可审计 lineage，避免只靠外层 idempotency key 推断 retry parent。
+- 新增 focused retry boundary test 覆盖 retry parent attempt、message、idempotency 和 payload hash。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_retry_boundary.py
+pytest -q tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A retry boundary and delivery settlement tests passed: 16 passed
+```

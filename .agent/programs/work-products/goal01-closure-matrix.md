@@ -392,4 +392,15 @@ Package A queue worker and delivery settlement tests passed: 20 passed.
 PHASE11 remains in_progress; this is Package A RabbitMQ worker resilience implementation evidence, not Gate C completion.
 ```
 
+2026-07-20 Package A retry parent lineage：
+
+```text
+PackageAProductionIngestionRuntime retry parse-request envelopes now include retry_attempt_no, retry_parent_attempt_id, retry_parent_message_id, and retry_parent_idempotency_key in payload.
+Retry messages keep the same PostgreSQL ParseJob aggregate while using a new message id, idempotency key, causation id, and recomputed canonical payload_hash.
+This makes retry parentage auditable from the outbox/RabbitMQ payload itself instead of inferring it from DB attempt_count alone.
+py_compile passed.
+Package A retry boundary and delivery settlement tests passed: 16 passed.
+PHASE11 remains in_progress; this is Package A retry lineage implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

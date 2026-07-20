@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime
+from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 
 
 def _runtime(*, max_attempts: int) -> PackageAProductionIngestionRuntime:
@@ -39,3 +42,55 @@ def test_retry_boundary_rejects_negative_prior_attempt_count() -> None:
             retryable=True,
             prior_attempt_count=-1,
         )
+
+
+def test_retry_envelope_records_parent_attempt_and_rehashes_payload() -> None:
+    runtime = _runtime(max_attempts=3)
+    now = datetime(2026, 7, 20, tzinfo=timezone.utc)
+    envelope = CrossModuleEnvelopeV1(
+        contract_name="zuno.ingestion.parse.requested",
+        contract_version="v1",
+        contract_bundle_version="phase11-package-a",
+        message_id="outbox:parse-job-a",
+        producer_module="workspace.file_upload",
+        consumer_module="ingestion.parser_worker",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        correlation_id="trace-a",
+        idempotency_key="parse:tenant-a:workspace-a:hash:1",
+        aggregate_type="ParseJob",
+        aggregate_id="parse-job-a",
+        trace_id="trace-a",
+        data_classification="internal",
+        occurred_at=now,
+        created_at=now,
+        payload={
+            "parse_job_id": "parse-job-a",
+            "source_object_id": "source-a",
+            "security_epoch_ref": "security-epoch-a",
+        },
+        payload_hash=canonical_sha256(
+            {
+                "parse_job_id": "parse-job-a",
+                "source_object_id": "source-a",
+                "security_epoch_ref": "security-epoch-a",
+            }
+        ),
+        payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
+    )
+
+    retry = runtime._retry_parse_requested_envelope(
+        envelope=envelope,
+        context={"parse_job_id": "parse-job-a"},
+        retry_parent_attempt_id="parse-job-a:attempt:1",
+        next_attempt_no=2,
+    )
+
+    assert retry.message_id == "outbox:parse-job-a:retry:2"
+    assert retry.causation_id == "outbox:parse-job-a"
+    assert retry.idempotency_key == "parse:tenant-a:workspace-a:hash:1:retry:2"
+    assert retry.payload["retry_attempt_no"] == 2
+    assert retry.payload["retry_parent_attempt_id"] == "parse-job-a:attempt:1"
+    assert retry.payload["retry_parent_message_id"] == "outbox:parse-job-a"
+    assert retry.payload["retry_parent_idempotency_key"] == "parse:tenant-a:workspace-a:hash:1"
+    assert retry.payload_hash == canonical_sha256(retry.payload)
