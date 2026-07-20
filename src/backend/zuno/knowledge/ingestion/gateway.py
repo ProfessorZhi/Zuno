@@ -256,6 +256,16 @@ class ParseGateway:
                     ),
                 ],
             )
+        policy_failure = cls._parser_policy_failure_result(
+            request=request,
+            parser_id=parser_id,
+            format_name=capability.format,
+            fallback=capability.fallback,
+            job_id=job_id,
+            diagnostics=diagnostics,
+        )
+        if policy_failure is not None:
+            return policy_failure
 
         try:
             source_text = cls._source_text(request)
@@ -660,6 +670,14 @@ class ParseGateway:
         if not reason:
             return "parser_failure"
         lowered = reason.lower()
+        if "oversized" in lowered:
+            return "oversized_source"
+        if "encrypted" in lowered:
+            return "encrypted_source"
+        if "corrupt" in lowered:
+            return "corrupt_source"
+        if "sandbox" in lowered:
+            return "sandbox_denied"
         if "empty source content" in lowered:
             return "empty_source"
         if "source object" in lowered or "objectref" in lowered:
@@ -686,6 +704,74 @@ class ParseGateway:
             "blocked": result.status == "blocked",
             "dead_letter": result.status == "dead_letter",
         }
+
+    @classmethod
+    def _parser_policy_failure_result(
+        cls,
+        *,
+        request: ParseDocumentRequest,
+        parser_id: str,
+        format_name: str,
+        fallback: str | None,
+        job_id: str,
+        diagnostics: list[ParserDiagnostic],
+    ) -> ParseDocumentResult | None:
+        reason = cls._parser_policy_failure_reason(request)
+        if reason is None:
+            return None
+        classification = cls._failure_classification(reason)
+        return ParseDocumentResult(
+            job_id=job_id,
+            status="failed",
+            failure=ParserFailure(
+                parser_id=parser_id,
+                format=format_name,
+                reason=reason,
+                fallback=fallback,
+                retryable=False,
+                failure_classification=classification,
+            ),
+            diagnostics=[
+                *diagnostics,
+                ParserDiagnostic(
+                    code="parser_policy_denied",
+                    message=reason,
+                    severity="error",
+                    parser_id=parser_id,
+                    format=format_name,
+                    metadata={
+                        "failure_classification": classification,
+                        "source_size_bytes": cls._source_size_bytes(request),
+                        "max_size_bytes": request.parser_config.get("max_size_bytes"),
+                        "sandbox_policy_ref": request.parser_config.get("sandbox_policy_ref"),
+                    },
+                ),
+            ],
+        )
+
+    @classmethod
+    def _parser_policy_failure_reason(cls, request: ParseDocumentRequest) -> str | None:
+        if request.parser_config.get("encrypted") is True:
+            return "encrypted source rejected by parser policy"
+        if request.parser_config.get("corrupt") is True:
+            return "corrupt source rejected by parser policy"
+        if request.parser_config.get("sandbox_denied") is True:
+            return "sandbox denied parser execution"
+        max_size = request.parser_config.get("max_size_bytes")
+        if max_size is not None and cls._source_size_bytes(request) > int(max_size):
+            return "oversized source rejected by parser policy"
+        return None
+
+    @staticmethod
+    def _source_size_bytes(request: ParseDocumentRequest) -> int:
+        if request.source_bytes is not None:
+            return len(request.source_bytes)
+        if request.source_text is not None:
+            return len(request.source_text.encode("utf-8"))
+        manifest_size = request.source_object_manifest.get("size_bytes")
+        if manifest_size is not None:
+            return int(manifest_size)
+        return 0
 
     @staticmethod
     def _transform_ledger_entry(

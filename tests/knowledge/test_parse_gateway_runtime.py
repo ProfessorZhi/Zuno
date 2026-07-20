@@ -428,6 +428,52 @@ def test_parse_gateway_cancel_requested_stops_before_adapter_execution() -> None
     assert snapshot.failure_snapshot["failure_classification"] == "cancelled"
 
 
+@pytest.mark.parametrize(
+    ("parser_config", "source_text", "expected_classification"),
+    [
+        ({"max_size_bytes": 4}, "too large", "oversized_source"),
+        ({"encrypted": True}, "encrypted payload marker", "encrypted_source"),
+        ({"corrupt": True}, "corrupt payload marker", "corrupt_source"),
+        (
+            {"sandbox_denied": True, "sandbox_policy_ref": "sandbox-policy:deny"},
+            "sandbox should reject before adapter",
+            "sandbox_denied",
+        ),
+    ],
+)
+def test_parse_gateway_policy_faults_are_typed_before_adapter_execution(
+    parser_config: dict,
+    source_text: str,
+    expected_classification: str,
+) -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id=f"doc_{expected_classification}",
+            workspace_id="workspace_phase11",
+            source_uri=f"file://notes/{expected_classification}.md",
+            mime_type="text/markdown",
+            source_text=source_text,
+            parser_config=parser_config,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "failed"
+    assert result.document is None
+    assert result.index_handoff is None
+    assert result.failure is not None
+    assert result.failure.failure_classification == expected_classification
+    assert result.failure.retryable is False
+    diagnostic = next(d for d in result.diagnostics if d.code == "parser_policy_denied")
+    assert diagnostic.severity == "error"
+    assert diagnostic.metadata["failure_classification"] == expected_classification
+    assert snapshot.status == "failed"
+    assert snapshot.failure_snapshot["failure_classification"] == expected_classification
+    assert snapshot.parser_diagnostics[-1]["code"] == "parser_policy_denied"
+
+
 def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:
     result = _parse_fixture("pdf_table", "pdf_table.pdf", "application/pdf")
 
