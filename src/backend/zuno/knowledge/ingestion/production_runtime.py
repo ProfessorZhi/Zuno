@@ -280,6 +280,14 @@ class PackageAProductionIngestionRuntime:
                 status="cancelled",
                 acked_after_domain_commit=True,
             )
+        repo.renew_parse_attempt_lease(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=self.worker_id,
+            fencing_token=fencing_token,
+            lease_ttl_seconds=self.lease_ttl_seconds,
+        )
         source_bytes = self._read_and_verify_object(context)
         request = ParseDocumentRequest(
             document_id=str(context["source_object_id"]),

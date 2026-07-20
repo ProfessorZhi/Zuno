@@ -243,6 +243,29 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B cancel test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 lease-heartbeat-reconcile path：
+
+- `IngestionRepository.renew_parse_attempt_lease(...)` 新增 PostgreSQL heartbeat/renew 语义：仅当前 worker、fencing token、claimed/renewed 且未过期 lease 可续租，更新 Lease `renewed`、heartbeat 和 Attempt lease expiry。
+- `IngestionRepository.reconcile_expired_parse_attempt_lease(...)` 新增过期 lease reconciliation：过期 Lease 置 `expired`，Attempt 置 `lease_lost`，ParseJob 回到 `queued`，为后续新 Attempt reclaim 提供持久事实。
+- `PackageAProductionIngestionRuntime` 在 Attempt running、取消检查通过后，读取 ObjectRef 和调用 Parser Gateway 前执行一次 fencing heartbeat/renew。
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_heartbeat_renews_lease_and_expiry_reconciles_attempt`，覆盖 renew 和 expired lease reconciliation 的数据库状态转换。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_heartbeat_renews_lease_and_expiry_reconciles_attempt -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B heartbeat/reconcile test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell

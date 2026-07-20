@@ -352,6 +352,110 @@ def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> Non
         engine.dispose()
 
 
+def test_gate_b_heartbeat_renews_lease_and_expiry_reconciles_attempt() -> None:
+    engine = _engine()
+    try:
+        _seed_job(engine)
+        with IngestionUnitOfWork(engine) as repo:
+            attempt = repo.claim_parse_attempt_lease(
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                source_object_id="source:pkg-a:b",
+                document_version_id="document-version:pkg-a:b",
+                parse_plan_id="parse-plan:pkg-a:b",
+                parse_job_id="parse-job:pkg-a:b",
+                worker_id="worker-heartbeat",
+                idempotency_key="parse:tenant-a:pkg-a:b:attempt:1",
+                security_epoch_ref="security-epoch:pkg-a",
+                lease_ttl_seconds=60,
+            )
+            fencing_token = int(attempt.payload_hash or "0")
+            repo.mark_parse_attempt_running(
+                parse_attempt_id=attempt.ref,
+                parse_job_id="parse-job:pkg-a:b",
+                tenant_id="tenant-a",
+                worker_id="worker-heartbeat",
+                fencing_token=fencing_token,
+            )
+            renewed = repo.renew_parse_attempt_lease(
+                parse_attempt_id=attempt.ref,
+                parse_job_id="parse-job:pkg-a:b",
+                tenant_id="tenant-a",
+                worker_id="worker-heartbeat",
+                fencing_token=fencing_token,
+                lease_ttl_seconds=120,
+            )
+            assert renewed.status == "lease_renewed"
+        with engine.connect() as conn:
+            renewed_row = conn.execute(
+                text(
+                    """
+                    SELECT lease.state AS lease_state,
+                           lease.lease_expires_at = attempt.lease_expires_at AS expiry_matches_attempt,
+                           attempt.status AS attempt_status
+                    FROM ingestion_parse_leases AS lease
+                    JOIN ingestion_parse_attempts AS attempt
+                      ON attempt.parse_attempt_id = lease.parse_attempt_id
+                    WHERE lease.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": attempt.ref},
+            ).mappings().one()
+            assert renewed_row["lease_state"] == "renewed"
+            assert renewed_row["expiry_matches_attempt"] is True
+            assert renewed_row["attempt_status"] == "running"
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE ingestion_parse_leases
+                    SET lease_expires_at = now() - interval '1 second'
+                    WHERE parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": attempt.ref},
+            )
+            conn.execute(
+                text(
+                    """
+                    UPDATE ingestion_parse_attempts
+                    SET lease_expires_at = now() - interval '1 second'
+                    WHERE parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": attempt.ref},
+            )
+        with IngestionUnitOfWork(engine) as repo:
+            reconciled = repo.reconcile_expired_parse_attempt_lease(
+                parse_attempt_id=attempt.ref,
+                parse_job_id="parse-job:pkg-a:b",
+                tenant_id="tenant-a",
+            )
+            assert reconciled.status == "lease_reconciled"
+        with engine.connect() as conn:
+            reconciled_row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.status AS attempt_status,
+                           lease.state AS lease_state,
+                           job.status AS job_status
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": attempt.ref},
+            ).mappings().one()
+            assert reconciled_row["attempt_status"] == "lease_lost"
+            assert reconciled_row["lease_state"] == "expired"
+            assert reconciled_row["job_status"] == "queued"
+    finally:
+        engine.dispose()
+
+
 def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_commit(monkeypatch) -> None:
     engine = _engine()
     content = b"# Retry\nTemporary parser failure."

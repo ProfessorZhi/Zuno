@@ -472,6 +472,95 @@ class IngestionRepository:
         )
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="running")
 
+    def renew_parse_attempt_lease(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+        lease_ttl_seconds: int = 60,
+    ) -> IngestionReceipt:
+        if lease_ttl_seconds <= 0:
+            raise IngestionPersistenceError("lease_ttl_seconds must be positive")
+        lease_expires_at = datetime.now(timezone.utc) + timedelta(seconds=lease_ttl_seconds)
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET state = 'renewed',
+                    heartbeat_at = now(),
+                    lease_expires_at = :lease_expires_at
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                  AND lease_expires_at > now()
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+                "lease_expires_at": lease_expires_at,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease renew rejected by fencing")
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="running",
+            lease_expires_at=lease_expires_at,
+        )
+        return IngestionReceipt(parse_attempt_id, tenant_id, "lease_renewed", str(fencing_token))
+
+    def reconcile_expired_parse_attempt_lease(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+    ) -> IngestionReceipt:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases AS lease
+                SET state = 'expired', heartbeat_at = now()
+                FROM ingestion_parse_attempts AS attempt
+                WHERE lease.parse_attempt_id = :parse_attempt_id
+                  AND lease.parse_job_id = :parse_job_id
+                  AND lease.tenant_id = :tenant_id
+                  AND lease.parse_attempt_id = attempt.parse_attempt_id
+                  AND attempt.parse_job_id = :parse_job_id
+                  AND attempt.tenant_id = :tenant_id
+                  AND lease.state in ('claimed','renewed')
+                  AND lease.lease_expires_at <= now()
+                RETURNING attempt.worker_id, attempt.fencing_token
+                """
+            ),
+            {"parse_attempt_id": parse_attempt_id, "parse_job_id": parse_job_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError("expired parse lease reconciliation found no expired lease")
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=str(row["worker_id"]),
+            fencing_token=int(row["fencing_token"]),
+            status="lease_lost",
+            require_unexpired_lease=False,
+        )
+        self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status="queued")
+        return IngestionReceipt(parse_attempt_id, tenant_id, "lease_reconciled")
+
     def commit_parse_attempt_if_current(
         self,
         *,
@@ -632,6 +721,8 @@ class IngestionRepository:
         status: str,
         domain_commit_ref: str | None = None,
         failure_code: str | None = None,
+        lease_expires_at: datetime | None = None,
+        require_unexpired_lease: bool = True,
     ) -> None:
         result = self.connection.execute(
             text(
@@ -640,6 +731,7 @@ class IngestionRepository:
                 SET status = :status,
                     domain_commit_ref = COALESCE(:domain_commit_ref, domain_commit_ref),
                     failure_code = COALESCE(:failure_code, failure_code),
+                    lease_expires_at = COALESCE(:lease_expires_at, lease_expires_at),
                     heartbeat_at = now(),
                     finished_at = CASE
                         WHEN :status in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
@@ -656,7 +748,7 @@ class IngestionRepository:
                       FROM ingestion_parse_attempts AS current_attempt
                       WHERE current_attempt.parse_job_id = :parse_job_id
                   )
-                  AND lease_expires_at > now()
+                  AND (:require_unexpired_lease = false OR lease_expires_at > now())
                   AND status not in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
                 """
             ),
@@ -669,6 +761,8 @@ class IngestionRepository:
                 "status": status,
                 "domain_commit_ref": domain_commit_ref,
                 "failure_code": failure_code,
+                "lease_expires_at": lease_expires_at,
+                "require_unexpired_lease": require_unexpired_lease,
             },
         )
         if result.rowcount != 1:

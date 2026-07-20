@@ -161,4 +161,15 @@ py_compile passed.
 Docker daemon remains unavailable; the new Gate B cancel test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
 ```
 
+2026-07-20 lease-heartbeat-reconcile path：
+
+```text
+Runtime now performs a fenced heartbeat/lease renew after running state and before ObjectRef read / Parser Gateway call.
+Repository now supports renew_parse_attempt_lease and reconcile_expired_parse_attempt_lease.
+Expired Lease reconciliation sets Lease expired, Attempt lease_lost, and Job queued for later reclaim.
+Added Gate B integration coverage for heartbeat renewal and expired lease reconciliation.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B heartbeat/reconcile test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。
