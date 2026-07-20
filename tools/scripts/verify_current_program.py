@@ -372,6 +372,16 @@ def verify_current_program() -> list[str]:
             "verify_utf8_doc_encoding",
         )
     )
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT
+            / "tools"
+            / "scripts"
+            / "verify_phase11_legacy_upload_parser_cutover.py",
+            "verify_phase11_legacy_upload_parser_cutover",
+            "verify_phase11_legacy_upload_parser_cutover",
+        )
+    )
 
     task_count = 0
     for phase_file in PHASE_FILES:
