@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from zuno.knowledge.ingestion.production_runtime import PackageAWorkerReceipt
 from zuno.knowledge.ingestion.worker import (
+    PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionQueueWorker,
     package_a_rabbitmq_topology,
 )
@@ -29,6 +30,48 @@ def test_package_a_queue_worker_publishes_then_consumes_delivery() -> None:
 
 def test_package_a_queue_worker_consumes_bounded_delivery_batch() -> None:
     asyncio.run(_assert_package_a_queue_worker_consumes_bounded_delivery_batch())
+
+
+def test_outbox_publisher_claims_only_configured_topics(monkeypatch) -> None:
+    import zuno.platform.queue.outbox as outbox
+
+    calls: list[dict] = []
+
+    class FakeRepo:
+        def claim_outbox(self, **kwargs):
+            calls.append(kwargs)
+            return []
+
+    class FakeUnitOfWork:
+        def __init__(self, engine):
+            self.repo = FakeRepo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(outbox, "InfrastructureUnitOfWork", FakeUnitOfWork)
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=object(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-topic-claim",
+        topics=(PACKAGE_A_PARSE_REQUESTED_TOPIC,),
+    )
+
+    asyncio.run(publisher.publish_batch(limit=7))
+
+    assert calls == [
+        {
+            "worker_id": "phase11-package-a-outbox-dispatcher",
+            "limit": 7,
+            "topics": (PACKAGE_A_PARSE_REQUESTED_TOPIC,),
+        }
+    ]
 
 
 def test_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:
@@ -94,6 +137,7 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
         def __init__(self, **kwargs):
             events.append(("publisher", kwargs["worker_id"]))
             events.append(("tenant", kwargs["tenant_id"]))
+            events.append(("topics", kwargs["topics"]))
 
         async def publish_batch(self, *, limit):
             events.append(("publish_batch", limit))
@@ -122,6 +166,7 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
         ("declare", "zuno.ingestion.parse"),
         ("publisher", "phase11-package-a-outbox-dispatcher"),
         ("tenant", None),
+        ("topics", (PACKAGE_A_PARSE_REQUESTED_TOPIC,)),
         ("publish_batch", 3),
         ("get", ("zuno.ingestion.parse", 0.25)),
         ("process", "event-1"),

@@ -16,6 +16,8 @@ from zuno.platform.queue import (
     RabbitMQTransport,
 )
 
+PACKAGE_A_PARSE_REQUESTED_TOPIC = "ingestion.parse.requested"
+
 
 @dataclass(frozen=True, slots=True)
 class PackageAQueuePumpReceipt:
@@ -90,6 +92,7 @@ class PackageAProductionQueueWorker:
             worker_id=self.publisher_worker_id,
             tenant_id=self.tenant_id,
             trace_id=self.trace_id,
+            topics=(PACKAGE_A_PARSE_REQUESTED_TOPIC,),
         )
         batch: OutboxPublishBatch = await publisher.publish_batch(limit=publish_limit)
         worker_receipts: list[PackageAWorkerReceipt] = []
@@ -109,5 +112,6 @@ class PackageAProductionQueueWorker:
 __all__ = [
     "PackageAProductionQueueWorker",
     "PackageAQueuePumpReceipt",
+    "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "package_a_rabbitmq_topology",
 ]

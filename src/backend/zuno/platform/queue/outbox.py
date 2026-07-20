@@ -65,6 +65,7 @@ class PostgresOutboxRabbitMQPublisher:
         worker_id: str,
         tenant_id: str | None,
         trace_id: str,
+        topics: tuple[str, ...] | None = None,
         policy: OutboxPublishPolicy | None = None,
     ) -> None:
         self.engine = engine
@@ -73,6 +74,7 @@ class PostgresOutboxRabbitMQPublisher:
         self.worker_id = worker_id
         self.tenant_id = tenant_id
         self.trace_id = trace_id
+        self.topics = topics
         self.policy = policy or OutboxPublishPolicy()
 
     async def publish_pending(self, *, limit: int = 10) -> list[PublishedOutboxEvent]:
@@ -83,7 +85,11 @@ class PostgresOutboxRabbitMQPublisher:
         published: list[PublishedOutboxEvent] = []
         failed: list[FailedOutboxEvent] = []
         with InfrastructureUnitOfWork(self.engine) as repo:
-            event_ids = repo.claim_outbox(worker_id=self.worker_id, limit=limit)
+            event_ids = repo.claim_outbox(
+                worker_id=self.worker_id,
+                limit=limit,
+                topics=self.topics,
+            )
             records = [
                 repo.load_claimed_outbox_event(event_id=event_id, worker_id=self.worker_id)
                 for event_id in event_ids

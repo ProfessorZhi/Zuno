@@ -228,4 +228,15 @@ Package A queue worker bounded batch tests passed: 6 passed.
 PHASE11 remains in_progress; real Gate C still needs live PostgreSQL/MinIO/RabbitMQ verification.
 ```
 
+2026-07-20 Package A topic-scoped outbox dispatch：
+
+```text
+InfrastructureRepository.claim_outbox now supports topic-scoped claiming before FOR UPDATE SKIP LOCKED.
+PostgresOutboxRabbitMQPublisher passes optional topics into the claim step while retaining generic behavior when topics is unset.
+PackageAProductionQueueWorker claims only ingestion.parse.requested events for the parse queue, preventing unrelated Snapshot or module outbox events from being published to the parser worker.
+py_compile passed.
+Package A queue worker topic dispatch tests passed: 7 passed.
+PHASE11 remains in_progress; this is Package A dispatch correctness evidence, not Gate C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

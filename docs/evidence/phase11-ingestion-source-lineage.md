@@ -402,3 +402,24 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker bounded batch tests passed: 6 passed
 ```
+
+2026-07-20 Package A topic-scoped outbox dispatch：
+
+- `InfrastructureRepository.claim_outbox(...)` 新增 optional topic filter，在 PostgreSQL `FOR UPDATE SKIP LOCKED` claim 阶段只选目标 topic，避免 claim 后再丢弃造成错误占用。
+- `PostgresOutboxRabbitMQPublisher` 新增 `topics` 参数并下推到 repository claim；未配置 topics 时保留 PHASE04 通用 publisher 行为。
+- `PackageAProductionQueueWorker` 固定传入 `("ingestion.parse.requested",)`，确保 Package A RabbitMQ dispatcher 只把 parse requested outbox 发布到 canonical parse queue，不会把 Snapshot handoff 或其他模块 outbox 发布到 parser worker。
+- `tests/knowledge/test_package_a_queue_worker.py` 新增 topic-scoped claim 覆盖，并验证 Package A worker 创建 publisher 时携带 parse requested topic filter。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/database/foundation.py src/backend/zuno/platform/queue/outbox.py src/backend/zuno/knowledge/ingestion/worker.py src/backend/zuno/knowledge/ingestion/__init__.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker topic dispatch tests passed: 7 passed
+```

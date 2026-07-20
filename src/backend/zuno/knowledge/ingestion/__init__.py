@@ -71,6 +71,7 @@ from .source_object_upload import (
     SourceObjectUploadRuntime,
 )
 from .worker import (
+    PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionQueueWorker,
     PackageAQueuePumpReceipt,
     package_a_rabbitmq_topology,
@@ -101,6 +102,7 @@ __all__ = [
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
+    "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "PackageAProductionIngestionRuntime",
     "PackageAProductionQueueWorker",
     "PackageAQueuePumpReceipt",

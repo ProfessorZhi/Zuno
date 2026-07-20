@@ -430,7 +430,14 @@ class InfrastructureRepository:
         )
         return event_id
 
-    def claim_outbox(self, *, worker_id: str, limit: int = 10) -> list[str]:
+    def claim_outbox(
+        self,
+        *,
+        worker_id: str,
+        limit: int = 10,
+        topics: tuple[str, ...] | None = None,
+    ) -> list[str]:
+        topic_filter_enabled = bool(topics)
         rows = self.connection.execute(
             text(
                 """
@@ -439,6 +446,10 @@ class InfrastructureRepository:
                     FROM infra_outbox_events
                     WHERE status = 'pending'
                       AND next_attempt_at <= now()
+                      AND (
+                          :topic_filter_enabled = false
+                          OR topic = ANY(CAST(:topics AS text[]))
+                      )
                     ORDER BY created_at, event_id
                     FOR UPDATE SKIP LOCKED
                     LIMIT :limit
@@ -450,7 +461,12 @@ class InfrastructureRepository:
                 RETURNING event.event_id
                 """
             ),
-            {"worker_id": worker_id, "limit": limit},
+            {
+                "worker_id": worker_id,
+                "limit": limit,
+                "topic_filter_enabled": topic_filter_enabled,
+                "topics": list(topics or ()),
+            },
         ).all()
         return [str(row.event_id) for row in rows]
 
