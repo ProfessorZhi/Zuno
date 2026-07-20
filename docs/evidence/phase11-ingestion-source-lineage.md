@@ -1297,6 +1297,28 @@ Package A delivery settlement tests passed: 41 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A succeeded replay handoff outbox completeness：
+
+- `PackageAProductionIngestionRuntime._validate_snapshot_handoff_replay_receipt(...)` 现在要求 succeeded duplicate/redelivery 的 Snapshot Handoff replay receipt 包含 `snapshot_hash`、`handoff_envelope_hash`、`visibility_ref`、`quality_decision_id`、`knowledge_handoff_status`、`outbox_publish_status` 和 `outbox_payload_hash`。
+- 该 gate 防止 crash-after-commit-before-ACK 回放路径在缺少 Snapshot Outbox payload hash 或 handoff 状态事实时 ACK RabbitMQ delivery。
+- 本次没有新增 Migration；复用 `load_snapshot_handoff_replay_receipt(...)` 已有 PostgreSQL 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 42 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。

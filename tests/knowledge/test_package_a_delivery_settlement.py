@@ -479,6 +479,13 @@ def test_package_a_worker_inbox_uses_runtime_worker_identity(monkeypatch) -> Non
                 "indexable_snapshot_id": "indexable-1",
                 "outbox_event_id": "outbox-1",
                 "handoff_idempotency_key": handoff_idempotency_key,
+                "snapshot_hash": "snapshot-hash-1",
+                "handoff_envelope_hash": "handoff-hash-1",
+                "visibility_ref": "visibility-1",
+                "quality_decision_id": "quality-1",
+                "knowledge_handoff_status": "pending",
+                "outbox_publish_status": "pending",
+                "outbox_payload_hash": "outbox-payload-hash-1",
             }
 
     class _UnitOfWork:
@@ -545,6 +552,13 @@ def test_package_a_duplicate_success_replay_refuses_handoff_receipt_mismatch_wit
                 "indexable_snapshot_id": "indexable-1",
                 "outbox_event_id": "outbox-forged",
                 "handoff_idempotency_key": handoff_idempotency_key,
+                "snapshot_hash": "snapshot-hash-1",
+                "handoff_envelope_hash": "handoff-hash-1",
+                "visibility_ref": "visibility-1",
+                "quality_decision_id": "quality-1",
+                "knowledge_handoff_status": "pending",
+                "outbox_publish_status": "pending",
+                "outbox_payload_hash": "outbox-payload-hash-1",
             }
 
     class _UnitOfWork:
@@ -564,6 +578,75 @@ def test_package_a_duplicate_success_replay_refuses_handoff_receipt_mismatch_wit
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
 
     with pytest.raises(IngestionPersistenceError, match="snapshot handoff replay mismatch"):
+        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.rejected is False
+
+
+def test_package_a_duplicate_success_replay_refuses_incomplete_handoff_outbox_without_ack(
+    monkeypatch,
+) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "received"
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "job_status": "succeeded",
+                "attempt_status": "succeeded",
+                "parse_attempt_id": "attempt-1",
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": "handoff-idem-1",
+                "outbox_idempotency_key": "handoff-idem-1",
+                "dead_letter_id": None,
+            }
+
+        def load_snapshot_handoff_replay_receipt(
+            self,
+            *,
+            tenant_id: str,
+            handoff_idempotency_key: str,
+        ):
+            return {
+                "indexable_snapshot_id": "indexable-1",
+                "outbox_event_id": "outbox-1",
+                "handoff_idempotency_key": handoff_idempotency_key,
+                "snapshot_hash": "snapshot-hash-1",
+                "handoff_envelope_hash": "handoff-hash-1",
+                "visibility_ref": "visibility-1",
+                "quality_decision_id": "quality-1",
+                "knowledge_handoff_status": "pending",
+                "outbox_publish_status": "pending",
+                "outbox_payload_hash": None,
+            }
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    with pytest.raises(IngestionPersistenceError, match="outbox_payload_hash"):
         asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
     assert delivery.acked is False

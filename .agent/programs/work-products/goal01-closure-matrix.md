@@ -905,4 +905,15 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A crash-after-commit replay handoff consistency evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay handoff outbox completeness：
+
+```text
+PackageAProductionIngestionRuntime now requires succeeded Snapshot Handoff replay receipts to include snapshot hash, handoff envelope hash, visibility, quality decision, handoff status, outbox publish status, and outbox payload hash.
+The focused test proves a succeeded replay with missing outbox_payload_hash is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement tests passed: 42 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A Snapshot Outbox replay completeness evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

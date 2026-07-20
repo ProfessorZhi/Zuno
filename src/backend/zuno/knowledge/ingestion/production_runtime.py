@@ -521,6 +521,19 @@ class PackageAProductionIngestionRuntime:
         replay: dict[str, Any],
         handoff_replay: dict[str, Any],
     ) -> None:
+        PackageAProductionIngestionRuntime._require_replay_fields(
+            handoff_replay,
+            (
+                "snapshot_hash",
+                "handoff_envelope_hash",
+                "visibility_ref",
+                "quality_decision_id",
+                "knowledge_handoff_status",
+                "outbox_publish_status",
+                "outbox_payload_hash",
+            ),
+            status="snapshot_handoff",
+        )
         for field_name in ("indexable_snapshot_id", "outbox_event_id", "handoff_idempotency_key"):
             if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
                 raise IngestionPersistenceError(
