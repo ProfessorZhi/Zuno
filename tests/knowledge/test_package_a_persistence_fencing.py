@@ -187,6 +187,10 @@ def test_snapshot_handoff_replay_receipt_loads_by_tenant_scoped_idempotency() ->
     }
     statement = connection.calls[0]["statement"]
     assert "outbox.idempotency_key = indexable.handoff_idempotency_key" in statement
+    assert "outbox.payload ->> 'indexable_snapshot_id'" in statement
+    assert "outbox.payload ->> 'document_version_id'" in statement
+    assert "outbox.payload ->> 'quality_decision_id'" in statement
+    assert "outbox.payload ->> 'idempotency_key'" in statement
 
 
 def test_workspace_upload_replay_receipt_joins_parse_job_to_source_and_outbox() -> None:

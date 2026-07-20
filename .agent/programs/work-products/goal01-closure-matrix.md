@@ -964,4 +964,16 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A visibility replay lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A succeeded replay Snapshot Outbox payload lineage gate：
+
+```text
+IngestionRepository.load_snapshot_handoff_replay_receipt now reads Snapshot Outbox payload lineage fields: indexable_snapshot_id, document_version_id, quality_decision_id, and idempotency_key.
+PackageAProductionIngestionRuntime now cross-checks those payload fields against ParseJob/Snapshot Handoff replay receipt before ACK.
+The focused test proves a handoff receipt with forged outbox_payload_idempotency_key is not ACKed or rejected.
+py_compile passed.
+Package A delivery settlement and persistence replay tests passed: 57 passed.
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed.
+PHASE11 remains in_progress; this is Package A Snapshot Outbox payload replay lineage evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

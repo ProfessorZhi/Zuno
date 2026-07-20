@@ -431,7 +431,11 @@ class IngestionRepository:
                     indexable.knowledge_handoff_status,
                     outbox.outbox_event_id,
                     outbox.publish_status AS outbox_publish_status,
-                    outbox.payload_hash AS outbox_payload_hash
+                    outbox.payload_hash AS outbox_payload_hash,
+                    outbox.payload ->> 'indexable_snapshot_id' AS outbox_payload_indexable_snapshot_id,
+                    outbox.payload ->> 'document_version_id' AS outbox_payload_document_version_id,
+                    outbox.payload ->> 'quality_decision_id' AS outbox_payload_quality_decision_id,
+                    outbox.payload ->> 'idempotency_key' AS outbox_payload_idempotency_key
                 FROM ingestion_indexable_document_snapshots AS indexable
                 LEFT JOIN ingestion_outbox_events AS outbox
                   ON outbox.tenant_id = indexable.tenant_id

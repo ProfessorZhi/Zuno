@@ -536,6 +536,10 @@ class PackageAProductionIngestionRuntime:
                 "knowledge_handoff_status",
                 "outbox_publish_status",
                 "outbox_payload_hash",
+                "outbox_payload_indexable_snapshot_id",
+                "outbox_payload_document_version_id",
+                "outbox_payload_quality_decision_id",
+                "outbox_payload_idempotency_key",
             ),
             status="snapshot_handoff",
         )
@@ -554,6 +558,17 @@ class PackageAProductionIngestionRuntime:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay lineage mismatch: visibility_ref"
             )
+        outbox_payload_fields = {
+            "outbox_payload_indexable_snapshot_id": "indexable_snapshot_id",
+            "outbox_payload_document_version_id": "document_version_id",
+            "outbox_payload_quality_decision_id": "quality_decision_id",
+            "outbox_payload_idempotency_key": "handoff_idempotency_key",
+        }
+        for outbox_field_name, replay_field_name in outbox_payload_fields.items():
+            if str(handoff_replay.get(outbox_field_name)) != str(replay.get(replay_field_name)):
+                raise IngestionPersistenceError(
+                    f"Package A snapshot handoff replay outbox mismatch: {outbox_field_name}"
+                )
         if str(handoff_replay.get("knowledge_handoff_status")) in {"blocked", "dead_letter"}:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay conflict: knowledge_handoff_status"

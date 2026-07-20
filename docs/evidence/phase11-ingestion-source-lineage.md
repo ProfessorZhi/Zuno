@@ -1416,6 +1416,29 @@ Package A delivery settlement and persistence replay tests passed: 56 passed
 Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
 ```
 
+2026-07-20 Package A succeeded replay Snapshot Outbox payload lineage gate：
+
+- `IngestionRepository.load_snapshot_handoff_replay_receipt(...)` 现在从 `ingestion_outbox_events.payload` 读取 `indexable_snapshot_id`、`document_version_id`、`quality_decision_id` 和 `idempotency_key`。
+- `PackageAProductionIngestionRuntime._validate_snapshot_handoff_replay_receipt(...)` 现在交叉校验 Snapshot Outbox payload 与 ParseJob / Snapshot Handoff replay receipt 的 `indexable_snapshot_id`、`document_version_id`、`quality_decision_id` 和 `handoff_idempotency_key` 一致。
+- 该 gate 防止 crash-after-commit-before-ACK 回放路径只凭 outbox row/idempotency row 存在就 ACK，而忽略 Snapshot Outbox payload 指向了其它 snapshot、document、quality decision 或 idempotency key。
+- 本次没有新增 Migration；复用 `ingestion_outbox_events.payload` 已有 JSON 字段。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and persistence replay tests passed: 57 passed
+Package A upload replay, retry boundary, and queue worker tests passed: 29 passed
+```
+
 2026-07-20 Package A upload default no-local-fallback gate：
 
 - `WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(...)` 现在记录 Package A 生产默认接线是否已被显式配置。
