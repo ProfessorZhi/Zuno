@@ -149,6 +149,13 @@ def test_package_a_rejects_payload_hash_mismatch_without_requeue() -> None:
     assert delivery.requeue is False
 
 
+def test_package_a_rejects_transport_message_id_mismatch_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.message_id = "transport-event-other"
+
+    _assert_rejected_parse_delivery(delivery, "delivery message_id does not match envelope")
+
+
 def test_package_a_rejects_wrong_topic_without_requeue() -> None:
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
     delivery.payload["topic"] = "knowledge.snapshot.ready"

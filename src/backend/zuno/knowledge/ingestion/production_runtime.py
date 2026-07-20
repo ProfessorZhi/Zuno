@@ -273,6 +273,9 @@ class PackageAProductionIngestionRuntime:
         except Exception as exc:
             await delivery.reject(requeue=False)
             raise PackageARejectDeliveryError("invalid Package A parse delivery envelope") from exc
+        if str(delivery.message_id) != str(envelope.message_id):
+            await delivery.reject(requeue=False)
+            raise PackageARejectDeliveryError("delivery message_id does not match envelope")
         if (
             parsed_delivery.topic != PACKAGE_A_PARSE_REQUESTED_TOPIC
             or envelope.contract_name != PACKAGE_A_PARSE_CONTRACT_NAME

@@ -527,4 +527,16 @@ Package A delivery settlement and queue worker tests passed: 28 passed.
 PHASE11 remains in_progress; this is Package A ACK/domain-commit ordering evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A transport message identity gate：
+
+```text
+PackageAProductionIngestionRuntime now rejects RabbitMQ deliveries whose transport message_id does not match the canonical outbox envelope message_id.
+The check happens before Worker Inbox, ParseAttempt, Lease, and Parser Gateway, preserving duplicate/redelivery and crash-after-commit replay identity.
+Gate B delivery fixture now includes RabbitMQ security_epoch_ref header from the canonical envelope, matching the production ingress contract.
+py_compile passed.
+Package A delivery settlement and queue worker tests passed: 29 passed.
+Gate B focused PostgreSQL test was attempted once; environment_blocked by localhost:5432 connection timeout during alembic upgrade head.
+PHASE11 remains in_progress; this is Package A RabbitMQ/Inbox identity-boundary implementation evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

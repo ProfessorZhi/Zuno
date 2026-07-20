@@ -957,3 +957,25 @@ pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/
 py_compile passed
 Package A delivery settlement and queue worker tests passed: 28 passed
 ```
+
+2026-07-20 Package A transport message identity gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在校验 RabbitMQ transport `delivery.message_id` 必须等于 canonical outbox envelope `message_id`。
+- 该 gate 在 Worker Inbox、ParseAttempt、Lease 和 Parser Gateway 之前执行；不匹配时 reject no-requeue，避免 RabbitMQ delivery identity、Outbox event identity 和 Worker Inbox 幂等身份分裂。
+- Gate B fixture `_RecordingDelivery` 同步补齐 `security_epoch_ref` RabbitMQ header，使 PostgreSQL integration tests 与生产入站契约一致。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py tests/integration/test_phase11_package_a_production_runtime.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_rejects_transport_message_id_mismatch_before_inbox -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement and queue worker tests passed: 29 passed
+Gate B PostgreSQL focused test attempted once and environment_blocked before assertions: localhost:5432 connection timeout during alembic upgrade head.
+```
