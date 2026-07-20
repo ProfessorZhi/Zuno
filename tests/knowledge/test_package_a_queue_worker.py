@@ -6,6 +6,8 @@ from zuno.knowledge.ingestion.worker import (
     PackageAProductionQueueWorker,
     package_a_rabbitmq_topology,
 )
+from zuno.platform.database.foundation import OutboxEventRecord
+from zuno.platform.queue import PostgresOutboxRabbitMQPublisher
 
 
 def test_package_a_rabbitmq_topology_uses_canonical_defaults() -> None:
@@ -23,6 +25,14 @@ def test_package_a_rabbitmq_topology_uses_canonical_defaults() -> None:
 
 def test_package_a_queue_worker_publishes_then_consumes_delivery() -> None:
     asyncio.run(_assert_package_a_queue_worker_publishes_then_consumes_delivery())
+
+
+def test_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:
+    asyncio.run(_assert_outbox_publisher_cross_tenant_mode_uses_record_tenant())
+
+
+def test_outbox_publisher_fixed_tenant_rejects_mismatch() -> None:
+    asyncio.run(_assert_outbox_publisher_fixed_tenant_rejects_mismatch())
 
 
 def test_queue_runner_defaults_to_package_a_ingestion_worker(monkeypatch) -> None:
@@ -73,6 +83,7 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
     class FakePublisher:
         def __init__(self, **kwargs):
             events.append(("publisher", kwargs["worker_id"]))
+            events.append(("tenant", kwargs["tenant_id"]))
 
         async def publish_batch(self, *, limit):
             events.append(("publish_batch", limit))
@@ -84,7 +95,6 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
         runtime=FakeRuntime(),
         transport=FakeTransport(),
         topology=topology,
-        tenant_id="tenant-1",
         trace_id="trace-1",
     )
 
@@ -101,7 +111,81 @@ async def _assert_package_a_queue_worker_publishes_then_consumes_delivery() -> N
     assert events == [
         ("declare", "zuno.ingestion.parse"),
         ("publisher", "phase11-package-a-outbox-dispatcher"),
+        ("tenant", None),
         ("publish_batch", 3),
         ("get", ("zuno.ingestion.parse", 0.25)),
         ("process", "event-1"),
     ]
+
+
+async def _assert_outbox_publisher_cross_tenant_mode_uses_record_tenant() -> None:
+    published: list[dict] = []
+
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            published.append(kwargs)
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id=None,
+        trace_id="trace-tenant-dispatch",
+    )
+    await publisher._publish_record(
+        OutboxEventRecord(
+            event_id="event-tenant-a",
+            aggregate_id="job-tenant-a",
+            topic="ingestion.parse.requested",
+            payload={"parse_job_id": "job-tenant-a"},
+            payload_hash="hash",
+            idempotency_key="tenant-a:parse:job-tenant-a",
+            claim_owner="phase11-package-a-outbox-dispatcher",
+            tenant_id="tenant-a",
+            ordering_key="job-tenant-a",
+            ordering_sequence=1,
+            publish_attempts=0,
+            retry_count=0,
+            replay_count=0,
+        )
+    )
+
+    assert published[0]["tenant_id"] == "tenant-a"
+
+
+async def _assert_outbox_publisher_fixed_tenant_rejects_mismatch() -> None:
+    class FakeTransport:
+        async def publish(self, topology, **kwargs):
+            raise AssertionError("mismatched tenant records must be rejected before publish")
+
+    publisher = PostgresOutboxRabbitMQPublisher(
+        engine=object(),
+        transport=FakeTransport(),
+        topology=package_a_rabbitmq_topology(SimpleNamespace(rabbitmq={})),
+        worker_id="phase11-package-a-outbox-dispatcher",
+        tenant_id="tenant-a",
+        trace_id="trace-tenant-dispatch",
+    )
+    try:
+        await publisher._publish_record(
+            OutboxEventRecord(
+                event_id="event-tenant-b",
+                aggregate_id="job-tenant-b",
+                topic="ingestion.parse.requested",
+                payload={"parse_job_id": "job-tenant-b"},
+                payload_hash="hash",
+                idempotency_key="tenant-b:parse:job-tenant-b",
+                claim_owner="phase11-package-a-outbox-dispatcher",
+                tenant_id="tenant-b",
+                ordering_key="job-tenant-b",
+                ordering_sequence=1,
+                publish_attempts=0,
+                retry_count=0,
+                replay_count=0,
+            )
+        )
+    except RuntimeError as exc:
+        assert "tenant does not match" in str(exc)
+    else:
+        raise AssertionError("mismatched tenant outbox record was not rejected")

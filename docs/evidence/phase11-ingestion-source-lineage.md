@@ -360,3 +360,24 @@ pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 py_compile passed
 Package A queue worker tests passed: 3 passed
 ```
+
+2026-07-20 Package A outbox tenant dispatch fix：
+
+- `PostgresOutboxRabbitMQPublisher` 支持 `tenant_id=None` 的跨租户 dispatcher 模式：固定 tenant 时仍拒绝不匹配 outbox record；跨租户模式下使用 outbox record 自身 `tenant_id` 写入 RabbitMQ header。
+- `PackageAProductionQueueWorker` 默认不再携带 `system` tenant，避免真实 workspace upload 以用户 tenant 写入的 `ingestion.parse.requested` outbox 在 dispatch 阶段被误拒绝。
+- `run_package_a_ingestion_worker_forever(...)` 只有在 `rabbitmq.tenant_id` 显式配置时才启用固定 tenant 发布，否则使用 record tenant，保持 Workspace/File Upload -> Outbox -> RabbitMQ 主链路的 tenant scope。
+- `tests/knowledge/test_package_a_queue_worker.py` 新增覆盖跨租户 publisher 使用 outbox record tenant，并保留固定 tenant 模式拒绝不匹配 record 的保护；原 queue worker 测试同步验证默认 publisher `tenant_id=None`。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/platform/queue/outbox.py src/backend/zuno/knowledge/ingestion/worker.py src/backend/zuno/platform/services/queue/runner.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A queue worker tenant dispatch tests passed: 5 passed
+```

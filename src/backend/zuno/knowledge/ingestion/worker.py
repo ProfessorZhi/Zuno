@@ -53,7 +53,7 @@ class PackageAProductionQueueWorker:
         runtime: PackageAProductionIngestionRuntime,
         transport: RabbitMQTransport,
         topology: RabbitMQTopology,
-        tenant_id: str,
+        tenant_id: str | None = None,
         trace_id: str,
         publisher_worker_id: str = "phase11-package-a-outbox-dispatcher",
     ) -> None:

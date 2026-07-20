@@ -206,4 +206,15 @@ Package A queue worker tests passed: 3 passed.
 PHASE11 remains in_progress; real Gate C still needs Docker/PostgreSQL/MinIO/RabbitMQ runtime availability.
 ```
 
+2026-07-20 Package A outbox tenant dispatch fix：
+
+```text
+PostgresOutboxRabbitMQPublisher now supports tenant_id=None for cross-tenant dispatcher workers while keeping fixed-tenant mismatch protection when tenant_id is configured.
+PackageAProductionQueueWorker and the queue runner no longer default the dispatcher tenant to system; RabbitMQ message tenant headers come from each outbox record.
+This removes the default Outbox -> RabbitMQ blocker for workspace uploads created under real user tenant IDs.
+py_compile passed.
+Package A queue worker tenant dispatch tests passed: 5 passed.
+PHASE11 remains in_progress; this is implementation evidence for Package A dispatch wiring, not real Gate C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

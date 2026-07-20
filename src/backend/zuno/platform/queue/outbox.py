@@ -63,7 +63,7 @@ class PostgresOutboxRabbitMQPublisher:
         transport: RabbitMQTransport,
         topology: RabbitMQTopology,
         worker_id: str,
-        tenant_id: str,
+        tenant_id: str | None,
         trace_id: str,
         policy: OutboxPublishPolicy | None = None,
     ) -> None:
@@ -150,8 +150,11 @@ class PostgresOutboxRabbitMQPublisher:
         )
 
     async def _publish_record(self, record: OutboxEventRecord) -> None:
-        if record.tenant_id and record.tenant_id != self.tenant_id:
+        if self.tenant_id is not None and record.tenant_id and record.tenant_id != self.tenant_id:
             raise RuntimeError("outbox publisher tenant does not match the claimed event tenant")
+        tenant_id = record.tenant_id or self.tenant_id
+        if tenant_id is None:
+            raise RuntimeError("outbox publisher requires tenant_id when the outbox record is tenantless")
         await asyncio.wait_for(
             self.transport.publish(
                 self.topology,
@@ -164,7 +167,7 @@ class PostgresOutboxRabbitMQPublisher:
                     "payload_hash": record.payload_hash,
                     "topic": record.topic,
                 },
-                tenant_id=record.tenant_id or self.tenant_id,
+                tenant_id=tenant_id,
                 trace_id=self.trace_id,
                 ordering_key=record.ordering_key,
                 ordering_sequence=record.ordering_sequence,

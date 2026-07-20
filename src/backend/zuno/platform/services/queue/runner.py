@@ -60,7 +60,8 @@ async def run_package_a_ingestion_worker_forever(
     if runtime is None:
         raise RuntimeError("Package A ingestion worker requires production MinIO storage configuration")
     topology = package_a_rabbitmq_topology(app_settings)
-    tenant_id = str(rabbitmq.get("tenant_id") or "system")
+    configured_tenant_id = rabbitmq.get("tenant_id")
+    tenant_id = str(configured_tenant_id).strip() if configured_tenant_id else None
     trace_id = str(rabbitmq.get("ingestion_trace_id") or "phase11-package-a-worker")
     publisher_worker_id = str(
         rabbitmq.get("ingestion_outbox_worker_id") or "phase11-package-a-outbox-dispatcher"
