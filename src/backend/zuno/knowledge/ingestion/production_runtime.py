@@ -19,6 +19,10 @@ from zuno.platform.queue.domain import CanonicalOutboxDeliveryV1
 from zuno.platform.queue.rabbitmq import RabbitMQDelivery
 from zuno.platform.storage.durable import DurableMinioObjectStore
 
+PACKAGE_A_PARSE_CONTRACT_NAME = "zuno.ingestion.parse.requested"
+PACKAGE_A_PARSE_CONSUMER_MODULE = "ingestion.parser_worker"
+PACKAGE_A_PARSE_REQUESTED_TOPIC = "ingestion.parse.requested"
+
 
 class AckableDelivery(Protocol):
     message_id: str
@@ -195,6 +199,13 @@ class PackageAProductionIngestionRuntime:
         except Exception as exc:
             await delivery.reject(requeue=False)
             raise IngestionPersistenceError("invalid Package A parse delivery envelope") from exc
+        if (
+            parsed_delivery.topic != PACKAGE_A_PARSE_REQUESTED_TOPIC
+            or envelope.contract_name != PACKAGE_A_PARSE_CONTRACT_NAME
+            or envelope.consumer_module != PACKAGE_A_PARSE_CONSUMER_MODULE
+        ):
+            await delivery.reject(requeue=False)
+            raise IngestionPersistenceError("delivery is not a Package A parse request")
         if envelope.tenant_id != delivery.headers.get("tenant_id"):
             await delivery.reject(requeue=False)
             raise IngestionPersistenceError("delivery tenant header does not match envelope")
@@ -602,6 +613,9 @@ class PackageAProductionIngestionRuntime:
 
 __all__ = [
     "PackageAProductionIngestionRuntime",
+    "PACKAGE_A_PARSE_CONTRACT_NAME",
+    "PACKAGE_A_PARSE_CONSUMER_MODULE",
+    "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "PackageAUploadCommand",
     "PackageAUploadReceipt",
     "PackageAWorkerReceipt",

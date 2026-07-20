@@ -273,4 +273,15 @@ Package A retry boundary tests passed: 3 passed.
 PHASE11 remains in_progress; PostgreSQL-backed retry/DLQ integration remains Gate B/C evidence.
 ```
 
+2026-07-20 Package A misrouted delivery rejection：
+
+```text
+PackageAProductionIngestionRuntime now rejects(requeue=false) deliveries whose RabbitMQ topic, envelope contract_name, or consumer_module does not match the Package A parse request contract.
+Misrouted deliveries are rejected before PostgreSQL inbox, ParseJob lookup, or Attempt/Lease claim.
+PackageAProductionQueueWorker reuses the runtime parse-requested topic constant for dispatch scope.
+py_compile passed.
+Package A delivery settlement misroute tests passed: 7 passed.
+PHASE11 remains in_progress; live RabbitMQ misroute handling still needs Gate C.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

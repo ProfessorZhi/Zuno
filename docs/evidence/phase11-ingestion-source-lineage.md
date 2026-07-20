@@ -487,3 +487,24 @@ pytest -q tests/knowledge/test_package_a_retry_boundary.py -p no:cacheprovider
 py_compile passed
 Package A retry boundary tests passed: 3 passed
 ```
+
+2026-07-20 Package A misrouted delivery rejection：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在进入 PostgreSQL UoW 前校验 delivery topic、envelope contract name 和 consumer module。
+- 只有 `ingestion.parse.requested` / `zuno.ingestion.parse.requested` / `ingestion.parser_worker` 的 canonical delivery 能进入 inbox 和 ParseJob 处理；误路由的 Snapshot、Knowledge index 或其他模块 envelope 会 `reject(requeue=False)`。
+- `PackageAProductionQueueWorker` 复用 runtime 导出的 `PACKAGE_A_PARSE_REQUESTED_TOPIC`，避免 dispatcher topic 和 consumer validation 分叉。
+- `tests/knowledge/test_package_a_delivery_settlement.py` 新增 wrong topic、wrong contract、wrong consumer 覆盖，验证误路由消息 reject 且不 ACK。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/knowledge/ingestion/worker.py src/backend/zuno/knowledge/ingestion/__init__.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement misroute tests passed: 7 passed
+```

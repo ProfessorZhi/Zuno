@@ -44,6 +44,9 @@ from .legacy_cutover import (
 from .normalizer import normalize_legacy_chunks_to_ir
 from .parse_control import ParseControlReceipt, ParseControlRuntime, ParseControlState
 from .production_runtime import (
+    PACKAGE_A_PARSE_CONSUMER_MODULE,
+    PACKAGE_A_PARSE_CONTRACT_NAME,
+    PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionIngestionRuntime,
     PackageAUploadCommand,
     PackageAUploadReceipt,
@@ -70,12 +73,7 @@ from .source_object_upload import (
     SourceObjectUploadReceipt,
     SourceObjectUploadRuntime,
 )
-from .worker import (
-    PACKAGE_A_PARSE_REQUESTED_TOPIC,
-    PackageAProductionQueueWorker,
-    PackageAQueuePumpReceipt,
-    package_a_rabbitmq_topology,
-)
+from .worker import PackageAProductionQueueWorker, PackageAQueuePumpReceipt, package_a_rabbitmq_topology
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -102,6 +100,8 @@ __all__ = [
     "PARSER_ADAPTER_CONTRACTS",
     "PARSER_ADAPTER_REGISTRY",
     "PARSER_CAPABILITY_MATRIX",
+    "PACKAGE_A_PARSE_CONSUMER_MODULE",
+    "PACKAGE_A_PARSE_CONTRACT_NAME",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
     "PackageAProductionIngestionRuntime",
     "PackageAProductionQueueWorker",

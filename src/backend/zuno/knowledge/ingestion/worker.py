@@ -6,6 +6,7 @@ from typing import Any, Callable
 from sqlalchemy import Engine
 
 from zuno.knowledge.ingestion.production_runtime import (
+    PACKAGE_A_PARSE_REQUESTED_TOPIC,
     PackageAProductionIngestionRuntime,
     PackageAWorkerReceipt,
 )
@@ -15,9 +16,6 @@ from zuno.platform.queue import (
     RabbitMQTopology,
     RabbitMQTransport,
 )
-
-PACKAGE_A_PARSE_REQUESTED_TOPIC = "ingestion.parse.requested"
-
 
 @dataclass(frozen=True, slots=True)
 class PackageAQueuePumpReceipt:

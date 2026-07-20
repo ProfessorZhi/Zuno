@@ -3,7 +3,13 @@ from datetime import datetime, timezone
 
 import pytest
 
-from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime, PackageAWorkerReceipt
+from zuno.knowledge.ingestion import (
+    PACKAGE_A_PARSE_CONSUMER_MODULE,
+    PACKAGE_A_PARSE_CONTRACT_NAME,
+    PACKAGE_A_PARSE_REQUESTED_TOPIC,
+    PackageAProductionIngestionRuntime,
+    PackageAWorkerReceipt,
+)
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 from zuno.platform.database.ingestion import IngestionPersistenceError
 
@@ -114,19 +120,53 @@ def test_package_a_rejects_payload_hash_mismatch_without_requeue() -> None:
     assert delivery.requeue is False
 
 
+def test_package_a_rejects_wrong_topic_without_requeue() -> None:
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+    delivery.payload["topic"] = "knowledge.snapshot.ready"
+
+    _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
+
+
+def test_package_a_rejects_wrong_contract_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={"parse_job_id": "job-1"},
+            contract_name="zuno.knowledge.snapshot.ready",
+        )
+    )
+
+    _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
+
+
+def test_package_a_rejects_wrong_consumer_without_requeue() -> None:
+    delivery = _delivery_for_envelope(
+        _envelope(
+            payload={"parse_job_id": "job-1"},
+            consumer_module="knowledge.indexer",
+        )
+    )
+
+    _assert_rejected_parse_delivery(delivery, "delivery is not a Package A parse request")
+
+
 def _runtime_without_init() -> PackageAProductionIngestionRuntime:
     return object.__new__(PackageAProductionIngestionRuntime)
 
 
-def _envelope(*, payload: dict) -> CrossModuleEnvelopeV1:
+def _envelope(
+    *,
+    payload: dict,
+    contract_name: str = PACKAGE_A_PARSE_CONTRACT_NAME,
+    consumer_module: str = PACKAGE_A_PARSE_CONSUMER_MODULE,
+) -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     return CrossModuleEnvelopeV1(
-        contract_name="zuno.ingestion.parse.requested",
+        contract_name=contract_name,
         contract_version="v1",
         contract_bundle_version="phase11-package-a",
         message_id="event-1",
         producer_module="workspace.file_upload",
-        consumer_module="ingestion.parser_worker",
+        consumer_module=consumer_module,
         tenant_id="tenant-a",
         workspace_id="workspace-a",
         correlation_id="trace-1",
@@ -141,3 +181,31 @@ def _envelope(*, payload: dict) -> CrossModuleEnvelopeV1:
         payload_hash=canonical_sha256(payload),
         payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
     )
+
+
+def _delivery_for_envelope(envelope: CrossModuleEnvelopeV1) -> _RecordingDelivery:
+    delivery = _RecordingDelivery()
+    delivery.headers = {"tenant_id": envelope.tenant_id}
+    delivery.payload = {
+        "aggregate_id": envelope.aggregate_id,
+        "event_id": envelope.message_id,
+        "idempotency_key": envelope.idempotency_key,
+        "payload": envelope.model_dump(mode="json"),
+        "payload_hash": canonical_sha256(envelope.model_dump(mode="json")),
+        "topic": PACKAGE_A_PARSE_REQUESTED_TOPIC,
+    }
+    return delivery
+
+
+def _assert_rejected_parse_delivery(delivery: _RecordingDelivery, match: str) -> None:
+    with pytest.raises(IngestionPersistenceError, match=match):
+        asyncio.run(
+            PackageAProductionIngestionRuntime.process_rabbitmq_delivery(
+                _runtime_without_init(),
+                delivery,
+            )
+        )
+
+    assert delivery.acked is False
+    assert delivery.rejected is True
+    assert delivery.requeue is False
