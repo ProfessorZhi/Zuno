@@ -126,6 +126,64 @@ def test_local_queue_lifecycle_replay_and_external_dependency_probes() -> None:
     assert redis_boundary.dependency_probe().status == "target_blocked"
 
 
+def test_local_queue_acks_only_after_domain_commit_and_dead_letters_retry_exhausted() -> None:
+    from zuno.knowledge.ingestion.async_runtime import LocalQueueBackend
+
+    queue = LocalQueueBackend()
+    message = queue.enqueue(
+        topic="parse_requested",
+        payload={"file_id": "file_ack_guard"},
+        idempotency_key="parse:file_ack_guard",
+    )
+    consumed = queue.consume("parse_requested")
+    assert consumed is not None
+
+    success = queue.ack_after_domain_commit(
+        consumed,
+        commit=lambda: "domain_commit:parse_job_1",
+    )
+
+    assert success.ok is True
+    assert success.status == "acked"
+    assert success.acked_after_domain_commit is True
+    assert success.domain_commit_ref == "domain_commit:parse_job_1"
+
+    retry_message = queue.enqueue(
+        topic="parse_requested",
+        payload={"file_id": "file_retry"},
+        idempotency_key="parse:file_retry",
+    )
+    first_delivery = queue.consume("parse_requested")
+    assert first_delivery is not None
+    assert first_delivery.message_id == retry_message.message_id
+
+    first_failure = queue.ack_after_domain_commit(
+        first_delivery,
+        commit=lambda: (_ for _ in ()).throw(RuntimeError("db offline")),
+        max_attempts=2,
+    )
+    redelivery = queue.consume("parse_requested")
+    assert redelivery is not None
+    second_failure = queue.ack_after_domain_commit(
+        redelivery,
+        commit=lambda: (_ for _ in ()).throw(RuntimeError("db offline")),
+        max_attempts=2,
+    )
+
+    assert first_failure.ok is False
+    assert first_failure.status == "queued"
+    assert first_failure.retryable is True
+    assert first_failure.acked_after_domain_commit is False
+    assert first_failure.attempt == 1
+    assert redelivery.message_id == retry_message.message_id
+    assert redelivery.attempt == 1
+    assert second_failure.ok is False
+    assert second_failure.status == "dead_letter"
+    assert second_failure.retryable is False
+    assert second_failure.dead_letter_id is not None
+    assert queue.dead_letters()[0].reason.startswith("retry_exhausted:domain_commit_failed")
+
+
 def test_local_parser_and_index_workers_persist_async_success_lifecycle(tmp_path) -> None:
     from zuno.knowledge.ingestion.async_runtime import (
         IngestionReconciler,
@@ -210,7 +268,7 @@ def test_local_parser_and_index_workers_persist_async_success_lifecycle(tmp_path
     assert missing_chunk_findings[0].entity_id == "index_missing_chunks"
 
 
-def test_blocked_ocr_vlm_worker_does_not_create_fake_index(tmp_path) -> None:
+def test_ocr_vlm_worker_fallback_enters_review_pending_without_index(tmp_path) -> None:
     from zuno.knowledge.ingestion.async_runtime import LocalQueueBackend, ParserWorker
 
     store = SQLiteDurableIngestionStore(tmp_path / "zuno.db")
@@ -240,13 +298,17 @@ def test_blocked_ocr_vlm_worker_does_not_create_fake_index(tmp_path) -> None:
     )
 
     result = ParserWorker(store=store, object_store=object_store, queue=queue).run_once()
-    assert result.status == "blocked"
-    assert store.get_workspace_file("file_scan").parse_status == "blocked"
-    assert store.get_parse_job(result.parse_job_id).blocked_reason
-    assert store.get_parse_snapshot(result.parse_job_id).parser_diagnostics[0]["code"] == "target_blocked_adapter"
+    assert result.status == "succeeded"
+    assert store.get_workspace_file("file_scan").parse_status == "review_pending"
+    assert store.get_parse_job(result.parse_job_id).status == "succeeded"
+    assert any(
+        diagnostic["code"] == "local_ocr_vlm_fallback"
+        for diagnostic in store.get_parse_snapshot(result.parse_job_id).parser_diagnostics
+    )
+    assert any(diagnostic["code"] == "review_pending" for diagnostic in result.diagnostics)
     assert queue.consume("index_requested") is None
     assert [event.payload["status"] for event in queue.outbox_events("file_scan")] == [
         "queued",
         "parsing",
-        "blocked",
+        "review_pending",
     ]

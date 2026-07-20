@@ -39,7 +39,7 @@ docs/evidence/input-runtime-batch.md
 - 同一 tenant 的 ParseJob idempotency key 由数据库唯一约束保护；重复写入被拒绝且不会新增第二个 ParseJob。
 - IndexableDocumentSnapshot 必须引用 QualityGateDecision；缺质量门时数据库 FK 拒绝 handoff。
 - SourceObject 写入前验证 `source_sha256` 是 64 位 hash。
-- LocalQueue ACK / retry / dead-letter / replay、RabbitMQ target-blocked probe、Redis fallback boundary 只作为线索；外部依赖不可用不能冒充 production dependency。
+- LocalQueue ACK / retry / dead-letter / replay、ACK-after-domain-commit guard、RabbitMQ target-blocked probe、Redis fallback boundary 只作为线索；外部依赖不可用不能冒充 production dependency。`ParserWorker` 当前在领域提交成功后才 ACK；领域提交失败会 retry，重试耗尽进入 dead letter。需要人工审核的 OCR/VLM fallback 会进入 `review_pending`，不会 enqueue index。
 - PHASE11 重新打开后，ParseAttemptControl、native/PDF parser、OCR/VLM、Office/archive、delete/legal hold/restore 等证据都只保留为部分证据，不能单独关闭 PHASE11。
 - `local_office_archive` 当前提供 Office/Archive 的可执行本地 fallback：docx/xlsx 保留 heading/table projection，pptx 保留 slide/figure projection，archive 只读取 manifest、不自动解包；live Unstructured / MarkItDown provider 保持 measurement blocked。
 - Parser Gateway 当前接受显式 `source_object_ref` 与 `source_object_manifest`，在 adapter 执行前校验 PHASE04 `s3://` ObjectRef、object manifest ref、content hash、size、parser policy、lineage ref、workspace scope，并把 ObjectRef、security policy、security epoch、timeout、source input mode 与质量 confidence 写入 ParseJobSnapshot；hash mismatch 与 cancel-before-adapter 进入 typed failure / cancelled 状态。
@@ -58,6 +58,7 @@ python tools/scripts/verify_phase11_ingestion_source_lineage.py
 pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_source_object_upload.py tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
+pytest -q tests/knowledge/test_ingestion_async_infrastructure.py -p no:cacheprovider
 pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_document_ingestion_contract.py -p no:cacheprovider
 pytest -q tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider
