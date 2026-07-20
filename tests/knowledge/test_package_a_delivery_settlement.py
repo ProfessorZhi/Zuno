@@ -1272,6 +1272,60 @@ def test_package_a_duplicate_delivery_refuses_failed_replay_without_retry_outbox
     assert delivery.rejected is False
 
 
+def test_package_a_duplicate_failed_replay_acks_and_exposes_retry_outbox(monkeypatch) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "received"
+        processable = False
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "job_status": "failed",
+                "attempt_status": "failed",
+                "parse_attempt_id": "attempt-1",
+                "failure_code": "temporary_parser_failure",
+                "retry_outbox_event_id": "outbox:job-1:retry:2",
+                "indexable_snapshot_id": None,
+                "outbox_event_id": None,
+                "handoff_idempotency_key": None,
+                "outbox_idempotency_key": None,
+                "dead_letter_id": None,
+            }
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is True
+    assert delivery.rejected is False
+    assert receipt.duplicate_delivery is True
+    assert receipt.status == "failed"
+    assert receipt.retry_enqueued_after_domain_commit is True
+    assert receipt.outbox_event_id == "outbox:job-1:retry:2"
+    assert receipt.failure_code == "temporary_parser_failure"
+
+
 def test_package_a_duplicate_delivery_refuses_cancelled_replay_with_publish_artifact_without_ack(
     monkeypatch,
 ) -> None:

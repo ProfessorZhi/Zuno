@@ -1108,6 +1108,27 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
 
+2026-07-20 Package A failed replay retry outbox visibility gate：
+
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 duplicate/redelivery replay 看到 `job_status=failed` 时，把 PostgreSQL replay receipt 中的 `retry_outbox_event_id` 映射到 `PackageAWorkerReceipt.outbox_event_id`。
+- 同一路径会设置 `retry_enqueued_after_domain_commit=True`，证明 crash-after-commit-before-ACK 的重复投递不会重新解析，而是 ACK 已提交的 failed attempt 并暴露已入队 retry outbox。
+- 该 gate 复用既有 `load_parse_job_replay_receipt` 的 `retry_outbox_event_id`，不新增 migration。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A delivery settlement tests passed: 48 passed
+PHASE11 remains in_progress; this is Package A failed replay retry visibility evidence, not Gate B/C completion.
+```
+
 2026-07-20 Package A parser policy and classification lineage in parse-request envelope：
 
 - `PackageAProductionIngestionRuntime._parse_requested_envelope(...)` 现在将 upload `classification_ref` 写入 Package A parse-request payload。

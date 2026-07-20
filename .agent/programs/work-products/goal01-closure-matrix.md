@@ -976,4 +976,15 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A Snapshot Outbox payload replay lineage evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A failed replay retry outbox visibility gate：
+
+```text
+PackageAProductionIngestionRuntime now maps failed duplicate/redelivery replay retry_outbox_event_id into PackageAWorkerReceipt.outbox_event_id.
+The same replay receipt sets retry_enqueued_after_domain_commit=True, so crash-after-commit-before-ACK visibility proves the failed attempt already enqueued retry without reparsing.
+No migration was added; this reuses load_parse_job_replay_receipt retry_outbox_event_id.
+py_compile passed.
+Package A delivery settlement tests passed: 48 passed.
+PHASE11 remains in_progress; this is Package A failed replay retry visibility evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

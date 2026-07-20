@@ -398,8 +398,13 @@ class PackageAProductionIngestionRuntime:
                             parse_attempt_id=replay.get("parse_attempt_id"),
                             status=status,
                             acked_after_domain_commit=True,
+                            retry_enqueued_after_domain_commit=status == "failed",
                             indexable_snapshot_id=replay.get("indexable_snapshot_id"),
-                            outbox_event_id=replay.get("outbox_event_id"),
+                            outbox_event_id=(
+                                replay.get("retry_outbox_event_id")
+                                if status == "failed"
+                                else replay.get("outbox_event_id")
+                            ),
                             handoff_idempotency_key=replay.get("handoff_idempotency_key"),
                             outbox_idempotency_key=replay.get("outbox_idempotency_key"),
                             dead_letter_id=replay.get("dead_letter_id"),
