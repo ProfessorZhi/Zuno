@@ -620,4 +620,15 @@ Package A delivery settlement, persistence fencing, and queue worker tests passe
 PHASE11 remains in_progress; this is Package A ordered Inbox commit/settlement boundary evidence, not Gate B/C completion.
 ```
 
+2026-07-20 Package A retry attempt number pre-Inbox gate：
+
+```text
+PackageAProductionIngestionRuntime now rejects retry delivery envelopes with retry_attempt_no < 2 before Worker Inbox.
+The focused retry boundary test proves forged retry:1 cannot pass the retry envelope identity gate.
+This keeps initial execution identity separate from retry Attempts before PostgreSQL Inbox/Attempt mutation.
+py_compile passed.
+Package A retry boundary, delivery settlement, and queue worker tests passed: 39 passed.
+PHASE11 remains in_progress; this is Package A retry identity-boundary evidence, not Gate B/C completion.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

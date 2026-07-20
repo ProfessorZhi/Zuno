@@ -826,6 +826,8 @@ class PackageAProductionIngestionRuntime:
             retry_attempt_no = int(payload["retry_attempt_no"])
         except (TypeError, ValueError) as exc:
             raise PackageARejectDeliveryError("delivery retry envelope mismatch: retry_attempt_no") from exc
+        if retry_attempt_no < 2:
+            raise PackageARejectDeliveryError("delivery retry envelope mismatch: retry_attempt_no")
         expected_message_id = f"outbox:{payload['parse_job_id']}:retry:{retry_attempt_no}"
         expected_idempotency_key = f"{payload['retry_parent_idempotency_key']}:retry:{retry_attempt_no}"
         if envelope.message_id != expected_message_id:

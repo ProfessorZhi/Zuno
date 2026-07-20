@@ -87,6 +87,29 @@ def test_retry_delivery_envelope_must_match_retry_payload_identity() -> None:
         )
 
 
+def test_retry_delivery_envelope_rejects_first_attempt_number() -> None:
+    retry = _parse_requested_envelope().model_copy(
+        update={
+            "message_id": "outbox:parse-job-a:retry:1",
+            "causation_id": "outbox:parse-job-a",
+            "idempotency_key": "parse:tenant-a:workspace-a:hash:1:retry:1",
+        }
+    )
+    payload = {
+        **retry.payload,
+        "retry_attempt_no": 1,
+        "retry_parent_attempt_id": "parse-job-a:attempt:0",
+        "retry_parent_message_id": "outbox:parse-job-a",
+        "retry_parent_idempotency_key": "parse:tenant-a:workspace-a:hash:1",
+    }
+
+    with pytest.raises(PackageARejectDeliveryError, match="retry_attempt_no"):
+        PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(
+            payload=payload,
+            envelope=retry,
+        )
+
+
 def _parse_requested_envelope() -> CrossModuleEnvelopeV1:
     now = datetime(2026, 7, 20, tzinfo=timezone.utc)
     payload = {

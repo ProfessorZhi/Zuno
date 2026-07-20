@@ -1108,6 +1108,26 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
 
+2026-07-20 Package A retry attempt number pre-Inbox gate：
+
+- `PackageAProductionIngestionRuntime._validate_delivery_retry_envelope(...)` 现在在 Worker Inbox 前拒绝 `retry_attempt_no < 2` 的 retry delivery。
+- 该 gate 防止伪造的 `retry:1` delivery 把初次执行伪装成 Retry，避免 Retry 复用或污染初次 Attempt 身份。
+- 合法 Retry 仍需同时满足 message_id、causation_id、idempotency_key 与 payload parent lineage 一致。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py
+pytest -q tests/knowledge/test_package_a_retry_boundary.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Package A retry boundary, delivery settlement, and queue worker tests passed: 39 passed
+```
+
 2026-07-20 Package A buffered Inbox commit-before-no-ACK boundary：
 
 - `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 PostgreSQL UoW 内记录 PHASE04 Worker Inbox receipt 后，若 Inbox 返回 `status=buffered` 且 `processable=false`，会让 UoW 正常退出并提交 receipt，再抛出 `IngestionPersistenceError`。
