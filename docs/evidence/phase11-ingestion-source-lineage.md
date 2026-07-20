@@ -11,9 +11,11 @@ phase_completion: `reopened_pending`
 infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py
 src/backend/zuno/platform/database/schema_registry.py
 src/backend/zuno/platform/database/ingestion/persistence.py
+src/backend/zuno/knowledge/ingestion/source_object_commit.py
 tools/scripts/verify_phase11_ingestion_source_lineage.py
 tests/repo/test_phase11_ingestion_source_lineage.py
 tests/integration/test_phase11_ingestion_persistence_runtime.py
+tests/knowledge/test_ingestion_source_object_commit.py
 docs/evidence/input-runtime-batch.md
 ```
 
@@ -22,6 +24,7 @@ docs/evidence/input-runtime-batch.md
 - Migration 串接到 `20260719_17`，避免产生第二个 Alembic head。
 - `ingestion_*` 表统一归属 `Input / Document Ingestion`。
 - SourceObject 保留 object manifest、hash、classification 和 security epoch。
+- `SourceObjectCommitRuntime` 消费 PHASE04 `ObjectStoreReceipt`，只接受 visible object receipt，并校验 object manifest ref、tenant/workspace object prefix、hash、size、mime type、classification 与 security epoch 后生成 PHASE11 `SourceObjectRecord`。
 - DocumentVersion 与 ParseSnapshot 分离；ParseSnapshot 绑定 ParseJob、ParseAttempt 和 DocumentVersion。
 - ParseAttempt 持久化 lease、fencing token、attempt number 和状态。
 - SourceSpan 可回溯到 ParseSnapshot 与 DocumentVersion。
@@ -40,6 +43,7 @@ docs/evidence/input-runtime-batch.md
 ```powershell
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
 pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider
+pytest -q tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
 python tools/scripts/verify_input_runtime_batch.py
 pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
 ```

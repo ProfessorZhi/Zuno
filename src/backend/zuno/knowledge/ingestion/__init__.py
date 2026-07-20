@@ -36,6 +36,11 @@ from .review import (
     ReviewDecisionReceipt,
     ReviewTask,
 )
+from .source_object_commit import (
+    SourceObjectCommitError,
+    SourceObjectCommitReceipt,
+    SourceObjectCommitRuntime,
+)
 from .router import (
     PARSER_ADAPTER_CONTRACTS,
     PARSER_CAPABILITY_MATRIX,
@@ -78,6 +83,9 @@ __all__ = [
     "SnapshotHandoffRuntime",
     "SnapshotOutboxEvent",
     "SourceSpan",
+    "SourceObjectCommitError",
+    "SourceObjectCommitReceipt",
+    "SourceObjectCommitRuntime",
     "adapter_boundary_metadata",
     "build_index_handoff_payload",
     "build_source_span_provenance",
