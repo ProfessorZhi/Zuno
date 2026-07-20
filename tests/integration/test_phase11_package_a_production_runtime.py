@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import text
 
 from zuno.knowledge.ingestion import PackageAProductionIngestionRuntime, PackageAUploadCommand
+from zuno.knowledge.ingestion.contracts import ParseDocumentResult, ParseJobSnapshot, ParserFailure
+from zuno.knowledge.ingestion.gateway import ParseGateway
+from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
+from zuno.platform.queue.domain import CanonicalOutboxDeliveryV1
 from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTopology, RabbitMQTransport
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
 
@@ -22,6 +28,43 @@ DATABASE_URL = os.environ.get(
 )
 RABBITMQ_URL = "amqp://guest:guest@localhost:5672/"
 MINIO_ENDPOINT = "localhost:9000"
+
+
+class _FakeObjectReader:
+    def __init__(self, *, bucket: str, object_name: str, content: bytes) -> None:
+        self.bucket = bucket
+        self.object_name = object_name
+        self.content = content
+
+    def read_object(self, *, bucket: str, object_name: str) -> bytes:
+        assert bucket == self.bucket
+        assert object_name == self.object_name
+        return self.content
+
+
+class _FakeObjectStore:
+    def __init__(self, *, bucket: str, object_name: str, content: bytes) -> None:
+        self.store = _FakeObjectReader(bucket=bucket, object_name=object_name, content=content)
+
+
+class _RecordingDelivery:
+    def __init__(self, *, payload: dict[str, Any], tenant_id: str) -> None:
+        self.message_id = str(payload["event_id"])
+        self.payload = payload
+        self.headers = {"tenant_id": tenant_id}
+        self.redelivered = False
+        self.acked = False
+        self.nacked = False
+        self.rejected = False
+
+    async def ack(self) -> None:
+        self.acked = True
+
+    async def nack(self, *, requeue: bool) -> None:
+        self.nacked = True
+
+    async def reject(self, *, requeue: bool = False) -> None:
+        self.rejected = True
 
 
 def _migrate() -> None:
@@ -118,6 +161,94 @@ def _seed_job(engine) -> None:
         )
 
 
+def _seed_retryable_job(engine, *, content: bytes) -> CrossModuleEnvelopeV1:
+    content_hash = hashlib.sha256(content).hexdigest()
+    payload = {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "source_object_id": "source:pkg-a:retry",
+        "document_version_id": "document-version:pkg-a:retry",
+        "parse_plan_id": "parse-plan:pkg-a:retry",
+        "parse_job_id": "parse-job:pkg-a:retry",
+        "object_ref": "s3://bucket/tenant-a/workspace-a/retry.md",
+        "object_manifest_ref": "manifest:pkg-a:retry",
+        "content_hash": content_hash,
+        "size_bytes": len(content),
+        "mime_type": "text/markdown",
+        "parser_policy_ref": "parser-policy:pkg-a",
+        "quality_policy_ref": "quality-policy:pkg-a",
+        "security_decision_ref": "security-decision:pkg-a",
+        "security_epoch_ref": "security-epoch:pkg-a:retry",
+        "max_attempts": 2,
+    }
+    envelope = CrossModuleEnvelopeV1(
+        contract_name="zuno.ingestion.parse.requested",
+        contract_version="v1",
+        contract_bundle_version="wave1",
+        message_id="outbox:parse-job:pkg-a:retry",
+        producer_module="workspace.file_upload",
+        consumer_module="ingestion.parser_worker",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        correlation_id="trace-pkg-a-retry",
+        idempotency_key=f"parse:tenant-a:workspace-a:{content_hash}:1",
+        aggregate_type="ParseJob",
+        aggregate_id="parse-job:pkg-a:retry",
+        effective_security_epoch_ref="security-epoch:pkg-a:retry",
+        trace_id="trace-pkg-a-retry",
+        data_classification="internal",
+        occurred_at="2026-07-20T00:00:00Z",
+        created_at="2026-07-20T00:00:00Z",
+        payload=payload,
+        payload_hash=canonical_sha256(payload),
+        payload_schema_hash=canonical_sha256({"schema": "zuno.ingestion.parse.requested.v1"}),
+    )
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:pkg-a:retry",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="retry.md",
+            mime_type="text/markdown",
+            declared_format="markdown",
+            storage_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            object_manifest_ref="manifest:pkg-a:retry",
+            source_sha256=content_hash,
+            size_bytes=len(content),
+            classification_ref="internal",
+            security_epoch_ref="security-epoch:pkg-a:retry",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:pkg-a:retry",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=content_hash,
+            metadata={"filename": "retry.md"},
+            immutability_ref="immutability:pkg-a:retry",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:pkg-a:retry",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:pkg-a",
+            parser_bundle={"parser": "native_markdown"},
+            quality_policy_ref="quality-policy:pkg-a",
+            security_decision_ref="security-decision:pkg-a",
+        )
+        repo.record_parse_job(
+            parse_job_id="parse-job:pkg-a:retry",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key=f"parse:tenant-a:workspace-a:{content_hash}:1",
+        )
+        repo.enqueue_parse_requested(envelope=envelope)
+    return envelope
+
+
 def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> None:
     engine = _engine()
     try:
@@ -177,6 +308,113 @@ def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> Non
             pass
         else:
             raise AssertionError("stale worker commit must be rejected by PostgreSQL fencing")
+    finally:
+        engine.dispose()
+
+
+def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_commit(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Retry\nTemporary parser failure."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(bucket="bucket", object_name="tenant-a/workspace-a/retry.md", content=content),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _failed_parse(_request):
+        return ParseDocumentResult(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            failure=ParserFailure(
+                parser_id="native_markdown",
+                format="markdown",
+                reason="temporary parser outage",
+                retryable=True,
+                failure_classification="temporary_parser_failure",
+            ),
+        )
+
+    def _failed_snapshot(_job_id):
+        return ParseJobSnapshot(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            document_id="source:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            parser_id="native_markdown",
+            parser_format="markdown",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_attempt_id="parse-attempt:pkg-a:retry:1",
+            retryable=True,
+        )
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_failed_parse))
+    monkeypatch.setattr(ParseGateway, "get_job_snapshot", staticmethod(_failed_snapshot))
+
+    try:
+        receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+        assert receipt.status == "failed"
+        assert receipt.acked_after_domain_commit is True
+        assert receipt.retry_enqueued_after_domain_commit is True
+        assert receipt.outbox_event_id == "outbox:parse-job:pkg-a:retry:retry:2"
+        assert delivery.acked is True
+        assert delivery.nacked is False
+        assert delivery.rejected is False
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT attempt.state AS attempt_state,
+                           lease.state AS lease_state,
+                           job.status AS job_status,
+                           job.attempt_count AS attempt_count
+                    FROM ingestion_parse_attempts AS attempt
+                    JOIN ingestion_parse_leases AS lease
+                      ON lease.parse_attempt_id = attempt.parse_attempt_id
+                    JOIN ingestion_parse_jobs AS job
+                      ON job.parse_job_id = attempt.parse_job_id
+                    WHERE attempt.parse_attempt_id = :parse_attempt_id
+                    """
+                ),
+                {"parse_attempt_id": receipt.parse_attempt_id},
+            ).mappings().one()
+            assert row["attempt_state"] == "failed"
+            assert row["lease_state"] == "released"
+            assert row["job_status"] == "queued"
+            assert row["attempt_count"] == 1
+
+            outbox = conn.execute(
+                text(
+                    """
+                    SELECT outbox_event_id, payload ->> 'message_id' AS message_id,
+                           payload ->> 'causation_id' AS causation_id,
+                           publish_status
+                    FROM ingestion_outbox_events
+                    ORDER BY created_at, outbox_event_id
+                    """
+                )
+            ).mappings().all()
+            assert [item["outbox_event_id"] for item in outbox] == [
+                "outbox:parse-job:pkg-a:retry",
+                "outbox:parse-job:pkg-a:retry:retry:2",
+            ]
+            assert outbox[1]["message_id"] != outbox[0]["message_id"]
+            assert outbox[1]["causation_id"] == outbox[0]["message_id"]
+            assert outbox[1]["publish_status"] == "pending"
     finally:
         engine.dispose()
 

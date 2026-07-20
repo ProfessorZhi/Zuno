@@ -104,4 +104,13 @@ fail_parse_attempt now updates ingestion_parse_leases to released/lost terminal 
 Gate A remains passed; Gate B remains environment_blocked at PostgreSQL localhost:5432.
 ```
 
+2026-07-20 retry-boundary test addition：
+
+```text
+Added Gate B integration coverage for retryable failure:
+failed Attempt + released Lease + queued Job + new parse.requested outbox + ACK current delivery after commit + no same-message NACK/requeue.
+py_compile passed.
+Docker daemon remains unavailable; the new Gate B test is environment_blocked before assertions at PostgreSQL localhost:5432 alembic upgrade.
+```
+
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

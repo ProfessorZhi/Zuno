@@ -115,6 +115,26 @@ Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
 Gate B remains environment_blocked at PostgreSQL localhost:5432 connection timeout during alembic upgrade
 ```
 
+2026-07-20 retry-boundary test addition：
+
+- 新增 `tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_commit`，覆盖 retryable parser failure 时当前 Attempt `failed`、Lease `released`、ParseJob 回到 `queued`、新增下一次 `parse.requested` outbox、当前 RabbitMQ delivery 事务提交后 ACK、且不 NACK/requeue 同一 message。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py src/backend/zuno/platform/database/ingestion/persistence.py tests/integration/test_phase11_package_a_production_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_commit -p no:cacheprovider
+```
+
+结果：
+
+```text
+py_compile passed
+Docker daemon unavailable at npipe:////./pipe/dockerDesktopLinuxEngine
+Gate B retry-boundary test failed before assertions: PostgreSQL localhost:5432 connection timeout during alembic upgrade
+```
+
 ## Validation
 
 ```powershell
