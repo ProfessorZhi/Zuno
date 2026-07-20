@@ -37,6 +37,7 @@ docs/evidence/input-runtime-batch.md
 - SourceObject 写入前验证 `source_sha256` 是 64 位 hash。
 - LocalQueue ACK / retry / dead-letter / replay、RabbitMQ target-blocked probe、Redis fallback boundary 只作为线索；外部依赖不可用不能冒充 production dependency。
 - PHASE11 重新打开后，ParseAttemptControl、native/PDF parser、OCR/VLM、Office/archive、delete/legal hold/restore 等证据都只保留为部分证据，不能单独关闭 PHASE11。
+- `local_office_archive` 当前提供 Office/Archive 的可执行本地 fallback：docx/xlsx 保留 heading/table projection，pptx 保留 slide/figure projection，archive 只读取 manifest、不自动解包；live Unstructured / MarkItDown provider 保持 measurement blocked。
 
 ## Validation
 
@@ -44,6 +45,7 @@ docs/evidence/input-runtime-batch.md
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
 pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider
 pytest -q tests/knowledge/test_ingestion_source_object_commit.py -p no:cacheprovider
+pytest -q tests/knowledge/test_parse_gateway_runtime.py -p no:cacheprovider
 python tools/scripts/verify_input_runtime_batch.py
 pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
 ```

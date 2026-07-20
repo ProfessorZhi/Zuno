@@ -36,14 +36,14 @@ def _parse_fixture(case_id: str, file_name: str, mime_type: str):
             "file://contracts/supplier.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "# Payment\nPayment is due in 30 days.\n| Fee | Amount |",
-            "unstructured_markitdown",
+            "local_office_archive",
             "heading",
         ),
         (
             "file://decks/risk-review.pptx",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "# Slide 1: Risk\n- Renewal risk\n![chart](chart.png)",
-            "unstructured_markitdown",
+            "local_office_archive",
             "slide_title",
         ),
         (
@@ -230,26 +230,26 @@ def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencie
             "docx_heading_table",
             "docx_heading_table.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "unstructured_markitdown",
+            "local_office_archive",
             "heading",
         ),
         (
             "pptx_slide",
             "pptx_slide.pptx",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            "unstructured_markitdown",
+            "local_office_archive",
             "slide_title",
         ),
         (
             "xlsx_sheet",
             "xlsx_sheet.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "unstructured_markitdown",
+            "local_office_archive",
             "table",
         ),
     ],
 )
-def test_office_contract_parse_keeps_target_blocked_boundary(
+def test_office_contract_parse_uses_executable_local_fallback_boundary(
     case_id: str,
     file_name: str,
     mime_type: str,
@@ -261,15 +261,60 @@ def test_office_contract_parse_keeps_target_blocked_boundary(
     assert result.status == "succeeded"
     assert result.document is not None
     assert result.document.metadata.parser_id == expected_parser
-    assert result.document.metadata.target_blocked is True
-    assert result.document.metadata.blocked_reason
+    assert result.document.metadata.target_blocked is False
+    assert result.document.metadata.blocked_reason is None
     assert any(block.type == expected_block for block in result.document.blocks)
-    blocked_diagnostic = next(
-        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    fallback_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "local_office_archive_fallback"
     )
-    assert blocked_diagnostic.metadata["dependency_status"] == "missing"
-    assert blocked_diagnostic.metadata["capability_status"] == "target-blocked"
-    assert blocked_diagnostic.metadata["fallback"] in {"native", "mineru_ocr_vlm"}
+    assert fallback_diagnostic.metadata["live_provider_status"] == "measurement_blocked"
+    provenance = result.document.provenance
+    assert provenance.parser_id == "local_office_archive"
+
+
+def test_archive_contract_parse_keeps_manifest_without_unpacking() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_archive",
+            workspace_id="workspace_phase11",
+            source_uri="file://archives/policy.zip",
+            mime_type="application/zip",
+            source_text="contracts/policy.md\nreports/q1.csv\n",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == "local_office_archive"
+    assert result.document.metadata.target_blocked is False
+    assert any(block.type == "archive_manifest" for block in result.document.blocks)
+    entry = next(block for block in result.document.blocks if block.type == "archive_entry")
+    assert entry.metadata["extraction_policy"] == "manifest_only_no_unpack"
+    assert result.document.tables[0].table_id == "archive_manifest"
+    diagnostic = next(d for d in result.diagnostics if d.code == "local_office_archive_fallback")
+    assert diagnostic.metadata["archive_policy"] == "manifest_only_no_unpack"
+
+
+def test_archive_contract_rejects_unsafe_manifest_entries() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_archive_bad",
+            workspace_id="workspace_phase11",
+            source_uri="file://archives/bad.zip",
+            mime_type="application/zip",
+            source_text="../secret.txt\n",
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.failure is not None
+    assert result.failure.parser_id == "local_office_archive"
+    assert result.failure.format == "archive"
+    assert "no safe entries" in result.failure.reason
 
 
 def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:

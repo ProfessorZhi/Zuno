@@ -197,6 +197,22 @@ class ParseGateway:
                     },
                 )
             )
+        if parser_id == "local_office_archive":
+            diagnostics.append(
+                ParserDiagnostic(
+                    code="local_office_archive_fallback",
+                    message="Local Office/Archive fallback is executable; live Unstructured / MarkItDown provider remains measurement blocked.",
+                    severity="warning",
+                    parser_id=parser_id,
+                    format=capability.format,
+                    metadata={
+                        "live_provider": "unstructured_markitdown",
+                        "live_provider_status": "measurement_blocked",
+                        "network_policy": "local_only",
+                        "archive_policy": "manifest_only_no_unpack",
+                    },
+                )
+            )
         parser_config_hash = cls._parser_config_hash(request)
         job_id = f"parse_{uuid4().hex[:12]}"
 

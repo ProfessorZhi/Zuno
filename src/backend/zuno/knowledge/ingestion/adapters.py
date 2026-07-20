@@ -82,6 +82,8 @@ class ParserAdapter:
             return _parse_structured_markdown(text, request, table_cells=True)
         if format_name == "pptx":
             return _parse_pptx(text, request)
+        if format_name == "archive":
+            return _parse_archive_manifest(text, request)
         if format_name == "image":
             return _parse_image_ocr(text, request)
         if format_name == "csv":
@@ -101,6 +103,7 @@ PARSER_ADAPTER_REGISTRY = {
     "mineru_ocr_vlm": ParserAdapter(parser_id="mineru_ocr_vlm"),
     "local_ocr_vlm": ParserAdapter(parser_id="local_ocr_vlm"),
     "unstructured_markitdown": ParserAdapter(parser_id="unstructured_markitdown"),
+    "local_office_archive": ParserAdapter(parser_id="local_office_archive"),
 }
 
 
@@ -548,6 +551,61 @@ def _parse_image_ocr(
         uri=request.source_uri,
     )
     return [block], [], [figure], ["OCR confidence should be reviewed before high-risk use."], 0.86
+
+
+def _parse_archive_manifest(
+    text: str,
+    request: ParseDocumentRequest,
+) -> tuple[list[DocumentBlock], list[DocumentTable], list[DocumentFigure], list[str], float]:
+    entries = [line.strip() for line in text.splitlines() if line.strip()]
+    if not entries:
+        raise ValueError("empty archive manifest")
+    blocks: list[DocumentBlock] = []
+    rows = [["entry_path", "kind"]]
+    warnings: list[str] = []
+    for index, entry in enumerate(entries, start=1):
+        normalized = entry.replace("\\", "/").strip("/")
+        if not normalized or ".." in normalized.split("/"):
+            warnings.append(f"unsafe_archive_entry: {entry}")
+            continue
+        kind = "directory" if normalized.endswith("/") else "file"
+        rows.append([normalized, kind])
+        blocks.append(
+            _block(
+                request,
+                block_id=f"block_archive_entry_{index}",
+                block_type="archive_entry",
+                text=normalized,
+                source_span=SourceSpan(line_range=[index, index], section_path=["archive_manifest"]),
+                metadata={
+                    "format": "archive",
+                    "entry_path": normalized,
+                    "entry_kind": kind,
+                    "extraction_policy": "manifest_only_no_unpack",
+                },
+            )
+        )
+    if not blocks:
+        raise ValueError("archive manifest contains no safe entries")
+    table = DocumentTable(
+        table_id="archive_manifest",
+        rows=rows,
+        source_span=SourceSpan(line_range=[1, len(entries)], table_cell="archive_manifest"),
+        caption="Archive manifest",
+    )
+    manifest_block = _block(
+        request,
+        block_id="block_archive_manifest",
+        block_type="archive_manifest",
+        text="\n".join(entry for entry, _kind in rows[1:]),
+        source_span=SourceSpan(line_range=[1, len(entries)], table_cell="archive_manifest"),
+        metadata={
+            "format": "archive",
+            "entry_count": len(blocks),
+            "extraction_policy": "manifest_only_no_unpack",
+        },
+    )
+    return [manifest_block, *blocks], [table], [], warnings, 0.9 if warnings else 1.0
 
 
 def _parse_code(
