@@ -1226,12 +1226,15 @@ def test_package_a_duplicate_delivery_refuses_attempt_status_mismatch_without_ac
     assert delivery.rejected is False
 
 
-def test_package_a_duplicate_delivery_refuses_failed_replay_without_retry_outbox(monkeypatch) -> None:
+def test_package_a_duplicate_failed_replay_builds_missing_retry_outbox_before_ack(monkeypatch) -> None:
     import zuno.knowledge.ingestion.production_runtime as production_runtime
+    from zuno.platform.contracts import canonical_sha256
 
     class _Inbox:
         status = "received"
         processable = False
+
+    events: list[tuple[str, object]] = []
 
     class _Repo:
         def record_worker_inbox(self, **_kwargs):
@@ -1244,10 +1247,15 @@ def test_package_a_duplicate_delivery_refuses_failed_replay_without_retry_outbox
                 "job_status": "failed",
                 "attempt_status": "failed",
                 "parse_attempt_id": "attempt-1",
+                "attempt_no": 1,
                 "failure_code": "temporary_parser_failure",
                 "retry_outbox_event_id": None,
                 "dead_letter_id": None,
             }
+
+        def enqueue_parse_requested(self, *, envelope):
+            events.append(("retry_enqueued", envelope.model_dump(mode="json")))
+            return SimpleNamespace(ref=envelope.message_id)
 
     class _UnitOfWork:
         def __init__(self, engine):
@@ -1265,11 +1273,23 @@ def test_package_a_duplicate_delivery_refuses_failed_replay_without_retry_outbox
     runtime.worker_id = "worker-from-config"
     delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
 
-    with pytest.raises(IngestionPersistenceError, match="retry_outbox_event_id"):
-        asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+    receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
-    assert delivery.acked is False
+    assert delivery.acked is True
     assert delivery.rejected is False
+    assert receipt.duplicate_delivery is True
+    assert receipt.status == "failed"
+    assert receipt.retry_enqueued_after_domain_commit is True
+    assert receipt.outbox_event_id == "outbox:job-1:retry:2"
+    assert events[0][0] == "retry_enqueued"
+    retry_payload = events[0][1]["payload"]
+    assert events[0][1]["message_id"] == "outbox:job-1:retry:2"
+    assert events[0][1]["idempotency_key"] == "idem-1:retry:2"
+    assert retry_payload["retry_attempt_no"] == 2
+    assert retry_payload["retry_parent_attempt_id"] == "attempt-1"
+    assert retry_payload["retry_parent_message_id"] == "event-1"
+    assert retry_payload["retry_parent_idempotency_key"] == "idem-1"
+    assert events[0][1]["payload_hash"] == canonical_sha256(retry_payload)
 
 
 def test_package_a_duplicate_failed_replay_acks_and_exposes_retry_outbox(monkeypatch) -> None:
@@ -1290,8 +1310,17 @@ def test_package_a_duplicate_failed_replay_acks_and_exposes_retry_outbox(monkeyp
                 "job_status": "failed",
                 "attempt_status": "failed",
                 "parse_attempt_id": "attempt-1",
+                "attempt_no": 1,
                 "failure_code": "temporary_parser_failure",
                 "retry_outbox_event_id": "outbox:job-1:retry:2",
+                "retry_outbox_tenant_id": tenant_id,
+                "retry_outbox_aggregate_id": parse_job_id,
+                "retry_outbox_idempotency_key": "idem-1:retry:2",
+                "retry_outbox_payload_retry_attempt_no": 2,
+                "retry_outbox_payload_retry_parent_attempt_id": "attempt-1",
+                "retry_outbox_payload_retry_parent_message_id": "event-1",
+                "retry_outbox_payload_retry_parent_idempotency_key": "idem-1",
+                "retry_outbox_payload_parse_job_id": parse_job_id,
                 "indexable_snapshot_id": None,
                 "outbox_event_id": None,
                 "handoff_idempotency_key": None,
@@ -1324,6 +1353,78 @@ def test_package_a_duplicate_failed_replay_acks_and_exposes_retry_outbox(monkeyp
     assert receipt.retry_enqueued_after_domain_commit is True
     assert receipt.outbox_event_id == "outbox:job-1:retry:2"
     assert receipt.failure_code == "temporary_parser_failure"
+
+
+def test_package_a_duplicate_failed_replay_rejects_retry_outbox_lineage_conflict(
+    monkeypatch,
+) -> None:
+    import zuno.knowledge.ingestion.production_runtime as production_runtime
+
+    class _Inbox:
+        status = "received"
+        processable = False
+
+    events: list[tuple[str, object]] = []
+
+    class _Repo:
+        def record_worker_inbox(self, **_kwargs):
+            return _Inbox()
+
+        def load_parse_job_replay_receipt(self, *, parse_job_id: str, tenant_id: str):
+            return {
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+                "job_status": "failed",
+                "attempt_status": "failed",
+                "parse_attempt_id": "attempt-1",
+                "attempt_no": 1,
+                "failure_code": "temporary_parser_failure",
+                "retry_outbox_event_id": "outbox:job-1",
+                "retry_outbox_tenant_id": tenant_id,
+                "retry_outbox_aggregate_id": parse_job_id,
+                "retry_outbox_idempotency_key": "idem-1",
+                "retry_outbox_payload_retry_attempt_no": None,
+                "retry_outbox_payload_retry_parent_attempt_id": None,
+                "retry_outbox_payload_retry_parent_message_id": None,
+                "retry_outbox_payload_retry_parent_idempotency_key": None,
+                "retry_outbox_payload_parse_job_id": parse_job_id,
+                "indexable_snapshot_id": None,
+                "outbox_event_id": None,
+                "handoff_idempotency_key": None,
+                "outbox_idempotency_key": None,
+                "dead_letter_id": None,
+            }
+
+        def record_dead_letter(self, **kwargs):
+            events.append(("dead_letter", kwargs))
+            return SimpleNamespace(ref=kwargs["dead_letter_id"])
+
+    class _UnitOfWork:
+        def __init__(self, engine):
+            self.repo = _Repo()
+
+        def __enter__(self):
+            return self.repo
+
+        def __exit__(self, exc_type, exc, tb):
+            return None
+
+    monkeypatch.setattr(production_runtime, "IngestionUnitOfWork", _UnitOfWork)
+    runtime = _runtime_without_init()
+    runtime.engine = object()
+    runtime.worker_id = "worker-from-config"
+    delivery = _delivery_for_envelope(_envelope(payload={"parse_job_id": "job-1"}))
+
+    receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
+
+    assert delivery.acked is False
+    assert delivery.rejected is True
+    assert delivery.requeue is False
+    assert receipt.status == "dead_letter"
+    assert receipt.retry_enqueued_after_domain_commit is False
+    assert receipt.outbox_event_id is None
+    assert events[0][0] == "dead_letter"
+    assert events[0][1]["failure_code"] == "retry_outbox_lineage_conflict"
 
 
 def test_package_a_duplicate_delivery_refuses_cancelled_replay_with_publish_artifact_without_ack(

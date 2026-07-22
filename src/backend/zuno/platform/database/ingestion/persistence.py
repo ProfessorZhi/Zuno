@@ -363,6 +363,7 @@ class IngestionRepository:
                     job.tenant_id,
                     job.status AS job_status,
                     latest_attempt.parse_attempt_id,
+                    latest_attempt.attempt_no,
                     latest_attempt.status AS attempt_status,
                     latest_attempt.failure_code,
                     snapshot.parse_snapshot_id,
@@ -375,10 +376,24 @@ class IngestionRepository:
                     outbox.outbox_event_id,
                     outbox.idempotency_key AS outbox_idempotency_key,
                     retry_outbox.event_id AS retry_outbox_event_id,
+                    retry_outbox.tenant_id AS retry_outbox_tenant_id,
+                    retry_outbox.aggregate_id AS retry_outbox_aggregate_id,
+                    retry_outbox.idempotency_key AS retry_outbox_idempotency_key,
+                    retry_outbox.payload -> 'payload' ->> 'retry_attempt_no'
+                        AS retry_outbox_payload_retry_attempt_no,
+                    retry_outbox.payload -> 'payload' ->> 'retry_parent_attempt_id'
+                        AS retry_outbox_payload_retry_parent_attempt_id,
+                    retry_outbox.payload -> 'payload' ->> 'retry_parent_message_id'
+                        AS retry_outbox_payload_retry_parent_message_id,
+                    retry_outbox.payload -> 'payload' ->> 'retry_parent_idempotency_key'
+                        AS retry_outbox_payload_retry_parent_idempotency_key,
+                    retry_outbox.payload -> 'payload' ->> 'parse_job_id'
+                        AS retry_outbox_payload_parse_job_id,
+                    retry_outbox.retry_outbox_count,
                     dead_letter.dead_letter_id
                 FROM ingestion_parse_jobs AS job
                 LEFT JOIN LATERAL (
-                    SELECT parse_attempt_id, status, failure_code
+                    SELECT parse_attempt_id, attempt_no, status, failure_code
                     FROM ingestion_parse_attempts
                     WHERE parse_job_id = job.parse_job_id
                     ORDER BY attempt_no DESC
@@ -393,11 +408,20 @@ class IngestionRepository:
                 LEFT JOIN ingestion_outbox_events AS outbox
                   ON outbox.aggregate_ref = indexable.indexable_snapshot_id
                  AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
-                LEFT JOIN infra_outbox_events AS retry_outbox
-                  ON retry_outbox.tenant_id = job.tenant_id
-                 AND retry_outbox.aggregate_id = job.parse_job_id
-                 AND retry_outbox.topic = 'ingestion.parse.requested'
-                 AND retry_outbox.event_id <> ('outbox:' || job.parse_job_id)
+                LEFT JOIN LATERAL (
+                    SELECT
+                        max(event_id) AS event_id,
+                        max(tenant_id) AS tenant_id,
+                        max(aggregate_id) AS aggregate_id,
+                        max(idempotency_key) AS idempotency_key,
+                        (array_agg(payload ORDER BY event_id DESC))[1] AS payload,
+                        count(*) AS retry_outbox_count
+                    FROM infra_outbox_events
+                    WHERE tenant_id = job.tenant_id
+                      AND aggregate_id = job.parse_job_id
+                      AND topic = 'ingestion.parse.requested'
+                      AND event_id <> ('outbox:' || job.parse_job_id)
+                ) AS retry_outbox ON true
                 LEFT JOIN ingestion_dead_letters AS dead_letter
                   ON dead_letter.parse_attempt_id = latest_attempt.parse_attempt_id
                 WHERE job.parse_job_id = :parse_job_id
@@ -900,13 +924,13 @@ class IngestionRepository:
             text(
                 """
                 UPDATE ingestion_parse_attempts
-                SET status = :status,
+                SET status = CAST(:status AS varchar),
                     domain_commit_ref = COALESCE(:domain_commit_ref, domain_commit_ref),
                     failure_code = COALESCE(:failure_code, failure_code),
                     lease_expires_at = COALESCE(:lease_expires_at, lease_expires_at),
                     heartbeat_at = now(),
                     finished_at = CASE
-                        WHEN :status in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
+                        WHEN :terminal_status in ('succeeded','failed','cancelled','lease_lost','dead_letter','fenced_out')
                         THEN now()
                         ELSE finished_at
                     END
@@ -932,6 +956,7 @@ class IngestionRepository:
                 "worker_id": worker_id,
                 "fencing_token": fencing_token,
                 "status": status,
+                "terminal_status": status,
                 "domain_commit_ref": domain_commit_ref,
                 "failure_code": failure_code,
                 "lease_expires_at": lease_expires_at,

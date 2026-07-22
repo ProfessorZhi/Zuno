@@ -976,15 +976,38 @@ Package A upload replay, retry boundary, and queue worker tests passed: 29 passe
 PHASE11 remains in_progress; this is Package A Snapshot Outbox payload replay lineage evidence, not Gate B/C completion.
 ```
 
-2026-07-20 Package A failed replay retry outbox visibility gate：
+2026-07-22 Package A failed replay Retry Outbox consistency freeze gate：
 
 ```text
-PackageAProductionIngestionRuntime now maps failed duplicate/redelivery replay retry_outbox_event_id into PackageAWorkerReceipt.outbox_event_id.
-The same replay receipt sets retry_enqueued_after_domain_commit=True, so crash-after-commit-before-ACK visibility proves the failed attempt already enqueued retry without reparsing.
-No migration was added; this reuses load_parse_job_replay_receipt retry_outbox_event_id.
+IngestionRepository.load_parse_job_replay_receipt now reads latest failed attempt_no plus Retry Outbox tenant, aggregate, idempotency, causation, parent attempt, parent idempotency, next attempt number and parse_job_id lineage fields.
+PackageAProductionIngestionRuntime now ACKs failed duplicate/redelivery replay only when Retry Outbox is correct and unique, or after it rebuilds a missing expected Retry Outbox in the same PostgreSQL UoW.
+Retry Outbox conflicts now record retry_outbox_lineage_conflict dead letter receipt and reject the RabbitMQ delivery without ACK or retry-enqueued claim.
+No migration was added; this reuses infra_outbox_events.payload and the existing retry parse-request envelope.
 py_compile passed.
-Package A delivery settlement tests passed: 48 passed.
-PHASE11 remains in_progress; this is Package A failed replay retry visibility evidence, not Gate B/C completion.
+Package A delivery settlement, persistence fencing, and retry boundary tests passed: 66 passed.
+Package A upload replay and queue worker tests passed: 22 passed.
+PHASE11 remains in_progress; this is Package A failed replay Retry Outbox consistency evidence, not Gate B/C completion.
+```
+
+2026-07-22 Package A Gate B/C completion-candidate verification：
+
+```text
+Docker Desktop Linux Engine recovered with existing local Docker Desktop.
+PostgreSQL, RabbitMQ, and MinIO started from infra/docker/docker-compose.yml and reported healthy.
+Alembic single head remained 20260720_20.
+Package A failed replay Retry Outbox consistency is frozen:
+- correct+unique Retry Outbox returns existing failed Attempt and real Retry Outbox ID, then ACKs after facts are confirmed;
+- missing Retry Outbox is rebuilt in the same PostgreSQL UoW, then ACKed after commit;
+- conflicting lineage writes retry_outbox_lineage_conflict and rejects without ACK or retry-enqueued claim.
+
+Verification:
+docker info --format '{{.ServerVersion}} {{.OperatingSystem}}' -> 29.4.0 Docker Desktop
+alembic -c infra/db/alembic.ini heads -> 20260720_20 (head)
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py -p no:cacheprovider --tb=short -> 32 passed
+
+Package A production default ingestion path status: completion_candidate.
+PHASE11 remains in_progress; Coordinator Approval remains pending_reopened.
+Requirement Ledger is not globally promoted because Package B/C, full PHASE11 Pre-Closure, Coordinator Closure, and Post-Closure remain outside this objective.
 ```
 
 PHASE08 保持 `ready`，因为它只依赖 PHASE04–PHASE07。PHASE12 保持 `planned`，等待 PHASE08 completed 与 PHASE11 completed。

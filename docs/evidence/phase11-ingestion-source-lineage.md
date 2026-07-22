@@ -1108,25 +1108,54 @@ py_compile passed
 Package A delivery settlement, persistence fencing, and queue worker tests passed: 43 passed
 ```
 
-2026-07-20 Package A failed replay retry outbox visibility gate：
+2026-07-22 Package A Gate B/C completion-candidate verification：
 
-- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 现在在 duplicate/redelivery replay 看到 `job_status=failed` 时，把 PostgreSQL replay receipt 中的 `retry_outbox_event_id` 映射到 `PackageAWorkerReceipt.outbox_event_id`。
-- 同一路径会设置 `retry_enqueued_after_domain_commit=True`，证明 crash-after-commit-before-ACK 的重复投递不会重新解析，而是 ACK 已提交的 failed attempt 并暴露已入队 retry outbox。
-- 该 gate 复用既有 `load_parse_job_replay_receipt` 的 `retry_outbox_event_id`，不新增 migration。
+- Docker Desktop Linux Engine 已恢复，仓库现有 `infra/docker/docker-compose.yml` 中 PostgreSQL、RabbitMQ、MinIO 均可启动并保持 healthy。
+- Alembic 当前只有一个 head：`20260720_20`；`alembic -c infra/db/alembic.ini upgrade head` 已成功运行。
+- failed duplicate/redelivery replay 的 Retry Outbox 一致性已冻结：正确且唯一时 ACK 并返回真实 Retry Outbox ID，缺失时同一 PostgreSQL UoW 幂等补建，冲突时记录 `retry_outbox_lineage_conflict` 并 reject 到 DLQ，不重新解析。
+- Gate B/C 真实依赖文件 `tests/integration/test_phase11_package_a_production_runtime.py` 已通过，覆盖 PostgreSQL lease/fencing/replay、真实 MinIO ObjectRef 读取、PostgreSQL transactional outbox、RabbitMQ publish/consume/ACK/DLQ/replay 和 upload-to-snapshot-outbox 路径。
 
 新增验证：
 
 ```text
-python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py
-pytest -q tests/knowledge/test_package_a_delivery_settlement.py -p no:cacheprovider
+docker info --format '{{.ServerVersion}} {{.OperatingSystem}}'
+alembic -c infra/db/alembic.ini heads
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py -p no:cacheprovider --tb=short
+```
+
+结果：
+
+```text
+Docker: 29.4.0 Docker Desktop
+Alembic heads: 20260720_20 (head)
+Gate B/C Package A production runtime integration passed: 32 passed
+```
+
+结论：Package A production default ingestion path 达到 `completion_candidate`。PHASE11 仍为 `in_progress`，Coordinator Approval 仍为 `pending_reopened`；该结论不关闭 Package B/C、PHASE11 Pre-Closure、Coordinator Closure 或 Post-Closure。
+
+2026-07-22 Package A failed replay Retry Outbox consistency freeze gate：
+
+- `IngestionRepository.load_parse_job_replay_receipt(...)` 现在读取 latest failed `attempt_no` 和 Retry Outbox lineage 字段：tenant、aggregate、idempotency key、retry parent Attempt、causation message、parent idempotency key、next attempt number 和 parse_job_id。
+- `PackageAProductionIngestionRuntime.process_rabbitmq_delivery(...)` 在 failed duplicate/redelivery replay 中只在 Retry Outbox 正确且唯一时 ACK，并返回真实 Retry Outbox ID。
+- Retry Outbox 缺失时，runtime 在同一 PostgreSQL UoW 内用既有 `_retry_parse_requested_envelope(...)` 幂等补建预期 Retry Outbox，提交后 ACK，不重新解析。
+- Retry Outbox 指向初始 parse-request、重复或 lineage 不一致时，runtime 记录稳定 `retry_outbox_lineage_conflict` dead letter receipt，并 reject 当前 RabbitMQ delivery，不 ACK、不声称 retry 已入队。
+- 本次不新增 migration；复用 `infra_outbox_events.payload` 和既有 Retry parse-request envelope 结构。
+
+新增验证：
+
+```text
+python -m py_compile src/backend/zuno/knowledge/ingestion/production_runtime.py tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py
+pytest -q tests/knowledge/test_package_a_delivery_settlement.py tests/knowledge/test_package_a_persistence_fencing.py tests/knowledge/test_package_a_retry_boundary.py -p no:cacheprovider
+pytest -q tests/knowledge/test_package_a_upload_replay.py tests/knowledge/test_package_a_queue_worker.py -p no:cacheprovider
 ```
 
 结果：
 
 ```text
 py_compile passed
-Package A delivery settlement tests passed: 48 passed
-PHASE11 remains in_progress; this is Package A failed replay retry visibility evidence, not Gate B/C completion.
+Package A delivery settlement, persistence fencing, and retry boundary tests passed: 66 passed
+Package A upload replay and queue worker tests passed: 22 passed
+PHASE11 remains in_progress; this is Package A failed replay Retry Outbox consistency evidence, not Gate B/C completion.
 ```
 
 2026-07-20 Package A parser policy and classification lineage in parse-request envelope：

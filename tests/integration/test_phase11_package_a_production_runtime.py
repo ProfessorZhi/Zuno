@@ -378,6 +378,13 @@ def test_gate_b_postgres_attempt_lease_and_fencing_rejects_stale_worker() -> Non
                 security_epoch_ref="security-epoch:pkg-a",
                 lease_ttl_seconds=60,
             )
+            repo.mark_parse_attempt_running(
+                parse_attempt_id=attempt2.ref,
+                parse_job_id="parse-job:pkg-a:b",
+                tenant_id="tenant-a",
+                worker_id="worker-b",
+                fencing_token=int(attempt2.payload_hash or "0"),
+            )
             repo.commit_parse_attempt_if_current(
                 parse_attempt_id=attempt2.ref,
                 parse_job_id="parse-job:pkg-a:b",
@@ -574,7 +581,7 @@ def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_com
             row = conn.execute(
                 text(
                     """
-                    SELECT attempt.state AS attempt_state,
+                    SELECT attempt.status AS attempt_status,
                            lease.state AS lease_state,
                            job.status AS job_status,
                            job.attempt_count AS attempt_count
@@ -588,7 +595,7 @@ def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_com
                 ),
                 {"parse_attempt_id": receipt.parse_attempt_id},
             ).mappings().one()
-            assert row["attempt_state"] == "failed"
+            assert row["attempt_status"] == "failed"
             assert row["lease_state"] == "released"
             assert row["job_status"] == "queued"
             assert row["attempt_count"] == 1
@@ -596,10 +603,10 @@ def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_com
             outbox = conn.execute(
                 text(
                     """
-                    SELECT outbox_event_id, payload ->> 'message_id' AS message_id,
+                    SELECT event_id AS outbox_event_id, payload ->> 'message_id' AS message_id,
                            payload ->> 'causation_id' AS causation_id,
-                           publish_status
-                    FROM ingestion_outbox_events
+                           status AS publish_status
+                    FROM infra_outbox_events
                     ORDER BY created_at, outbox_event_id
                     """
                 )
@@ -611,6 +618,110 @@ def test_gate_b_retryable_failure_closes_lease_enqueues_retry_and_acks_after_com
             assert outbox[1]["message_id"] != outbox[0]["message_id"]
             assert outbox[1]["causation_id"] == outbox[0]["message_id"]
             assert outbox[1]["publish_status"] == "pending"
+    finally:
+        engine.dispose()
+
+
+def test_gate_b_failed_redelivery_rejects_retry_outbox_lineage_conflict(monkeypatch) -> None:
+    engine = _engine()
+    content = b"# Retry conflict\nTemporary parser failure."
+    envelope = _seed_retryable_job(engine, content=content)
+    delivery_payload = CanonicalOutboxDeliveryV1(
+        aggregate_id=envelope.aggregate_id or "",
+        event_id=envelope.message_id,
+        idempotency_key=envelope.idempotency_key or "",
+        payload=envelope.model_dump(mode="json"),
+        payload_hash=canonical_sha256(envelope.model_dump(mode="json")),
+        topic="ingestion.parse.requested",
+    ).model_dump(mode="json")
+    first_delivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=_FakeObjectStore(bucket="bucket", object_name="tenant-a/workspace-a/retry.md", content=content),
+        worker_id="phase11-package-a-worker",
+        max_attempts=2,
+    )
+
+    def _failed_parse(_request):
+        return ParseDocumentResult(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            failure=ParserFailure(
+                parser_id="native_markdown",
+                format="markdown",
+                reason="temporary parser outage",
+                retryable=True,
+                failure_classification="temporary_parser_failure",
+            ),
+        )
+
+    def _failed_snapshot(_job_id):
+        return ParseJobSnapshot(
+            job_id="parse-job:pkg-a:retry",
+            status="failed",
+            document_id="source:pkg-a:retry",
+            workspace_id="workspace-a",
+            source_uri="s3://bucket/tenant-a/workspace-a/retry.md",
+            mime_type="text/markdown",
+            parser_id="native_markdown",
+            parser_format="markdown",
+            parse_plan_id="parse-plan:pkg-a:retry",
+            parse_attempt_id="parse-attempt:pkg-a:retry:1",
+            retryable=True,
+        )
+
+    monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_failed_parse))
+    monkeypatch.setattr(ParseGateway, "get_job_snapshot", staticmethod(_failed_snapshot))
+
+    try:
+        first_receipt = asyncio.run(runtime.process_rabbitmq_delivery(first_delivery))
+        assert first_receipt.status == "failed"
+        assert first_receipt.outbox_event_id == "outbox:parse-job:pkg-a:retry:retry:2"
+        assert first_delivery.acked is True
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE infra_outbox_events
+                    SET idempotency_key = :forged_idempotency_key
+                    WHERE event_id = :event_id
+                    """
+                ),
+                {
+                    "event_id": first_receipt.outbox_event_id,
+                    "forged_idempotency_key": envelope.idempotency_key,
+                },
+            )
+
+        def _unexpected_parse(_request):
+            raise AssertionError("failed redelivery must not reparse when retry outbox conflicts")
+
+        monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
+        redelivery = _RecordingDelivery(payload=delivery_payload, tenant_id="tenant-a")
+        redelivery.redelivered = True
+
+        replay_receipt = asyncio.run(runtime.process_rabbitmq_delivery(redelivery))
+
+        assert replay_receipt.status == "dead_letter"
+        assert replay_receipt.failure_code == "retry_outbox_lineage_conflict"
+        assert replay_receipt.retry_enqueued_after_domain_commit is False
+        assert replay_receipt.outbox_event_id is None
+        assert redelivery.acked is False
+        assert redelivery.rejected is True
+
+        with engine.connect() as conn:
+            dead_letter = conn.execute(
+                text(
+                    """
+                    SELECT failure_code, retryable, rabbitmq_dead_letter_ref
+                    FROM ingestion_dead_letters
+                    WHERE failure_code = 'retry_outbox_lineage_conflict'
+                    """
+                )
+            ).mappings().one()
+            assert dead_letter["retryable"] is False
+            assert dead_letter["rabbitmq_dead_letter_ref"] == f"rabbitmq-dlq:{envelope.message_id}"
     finally:
         engine.dispose()
 
@@ -646,10 +757,12 @@ def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) 
     monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
     with IngestionUnitOfWork(engine) as repo:
         inbox = repo.record_worker_inbox(
-            consumer="phase11-package-a-parser-worker",
+            consumer="phase11-package-a-worker",
             message_id=envelope.message_id,
             payload=delivery.payload,
             tenant_id="tenant-a",
+            ordering_key=str(delivery.headers["ordering_key"]),
+            ordering_sequence=int(delivery.headers["ordering_sequence"]),
         )
         assert inbox.processable is True
 
@@ -667,7 +780,7 @@ def test_gate_b_duplicate_delivery_acks_without_reparse_or_attempt(monkeypatch) 
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_attempts")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_leases")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
-            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:
         engine.dispose()
 
@@ -1585,8 +1698,9 @@ def test_gate_b_rejects_retry_parent_attempt_mismatch_before_new_attempt(monkeyp
     )
     forged_envelope = envelope.model_copy(
         update={
-            "message_id": "outbox:parse-job:pkg-a:retry:2",
+            "message_id": "outbox:parse-job:pkg-a:retry:retry:2",
             "producer_module": "ingestion.parser_worker",
+            "causation_id": envelope.message_id,
             "idempotency_key": f"{envelope.idempotency_key}:retry:2",
             "payload": forged_payload,
             "payload_hash": canonical_sha256(forged_payload),
@@ -1721,10 +1835,12 @@ def test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse
     monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
     with IngestionUnitOfWork(engine) as repo:
         inbox = repo.record_worker_inbox(
-            consumer="phase11-package-a-parser-worker",
+            consumer="phase11-package-a-worker",
             message_id=envelope.message_id,
             payload=delivery.payload,
             tenant_id="tenant-a",
+            ordering_key=str(delivery.headers["ordering_key"]),
+            ordering_sequence=int(delivery.headers["ordering_sequence"]),
         )
         assert inbox.processable is True
         attempt = repo.claim_parse_attempt_lease(
@@ -1767,6 +1883,14 @@ def test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse
             confidence_score=1.0,
             decision="publish",
         )
+        handoff_idempotency_key = f"handoff:{attempt.ref}"
+        handoff_payload = {
+            "indexable_snapshot_id": f"indexable:{attempt.ref}",
+            "document_version_id": "document-version:pkg-a:retry",
+            "quality_decision_id": quality.ref,
+            "canonical_hash": canonical_sha256({"indexable_snapshot_id": f"indexable:{attempt.ref}"}),
+            "idempotency_key": handoff_idempotency_key,
+        }
         indexable = repo.record_indexable_snapshot(
             indexable_snapshot_id=f"indexable:{attempt.ref}",
             tenant_id="tenant-a",
@@ -1775,13 +1899,15 @@ def test_gate_b_redelivery_after_commit_returns_existing_success_without_reparse
             quality_decision_id=quality.ref,
             visibility_ref="visibility:workspace-a:source:pkg-a:retry",
             payload={"indexable_snapshot_id": f"indexable:{attempt.ref}"},
+            handoff_idempotency_key=handoff_idempotency_key,
         )
         outbox = repo.enqueue_outbox_event(
             outbox_event_id=f"outbox:indexable:{attempt.ref}",
             tenant_id="tenant-a",
             aggregate_ref=indexable.ref,
             event_type="ingestion.indexable_snapshot.ready",
-            payload={"indexable_snapshot_id": indexable.ref},
+            payload=handoff_payload,
+            idempotency_key=handoff_idempotency_key,
         )
         repo.commit_parse_attempt_if_current(
             parse_attempt_id=attempt.ref,
@@ -1844,10 +1970,12 @@ def test_gate_b_redelivery_refuses_dead_letter_handoff_replay_without_ack(monkey
     monkeypatch.setattr(ParseGateway, "submit_parse_job", staticmethod(_unexpected_parse))
     with IngestionUnitOfWork(engine) as repo:
         inbox = repo.record_worker_inbox(
-            consumer="phase11-package-a-parser-worker",
+            consumer="phase11-package-a-worker",
             message_id=envelope.message_id,
             payload=delivery.payload,
             tenant_id="tenant-a",
+            ordering_key=str(delivery.headers["ordering_key"]),
+            ordering_sequence=int(delivery.headers["ordering_sequence"]),
         )
         assert inbox.processable is True
         attempt = repo.claim_parse_attempt_lease(
@@ -1890,6 +2018,14 @@ def test_gate_b_redelivery_refuses_dead_letter_handoff_replay_without_ack(monkey
             confidence_score=1.0,
             decision="publish",
         )
+        handoff_idempotency_key = f"handoff:{attempt.ref}"
+        handoff_payload = {
+            "indexable_snapshot_id": f"indexable:{attempt.ref}",
+            "document_version_id": "document-version:pkg-a:retry",
+            "quality_decision_id": quality.ref,
+            "canonical_hash": canonical_sha256({"indexable_snapshot_id": f"indexable:{attempt.ref}"}),
+            "idempotency_key": handoff_idempotency_key,
+        }
         indexable = repo.record_indexable_snapshot(
             indexable_snapshot_id=f"indexable:{attempt.ref}",
             tenant_id="tenant-a",
@@ -1898,13 +2034,15 @@ def test_gate_b_redelivery_refuses_dead_letter_handoff_replay_without_ack(monkey
             quality_decision_id=quality.ref,
             visibility_ref="visibility:workspace-a:source:pkg-a:retry",
             payload={"indexable_snapshot_id": f"indexable:{attempt.ref}"},
+            handoff_idempotency_key=handoff_idempotency_key,
         )
         outbox = repo.enqueue_outbox_event(
             outbox_event_id=f"outbox:indexable:{attempt.ref}",
             tenant_id="tenant-a",
             aggregate_ref=indexable.ref,
             event_type="ingestion.indexable_snapshot.ready",
-            payload={"indexable_snapshot_id": indexable.ref},
+            payload=handoff_payload,
+            idempotency_key=handoff_idempotency_key,
         )
         repo.commit_parse_attempt_if_current(
             parse_attempt_id=attempt.ref,
@@ -2012,7 +2150,7 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
             row = conn.execute(
                 text(
                     """
-                    SELECT attempt.state AS attempt_state,
+                    SELECT attempt.status AS attempt_status,
                            lease.state AS lease_state,
                            job.status AS job_status,
                            job.attempt_count AS attempt_count
@@ -2026,7 +2164,7 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
                 ),
                 {"parse_attempt_id": receipt.parse_attempt_id},
             ).mappings().one()
-            assert row["attempt_state"] == "dead_letter"
+            assert row["attempt_status"] == "dead_letter"
             assert row["lease_state"] == "released"
             assert row["job_status"] == "dead_letter"
             assert row["attempt_count"] == 1
@@ -2046,10 +2184,11 @@ def test_gate_b_non_retryable_failure_records_dlq_without_retry_outbox(monkeypat
             assert dead_letter["retry_count"] == 1
             assert dead_letter["rabbitmq_dead_letter_ref"] == f"rabbitmq-dlq:{envelope.message_id}"
 
-            outbox_ids = conn.execute(
-                text("SELECT outbox_event_id FROM ingestion_outbox_events ORDER BY outbox_event_id")
+            infra_outbox_ids = conn.execute(
+                text("SELECT event_id FROM infra_outbox_events ORDER BY event_id")
             ).scalars().all()
-            assert outbox_ids == ["outbox:parse-job:pkg-a:retry"]
+            assert infra_outbox_ids == ["outbox:parse-job:pkg-a:retry"]
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:
         engine.dispose()
 
@@ -2223,10 +2362,10 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
             assert row["failure_code"] == "quality_gate_review"
             assert row["lease_state"] == "released"
             assert row["job_status"] == "failed"
-            assert row["quality_decision"] == "review_required"
+            assert row["quality_decision"] == "human_review"
             assert conn.execute(text("SELECT count(*) FROM ingestion_source_spans")).scalar_one() == 1
             assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
-            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:
         engine.dispose()
 
@@ -2391,7 +2530,7 @@ def test_gate_b_cancel_requested_closes_attempt_and_lease_without_snapshot(monke
             assert row["job_status"] == "cancelled"
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
-            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:
         engine.dispose()
 
@@ -2464,7 +2603,7 @@ def test_gate_b_expired_deadline_closes_attempt_and_lease_without_snapshot(monke
             assert row["job_status"] == "cancelled"
             assert conn.execute(text("SELECT count(*) FROM ingestion_parse_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
-            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:
         engine.dispose()
 

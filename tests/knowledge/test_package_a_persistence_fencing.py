@@ -169,6 +169,16 @@ def test_parse_job_replay_receipt_selects_handoff_idempotency_fields() -> None:
     assert "indexable.quality_decision_id" in statement
     assert "indexable.handoff_idempotency_key" in statement
     assert "outbox.idempotency_key AS outbox_idempotency_key" in statement
+    assert "latest_attempt.attempt_no" in statement
+    assert "retry_outbox.event_id AS retry_outbox_event_id" in statement
+    assert "retry_outbox.tenant_id AS retry_outbox_tenant_id" in statement
+    assert "retry_outbox.aggregate_id AS retry_outbox_aggregate_id" in statement
+    assert "retry_outbox.idempotency_key AS retry_outbox_idempotency_key" in statement
+    assert "retry_outbox.payload -> 'payload' ->> 'retry_attempt_no'" in statement
+    assert "retry_outbox.payload -> 'payload' ->> 'retry_parent_attempt_id'" in statement
+    assert "retry_outbox.payload -> 'payload' ->> 'retry_parent_message_id'" in statement
+    assert "retry_outbox.payload -> 'payload' ->> 'retry_parent_idempotency_key'" in statement
+    assert "retry_outbox.payload -> 'payload' ->> 'parse_job_id'" in statement
 
 
 def test_snapshot_handoff_replay_receipt_loads_by_tenant_scoped_idempotency() -> None:

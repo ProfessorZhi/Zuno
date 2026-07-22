@@ -381,7 +381,7 @@ class PackageAProductionIngestionRuntime:
                             parse_job_id=parse_job_id,
                             tenant_id=tenant_id,
                         )
-                        status = str(replay["job_status"])
+                        status = self._replay_receipt_status(replay)
                         if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
                             status = "duplicate"
                         if status == "succeeded":
@@ -393,24 +393,48 @@ class PackageAProductionIngestionRuntime:
                                 replay=replay,
                                 handoff_replay=handoff_replay,
                             )
-                        worker_receipt = PackageAWorkerReceipt(
-                            parse_job_id=parse_job_id,
-                            parse_attempt_id=replay.get("parse_attempt_id"),
-                            status=status,
-                            acked_after_domain_commit=True,
-                            retry_enqueued_after_domain_commit=status == "failed",
-                            indexable_snapshot_id=replay.get("indexable_snapshot_id"),
-                            outbox_event_id=(
-                                replay.get("retry_outbox_event_id")
-                                if status == "failed"
-                                else replay.get("outbox_event_id")
-                            ),
-                            handoff_idempotency_key=replay.get("handoff_idempotency_key"),
-                            outbox_idempotency_key=replay.get("outbox_idempotency_key"),
-                            dead_letter_id=replay.get("dead_letter_id"),
-                            failure_code=replay.get("failure_code"),
-                            duplicate_delivery=True,
-                        )
+                        retry_outbox_event_id = replay.get("outbox_event_id")
+                        retry_enqueued_after_domain_commit = False
+                        retry_consistency_dead_letter_id = None
+                        retry_consistency_failure_code = None
+                        if status == "failed":
+                            (
+                                retry_outbox_event_id,
+                                retry_enqueued_after_domain_commit,
+                                retry_consistency_dead_letter_id,
+                                retry_consistency_failure_code,
+                            ) = self._resolve_failed_replay_retry_outbox(
+                                repo=repo,
+                                replay=replay,
+                                envelope=envelope,
+                                parse_job_id=parse_job_id,
+                                tenant_id=tenant_id,
+                            )
+                        if retry_consistency_dead_letter_id is not None:
+                            worker_receipt = PackageAWorkerReceipt(
+                                parse_job_id=parse_job_id,
+                                parse_attempt_id=replay.get("parse_attempt_id"),
+                                status="dead_letter",
+                                acked_after_domain_commit=False,
+                                dead_letter_id=retry_consistency_dead_letter_id,
+                                failure_code=retry_consistency_failure_code,
+                                duplicate_delivery=True,
+                            )
+                        else:
+                            worker_receipt = PackageAWorkerReceipt(
+                                parse_job_id=parse_job_id,
+                                parse_attempt_id=replay.get("parse_attempt_id"),
+                                status=status,
+                                acked_after_domain_commit=True,
+                                retry_enqueued_after_domain_commit=retry_enqueued_after_domain_commit,
+                                indexable_snapshot_id=replay.get("indexable_snapshot_id"),
+                                outbox_event_id=retry_outbox_event_id,
+                                handoff_idempotency_key=replay.get("handoff_idempotency_key"),
+                                outbox_idempotency_key=replay.get("outbox_idempotency_key"),
+                                dead_letter_id=replay.get("dead_letter_id"),
+                                failure_code=replay.get("failure_code"),
+                                duplicate_delivery=True,
+                            )
                 else:
                     worker_receipt = self._process_first_seen_delivery(
                         repo=repo,
@@ -441,7 +465,7 @@ class PackageAProductionIngestionRuntime:
             raise IngestionPersistenceError("Package A replay receipt mismatch: parse_job_id")
         if str(replay.get("tenant_id")) != str(tenant_id):
             raise IngestionPersistenceError("Package A replay receipt mismatch: tenant_id")
-        status = str(replay.get("job_status"))
+        status = PackageAProductionIngestionRuntime._replay_receipt_status(replay)
         if status not in {"succeeded", "failed", "cancelled", "dead_letter"}:
             return
         if str(replay.get("attempt_status")) != status:
@@ -478,7 +502,7 @@ class PackageAProductionIngestionRuntime:
         elif status == "failed":
             PackageAProductionIngestionRuntime._require_replay_fields(
                 replay,
-                ("failure_code", "retry_outbox_event_id"),
+                ("failure_code", "attempt_no"),
                 status=status,
             )
         else:
@@ -524,6 +548,14 @@ class PackageAProductionIngestionRuntime:
                 raise IngestionPersistenceError(
                     f"Package A replay receipt conflict for {status}: {field_name}"
                 )
+
+    @staticmethod
+    def _replay_receipt_status(replay: dict[str, Any]) -> str:
+        job_status = str(replay.get("job_status"))
+        attempt_status = str(replay.get("attempt_status"))
+        if job_status not in {"succeeded", "failed", "cancelled", "dead_letter"} and attempt_status == "failed":
+            return "failed"
+        return job_status
 
     @staticmethod
     def _validate_snapshot_handoff_replay_receipt(
@@ -582,6 +614,82 @@ class PackageAProductionIngestionRuntime:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay conflict: outbox_publish_status"
             )
+
+    def _resolve_failed_replay_retry_outbox(
+        self,
+        *,
+        repo,
+        replay: dict[str, Any],
+        envelope: CrossModuleEnvelopeV1,
+        parse_job_id: str,
+        tenant_id: str,
+    ) -> tuple[str | None, bool, str | None, str | None]:
+        try:
+            failed_attempt_no = int(replay["attempt_no"])
+        except (TypeError, ValueError) as exc:
+            raise IngestionPersistenceError("Package A failed replay receipt invalid: attempt_no") from exc
+        next_attempt_no = failed_attempt_no + 1
+        retry_outbox_event_id = replay.get("retry_outbox_event_id")
+        if retry_outbox_event_id in {None, ""}:
+            retry_envelope = self._retry_parse_requested_envelope(
+                envelope=envelope,
+                context={"parse_job_id": parse_job_id},
+                retry_parent_attempt_id=str(replay["parse_attempt_id"]),
+                next_attempt_no=next_attempt_no,
+            )
+            retry_outbox = repo.enqueue_parse_requested(envelope=retry_envelope)
+            return retry_outbox.ref, True, None, None
+        if self._failed_replay_retry_outbox_matches(
+            replay=replay,
+            envelope=envelope,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            next_attempt_no=next_attempt_no,
+        ):
+            return str(retry_outbox_event_id), True, None, None
+        failure_code = "retry_outbox_lineage_conflict"
+        dead_letter = repo.record_dead_letter(
+            dead_letter_id=f"dead-letter:retry-outbox:{replay['parse_attempt_id']}",
+            tenant_id=tenant_id,
+            parse_job_id=parse_job_id,
+            parse_attempt_id=str(replay["parse_attempt_id"]),
+            source_ref=parse_job_id,
+            failure_code=failure_code,
+            retryable=False,
+            retry_count=next_attempt_no - 1,
+            rabbitmq_dead_letter_ref=f"rabbitmq-dlq:{envelope.message_id}",
+            payload={
+                "parse_job_id": parse_job_id,
+                "parse_attempt_id": replay["parse_attempt_id"],
+                "retry_outbox_event_id": retry_outbox_event_id,
+                "status": failure_code,
+            },
+        )
+        return None, False, dead_letter.ref, failure_code
+
+    @staticmethod
+    def _failed_replay_retry_outbox_matches(
+        *,
+        replay: dict[str, Any],
+        envelope: CrossModuleEnvelopeV1,
+        parse_job_id: str,
+        tenant_id: str,
+        next_attempt_no: int,
+    ) -> bool:
+        expected_fields = {
+            "retry_outbox_event_id": f"outbox:{parse_job_id}:retry:{next_attempt_no}",
+            "retry_outbox_tenant_id": tenant_id,
+            "retry_outbox_aggregate_id": parse_job_id,
+            "retry_outbox_idempotency_key": f"{envelope.idempotency_key}:retry:{next_attempt_no}",
+            "retry_outbox_payload_retry_attempt_no": next_attempt_no,
+            "retry_outbox_payload_retry_parent_attempt_id": replay["parse_attempt_id"],
+            "retry_outbox_payload_retry_parent_message_id": envelope.message_id,
+            "retry_outbox_payload_retry_parent_idempotency_key": envelope.idempotency_key,
+            "retry_outbox_payload_parse_job_id": parse_job_id,
+        }
+        if int(replay.get("retry_outbox_count") or 1) != 1:
+            return False
+        return all(str(replay.get(field_name)) == str(expected) for field_name, expected in expected_fields.items())
 
     @staticmethod
     async def _settle_delivery_after_domain_commit(
@@ -852,7 +960,7 @@ class PackageAProductionIngestionRuntime:
             parse_snapshot_id=snapshot_receipt.ref,
             coverage_score=self._quality_metric(quality_gate, "coverage"),
             confidence_score=self._quality_metric(quality_gate, "confidence"),
-            decision="publish" if HumanReviewRuntime.can_publish_snapshot(gate=quality_gate) else "review_required",
+            decision="publish" if HumanReviewRuntime.can_publish_snapshot(gate=quality_gate) else "human_review",
         )
         if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
             repo.fail_parse_attempt(
