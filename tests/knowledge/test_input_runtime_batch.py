@@ -21,7 +21,7 @@ def test_input_runtime_batch_validates_all_eighty_requirements() -> None:
     assert report.requirement_ids[-1] == "ARCH-ING-080"
     assert report.source_verified is True
     assert report.parse_status == "succeeded"
-    assert report.blocked_status == "blocked"
+    assert report.blocked_status == "review_pending"
     assert report.queue_outbox_count >= 5
 
 

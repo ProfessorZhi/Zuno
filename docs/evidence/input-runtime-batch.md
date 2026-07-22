@@ -37,7 +37,7 @@ python tools/scripts/verify_input_runtime_batch.py
 
 ```text
 5 passed
-Input runtime batch verification passed: 80 requirements, source_verified=True, parse=succeeded, blocked=blocked.
+Input runtime batch verification passed: 80 requirements, source_verified=True, parse=succeeded, blocked=review_pending.
 ```
 
 ## Limit

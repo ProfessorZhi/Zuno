@@ -26,4 +26,4 @@ pytest -q tests/platform/test_model_gateway.py tests/repo/test_model_gateway_byp
 
 ## 未证明
 
-PHASE07 implementation available 不等于 production ready、quality proven 或 PHASE20 release gate；PHASE08 仍等待 PHASE11 完成后才能 ready。
+PHASE07 implementation available 不等于 production ready、quality proven 或 PHASE20 release gate；PHASE08 只依赖 PHASE04、PHASE05、PHASE06、PHASE07，PHASE11 不再作为 PHASE08 ready 的依赖。
