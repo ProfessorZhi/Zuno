@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 
 from fastapi import FastAPI
@@ -335,7 +336,9 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
             "file_id": "file_contract_full",
             "name": "supplier-contract.md",
             "mime_type": "text/markdown",
-            "hash": "sha256-contract-full",
+            "hash": hashlib.sha256(
+                "Create a cited risk memo after approval using renewal and liability evidence.".encode("utf-8")
+            ).hexdigest(),
             "uri": "memory://workspace/workspace_phase03_full/files/file_contract_full",
             "content": "Create a cited risk memo after approval using renewal and liability evidence.",
         },
@@ -783,7 +786,9 @@ def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> 
             "file_id": "file_contract_phase09",
             "name": "renewal-contract.md",
             "mime_type": "text/markdown",
-            "hash": "sha256-phase09",
+            "hash": hashlib.sha256(
+                "Renewal notice must be sent 30 days before the contract anniversary.".encode("utf-8")
+            ).hexdigest(),
             "uri": "memory://workspace/workspace_phase09/files/file_contract_phase09",
             "content": "Renewal notice must be sent 30 days before the contract anniversary.",
         },

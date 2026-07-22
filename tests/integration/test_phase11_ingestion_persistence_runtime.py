@@ -51,6 +51,7 @@ def engine(migrated_postgres):
                     ingestion_quality_gate_decisions,
                     ingestion_source_spans,
                     ingestion_parse_snapshots,
+                    ingestion_parse_leases,
                     ingestion_parse_attempts,
                     ingestion_parse_jobs,
                     ingestion_parse_plans,

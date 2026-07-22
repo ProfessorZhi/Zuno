@@ -3,9 +3,11 @@
 status: reopened
 reopened_at: 2026-07-20
 branch: `integration/goal01-control-plane-model-ingestion`
-start_sha_after_fetch: `5156ed944eb797a8c41210cef19b04f023c756c0`
+start_sha_after_fetch: `ed787ee962f7f567163388188e56b4b765c27877`
 
 说明：本文记录 PHASE05、PHASE06、PHASE07、PHASE11 的有限 Closure Matrix。PHASE05、PHASE06、PHASE07 保留 `fd43babd` 中原始 Matrix 内容；PHASE11 经 Goal01 audit 重新打开，本节全部 Mandatory 行降为 `target_not_current`，不得作为 Closure Evidence 使用。
+
+PHASE05 security persistence verifier historical anchor: start_sha_after_fetch: `36130924f5602c894d3d89eaaf6cefc3c8624a89`。
 
 ## PHASE05 PEP/PDP Cutover Matrix
 
