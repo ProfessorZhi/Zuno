@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -9,6 +9,16 @@ from typing import Any, Iterable, Literal, Protocol
 
 from langchain_core.language_models import BaseChatModel
 
+from zuno.platform.model_gateway_adapters import (
+    AnthropicMessagesGatewayAdapter,
+    AsyncAnthropicMessagesGatewayAdapter,
+    OpenAIChatCompletionsGatewayAdapter,
+    OpenAIEmbeddingGatewayAdapter,
+    OpenAIUsageChatGatewayAdapter,
+    build_openai_chat_gateway_model,
+    build_openai_embedding_gateway_adapter,
+    is_openai_well_known_tool,
+)
 from zuno.platform.model_roles import ModelRole, ROLE_DEFAULT_SLOT
 from zuno.platform.security import redact_sensitive_payload, redact_sensitive_text
 from zuno.platform.services.llm.providers import EchoLLMProvider, LLMProvider
@@ -3321,6 +3331,8 @@ def _build_product_stream_events(call_id: str, gateway_chunks: list[GatewayStrea
 __all__ = [
     "EchoLLMProvider",
     "LLMProvider",
+    "AnthropicMessagesGatewayAdapter",
+    "AsyncAnthropicMessagesGatewayAdapter",
     "BudgetPolicy",
     "BudgetVerdict",
     "MockModelProvider",
@@ -3373,6 +3385,9 @@ __all__ = [
     "ModelGatewayResult",
     "ModelGatewayTimeoutError",
     "ModelOperation",
+    "OpenAIChatCompletionsGatewayAdapter",
+    "OpenAIEmbeddingGatewayAdapter",
+    "OpenAIUsageChatGatewayAdapter",
     "ModelOperationalCommand",
     "ModelOperationalCommandKind",
     "ModelOperationalCommandVerdict",
@@ -3425,4 +3440,7 @@ __all__ = [
     "ProductStreamEvent",
     "ProviderStreamChunk",
     "build_default_model_gateway",
+    "build_openai_embedding_gateway_adapter",
+    "build_openai_chat_gateway_model",
+    "is_openai_well_known_tool",
 ]

@@ -48,6 +48,25 @@ class ParseJobRecord(BaseModel):
     failure_reason: str | None = None
 
 
+class ParseAttemptLeaseRecord(BaseModel):
+    parse_attempt_id: str
+    parse_job_id: str
+    worker_id: str
+    attempt_no: int
+    fencing_token: int
+    state: str
+    heartbeat_at: float
+    lease_expires_at: float
+    lease_lost_reason: str | None = None
+    domain_commit_ref: str | None = None
+    idempotency_key: str | None = None
+    duplicate_commit: bool = False
+    late_result_rejected: bool = False
+    orphan_reconciled: bool = False
+    receipt_hash: str
+    history: list[str] = Field(default_factory=list)
+
+
 class DocumentVersionRecord(BaseModel):
     document_version_id: str
     document_id: str
@@ -92,6 +111,83 @@ class IndexChunkRecord(BaseModel):
     citation_lineage: dict[str, Any] = Field(default_factory=dict)
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
+
+
+class QualityGateRecord(BaseModel):
+    quality_decision_id: str
+    parse_snapshot_id: str
+    document_version_id: str
+    workspace_id: str
+    verdict: str
+    decision_hash: str
+    review_task_id: str | None = None
+    metrics: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ReviewTaskRecord(BaseModel):
+    review_task_id: str
+    parse_snapshot_id: str
+    document_version_id: str
+    workspace_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    status: str = "pending"
+    expires_at: float
+    reason: str
+    decision_hash: str
+
+
+class ReviewDecisionRecord(BaseModel):
+    decision_id: str
+    review_task_id: str
+    status: str
+    reviewer_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    decision_hash: str
+    duplicate: bool = False
+    reason: str = ""
+    decided_at: float
+
+
+class IndexableSnapshotRecord(BaseModel):
+    indexable_snapshot_id: str
+    document_version_id: str
+    parse_snapshot_id: str
+    quality_decision_id: str
+    workspace_id: str
+    document_id: str
+    canonical_hash: str
+    idempotency_key: str
+    security_refs: dict[str, Any] = Field(default_factory=dict)
+    delete_refs: list[str] = Field(default_factory=list)
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class IngestionOutboxRecord(BaseModel):
+    outbox_event_id: str
+    aggregate_ref: str
+    event_type: str
+    payload_hash: str
+    idempotency_key: str
+    publish_status: str = "pending"
+    replay_count: int = 0
+
+
+class DeleteLifecycleRecord(BaseModel):
+    delete_ref: str
+    snapshot_ref: str
+    state: str
+    visibility_ref: str
+    cleanup_ref: str | None = None
+    physical_delete_ref: str | None = None
+    verification_ref: str | None = None
+    legal_hold_ref: str | None = None
+    restored_authorization: bool = False
+    duplicate: bool = False
+    late_worker_result_rejected: bool = False
+    receipt_hash: str
+    history: list[str] = Field(default_factory=list)
 
 
 class WorkspaceTaskRecord(BaseModel):
@@ -139,9 +235,16 @@ __all__ = [
     "ArtifactRecord",
     "DocumentBlockRecord",
     "DocumentVersionRecord",
+    "DeleteLifecycleRecord",
     "FeedbackRecord",
     "IndexChunkRecord",
+    "IndexableSnapshotRecord",
+    "IngestionOutboxRecord",
+    "ParseAttemptLeaseRecord",
     "ParseJobRecord",
+    "QualityGateRecord",
+    "ReviewDecisionRecord",
+    "ReviewTaskRecord",
     "SourceObjectRecord",
     "TaskEventRecord",
     "WorkspaceFileRecord",

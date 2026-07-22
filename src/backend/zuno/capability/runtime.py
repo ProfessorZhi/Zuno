@@ -3,8 +3,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
+import hashlib
+import json
 import re
-from typing import Any
+from typing import Any, Protocol
 from uuid import uuid4
 
 from zuno.capability.control_plane import (
@@ -33,6 +35,16 @@ ToolExecutor = Callable[["ToolExecutionContext"], Any]
 LegacyToolExecutor = Callable[[dict[str, Any], "ToolExecutionContext"], Any]
 
 
+class SecurityApprovalFactSink(Protocol):
+    def record_tool_approval_fact(self, fact: dict[str, Any]) -> None:
+        ...
+
+
+LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID = "temporary.adapter.tool_runtime.approved_bool"
+LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE = "PHASE16"
+WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID = "workspace.approval_decision_ref"
+
+
 @dataclass(frozen=True, slots=True)
 class ToolRuntimeRequest:
     tool_id: str
@@ -43,6 +55,9 @@ class ToolRuntimeRequest:
     trace_id: str
     model_intent: str
     approved: bool = False
+    approval_decision_ref: str = ""
+    approval_adapter_ref: str = ""
+    approval_adapter_removal_phase: str = ""
     approval_comment: str = ""
     runtime_state: Any | None = None
     tool_request_id: str = field(default_factory=lambda: f"toolreq_{uuid4().hex[:12]}")
@@ -270,12 +285,14 @@ class ToolControlPlaneRuntime:
         *,
         credential_broker: InMemoryCredentialBroker | None = None,
         sandbox_enforcer: SandboxPolicyEnforcer | None = None,
+        security_approval_sink: SecurityApprovalFactSink | None = None,
     ) -> None:
         self._manifests: dict[str, ToolCardManifest] = {}
         self._executor_registry = ExecutorRegistry()
         self._executors: dict[str, LegacyToolExecutor] = {}
         self._credential_broker = credential_broker or InMemoryCredentialBroker()
         self._sandbox_enforcer = sandbox_enforcer or SandboxPolicyEnforcer()
+        self._security_approval_sink = security_approval_sink
         self._approval_gate = ApprovalGate()
         self._tool_gate = ToolSecurityGate()
         self._approval_ledger: list[dict[str, Any]] = []
@@ -341,6 +358,15 @@ class ToolControlPlaneRuntime:
                 sandbox_context=sandbox_context,
                 reason=approval_decision.reason or "tool_disabled",
             )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+            )
             return ToolRuntimeExecutionResult(
                 tool_id=manifest.tool_id,
                 status="blocked",
@@ -370,6 +396,15 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
                 reason=sandbox_context.network_policy_decision.reason,
+            )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
             )
             return ToolRuntimeExecutionResult(
                 tool_id=manifest.tool_id,
@@ -404,6 +439,15 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
             )
+            self._record_security_approval_fact(
+                status="approval_waiting",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=gate_result.decision.value,
+                approval_decision=approval_decision.to_dict(),
+            )
             return ToolRuntimeExecutionResult(
                 tool_id=manifest.tool_id,
                 status="approval_required",
@@ -421,6 +465,16 @@ class ToolControlPlaneRuntime:
             gate_result.audit_event,
             final_decision="approved" if request.approved or requires_approval else "approved",
         )
+        if request.approved or requires_approval:
+            self._record_security_approval_fact(
+                status="approved_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=gate_result.decision.value,
+                approval_decision=approval_decision.to_dict(),
+            )
         execution_id = request.execution_id or f"toolexec_{uuid4().hex[:12]}"
         result_id = f"toolres_{execution_id.removeprefix('toolexec_')}"
         execution_context = ToolExecutionContext(
@@ -650,6 +704,9 @@ class ToolControlPlaneRuntime:
                 "tool_id": manifest.tool_id,
                 "tool_request_id": request.tool_request_id,
                 "approval_id": request.approval_id,
+                "approval_decision_ref": _approval_decision_ref(request),
+                "approval_adapter_ref": _approval_adapter_ref(request),
+                "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
                 "task_id": request.task_id,
                 "trace_id": request.trace_id,
                 "required_approval": f"tool:{manifest.tool_id}",
@@ -660,9 +717,57 @@ class ToolControlPlaneRuntime:
             }
         )
 
+    def _record_security_approval_fact(
+        self,
+        *,
+        status: str,
+        request: ToolRuntimeRequest,
+        manifest: ToolCardManifest,
+        audit_event: SandboxAuditEvent,
+        sandbox_context: ToolSandboxContext,
+        security_decision: str,
+        approval_decision: dict[str, Any],
+    ) -> None:
+        if self._security_approval_sink is None:
+            return
+        redacted_arguments = redact_sensitive_payload(request.arguments)
+        fact = {
+            "status": status,
+            "tool_id": manifest.tool_id,
+            "tool_request_id": request.tool_request_id,
+            "approval_id": request.approval_id,
+            "approval_decision_ref": _approval_decision_ref(request),
+            "approval_adapter_ref": _approval_adapter_ref(request),
+            "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
+            "workspace_id": request.workspace_id,
+            "user_id": request.user_id,
+            "task_id": request.task_id,
+            "trace_id": request.trace_id,
+            "required_approval": f"tool:{manifest.tool_id}",
+            "prepared_action_hash": _hash_payload(
+                {
+                    "tool_id": manifest.tool_id,
+                    "arguments": redacted_arguments,
+                    "workspace_id": request.workspace_id,
+                    "task_id": request.task_id,
+                    "execution_id": request.execution_id,
+                }
+            ),
+            "security_decision": security_decision,
+            "approval_decision": approval_decision,
+            "approval_comment": _redact_approval_comment(request.approval_comment),
+            "audit_ref": audit_event.audit_id,
+            "credential_refs": list(sandbox_context.credential_refs),
+            "sandbox": sandbox_context.to_dict(),
+        }
+        self._security_approval_sink.record_tool_approval_fact(fact)
 
-def build_default_tool_control_plane_runtime() -> ToolControlPlaneRuntime:
-    runtime = ToolControlPlaneRuntime()
+
+def build_default_tool_control_plane_runtime(
+    *,
+    security_approval_sink: SecurityApprovalFactSink | None = None,
+) -> ToolControlPlaneRuntime:
+    runtime = ToolControlPlaneRuntime(security_approval_sink=security_approval_sink)
 
     runtime.register_manifest(
         ToolCardManifest(
@@ -831,15 +936,53 @@ def _redact_approval_comment(comment: str) -> str:
     return re.sub(r"\braw-secret\b", "[REDACTED_SECRET]", redacted, flags=re.I)
 
 
+def _approval_decision_ref(request: ToolRuntimeRequest) -> str:
+    if request.approval_decision_ref:
+        return request.approval_decision_ref
+    if request.approved:
+        return f"{LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID}:{request.approval_id}"
+    return ""
+
+
+def _approval_adapter_ref(request: ToolRuntimeRequest) -> str:
+    if request.approval_adapter_ref:
+        return request.approval_adapter_ref
+    if request.approved:
+        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID
+    return ""
+
+
+def _approval_adapter_removal_phase(request: ToolRuntimeRequest) -> str:
+    if request.approval_adapter_removal_phase:
+        return request.approval_adapter_removal_phase
+    if request.approved and not request.approval_decision_ref:
+        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE
+    return ""
+
+
+def _hash_payload(payload: Any) -> str:
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 __all__ = [
     "CredentialGrant",
     "InMemoryCredentialBroker",
     "NetworkPolicyDecision",
     "SandboxPolicyEnforcer",
+    "SecurityApprovalFactSink",
     "ToolControlPlaneRuntime",
     "ToolExecutionContext",
     "ToolRuntimeExecutionResult",
     "ToolRuntimeRequest",
     "ToolSandboxContext",
+    "LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID",
+    "LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE",
+    "WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID",
     "build_default_tool_control_plane_runtime",
 ]

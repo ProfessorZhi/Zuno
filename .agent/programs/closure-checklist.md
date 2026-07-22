@@ -2,11 +2,11 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE05
+current_phase: PHASE08
 program_version: 2
 
 PHASE04 completed
-PHASE05 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 reopened in_progress / PHASE08 ready
 
 ## PHASE01–04 订正状态
 
@@ -16,7 +16,11 @@ PHASE05 ready
 - [x] PHASE02 可执行 Adapter/Flag/Cutover/Rollback/Guard 重新关闭。
 - [x] PHASE03 十一模块完整 Contract/Producer/Consumer Adoption 重新关闭。
 - [x] PHASE04 PostgreSQL/RabbitMQ/Object/Checkpointer/Backup/Restore/Fault 重新关闭。
-- [x] PHASE05 ready。
+- [x] PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。
+- [x] PHASE06 Observability Minimum Black Box 已由 Coordinator Closure 批准为 completed。
+- [x] PHASE07 Model Gateway Runtime 已由 Coordinator Closure 批准为 completed。
+- [ ] PHASE11 Durable Ingestion and Source Lineage 已由 Goal01 audit 重新打开；Coordinator Approval 调整为 pending/reopened。
+- [x] PHASE08 ready；PHASE12 仍 planned。
 
 ## Phase 状态
 
@@ -24,9 +28,9 @@ PHASE05 ready
 - [x] PHASE02 Legacy Runtime Compatibility and Cutover Control
 - [x] PHASE03 Executable Cross-module Contract Bundle
 - [x] PHASE04 PostgreSQL Domain and Transaction Foundation
-- [ ] PHASE05 Security Control Plane
-- [ ] PHASE06 Observability Minimum Black Box
-- [ ] PHASE07 Model Gateway Runtime
+- [x] PHASE05 Security Control Plane
+- [x] PHASE06 Observability Minimum Black Box
+- [x] PHASE07 Model Gateway Runtime
 - [ ] PHASE08 Deterministic Single Controller Runtime
 - [ ] PHASE09 Product Surface Backend Runtime
 - [ ] PHASE10 Web and Desktop Product Adaptation

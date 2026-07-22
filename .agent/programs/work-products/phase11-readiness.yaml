@@ -1,0 +1,33 @@
+phase_id: PHASE11
+phase_name: Durable Ingestion and Source Lineage
+current_phase_status: in_progress
+coordinator_approval: pending_reopened
+closure_decision_ref: docs/evidence/phase11-coordinator-closure.md
+pre_closure_ref: docs/evidence/phase11-pre-closure.md
+post_closure_gate: tools/scripts/verify_phase11_post_closure_consistency.py
+requirement_ledger:
+  mandatory_total: 80
+  implementation_available: 0
+  target_not_current: 80
+evidence_refs:
+  - docs/evidence/input-runtime-batch.md
+  - docs/evidence/phase11-ingestion-source-lineage.md
+  - docs/evidence/phase11-pre-closure.md
+  - docs/evidence/phase11-coordinator-closure.md
+focused_commands:
+  - python tools/scripts/verify_phase11_ingestion_source_lineage.py
+  - python tools/scripts/verify_input_runtime_batch.py
+  - pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
+downstream:
+  phase08_ready: true
+  phase12_planned: true
+  phase12_waits_for:
+    - PHASE08 completed
+    - PHASE11 completed
+boundary:
+  implementation_available_not_production_ready: true
+  external_dependencies_target_blocked_not_mocked: true
+reopen_audit:
+  reopened_at: 2026-07-20
+  reason: "LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 证据不足以证明 PHASE11 原始完整 Mandatory Scope。"
+  retained_evidence: true

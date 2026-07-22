@@ -63,8 +63,9 @@ class PostgresOutboxRabbitMQPublisher:
         transport: RabbitMQTransport,
         topology: RabbitMQTopology,
         worker_id: str,
-        tenant_id: str,
+        tenant_id: str | None,
         trace_id: str,
+        topics: tuple[str, ...] | None = None,
         policy: OutboxPublishPolicy | None = None,
     ) -> None:
         self.engine = engine
@@ -73,6 +74,7 @@ class PostgresOutboxRabbitMQPublisher:
         self.worker_id = worker_id
         self.tenant_id = tenant_id
         self.trace_id = trace_id
+        self.topics = topics
         self.policy = policy or OutboxPublishPolicy()
 
     async def publish_pending(self, *, limit: int = 10) -> list[PublishedOutboxEvent]:
@@ -83,7 +85,11 @@ class PostgresOutboxRabbitMQPublisher:
         published: list[PublishedOutboxEvent] = []
         failed: list[FailedOutboxEvent] = []
         with InfrastructureUnitOfWork(self.engine) as repo:
-            event_ids = repo.claim_outbox(worker_id=self.worker_id, limit=limit)
+            event_ids = repo.claim_outbox(
+                worker_id=self.worker_id,
+                limit=limit,
+                topics=self.topics,
+            )
             records = [
                 repo.load_claimed_outbox_event(event_id=event_id, worker_id=self.worker_id)
                 for event_id in event_ids
@@ -150,8 +156,16 @@ class PostgresOutboxRabbitMQPublisher:
         )
 
     async def _publish_record(self, record: OutboxEventRecord) -> None:
-        if record.tenant_id and record.tenant_id != self.tenant_id:
+        if self.tenant_id is not None and record.tenant_id and record.tenant_id != self.tenant_id:
             raise RuntimeError("outbox publisher tenant does not match the claimed event tenant")
+        tenant_id = record.tenant_id or self.tenant_id
+        if tenant_id is None:
+            raise RuntimeError("outbox publisher requires tenant_id when the outbox record is tenantless")
+        security_epoch_ref = self._security_epoch_ref(record.payload)
+        workspace_id = self._workspace_id(record.payload)
+        trace_id = self._trace_id(record.payload) or self.trace_id
+        data_classification = self._data_classification(record.payload)
+        contract_version = self._contract_version(record.payload) or "v1"
         await asyncio.wait_for(
             self.transport.publish(
                 self.topology,
@@ -164,8 +178,12 @@ class PostgresOutboxRabbitMQPublisher:
                     "payload_hash": record.payload_hash,
                     "topic": record.topic,
                 },
-                tenant_id=record.tenant_id or self.tenant_id,
-                trace_id=self.trace_id,
+                tenant_id=tenant_id,
+                trace_id=trace_id,
+                workspace_id=workspace_id,
+                data_classification=data_classification,
+                version=contract_version,
+                security_epoch_ref=security_epoch_ref,
                 ordering_key=record.ordering_key,
                 ordering_sequence=record.ordering_sequence,
                 outbox_publish_attempt=record.publish_attempts + 1,
@@ -174,6 +192,50 @@ class PostgresOutboxRabbitMQPublisher:
             ),
             timeout=self.policy.publish_timeout_seconds,
         )
+
+    @staticmethod
+    def _security_epoch_ref(payload: dict) -> str | None:
+        envelope_epoch = payload.get("effective_security_epoch_ref")
+        if envelope_epoch is not None:
+            return str(envelope_epoch)
+        inner_payload = payload.get("payload")
+        if isinstance(inner_payload, dict) and inner_payload.get("security_epoch_ref") is not None:
+            return str(inner_payload["security_epoch_ref"])
+        return None
+
+    @staticmethod
+    def _workspace_id(payload: dict) -> str | None:
+        envelope_workspace_id = payload.get("workspace_id")
+        if envelope_workspace_id is not None:
+            return str(envelope_workspace_id)
+        inner_payload = payload.get("payload")
+        if isinstance(inner_payload, dict) and inner_payload.get("workspace_id") is not None:
+            return str(inner_payload["workspace_id"])
+        return None
+
+    @staticmethod
+    def _trace_id(payload: dict) -> str | None:
+        envelope_trace_id = payload.get("trace_id")
+        if envelope_trace_id is not None:
+            return str(envelope_trace_id)
+        inner_payload = payload.get("payload")
+        if isinstance(inner_payload, dict) and inner_payload.get("trace_id") is not None:
+            return str(inner_payload["trace_id"])
+        return None
+
+    @staticmethod
+    def _data_classification(payload: dict) -> str | None:
+        data_classification = payload.get("data_classification")
+        if data_classification is not None:
+            return str(data_classification)
+        return None
+
+    @staticmethod
+    def _contract_version(payload: dict) -> str | None:
+        contract_version = payload.get("contract_version")
+        if contract_version is not None:
+            return str(contract_version)
+        return None
 
 
 __all__ = [

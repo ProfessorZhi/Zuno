@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import json
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
+from zuno.platform.security import SecurityProductActionDenied
 
 
 def _client() -> TestClient:
@@ -333,7 +336,9 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
             "file_id": "file_contract_full",
             "name": "supplier-contract.md",
             "mime_type": "text/markdown",
-            "hash": "sha256-contract-full",
+            "hash": hashlib.sha256(
+                "Create a cited risk memo after approval using renewal and liability evidence.".encode("utf-8")
+            ).hexdigest(),
             "uri": "memory://workspace/workspace_phase03_full/files/file_contract_full",
             "content": "Create a cited risk memo after approval using renewal and liability evidence.",
         },
@@ -719,6 +724,58 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     assert "raw-secret" not in repr(approved_events)
 
 
+def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_path() -> None:
+    facts: list[dict] = []
+
+    class SecurityFactSink:
+        def record_tool_approval_fact(self, fact: dict) -> None:
+            facts.append(fact)
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_security_approval_sink(SecurityFactSink())
+    try:
+        client = _client()
+
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Send the approved project email",
+                "model_id": "model-local",
+                "session_id": "session_phase05_mail",
+                "workspace_id": "workspace_phase05",
+                "task_id": "task_phase05_mail_api",
+                "trace_id": "trace_phase05_mail_api",
+                "goal": "security approval fact closure",
+                "product_mode": "general_agent",
+                "plugins": ["mail.send"],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        assert facts[0]["status"] == "approval_waiting"
+        assert facts[0]["prepared_action_hash"]
+        assert "raw-secret" not in repr(facts)
+
+        approve_response = client.post(
+            "/api/v1/workspace/task/task_phase05_mail_api/approve",
+            json={"decision": "approved", "comment": "Approved by product user."},
+        )
+        assert approve_response.status_code == 200
+        assert [fact["status"] for fact in facts] == [
+            "approval_waiting",
+            "approved_before_effect",
+        ]
+        assert facts[-1]["credential_refs"] == ["credref://workspace_phase05/mail.send"]
+        assert facts[-1]["approval_decision_ref"].startswith(
+            "security-approval-decision:task_phase05_mail_api:"
+        )
+        assert facts[-1]["approval_adapter_ref"] == "workspace.approval_decision_ref"
+        assert facts[-1]["approval_adapter_removal_phase"] == ""
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
 def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> None:
     client = _client()
 
@@ -729,7 +786,9 @@ def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> 
             "file_id": "file_contract_phase09",
             "name": "renewal-contract.md",
             "mime_type": "text/markdown",
-            "hash": "sha256-phase09",
+            "hash": hashlib.sha256(
+                "Renewal notice must be sent 30 days before the contract anniversary.".encode("utf-8")
+            ).hexdigest(),
             "uri": "memory://workspace/workspace_phase09/files/file_contract_phase09",
             "content": "Renewal notice must be sent 30 days before the contract anniversary.",
         },
@@ -797,3 +856,168 @@ def test_workspace_task_runtime_answers_from_ingested_index_with_citations() -> 
     content = artifact_response.json()["data"]["content"]
     assert "Renewal notice must be sent 30 days" in content
     assert "[1]" in content
+
+
+class RecordingProductActionGuard:
+    def __init__(self, *, deny_action: str | None = None) -> None:
+        self.deny_action = deny_action
+        self.requests = []
+
+    def require_authorized_action(self, request) -> None:
+        self.requests.append(request)
+        if request.action == self.deny_action:
+            raise SecurityProductActionDenied("product action denied by Security")
+
+
+def test_workspace_artifact_read_and_download_reauthorize_through_security_guard() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard()
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Create secured report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_guard",
+                "workspace_id": "workspace_phase05_guard",
+                "task_id": "task_phase05_guard",
+                "trace_id": "trace_phase05_guard",
+                "goal": "secured report",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        artifact_id = create_response.json()["data"]["artifact_ids"][0]
+
+        read_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}")
+        download_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}/download")
+
+        assert read_response.status_code == 200
+        assert download_response.status_code == 200
+        assert [request.action for request in guard.requests] == [
+            "artifact.read",
+            "artifact.download",
+        ]
+        assert all(request.principal_id == "user_phase03" for request in guard.requests)
+        assert all(request.prepared_action_hash for request in guard.requests)
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_artifact_download_returns_403_when_security_reauthorization_denies() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard(deny_action="artifact.download")
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Create denied secured report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_guard_deny",
+                "workspace_id": "workspace_phase05_guard_deny",
+                "task_id": "task_phase05_guard_deny",
+                "trace_id": "trace_phase05_guard_deny",
+                "goal": "denied secured report",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        artifact_id = create_response.json()["data"]["artifact_ids"][0]
+
+        response = client.get(f"/api/v1/workspace/artifact/{artifact_id}/download")
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "product action denied by Security"
+        assert [request.action for request in guard.requests] == ["artifact.download"]
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_task_approval_resume_reauthorizes_through_security_guard() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard()
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Manual approval report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_resume_guard",
+                "workspace_id": "workspace_phase05_resume_guard",
+                "task_id": "task_phase05_resume_guard",
+                "trace_id": "trace_phase05_resume_guard",
+                "goal": "manual approval report",
+                "product_mode": "general_agent",
+                "approval_mode": "manual",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        task_id = create_response.json()["data"]["task"]["task_id"]
+
+        approve_response = client.post(
+            f"/api/v1/workspace/task/{task_id}/approve",
+            json={"decision": "approved", "comment": "Approved by Security."},
+        )
+
+        assert approve_response.status_code == 200
+        assert approve_response.json()["data"]["task"]["status"] == "completed"
+        assert [request.action for request in guard.requests] == ["task.resume.approved"]
+        assert guard.requests[0].principal_id == "user_phase03"
+        assert guard.requests[0].resource_ref == f"workspace-task:{task_id}"
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+
+def test_workspace_task_approval_resume_returns_403_when_security_guard_denies() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    guard = RecordingProductActionGuard(deny_action="task.resume.approved")
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+    client = _client()
+
+    try:
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Denied manual approval report",
+                "model_id": "model-local",
+                "session_id": "session_phase05_resume_guard_deny",
+                "workspace_id": "workspace_phase05_resume_guard_deny",
+                "task_id": "task_phase05_resume_guard_deny",
+                "trace_id": "trace_phase05_resume_guard_deny",
+                "goal": "denied manual approval report",
+                "product_mode": "general_agent",
+                "approval_mode": "manual",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+        assert create_response.status_code == 200
+        task_id = create_response.json()["data"]["task"]["task_id"]
+
+        approve_response = client.post(
+            f"/api/v1/workspace/task/{task_id}/approve",
+            json={"decision": "approved", "comment": "Denied by Security."},
+        )
+        snapshot = client.get(f"/api/v1/workspace/task/{task_id}").json()["data"]
+
+        assert approve_response.status_code == 403
+        assert approve_response.json()["detail"] == "product action denied by Security"
+        assert snapshot["task"]["status"] == "approval_waiting"
+        assert [request.action for request in guard.requests] == ["task.resume.approved"]
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)

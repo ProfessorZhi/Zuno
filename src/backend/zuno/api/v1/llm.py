@@ -20,7 +20,7 @@ async def create_llm(req: LLMCreateReq, login_user: UserPayload = Depends(get_lo
 @router.delete("/delete", summary="Delete LLM")
 async def delete_llm(req: LLMDeleteReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id)
+        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id, action="delete")
         await LLMService.delete_llm(req.llm_id)
         return resp_200()
     except Exception as err:
@@ -30,7 +30,7 @@ async def delete_llm(req: LLMDeleteReq, login_user: UserPayload = Depends(get_lo
 @router.put("/update", summary="Update LLM")
 async def update_llm(req: LLMUpdateReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id)
+        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id, action="update")
         await LLMService.update_llm(**req.model_dump(exclude_unset=True))
         return resp_200()
     except Exception as err:
@@ -40,7 +40,7 @@ async def update_llm(req: LLMUpdateReq, login_user: UserPayload = Depends(get_lo
 @router.post("/activate", summary="Activate model slot")
 async def activate_llm(req: LLMActivateReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id)
+        await LLMService.verify_user_permission(llm_id=req.llm_id, user_id=login_user.user_id, action="activate")
         await LLMService.activate_model_slot(req.llm_id, req.model_slot)
         return resp_200()
     except Exception as err:

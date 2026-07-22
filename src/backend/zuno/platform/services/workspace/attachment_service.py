@@ -11,7 +11,7 @@ from uuid import uuid4
 import requests
 
 from zuno.schema.workspace import WorkspaceAttachment
-from zuno.services.rag.parser import doc_parser
+from zuno.knowledge.ingestion import parse_file_into_legacy_chunks
 from zuno.services.storage import storage_client
 from zuno.settings import app_settings
 from zuno.tools.image2text.action import _image_to_text
@@ -98,7 +98,7 @@ async def _extract_attachment_text(attachment: WorkspaceAttachment, session_id: 
     try:
         if kind == "image":
             return kind, await asyncio.to_thread(_image_to_text, local_path)
-        chunks = await doc_parser.parse_doc_into_chunks(
+        chunks = await parse_file_into_legacy_chunks(
             file_id=f"workspace_attachment_{uuid4().hex}",
             file_path=local_path,
             knowledge_id=session_id or "workspace_attachment",

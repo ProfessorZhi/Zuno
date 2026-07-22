@@ -2,19 +2,20 @@ import json
 from typing import Any, Dict, List, Union
 
 from langchain_core.messages import AIMessage, BaseMessage, ChatMessage, FunctionMessage, HumanMessage, SystemMessage, ToolCall, ToolMessage
-from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageToolCall
 from openai.types.chat.chat_completion_message_tool_call import Function
+
+from zuno.platform.model_gateway import OpenAIChatCompletionsGatewayAdapter
 
 
 class ReasoningModel:
     def __init__(self, base_url: str, api_key: str, model_name: str):
         self.model_name = model_name
-        self.client = AsyncOpenAI(base_url=base_url, api_key=api_key)
+        self.client = OpenAIChatCompletionsGatewayAdapter(base_url=base_url, api_key=api_key)
 
     async def astream(self, messages: List[BaseMessage]):
         user_messages = [self.convert_message_to_dict(message) for message in messages]
-        return await self.client.chat.completions.create(
+        return await self.client.create(
             model=self.model_name,
             messages=user_messages,
             stream=True,

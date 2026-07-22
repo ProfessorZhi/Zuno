@@ -55,7 +55,7 @@ async def delete_dialog(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await DialogService.verify_user_permission(dialog_id, login_user.user_id)
+        await DialogService.verify_user_permission(dialog_id, login_user.user_id, action="delete")
         await DialogService.delete_dialog(dialog_id=dialog_id)
         return resp_200()
     except Exception as err:

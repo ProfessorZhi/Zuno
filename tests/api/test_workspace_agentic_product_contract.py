@@ -11,6 +11,18 @@ from pydantic import ValidationError
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
+from zuno.platform.security import SecurityProductActionDenied
+
+
+class RecordingProductActionGuard:
+    def __init__(self, *, deny_action: str | None = None) -> None:
+        self.deny_action = deny_action
+        self.requests = []
+
+    def require_authorized_action(self, request) -> None:
+        self.requests.append(request)
+        if request.action == self.deny_action:
+            raise SecurityProductActionDenied("product action denied by Security")
 
 
 def _client() -> TestClient:
@@ -182,6 +194,79 @@ def test_workspace_artifact_response_includes_citation_refs() -> None:
     assert citation_refs[0]["document_id"] == "file_ks_phase11_artifact"
     assert citation_refs[0]["source_ref"].startswith("file_ks_phase11_artifact::")
     assert payload["artifact"]["citation_refs"] == citation_refs
+
+
+def test_workspace_artifact_citation_refs_reauthorize_through_security_guard() -> None:
+    client = _client()
+    _seed_index(client, workspace_id="workspace_phase05_citation", knowledge_space_id="ks_phase05_citation")
+
+    created = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "What is the renewal notice requirement?",
+            "model_id": "model-local",
+            "session_id": "session_phase05_citation",
+            "workspace_id": "workspace_phase05_citation",
+            "task_id": "task_phase05_citation",
+            "trace_id": "trace_phase05_citation",
+            "goal": "citation reauthorization answer",
+            "product_mode": "contract_review",
+            "knowledge_space_ids": ["ks_phase05_citation"],
+            "retrieval_profiles": {"ks_phase05_citation": "standard"},
+            "uploaded_file_ids": ["file_ks_phase05_citation"],
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    ).json()["data"]
+    artifact_id = created["artifact_ids"][0]
+    guard = RecordingProductActionGuard()
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+
+    try:
+        artifact_response = client.get(f"/api/v1/workspace/artifact/{artifact_id}")
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+    assert artifact_response.status_code == 200
+    assert [request.action for request in guard.requests] == ["artifact.read", "citation.read"]
+    assert guard.requests[1].principal_id == "user_phase11"
+    assert guard.requests[1].resource_ref == f"workspace-artifact:{artifact_id}:citations"
+
+
+def test_workspace_task_snapshot_citation_refs_return_403_when_security_guard_denies() -> None:
+    client = _client()
+    _seed_index(client, workspace_id="workspace_phase05_citation_deny", knowledge_space_id="ks_phase05_citation_deny")
+
+    created = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "What is the renewal notice requirement?",
+            "model_id": "model-local",
+            "session_id": "session_phase05_citation_deny",
+            "workspace_id": "workspace_phase05_citation_deny",
+            "task_id": "task_phase05_citation_deny",
+            "trace_id": "trace_phase05_citation_deny",
+            "goal": "denied citation reauthorization answer",
+            "product_mode": "contract_review",
+            "knowledge_space_ids": ["ks_phase05_citation_deny"],
+            "retrieval_profiles": {"ks_phase05_citation_deny": "standard"},
+            "uploaded_file_ids": ["file_ks_phase05_citation_deny"],
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    ).json()["data"]
+    task_id = created["task"]["task_id"]
+    guard = RecordingProductActionGuard(deny_action="citation.read")
+    WorkspaceTaskRuntimeService.configure_security_product_action_guard(guard)
+
+    try:
+        task_response = client.get(f"/api/v1/workspace/task/{task_id}")
+    finally:
+        WorkspaceTaskRuntimeService.configure_security_product_action_guard(None)
+
+    assert task_response.status_code == 403
+    assert task_response.json()["detail"] == "product action denied by Security"
+    assert [request.action for request in guard.requests] == ["citation.read"]
 
 
 def test_frontend_workspace_api_types_expose_product_contract_without_internal_user_modes() -> None:

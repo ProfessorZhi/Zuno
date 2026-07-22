@@ -1,5 +1,6 @@
 from zuno.database.dao.llm import LLMDao
 from zuno.database.models.user import AdminUser, SystemUser
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 from zuno.utils.model_output import normalize_model_id_for_provider
 
 LLM_Types = ["LLM", "Embedding", "Rerank"]
@@ -37,9 +38,17 @@ class LLMService:
         await LLMDao.delete_llm(llm_id)
 
     @classmethod
-    async def verify_user_permission(cls, llm_id: str, user_id: str):
+    async def verify_user_permission(cls, llm_id: str, user_id: str, action: str = "access"):
         owner_id = await cls.get_user_id_by_llm(llm_id)
-        if user_id not in (AdminUser, owner_id):
+        if user_id == AdminUser:
+            if owner_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=f"admin.llm.{action}",
+                    resource_ref=f"llm:{llm_id}",
+                )
+            return
+        if user_id != owner_id:
             raise ValueError("没有权限访问")
 
     @classmethod
@@ -110,6 +119,11 @@ class LLMService:
     async def get_all_llm(cls, user_id):
         if user_id != AdminUser:
             raise ValueError("无权限访问模型数据")
+        require_admin_action_authorized(
+            principal_id=user_id,
+            action="admin.llm.list",
+            resource_ref="llm:*",
+        )
         llms = await LLMDao.get_all_llm()
         result = [llm.to_dict() for llm in llms]
         return cls._group_by_type(result, hide_api_key=True)

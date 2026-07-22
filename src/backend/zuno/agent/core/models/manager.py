@@ -1,23 +1,15 @@
 from langchain_core.language_models import BaseChatModel
-from langchain_openai import ChatOpenAI
 
 from zuno.core.models.embedding import EmbeddingModel
 from zuno.core.models.reason_model import ReasoningModel
 from zuno.database.dao.llm import LLMDao
+from zuno.platform.model_gateway import build_openai_chat_gateway_model
 from zuno.schema.common import ModelConfig
 from zuno.settings import app_settings
 from zuno.utils.model_output import normalize_model_id_for_provider
 
 
 class ModelManager:
-    @staticmethod
-    def _standard_chat_kwargs(model_name: str, base_url: str | None) -> dict:
-        base_url_lower = str(base_url or "").lower()
-        model_lower = str(model_name or "").lower()
-        if "deepseek.com" in base_url_lower and model_lower.startswith("deepseek-v4"):
-            return {"extra_body": {"thinking": {"type": "disabled"}}}
-        return {}
-
     @staticmethod
     def _require_model_config(model_config, label: str):
         if not model_config.is_configured():
@@ -48,23 +40,21 @@ class ModelManager:
             tool_call_model.model_name,
             base_url=tool_call_model.base_url,
         )
-        return ChatOpenAI(
+        return build_openai_chat_gateway_model(
             stream_usage=True,
             model=model_name,
             api_key=tool_call_model.api_key,
             base_url=tool_call_model.base_url,
-            **cls._standard_chat_kwargs(model_name, tool_call_model.base_url),
         )
 
     @classmethod
     def get_conversation_model(cls, **kwargs) -> BaseChatModel:
         conversation_model = cls.get_model_config("conversation_model", "瀵硅瘽妯″瀷")
-        return ChatOpenAI(
+        return build_openai_chat_gateway_model(
             stream_usage=True,
             model=conversation_model.model_name,
             api_key=conversation_model.api_key,
             base_url=conversation_model.base_url,
-            **cls._standard_chat_kwargs(conversation_model.model_name, conversation_model.base_url),
         )
 
     @classmethod
@@ -85,7 +75,7 @@ class ModelManager:
             app_settings.multi_models.qwen_vl,
             "瑙嗚妯″瀷",
         )
-        return ChatOpenAI(
+        return build_openai_chat_gateway_model(
             stream_usage=True,
             model=normalize_model_id_for_provider(
                 qwen_vl_model.model_name,
@@ -103,12 +93,11 @@ class ModelManager:
             provider=user_model.get("provider"),
             base_url=user_model.get("base_url"),
         )
-        return ChatOpenAI(
+        return build_openai_chat_gateway_model(
             stream_usage=True,
             model=model_name,
             api_key=user_model.get("api_key"),
             base_url=user_model.get("base_url"),
-            **cls._standard_chat_kwargs(model_name, user_model.get("base_url")),
         )
 
     @classmethod

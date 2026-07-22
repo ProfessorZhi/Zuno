@@ -114,6 +114,9 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         ingest = ingest_response.json()["data"]
         assert ingest["parse_snapshot"]["parser_id"] != "workspace_text_runtime"
         assert ingest["index_job"]["status"] == "succeeded"
+        assert ingest["indexable_snapshot"]["canonical_hash"]
+        assert ingest["outbox_event"]["publish_status"] == "pending"
+        assert ingest["outbox_event"]["idempotency_key"] == ingest["indexable_snapshot"]["idempotency_key"]
         assert ingest["durable_status"] == "persisted"
         assert ingest["document_version"]["document_version_id"] == ingest["index_job"]["document_version_id"]
         assert ingest["index_manifest_ref"]["index_job_id"] == ingest["index_job"]["job_id"]
@@ -126,6 +129,10 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         restored_blocks = restored.list_document_blocks(ingest["index_job"]["document_version_id"])
         restored_manifest = restored.get_index_manifest(ingest["index_job"]["job_id"])
         restored_chunks = restored.list_index_chunks(ingest["index_job"]["job_id"])
+        restored_snapshot_handoff = restored.get_indexable_snapshot(
+            ingest["indexable_snapshot"]["indexable_snapshot_id"]
+        )
+        restored_outbox = restored.get_ingestion_outbox(ingest["outbox_event"]["outbox_event_id"])
 
         assert restored_file.latest_parse_job_id == ingest["parse_job"]["job_id"]
         assert restored_file.latest_document_version_id == ingest["index_job"]["document_version_id"]
@@ -134,6 +141,9 @@ def test_workspace_ingest_persists_parse_document_index_and_chunks(tmp_path) -> 
         assert restored_document.block_count >= 1
         assert restored_blocks[0].text.startswith("SOC 2 evidence")
         assert restored_manifest.source_sha256 == restored_file.source_sha256
+        assert restored_snapshot_handoff.document_version_id == restored_manifest.document_version_id
+        assert restored_outbox.aggregate_ref == restored_snapshot_handoff.indexable_snapshot_id
+        assert restored_outbox.publish_status == "pending"
         assert any("SOC 2 evidence" in chunk.content for chunk in restored_chunks)
         assert restored_chunks[0].citation_lineage["parse_job_id"] == ingest["parse_job"]["job_id"]
     finally:
@@ -252,7 +262,7 @@ def test_workspace_restart_rehydrates_cited_artifact_and_feedback(tmp_path) -> N
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)
 
 
-def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_path) -> None:
+def test_local_ocr_vlm_parser_requires_review_before_index_snapshot_publish(tmp_path) -> None:
     db_path = tmp_path / "zuno.db"
     WorkspaceTaskRuntimeService.configure_durable_ingestion(
         store=SQLiteDurableIngestionStore(db_path),
@@ -263,11 +273,11 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         client.post(
             "/api/v1/workspace/file",
             json={
-                "workspace_id": "workspace_phase05_blocked",
+                "workspace_id": "workspace_phase05_local_ocr",
                 "file_id": "file_scan_phase05.png",
                 "name": "scan.png",
                 "mime_type": "image/png",
-                "content": "fake image bytes for blocked OCR boundary",
+                "content": "OCR text from local fallback with review required.",
                 "security_label": "internal",
             },
         )
@@ -275,15 +285,17 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         ingest_response = client.post(
             "/api/v1/workspace/ingest",
             json={
-                "workspace_id": "workspace_phase05_blocked",
+                "workspace_id": "workspace_phase05_local_ocr",
                 "file_id": "file_scan_phase05.png",
-                "knowledge_space_id": "ks_phase05_blocked",
+                "knowledge_space_id": "ks_phase05_local_ocr",
             },
         )
 
         assert ingest_response.status_code == 200
         ingest = ingest_response.json()["data"]
-        assert ingest["status"] == "blocked"
+        assert ingest["status"] == "review_pending"
+        assert ingest["quality_gate"]["verdict"] == "REVIEW"
+        assert ingest["review_task"]["status"] == "pending"
         assert ingest["index_job"] is None
         assert "index_manifest_ref" not in ingest
         assert ingest["durable_status"] == "persisted"
@@ -293,10 +305,19 @@ def test_target_blocked_parser_diagnostics_are_persisted_without_fake_index(tmp_
         restored_parse_job = restored.get_parse_job(ingest["parse_job"]["job_id"])
         restored_snapshot = restored.get_parse_snapshot(ingest["parse_job"]["job_id"])
 
-        assert restored_file.parse_status == "blocked"
-        assert restored_parse_job.status == "blocked"
-        assert restored_parse_job.blocked_reason
-        assert restored_snapshot.blocked_reason == restored_parse_job.blocked_reason
-        assert restored_snapshot.parser_diagnostics[0]["code"] == "target_blocked_adapter"
+        assert restored_file.parse_status == "review_pending"
+        assert restored_parse_job.status == "succeeded"
+        assert restored_parse_job.blocked_reason is None
+        assert restored_snapshot.parser_id == "local_ocr_vlm"
+        assert any(
+            diagnostic["code"] == "local_ocr_vlm_fallback"
+            for diagnostic in restored_snapshot.parser_diagnostics
+        )
+        assert restored_snapshot.adapter_boundary["budget_gate"]["review_required"] is True
+        restored_quality = restored.get_quality_gate(ingest["quality_gate"]["quality_decision_id"])
+        restored_review = restored.get_review_task(ingest["review_task"]["review_task_id"])
+        assert restored_quality.verdict == "REVIEW"
+        assert restored_quality.review_task_id == restored_review.review_task_id
+        assert restored_review.status == "pending"
     finally:
         WorkspaceTaskRuntimeService.configure_durable_ingestion(store=None, object_store=None)

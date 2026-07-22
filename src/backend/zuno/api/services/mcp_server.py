@@ -12,11 +12,36 @@ from zuno.database.models.user import AdminUser, SystemUser
 from zuno.resources.prompts.mcp import McpAsToolPrompt
 from zuno.schema.mcp import MCPResponseFormat
 from zuno.services.mcp.manager import MCPManager
+from zuno.platform.security import (
+    SecurityProductActionDenied,
+    SecurityProductActionGuard,
+    SecurityProductActionRequest,
+    build_product_action_hash,
+)
 from zuno.utils.convert import convert_mcp_config
 from zuno.utils.helpers import parse_imported_config
 
+ADMIN_MCP_ACTIONS = {
+    "config": "admin.mcp.config",
+    "create": "admin.mcp.create",
+    "delete": "admin.mcp.delete",
+    "list": "admin.mcp.list",
+    "test": "admin.mcp.test",
+    "update": "admin.mcp.update",
+    "view": "admin.mcp.view",
+}
+
 
 class MCPService:
+    _security_product_action_guard: SecurityProductActionGuard | None = None
+
+    @classmethod
+    def configure_security_product_action_guard(
+        cls,
+        guard: SecurityProductActionGuard | None,
+    ) -> None:
+        cls._security_product_action_guard = guard
+
     @staticmethod
     def build_mcp_summary(server_name: str, tools_params: dict) -> MCPResponseFormat:
         tool_defs = tools_params.get(server_name) or []
@@ -154,6 +179,12 @@ class MCPService:
         imported_config: dict = None,
         config_enabled: bool = False,
     ):
+        if user_id == AdminUser:
+            cls._require_admin_action_authorized(
+                principal_id=user_id,
+                action=ADMIN_MCP_ACTIONS["create"],
+                resource_ref=f"mcp-server:{server_name}",
+            )
         return await MCPServerDao.create_mcp_server(
             url=url,
             type=type,
@@ -202,12 +233,29 @@ class MCPService:
 
         if action in ("view", "config", "test"):
             if is_system_server or is_owner or is_admin:
+                if is_admin and not is_owner:
+                    cls._require_admin_action_authorized(
+                        principal_id=user_id,
+                        action=ADMIN_MCP_ACTIONS[action],
+                        resource_ref=f"mcp-server:{server_id}",
+                    )
                 return
         else:
             if is_system_server:
                 if is_admin:
+                    cls._require_admin_action_authorized(
+                        principal_id=user_id,
+                        action=ADMIN_MCP_ACTIONS[action],
+                        resource_ref=f"mcp-server:{server_id}",
+                    )
                     return
             elif is_owner or is_admin:
+                if is_admin and not is_owner:
+                    cls._require_admin_action_authorized(
+                        principal_id=user_id,
+                        action=ADMIN_MCP_ACTIONS[action],
+                        resource_ref=f"mcp-server:{server_id}",
+                    )
                 return
 
         raise ValueError("No permission to access this MCP server.")
@@ -215,6 +263,12 @@ class MCPService:
     @classmethod
     async def get_all_servers(cls, user_id):
         if user_id in (AdminUser, SystemUser):
+            if user_id == AdminUser:
+                cls._require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=ADMIN_MCP_ACTIONS["list"],
+                    resource_ref="mcp-server:*",
+                )
             all_servers = await MCPServerDao.get_all_mcp_servers()
         else:
             personal_servers = await MCPServerDao.get_mcp_servers_from_user(user_id)
@@ -382,6 +436,38 @@ class MCPService:
             if "env_passthrough" in server_conf and server_conf["env_passthrough"] is not None:
                 if not isinstance(server_conf["env_passthrough"], list):
                     raise ValueError(f"MCP `{server_name}` env_passthrough must be a list.")
+
+    @classmethod
+    def _require_admin_action_authorized(
+        cls,
+        *,
+        principal_id: str,
+        action: str,
+        resource_ref: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        tenant_id = "system"
+        workspace_id = "system"
+        request = SecurityProductActionRequest(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            principal_id=principal_id,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{principal_id}:{resource_ref}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                principal_id=principal_id,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise ValueError(str(exc) or "Security authorization denied") from exc
 
 
 __all__ = ["MCPService"]

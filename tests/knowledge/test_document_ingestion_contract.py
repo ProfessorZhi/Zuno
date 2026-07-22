@@ -48,8 +48,10 @@ def test_parser_router_selects_default_and_fallback_contracts() -> None:
     from zuno.knowledge.ingestion import select_parser_for_format
 
     assert select_parser_for_format("contract.pdf").default_parser == "docling_pymupdf"
-    assert select_parser_for_format("scan.png").default_parser == "mineru_ocr_vlm"
-    assert select_parser_for_format("slides.pptx").default_parser == "unstructured_markitdown"
+    assert select_parser_for_format("scan.png").default_parser == "local_ocr_vlm"
+    slides = select_parser_for_format("slides.pptx")
+    assert slides.default_parser == "local_office_archive"
+    assert slides.fallback == "unstructured_markitdown"
     assert select_parser_for_format("notes.md").default_parser == "native"
     assert select_parser_for_format("unknown.bin").fallback == "unstructured_markitdown"
 
@@ -72,6 +74,12 @@ def test_parser_adapter_contracts_mark_external_engines_as_target_boundary() -> 
         assert contract.production_target
         assert contract.blocked_reason
 
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.current_runtime == "deterministic_local"
+    assert local_ocr_contract.external_dependency_status == "not_required"
+    assert local_ocr_contract.dependency_status == "present"
+    assert local_ocr_contract.budget_gate["review_required"] is True
+
 
 def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -> None:
     from zuno.knowledge.ingestion import PARSER_ADAPTER_CONTRACTS, get_parser_adapter
@@ -89,6 +97,11 @@ def test_parser_adapter_contract_exposes_runtime_operations_and_capabilities() -
     blocked_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
     assert blocked_contract.capability_status == "target-blocked"
     assert blocked_contract.blocked_reason
+
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.capability_status == "current"
+    assert local_ocr_contract.blocked_reason is None
+    assert get_parser_adapter("local_ocr_vlm").supports("image") is True
 
 
 def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries() -> None:
@@ -115,6 +128,13 @@ def test_external_parser_contracts_freeze_dependency_and_enrichment_boundaries()
         assert contract.privacy_gate["sensitive_input_policy"] == "deny_by_default"
         assert contract.budget_gate["max_pages"] >= 0
 
+    local_ocr_contract = PARSER_ADAPTER_CONTRACTS["local_ocr_vlm"]
+    assert local_ocr_contract.capability_status == "current"
+    assert local_ocr_contract.external_dependency_status == "not_required"
+    assert local_ocr_contract.dependency_status == "present"
+    assert local_ocr_contract.network_policy == "deny_by_default"
+    assert local_ocr_contract.budget_gate["review_required"] is True
+
     ocr_contract = PARSER_ADAPTER_CONTRACTS["mineru_ocr_vlm"]
     assert ocr_contract.enrichment_role == "derived_enrichment"
     assert ocr_contract.privacy_gate["source_truth_policy"] == "cannot_override_deterministic_source"
@@ -125,9 +145,14 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     from zuno.knowledge.ingestion import (
         CanonicalDocumentIR,
         DocumentBlock,
+        DocumentFigure,
         DocumentMetadata,
         DocumentProvenance,
+        DocumentTable,
         SourceSpan,
+        TransformLedgerEntry,
+        canonical_document_ir_contract_report,
+        round_trip_canonical_document_ir,
     )
 
     ir = CanonicalDocumentIR(
@@ -147,10 +172,46 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
                 block_id="block_1",
                 type="paragraph",
                 text="Payment is due in 30 days.",
-                source_span=SourceSpan(page=3, bbox=[10.0, 20.0, 300.0, 360.0]),
+                source_span=SourceSpan(
+                    page=3,
+                    bbox=[10.0, 20.0, 300.0, 360.0],
+                    region_id="pdf-page-3-region-1",
+                    raw_text="Payment   is due in 30 days.",
+                    normalized_text="Payment is due in 30 days.",
+                ),
+                order_index=1,
+                style={"font_weight": "normal", "role": "body"},
                 acl_scope="workspace",
                 sensitivity_tags=["confidential"],
                 confidence=0.97,
+            )
+        ],
+        tables=[
+            DocumentTable(
+                table_id="table_payment",
+                rows=[["Term", "Value"], ["Due", "30 days"]],
+                source_span=SourceSpan(page=3, table_cell="table:payment"),
+            )
+        ],
+        figures=[
+            DocumentFigure(
+                figure_id="figure_signature",
+                description="Signature block",
+                source_span=SourceSpan(page=3, bbox=[20.0, 400.0, 120.0, 480.0]),
+                uri="s3://bucket/contract.pdf#figure_signature",
+            )
+        ],
+        transform_ledger=[
+            TransformLedgerEntry(
+                transform_id="transform_pdf_extract_1",
+                transform_type="extract",
+                algorithm_version="docling_pymupdf:contract-v1:canonical-document-ir-v1",
+                input_hash="source-hash",
+                output_hash="ir-hash",
+                source_block_id=None,
+                output_block_id="block_1",
+                reversible=False,
+                provenance={"parser_id": "docling_pymupdf"},
             )
         ],
         provenance=DocumentProvenance(
@@ -167,6 +228,56 @@ def test_canonical_document_ir_keeps_provenance_acl_and_source_span() -> None:
     assert dumped["blocks"][0]["source_span"]["bbox"] == [10.0, 20.0, 300.0, 360.0]
     assert dumped["blocks"][0]["acl_scope"] == "workspace"
     assert dumped["provenance"]["parser_id"] == "docling_pymupdf"
+    round_tripped = round_trip_canonical_document_ir(ir)
+    report = canonical_document_ir_contract_report(round_tripped)
+    assert round_tripped.model_dump() == ir.model_dump()
+    assert report["schema_round_trip"] is True
+    assert report["source_span_chunk_ids_absent"] is True
+    assert report["knowledge_artifacts_absent"] is True
+    assert report["table_count"] == 1
+    assert report["figure_count"] == 1
+    assert report["transform_ledger_complete"] is True
+    assert report["source_span_shapes"][0]["region_id"] == "pdf-page-3-region-1"
+    assert report["source_span_shapes"][0]["order_index"] == 1
+    assert report["source_span_shapes"][0]["style_keys"] == ["font_weight", "role"]
+
+
+def test_parse_gateway_outputs_round_trippable_ir_with_transform_ledger_and_refs() -> None:
+    from zuno.knowledge.ingestion import (
+        ParseDocumentRequest,
+        ParseGateway,
+        canonical_document_ir_contract_report,
+        round_trip_canonical_document_ir,
+    )
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_ir_contract_ppt",
+            workspace_id="workspace_phase11",
+            source_uri="file://decks/roadmap.pptx",
+            mime_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            source_text="# Roadmap\n- Milestone\n![timeline](timeline.png)",
+            parser_version="contract-v3",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    document = round_trip_canonical_document_ir(result.document)
+    report = canonical_document_ir_contract_report(document)
+
+    assert report["schema_round_trip"] is True
+    assert report["source_span_chunk_ids_absent"] is True
+    assert report["knowledge_artifacts_absent"] is True
+    assert report["figure_count"] == 1
+    assert report["transform_ledger_count"] == 1
+    assert report["transform_ledger_complete"] is True
+    assert document.transform_ledger[0].input_hash == document.metadata.source_sha256
+    assert document.transform_ledger[0].provenance["parser_id"] == "local_office_archive"
+    assert any(shape["slide"] == 1 and shape["bbox"] for shape in report["source_span_shapes"])
+    assert any(block.order_index is not None for block in document.blocks)
+    assert any(block.style.get("role") == "slide" for block in document.blocks)
+    assert document.figures[0].uri is None
 
 
 def test_parse_gateway_freezes_document_version_and_schema_fields() -> None:

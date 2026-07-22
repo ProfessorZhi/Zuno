@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -36,14 +37,14 @@ def _parse_fixture(case_id: str, file_name: str, mime_type: str):
             "file://contracts/supplier.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "# Payment\nPayment is due in 30 days.\n| Fee | Amount |",
-            "unstructured_markitdown",
+            "local_office_archive",
             "heading",
         ),
         (
             "file://decks/risk-review.pptx",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "# Slide 1: Risk\n- Renewal risk\n![chart](chart.png)",
-            "unstructured_markitdown",
+            "local_office_archive",
             "slide_title",
         ),
         (
@@ -64,7 +65,7 @@ def _parse_fixture(case_id: str, file_name: str, mime_type: str):
             "file://scans/page.png",
             "image/png",
             "OCR text: invoice number 42",
-            "mineru_ocr_vlm",
+            "local_ocr_vlm",
             "ocr_text",
         ),
         (
@@ -180,7 +181,7 @@ def test_parse_gateway_unknown_format_returns_stable_fallback_diagnostics() -> N
     assert any(diagnostic.code == "unknown_format_fallback" for diagnostic in result.diagnostics)
 
 
-def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
+def test_parse_gateway_local_ocr_vlm_adapter_emits_executable_fallback_diagnostic() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
     result = ParseGateway.parse_document(
@@ -195,14 +196,15 @@ def test_parse_gateway_target_blocked_adapter_emits_stable_diagnostic() -> None:
 
     assert result.status == "succeeded"
     assert result.document is not None
-    assert result.document.metadata.parser_id == "mineru_ocr_vlm"
-    assert result.document.metadata.target_blocked is True
-    assert result.document.metadata.blocked_reason
-    blocked_diagnostic = next(
-        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    assert result.document.metadata.parser_id == "local_ocr_vlm"
+    assert result.document.metadata.target_blocked is False
+    assert result.document.metadata.blocked_reason is None
+    fallback_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "local_ocr_vlm_fallback"
     )
-    assert blocked_diagnostic.severity == "warning"
-    assert blocked_diagnostic.metadata["external_dependency_status"] == "target_blocked"
+    assert fallback_diagnostic.severity == "warning"
+    assert fallback_diagnostic.metadata["live_provider_status"] == "measurement_blocked"
+    assert result.document.blocks[0].metadata["requires_human_review"] is True
 
 
 def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencies() -> None:
@@ -229,26 +231,26 @@ def test_parser_adapter_dependency_probe_reports_present_and_missing_dependencie
             "docx_heading_table",
             "docx_heading_table.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "unstructured_markitdown",
+            "local_office_archive",
             "heading",
         ),
         (
             "pptx_slide",
             "pptx_slide.pptx",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            "unstructured_markitdown",
+            "local_office_archive",
             "slide_title",
         ),
         (
             "xlsx_sheet",
             "xlsx_sheet.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "unstructured_markitdown",
+            "local_office_archive",
             "table",
         ),
     ],
 )
-def test_office_contract_parse_keeps_target_blocked_boundary(
+def test_office_contract_parse_uses_executable_local_fallback_boundary(
     case_id: str,
     file_name: str,
     mime_type: str,
@@ -260,15 +262,216 @@ def test_office_contract_parse_keeps_target_blocked_boundary(
     assert result.status == "succeeded"
     assert result.document is not None
     assert result.document.metadata.parser_id == expected_parser
-    assert result.document.metadata.target_blocked is True
-    assert result.document.metadata.blocked_reason
+    assert result.document.metadata.target_blocked is False
+    assert result.document.metadata.blocked_reason is None
     assert any(block.type == expected_block for block in result.document.blocks)
-    blocked_diagnostic = next(
-        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "target_blocked_adapter"
+    fallback_diagnostic = next(
+        diagnostic for diagnostic in result.diagnostics if diagnostic.code == "local_office_archive_fallback"
     )
-    assert blocked_diagnostic.metadata["dependency_status"] == "missing"
-    assert blocked_diagnostic.metadata["capability_status"] == "target-blocked"
-    assert blocked_diagnostic.metadata["fallback"] in {"native", "mineru_ocr_vlm"}
+    assert fallback_diagnostic.metadata["live_provider_status"] == "measurement_blocked"
+    provenance = result.document.provenance
+    assert provenance.parser_id == "local_office_archive"
+
+
+def test_archive_contract_parse_keeps_manifest_without_unpacking() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_archive",
+            workspace_id="workspace_phase11",
+            source_uri="file://archives/policy.zip",
+            mime_type="application/zip",
+            source_text="contracts/policy.md\nreports/q1.csv\n",
+        )
+    )
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.parser_id == "local_office_archive"
+    assert result.document.metadata.target_blocked is False
+    assert any(block.type == "archive_manifest" for block in result.document.blocks)
+    entry = next(block for block in result.document.blocks if block.type == "archive_entry")
+    assert entry.metadata["extraction_policy"] == "manifest_only_no_unpack"
+    assert result.document.tables[0].table_id == "archive_manifest"
+    diagnostic = next(d for d in result.diagnostics if d.code == "local_office_archive_fallback")
+    assert diagnostic.metadata["archive_policy"] == "manifest_only_no_unpack"
+
+
+def test_archive_contract_rejects_unsafe_manifest_entries() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_archive_bad",
+            workspace_id="workspace_phase11",
+            source_uri="file://archives/bad.zip",
+            mime_type="application/zip",
+            source_text="../secret.txt\n",
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.failure is not None
+    assert result.failure.parser_id == "local_office_archive"
+    assert result.failure.format == "archive"
+    assert "no safe entries" in result.failure.reason
+
+
+def test_parse_gateway_binds_source_object_ref_manifest_and_security_policy() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_text = "# Source Object\nParser reads a fetched projection but binds the S3 ObjectRef."
+    content_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+    object_ref = "s3://zuno-input/tenant-a/workspace_phase11/source/policy.md"
+    request = ParseDocumentRequest(
+        document_id="doc_object_ref",
+        source_id="source_object_1",
+        source_object_ref=object_ref,
+        source_object_manifest={
+            "object_manifest_ref": "object-manifest:policy-md",
+            "content_hash": content_hash,
+            "size_bytes": len(source_text.encode("utf-8")),
+            "parser_policy_ref": "parser-policy:phase11",
+            "lineage_ref": "lineage:source-object-1",
+            "classification_ref": "classification:internal",
+            "workspace_id": "workspace_phase11",
+        },
+        workspace_id="workspace_phase11",
+        source_uri=object_ref,
+        mime_type="text/markdown",
+        source_text=source_text,
+        hash=content_hash,
+        security_policy_ref="security-policy:workspace-parser",
+        security_epoch_ref="security-epoch:42",
+        parser_timeout_seconds=10,
+    )
+
+    result = ParseGateway.submit_parse_job(request)
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert result.document.metadata.source_object_ref == object_ref
+    assert result.document.metadata.object_manifest_ref == "object-manifest:policy-md"
+    assert result.document.metadata.source_sha256 == content_hash
+    assert f":{content_hash}:native:" in result.document.metadata.document_version_id
+    assert result.document.metadata.security_policy_ref == "security-policy:workspace-parser"
+    assert result.document.metadata.security_epoch_ref == "security-epoch:42"
+    diagnostic = next(d for d in result.diagnostics if d.code == "object_ref_input_bound")
+    assert diagnostic.metadata["parser_policy_ref"] == "parser-policy:phase11"
+    assert diagnostic.metadata["input_mode"] == "object_ref_with_projection"
+    assert snapshot.metrics.source_input_mode == "object_ref_with_projection"
+    assert snapshot.metrics.timeout_seconds == 10
+    assert snapshot.metrics.confidence == result.document.provenance.confidence
+    assert snapshot.source_provenance["source_object_ref"] == object_ref
+    assert snapshot.source_provenance["object_manifest_ref"] == "object-manifest:policy-md"
+    assert snapshot.source_provenance["source_sha256"] == content_hash
+    assert snapshot.source_provenance["security_epoch_ref"] == "security-epoch:42"
+
+
+def test_parse_gateway_rejects_object_ref_hash_mismatch_as_typed_failure() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    source_text = "ObjectRef hash mismatch should fail before adapter execution."
+    object_ref = "s3://zuno-input/tenant-a/workspace_phase11/source/bad.md"
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_object_ref_bad",
+            source_object_ref=object_ref,
+            source_object_manifest={
+                "object_manifest_ref": "object-manifest:bad",
+                "content_hash": "0" * 64,
+                "size_bytes": len(source_text.encode("utf-8")),
+                "parser_policy_ref": "parser-policy:phase11",
+                "lineage_ref": "lineage:bad",
+            },
+            workspace_id="workspace_phase11",
+            source_uri=object_ref,
+            mime_type="text/markdown",
+            source_text=source_text,
+            hash="f" * 64,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "failed"
+    assert result.failure is not None
+    assert result.failure.failure_classification == "object_ref_contract_violation"
+    assert result.failure.retryable is False
+    assert snapshot.error_class == "ObjectRefContractViolation"
+    assert snapshot.failure_snapshot["failure_classification"] == "object_ref_contract_violation"
+    assert snapshot.metrics.source_input_mode == "object_ref_with_projection"
+
+
+def test_parse_gateway_cancel_requested_stops_before_adapter_execution() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="doc_cancel_before_parse",
+            workspace_id="workspace_phase11",
+            source_uri="file://notes/cancel-before.md",
+            mime_type="text/markdown",
+            source_text="# Cancel\nThis should not be parsed.",
+            cancel_requested=True,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "cancelled"
+    assert result.document is None
+    assert result.failure is not None
+    assert result.failure.failure_classification == "cancelled"
+    assert any(diagnostic.code == "parse_cancelled" for diagnostic in result.diagnostics)
+    assert snapshot.status == "cancelled"
+    assert snapshot.failure_snapshot["failure_classification"] == "cancelled"
+
+
+@pytest.mark.parametrize(
+    ("parser_config", "source_text", "expected_classification"),
+    [
+        ({"max_size_bytes": 4}, "too large", "oversized_source"),
+        ({"encrypted": True}, "encrypted payload marker", "encrypted_source"),
+        ({"corrupt": True}, "corrupt payload marker", "corrupt_source"),
+        (
+            {"sandbox_denied": True, "sandbox_policy_ref": "sandbox-policy:deny"},
+            "sandbox should reject before adapter",
+            "sandbox_denied",
+        ),
+    ],
+)
+def test_parse_gateway_policy_faults_are_typed_before_adapter_execution(
+    parser_config: dict,
+    source_text: str,
+    expected_classification: str,
+) -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id=f"doc_{expected_classification}",
+            workspace_id="workspace_phase11",
+            source_uri=f"file://notes/{expected_classification}.md",
+            mime_type="text/markdown",
+            source_text=source_text,
+            parser_config=parser_config,
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.status == "failed"
+    assert result.document is None
+    assert result.index_handoff is None
+    assert result.failure is not None
+    assert result.failure.failure_classification == expected_classification
+    assert result.failure.retryable is False
+    diagnostic = next(d for d in result.diagnostics if d.code == "parser_policy_denied")
+    assert diagnostic.severity == "error"
+    assert diagnostic.metadata["failure_classification"] == expected_classification
+    assert snapshot.status == "failed"
+    assert snapshot.failure_snapshot["failure_classification"] == expected_classification
+    assert snapshot.parser_diagnostics[-1]["code"] == "parser_policy_denied"
 
 
 def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:
@@ -283,30 +486,28 @@ def test_text_pdf_contract_parse_is_local_pymupdf_current() -> None:
     assert not any(diagnostic.code == "target_blocked_adapter" for diagnostic in result.diagnostics)
 
 
-def test_ocr_vlm_blocked_result_keeps_derived_enrichment_gates() -> None:
+def test_local_ocr_vlm_result_keeps_derived_enrichment_gates() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    blocked = ParseGateway.submit_parse_job(
+    parsed = ParseGateway.submit_parse_job(
         ParseDocumentRequest(
-            document_id="doc_vlm_blocked",
+            document_id="doc_vlm_local",
             workspace_id="workspace_phase05",
             source_uri="file://scans/diagram.png",
             mime_type="image/png",
-            source_text="OCR placeholder should not be source truth.",
+            source_text="OCR fallback should require review before high-risk use.",
         )
     )
-    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
-    diagnostic = blocked.diagnostics[0]
+    snapshot = ParseGateway.get_job_snapshot(parsed.job_id)
+    diagnostic = next(d for d in parsed.diagnostics if d.code == "local_ocr_vlm_fallback")
 
-    assert blocked.status == "blocked"
-    assert blocked.document is None
-    assert diagnostic.code == "target_blocked_adapter"
-    assert diagnostic.metadata["enrichment_role"] == "derived_enrichment"
+    assert parsed.status == "succeeded"
+    assert parsed.document is not None
+    assert parsed.document.metadata.parser_id == "local_ocr_vlm"
     assert diagnostic.metadata["network_policy"] == "deny_by_default"
-    assert diagnostic.metadata["privacy_gate"]["source_truth_policy"] == "cannot_override_deterministic_source"
-    assert diagnostic.metadata["budget_gate"]["network_default"] == "deny"
+    assert diagnostic.metadata["requires_human_review"] is True
     assert snapshot.adapter_boundary["enrichment_role"] == "derived_enrichment"
-    assert snapshot.adapter_boundary["dependency_status"] == "missing"
+    assert snapshot.adapter_boundary["dependency_status"] == "present"
     assert snapshot.adapter_boundary["budget_gate"]["review_required"] is True
 
 
@@ -344,31 +545,33 @@ def test_parse_gateway_records_parse_job_status_for_replay() -> None:
     assert snapshot.metrics.format == "md"
 
 
-def test_parse_gateway_target_blocked_adapter_enters_blocked_job_state() -> None:
+def test_parse_gateway_local_ocr_vlm_empty_content_enters_typed_failed_job_state() -> None:
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
-    blocked = ParseGateway.submit_parse_job(
+    failed = ParseGateway.submit_parse_job(
         ParseDocumentRequest(
-            document_id="doc_blocked_ocr",
+            document_id="doc_failed_ocr",
             workspace_id="workspace_phase03",
             source_uri="file://scans/invoice.png",
             mime_type="image/png",
-            source_text="OCR placeholder should not make worker Current.",
+            source_text="",
         )
     )
-    snapshot = ParseGateway.get_job_snapshot(blocked.job_id)
+    snapshot = ParseGateway.get_job_snapshot(failed.job_id)
 
-    assert blocked.status == "blocked"
-    assert blocked.document is None
-    assert blocked.failure is not None
-    assert blocked.failure.reason == snapshot.blocked_reason
-    assert snapshot.status == "blocked"
-    assert snapshot.retryable is False
-    assert snapshot.failure_snapshot["blocked"] is True
-    assert snapshot.adapter_boundary["external_dependency_status"] == "target_blocked"
+    assert failed.status == "failed"
+    assert failed.document is None
+    assert failed.failure is not None
+    assert failed.failure.parser_id == "local_ocr_vlm"
+    assert failed.failure.reason == snapshot.failure_reason
+    assert snapshot.status == "failed"
+    assert snapshot.retryable is True
+    assert snapshot.failure_snapshot["blocked"] is False
+    assert snapshot.adapter_boundary["external_dependency_status"] == "not_required"
     assert [entry["status"] for entry in snapshot.status_timeline] == [
         "accepted",
-        "blocked",
+        "running",
+        "failed",
     ]
 
 
@@ -702,3 +905,34 @@ def test_legacy_chunks_normalize_to_ir_with_acl_source_span_provenance() -> None
     assert document.blocks[0].acl_scope == "workspace"
     assert document.blocks[0].sensitivity_tags == ["internal"]
     assert document.provenance.parser_id == "legacy_doc_parser"
+
+
+def test_parse_gateway_honors_authoritative_package_a_ids() -> None:
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+
+    result = ParseGateway.submit_parse_job(
+        ParseDocumentRequest(
+            document_id="source_pkg_a_ids",
+            source_id="source_pkg_a_ids",
+            document_version_id="document-version:pkg-a:1",
+            parse_plan_id="parse-plan:pkg-a:1",
+            parse_job_id="parse-job:pkg-a:1",
+            parse_attempt_id="parse-attempt:pkg-a:1",
+            parse_idempotency_key="parse-idem:pkg-a:1",
+            workspace_id="workspace_pkg_a",
+            source_uri="file://pkg-a.md",
+            mime_type="text/markdown",
+            source_text="# Package A\nAuthoritative identity.",
+        )
+    )
+    snapshot = ParseGateway.get_job_snapshot(result.job_id)
+
+    assert result.job_id == "parse-job:pkg-a:1"
+    assert result.document is not None
+    assert result.document.metadata.document_version_id == "document-version:pkg-a:1"
+    assert snapshot.job_id == "parse-job:pkg-a:1"
+    assert snapshot.parse_plan_id == "parse-plan:pkg-a:1"
+    assert snapshot.parse_attempt_id == "parse-attempt:pkg-a:1"
+    assert snapshot.parse_idempotency_key == "parse-idem:pkg-a:1"
+    assert snapshot.source_provenance["parse_job_id"] == "parse-job:pkg-a:1"
+    assert snapshot.source_provenance["parse_attempt_id"] == "parse-attempt:pkg-a:1"

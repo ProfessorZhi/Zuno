@@ -3,8 +3,14 @@ from zuno.database.dao.agent import AgentDao
 from zuno.database.dao.dialog import DialogDao
 from zuno.database.models.user import AdminUser, SystemUser
 from zuno.schema.agent import AgentCreateReq
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 
 HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手"}
+ADMIN_AGENT_ACTIONS = {
+    "access": "admin.agent.access",
+    "delete": "admin.agent.delete",
+    "update": "admin.agent.update",
+}
 
 
 class AgentService:
@@ -54,10 +60,16 @@ class AgentService:
         return values
 
     @classmethod
-    async def _check_permission(cls, agent_id: str, user_id: str):
-        if user_id == AdminUser:
-            return
+    async def _check_permission(cls, agent_id: str, user_id: str, *, action: str = "admin.agent.access"):
         owner_id = await cls.get_agent_user_id(agent_id)
+        if user_id == AdminUser:
+            if owner_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=action,
+                    resource_ref=f"agent:{agent_id}",
+                )
+            return
         if user_id != owner_id:
             raise ValueError("没有权限访问")
 
@@ -68,7 +80,7 @@ class AgentService:
 
     @classmethod
     async def update_agent(cls, agent_id: str, update_values: dict, user_id: str):
-        await cls._check_permission(agent_id, user_id)
+        await cls._check_permission(agent_id, user_id, action="admin.agent.update")
         if not update_values:
             return
         await AgentDao.update_agent_by_id(
@@ -93,8 +105,7 @@ class AgentService:
 
     @classmethod
     async def verify_user_permission(cls, id, user_id, action: str = "update"):
-        _ = action
-        await cls._check_permission(id, user_id)
+        await cls._check_permission(id, user_id, action=ADMIN_AGENT_ACTIONS.get(action, "admin.agent.access"))
 
     @classmethod
     async def search_agent_name(cls, name: str, user_id: str):

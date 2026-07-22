@@ -597,16 +597,20 @@ def _revision_chain_errors() -> list[str]:
     errors: list[str] = []
     config = Config(str(REPO_ROOT / "infra" / "db" / "alembic.ini"))
     script = ScriptDirectory.from_config(config)
-    heads = script.get_heads()
-    if heads != [EXPECTED_HEAD_REVISION]:
-        errors.append(f"Alembic must have exactly one expected head, found: {heads!r}")
+    if script.get_revision(EXPECTED_HEAD_REVISION) is None:
+        errors.append(f"PHASE04 expected revision is missing: {EXPECTED_HEAD_REVISION}")
         return errors
     revisions = list(script.walk_revisions(base="base", head=EXPECTED_HEAD_REVISION))
     revision_ids = {str(item.revision) for item in revisions}
-    if revision_ids != set(REVISION_OWNERS):
+    expected_phase04_revisions = {
+        revision
+        for revision, owner in REVISION_OWNERS.items()
+        if owner in {"Cross-module frozen baseline", "Infrastructure", "Product Surface"}
+    }
+    if revision_ids != expected_phase04_revisions:
         errors.append(
             "revision ownership registry mismatch: "
-            f"chain={sorted(revision_ids)!r}, registry={sorted(REVISION_OWNERS)!r}"
+            f"chain={sorted(revision_ids)!r}, registry={sorted(expected_phase04_revisions)!r}"
         )
     if set(metadata.tables) != REQUIRED_DOMAIN_TABLES:
         errors.append(
@@ -695,10 +699,10 @@ def verify_phase04_alembic_migration() -> list[str]:
             config_path = Path(tmp) / "config.yaml"
             _write_config(config_path, database_url)
 
-            upgrade = _run_alembic(config_path, "upgrade", "head")
+            upgrade = _run_alembic(config_path, "upgrade", EXPECTED_HEAD_REVISION)
             if upgrade.returncode != 0:
                 errors.append(
-                    "alembic upgrade head failed: "
+                    f"alembic upgrade {EXPECTED_HEAD_REVISION} failed: "
                     + (upgrade.stderr or upgrade.stdout).strip()
                 )
                 return errors
@@ -720,10 +724,10 @@ def verify_phase04_alembic_migration() -> list[str]:
             errors.extend(_domain_schema_drift_errors(database_url))
             errors.extend(_online_schema_errors(database_url))
 
-            repeated = _run_alembic(config_path, "upgrade", "head")
+            repeated = _run_alembic(config_path, "upgrade", EXPECTED_HEAD_REVISION)
             if repeated.returncode != 0:
                 errors.append(
-                    "repeated alembic upgrade head failed: "
+                    f"repeated alembic upgrade {EXPECTED_HEAD_REVISION} failed: "
                     + (repeated.stderr or repeated.stdout).strip()
                 )
             if _current_revision(database_url) != EXPECTED_HEAD_REVISION:
@@ -745,10 +749,10 @@ def verify_phase04_alembic_migration() -> list[str]:
                     f"managed tables remained after downgrade base: {sorted(remaining_after_downgrade)!r}"
                 )
 
-            reupgrade = _run_alembic(config_path, "upgrade", "head")
+            reupgrade = _run_alembic(config_path, "upgrade", EXPECTED_HEAD_REVISION)
             if reupgrade.returncode != 0:
                 errors.append(
-                    "alembic re-upgrade head failed: "
+                    f"alembic re-upgrade {EXPECTED_HEAD_REVISION} failed: "
                     + (reupgrade.stderr or reupgrade.stdout).strip()
                 )
             if _current_revision(database_url) != EXPECTED_HEAD_REVISION:

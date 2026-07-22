@@ -1,0 +1,9 @@
+phase_id: PHASE07
+status: blocker_inventory
+owner: Module 04 Model Gateway
+strict_zero_required_for_closure: true
+generated_by: tools/scripts/verify_model_gateway_bypass.py
+known_bypass_paths: []
+notes:
+  - "Default verifier mode locks the current blocker inventory to prevent silent drift."
+  - "Closure requires --strict mode to pass with zero production bypasses."

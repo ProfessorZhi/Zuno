@@ -1,0 +1,25 @@
+phase_id: PHASE07
+phase_name: Model Gateway Runtime
+current_phase_status: completed
+coordinator_approval: approved
+closure_decision_ref: docs/evidence/phase07-coordinator-closure.md
+pre_closure_ref: docs/evidence/phase07-pre-closure.md
+post_closure_gate: tools/scripts/verify_phase07_post_closure_consistency.py
+requirement_ledger:
+  mandatory_total: 88
+  implementation_available: 88
+  target_not_current: 0
+evidence_refs:
+  - docs/evidence/model-gateway-runtime-batch.md
+  - docs/evidence/phase07-pre-closure.md
+  - docs/evidence/phase07-coordinator-closure.md
+focused_commands:
+  - python tools/scripts/verify_model_gateway_runtime_batch.py
+  - python tools/scripts/verify_model_gateway_bypass.py --strict
+  - pytest -q tests/platform/test_model_gateway.py tests/repo/test_model_gateway_bypass.py -p no:cacheprovider
+downstream:
+  phase08_dependency_satisfied_for_phase07: true
+  phase08_ready: false
+boundary:
+  implementation_available_not_production_ready: true
+  phase08_waits_for_phase11: true

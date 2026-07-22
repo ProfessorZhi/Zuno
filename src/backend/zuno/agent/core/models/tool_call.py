@@ -3,9 +3,10 @@ from typing import List, Dict, Any, Union
 
 from langchain_core.messages import BaseMessage, ChatMessage, HumanMessage, AIMessage, FunctionMessage, ToolMessage, \
     SystemMessage, ToolCall
-from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessage, ChatCompletionMessageToolCall
 from openai.types.chat.chat_completion_message_tool_call import Function
+
+from zuno.platform.model_gateway import OpenAIChatCompletionsGatewayAdapter
 
 
 class ToolCallModel:
@@ -15,7 +16,7 @@ class ToolCallModel:
         self.api_key = api_key
         self.tools = []
 
-        self.client = AsyncOpenAI(api_key=self.api_key, base_url=base_url)
+        self.client = OpenAIChatCompletionsGatewayAdapter(api_key=self.api_key, base_url=base_url)
 
     def bind_tools(self, tools: Union[dict, list]):
         self.tools = tools
@@ -23,7 +24,7 @@ class ToolCallModel:
     async def ainvoke(self, messages: List[BaseMessage]) -> ChatCompletionMessage:
         user_messages = [self.convert_message_to_dict(message) for message in messages]
 
-        response = await self.client.chat.completions.create(
+        response = await self.client.create(
             model=self.model_name,
             messages=user_messages,
             tools=self.tools

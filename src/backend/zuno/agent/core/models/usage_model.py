@@ -3,8 +3,6 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
-from langchain_openai.chat_models.base import WellKnownTools
-from openai import OpenAI, AsyncOpenAI
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import BaseMessage, AIMessage, AIMessageChunk
@@ -12,6 +10,7 @@ from langchain_core.outputs import ChatResult, ChatGeneration, ChatGenerationChu
 from langchain_core.callbacks import CallbackManagerForLLMRun, AsyncCallbackManagerForLLMRun
 from typing import Any, List, Optional, Iterator, AsyncIterator, Dict, Union, Sequence, Callable, Literal
 
+from zuno.platform.model_gateway import OpenAIUsageChatGatewayAdapter, is_openai_well_known_tool
 from zuno.utils.contexts import get_user_id_context, get_agent_name_context
 from zuno.utils.convert import convert_langchain_tool_calls
 from zuno.api.services.usage_stats import UsageStatsService
@@ -32,8 +31,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
     agent_name: Optional[str] = Field(default=None)
     
     # 私有属性用于存储状态
-    _client: Optional[OpenAI] = PrivateAttr(default=None)
-    _async_client: Optional[AsyncOpenAI] = PrivateAttr(default=None)
+    _client: Optional[OpenAIUsageChatGatewayAdapter] = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any) -> None:
         """初始化 OpenAI 客户端"""
@@ -42,8 +40,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
         api_key = self.openai_api_key.get_secret_value() if self.openai_api_key else None
         base_url = self.openai_api_base
 
-        self._client = OpenAI(api_key=api_key, base_url=base_url)
-        self._async_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self._client = OpenAIUsageChatGatewayAdapter(api_key=api_key, base_url=base_url)
 
     @property
     def _llm_type(self) -> str:
@@ -61,7 +58,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
         # 转换消息格式
         openai_messages = self._convert_messages(messages)
         # 调用 OpenAI API
-        response = self._client.chat.completions.create(
+        response = self._client.create(
             model=self.model_name,
             messages=openai_messages,
             temperature=self.temperature,
@@ -101,7 +98,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
         openai_messages = self._convert_messages(messages)
 
         # 调用 OpenAI API
-        response = await self._async_client.chat.completions.create(
+        response = await self._client.acreate(
             model=self.model_name,
             messages=openai_messages,
             temperature=self.temperature,
@@ -143,7 +140,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
         input_tokens = 0
         output_tokens = 0
 
-        stream = self._client.chat.completions.create(
+        stream = self._client.create(
             model=self.model_name,
             messages=openai_messages,
             temperature=self.temperature,
@@ -185,7 +182,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
         input_tokens = 0
         output_tokens = 0
 
-        stream = await self._async_client.chat.completions.create(
+        stream = await self._client.acreate(
             model=self.model_name,
             messages=openai_messages,
             temperature=self.temperature,
@@ -247,7 +244,7 @@ class ChatModelWithTokenUsage(BaseChatModel):
                         "type": "function",
                         "function": {"name": tool_choice},
                     }
-                elif tool_choice in WellKnownTools:
+                elif is_openai_well_known_tool(tool_choice):
                     tool_choice = {"type": tool_choice}
                 # 'any' is not natively supported by OpenAI API.
                 # We support 'any' since other models use this instead of 'required'.

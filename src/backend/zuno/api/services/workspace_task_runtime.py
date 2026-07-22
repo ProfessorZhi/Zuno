@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
 import tempfile
 import time
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
@@ -19,8 +20,10 @@ from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
 from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.api.services.user import UserPayload
 from zuno.capability.runtime import (
+    SecurityApprovalFactSink,
     ToolRuntimeExecutionResult,
     ToolRuntimeRequest,
+    WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID,
     build_default_tool_control_plane_runtime,
 )
 from zuno.knowledge.agentic_graphrag import (
@@ -35,10 +38,16 @@ from zuno.knowledge.ingestion import (
     DocumentBlock,
     DocumentMetadata,
     DocumentProvenance,
+    HumanReviewRuntime,
+    IndexableDocumentSnapshotV1,
+    PackageAProductionIngestionRuntime,
+    PackageAUploadCommand,
     ParseDocumentRequest,
     ParseDocumentResult,
     ParseGateway,
     ParseJobSnapshot,
+    SnapshotHandoffRuntime,
+    SnapshotOutboxEvent,
     SourceSpan,
 )
 from zuno.knowledge.storage import (
@@ -46,8 +55,12 @@ from zuno.knowledge.storage import (
     DocumentVersionRecord,
     FeedbackRecord,
     IndexChunkRecord,
+    IndexableSnapshotRecord,
+    IngestionOutboxRecord,
     LocalObjectStore,
     ParseJobRecord,
+    QualityGateRecord,
+    ReviewTaskRecord,
     SQLiteDurableIngestionStore,
     SourceObjectRecord,
     TaskEventRecord,
@@ -72,7 +85,60 @@ from zuno.platform.security import (
     SandboxAuditEvent,
     SecurityDecision,
     SecurityGate,
+    SecurityProductActionDenied,
+    SecurityProductActionGuard,
+    SecurityProductActionRequest,
+    build_product_action_hash,
 )
+from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
+
+
+DEFAULT_PACKAGE_A_UPLOAD_BUCKET = "zuno-ingestion"
+
+
+def resolve_package_a_upload_bucket(settings: Any) -> str:
+    storage = getattr(settings, "storage", None)
+    minio = getattr(storage, "minio", None) if storage is not None else None
+    bucket = str(getattr(minio, "bucket_name", "") or "").strip() if minio is not None else ""
+    return bucket or DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+
+
+def build_package_a_production_ingestion_runtime(
+    *,
+    engine: Any,
+    settings: Any,
+    worker_id: str = "workspace-file-upload",
+    object_store_factory: Callable[..., Any] = MinioObjectStore,
+    durable_object_store_factory: Callable[..., Any] = DurableMinioObjectStore,
+    runtime_factory: Callable[..., PackageAProductionIngestionRuntime] = PackageAProductionIngestionRuntime,
+) -> PackageAProductionIngestionRuntime | None:
+    storage = getattr(settings, "storage", None)
+    if storage is None or getattr(storage, "mode", None) != "minio":
+        return None
+    minio = getattr(storage, "minio", None)
+    if minio is None:
+        return None
+    endpoint = str(getattr(minio, "endpoint", "") or "").strip()
+    access_key = str(getattr(minio, "access_key_id", "") or "").strip()
+    secret_key = str(getattr(minio, "access_key_secret", "") or "").strip()
+    if not endpoint or not access_key or not secret_key:
+        return None
+    object_store = object_store_factory(
+        endpoint=endpoint,
+        access_key=access_key,
+        secret_key=secret_key,
+        secure=False,
+    )
+    durable_object_store = durable_object_store_factory(
+        store=object_store,
+        engine=engine,
+        owner="workspace.file_upload",
+    )
+    return runtime_factory(
+        engine=engine,
+        object_store=durable_object_store,
+        worker_id=worker_id,
+    )
 from zuno.schema.workspace import (
     ArtifactContract,
     FeedbackContract,
@@ -116,12 +182,18 @@ class WorkspaceTaskRuntimeService:
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
     _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
+    _human_review_runtime = HumanReviewRuntime()
+    _snapshot_handoff_runtime = SnapshotHandoffRuntime()
+    _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
+    _package_a_production_configured: bool = False
+    _package_a_upload_bucket: str = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
     _input_security_gate = InputSecurityGate()
     _retrieval_security_gate = RetrievalSecurityGate()
     _output_security_gate = OutputSecurityGate()
+    _security_product_action_guard: SecurityProductActionGuard | None = None
     _span_builder = ZunoSpanBuilder()
     _trace_spans: dict[str, list[dict]] = {}
     _release_evals: dict[str, dict] = {}
@@ -209,8 +281,35 @@ class WorkspaceTaskRuntimeService:
             cls._rehydrate_from_durable_store()
 
     @classmethod
+    def configure_package_a_production_ingestion(
+        cls,
+        runtime: PackageAProductionIngestionRuntime | None,
+        *,
+        upload_bucket: str | None = None,
+    ) -> None:
+        cls._package_a_production_configured = True
+        cls._package_a_production_runtime = runtime
+        cls._package_a_upload_bucket = (upload_bucket or DEFAULT_PACKAGE_A_UPLOAD_BUCKET).strip() or DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+
+    @classmethod
     def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
         cls._unified_runtime_store = store
+
+    @classmethod
+    def configure_security_approval_sink(
+        cls,
+        sink: SecurityApprovalFactSink | None,
+    ) -> None:
+        cls._tool_runtime = build_default_tool_control_plane_runtime(
+            security_approval_sink=sink
+        )
+
+    @classmethod
+    def configure_security_product_action_guard(
+        cls,
+        guard: SecurityProductActionGuard | None,
+    ) -> None:
+        cls._security_product_action_guard = guard
 
     @classmethod
     def reset_runtime_state_for_tests(cls) -> None:
@@ -240,6 +339,10 @@ class WorkspaceTaskRuntimeService:
         cls._trace_replays = {}
         cls._durable_ingestion_store = None
         cls._source_object_store = None
+        cls._package_a_production_runtime = None
+        cls._package_a_production_configured = False
+        cls._package_a_upload_bucket = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+        cls._security_product_action_guard = None
 
     @classmethod
     def _rehydrate_from_durable_store(cls) -> None:
@@ -324,12 +427,20 @@ class WorkspaceTaskRuntimeService:
         trace_id: str | None,
         security_label: str,
         content: str | None = None,
+        deadline_at: datetime | None = None,
     ) -> dict:
         normalized_file_id = file_id or f"file_{uuid4().hex[:12]}"
         stored_content = content or f"{name or normalized_file_id} was uploaded to workspace {workspace_id}."
-        normalized_hash = file_hash or hashlib.sha256(
-            stored_content.encode("utf-8")
-        ).hexdigest()
+        content_bytes = stored_content.encode("utf-8")
+        actual_hash = hashlib.sha256(content_bytes).hexdigest()
+        if file_hash is not None and file_hash != actual_hash:
+            raise HTTPException(status_code=400, detail="Uploaded file hash does not match content")
+        if cls._package_a_production_configured and cls._package_a_production_runtime is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Package A production ingestion is configured but unavailable",
+            )
+        normalized_hash = actual_hash
         file = UploadedFileContract(
             workspace_id=workspace_id,
             owner=login_user.user_id,
@@ -356,6 +467,48 @@ class WorkspaceTaskRuntimeService:
                 source_ref=uri or file.file_id,
             ),
         }
+        if cls._package_a_production_runtime is not None:
+            source_id = f"source_{normalized_file_id}"
+            receipt = cls._package_a_production_runtime.accept_workspace_upload(
+                PackageAUploadCommand(
+                    tenant_id=login_user.user_id,
+                    workspace_id=workspace_id,
+                    principal_id=login_user.user_id,
+                    filename=name or f"{normalized_file_id}.txt",
+                    mime_type=mime_type,
+                    content=content_bytes,
+                    bucket=cls._package_a_upload_bucket,
+                    source_object_id=source_id,
+                    classification_ref=security_label,
+                    security_epoch_ref=f"security-epoch:{workspace_id}:{login_user.user_id}",
+                    trace_id=file.trace_id or trace_id or f"trace_{uuid4().hex[:12]}",
+                    deadline_at=deadline_at,
+                )
+            )
+            file.parse_status = "ingest_accepted"
+            file.updated_at = str(time.time())
+            payload.update(
+                {
+                    "source_id": receipt.source_object_id,
+                    "document_version_id": receipt.document_version_id,
+                    "parse_plan_id": receipt.parse_plan_id,
+                    "parse_job_id": receipt.parse_job_id,
+                    "outbox_event_id": receipt.outbox_event_id,
+                    "storage_uri": receipt.object_ref,
+                    "durable_status": "production_accepted",
+                }
+            )
+            payload["file"] = file.model_dump()
+            payload["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=name or normalized_file_id,
+                storage_uri=receipt.object_ref,
+                source_ref=receipt.source_object_id,
+                source_sha256=normalized_hash,
+                size_bytes=len(content_bytes),
+                index_status="pending",
+            )
+            return payload
         if cls._durable_ingestion_store is not None and cls._source_object_store is not None:
             source_id = f"source_{normalized_file_id}"
             source_object = cls._source_object_store.save_text(
@@ -482,11 +635,66 @@ class WorkspaceTaskRuntimeService:
             )
             cls._ingest_jobs[ingest_task_id] = job
             return job
-        index_job = cls._knowledge_index_runtime.index_document(
+        quality_gate, review_task = cls._human_review_runtime.evaluate(
+            document=parse_job.document,
+            parse_snapshot=parse_snapshot,
+            security_epoch_ref=f"security_epoch:{workspace_id}",
+        )
+        if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
+            file.parse_status = "review_pending"
+            file.updated_at = str(time.time())
+            document_version = cls._persist_review_pending_ingest(
+                file=file,
+                durable_file=durable_file,
+                source_object=source_object,
+                parse_job=parse_job,
+                parse_snapshot=parse_snapshot,
+                quality_gate=quality_gate,
+                review_task=review_task,
+            )
+            job = {
+                "ingest_task_id": ingest_task_id,
+                "workspace_id": workspace_id,
+                "file_id": file_id,
+                "knowledge_space_id": knowledge_space_id,
+                "session_id": session_id,
+                "trace_id": normalized_trace_id,
+                "status": "review_pending",
+                "file": file.model_dump(),
+                "parse_job": parse_job.model_dump(),
+                "parse_snapshot": parse_snapshot.model_dump(),
+                "quality_gate": quality_gate.model_dump(),
+                "review_task": review_task.model_dump() if review_task is not None else None,
+                "index_job": None,
+            }
+            job["file_status"] = cls._file_status_payload(
+                file=file,
+                filename=source_object.filename if source_object is not None else None,
+                storage_uri=source_object.storage_uri if source_object is not None else None,
+                source_ref=source_object.source_id if source_object is not None else file.file_id,
+                source_sha256=source_object.source_sha256 if source_object is not None else file.hash,
+                size_bytes=source_object.size_bytes if source_object is not None else 0,
+                parse_snapshot=parse_snapshot,
+                document_version=document_version,
+                index_status="review_pending",
+            )
+            cls._attach_review_pending_durable_payload(
+                job=job,
+                source_object=source_object,
+                document_version=document_version,
+            )
+            cls._ingest_jobs[ingest_task_id] = job
+            return job
+        indexable_snapshot, outbox_event = cls._snapshot_handoff_runtime.create_snapshot(
+            document=parse_job.document,
+            parse_snapshot=parse_snapshot,
+            quality_gate=quality_gate,
+            visibility_ref=f"visibility:{workspace_id}:{file_id}",
+        )
+        index_job = cls._consume_snapshot_handoff_for_local_index(
             knowledge_space_id,
-            parse_job.document,
-            targets=["bm25", "vector", "graph"],
-            parse_job_snapshot=parse_snapshot,
+            snapshot=indexable_snapshot,
+            parse_snapshot=parse_snapshot,
         )
         file.parse_status = "indexed"
         file.updated_at = str(time.time())
@@ -496,6 +704,9 @@ class WorkspaceTaskRuntimeService:
             source_object=source_object,
             parse_job=parse_job,
             parse_snapshot=parse_snapshot,
+            quality_gate=quality_gate,
+            indexable_snapshot=indexable_snapshot,
+            outbox_event=outbox_event,
             index_job=index_job,
             knowledge_space_id=knowledge_space_id,
         )
@@ -510,6 +721,9 @@ class WorkspaceTaskRuntimeService:
             "file": file.model_dump(),
             "parse_job": parse_job.model_dump(),
             "parse_snapshot": parse_snapshot.model_dump(),
+            "quality_gate": quality_gate.model_dump(),
+            "indexable_snapshot": indexable_snapshot.model_dump(exclude={"payload"}),
+            "outbox_event": outbox_event.model_dump(),
             "index_job": index_job.model_dump(),
         }
         job["file_status"] = cls._file_status_payload(
@@ -597,6 +811,9 @@ class WorkspaceTaskRuntimeService:
         source_object: SourceObjectRecord | None,
         parse_job: ParseDocumentResult,
         parse_snapshot: ParseJobSnapshot,
+        quality_gate,
+        indexable_snapshot: IndexableDocumentSnapshotV1,
+        outbox_event: SnapshotOutboxEvent,
         index_job: IndexJobManifest,
         knowledge_space_id: str,
     ) -> DocumentVersionRecord | None:
@@ -607,6 +824,44 @@ class WorkspaceTaskRuntimeService:
         ):
             return None
         document_version = cls._durable_ingestion_store.save_document_version(parse_job.document)
+        cls._durable_ingestion_store.save_quality_gate(
+            QualityGateRecord(
+                quality_decision_id=quality_gate.quality_decision_id,
+                parse_snapshot_id=quality_gate.parse_snapshot_id,
+                document_version_id=document_version.document_version_id,
+                workspace_id=file.workspace_id,
+                verdict=quality_gate.verdict,
+                decision_hash=quality_gate.decision_hash,
+                review_task_id=quality_gate.review_task_id,
+                metrics=[metric.model_dump() for metric in quality_gate.metrics],
+            )
+        )
+        cls._durable_ingestion_store.save_indexable_snapshot(
+            IndexableSnapshotRecord(
+                indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
+                document_version_id=indexable_snapshot.document_version_id,
+                parse_snapshot_id=indexable_snapshot.parse_snapshot_id,
+                quality_decision_id=indexable_snapshot.quality_decision_id,
+                workspace_id=indexable_snapshot.workspace_id,
+                document_id=indexable_snapshot.document_id,
+                canonical_hash=indexable_snapshot.canonical_hash,
+                idempotency_key=indexable_snapshot.idempotency_key,
+                security_refs=indexable_snapshot.security_refs,
+                delete_refs=indexable_snapshot.delete_refs,
+                payload=indexable_snapshot.payload,
+            )
+        )
+        cls._durable_ingestion_store.save_ingestion_outbox(
+            IngestionOutboxRecord(
+                outbox_event_id=outbox_event.outbox_event_id,
+                aggregate_ref=outbox_event.aggregate_ref,
+                event_type=outbox_event.event_type,
+                payload_hash=outbox_event.payload_hash,
+                idempotency_key=outbox_event.idempotency_key,
+                publish_status=outbox_event.publish_status,
+                replay_count=outbox_event.replay_count,
+            )
+        )
         cls._durable_ingestion_store.save_index_manifest(index_job)
         for chunk in cls._index_chunks_for_manifest(
             index_job=index_job,
@@ -617,6 +872,76 @@ class WorkspaceTaskRuntimeService:
         cls._persist_workspace_file_status(
             durable_file=durable_file,
             parse_status="indexed",
+            latest_parse_job_id=parse_snapshot.job_id,
+            latest_document_version_id=document_version.document_version_id,
+        )
+        return document_version
+
+    @classmethod
+    def _consume_snapshot_handoff_for_local_index(
+        cls,
+        knowledge_space_id: str,
+        *,
+        snapshot: IndexableDocumentSnapshotV1,
+        parse_snapshot: ParseJobSnapshot,
+    ) -> IndexJobManifest:
+        document = CanonicalDocumentIR.model_validate(snapshot.payload["document"])
+        return cls._knowledge_index_runtime.index_document(
+            knowledge_space_id,
+            document,
+            targets=["bm25", "vector", "graph"],
+            parse_job_snapshot=parse_snapshot,
+        )
+
+    @classmethod
+    def _persist_review_pending_ingest(
+        cls,
+        *,
+        file: UploadedFileContract,
+        durable_file: WorkspaceFileRecord | None,
+        source_object: SourceObjectRecord | None,
+        parse_job: ParseDocumentResult,
+        parse_snapshot: ParseJobSnapshot,
+        quality_gate,
+        review_task,
+    ) -> DocumentVersionRecord | None:
+        if (
+            cls._durable_ingestion_store is None
+            or source_object is None
+            or parse_job.document is None
+        ):
+            return None
+        document_version = cls._durable_ingestion_store.save_document_version(parse_job.document)
+        cls._durable_ingestion_store.save_quality_gate(
+            QualityGateRecord(
+                quality_decision_id=quality_gate.quality_decision_id,
+                parse_snapshot_id=quality_gate.parse_snapshot_id,
+                document_version_id=document_version.document_version_id,
+                workspace_id=file.workspace_id,
+                verdict=quality_gate.verdict,
+                decision_hash=quality_gate.decision_hash,
+                review_task_id=quality_gate.review_task_id,
+                metrics=[metric.model_dump() for metric in quality_gate.metrics],
+            )
+        )
+        if review_task is not None:
+            cls._durable_ingestion_store.save_review_task(
+                ReviewTaskRecord(
+                    review_task_id=review_task.review_task_id,
+                    parse_snapshot_id=review_task.parse_snapshot_id,
+                    document_version_id=review_task.document_version_id,
+                    workspace_id=review_task.workspace_id,
+                    reviewer_scope=review_task.reviewer_scope,
+                    security_epoch_ref=review_task.security_epoch_ref,
+                    status=review_task.status,
+                    expires_at=review_task.expires_at,
+                    reason=review_task.reason,
+                    decision_hash=review_task.decision_hash,
+                )
+            )
+        cls._persist_workspace_file_status(
+            durable_file=durable_file,
+            parse_status="review_pending",
             latest_parse_job_id=parse_snapshot.job_id,
             latest_document_version_id=document_version.document_version_id,
         )
@@ -715,6 +1040,23 @@ class WorkspaceTaskRuntimeService:
                     "document_version_id": index_job.document_version_id,
                     "source_sha256": index_job.source_sha256,
                 },
+                "durable_status": "persisted",
+            }
+        )
+
+    @staticmethod
+    def _attach_review_pending_durable_payload(
+        *,
+        job: dict,
+        source_object: SourceObjectRecord | None,
+        document_version: DocumentVersionRecord | None,
+    ) -> None:
+        if source_object is None or document_version is None:
+            return
+        job.update(
+            {
+                "source_object": source_object.model_dump(),
+                "document_version": document_version.model_dump(exclude={"ir_json"}),
                 "durable_status": "persisted",
             }
         )
@@ -894,13 +1236,18 @@ class WorkspaceTaskRuntimeService:
         return cls.get_task_snapshot(task_id)
 
     @classmethod
-    def approve_task(cls, *, task_id: str, decision: str, comment: str | None) -> dict:
+    def approve_task(cls, *, task_id: str, decision: str, comment: str | None, principal_id: str = "") -> dict:
         task = cls._require_task(task_id)
         normalized_decision = decision.strip().lower()
         if normalized_decision not in {"approved", "rejected"}:
             raise HTTPException(status_code=400, detail="Approval decision must be approved or rejected")
         if task.status != "approval_waiting":
             raise HTTPException(status_code=409, detail="Workspace task is not waiting for approval")
+        cls._require_workspace_task_action_authorized(
+            task=task,
+            principal_id=principal_id,
+            action=f"task.resume.{normalized_decision}",
+        )
 
         cls._events.setdefault(task_id, []).append(
             cls._event(
@@ -955,6 +1302,10 @@ class WorkspaceTaskRuntimeService:
                 replace(
                     pending_tool_request,
                     approved=True,
+                    approval_decision_ref=(
+                        f"security-approval-decision:{task_id}:{pending_tool_request.approval_id}"
+                    ),
+                    approval_adapter_ref=WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID,
                     approval_comment=comment or "",
                 )
             )
@@ -2054,10 +2405,19 @@ class WorkspaceTaskRuntimeService:
             )
 
     @classmethod
-    def get_task_snapshot(cls, task_id: str) -> dict:
+    def get_task_snapshot(cls, task_id: str, *, principal_id: str = "") -> dict:
         task = cls._require_task(task_id)
         cls._persist_workspace_product_state(task_id)
         artifact_ids = cls._artifact_ids_by_task.get(task_id, [])
+        artifacts = []
+        for artifact_id in artifact_ids:
+            artifact = cls._artifacts[artifact_id]
+            if cls._artifact_has_citation_refs(artifact):
+                cls._require_citation_refs_authorized(
+                    artifact=artifact,
+                    principal_id=principal_id,
+                )
+            artifacts.append(artifact.model_dump())
         feedback_ids = cls._feedback_ids_by_task.get(task_id, [])
         runtime_snapshot = cls._durable_runtime.get_task_snapshot(task_id)
         unified_snapshot = cls._unified_runtime_service().get_snapshot(task_id)
@@ -2065,7 +2425,7 @@ class WorkspaceTaskRuntimeService:
         return {
             "task": task.model_dump(),
             "artifact_ids": list(artifact_ids),
-            "artifacts": [cls._artifacts[artifact_id].model_dump() for artifact_id in artifact_ids],
+            "artifacts": artifacts,
             "feedback_ids": list(feedback_ids),
             "feedback": [cls._feedback[feedback_id].model_dump() for feedback_id in feedback_ids],
             "lifecycle": cls._task_lifecycle_snapshot(
@@ -2103,14 +2463,24 @@ class WorkspaceTaskRuntimeService:
             yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
     @classmethod
-    def get_artifact(cls, artifact_id: str) -> dict:
+    def get_artifact(cls, artifact_id: str, *, principal_id: str = "") -> dict:
         artifact = cls._artifacts.get(artifact_id)
         if artifact is None:
             raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        cls._require_product_action_authorized(
+            artifact=artifact,
+            principal_id=principal_id,
+            action="artifact.read",
+        )
         citation_refs = cls._artifact_citation_refs.get(
             artifact_id,
             [ref.model_dump(mode="json") for ref in artifact.citation_refs],
         )
+        if citation_refs:
+            cls._require_citation_refs_authorized(
+                artifact=artifact,
+                principal_id=principal_id,
+            )
         return {
             "artifact": artifact.model_dump(),
             "content": cls._artifact_content.get(artifact_id, ""),
@@ -2124,16 +2494,124 @@ class WorkspaceTaskRuntimeService:
         }
 
     @classmethod
-    def download_artifact(cls, artifact_id: str) -> dict:
+    def download_artifact(cls, artifact_id: str, *, principal_id: str = "") -> dict:
         artifact = cls._artifacts.get(artifact_id)
         if artifact is None:
             raise HTTPException(status_code=404, detail="Workspace artifact not found")
+        cls._require_product_action_authorized(
+            artifact=artifact,
+            principal_id=principal_id,
+            action="artifact.download",
+        )
         return {
             "artifact": artifact,
             "content": cls._artifact_content.get(artifact_id, ""),
             "filename": cls._artifact_filename(artifact),
             "media_type": "text/markdown; charset=utf-8",
         }
+
+    @classmethod
+    def _require_product_action_authorized(
+        cls,
+        *,
+        artifact: ArtifactContract,
+        principal_id: str,
+        action: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or artifact.owner
+        resource_ref = f"workspace-artifact:{artifact.artifact_id}"
+        request = SecurityProductActionRequest(
+            tenant_id=artifact.workspace_id,
+            workspace_id=artifact.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{artifact.artifact_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=artifact.workspace_id,
+                workspace_id=artifact.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
+
+    @classmethod
+    def _artifact_has_citation_refs(cls, artifact: ArtifactContract) -> bool:
+        return bool(
+            cls._artifact_citation_refs.get(artifact.artifact_id)
+            or artifact.citation_refs
+        )
+
+    @classmethod
+    def _require_citation_refs_authorized(
+        cls,
+        *,
+        artifact: ArtifactContract,
+        principal_id: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or artifact.owner
+        resource_ref = f"workspace-artifact:{artifact.artifact_id}:citations"
+        action = "citation.read"
+        request = SecurityProductActionRequest(
+            tenant_id=artifact.workspace_id,
+            workspace_id=artifact.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{artifact.artifact_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=artifact.workspace_id,
+                workspace_id=artifact.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
+
+    @classmethod
+    def _require_workspace_task_action_authorized(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        principal_id: str,
+        action: str,
+    ) -> None:
+        if cls._security_product_action_guard is None:
+            return
+        actor = principal_id or task.owner
+        resource_ref = f"workspace-task:{task.task_id}"
+        request = SecurityProductActionRequest(
+            tenant_id=task.workspace_id,
+            workspace_id=task.workspace_id,
+            principal_id=actor,
+            action=action,
+            resource_ref=resource_ref,
+            decision_id=f"authorization-decision:{action}:{task.task_id}",
+            prepared_action_hash=build_product_action_hash(
+                tenant_id=task.workspace_id,
+                workspace_id=task.workspace_id,
+                principal_id=actor,
+                action=action,
+                resource_ref=resource_ref,
+            ),
+        )
+        try:
+            cls._security_product_action_guard.require_authorized_action(request)
+        except SecurityProductActionDenied as exc:
+            raise HTTPException(status_code=403, detail=str(exc) or "Security authorization denied") from exc
 
     @classmethod
     def record_feedback(
@@ -2627,4 +3105,8 @@ def _product_mode_for_retrieval(product_mode: str) -> ProductMode:
     return ProductMode.AUTO
 
 
-__all__ = ["WorkspaceTaskRuntimeService"]
+__all__ = [
+    "WorkspaceTaskRuntimeService",
+    "build_package_a_production_ingestion_runtime",
+    "resolve_package_a_upload_bucket",
+]

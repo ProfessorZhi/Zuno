@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette.responses import PlainTextResponse, StreamingResponse
@@ -38,6 +40,7 @@ class WorkspaceFileBody(BaseModel):
     content: str | None = None
     trace_id: str | None = None
     security_label: str = "internal"
+    deadline_at: datetime | None = None
 
 
 class WorkspaceIngestBody(BaseModel):
@@ -159,6 +162,7 @@ async def register_workspace_file(
             trace_id=payload.trace_id,
             security_label=payload.security_label,
             content=payload.content,
+            deadline_at=payload.deadline_at,
         )
     )
 
@@ -215,8 +219,12 @@ async def get_workspace_task(
     task_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    return resp_200(data=WorkspaceTaskRuntimeService.get_task_snapshot(task_id))
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.get_task_snapshot(
+            task_id,
+            principal_id=str(login_user.user_id or ""),
+        )
+    )
 
 
 @router.get("/task/{task_id}/events", summary="Get workspace task events")
@@ -234,12 +242,12 @@ async def approve_workspace_task(
     payload: WorkspaceApprovalBody,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
     return resp_200(
         data=WorkspaceTaskRuntimeService.approve_task(
             task_id=task_id,
             decision=payload.decision,
             comment=payload.comment,
+            principal_id=str(login_user.user_id or ""),
         )
     )
 
@@ -281,8 +289,12 @@ async def get_workspace_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    return resp_200(data=WorkspaceTaskRuntimeService.get_artifact(artifact_id))
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.get_artifact(
+            artifact_id,
+            principal_id=str(login_user.user_id or ""),
+        )
+    )
 
 
 @router.get("/artifact/{artifact_id}/download", summary="Download workspace artifact")
@@ -290,8 +302,10 @@ async def download_workspace_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    _ = login_user
-    payload = WorkspaceTaskRuntimeService.download_artifact(artifact_id)
+    payload = WorkspaceTaskRuntimeService.download_artifact(
+        artifact_id,
+        principal_id=str(login_user.user_id or ""),
+    )
     return PlainTextResponse(
         payload["content"],
         media_type=payload["media_type"],

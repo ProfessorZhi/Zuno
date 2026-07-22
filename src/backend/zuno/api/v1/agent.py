@@ -41,7 +41,7 @@ async def get_agent(login_user: UserPayload = Depends(get_login_user)):
 @router.delete("/agent", response_model=UnifiedResponseModel)
 async def delete_agent(req: AgentDeleteReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await AgentService.verify_user_permission(req.agent_id, login_user.user_id)
+        await AgentService.verify_user_permission(req.agent_id, login_user.user_id, action="delete")
         await AgentService.delete_agent_by_id(req.agent_id)
         return resp_200()
     except Exception as err:
@@ -52,7 +52,7 @@ async def delete_agent(req: AgentDeleteReq, login_user: UserPayload = Depends(ge
 @router.put("/agent", response_model=UnifiedResponseModel)
 async def update_agent(agent_request: AgentUpdateReq, login_user: UserPayload = Depends(get_login_user)):
     try:
-        await AgentService.verify_user_permission(agent_request.agent_id, login_user.user_id)
+        await AgentService.verify_user_permission(agent_request.agent_id, login_user.user_id, action="update")
 
         update_values = agent_request.model_dump(exclude={"agent_id"}, exclude_none=True)
 

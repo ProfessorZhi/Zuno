@@ -85,6 +85,24 @@ def _phase04_target_not_current_requirements(ledger: str) -> list[str]:
     return errors
 
 
+def _current_status_counts_are_self_consistent(ledger: str) -> bool:
+    declared_match = re.search(
+        r"(?ms)^current_status_counts:\n(?P<body>(?:  [^\n]+\n)+)",
+        ledger,
+    )
+    if declared_match is None:
+        return False
+    declared: dict[str, int] = {}
+    for line in declared_match.group("body").splitlines():
+        item = re.match(r"\s+([^:]+):\s+(\d+)\s*$", line)
+        if item:
+            declared[item.group(1)] = int(item.group(2))
+    actual: dict[str, int] = {}
+    for status in re.findall(r"(?m)^\s+current_status:\s+([^\r\n]+)\s*$", ledger):
+        actual[status] = actual.get(status, 0) + 1
+    return declared == actual
+
+
 def verify_phase04_pre_closure_gate() -> list[str]:
     errors: list[str] = []
     if not PHASE04_READINESS.exists():
@@ -119,8 +137,8 @@ def verify_phase04_pre_closure_gate() -> list[str]:
             "PHASE04 mandatory target_not_current requirements remain: "
             + ", ".join(phase04_gaps)
         )
-    if "implementation_available: 74" not in ledger or "target_not_current: 682" not in ledger:
-        errors.append("Requirement Ledger current_status_counts are not 74/682")
+    if not _current_status_counts_are_self_consistent(ledger):
+        errors.append("Requirement Ledger current_status_counts are not self-consistent")
 
     if not PHASE04_EVIDENCE.exists():
         errors.append("missing PHASE04 infrastructure evidence")

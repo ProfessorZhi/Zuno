@@ -86,16 +86,17 @@
 - 已证明未知安全枚举、未知终态和未知事件 fail closed 或 quarantine。
 - 已证明高风险故障必须具备 Fault Injection 和恢复证据。
 - 已证明 Target 转 Current 必须具备代码、Migration、测试、Trace、Eval 和运行证据引用。
-- 已证明 Gateway 源文件不直接导入 OpenAI/Anthropic Provider SDK。
+- 已证明 Gateway 源文件不直接导入 OpenAI/Anthropic Provider SDK；Provider SDK 只存在 `src/backend/zuno/platform/model_gateway_adapters.py` adapter 边界。
 
 未覆盖：
 
-- Model Gateway 模块 `ARCH-MODEL-001` 到 `ARCH-MODEL-088` 已由本批 evidence 覆盖；PHASE07 其他模块或全阶段仍需后续批次证明。
+- Model Gateway 模块 `ARCH-MODEL-001` 到 `ARCH-MODEL-088` 已由本批 evidence 覆盖；PHASE07 closure 仍由独立 Pre-Closure Gate、Coordinator Decision 和 Post-Closure Gate 决定。
 
 验证命令：
 
 ```powershell
 python tools/scripts/verify_model_gateway_runtime_batch.py
+python tools/scripts/verify_model_gateway_bypass.py --strict
 pytest -q tests/platform/test_model_gateway.py -p no:cacheprovider
 pytest -q tests/platform/test_model_gateway.py tests/evals/test_model_gateway_cost_latency.py tests/agent/runtime/test_runtime_real_execution.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
 ```
@@ -104,6 +105,6 @@ pytest -q tests/platform/test_model_gateway.py tests/evals/test_model_gateway_co
 
 ```text
 Model Gateway runtime batch verification passed for ARCH-MODEL-001, ARCH-MODEL-002, ARCH-MODEL-003, ARCH-MODEL-004, ARCH-MODEL-005, ARCH-MODEL-006, ARCH-MODEL-007, ARCH-MODEL-008, ARCH-MODEL-009, ARCH-MODEL-010, ARCH-MODEL-011, ARCH-MODEL-012, ARCH-MODEL-013, ARCH-MODEL-014, ARCH-MODEL-015, ARCH-MODEL-016, ARCH-MODEL-017, ARCH-MODEL-018, ARCH-MODEL-019, ARCH-MODEL-020, ARCH-MODEL-021, ARCH-MODEL-022, ARCH-MODEL-023, ARCH-MODEL-024, ARCH-MODEL-025, ARCH-MODEL-026, ARCH-MODEL-027, ARCH-MODEL-028, ARCH-MODEL-029, ARCH-MODEL-030, ARCH-MODEL-031, ARCH-MODEL-032, ARCH-MODEL-033, ARCH-MODEL-034, ARCH-MODEL-035, ARCH-MODEL-036, ARCH-MODEL-037, ARCH-MODEL-038, ARCH-MODEL-039, ARCH-MODEL-040, ARCH-MODEL-041, ARCH-MODEL-042, ARCH-MODEL-043, ARCH-MODEL-044, ARCH-MODEL-045, ARCH-MODEL-046, ARCH-MODEL-047, ARCH-MODEL-048, ARCH-MODEL-049, ARCH-MODEL-050, ARCH-MODEL-051, ARCH-MODEL-052, ARCH-MODEL-053, ARCH-MODEL-054, ARCH-MODEL-055, ARCH-MODEL-056, ARCH-MODEL-057, ARCH-MODEL-058, ARCH-MODEL-059, ARCH-MODEL-060, ARCH-MODEL-061, ARCH-MODEL-062, ARCH-MODEL-063, ARCH-MODEL-064, ARCH-MODEL-065, ARCH-MODEL-066, ARCH-MODEL-067, ARCH-MODEL-068, ARCH-MODEL-069, ARCH-MODEL-070, ARCH-MODEL-071, ARCH-MODEL-072, ARCH-MODEL-073, ARCH-MODEL-074, ARCH-MODEL-075, ARCH-MODEL-076, ARCH-MODEL-077, ARCH-MODEL-078, ARCH-MODEL-079, ARCH-MODEL-080, ARCH-MODEL-081, ARCH-MODEL-082, ARCH-MODEL-083, ARCH-MODEL-084, ARCH-MODEL-085, ARCH-MODEL-086, ARCH-MODEL-087, ARCH-MODEL-088.
-23 passed in 25.33s
-33 passed in 27.56s
+Model Gateway bypass strict verification passed.
+42 passed in 35.02s
 ```

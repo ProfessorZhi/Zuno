@@ -2,13 +2,13 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE05
+current_phase: PHASE08
 phase_count: 22
 program_version: 2
 
 当前唯一 active Program 是十一模块新架构完整实现与旧架构迁移总计划。
 
-2026-07-18 PHASE04 已由 Coordinator Closure 批准为 completed，PHASE05 ready。PHASE05–22 Runtime 仍必须按各自 Phase 目标实现；不得把 PHASE04 durable infrastructure foundation 误写成全 Program 或 production ready。
+2026-07-20 Goal01 audit 将 PHASE11 从 completed 重新打开为 in_progress：LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 证据不足以关闭完整 PHASE11。当前 PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE11 in_progress；PHASE08 仍 ready，因为只依赖 PHASE04–07；PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed；PHASE09–22 不得提前提升为 Current；不得把本轮实现误写成 production ready。
 
 入口：
 

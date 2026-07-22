@@ -5,6 +5,7 @@ from loguru import logger
 from zuno.database.dao.mcp_agent import MCPAgentDao
 from zuno.database.models.user import AdminUser, SystemUser
 from zuno.schema.schemas import resp_200, resp_500
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 
 
 class MCPAgentService:
@@ -57,7 +58,15 @@ class MCPAgentService:
         enable_memory: bool,
     ):
         try:
-            if user_id == AdminUser or user_id == cls.get_agent_user_id(agent_id=id):
+            owner_id = cls.get_agent_user_id(agent_id=id)
+            if user_id == AdminUser:
+                if owner_id != AdminUser:
+                    require_admin_action_authorized(
+                        principal_id=user_id,
+                        action="admin.mcp_agent.update",
+                        resource_ref=f"mcp-agent:{id}",
+                    )
+            if user_id == AdminUser or user_id == owner_id:
                 MCPAgentDao.update_mcp_agent_by_id(
                     id=id,
                     name=name,
@@ -84,7 +93,15 @@ class MCPAgentService:
     @classmethod
     def delete_mcp_agent_by_id(cls, id: str, user_id: str):
         try:
-            if user_id == AdminUser or user_id == cls.get_agent_user_id(agent_id=id):
+            owner_id = cls.get_agent_user_id(agent_id=id)
+            if user_id == AdminUser:
+                if owner_id != AdminUser:
+                    require_admin_action_authorized(
+                        principal_id=user_id,
+                        action="admin.mcp_agent.delete",
+                        resource_ref=f"mcp-agent:{id}",
+                    )
+            if user_id == AdminUser or user_id == owner_id:
                 MCPAgentDao.delete_mcp_agent_by_id(id=id)
                 return resp_200(message="delete success")
             return resp_500(message="no permission exec")

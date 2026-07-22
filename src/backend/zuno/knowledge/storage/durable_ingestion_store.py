@@ -12,11 +12,18 @@ from zuno.knowledge.indexing import IndexJobManifest
 
 from .contracts import (
     ArtifactRecord,
+    DeleteLifecycleRecord,
     DocumentBlockRecord,
     DocumentVersionRecord,
     FeedbackRecord,
     IndexChunkRecord,
+    IndexableSnapshotRecord,
+    IngestionOutboxRecord,
+    ParseAttemptLeaseRecord,
     ParseJobRecord,
+    QualityGateRecord,
+    ReviewDecisionRecord,
+    ReviewTaskRecord,
     SourceObjectRecord,
     TaskEventRecord,
     WorkspaceFileRecord,
@@ -24,13 +31,20 @@ from .contracts import (
 )
 from .sqlmodel_models import (
     ArtifactTable,
+    DeleteLifecycleTable,
     DocumentBlockTable,
     DocumentVersionTable,
     FeedbackTable,
     IndexChunkTable,
     IndexManifestTable,
+    IndexableSnapshotTable,
+    IngestionOutboxTable,
+    ParseAttemptLeaseTable,
     ParseJobTable,
     ParseSnapshotTable,
+    QualityGateTable,
+    ReviewDecisionTable,
+    ReviewTaskTable,
     SourceObjectTable,
     TaskEventTable,
     WorkspaceFileTable,
@@ -118,6 +132,29 @@ class SQLiteDurableIngestionStore:
         )
         return snapshot
 
+    def save_parse_attempt_lease(self, record: ParseAttemptLeaseRecord) -> ParseAttemptLeaseRecord:
+        self._merge(
+            ParseAttemptLeaseTable(
+                parse_attempt_id=record.parse_attempt_id,
+                parse_job_id=record.parse_job_id,
+                worker_id=record.worker_id,
+                attempt_no=record.attempt_no,
+                fencing_token=record.fencing_token,
+                state=record.state,
+                heartbeat_at=record.heartbeat_at,
+                lease_expires_at=record.lease_expires_at,
+                lease_lost_reason=record.lease_lost_reason,
+                domain_commit_ref=record.domain_commit_ref,
+                idempotency_key=record.idempotency_key,
+                duplicate_commit=record.duplicate_commit,
+                late_result_rejected=record.late_result_rejected,
+                orphan_reconciled=record.orphan_reconciled,
+                receipt_hash=record.receipt_hash,
+                history_json=list(record.history),
+            )
+        )
+        return record
+
     def save_document_version(self, document: CanonicalDocumentIR) -> DocumentVersionRecord:
         metadata = document.metadata
         record = DocumentVersionRecord(
@@ -202,6 +239,107 @@ class SQLiteDurableIngestionStore:
                 citation_lineage_json=record.citation_lineage,
                 acl_scope=record.acl_scope,
                 sensitivity_tags_json=list(record.sensitivity_tags),
+            )
+        )
+        return record
+
+    def save_quality_gate(self, record: QualityGateRecord) -> QualityGateRecord:
+        self._merge(
+            QualityGateTable(
+                quality_decision_id=record.quality_decision_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                document_version_id=record.document_version_id,
+                workspace_id=record.workspace_id,
+                verdict=record.verdict,
+                decision_hash=record.decision_hash,
+                review_task_id=record.review_task_id,
+                metrics_json=list(record.metrics),
+            )
+        )
+        return record
+
+    def save_review_task(self, record: ReviewTaskRecord) -> ReviewTaskRecord:
+        self._merge(
+            ReviewTaskTable(
+                review_task_id=record.review_task_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                document_version_id=record.document_version_id,
+                workspace_id=record.workspace_id,
+                reviewer_scope=record.reviewer_scope,
+                security_epoch_ref=record.security_epoch_ref,
+                status=record.status,
+                expires_at=record.expires_at,
+                reason=record.reason,
+                decision_hash=record.decision_hash,
+            )
+        )
+        return record
+
+    def save_review_decision(self, record: ReviewDecisionRecord) -> ReviewDecisionRecord:
+        self._merge(
+            ReviewDecisionTable(
+                decision_id=record.decision_id,
+                review_task_id=record.review_task_id,
+                status=record.status,
+                reviewer_id=record.reviewer_id,
+                reviewer_scope=record.reviewer_scope,
+                security_epoch_ref=record.security_epoch_ref,
+                decision_hash=record.decision_hash,
+                duplicate=record.duplicate,
+                reason=record.reason,
+                decided_at=record.decided_at,
+            )
+        )
+        return record
+
+    def save_indexable_snapshot(self, record: IndexableSnapshotRecord) -> IndexableSnapshotRecord:
+        self._merge(
+            IndexableSnapshotTable(
+                indexable_snapshot_id=record.indexable_snapshot_id,
+                document_version_id=record.document_version_id,
+                parse_snapshot_id=record.parse_snapshot_id,
+                quality_decision_id=record.quality_decision_id,
+                workspace_id=record.workspace_id,
+                document_id=record.document_id,
+                canonical_hash=record.canonical_hash,
+                idempotency_key=record.idempotency_key,
+                security_refs_json=dict(record.security_refs),
+                delete_refs_json=list(record.delete_refs),
+                payload_json=dict(record.payload),
+            )
+        )
+        return record
+
+    def save_ingestion_outbox(self, record: IngestionOutboxRecord) -> IngestionOutboxRecord:
+        self._merge(
+            IngestionOutboxTable(
+                outbox_event_id=record.outbox_event_id,
+                aggregate_ref=record.aggregate_ref,
+                event_type=record.event_type,
+                payload_hash=record.payload_hash,
+                idempotency_key=record.idempotency_key,
+                publish_status=record.publish_status,
+                replay_count=record.replay_count,
+            )
+        )
+        return record
+
+    def save_delete_lifecycle(self, record: DeleteLifecycleRecord) -> DeleteLifecycleRecord:
+        self._merge(
+            DeleteLifecycleTable(
+                delete_ref=record.delete_ref,
+                snapshot_ref=record.snapshot_ref,
+                state=record.state,
+                visibility_ref=record.visibility_ref,
+                cleanup_ref=record.cleanup_ref,
+                physical_delete_ref=record.physical_delete_ref,
+                verification_ref=record.verification_ref,
+                legal_hold_ref=record.legal_hold_ref,
+                restored_authorization=record.restored_authorization,
+                duplicate=record.duplicate,
+                late_worker_result_rejected=record.late_worker_result_rejected,
+                receipt_hash=record.receipt_hash,
+                history_json=list(record.history),
             )
         )
         return record
@@ -300,6 +438,27 @@ class SQLiteDurableIngestionStore:
         row = self._get(ParseSnapshotTable, parse_job_id, "parse snapshot")
         return ParseJobSnapshot.model_validate(row.snapshot_json)
 
+    def get_parse_attempt_lease(self, parse_attempt_id: str) -> ParseAttemptLeaseRecord:
+        row = self._get(ParseAttemptLeaseTable, parse_attempt_id, "parse attempt lease")
+        return ParseAttemptLeaseRecord(
+            parse_attempt_id=row.parse_attempt_id,
+            parse_job_id=row.parse_job_id,
+            worker_id=row.worker_id,
+            attempt_no=row.attempt_no,
+            fencing_token=row.fencing_token,
+            state=row.state,
+            heartbeat_at=row.heartbeat_at,
+            lease_expires_at=row.lease_expires_at,
+            lease_lost_reason=row.lease_lost_reason,
+            domain_commit_ref=row.domain_commit_ref,
+            idempotency_key=row.idempotency_key,
+            duplicate_commit=row.duplicate_commit,
+            late_result_rejected=row.late_result_rejected,
+            orphan_reconciled=row.orphan_reconciled,
+            receipt_hash=row.receipt_hash,
+            history=list(row.history_json or []),
+        )
+
     def get_document_version(self, document_version_id: str) -> DocumentVersionRecord:
         row = self._get(DocumentVersionTable, document_version_id, "document version")
         return DocumentVersionRecord(
@@ -374,6 +533,95 @@ class SQLiteDurableIngestionStore:
         with Session(self.engine) as session:
             rows = session.exec(select(IndexManifestTable)).all()
         return [IndexJobManifest.model_validate(row.manifest_json) for row in rows]
+
+    def get_quality_gate(self, quality_decision_id: str) -> QualityGateRecord:
+        row = self._get(QualityGateTable, quality_decision_id, "quality gate")
+        return QualityGateRecord(
+            quality_decision_id=row.quality_decision_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            document_version_id=row.document_version_id,
+            workspace_id=row.workspace_id,
+            verdict=row.verdict,
+            decision_hash=row.decision_hash,
+            review_task_id=row.review_task_id,
+            metrics=list(row.metrics_json or []),
+        )
+
+    def get_review_task(self, review_task_id: str) -> ReviewTaskRecord:
+        row = self._get(ReviewTaskTable, review_task_id, "review task")
+        return ReviewTaskRecord(
+            review_task_id=row.review_task_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            document_version_id=row.document_version_id,
+            workspace_id=row.workspace_id,
+            reviewer_scope=row.reviewer_scope,
+            security_epoch_ref=row.security_epoch_ref,
+            status=row.status,
+            expires_at=row.expires_at,
+            reason=row.reason,
+            decision_hash=row.decision_hash,
+        )
+
+    def get_review_decision(self, decision_id: str) -> ReviewDecisionRecord:
+        row = self._get(ReviewDecisionTable, decision_id, "review decision")
+        return ReviewDecisionRecord(
+            decision_id=row.decision_id,
+            review_task_id=row.review_task_id,
+            status=row.status,
+            reviewer_id=row.reviewer_id,
+            reviewer_scope=row.reviewer_scope,
+            security_epoch_ref=row.security_epoch_ref,
+            decision_hash=row.decision_hash,
+            duplicate=row.duplicate,
+            reason=row.reason,
+            decided_at=row.decided_at,
+        )
+
+    def get_indexable_snapshot(self, indexable_snapshot_id: str) -> IndexableSnapshotRecord:
+        row = self._get(IndexableSnapshotTable, indexable_snapshot_id, "indexable snapshot")
+        return IndexableSnapshotRecord(
+            indexable_snapshot_id=row.indexable_snapshot_id,
+            document_version_id=row.document_version_id,
+            parse_snapshot_id=row.parse_snapshot_id,
+            quality_decision_id=row.quality_decision_id,
+            workspace_id=row.workspace_id,
+            document_id=row.document_id,
+            canonical_hash=row.canonical_hash,
+            idempotency_key=row.idempotency_key,
+            security_refs=dict(row.security_refs_json or {}),
+            delete_refs=list(row.delete_refs_json or []),
+            payload=dict(row.payload_json or {}),
+        )
+
+    def get_ingestion_outbox(self, outbox_event_id: str) -> IngestionOutboxRecord:
+        row = self._get(IngestionOutboxTable, outbox_event_id, "ingestion outbox")
+        return IngestionOutboxRecord(
+            outbox_event_id=row.outbox_event_id,
+            aggregate_ref=row.aggregate_ref,
+            event_type=row.event_type,
+            payload_hash=row.payload_hash,
+            idempotency_key=row.idempotency_key,
+            publish_status=row.publish_status,
+            replay_count=row.replay_count,
+        )
+
+    def get_delete_lifecycle(self, delete_ref: str) -> DeleteLifecycleRecord:
+        row = self._get(DeleteLifecycleTable, delete_ref, "delete lifecycle")
+        return DeleteLifecycleRecord(
+            delete_ref=row.delete_ref,
+            snapshot_ref=row.snapshot_ref,
+            state=row.state,
+            visibility_ref=row.visibility_ref,
+            cleanup_ref=row.cleanup_ref,
+            physical_delete_ref=row.physical_delete_ref,
+            verification_ref=row.verification_ref,
+            legal_hold_ref=row.legal_hold_ref,
+            restored_authorization=row.restored_authorization,
+            duplicate=row.duplicate,
+            late_worker_result_rejected=row.late_worker_result_rejected,
+            receipt_hash=row.receipt_hash,
+            history=list(row.history_json or []),
+        )
 
     def save_workspace_task(self, record: WorkspaceTaskRecord) -> WorkspaceTaskRecord:
         self._merge(

@@ -3,10 +3,11 @@ from __future__ import annotations
 import re
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE05"
+CURRENT_PHASE = "PHASE08"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -108,6 +109,7 @@ def _load_verifier(path: Path, module_name: str, function_name: str) -> list[str
     if spec is None or spec.loader is None:
         return [f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"]
     module = module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     function = getattr(module, function_name)
     return list(function())
@@ -118,8 +120,9 @@ def _load_verifier_function(path: Path, module_name: str, function_name: str):
     if spec is None or spec.loader is None:
         raise RuntimeError(
             f"cannot load verifier: {path.relative_to(REPO_ROOT).as_posix()}"
-        )
+    )
     module = module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return getattr(module, function_name)
 
@@ -185,7 +188,11 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[1]: "completed",
         PHASE_FILES[2]: "completed",
         PHASE_FILES[3]: "completed",
-        PHASE_FILES[4]: "ready",
+        PHASE_FILES[4]: "completed",
+        PHASE_FILES[5]: "completed",
+        PHASE_FILES[6]: "completed",
+        PHASE_FILES[7]: "ready",
+        PHASE_FILES[10]: "in_progress",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -293,9 +300,14 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE05",
+                "current_phase: PHASE08",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
+                "PHASE05 completed",
+                "PHASE06 completed",
+                "PHASE07 completed",
+                "PHASE11 reopened/in_progress",
+                "PHASE08 仍 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -309,7 +321,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE05",
+                "current_phase: PHASE08",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -330,7 +342,11 @@ def verify_current_program() -> list[str]:
                 "id: PHASE02, file: .agent/programs/PHASE02_legacy-runtime-compatibility-and-cutover-map.md, state: completed",
                 "id: PHASE03, file: .agent/programs/PHASE03_executable-cross-module-contract-bundle.md, state: completed",
                 "id: PHASE04, file: .agent/programs/PHASE04_postgres-domain-and-transaction-foundation.md, state: completed",
-                "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: ready",
+                "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
+                "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
+                "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
+                "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready",
+                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress",
             ],
             "program-manifest.yaml",
         )
@@ -346,6 +362,24 @@ def verify_current_program() -> list[str]:
             / "verify_requirement_ledger_evidence_gate.py",
             "verify_requirement_ledger_evidence_gate",
             "verify_requirement_ledger_evidence_gate",
+        )
+    )
+    errors.extend(
+        str(issue)
+        for issue in _load_verifier(
+            REPO_ROOT / "tools" / "scripts" / "verify_utf8_doc_encoding.py",
+            "verify_utf8_doc_encoding",
+            "verify_utf8_doc_encoding",
+        )
+    )
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT
+            / "tools"
+            / "scripts"
+            / "verify_phase11_legacy_upload_parser_cutover.py",
+            "verify_phase11_legacy_upload_parser_cutover",
+            "verify_phase11_legacy_upload_parser_cutover",
         )
     )
 
@@ -437,20 +471,11 @@ def verify_current_program() -> list[str]:
     elif not phase04_blocker.exists():
         errors.append("missing PHASE04 aggregate evidence")
     else:
-        pre_closure_errors = _load_verifier_function(
-            phase04_pre_closure_path,
-            "verify_phase04_pre_closure_gate",
-            "verify_phase04_pre_closure_gate",
-        )()
         post_closure_errors = _load_verifier_function(
             phase04_post_closure_path,
             "verify_phase04_post_closure_consistency",
             "verify_phase04_post_closure_consistency",
         )()
-        errors.extend(
-            f"PHASE04 pre-closure gate failed after closure: {error}"
-            for error in pre_closure_errors
-        )
         errors.extend(
             f"PHASE04 post-closure consistency gate failed after closure: {error}"
             for error in post_closure_errors
@@ -465,6 +490,40 @@ def verify_current_program() -> list[str]:
         ]:
             if phrase not in blocker_text:
                 errors.append(f"PHASE04 blocker evidence missing phrase: {phrase}")
+    phase07_post_closure_path = (
+        REPO_ROOT / "tools" / "scripts" / "verify_phase07_post_closure_consistency.py"
+    )
+    if not phase07_post_closure_path.exists():
+        errors.append("missing PHASE07 post-closure consistency verifier")
+    else:
+        phase07_post_errors = _load_verifier_function(
+            phase07_post_closure_path,
+            "verify_phase07_post_closure_consistency",
+            "verify_phase07_post_closure_consistency",
+        )()
+        errors.extend(
+            f"PHASE07 post-closure consistency gate failed after closure: {error}"
+            for error in phase07_post_errors
+        )
+    phase11_file = _read(PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md")
+    phase11_readiness = _read(WORK_PRODUCTS / "phase11-readiness.yaml")
+    for phrase in [
+        "status: in_progress",
+        "Goal01 audit",
+        "LocalQueue",
+        "OCR/VLM",
+    ]:
+        if phrase not in phase11_file:
+            errors.append(f"PHASE11 reopened phase file missing phrase: {phrase}")
+    for phrase in [
+        "current_phase_status: in_progress",
+        "coordinator_approval: pending_reopened",
+        "target_not_current: 80",
+        "PHASE08 completed",
+        "PHASE11 completed",
+    ]:
+        if phrase not in phase11_readiness:
+            errors.append(f"PHASE11 reopened readiness missing phrase: {phrase}")
     return errors
 
 

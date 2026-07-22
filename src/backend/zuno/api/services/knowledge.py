@@ -6,6 +6,7 @@ from zuno.database.dao.knowledge import KnowledgeDao
 from zuno.database.dao.knowledge_file import KnowledgeFileDao
 from zuno.database.dao.llm import LLMDao
 from zuno.database.models.user import AdminUser
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 from zuno.services.runtime_registry import get_local_runtime_settings
 from zuno.utils.file_utils import format_file_size
 
@@ -499,9 +500,17 @@ class KnowledgeService:
             raise ValueError(f"Delete Knowledge By ID Error: {err}")
 
     @classmethod
-    async def verify_user_permission(cls, knowledge_id, user_id):
+    async def verify_user_permission(cls, knowledge_id, user_id, action: str = "access"):
         knowledge_user_id = await cls.select_user_by_id(knowledge_id)
-        if user_id != knowledge_user_id and user_id != AdminUser:
+        if user_id == AdminUser:
+            if knowledge_user_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=f"admin.knowledge.{action}",
+                    resource_ref=f"knowledge:{knowledge_id}",
+                )
+            return
+        if user_id != knowledge_user_id:
             raise ValueError("No permission for this knowledge")
 
     @classmethod

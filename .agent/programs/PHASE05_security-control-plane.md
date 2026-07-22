@@ -1,13 +1,13 @@
 # PHASE05 Security Control Plane
 
 phase_id: PHASE05
-status: ready
+status: completed
 depends_on: PHASE03, PHASE04
 owner: Module 09 Security
 
 ## Readiness Boundary
 
-PHASE05 ready。订正后的 PHASE03 Contract Adoption 与 PHASE04 Durable Infrastructure 已关闭，可作为 Security Control Plane 的启动依赖；PHASE05 自身 Runtime 仍未完成，不能声明为 Current。
+PHASE05 completed。Security Control Plane 在完整 Phase Scope 内达到 implementation available；这不表示 production ready，也不解锁任何非依赖 Phase 的 Current 声明。
 
 ## Phase 目标
 

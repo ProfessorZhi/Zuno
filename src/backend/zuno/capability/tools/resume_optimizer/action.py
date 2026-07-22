@@ -1,30 +1,50 @@
 import os
 from docx import Document
-from openai import OpenAI
 import fitz  # PyMuPDF
+
+from zuno.platform.model_gateway import (
+    ModelCategory,
+    ModelGateway,
+    ModelGatewayRequest,
+    build_default_model_gateway,
+)
 
 
 class ResumeEnhancer:
-    def __init__(self, api_key):
-        self.client = OpenAI(api_key=api_key, base_url="")
+    def __init__(self, api_key: str | None = None, *, gateway: ModelGateway | None = None):
+        self.api_key = api_key
+        self.gateway = gateway or build_default_model_gateway()
 
-    def enhance_text(self, text):
+    def enhance_text(self, text: str) -> str:
         """使用 OpenAI API 优化文本"""
         if not text.strip():  # 如果是空文本就直接返回
             return text
 
+        prompt = (
+            "你是一个专业的简历优化助手。请优化以下简历内容，使其更专业、更有说服力，"
+            "但保持事实准确性。保持原有的格式和标点符号。\n\n"
+            f"请优化以下简历内容，保持相同的格式：\n{text}"
+        )
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system",
-                     "content": "你是一个专业的简历优化助手。请优化以下简历内容，使其更专业、更有说服力，但保持事实准确性。保持原有的格式和标点符号。"},
-                    {"role": "user", "content": f"请优化以下简历内容，保持相同的格式：\n{text}"}
-                ]
+            result = self.gateway.invoke(
+                ModelGatewayRequest(
+                    category=ModelCategory.CHAT,
+                    prompt=prompt,
+                    task_id="resume_optimizer",
+                    metadata={"tool": "resume_optimizer", "api_key_provided": bool(self.api_key)},
+                )
             )
-            return response.choices[0].message.content
+            if result.status != "succeeded":
+                print(f"模型网关未返回成功状态: {result.status}")
+                return text
+            if result.metrics.provider_id.startswith("local_mock_"):
+                print("模型网关当前只有本地 mock provider，保留原文")
+                return text
+            if not result.output.strip():
+                return text
+            return result.output
         except Exception as e:
-            print(f"调用 API 时出错: {e}")
+            print(f"调用模型网关时出错: {e}")
             return text
 
     def process_docx(self, input_path, output_path):

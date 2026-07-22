@@ -4,6 +4,7 @@ from zuno.api.services.agent import AgentService
 from zuno.database.dao.dialog import DialogDao
 from zuno.database.dao.history import HistoryDao
 from zuno.database.models.user import AdminUser
+from zuno.api.services.security_admin_actions import require_admin_action_authorized
 
 
 class DialogService:
@@ -55,9 +56,17 @@ class DialogService:
             raise ValueError(f"Delete Dialog Appear Error: {err}")
 
     @classmethod
-    async def verify_user_permission(cls, dialog_id, user_id):
+    async def verify_user_permission(cls, dialog_id, user_id, action: str = "access"):
         dialog = await DialogDao.get_agent_by_dialog_id(dialog_id)
-        if user_id not in (AdminUser, dialog.user_id):
+        if user_id == AdminUser:
+            if dialog.user_id != AdminUser:
+                require_admin_action_authorized(
+                    principal_id=user_id,
+                    action=f"admin.dialog.{action}",
+                    resource_ref=f"dialog:{dialog_id}",
+                )
+            return
+        if user_id != dialog.user_id:
             logger.warning("dialog permission denied: dialog_id={} user_id={}", dialog_id, user_id)
             raise ValueError("没有权限访问")
 

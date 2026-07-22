@@ -1,18 +1,14 @@
 import logging
-from typing import Union
 
-from anthropic import Anthropic, AsyncAnthropic
 from mcp.types import CallToolResult
-from openai import OpenAI, AsyncOpenAI
 
 from zuno.services.mcp_openai.mcp_client import MCPClient
 from zuno.services.mcp_openai.mcp_util import MCPUtil
 from zuno.services.mcp_openai.schema import FunctionTool
-from zuno.core.models.anthropic import DeepAsyncAnthropic, DeepAnthropic
 
 
 class MCPManager:
-    def __init__(self, client: Union[DeepAsyncAnthropic, DeepAnthropic]):
+    def __init__(self, client: object):
         self.mcp_server_stack: list[str] = []
         self.chat_client = client
         self.mcp_clients: list[MCPClient] = []
@@ -42,19 +38,14 @@ class MCPManager:
 
     async def _chat_model(self, messages, available_tools):
         try:
-            match self.chat_client:
-                case AsyncAnthropic():
-                    response = await self.chat_client.ainvoke(messages, available_tools)
-                    return response
-                case Anthropic():
-                    response = self.chat_client.invoke(messages, available_tools)
-                    return response
-                case AsyncOpenAI():
-                    raise NotImplementedError("AsyncOpenAI is not implemented yet")
-                case OpenAI():
-                    raise NotImplementedError("OpenAI is not implemented yet")
-                case _:
-                    raise ValueError("Now MCP Server support OpenAI and Anthropic")
+            if hasattr(self.chat_client, "ainvoke"):
+                return await self.chat_client.ainvoke(messages, available_tools)
+            if hasattr(self.chat_client, "invoke"):
+                return self.chat_client.invoke(messages, available_tools)
+            client_type = type(self.chat_client)
+            if "openai" in f"{client_type.__module__}.{client_type.__name__}".lower():
+                raise NotImplementedError("OpenAI MCP chat client is not implemented yet")
+            raise ValueError("Now MCP Server support Anthropic-compatible invoke clients")
 
         except Exception as err:
             logging.info(f"chat model appear error: {err}")

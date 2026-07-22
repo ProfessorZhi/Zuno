@@ -7,11 +7,12 @@ from typing import TypedDict, List, Dict
 from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from zuno.platform.model_gateway import ModelGateway, build_default_model_gateway
+from zuno.platform.model_roles import ModelRole
 from zuno.resources.prompts.llm import agent_guide_word, auto_build_ask_prompt, auto_build_abstract_prompt, create_agent_prompt, \
     PROMPT_REACT_BASE
 from zuno.api.services.agent import AgentService
@@ -37,11 +38,12 @@ def resp_state(name: str = '', description: str = '', user_input: str = ''):
 
 class AutoBuildClient:
     def __init__(self, chat_id: str, client_key: str,
-                 login_user: UserPayload, websocket: WebSocket, **kwargs):
+                 login_user: UserPayload, websocket: WebSocket, model_gateway: ModelGateway | None = None, **kwargs):
         self.client_key = client_key
         self.chat_id = chat_id
         self.login_user = login_user
         self.websocket = websocket
+        self.model_gateway = model_gateway or build_default_model_gateway()
         self.builder_graph = StateGraph(State)
         self.base_agent = None
         self.parser = None
@@ -102,7 +104,10 @@ class AutoBuildClient:
         return resp
 
     async def create_build_agent(self, **kwargs):
-        self.base_agent = ChatOpenAI(**kwargs)
+        self.base_agent = self.model_gateway.get_chat_model(
+            binding=kwargs,
+            role=ModelRole.EXECUTOR,
+        )
 
     async def abstract_parameter(self, user_input):
         resp = await self.abstract_agent.ainvoke({"input": user_input, "history": ""})
@@ -292,7 +297,6 @@ class AutoBuildClient:
         self.builder_graph.add_edge('receive_input_description', 'abstract_description')
         self.builder_graph.add_edge('abstract_description', 'auto_create_agent')
         self.builder_graph.add_edge('auto_create_assistant', END)
-
 
 
 

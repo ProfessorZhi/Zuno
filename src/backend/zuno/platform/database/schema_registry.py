@@ -34,6 +34,20 @@ DOMAIN_TABLE_OWNERS = {
     "workspace_session": "Product Surface",
 }
 
+INGESTION_TABLE_OWNERS = {
+    "ingestion_dead_letters": "Input / Document Ingestion",
+    "ingestion_document_versions": "Input / Document Ingestion",
+    "ingestion_indexable_document_snapshots": "Input / Document Ingestion",
+    "ingestion_outbox_events": "Input / Document Ingestion",
+    "ingestion_parse_attempts": "Input / Document Ingestion",
+    "ingestion_parse_jobs": "Input / Document Ingestion",
+    "ingestion_parse_plans": "Input / Document Ingestion",
+    "ingestion_parse_snapshots": "Input / Document Ingestion",
+    "ingestion_quality_gate_decisions": "Input / Document Ingestion",
+    "ingestion_source_objects": "Input / Document Ingestion",
+    "ingestion_source_spans": "Input / Document Ingestion",
+}
+
 INFRASTRUCTURE_TABLES = {
     "infra_active_snapshot_refs",
     "infra_audit_channels",
@@ -75,6 +89,36 @@ REVISION_OWNERS = {
     "20260718_13": "Infrastructure",
     "20260718_14": "Infrastructure",
     "20260718_15": "Infrastructure",
+    "20260719_16": "Security",
+    "20260719_17": "Observability / Eval",
+    "20260719_18": "Input / Document Ingestion",
+    "20260720_19": "Input / Document Ingestion",
+    "20260720_20": "Input / Document Ingestion",
+}
+
+OBSERVABILITY_TABLE_OWNERS = {
+    "observability_audit_records": "Observability / Eval",
+    "observability_dead_letters": "Observability / Eval",
+    "observability_gaps": "Observability / Eval",
+    "observability_ingest_envelopes": "Observability / Eval",
+    "observability_projection_rebuilds": "Observability / Eval",
+    "observability_projection_watermarks": "Observability / Eval",
+    "observability_runtime_events": "Observability / Eval",
+    "observability_spans": "Observability / Eval",
+    "observability_traces": "Observability / Eval",
+}
+
+SECURITY_TABLE_OWNERS = {
+    "security_approval_decisions": "Security",
+    "security_approval_requests": "Security",
+    "security_audit_requirements": "Security",
+    "security_authorization_decisions": "Security",
+    "security_effective_epochs": "Security",
+    "security_outbox_events": "Security",
+    "security_principal_contexts": "Security",
+    "security_redaction_decisions": "Security",
+    "security_secret_leases": "Security",
+    "security_secret_refs": "Security",
 }
 
 ONLINE_SCHEMA_OBJECTS = {
@@ -84,7 +128,10 @@ ONLINE_SCHEMA_OBJECTS = {
 
 __all__ = [
     "DOMAIN_TABLE_OWNERS",
+    "INGESTION_TABLE_OWNERS",
     "INFRASTRUCTURE_TABLES",
+    "OBSERVABILITY_TABLE_OWNERS",
     "ONLINE_SCHEMA_OBJECTS",
     "REVISION_OWNERS",
+    "SECURITY_TABLE_OWNERS",
 ]

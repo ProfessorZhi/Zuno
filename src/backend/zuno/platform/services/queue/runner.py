@@ -37,11 +37,80 @@ async def consume_forever(
             await asyncio.sleep(poll_interval)
 
 
+async def run_package_a_ingestion_worker_forever(
+    *,
+    poll_interval: float = 1.0,
+    publish_limit: int = 10,
+    consume_limit: int | None = None,
+    consume_timeout_seconds: float = 5.0,
+) -> None:
+    from zuno.api.services.workspace_task_runtime import build_package_a_production_ingestion_runtime
+    from zuno.knowledge.ingestion import PackageAProductionQueueWorker, package_a_rabbitmq_topology
+    from zuno.platform.database import engine
+    from zuno.platform.queue import RabbitMQTransport
+
+    rabbitmq = app_settings.rabbitmq or {}
+    rabbitmq_url = str(rabbitmq.get("url") or "").strip()
+    if not rabbitmq_url:
+        raise RuntimeError("Package A ingestion worker requires rabbitmq.url")
+    runtime = build_package_a_production_ingestion_runtime(
+        engine=engine,
+        settings=app_settings,
+        worker_id=str(rabbitmq.get("ingestion_worker_id") or "phase11-package-a-parser-worker"),
+    )
+    if runtime is None:
+        raise RuntimeError("Package A ingestion worker requires production MinIO storage configuration")
+    topology = package_a_rabbitmq_topology(app_settings)
+    configured_tenant_id = rabbitmq.get("tenant_id")
+    tenant_id = str(configured_tenant_id).strip() if configured_tenant_id else None
+    trace_id = str(rabbitmq.get("ingestion_trace_id") or "phase11-package-a-worker")
+    publisher_worker_id = str(
+        rabbitmq.get("ingestion_outbox_worker_id") or "phase11-package-a-outbox-dispatcher"
+    )
+    resolved_publish_limit = int(rabbitmq.get("ingestion_publish_limit") or publish_limit)
+    configured_consume_limit = rabbitmq.get("ingestion_consume_limit")
+    resolved_consume_limit = (
+        int(configured_consume_limit) if configured_consume_limit is not None else consume_limit
+    )
+    resolved_consume_timeout_seconds = float(
+        rabbitmq.get("ingestion_consume_timeout_seconds") or consume_timeout_seconds
+    )
+    async with RabbitMQTransport(rabbitmq_url) as transport:
+        worker = PackageAProductionQueueWorker(
+            engine=engine,
+            runtime=runtime,
+            transport=transport,
+            topology=topology,
+            tenant_id=tenant_id,
+            trace_id=trace_id,
+            publisher_worker_id=publisher_worker_id,
+        )
+        logger.info(
+            "Package A ingestion worker listening: exchange={} queue={}",
+            topology.exchange,
+            topology.queue,
+        )
+        while True:
+            try:
+                await worker.publish_and_consume_once(
+                    publish_limit=resolved_publish_limit,
+                    consume_limit=resolved_consume_limit,
+                    consume_timeout_seconds=resolved_consume_timeout_seconds,
+                )
+            except Exception as err:
+                logger.exception(f"Package A ingestion worker error: {err}")
+            await asyncio.sleep(poll_interval)
+
+
 async def main():
     await initialize_worker_runtime()
 
     if not (app_settings.rabbitmq or {}).get("enabled"):
         raise RuntimeError("RabbitMQ worker started while rabbitmq.enabled is false")
+
+    if (app_settings.rabbitmq or {}).get("package_a_ingestion_enabled", True):
+        await run_package_a_ingestion_worker_forever()
+        return
 
     from zuno.services.pipeline.manager import KnowledgePipelineManager
     from zuno.services.queue.client import QueueClient, get_queue_names
@@ -77,7 +146,12 @@ async def main():
     )
 
 
-__all__ = ["consume_forever", "initialize_worker_runtime", "main"]
+__all__ = [
+    "consume_forever",
+    "initialize_worker_runtime",
+    "main",
+    "run_package_a_ingestion_worker_forever",
+]
 
 
 if __name__ == "__main__":

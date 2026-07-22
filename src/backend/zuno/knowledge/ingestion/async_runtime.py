@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any, Callable
 from uuid import uuid4
 
 from zuno.agent.contracts import (
@@ -24,6 +25,14 @@ from zuno.knowledge.storage import (
     SourceObjectRecord,
     WorkspaceFileRecord,
 )
+
+
+class QueueDeliveryReceipt(QueueBackendResult):
+    acked_after_domain_commit: bool = False
+    domain_commit_ref: str | None = None
+    retryable: bool = False
+    dead_letter_id: str | None = None
+    attempt: int = 0
 
 
 class LocalQueueBackend:
@@ -108,6 +117,58 @@ class LocalQueueBackend:
         self._dead_letter_attempts[dead_letter.dead_letter_id] = message.attempt
         self._messages[message_id] = message.model_copy(update={"status": "dead_letter"})
         return dead_letter
+
+    def ack_after_domain_commit(
+        self,
+        message: QueueMessage,
+        *,
+        commit: Callable[[], str],
+        max_attempts: int = 3,
+    ) -> QueueDeliveryReceipt:
+        if max_attempts <= 0:
+            raise ValueError("max_attempts must be positive")
+        try:
+            domain_commit_ref = commit()
+        except Exception as exc:
+            if message.attempt + 1 < max_attempts:
+                retried = self.fail(
+                    message.message_id,
+                    reason=f"domain_commit_failed:{type(exc).__name__}",
+                    retryable=True,
+                )
+                assert isinstance(retried, QueueMessage)
+                return QueueDeliveryReceipt(
+                    ok=False,
+                    message_id=retried.message_id,
+                    status=retried.status,
+                    error=f"domain_commit_failed:{type(exc).__name__}",
+                    retryable=True,
+                    attempt=retried.attempt,
+                )
+            dead_letter = self.fail(
+                message.message_id,
+                reason=f"retry_exhausted:domain_commit_failed:{type(exc).__name__}",
+                retryable=False,
+            )
+            assert isinstance(dead_letter, DeadLetterRecord)
+            return QueueDeliveryReceipt(
+                ok=False,
+                message_id=message.message_id,
+                status="dead_letter",
+                error=dead_letter.reason,
+                retryable=False,
+                dead_letter_id=dead_letter.dead_letter_id,
+                attempt=message.attempt,
+            )
+        acked = self.ack(message.message_id)
+        return QueueDeliveryReceipt(
+            ok=True,
+            message_id=acked.message_id,
+            status=acked.status,
+            acked_after_domain_commit=True,
+            domain_commit_ref=domain_commit_ref,
+            attempt=acked.attempt,
+        )
 
     def dead_letters(self) -> list[DeadLetterRecord]:
         return list(self._dead_letters.values())
@@ -281,6 +342,35 @@ class ParserWorker:
         if parse_job.status == "succeeded" and parse_job.document is not None:
             document_record = self.store.save_document_version(parse_job.document)
             document_version_id = document_record.document_version_id
+            requires_review = any(
+                bool(block.metadata.get("requires_human_review"))
+                for block in parse_job.document.blocks
+            )
+            if requires_review:
+                _save_file_status(
+                    self.store,
+                    durable_file,
+                    parse_status="review_pending",
+                    latest_parse_job_id=parse_job.job_id,
+                    latest_document_version_id=document_version_id,
+                )
+                self.queue.record_file_status(
+                    file_id=file_id,
+                    status="review_pending",
+                    trace_id=trace_id,
+                    details={"reason": "quality_review_required"},
+                )
+                self.queue.ack(message.message_id)
+                return ParserWorkerResult(
+                    parse_job_id=parse_job.job_id,
+                    status=ParseJobStatus.SUCCEEDED,
+                    document_version_id=document_version_id,
+                    parse_attempt=_parse_attempt(parse_snapshot),
+                    diagnostics=[
+                        *[diagnostic.model_dump() for diagnostic in parse_job.diagnostics],
+                        {"code": "review_pending", "reason": "quality_review_required"},
+                    ],
+                )
             _save_file_status(
                 self.store,
                 durable_file,
@@ -517,6 +607,7 @@ __all__ = [
     "IngestionReconciler",
     "LocalQueueBackend",
     "ParserWorker",
+    "QueueDeliveryReceipt",
     "RabbitMQQueueBackend",
     "RedisRuntimeStateBoundary",
 ]

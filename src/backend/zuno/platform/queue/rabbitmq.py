@@ -136,7 +136,10 @@ class RabbitMQTransport:
         payload: dict[str, Any],
         tenant_id: str,
         trace_id: str,
+        workspace_id: str | None = None,
+        data_classification: str | None = None,
         version: str = "v1",
+        security_epoch_ref: str | None = None,
         ordering_key: str | None = None,
         ordering_sequence: int | None = None,
         outbox_publish_attempt: int | None = None,
@@ -149,6 +152,12 @@ class RabbitMQTransport:
             "trace_id": trace_id,
             "message_version": version,
         }
+        if workspace_id is not None:
+            headers["workspace_id"] = workspace_id
+        if data_classification is not None:
+            headers["data_classification"] = data_classification
+        if security_epoch_ref is not None:
+            headers["security_epoch_ref"] = security_epoch_ref
         if ordering_key is not None or ordering_sequence is not None:
             if not ordering_key or ordering_sequence is None or ordering_sequence < 1:
                 raise ValueError("ordering_key and positive ordering_sequence must be provided together")
@@ -196,6 +205,7 @@ class RabbitMQTransport:
         headers = dict(delivery.headers)
         headers["trace_id"] = replay_trace_id
         headers["replayed_from_dlq"] = True
+        headers["outbox_replay_count"] = int(headers.get("outbox_replay_count", 0)) + 1
         message = aio_pika.Message(
             body=json.dumps(delivery.payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             content_type="application/json",
