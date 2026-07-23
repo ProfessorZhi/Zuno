@@ -15,17 +15,17 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE06 completed：Observability Minimum Black Box 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
 - PHASE08 completed：Deterministic Single Controller Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE09 产品默认路径、quality proven 或 production ready。
-- PHASE11 reopened/in_progress：Goal01 audit 确认 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 诊断和不完整 Human Review 证据不足以证明 PHASE11 原始完整生产默认路径。
-- PHASE12 planned：等待 PHASE11 completed；PHASE08 依赖已满足。
+- PHASE11 completed：Durable Ingestion and Source Lineage 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE12 Knowledge Index、quality proven 或 production ready。
+- PHASE12 ready：PHASE08 与 PHASE11 依赖已满足，但 PHASE12 尚未实施。
 - PHASE09–22 不得提前冒充 Current。
 
-不得声明完整 Zuno、quality proven、完整 CI 通过或 production ready。
+不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
-## PHASE11 Reopen Boundary
+## PHASE11 Closure Boundary
 
-PHASE11 只有在 P11-T01 到 P11-T08 全部完成，并且 80 个 Mandatory Requirement 均有 Code/Test/Runtime Evidence 后，才能重新标记为 completed。
+PHASE11 已在 2026-07-23 Goal02 closure 中完成 P11-T01 到 P11-T08，并将 80 个 Mandatory Requirement 更新为 `implementation_available`。该结论只覆盖 Input / Document Ingestion 的 Durable Ingestion and Source Lineage phase scope。
 
-PHASE11 completion 必须证明：
+PHASE11 completion 已证明：
 
 - 生产默认 upload/parser 路径进入 SourceObject → DocumentVersion → ParsePlan → ParseJob → ParseAttempt → ParseSnapshot → CanonicalDocumentIR → SourceSpan → Quality Gate / Human Review → IndexableDocumentSnapshot → Outbox Handoff。
 - 默认路径使用正式 PostgreSQL Repository/UoW。
@@ -38,6 +38,12 @@ PHASE11 completion 必须证明：
 - Input 只提交 immutable IndexableDocumentSnapshotV1，不直接写 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
 - Delete / Legal Hold / Restore 按 visibility revoke → cleanup request → physical delete → verification 顺序验证，restore 不自动恢复已撤销授权。
 - Legacy upload/parser 默认入口完成 cutover、进入期限 Adapter 或删除。
+
+PHASE11 completion 不证明：
+
+- PHASE12 KnowledgeVersion、Index Cutover 或 Standard RAG 已完成。
+- PHASE09 / PHASE10 Product Backend、Web 或 Desktop 默认路径已完成。
+- 完整 release gate、fixed benchmark、quality measurement 或 production readiness 已通过。
 
 ## Measurement Blocked
 

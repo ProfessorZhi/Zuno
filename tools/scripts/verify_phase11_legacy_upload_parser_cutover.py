@@ -95,8 +95,8 @@ def verify_phase11_legacy_upload_parser_cutover() -> list[str]:
             errors.append(f"inventory missing path for {row_id}: {expected['path']}")
         if expected["status"] not in inventory:
             errors.append(f"inventory missing classification for {row_id}: {expected['status']}")
-        if "| `target_not_current` |" not in inventory:
-            errors.append("inventory must keep reopened rows target_not_current")
+        if "| `implementation_available` |" not in inventory:
+            errors.append("inventory must record canonical runtime implementation_available")
             break
 
     for relative_path, required_terms in SOURCE_EXPECTATIONS.items():
@@ -110,12 +110,12 @@ def verify_phase11_legacy_upload_parser_cutover() -> list[str]:
                 errors.append(f"{relative_path} missing expected active cutover term: {term}")
 
     for required_phrase in [
-        "PHASE11 仍为 `in_progress`",
+        "PHASE11 为 `completed`",
         "versioned_adapter_required",
         "not_phase11_ingestion",
         "canonical_runtime_candidate",
-        "不得作为 PHASE11 完成证据",
-        "不得用 SQLite/LocalQueue 关闭生产 durable ingestion",
+        "生产默认路径已证明完整经过 SourceObject",
+        "生产默认路径由 Package A PostgreSQL/RabbitMQ/MinIO runtime 承担",
     ]:
         if required_phrase not in inventory:
             errors.append(f"inventory missing governance phrase: {required_phrase}")

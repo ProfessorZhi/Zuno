@@ -10,7 +10,7 @@ branch: integration/goal02-agent-core-ingestion-closure
 
 ## 结论
 
-P11-T08 当前达到 `completion_candidate`：delete lifecycle 已覆盖 visibility revoke、projection cleanup request、physical delete、verification、legal hold、restore、delete during parse、late worker result reject，并新增 PostgreSQL 审计事实表。
+P11-T08 当前达到 `completion_candidate`：Delete / Restore lifecycle 已覆盖 visibility revoke、projection cleanup request、physical delete、verification、legal hold、restore、delete during parse、late worker result reject，并新增 PostgreSQL 审计事实表。
 
 本文件不单独关闭 PHASE11。完整 Phase Closure 仍需要 P11-T01～T08 证据汇总、完整 E2E / Fault 验证和 Coordinator Closure。
 

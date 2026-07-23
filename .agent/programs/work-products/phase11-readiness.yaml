@@ -1,29 +1,37 @@
 phase_id: PHASE11
 phase_name: Durable Ingestion and Source Lineage
-current_phase_status: in_progress
-coordinator_approval: pending_reopened
+current_phase_status: completed
+coordinator_approval: approved
 closure_decision_ref: docs/evidence/phase11-coordinator-closure.md
 pre_closure_ref: docs/evidence/phase11-pre-closure.md
 post_closure_gate: tools/scripts/verify_phase11_post_closure_consistency.py
 requirement_ledger:
   mandatory_total: 80
-  implementation_available: 0
-  target_not_current: 80
+  implementation_available: 80
+  target_not_current: 0
 evidence_refs:
   - docs/evidence/input-runtime-batch.md
   - docs/evidence/phase11-ingestion-source-lineage.md
+  - docs/evidence/phase11-p11-t04-t07-runtime.md
+  - docs/evidence/phase11-p11-t08-delete-recovery-cutover.md
+  - docs/evidence/phase11-e2e-fault.md
   - docs/evidence/phase11-pre-closure.md
   - docs/evidence/phase11-coordinator-closure.md
+  - docs/evidence/phase11-post-closure.md
 focused_commands:
   - python tools/scripts/verify_phase11_ingestion_source_lineage.py
+  - python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py
   - python tools/scripts/verify_input_runtime_batch.py
-  - pytest -q tests/knowledge/test_input_runtime_batch.py tests/knowledge/test_ingestion_async_infrastructure.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/repo/test_phase11_ingestion_source_lineage.py -p no:cacheprovider
+  - pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/integration/test_phase11_package_a_production_runtime.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/knowledge/test_ingestion_delete_restore.py tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider --tb=short
 downstream:
-  phase08_ready: true
+  phase08_completed: true
   phase12_planned: true
   phase12_waits_for:
+    - PHASE12 implementation start
+  dependency_statement:
     - PHASE08 completed
     - PHASE11 completed
+    - PHASE12 ready
 boundary:
   implementation_available_not_production_ready: true
   external_dependencies_target_blocked_not_mocked: true
@@ -31,3 +39,8 @@ reopen_audit:
   reopened_at: 2026-07-20
   reason: "LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 和不完整 Human Review 证据不足以证明 PHASE11 原始完整 Mandatory Scope。"
   retained_evidence: true
+closure:
+  closed_at: 2026-07-23
+  goal02_branch: integration/goal02-agent-core-ingestion-closure
+  closure_commit: 932603014fefecaeb55291c0f0f6eff581c3812a
+  e2e_fault_result: "120 passed in 154.80s"
