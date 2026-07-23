@@ -418,6 +418,437 @@ class AgentDomainRepository:
         ).mappings().first()
         return None if row is None else _task_from_row(row)
 
+    def claim_request_idempotency(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        aggregate_ref: str,
+        status: str = "claimed",
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_request_idempotency_keys(
+                    idempotency_key, tenant_id, workspace_id, payload_hash, aggregate_ref, status
+                ) VALUES (
+                    :idempotency_key, :tenant_id, :workspace_id, :payload_hash, :aggregate_ref, :status
+                )
+                ON CONFLICT (tenant_id, idempotency_key) DO NOTHING
+                """
+            ),
+            {
+                "idempotency_key": idempotency_key,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "payload_hash": payload_hash,
+                "aggregate_ref": aggregate_ref,
+                "status": status,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT payload_hash, aggregate_ref, status
+                    FROM agent_request_idempotency_keys
+                    WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).mappings().first()
+            if existing and existing["payload_hash"] == payload_hash:
+                return AgentDomainReceipt(str(existing["aggregate_ref"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting idempotency payload for {idempotency_key}")
+        return AgentDomainReceipt(aggregate_ref, status, 1)
+
+    def claim_effect(
+        self,
+        *,
+        effect_claim_id: str,
+        tenant_id: str,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        owner_port: str,
+        effect_ref: str,
+        status: str = "claimed",
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_effect_claims(
+                    effect_claim_id, tenant_id, idempotency_key, payload_hash,
+                    owner_port, status, effect_ref
+                ) VALUES (
+                    :effect_claim_id, :tenant_id, :idempotency_key, :payload_hash,
+                    :owner_port, :status, :effect_ref
+                )
+                ON CONFLICT (tenant_id, idempotency_key) DO NOTHING
+                """
+            ),
+            {
+                "effect_claim_id": effect_claim_id,
+                "tenant_id": tenant_id,
+                "idempotency_key": idempotency_key,
+                "payload_hash": payload_hash,
+                "owner_port": owner_port,
+                "status": status,
+                "effect_ref": effect_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT effect_claim_id, payload_hash, status
+                    FROM agent_effect_claims
+                    WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).mappings().first()
+            if existing and existing["payload_hash"] == payload_hash:
+                return AgentDomainReceipt(str(existing["effect_claim_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting effect payload for {idempotency_key}")
+        return AgentDomainReceipt(effect_claim_id, status, 1)
+
+    def record_action_observation_acceptance(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        step_run_id: str,
+        owner_port: str,
+        proposal: dict[str, Any],
+        observation: dict[str, Any],
+        acceptance: dict[str, Any],
+        trace_ref: str,
+        evidence_refs: list[str],
+        status: str = "accepted",
+    ) -> AgentDomainReceipt:
+        action_run_id = f"action:{step_run_id}"
+        observation_id = f"observation:{step_run_id}"
+        acceptance_id = f"acceptance:{step_run_id}"
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_action_runs(
+                    action_run_id, tenant_id, run_id, step_run_id, owner_port,
+                    proposal_hash, status, trace_ref
+                ) VALUES (
+                    :action_run_id, :tenant_id, :run_id, :step_run_id, :owner_port,
+                    :proposal_hash, :status, :trace_ref
+                )
+                """
+            ),
+            {
+                "action_run_id": action_run_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "step_run_id": step_run_id,
+                "owner_port": owner_port,
+                "proposal_hash": _canonical_hash(proposal),
+                "status": status,
+                "trace_ref": trace_ref,
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_observations(
+                    observation_id, tenant_id, action_run_id, observation_hash, status, evidence_refs
+                ) VALUES (
+                    :observation_id, :tenant_id, :action_run_id, :observation_hash, :status, CAST(:evidence_refs AS JSON)
+                )
+                """
+            ),
+            {
+                "observation_id": observation_id,
+                "tenant_id": tenant_id,
+                "action_run_id": action_run_id,
+                "observation_hash": _canonical_hash(observation),
+                "status": status,
+                "evidence_refs": json.dumps(evidence_refs, sort_keys=True, separators=(",", ":")),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_step_acceptances(
+                    acceptance_id, tenant_id, step_run_id, observation_id, acceptance_hash, status
+                ) VALUES (
+                    :acceptance_id, :tenant_id, :step_run_id, :observation_id, :acceptance_hash, :status
+                )
+                """
+            ),
+            {
+                "acceptance_id": acceptance_id,
+                "tenant_id": tenant_id,
+                "step_run_id": step_run_id,
+                "observation_id": observation_id,
+                "acceptance_hash": _canonical_hash(acceptance),
+                "status": status,
+            },
+        )
+        return AgentDomainReceipt(acceptance_id, status, 1)
+
+    def record_final_gate_and_outcome(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        decision: str,
+        answer_policy_ref: str,
+        evidence_ref: str,
+        security_decision_ref: str,
+        budget_settlement_ref: str,
+        step_acceptance_ref: str,
+        publication_eligible: bool,
+        outcome_status: str,
+        publication_ref: str | None,
+    ) -> AgentDomainReceipt:
+        final_gate_id = f"final-gate:{run_id}"
+        outcome_id = f"run-outcome:{run_id}"
+        decision_payload = {
+            "run_id": run_id,
+            "decision": decision,
+            "answer_policy_ref": answer_policy_ref,
+            "evidence_ref": evidence_ref,
+            "security_decision_ref": security_decision_ref,
+            "budget_settlement_ref": budget_settlement_ref,
+            "step_acceptance_ref": step_acceptance_ref,
+            "publication_eligible": publication_eligible,
+        }
+        decision_hash = _canonical_hash(decision_payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_final_gate_receipts(
+                    final_gate_id, tenant_id, run_id, decision, decision_hash,
+                    answer_policy_ref, evidence_ref, security_decision_ref,
+                    budget_settlement_ref, step_acceptance_ref, publication_eligible
+                ) VALUES (
+                    :final_gate_id, :tenant_id, :run_id, :decision, :decision_hash,
+                    :answer_policy_ref, :evidence_ref, :security_decision_ref,
+                    :budget_settlement_ref, :step_acceptance_ref, :publication_eligible
+                )
+                ON CONFLICT (tenant_id, run_id) DO NOTHING
+                """
+            ),
+            {
+                "final_gate_id": final_gate_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "decision": decision,
+                "decision_hash": decision_hash,
+                "answer_policy_ref": answer_policy_ref,
+                "evidence_ref": evidence_ref,
+                "security_decision_ref": security_decision_ref,
+                "budget_settlement_ref": budget_settlement_ref,
+                "step_acceptance_ref": step_acceptance_ref,
+                "publication_eligible": publication_eligible,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT final_gate_id, decision_hash, decision
+                    FROM agent_final_gate_receipts
+                    WHERE tenant_id = :tenant_id AND run_id = :run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "run_id": run_id},
+            ).mappings().first()
+            if not existing or existing["decision_hash"] != decision_hash:
+                raise AgentDomainConflict(f"conflicting final gate for {run_id}")
+            final_gate_id = str(existing["final_gate_id"])
+        outcome_hash = _canonical_hash(
+            {
+                "run_id": run_id,
+                "status": outcome_status,
+                "final_gate_id": final_gate_id,
+                "publication_ref": publication_ref,
+            }
+        )
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_run_outcomes(
+                    run_outcome_id, tenant_id, run_id, final_gate_id, status, outcome_hash, publication_ref
+                ) VALUES (
+                    :run_outcome_id, :tenant_id, :run_id, :final_gate_id, :status, :outcome_hash, :publication_ref
+                )
+                ON CONFLICT (tenant_id, run_id) DO NOTHING
+                """
+            ),
+            {
+                "run_outcome_id": outcome_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "final_gate_id": final_gate_id,
+                "status": outcome_status,
+                "outcome_hash": outcome_hash,
+                "publication_ref": publication_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT run_outcome_id, outcome_hash, status
+                    FROM agent_run_outcomes
+                    WHERE tenant_id = :tenant_id AND run_id = :run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "run_id": run_id},
+            ).mappings().first()
+            if existing and existing["outcome_hash"] == outcome_hash:
+                return AgentDomainReceipt(str(existing["run_outcome_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting run outcome for {run_id}")
+        return AgentDomainReceipt(outcome_id, outcome_status, 1)
+
+    def record_signal(
+        self,
+        *,
+        signal_id: str,
+        tenant_id: str,
+        run_id: str,
+        signal_type: str,
+        payload: dict[str, Any],
+        status: str,
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        try:
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO agent_runtime_signals(
+                        signal_id, tenant_id, run_id, signal_type, payload_hash, status
+                    ) VALUES (
+                        :signal_id, :tenant_id, :run_id, :signal_type, :payload_hash, :status
+                    )
+                    """
+                ),
+                {
+                    "signal_id": signal_id,
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "signal_type": signal_type,
+                    "payload_hash": payload_hash,
+                    "status": status,
+                },
+            )
+        except IntegrityError as exc:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT signal_id, status
+                    FROM agent_runtime_signals
+                    WHERE tenant_id = :tenant_id
+                      AND run_id = :run_id
+                      AND signal_type = :signal_type
+                      AND payload_hash = :payload_hash
+                    """
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "signal_type": signal_type,
+                    "payload_hash": payload_hash,
+                },
+            ).mappings().first()
+            if existing:
+                return AgentDomainReceipt(str(existing["signal_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting signal for {run_id}") from exc
+        return AgentDomainReceipt(signal_id, status, 1)
+
+    def record_reconciliation_finding(
+        self,
+        *,
+        finding_id: str,
+        tenant_id: str,
+        run_id: str,
+        status: str,
+        fact_owner: str,
+        auto_repair: bool,
+        replay_allowed: bool,
+        terminate_run: bool,
+        audit_event_ref: str,
+        payload: dict[str, Any],
+    ) -> AgentDomainReceipt:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_reconciliation_findings(
+                    finding_id, tenant_id, run_id, status, fact_owner,
+                    auto_repair, replay_allowed, terminate_run, audit_event_ref, payload_hash
+                ) VALUES (
+                    :finding_id, :tenant_id, :run_id, :status, :fact_owner,
+                    :auto_repair, :replay_allowed, :terminate_run, :audit_event_ref, :payload_hash
+                )
+                """
+            ),
+            {
+                "finding_id": finding_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "status": status,
+                "fact_owner": fact_owner,
+                "auto_repair": auto_repair,
+                "replay_allowed": replay_allowed,
+                "terminate_run": terminate_run,
+                "audit_event_ref": audit_event_ref,
+                "payload_hash": _canonical_hash(payload),
+            },
+        )
+        return AgentDomainReceipt(finding_id, status, 1)
+
+    def record_cutover_audit_event(
+        self,
+        *,
+        cutover_event_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        request_id: str,
+        mode: str,
+        primary_runtime: str,
+        effect_committed: bool,
+        fallback_allowed: bool,
+        request_hash: str,
+        trace_ref: str,
+    ) -> AgentDomainReceipt:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_cutover_audit_events(
+                    cutover_event_id, tenant_id, workspace_id, request_id, mode,
+                    primary_runtime, effect_committed, fallback_allowed, request_hash, trace_ref
+                ) VALUES (
+                    :cutover_event_id, :tenant_id, :workspace_id, :request_id, :mode,
+                    :primary_runtime, :effect_committed, :fallback_allowed, :request_hash, :trace_ref
+                )
+                """
+            ),
+            {
+                "cutover_event_id": cutover_event_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "request_id": request_id,
+                "mode": mode,
+                "primary_runtime": primary_runtime,
+                "effect_committed": effect_committed,
+                "fallback_allowed": fallback_allowed,
+                "request_hash": request_hash,
+                "trace_ref": trace_ref,
+            },
+        )
+        return AgentDomainReceipt(cutover_event_id, mode, 1)
+
     def _record_event(
         self,
         *,
@@ -588,6 +1019,13 @@ def _execution_snapshot_params(snapshot: ExecutionContextSnapshot) -> dict[str, 
         "deadline_at": snapshot.deadline_at,
         "context_hash": snapshot.context_hash,
     }
+
+
+def _canonical_hash(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    import hashlib
+
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def _task_from_row(row: Any) -> TaskContract:
