@@ -2,11 +2,11 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE09
+current_phase: PHASE08
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 ready / PHASE12 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 in_progress / PHASE11 in_progress / PHASE09 planned / PHASE12 planned
 
 ## PHASE01–04 订正状态
 
@@ -19,9 +19,9 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE06 Observability Minimum Black Box 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE07 Model Gateway Runtime 已由 Coordinator Closure 批准为 completed。
-- [x] PHASE11 Durable Ingestion and Source Lineage 已由 Goal02 Coordinator Closure 批准为 completed。
-- [x] PHASE08 completed：Goal02 final closure 已批准 Coordinator Approval。
-- [x] PHASE11 completed：Goal02 final closure 已批准 Coordinator Approval。
+- [ ] PHASE11 Durable Ingestion and Source Lineage 重新打开为 in_progress，等待 Goal02 Final Closure 修复。
+- [ ] PHASE08 in_progress：Goal02 final closure 初版证据不足，Coordinator Approval 撤回到 pending。
+- [ ] PHASE11 in_progress：Goal02 final closure 初版证据不足，Coordinator Approval 撤回到 pending。
 
 ## Phase 状态
 
@@ -32,10 +32,10 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE05 Security Control Plane
 - [x] PHASE06 Observability Minimum Black Box
 - [x] PHASE07 Model Gateway Runtime
-- [x] PHASE08 Deterministic Single Controller Runtime
+- [ ] PHASE08 Deterministic Single Controller Runtime
 - [ ] PHASE09 Product Surface Backend Runtime
 - [ ] PHASE10 Web and Desktop Product Adaptation
-- [x] PHASE11 Durable Ingestion and Source Lineage
+- [ ] PHASE11 Durable Ingestion and Source Lineage
 - [ ] PHASE12 Knowledge Version and Standard RAG
 - [ ] PHASE13 Memory and Context Governance Runtime
 - [ ] PHASE14 Capability and Skill Control Plane

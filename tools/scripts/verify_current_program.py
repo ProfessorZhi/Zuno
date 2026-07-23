@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE09"
+CURRENT_PHASE = "PHASE08"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -191,10 +191,10 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[4]: "completed",
         PHASE_FILES[5]: "completed",
         PHASE_FILES[6]: "completed",
-        PHASE_FILES[7]: "completed",
-        PHASE_FILES[8]: "ready",
-        PHASE_FILES[10]: "completed",
-        PHASE_FILES[11]: "ready",
+        PHASE_FILES[7]: "in_progress",
+        PHASE_FILES[8]: "planned",
+        PHASE_FILES[10]: "in_progress",
+        PHASE_FILES[11]: "planned",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -302,16 +302,16 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE09",
+                "current_phase: PHASE08",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
                 "PHASE06 completed",
                 "PHASE07 completed",
-                "PHASE08 completed",
-                "PHASE11 completed",
-                "PHASE09 ready",
-                "PHASE12 ready",
+                "PHASE08 in_progress",
+                "PHASE11 in_progress",
+                "PHASE09 planned",
+                "PHASE12 planned",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -325,7 +325,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE09",
+                "current_phase: PHASE08",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -349,10 +349,10 @@ def verify_current_program() -> list[str]:
                 "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
-                "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed",
-                "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: ready",
-                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed",
-                "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: ready",
+                "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: in_progress",
+                "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: planned",
+                "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress",
+                "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: planned",
             ],
             "program-manifest.yaml",
         )
@@ -514,23 +514,23 @@ def verify_current_program() -> list[str]:
     phase11_file = _read(PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md")
     phase11_readiness = _read(WORK_PRODUCTS / "phase11-readiness.yaml")
     for phrase in [
-        "status: completed",
+        "status: in_progress",
         "Goal02 final closure",
-        "coordinator_approval: approved",
+        "coordinator_approval: pending",
         "Human Review Resume",
         "Delete / Restore / Reconciliation",
     ]:
         if phrase not in phase11_file:
             errors.append(f"PHASE11 repair phase file missing phrase: {phrase}")
     for phrase in [
-        "current_phase_status: completed",
-        "coordinator_approval: approved",
+        "current_phase_status: in_progress",
+        "coordinator_approval: pending",
         "implementation_available: 80",
         "target_not_current: 0",
-        "PHASE08 completed",
-        "PHASE11 completed",
-        "PHASE09 ready",
-        "PHASE12 ready",
+        "PHASE08 in_progress",
+        "PHASE11 in_progress",
+        "PHASE09 planned",
+        "PHASE12 planned",
     ]:
         if phrase not in phase11_readiness:
             errors.append(f"PHASE11 repair readiness missing phrase: {phrase}")

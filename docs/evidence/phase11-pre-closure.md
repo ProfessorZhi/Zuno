@@ -1,6 +1,6 @@
 ---
 phase: PHASE11
-status: completed
+status: superseded
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a

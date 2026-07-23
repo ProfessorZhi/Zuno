@@ -1,7 +1,7 @@
 ---
 phase: PHASE11
-status: completed
-coordinator_approval: approved
+status: reopened
+coordinator_approval: pending
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -11,7 +11,7 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## Decision
 
-PHASE11 Coordinator Closure is approved by the Goal02 final closure repair. PHASE11 is `completed`: durable Human Review Resume and Delete / Restore / Reconciliation have focused PostgreSQL/runtime evidence.
+PHASE11 Coordinator Closure is reopened by the current Goal02 final closure repair. PHASE11 is `in_progress`: existing durable Human Review Resume and Delete / Restore / Reconciliation artifacts are retained as partial PostgreSQL/runtime evidence, but they do not yet prove the full mandatory production path.
 
 This superseded approval does not mark Zuno production ready, quality proven, PHASE12 completed, PHASE09 completed, or PHASE10 completed.
 
@@ -36,7 +36,7 @@ This superseded approval does not mark Zuno production ready, quality proven, PH
 
 ## Gate Result
 
-PHASE11 may be marked `completed` in Program state. Goal02 final state sets `current_phase=PHASE09`; PHASE09 and PHASE12 may be marked ready, but both remain unimplemented until their own work packages are executed and verified.
+PHASE11 must remain `in_progress` in Program state until the current mandatory closure gate is satisfied. Goal02 state sets `current_phase=PHASE08`; PHASE09 and PHASE12 remain planned and unimplemented.
 
 ## Validation
 

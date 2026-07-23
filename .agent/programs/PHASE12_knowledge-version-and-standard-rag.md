@@ -1,7 +1,7 @@
 # PHASE12 Knowledge Version and Standard RAG
 
 phase_id: PHASE12
-status: ready
+status: planned
 depends_on: PHASE08, PHASE11
 owner: Module 03 Knowledge / Agentic GraphRAG
 

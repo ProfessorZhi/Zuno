@@ -2,13 +2,13 @@
 
 phase_id: PHASE08
 date: 2026-07-23
-status: completed
+status: superseded
 gate: pre_closure
 coordinator_review_required: true
 
 ## 结论
 
-本 PHASE08 Pre-Closure 已由 Goal02 final closure repair 重新批准。已有代码、迁移、测试和 evidence，加上 final closure repair 的 graph contract / native recovery focused validation，构成当前 PHASE08 completed 证据。
+本 PHASE08 Pre-Closure 结论已被当前 Goal02 final closure repair 订正为不足证据。已有代码、迁移、测试和 evidence 保留为部分证据，但不能构成当前 PHASE08 completed 结论。
 
 ## 覆盖
 
@@ -58,4 +58,4 @@ refined Agent Core target architecture verification passed.
 
 ## 边界
 
-PHASE08 completed 不表示完整产品默认路径、Web/Desktop、PHASE09、PHASE10、PHASE12、质量评测或 production readiness 已完成。PHASE09 仅为 ready；PHASE12 仅为 ready。
+PHASE08 当前为 in_progress，不表示完整产品默认路径、Web/Desktop、PHASE09、PHASE10、PHASE12、质量评测或 production readiness 已完成。PHASE09 与 PHASE12 当前为 planned。
