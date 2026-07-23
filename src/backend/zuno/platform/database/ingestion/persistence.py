@@ -1268,6 +1268,82 @@ class IngestionRepository:
         )
         return IngestionReceipt(indexable_snapshot_id, tenant_id, knowledge_handoff_status, handoff_hash)
 
+    def record_delete_lifecycle(
+        self,
+        *,
+        delete_ref: str,
+        tenant_id: str,
+        snapshot_ref: str,
+        state: str,
+        visibility_ref: str,
+        receipt_hash: str,
+        history: list[str],
+        indexable_snapshot_id: str | None = None,
+        handoff_outbox_event_id: str | None = None,
+        parse_job_id: str | None = None,
+        parse_attempt_id: str | None = None,
+        fencing_token: int | None = None,
+        cleanup_ref: str | None = None,
+        projection_cleanup_ref: str | None = None,
+        physical_delete_ref: str | None = None,
+        verification_ref: str | None = None,
+        cleanup_verified: bool = False,
+        physical_delete_verified: bool = False,
+        legal_hold_ref: str | None = None,
+        restored_authorization: bool = False,
+        duplicate: bool = False,
+        late_worker_result_rejected: bool = False,
+    ) -> IngestionReceipt:
+        self._require_hash(receipt_hash, "receipt_hash")
+        if fencing_token is not None and fencing_token <= 0:
+            raise IngestionPersistenceError("delete lifecycle fencing_token must be positive")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO ingestion_delete_lifecycles(
+                    delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
+                    indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
+                    parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
+                    physical_delete_ref, verification_ref, cleanup_verified,
+                    physical_delete_verified, legal_hold_ref, restored_authorization,
+                    duplicate, late_worker_result_rejected, receipt_hash, history
+                ) VALUES (
+                    :delete_ref, :tenant_id, :snapshot_ref, :state, :visibility_ref,
+                    :indexable_snapshot_id, :handoff_outbox_event_id, :parse_job_id,
+                    :parse_attempt_id, :fencing_token, :cleanup_ref, :projection_cleanup_ref,
+                    :physical_delete_ref, :verification_ref, :cleanup_verified,
+                    :physical_delete_verified, :legal_hold_ref, :restored_authorization,
+                    :duplicate, :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
+                )
+                """
+            ),
+            {
+                "delete_ref": delete_ref,
+                "tenant_id": tenant_id,
+                "snapshot_ref": snapshot_ref,
+                "state": state,
+                "visibility_ref": visibility_ref,
+                "indexable_snapshot_id": indexable_snapshot_id,
+                "handoff_outbox_event_id": handoff_outbox_event_id,
+                "parse_job_id": parse_job_id,
+                "parse_attempt_id": parse_attempt_id,
+                "fencing_token": fencing_token,
+                "cleanup_ref": cleanup_ref,
+                "projection_cleanup_ref": projection_cleanup_ref,
+                "physical_delete_ref": physical_delete_ref,
+                "verification_ref": verification_ref,
+                "cleanup_verified": cleanup_verified,
+                "physical_delete_verified": physical_delete_verified,
+                "legal_hold_ref": legal_hold_ref,
+                "restored_authorization": restored_authorization,
+                "duplicate": duplicate,
+                "late_worker_result_rejected": late_worker_result_rejected,
+                "receipt_hash": receipt_hash,
+                "history": canonical_json(history),
+            },
+        )
+        return IngestionReceipt(delete_ref, tenant_id, state, receipt_hash)
+
     def enqueue_outbox_event(
         self,
         *,
@@ -1353,6 +1429,26 @@ class IngestionRepository:
         ).mappings().first()
         if row is None:
             raise IngestionPersistenceError(f"missing review decision receipt: {decision_id}")
+        return dict(row)
+
+    def get_delete_lifecycle(self, delete_ref: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
+                       indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
+                       parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
+                       physical_delete_ref, verification_ref, cleanup_verified,
+                       physical_delete_verified, legal_hold_ref, restored_authorization,
+                       duplicate, late_worker_result_rejected, receipt_hash, history
+                FROM ingestion_delete_lifecycles
+                WHERE delete_ref = :delete_ref
+                """
+            ),
+            {"delete_ref": delete_ref},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing delete lifecycle: {delete_ref}")
         return dict(row)
 
     @staticmethod

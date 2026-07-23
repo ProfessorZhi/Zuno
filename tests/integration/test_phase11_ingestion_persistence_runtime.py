@@ -45,6 +45,7 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    ingestion_delete_lifecycles,
                     ingestion_review_decision_receipts,
                     ingestion_review_tasks,
                     ingestion_dead_letters,
@@ -70,6 +71,8 @@ def engine(migrated_postgres):
 
 
 def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> None:
+    from zuno.knowledge.ingestion import DeleteRestoreRuntime
+
     with IngestionUnitOfWork(engine) as repo:
         source = repo.record_source_object(
             source_object_id="source:phase11:1",
@@ -192,9 +195,26 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
             event_type="ingestion.indexable_snapshot.ready",
             payload={"indexable_snapshot_id": indexable.ref},
         )
+        delete_receipt = DeleteRestoreRuntime().verify_delete(
+            DeleteRestoreRuntime().mark_physical_delete(
+                DeleteRestoreRuntime().request_cleanup(
+                    DeleteRestoreRuntime().request_delete_after_snapshot(
+                        indexable_snapshot_id=indexable.ref,
+                        handoff_outbox_event_id=outbox.ref,
+                        visibility_ref="visibility:workspace-a:active",
+                        projection_cleanup_ref=f"projection-cleanup:{indexable.ref}",
+                    )
+                )
+            )
+        )
+        delete = repo.record_delete_lifecycle(
+            tenant_id="tenant-a",
+            **delete_receipt.model_dump(),
+        )
         restored = repo.get_indexable_snapshot(indexable.ref)
         restored_review_task = repo.get_review_task(review_task.ref)
         restored_review_receipt = repo.get_review_decision_receipt(review_receipt.ref)
+        restored_delete = repo.get_delete_lifecycle(delete.ref)
 
     assert restored["quality_decision_id"] == quality.ref
     assert restored["knowledge_handoff_status"] == "pending"
@@ -202,6 +222,11 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
     assert restored_review_task["status"] == "approved"
     assert restored_review_receipt["review_task_id"] == review_task.ref
     assert restored_review_receipt["status"] == "approved"
+    assert restored_delete["indexable_snapshot_id"] == indexable.ref
+    assert restored_delete["state"] == "verified"
+    assert restored_delete["cleanup_verified"] is True
+    assert restored_delete["physical_delete_verified"] is True
+    assert restored_delete["history"][-1] == "verified"
     assert outbox.status == "pending"
     with engine.connect() as conn:
         for table in [
@@ -217,8 +242,30 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
             "ingestion_review_decision_receipts",
             "ingestion_indexable_document_snapshots",
             "ingestion_outbox_events",
+            "ingestion_delete_lifecycles",
         ]:
             assert conn.execute(text(f"SELECT count(*) FROM {table}")).scalar_one() == 1
+
+
+def test_ingestion_delete_lifecycle_legal_hold_blocks_physical_delete_ref(engine) -> None:
+    from zuno.knowledge.ingestion import DeleteRestoreRuntime
+
+    held = DeleteRestoreRuntime().request_delete(
+        snapshot_ref="snapshot:legal-hold",
+        visibility_ref="visibility:workspace-a:legal-hold",
+        legal_hold_ref="legal-hold:case-1",
+    )
+    with IngestionUnitOfWork(engine) as repo:
+        receipt = repo.record_delete_lifecycle(
+            tenant_id="tenant-a",
+            **held.model_dump(),
+        )
+        restored = repo.get_delete_lifecycle(receipt.ref)
+
+    assert restored["state"] == "legal_hold"
+    assert restored["legal_hold_ref"] == "legal-hold:case-1"
+    assert restored["physical_delete_ref"] is None
+    assert restored["restored_authorization"] is False
 
 
 def test_ingestion_review_decision_requires_review_task(engine) -> None:

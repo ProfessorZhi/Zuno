@@ -134,6 +134,7 @@ def _engine():
                 """
                 TRUNCATE
                     ingestion_parse_leases,
+                    ingestion_delete_lifecycles,
                     ingestion_review_decision_receipts,
                     ingestion_review_tasks,
                     ingestion_dead_letters,
