@@ -3,8 +3,12 @@ from zuno.agent.domain.task_contracts import (
     AgentDomainError,
     AgentRun,
     AgentRunStatus,
+    DeterministicStepDefinition,
     GoalInputClassification,
     GoalVersion,
+    PlanVersion,
+    PlanVersionStatus,
+    StepExecutorType,
     TaskContract,
 )
 
@@ -13,7 +17,11 @@ __all__ = [
     "AgentDomainError",
     "AgentRun",
     "AgentRunStatus",
+    "DeterministicStepDefinition",
     "GoalInputClassification",
     "GoalVersion",
+    "PlanVersion",
+    "PlanVersionStatus",
+    "StepExecutorType",
     "TaskContract",
 ]

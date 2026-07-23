@@ -54,6 +54,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_plan_step_definitions,
+                    agent_plan_versions,
                     agent_domain_events,
                     agent_domain_runs,
                     agent_task_contracts,

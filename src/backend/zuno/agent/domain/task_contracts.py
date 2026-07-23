@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
+import hashlib
+import json
 
 
 class AgentDomainError(ValueError):
@@ -31,6 +33,22 @@ class AgentRunStatus(StrEnum):
     CANCELLED = "CANCELLED"
     FAILED = "FAILED"
     COMPLETED = "COMPLETED"
+
+
+class PlanVersionStatus(StrEnum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    REJECTED = "REJECTED"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class StepExecutorType(StrEnum):
+    MODEL = "MODEL"
+    KNOWLEDGE = "KNOWLEDGE"
+    CAPABILITY = "CAPABILITY"
+    TOOL = "TOOL"
+    INGESTION_WAIT = "INGESTION_WAIT"
+    FINAL_GATE = "FINAL_GATE"
 
 
 _ALLOWED_TRANSITIONS: dict[AgentRunStatus, set[AgentRunStatus]] = {
@@ -176,6 +194,144 @@ class AgentRun:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class DeterministicStepDefinition:
+    step_definition_id: str
+    plan_version_id: str
+    tenant_id: str
+    step_no: int
+    objective_ref: str
+    input_contract_ref: str
+    output_contract_ref: str
+    acceptance_refs: tuple[str, ...]
+    executor_type: StepExecutorType
+    required_evidence_refs: tuple[str, ...]
+    budget_ref: str
+    deadline_at: datetime
+    step_hash: str = ""
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "step_definition_id",
+            "plan_version_id",
+            "tenant_id",
+            "objective_ref",
+            "input_contract_ref",
+            "output_contract_ref",
+            "budget_ref",
+        ):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.step_no != 1:
+            raise AgentDomainError("PHASE08 deterministic PlanVersion supports exactly one step")
+        if not self.acceptance_refs:
+            raise AgentDomainError("StepDefinition requires acceptance_refs")
+        if self.deadline_at.tzinfo is None:
+            raise AgentDomainError("deadline_at must be timezone-aware")
+        expected_hash = self.compute_hash()
+        if not self.step_hash:
+            object.__setattr__(self, "step_hash", expected_hash)
+        elif self.step_hash != expected_hash:
+            raise AgentDomainError("StepDefinition hash mismatch")
+
+    def compute_hash(self) -> str:
+        return _canonical_hash(
+            {
+                "tenant_id": self.tenant_id,
+                "step_no": self.step_no,
+                "objective_ref": self.objective_ref,
+                "input_contract_ref": self.input_contract_ref,
+                "output_contract_ref": self.output_contract_ref,
+                "acceptance_refs": list(self.acceptance_refs),
+                "executor_type": self.executor_type.value,
+                "required_evidence_refs": list(self.required_evidence_refs),
+                "budget_ref": self.budget_ref,
+                "deadline_at": _canonical_datetime(self.deadline_at),
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class PlanVersion:
+    plan_version_id: str
+    tenant_id: str
+    workspace_id: str
+    goal_version_id: str
+    plan_kind: str
+    status: PlanVersionStatus
+    steps: tuple[DeterministicStepDefinition, ...]
+    plan_hash: str = ""
+    aggregate_version: int = 1
+    activated_at: datetime | None = None
+
+    def __post_init__(self) -> None:
+        for field_name in ("plan_version_id", "tenant_id", "workspace_id", "goal_version_id", "plan_kind"):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.plan_kind != "DETERMINISTIC_SINGLE_STEP":
+            raise AgentDomainError("PHASE08-T02 only supports DETERMINISTIC_SINGLE_STEP")
+        if len(self.steps) != 1:
+            raise AgentDomainError("Deterministic PlanVersion must contain exactly one step")
+        if self.steps[0].plan_version_id != self.plan_version_id:
+            raise AgentDomainError("StepDefinition must bind PlanVersion")
+        if self.aggregate_version < 1:
+            raise AgentDomainError("aggregate_version must be positive")
+        expected_hash = self.compute_hash()
+        if not self.plan_hash:
+            object.__setattr__(self, "plan_hash", expected_hash)
+        elif self.plan_hash != expected_hash:
+            raise AgentDomainError("PlanVersion hash mismatch")
+
+    @classmethod
+    def create_single_step(
+        cls,
+        *,
+        plan_version_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        goal_version_id: str,
+        step: DeterministicStepDefinition,
+    ) -> "PlanVersion":
+        return cls(
+            plan_version_id=plan_version_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            goal_version_id=goal_version_id,
+            plan_kind="DETERMINISTIC_SINGLE_STEP",
+            status=PlanVersionStatus.DRAFT,
+            steps=(step,),
+        )
+
+    def compute_hash(self) -> str:
+        return _canonical_hash(
+            {
+                "tenant_id": self.tenant_id,
+                "workspace_id": self.workspace_id,
+                "goal_version_id": self.goal_version_id,
+                "plan_kind": self.plan_kind,
+                "steps": [step.step_hash for step in self.steps],
+            }
+        )
+
+    def activate(self, *, expected_version: int, activated_at: datetime) -> "PlanVersion":
+        if expected_version != self.aggregate_version:
+            raise AgentDomainConflict(
+                f"expected aggregate_version {expected_version}, observed {self.aggregate_version}"
+            )
+        if self.status is not PlanVersionStatus.DRAFT:
+            raise AgentDomainError("PlanVersion activation is allowed exactly once from DRAFT")
+        if activated_at.tzinfo is None:
+            raise AgentDomainError("activated_at must be timezone-aware")
+        return replace(
+            self,
+            status=PlanVersionStatus.ACTIVE,
+            aggregate_version=self.aggregate_version + 1,
+            activated_at=activated_at,
+        )
+
+    def reject_mutation(self) -> None:
+        if self.status is PlanVersionStatus.ACTIVE:
+            raise AgentDomainError("active PlanVersion is immutable; create a new PlanVersion instead")
+
+
 def _require_ref(value: str, field_name: str) -> None:
     if not isinstance(value, str) or not value.strip():
         raise AgentDomainError(f"{field_name} is required")
@@ -185,3 +341,12 @@ def _require_hash(value: str, field_name: str) -> None:
     _require_ref(value, field_name)
     if len(value) != 64:
         raise AgentDomainError(f"{field_name} must be a canonical sha256 hex digest")
+
+
+def _canonical_hash(payload: dict[str, object]) -> str:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+
+
+def _canonical_datetime(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat()
