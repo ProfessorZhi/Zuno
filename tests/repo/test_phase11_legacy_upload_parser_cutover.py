@@ -23,10 +23,10 @@ def test_phase11_legacy_cutover_inventory_is_machine_verifiable() -> None:
     assert verifier.verify_phase11_legacy_upload_parser_cutover() == []
 
 
-def test_phase11_legacy_cutover_inventory_keeps_reopen_boundary() -> None:
+def test_phase11_legacy_cutover_inventory_keeps_closure_boundary() -> None:
     text = INVENTORY.read_text(encoding="utf-8")
-    assert "status: active_reopen_guard" in text
-    assert "PHASE11 仍为 `in_progress`" in text
+    assert "status: closure_inventory" in text
+    assert "PHASE11 为 `completed`" in text
     assert "versioned_adapter_required" in text
     assert "temporary.adapter.phase11.legacy_chunk_projection" in text
-    assert "不得作为 PHASE11 完成证据" in text
+    assert "生产默认路径已证明完整经过 SourceObject" in text

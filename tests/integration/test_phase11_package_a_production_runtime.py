@@ -134,6 +134,9 @@ def _engine():
                 """
                 TRUNCATE
                     ingestion_parse_leases,
+                    ingestion_delete_lifecycles,
+                    ingestion_review_decision_receipts,
+                    ingestion_review_tasks,
                     ingestion_dead_letters,
                     ingestion_outbox_events,
                     ingestion_indexable_document_snapshots,
@@ -2343,7 +2346,11 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
                            attempt.failure_code AS failure_code,
                            lease.state AS lease_state,
                            job.status AS job_status,
-                           quality.decision AS quality_decision
+                           quality.decision AS quality_decision,
+                           quality.review_task_ref AS review_task_ref,
+                           review_task.review_task_id AS review_task_id,
+                           review_task.status AS review_task_status,
+                           review_task.reason AS review_task_reason
                     FROM ingestion_parse_attempts AS attempt
                     JOIN ingestion_parse_leases AS lease
                       ON lease.parse_attempt_id = attempt.parse_attempt_id
@@ -2353,6 +2360,8 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
                       ON snapshot.parse_attempt_id = attempt.parse_attempt_id
                     JOIN ingestion_quality_gate_decisions AS quality
                       ON quality.parse_snapshot_id = snapshot.parse_snapshot_id
+                    JOIN ingestion_review_tasks AS review_task
+                      ON review_task.quality_decision_id = quality.quality_decision_id
                     WHERE attempt.parse_attempt_id = :parse_attempt_id
                     """
                 ),
@@ -2363,7 +2372,11 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
             assert row["lease_state"] == "released"
             assert row["job_status"] == "failed"
             assert row["quality_decision"] == "human_review"
+            assert row["review_task_ref"] == row["review_task_id"]
+            assert row["review_task_status"] == "pending"
+            assert row["review_task_reason"] == "quality_review_required"
             assert conn.execute(text("SELECT count(*) FROM ingestion_source_spans")).scalar_one() == 1
+            assert conn.execute(text("SELECT count(*) FROM ingestion_review_tasks")).scalar_one() == 1
             assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
             assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
     finally:

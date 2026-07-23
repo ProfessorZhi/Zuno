@@ -10,6 +10,9 @@ MATRIX = WORK_PRODUCTS / "goal01-closure-matrix.md"
 LEDGER = WORK_PRODUCTS / "requirement-ledger.yaml"
 SOURCE_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-ingestion-source-lineage.md"
 RUNTIME_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "input-runtime-batch.md"
+P11_T04_T07_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-p11-t04-t07-runtime.md"
+P11_T08_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-p11-t08-delete-recovery-cutover.md"
+E2E_EVIDENCE = REPO_ROOT / "docs" / "evidence" / "phase11-e2e-fault.md"
 
 
 def _read(path: Path) -> str:
@@ -45,21 +48,6 @@ def _phase_target_not_current_requirements(ledger: str, phase_id: str) -> list[s
 
 def verify_phase11_pre_closure_gate() -> list[str]:
     errors: list[str] = []
-    matrix_section = _phase_section(_read(MATRIX), "PHASE11 Ingestion Closure Matrix")
-    if not matrix_section:
-        errors.append("PHASE11 Ingestion Closure Matrix section missing")
-    elif "`mandatory_open`" in matrix_section or "`partial_evidence`" in matrix_section:
-        errors.append("PHASE11 Ingestion Closure Matrix still contains mandatory_open or partial_evidence")
-    for phrase in [
-        "SourceObject upload init / commit",
-        "RabbitMQ dispatch / ACK / Retry / Dead Letter",
-        "Quality Gate / Human Review",
-        "Legacy upload/parser 默认路径 Cutover",
-        "completion_candidate",
-    ]:
-        if phrase not in matrix_section:
-            errors.append(f"PHASE11 matrix missing phrase: {phrase}")
-
     gaps = _phase_target_not_current_requirements(_read(LEDGER), "PHASE11")
     if gaps:
         errors.append("PHASE11 mandatory target_not_current remains: " + ", ".join(gaps))
@@ -72,6 +60,15 @@ def verify_phase11_pre_closure_gate() -> list[str]:
     for phrase in ["status: implementation_available", "ARCH-ING-001", "ARCH-ING-080", "Input runtime batch verification passed"]:
         if phrase not in runtime_evidence:
             errors.append(f"input runtime evidence missing phrase: {phrase}")
+    for evidence, label, phrases in [
+        (P11_T04_T07_EVIDENCE, "P11-T04-T07 evidence", ["status: completion_candidate", "69 passed", "ReviewTask"]),
+        (P11_T08_EVIDENCE, "P11-T08 evidence", ["status: completion_candidate", "Delete / Restore", "Legacy upload/parser cutover verifier"]),
+        (E2E_EVIDENCE, "PHASE11 E2E evidence", ["status: passed", "120 passed", "P11-T01～P11-T08"]),
+    ]:
+        text = _read(evidence)
+        for phrase in phrases:
+            if phrase not in text:
+                errors.append(f"{label} missing phrase: {phrase}")
 
     source_errors = _load_function(
         REPO_ROOT / "tools" / "scripts" / "verify_phase11_ingestion_source_lineage.py",

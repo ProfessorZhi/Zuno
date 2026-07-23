@@ -6,7 +6,7 @@ current_phase: PHASE08
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 reopened in_progress / PHASE08 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 in_progress / PHASE11 in_progress / PHASE09 planned / PHASE12 planned
 
 ## PHASE01–04 订正状态
 
@@ -19,8 +19,9 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE11 reopened in_
 - [x] PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE06 Observability Minimum Black Box 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE07 Model Gateway Runtime 已由 Coordinator Closure 批准为 completed。
-- [ ] PHASE11 Durable Ingestion and Source Lineage 已由 Goal01 audit 重新打开；Coordinator Approval 调整为 pending/reopened。
-- [x] PHASE08 ready；PHASE12 仍 planned。
+- [x] PHASE11 Durable Ingestion and Source Lineage 已由 Goal02 Coordinator Closure 批准为 completed。
+- [ ] PHASE08 由 Goal02 repair 订正为 in_progress；Coordinator Approval 需重新完成。
+- [ ] PHASE11 由 Goal02 repair 订正为 in_progress；Coordinator Approval 需重新完成。
 
 ## Phase 状态
 

@@ -33,14 +33,15 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal01_reopen_audit() -> None:
+def test_phase_states_reflect_goal02_phase11_closure() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
         "PHASE05_security-control-plane.md": "status: completed",
         "PHASE06_observability-minimum-black-box.md": "status: completed",
         "PHASE07_model-gateway-runtime.md": "status: completed",
-        "PHASE08_deterministic-single-controller-runtime.md": "status: ready",
+        "PHASE08_deterministic-single-controller-runtime.md": "status: in_progress",
+        "PHASE09_product-surface-backend-runtime.md": "status: planned",
         "PHASE11_durable-ingestion-and-source-lineage.md": "status: in_progress",
         "PHASE12_knowledge-version-and-standard-rag.md": "status: planned",
     }
@@ -50,12 +51,13 @@ def test_phase_states_reflect_goal01_reopen_audit() -> None:
 
     manifest = (program_root / "program-manifest.yaml").read_text(encoding="utf-8")
     assert "minimum_vertical_slice_is_phase_completion: false" in manifest
-    assert "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready" in manifest
+    assert "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: in_progress" in manifest
+    assert "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: planned" in manifest
     assert "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: planned" in manifest
 
 
-def test_phase11_reopen_keeps_phase08_ready_and_phase12_planned() -> None:
+def test_goal02_repair_reopens_phase08_and_phase11_without_implementing_downstream() -> None:
     readiness = (
         REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
     ).read_text(encoding="utf-8")
@@ -65,12 +67,13 @@ def test_phase11_reopen_keeps_phase08_ready_and_phase12_planned() -> None:
     )
 
     assert "current_phase_status: in_progress" in readiness
-    assert "coordinator_approval: pending_reopened" in readiness
-    assert "target_not_current: 80" in readiness
-    assert "PHASE11 reopened/in_progress" in current
-    assert "PHASE08 仍 ready" in current
-    assert "PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed" in current
-    assert "PHASE11 reopened/in_progress" in production
+    assert "coordinator_approval: pending_repair" in readiness
+    assert "repair_blockers_pending" in readiness
+    assert "PHASE08 in_progress" in current
+    assert "PHASE11 in_progress" in current
+    assert "PHASE09 planned" in current
+    assert "PHASE12 planned" in current
+    assert "PHASE11 in_progress" in production
 
 
 def test_program_has_all_phase_files_and_atomic_tasks() -> None:

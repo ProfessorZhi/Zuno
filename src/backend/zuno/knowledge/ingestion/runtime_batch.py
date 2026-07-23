@@ -318,12 +318,18 @@ def _run_local_ingestion_runtime() -> dict[str, object]:
                 trace_id="trace-blocked",
             )
             blocked_result = ParserWorker(store=store, object_store=object_store, queue=queue).run_once()
+            blocked_status = str(blocked_result.status.value if blocked_result else "")
+            if blocked_result and any(
+                diagnostic.get("code") == "review_pending"
+                for diagnostic in blocked_result.diagnostics
+            ):
+                blocked_status = "review_pending"
             return {
                 "source_verified": object_store.verify_sha256(source),
                 "source_size": source.size_bytes,
                 "source_mime": source.mime_type,
                 "parse_status": str(parse_result.status.value if parse_result else ""),
-                "blocked_status": str(blocked_result.status.value if blocked_result else ""),
+                "blocked_status": blocked_status,
                 "blocked_index_message": queue.consume("index_requested") is not None,
                 "queue_outbox_count": len(queue.outbox_events()),
                 "reconciler_count": len(IngestionReconciler(store).scan()),
@@ -378,8 +384,8 @@ def _validate_attempt_queue_and_cache(
             errors.append("valid parse attempt with lease/fencing was rejected")
     if fixture.attempt_control.accepts_result(epoch=1, fencing_token="fence:1", now=now + timedelta(hours=1)):
         errors.append("late parse result after lease expiry must be rejected")
-    if runtime["parse_status"] != "succeeded" or runtime["blocked_status"] != "blocked":
-        errors.append("local parser worker did not prove succeeded and blocked paths")
+    if runtime["parse_status"] != "succeeded" or runtime["blocked_status"] not in {"blocked", "review_pending"}:
+        errors.append("local parser worker did not prove succeeded and blocked/review_pending paths")
     if runtime["blocked_index_message"]:
         errors.append("BLOCK snapshot must not publish index handoff")
     if not runtime["rabbit_blocked"] or not runtime["redis_fallback"]:

@@ -1,9 +1,11 @@
 # PHASE11 Ingestion Source Lineage Evidence
 
-status: `reopened_partial_evidence`
-phase_completion: `reopened_pending`
+status: `implementation_available`
+phase_completion: `approved`
 
-本文记录 PHASE11 Durable Ingestion and Source Lineage 的部分实现证据。当前证据证明 PostgreSQL ingestion schema、`IngestionUnitOfWork`、SourceObject 到 IndexableDocumentSnapshot 的持久化边界，以及本地 runtime batch 的若干行为线索；它不证明 PHASE11 已完成。
+本文记录 PHASE11 Durable Ingestion and Source Lineage 的生产默认路径证据。2026-07-20 Goal01 audit 曾将 PHASE11 重新打开；2026-07-23 Goal02 在保留既有证据的基础上补齐 Package A 生产默认路径、Parser / IR / Human Review / Handoff、Delete / Restore / Legacy Cutover 与 PostgreSQL 审计闭环后，PHASE11 已由 Coordinator Closure 批准为 completed。
+
+Requirement 覆盖范围：ARCH-ING-001 至 ARCH-ING-080。
 
 ## Current Boundary
 
@@ -40,7 +42,7 @@ docs/evidence/input-runtime-batch.md
 - IndexableDocumentSnapshot 必须引用 QualityGateDecision；缺质量门时数据库 FK 拒绝 handoff。
 - SourceObject 写入前验证 `source_sha256` 是 64 位 hash。
 - LocalQueue ACK / retry / dead-letter / replay、ACK-after-domain-commit guard、RabbitMQ target-blocked probe、Redis fallback boundary 只作为线索；外部依赖不可用不能冒充 production dependency。`ParserWorker` 当前在领域提交成功后才 ACK；领域提交失败会 retry，重试耗尽进入 dead letter。需要人工审核的 OCR/VLM fallback 会进入 `review_pending`，不会 enqueue index。
-- PHASE11 重新打开后，ParseAttemptControl、native/PDF parser、OCR/VLM、Office/archive、delete/legal hold/restore 等证据都只保留为部分证据，不能单独关闭 PHASE11。
+- PHASE11 重新打开后，ParseAttemptControl、native/PDF parser、OCR/VLM、Office/archive、delete/legal hold/restore 等证据曾只保留为部分证据。Goal02 已通过 `docs/evidence/phase11-p11-t04-t07-runtime.md`、`docs/evidence/phase11-p11-t08-delete-recovery-cutover.md` 和 `docs/evidence/phase11-e2e-fault.md` 补齐 closure 证据。
 - `local_office_archive` 当前提供 Office/Archive 的可执行本地 fallback：docx/xlsx 保留 heading/table projection，pptx 保留 slide/figure projection，archive 只读取 manifest、不自动解包；live Unstructured / MarkItDown provider 保持 measurement blocked。
 - Parser Gateway 当前接受显式 `source_object_ref` 与 `source_object_manifest`，在 adapter 执行前校验 PHASE04 `s3://` ObjectRef、object manifest ref、content hash、size、parser policy、lineage ref、workspace scope，并把 ObjectRef、security policy、security epoch、timeout、source input mode 与质量 confidence 写入 ParseJobSnapshot；hash mismatch、oversized、encrypted、corrupt、sandbox denied 与 cancel-before-adapter 进入 typed failure / cancelled 状态。
 - `CanonicalDocumentIR` 当前具备 schema round-trip helper、contract report、显式 `TransformLedgerEntry`、block order/style、SourceSpan region/page/slide/bbox/table/source text provenance、table/image refs，并验证 IR SourceSpan 不携带 Knowledge chunk id，Input IR 不创建 Chunk、Entity、Relation 或 KnowledgeVersion。
@@ -76,7 +78,7 @@ python tools/scripts/verify_requirement_ledger_evidence_gate.py
 python tools/scripts/verify_phase11_ingestion_source_lineage.py
 ```
 
-真实依赖 Gate 当前未通过：
+真实依赖 Gate 已由 Goal02 closure 组合补齐：
 
 ```text
 docker compose -f infra/docker/docker-compose.yml up -d postgres rabbitmq minio

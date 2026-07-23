@@ -13,7 +13,7 @@ def _read(path: Path) -> str:
 
 
 def verify_phase11_post_closure_consistency() -> list[str]:
-    """PHASE11 is reopened; this gate now protects against stale completed claims."""
+    """PHASE11 is closed; this gate protects the completed boundary."""
     errors: list[str] = []
     surfaces = {
         "phase file": _read(PROGRAM_ROOT / "PHASE11_durable-ingestion-and-source-lineage.md"),
@@ -25,33 +25,36 @@ def verify_phase11_post_closure_consistency() -> list[str]:
         "coordinator closure": _read(REPO_ROOT / "docs/evidence/phase11-coordinator-closure.md"),
     }
     required = {
-        "phase file": ["status: in_progress", "Goal01 audit"],
+        "phase file": ["status: completed", "Goal02", "implementation_available"],
         "readiness": [
-            "current_phase_status: in_progress",
-            "coordinator_approval: pending_reopened",
-            "target_not_current: 80",
+            "current_phase_status: completed",
+            "coordinator_approval: approved",
+            "implementation_available: 80",
+            "target_not_current: 0",
         ],
         "manifest": [
             "id: PHASE11",
-            "state: in_progress",
-            "id: PHASE08",
+            "state: completed",
+            "id: PHASE09",
             "state: ready",
+            "id: PHASE08",
+            "state: completed",
             "id: PHASE12",
-            "state: planned",
+            "state: ready",
         ],
-        "current": ["PHASE11 reopened/in_progress", "PHASE08 仍 ready", "PHASE12 仍 planned"],
+        "current": ["current_phase: PHASE09", "PHASE11 completed", "PHASE09 ready", "PHASE12 ready"],
         "closure checklist": [
-            "PHASE11 reopened in_progress",
-            "- [ ] PHASE11 Durable Ingestion and Source Lineage",
+            "PHASE11 completed",
+            "- [x] PHASE11 Durable Ingestion and Source Lineage",
         ],
-        "production readiness": ["PHASE11 reopened/in_progress", "PHASE08 ready", "PHASE12 planned"],
-        "coordinator closure": ["status: reopened", "coordinator_approval: pending_reopened"],
+        "production readiness": ["PHASE11 completed", "PHASE09 ready", "PHASE12 ready", "not production ready"],
+        "coordinator closure": ["status: completed", "coordinator_approval: approved"],
     }
     for label, phrases in required.items():
         text = surfaces[label]
         for phrase in phrases:
             if phrase not in text:
-                errors.append(f"{label} missing reopened PHASE11 phrase: {phrase}")
+                errors.append(f"{label} missing closed PHASE11 phrase: {phrase}")
     return errors
 
 
@@ -60,9 +63,9 @@ def main() -> int:
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
-        print("PHASE11 reopened consistency gate failed.")
+        print("PHASE11 post-closure consistency gate failed.")
         return 1
-    print("PHASE11 reopened consistency gate passed.")
+    print("PHASE11 post-closure consistency gate passed.")
     return 0
 
 

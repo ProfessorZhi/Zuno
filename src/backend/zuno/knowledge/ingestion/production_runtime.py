@@ -926,7 +926,7 @@ class PackageAProductionIngestionRuntime:
                 failure_code=result.failure.failure_classification if result.failure else result.status,
             )
 
-        quality_gate, _review_task = self.review_runtime.evaluate(
+        quality_gate, review_task = self.review_runtime.evaluate(
             document=result.document,
             parse_snapshot=snapshot,
             security_epoch_ref=str(context["security_epoch_ref"]),
@@ -961,7 +961,23 @@ class PackageAProductionIngestionRuntime:
             coverage_score=self._quality_metric(quality_gate, "coverage"),
             confidence_score=self._quality_metric(quality_gate, "confidence"),
             decision="publish" if HumanReviewRuntime.can_publish_snapshot(gate=quality_gate) else "human_review",
+            review_task_ref=quality_gate.review_task_id,
         )
+        if review_task is not None:
+            repo.record_review_task(
+                review_task_id=review_task.review_task_id,
+                tenant_id=tenant_id,
+                parse_snapshot_id=snapshot_receipt.ref,
+                quality_decision_id=quality.ref,
+                document_version_id=str(context["document_version_id"]),
+                workspace_id=review_task.workspace_id,
+                reviewer_scope=review_task.reviewer_scope,
+                security_epoch_ref=review_task.security_epoch_ref,
+                status=review_task.status,
+                reason=review_task.reason,
+                decision_hash=review_task.decision_hash,
+                expires_at=review_task.expires_at,
+            )
         if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
             repo.fail_parse_attempt(
                 parse_attempt_id=parse_attempt_id,
