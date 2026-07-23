@@ -32,6 +32,13 @@ from zuno.agent.runtime.phase08 import (
     build_phase08_step_graph,
     reconcile_generations,
 )
+from zuno.agent.runtime.phase08_cutover import (
+    Phase08CutoverController,
+    Phase08CutoverError,
+    Phase08RuntimeRequest,
+    Phase08RuntimeResponse,
+    SideEffectLedger,
+)
 from zuno.agent.runtime.factory import RuntimeAssembly, RuntimeDependencyFactory
 from zuno.agent.runtime.planning import (
     PlanExecutor,
@@ -68,7 +75,11 @@ __all__ = [
     "PHASE08_STEP_SCHEMA",
     "ReflectionDecision",
     "Phase08Conflict",
+    "Phase08CutoverController",
+    "Phase08CutoverError",
     "Phase08RuntimeError",
+    "Phase08RuntimeRequest",
+    "Phase08RuntimeResponse",
     "Phase08RunService",
     "Phase08SignalRecord",
     "Phase08StepService",
@@ -82,6 +93,7 @@ __all__ = [
     "RuntimeStreamEvent",
     "RuntimeStrategySelector",
     "SQLiteAgentRunStore",
+    "SideEffectLedger",
     "StrategyDecision",
     "StrategyMode",
     "UnsupportedRuntimeStateVersion",
