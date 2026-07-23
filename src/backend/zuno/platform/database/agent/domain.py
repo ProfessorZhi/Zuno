@@ -12,7 +12,11 @@ from zuno.agent.domain import (
     AgentDomainError,
     AgentRun,
     AgentRunStatus,
+    BudgetReservation,
+    BudgetReservationStatus,
+    BudgetSettlement,
     DeterministicStepDefinition,
+    ExecutionContextSnapshot,
     GoalInputClassification,
     GoalVersion,
     PlanVersion,
@@ -278,6 +282,122 @@ class AgentDomainRepository:
             raise AgentDomainConflict(f"stale PlanVersion activation for {next_plan.plan_version_id}")
         return AgentDomainReceipt(next_plan.plan_version_id, next_plan.status.value, next_plan.aggregate_version)
 
+    def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_budget_reservations (
+                    budget_reservation_id, run_id, tenant_id, budget_ref, reservation_scope,
+                    requested_units, reserved_units, status, aggregate_version
+                )
+                VALUES (
+                    :budget_reservation_id, :run_id, :tenant_id, :budget_ref, :reservation_scope,
+                    :requested_units, :reserved_units, :status, :aggregate_version
+                )
+                """
+            ),
+            _budget_reservation_params(reservation),
+        )
+        return AgentDomainReceipt(
+            reservation.budget_reservation_id,
+            reservation.status.value,
+            reservation.aggregate_version,
+        )
+
+    def load_budget_reservation(self, budget_reservation_id: str) -> BudgetReservation:
+        row = self.connection.execute(
+            text("SELECT * FROM agent_budget_reservations WHERE budget_reservation_id = :budget_reservation_id"),
+            {"budget_reservation_id": budget_reservation_id},
+        ).mappings().one()
+        return _budget_reservation_from_row(row)
+
+    def settle_budget_reservation(
+        self,
+        next_reservation: BudgetReservation,
+        settlement: BudgetSettlement,
+        *,
+        expected_version: int,
+    ) -> AgentDomainReceipt:
+        previous = self.load_budget_reservation(next_reservation.budget_reservation_id)
+        if previous.aggregate_version != expected_version:
+            raise AgentDomainConflict(
+                f"expected aggregate_version {expected_version}, observed {previous.aggregate_version}"
+            )
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE agent_budget_reservations
+                SET status = :status,
+                    aggregate_version = :next_version
+                WHERE budget_reservation_id = :budget_reservation_id
+                  AND aggregate_version = :expected_version
+                  AND status = 'RESERVED'
+                """
+            ),
+            {
+                "budget_reservation_id": next_reservation.budget_reservation_id,
+                "status": next_reservation.status.value,
+                "next_version": next_reservation.aggregate_version,
+                "expected_version": expected_version,
+            },
+        )
+        if result.rowcount != 1:
+            raise AgentDomainConflict(f"stale BudgetReservation settlement for {next_reservation.budget_reservation_id}")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_budget_settlements (
+                    budget_settlement_id, budget_reservation_id, run_id, tenant_id,
+                    consumed_units, released_units, reason_ref
+                )
+                VALUES (
+                    :budget_settlement_id, :budget_reservation_id, :run_id, :tenant_id,
+                    :consumed_units, :released_units, :reason_ref
+                )
+                """
+            ),
+            _budget_settlement_params(settlement),
+        )
+        return AgentDomainReceipt(
+            next_reservation.budget_reservation_id,
+            next_reservation.status.value,
+            next_reservation.aggregate_version,
+        )
+
+    def record_execution_context_snapshot(self, snapshot: ExecutionContextSnapshot) -> AgentDomainReceipt:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_execution_context_snapshots (
+                    execution_snapshot_id, run_id, tenant_id, workspace_id, principal_id,
+                    task_contract_id, security_context_ref, security_epoch_ref, model_policy_ref,
+                    capability_profile_ref, knowledge_snapshot_ref, answer_policy_ref,
+                    budget_reservation_id, deadline_at, context_hash
+                )
+                VALUES (
+                    :execution_snapshot_id, :run_id, :tenant_id, :workspace_id, :principal_id,
+                    :task_contract_id, :security_context_ref, :security_epoch_ref, :model_policy_ref,
+                    :capability_profile_ref, :knowledge_snapshot_ref, :answer_policy_ref,
+                    :budget_reservation_id, :deadline_at, :context_hash
+                )
+                """
+            ),
+            _execution_snapshot_params(snapshot),
+        )
+        return AgentDomainReceipt(snapshot.execution_snapshot_id, "RECORDED", 1)
+
+    def load_execution_context_snapshot(self, execution_snapshot_id: str) -> ExecutionContextSnapshot:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT * FROM agent_execution_context_snapshots
+                WHERE execution_snapshot_id = :execution_snapshot_id
+                """
+            ),
+            {"execution_snapshot_id": execution_snapshot_id},
+        ).mappings().one()
+        return _execution_snapshot_from_row(row)
+
     def find_task_contract_by_idempotency(
         self,
         *,
@@ -424,6 +544,52 @@ def _step_params(step: DeterministicStepDefinition) -> dict[str, Any]:
     }
 
 
+def _budget_reservation_params(reservation: BudgetReservation) -> dict[str, Any]:
+    return {
+        "budget_reservation_id": reservation.budget_reservation_id,
+        "run_id": reservation.run_id,
+        "tenant_id": reservation.tenant_id,
+        "budget_ref": reservation.budget_ref,
+        "reservation_scope": reservation.reservation_scope,
+        "requested_units": reservation.requested_units,
+        "reserved_units": reservation.reserved_units,
+        "status": reservation.status.value,
+        "aggregate_version": reservation.aggregate_version,
+    }
+
+
+def _budget_settlement_params(settlement: BudgetSettlement) -> dict[str, Any]:
+    return {
+        "budget_settlement_id": settlement.budget_settlement_id,
+        "budget_reservation_id": settlement.budget_reservation_id,
+        "run_id": settlement.run_id,
+        "tenant_id": settlement.tenant_id,
+        "consumed_units": settlement.consumed_units,
+        "released_units": settlement.released_units,
+        "reason_ref": settlement.reason_ref,
+    }
+
+
+def _execution_snapshot_params(snapshot: ExecutionContextSnapshot) -> dict[str, Any]:
+    return {
+        "execution_snapshot_id": snapshot.execution_snapshot_id,
+        "run_id": snapshot.run_id,
+        "tenant_id": snapshot.tenant_id,
+        "workspace_id": snapshot.workspace_id,
+        "principal_id": snapshot.principal_id,
+        "task_contract_id": snapshot.task_contract_id,
+        "security_context_ref": snapshot.security_context_ref,
+        "security_epoch_ref": snapshot.security_epoch_ref,
+        "model_policy_ref": snapshot.model_policy_ref,
+        "capability_profile_ref": snapshot.capability_profile_ref,
+        "knowledge_snapshot_ref": snapshot.knowledge_snapshot_ref,
+        "answer_policy_ref": snapshot.answer_policy_ref,
+        "budget_reservation_id": snapshot.budget_reservation_id,
+        "deadline_at": snapshot.deadline_at,
+        "context_hash": snapshot.context_hash,
+    }
+
+
 def _task_from_row(row: Any) -> TaskContract:
     return TaskContract(
         task_contract_id=row["task_contract_id"],
@@ -488,4 +654,38 @@ def _plan_from_rows(plan_row: Any, step_rows: list[Any]) -> PlanVersion:
         plan_hash=plan_row["plan_hash"],
         aggregate_version=plan_row["aggregate_version"],
         activated_at=plan_row["activated_at"],
+    )
+
+
+def _budget_reservation_from_row(row: Any) -> BudgetReservation:
+    return BudgetReservation(
+        budget_reservation_id=row["budget_reservation_id"],
+        run_id=row["run_id"],
+        tenant_id=row["tenant_id"],
+        budget_ref=row["budget_ref"],
+        reservation_scope=row["reservation_scope"],
+        requested_units=row["requested_units"],
+        reserved_units=row["reserved_units"],
+        status=BudgetReservationStatus(row["status"]),
+        aggregate_version=row["aggregate_version"],
+    )
+
+
+def _execution_snapshot_from_row(row: Any) -> ExecutionContextSnapshot:
+    return ExecutionContextSnapshot(
+        execution_snapshot_id=row["execution_snapshot_id"],
+        run_id=row["run_id"],
+        tenant_id=row["tenant_id"],
+        workspace_id=row["workspace_id"],
+        principal_id=row["principal_id"],
+        task_contract_id=row["task_contract_id"],
+        security_context_ref=row["security_context_ref"],
+        security_epoch_ref=row["security_epoch_ref"],
+        model_policy_ref=row["model_policy_ref"],
+        capability_profile_ref=row["capability_profile_ref"],
+        knowledge_snapshot_ref=row["knowledge_snapshot_ref"],
+        answer_policy_ref=row["answer_policy_ref"],
+        budget_reservation_id=row["budget_reservation_id"],
+        deadline_at=row["deadline_at"],
+        context_hash=row["context_hash"],
     )

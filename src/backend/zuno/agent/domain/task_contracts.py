@@ -51,6 +51,11 @@ class StepExecutorType(StrEnum):
     FINAL_GATE = "FINAL_GATE"
 
 
+class BudgetReservationStatus(StrEnum):
+    RESERVED = "RESERVED"
+    SETTLED = "SETTLED"
+
+
 _ALLOWED_TRANSITIONS: dict[AgentRunStatus, set[AgentRunStatus]] = {
     AgentRunStatus.CREATED: {AgentRunStatus.AUTHORIZED, AgentRunStatus.CANCELLING, AgentRunStatus.FAILED},
     AgentRunStatus.AUTHORIZED: {AgentRunStatus.STARTED, AgentRunStatus.CANCELLING, AgentRunStatus.FAILED},
@@ -330,6 +335,179 @@ class PlanVersion:
     def reject_mutation(self) -> None:
         if self.status is PlanVersionStatus.ACTIVE:
             raise AgentDomainError("active PlanVersion is immutable; create a new PlanVersion instead")
+
+
+@dataclass(frozen=True, slots=True)
+class BudgetSettlement:
+    budget_settlement_id: str
+    budget_reservation_id: str
+    run_id: str
+    tenant_id: str
+    consumed_units: int
+    released_units: int
+    reason_ref: str
+
+    def __post_init__(self) -> None:
+        for field_name in ("budget_settlement_id", "budget_reservation_id", "run_id", "tenant_id", "reason_ref"):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.consumed_units < 0 or self.released_units < 0:
+            raise AgentDomainError("BudgetSettlement units must be non-negative")
+
+
+@dataclass(frozen=True, slots=True)
+class BudgetReservation:
+    budget_reservation_id: str
+    run_id: str
+    tenant_id: str
+    budget_ref: str
+    reservation_scope: str
+    requested_units: int
+    reserved_units: int
+    status: BudgetReservationStatus = BudgetReservationStatus.RESERVED
+    aggregate_version: int = 1
+
+    def __post_init__(self) -> None:
+        for field_name in ("budget_reservation_id", "run_id", "tenant_id", "budget_ref", "reservation_scope"):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.requested_units < 1:
+            raise AgentDomainError("requested_units must be positive")
+        if self.reserved_units < 1:
+            raise AgentDomainError("reserved_units must be positive")
+        if self.reserved_units > self.requested_units:
+            raise AgentDomainError("reserved_units cannot exceed requested_units")
+        if self.aggregate_version < 1:
+            raise AgentDomainError("aggregate_version must be positive")
+
+    @classmethod
+    def reserve(
+        cls,
+        *,
+        budget_reservation_id: str,
+        run_id: str,
+        tenant_id: str,
+        budget_ref: str,
+        reservation_scope: str,
+        requested_units: int,
+        available_units: int,
+    ) -> "BudgetReservation":
+        if available_units < requested_units:
+            raise AgentDomainError("budget insufficient for reservation")
+        return cls(
+            budget_reservation_id=budget_reservation_id,
+            run_id=run_id,
+            tenant_id=tenant_id,
+            budget_ref=budget_ref,
+            reservation_scope=reservation_scope,
+            requested_units=requested_units,
+            reserved_units=requested_units,
+        )
+
+    def settle(self, *, expected_version: int, consumed_units: int, reason_ref: str) -> tuple["BudgetReservation", BudgetSettlement]:
+        if expected_version != self.aggregate_version:
+            raise AgentDomainConflict(
+                f"expected aggregate_version {expected_version}, observed {self.aggregate_version}"
+            )
+        if self.status is not BudgetReservationStatus.RESERVED:
+            raise AgentDomainError("BudgetReservation can be settled exactly once")
+        if consumed_units < 0 or consumed_units > self.reserved_units:
+            raise AgentDomainError("consumed_units must fit reserved budget")
+        settlement = BudgetSettlement(
+            budget_settlement_id=f"{self.budget_reservation_id}:settlement",
+            budget_reservation_id=self.budget_reservation_id,
+            run_id=self.run_id,
+            tenant_id=self.tenant_id,
+            consumed_units=consumed_units,
+            released_units=self.reserved_units - consumed_units,
+            reason_ref=reason_ref,
+        )
+        return (
+            replace(self, status=BudgetReservationStatus.SETTLED, aggregate_version=self.aggregate_version + 1),
+            settlement,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionContextSnapshot:
+    execution_snapshot_id: str
+    run_id: str
+    tenant_id: str
+    workspace_id: str
+    principal_id: str
+    task_contract_id: str
+    security_context_ref: str
+    security_epoch_ref: str
+    model_policy_ref: str
+    capability_profile_ref: str
+    knowledge_snapshot_ref: str
+    answer_policy_ref: str
+    budget_reservation_id: str
+    deadline_at: datetime
+    context_hash: str = ""
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "execution_snapshot_id",
+            "run_id",
+            "tenant_id",
+            "workspace_id",
+            "principal_id",
+            "task_contract_id",
+            "security_context_ref",
+            "security_epoch_ref",
+            "model_policy_ref",
+            "capability_profile_ref",
+            "knowledge_snapshot_ref",
+            "answer_policy_ref",
+            "budget_reservation_id",
+        ):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.deadline_at.tzinfo is None:
+            raise AgentDomainError("deadline_at must be timezone-aware")
+        expected_hash = self.compute_hash()
+        if not self.context_hash:
+            object.__setattr__(self, "context_hash", expected_hash)
+        elif self.context_hash != expected_hash:
+            raise AgentDomainError("ExecutionContextSnapshot hash mismatch")
+
+    def assert_current_security_epoch(self, current_epoch_ref: str) -> None:
+        if current_epoch_ref != self.security_epoch_ref:
+            raise AgentDomainError("stale security epoch for ExecutionContextSnapshot")
+
+    def assert_deadline_open(self, observed_at: datetime) -> None:
+        if observed_at.tzinfo is None:
+            raise AgentDomainError("observed_at must be timezone-aware")
+        if observed_at >= self.deadline_at:
+            raise AgentDomainError("deadline expired for ExecutionContextSnapshot")
+
+    def resume_refs(self) -> dict[str, str]:
+        return {
+            "security_context_ref": self.security_context_ref,
+            "security_epoch_ref": self.security_epoch_ref,
+            "model_policy_ref": self.model_policy_ref,
+            "capability_profile_ref": self.capability_profile_ref,
+            "knowledge_snapshot_ref": self.knowledge_snapshot_ref,
+            "answer_policy_ref": self.answer_policy_ref,
+            "budget_reservation_id": self.budget_reservation_id,
+        }
+
+    def compute_hash(self) -> str:
+        return _canonical_hash(
+            {
+                "run_id": self.run_id,
+                "tenant_id": self.tenant_id,
+                "workspace_id": self.workspace_id,
+                "principal_id": self.principal_id,
+                "task_contract_id": self.task_contract_id,
+                "security_context_ref": self.security_context_ref,
+                "security_epoch_ref": self.security_epoch_ref,
+                "model_policy_ref": self.model_policy_ref,
+                "capability_profile_ref": self.capability_profile_ref,
+                "knowledge_snapshot_ref": self.knowledge_snapshot_ref,
+                "answer_policy_ref": self.answer_policy_ref,
+                "budget_reservation_id": self.budget_reservation_id,
+                "deadline_at": _canonical_datetime(self.deadline_at),
+            }
+        )
 
 
 def _require_ref(value: str, field_name: str) -> None:
