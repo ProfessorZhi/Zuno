@@ -45,6 +45,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    ingestion_review_decision_receipts,
+                    ingestion_review_tasks,
                     ingestion_dead_letters,
                     ingestion_outbox_events,
                     ingestion_indexable_document_snapshots,
@@ -148,6 +150,32 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
             confidence_score=0.98,
             decision="publish",
         )
+        review_task = repo.record_review_task(
+            review_task_id="review-task:phase11:1",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            quality_decision_id=quality.ref,
+            document_version_id=document.ref,
+            workspace_id="workspace-a",
+            reviewer_scope="workspace_reviewer",
+            security_epoch_ref="security-epoch:phase11",
+            status="pending",
+            reason="quality_review_required",
+            decision_hash=HEX_64,
+            expires_at=1893456000.0,
+        )
+        review_receipt = repo.record_review_decision_receipt(
+            decision_id="review-decision:phase11:1",
+            tenant_id="tenant-a",
+            review_task_id=review_task.ref,
+            status="approved",
+            reviewer_id="reviewer:phase11",
+            reviewer_scope="workspace_reviewer",
+            security_epoch_ref="security-epoch:phase11",
+            reason="review_decision_recorded",
+            decision_hash=HEX_64,
+            decided_at=1893456001.0,
+        )
         indexable = repo.record_indexable_snapshot(
             indexable_snapshot_id="indexable:phase11:1",
             tenant_id="tenant-a",
@@ -165,9 +193,15 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
             payload={"indexable_snapshot_id": indexable.ref},
         )
         restored = repo.get_indexable_snapshot(indexable.ref)
+        restored_review_task = repo.get_review_task(review_task.ref)
+        restored_review_receipt = repo.get_review_decision_receipt(review_receipt.ref)
 
     assert restored["quality_decision_id"] == quality.ref
     assert restored["knowledge_handoff_status"] == "pending"
+    assert restored_review_task["quality_decision_id"] == quality.ref
+    assert restored_review_task["status"] == "approved"
+    assert restored_review_receipt["review_task_id"] == review_task.ref
+    assert restored_review_receipt["status"] == "approved"
     assert outbox.status == "pending"
     with engine.connect() as conn:
         for table in [
@@ -179,10 +213,32 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
             "ingestion_parse_snapshots",
             "ingestion_source_spans",
             "ingestion_quality_gate_decisions",
+            "ingestion_review_tasks",
+            "ingestion_review_decision_receipts",
             "ingestion_indexable_document_snapshots",
             "ingestion_outbox_events",
         ]:
             assert conn.execute(text(f"SELECT count(*) FROM {table}")).scalar_one() == 1
+
+
+def test_ingestion_review_decision_requires_review_task(engine) -> None:
+    with pytest.raises(exc.IntegrityError):
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_review_decision_receipt(
+                decision_id="review-decision:missing-task",
+                tenant_id="tenant-a",
+                review_task_id="review-task:missing",
+                status="approved",
+                reviewer_id="reviewer:phase11",
+                reviewer_scope="workspace_reviewer",
+                security_epoch_ref="security-epoch:phase11",
+                reason="review_decision_recorded",
+                decision_hash=HEX_64,
+                decided_at=1893456001.0,
+            )
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_review_decision_receipts")).scalar_one() == 0
 
 
 def test_ingestion_indexable_snapshot_requires_quality_gate(engine) -> None:
