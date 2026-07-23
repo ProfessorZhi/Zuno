@@ -42,21 +42,25 @@ def build_phase08_run_graph(*, checkpointer: Any | None = None) -> Any:
     graph = StateGraph(dict)
     graph.add_node("initialize", _initialize_run)
     graph.add_node("authorize", _authorize_run)
-    graph.add_node("context", _build_execution_context)
-    graph.add_node("plan", _plan_run)
-    graph.add_node("activate", _activate_plan)
-    graph.add_node("execute", _execute_run)
+    graph.add_node("context_snapshot", _build_execution_context)
+    graph.add_node("create_plan", _plan_run)
+    graph.add_node("validate_plan", _validate_plan)
+    graph.add_node("activate_plan", _activate_plan)
+    graph.add_node("execute_step", _execute_run)
     graph.add_node("final_gate", _final_gate_run)
     graph.add_node("finalize", _finalize_run)
+    graph.add_node("run_outcome", _run_outcome)
     graph.add_edge(START, "initialize")
     graph.add_edge("initialize", "authorize")
-    graph.add_edge("authorize", "context")
-    graph.add_edge("context", "plan")
-    graph.add_edge("plan", "activate")
-    graph.add_edge("activate", "execute")
-    graph.add_edge("execute", "final_gate")
+    graph.add_edge("authorize", "context_snapshot")
+    graph.add_edge("context_snapshot", "create_plan")
+    graph.add_edge("create_plan", "validate_plan")
+    graph.add_edge("validate_plan", "activate_plan")
+    graph.add_edge("activate_plan", "execute_step")
+    graph.add_edge("execute_step", "final_gate")
     graph.add_edge("final_gate", "finalize")
-    graph.add_edge("finalize", END)
+    graph.add_edge("finalize", "run_outcome")
+    graph.add_edge("run_outcome", END)
     return graph.compile(checkpointer=checkpointer)
 
 
@@ -71,8 +75,8 @@ def build_phase08_step_graph(*, checkpointer: Any | None = None) -> Any:
     graph.add_node("deterministic_validation", _deterministic_validation)
     graph.add_node("execute_owner_port", _execute_owner_port)
     graph.add_node("observation", _step_observation)
-    graph.add_node("evaluation", _step_evaluation)
-    graph.add_node("acceptance", _step_acceptance)
+    graph.add_node("action_evaluation", _step_evaluation)
+    graph.add_node("step_acceptance", _step_acceptance)
     graph.add_node("commit_step_result", _commit_step_result)
     graph.add_edge(START, "load_step")
     graph.add_edge("load_step", "resolve_input")
@@ -81,9 +85,9 @@ def build_phase08_step_graph(*, checkpointer: Any | None = None) -> Any:
     graph.add_edge("proposal", "deterministic_validation")
     graph.add_edge("deterministic_validation", "execute_owner_port")
     graph.add_edge("execute_owner_port", "observation")
-    graph.add_edge("observation", "evaluation")
-    graph.add_edge("evaluation", "acceptance")
-    graph.add_edge("acceptance", "commit_step_result")
+    graph.add_edge("observation", "action_evaluation")
+    graph.add_edge("action_evaluation", "step_acceptance")
+    graph.add_edge("step_acceptance", "commit_step_result")
     graph.add_edge("commit_step_result", END)
     return graph.compile(checkpointer=checkpointer)
 
@@ -214,14 +218,14 @@ def _authorize_run(state: dict[str, Any]) -> dict[str, Any]:
         next_state["phase"] = "finalize"
         next_state["finalization_status"] = "failed"
         return _advance(next_state, "finalize")
-    return _advance(next_state, "context")
+    return _advance(next_state, "context_snapshot")
 
 
 def _build_execution_context(state: dict[str, Any]) -> dict[str, Any]:
     next_state = dict(state)
     if not next_state.get("execution_snapshot_id"):
         next_state["execution_snapshot_id"] = f"execution-snapshot:{next_state.get('run_id', 'run')}"
-    return _advance(next_state, "plan")
+    return _advance(next_state, "create_plan")
 
 
 def _plan_run(state: dict[str, Any]) -> dict[str, Any]:
@@ -235,13 +239,23 @@ def _plan_run(state: dict[str, Any]) -> dict[str, Any]:
         next_state["finalization_status"] = "blocked"
         return _advance(next_state, "finalize")
     next_state.setdefault("active_plan_version_id", f"plan:{next_state.get('run_id', 'run')}")
-    return _advance(next_state, "activate")
+    return _advance(next_state, "validate_plan")
+
+
+def _validate_plan(state: dict[str, Any]) -> dict[str, Any]:
+    next_state = dict(state)
+    if not next_state.get("active_plan_version_id"):
+        next_state["latest_control_decision_ref"] = "plan_validation_failed"
+        next_state["finalization_status"] = "failed"
+        return _advance(next_state, "finalize")
+    next_state["plan_validation_ref"] = _domain_ref(next_state, "plan-validation")
+    return _advance(next_state, "activate_plan")
 
 
 def _activate_plan(state: dict[str, Any]) -> dict[str, Any]:
     next_state = dict(state)
     next_state.setdefault("current_dispatch_group_id", f"dispatch:{next_state.get('run_id', 'run')}")
-    return _advance(next_state, "execute")
+    return _advance(next_state, "execute_step")
 
 
 def _execute_run(state: dict[str, Any]) -> dict[str, Any]:
@@ -300,18 +314,24 @@ def _finalize_run(state: dict[str, Any]) -> dict[str, Any]:
     if next_state["finalization_status"] == "interrupted":
         next_state["outcome_ref"] = None
     elif next_state["finalization_status"] == "cancelled":
-        next_state["outcome_ref"] = f"outcome:{next_state.get('run_id', 'run')}:cancelled"
+        next_state["outcome_ref"] = _domain_ref(next_state, "run-outcome-cancelled")
     elif next_state["finalization_status"] == "blocked":
-        next_state["outcome_ref"] = f"outcome:{next_state.get('run_id', 'run')}:blocked"
+        next_state["outcome_ref"] = _domain_ref(next_state, "run-outcome-blocked")
     elif next_state["finalization_status"] == "abstained":
-        next_state["outcome_ref"] = f"outcome:{next_state.get('run_id', 'run')}:abstained"
+        next_state["outcome_ref"] = _domain_ref(next_state, "run-outcome-abstained")
     elif next_state["finalization_status"] == "failed":
         next_state["outcome_ref"] = next_state.get("outcome_receipt_ref") or _domain_ref(next_state, "run-outcome-failed")
     else:
         next_state["finalization_status"] = "finalized"
         next_state["publication_ref"] = next_state["publication_receipt_ref"]
         next_state["outcome_ref"] = next_state["outcome_receipt_ref"]
-    return _advance(next_state, "finalize")
+    return _advance(next_state, "run_outcome")
+
+
+def _run_outcome(state: dict[str, Any]) -> dict[str, Any]:
+    next_state = dict(state)
+    next_state["run_outcome_committed"] = next_state.get("outcome_ref") is not None
+    return _advance(next_state, "run_outcome")
 
 
 def _load_step(state: dict[str, Any]) -> dict[str, Any]:
@@ -329,7 +349,7 @@ def _resolve_step_input(state: dict[str, Any]) -> dict[str, Any]:
     if next_state.get("blocked_reason"):
         next_state["outcome_status"] = "blocked"
         next_state["latest_acceptance_ref"] = None
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     next_state.setdefault("resolved_input_ref", f"input:{next_state.get('step_run_id', 'step')}")
     return _advance_step(next_state, "security_gate")
 
@@ -339,7 +359,7 @@ def _step_security_gate(state: dict[str, Any]) -> dict[str, Any]:
     if next_state.get("security_denied"):
         next_state["failure_ref"] = "denied"
         next_state["outcome_status"] = "denied"
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     return _advance_step(next_state, "proposal")
 
 
@@ -352,11 +372,11 @@ def _step_proposal(state: dict[str, Any]) -> dict[str, Any]:
         return _advance_step(next_state, "load_step")
     if next_state.get("abstain_requested"):
         next_state["outcome_status"] = "abstained"
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     if next_state.get("invalid_proposal"):
         next_state["failure_ref"] = "invalid_proposal"
         next_state["outcome_status"] = "failed"
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     next_state["latest_action_run_id"] = f"action:{next_state.get('step_run_id', 'step')}"
     return _advance_step(next_state, "deterministic_validation")
 
@@ -364,12 +384,12 @@ def _step_proposal(state: dict[str, Any]) -> dict[str, Any]:
 def _deterministic_validation(state: dict[str, Any]) -> dict[str, Any]:
     next_state = dict(state)
     if next_state.get("outcome_status") in {"blocked", "denied", "abstained", "failed"}:
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     required = ("step_definition_id", "plan_version_id", "controller_epoch", "execution_epoch")
     if any(not next_state.get(key) for key in required):
         next_state["failure_ref"] = "deterministic_validation_failed"
         next_state["outcome_status"] = "failed"
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     next_state["validation_ref"] = _step_domain_ref(next_state, "deterministic-validation")
     return _advance_step(next_state, "execute_owner_port")
 
@@ -387,7 +407,7 @@ def _step_observation(state: dict[str, Any]) -> dict[str, Any]:
     if next_state.get("outcome_status") == "retryable":
         return next_state
     next_state.setdefault("latest_observation_ref", f"observation:{next_state.get('step_run_id', 'step')}")
-    return _advance_step(next_state, "evaluation")
+    return _advance_step(next_state, "action_evaluation")
 
 
 def _step_evaluation(state: dict[str, Any]) -> dict[str, Any]:
@@ -395,10 +415,10 @@ def _step_evaluation(state: dict[str, Any]) -> dict[str, Any]:
     if next_state.get("outcome_status") == "retryable":
         return next_state
     if next_state.get("outcome_status") in {"blocked", "denied", "abstained"}:
-        return _advance_step(next_state, "acceptance")
+        return _advance_step(next_state, "step_acceptance")
     if next_state.get("retryable_failure") and int(next_state.get("retry_count", 0)) > 0:
         next_state["outcome_status"] = "completed"
-    return _advance_step(next_state, "acceptance")
+    return _advance_step(next_state, "step_acceptance")
 
 
 def _step_acceptance(state: dict[str, Any]) -> dict[str, Any]:
@@ -457,7 +477,7 @@ def _interrupted_state(graph: Any, state: dict[str, Any], result: dict[str, Any]
     values["pending_interrupt_refs"] = pending
     values["latest_control_decision_ref"] = "interrupt"
     values["finalization_status"] = "interrupted"
-    values["phase"] = "execute"
+    values["phase"] = "execute_step"
     values["checkpoint_generation"] = int(values.get("checkpoint_generation", 0)) + 1
     return values
 

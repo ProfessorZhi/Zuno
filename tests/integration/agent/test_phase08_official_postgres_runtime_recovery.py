@@ -42,7 +42,7 @@ def test_phase08_run_graph_resumes_from_official_postgres_checkpoint_after_resta
             snapshot = service.graph.get_state({"configurable": {"thread_id": thread_id}})
 
             assert interrupted["finalization_status"] == "interrupted"
-            assert snapshot.next == ("execute",)
+            assert snapshot.next == ("execute_step",)
             assert snapshot.tasks and snapshot.tasks[0].interrupts
 
         with PostgresSaver.from_conn_string(POSTGRES_DSN) as restarted_saver:
@@ -57,6 +57,7 @@ def test_phase08_run_graph_resumes_from_official_postgres_checkpoint_after_resta
             assert resumed["finalization_status"] == "finalized"
             assert resumed["plan_created_count"] == 1
             assert resumed["publication_ref"].startswith("agent-domain:publication:")
+            assert resumed["phase"] == "run_outcome"
             assert final_snapshot.next == ()
     finally:
         _cleanup_checkpoints(thread_id)

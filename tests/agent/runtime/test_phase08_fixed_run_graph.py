@@ -38,10 +38,12 @@ def test_fixed_run_graph_compiles_and_produces_native_checkpoints() -> None:
     checkpoint_state = service.get_state(_state())
 
     assert final_state["schema_version"] == PHASE08_RUN_SCHEMA
-    assert final_state["phase"] == "finalize"
+    assert final_state["phase"] == "run_outcome"
+    assert final_state["plan_validation_ref"].startswith("agent-domain:plan-validation:")
     assert final_state["final_gate_receipt_ref"].startswith("agent-domain:final-gate:")
     assert final_state["publication_ref"].startswith("agent-domain:publication:")
     assert final_state["outcome_ref"].startswith("agent-domain:run-outcome:")
+    assert final_state["run_outcome_committed"] is True
     assert final_state["finalization_status"] == "finalized"
     assert checkpoint_state["execution_snapshot_id"] == "execution-snapshot:run:p08:t04:1"
     assert checkpoint_state["final_gate_receipt_ref"] == final_state["final_gate_receipt_ref"]
@@ -67,7 +69,7 @@ def test_run_graph_handles_interrupt_resume_cancel_and_deadline() -> None:
     )
 
     assert interrupted["finalization_status"] == "interrupted"
-    assert interrupted["phase"] == "execute"
+    assert interrupted["phase"] == "execute_step"
     assert interrupted["pending_interrupt_refs"]
     assert resumed["finalization_status"] == "finalized"
     assert resumed["pending_interrupt_refs"] == []
