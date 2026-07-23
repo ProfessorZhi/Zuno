@@ -990,11 +990,11 @@ class IngestionRepository:
                 """
                 INSERT INTO ingestion_parse_snapshots(
                     parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
-                    document_version_id, snapshot_hash, canonical_ir_ref,
+                    document_version_id, snapshot_hash, canonical_ir_json, canonical_ir_ref,
                     canonical_ir_schema_ref, parser_id, parser_version, status, diagnostics
                 ) VALUES (
                     :parse_snapshot_id, :tenant_id, :parse_job_id, :parse_attempt_id,
-                    :document_version_id, :snapshot_hash, :canonical_ir_ref,
+                    :document_version_id, :snapshot_hash, CAST(:canonical_ir_json AS jsonb), :canonical_ir_ref,
                     :canonical_ir_schema_ref, :parser_id, :parser_version, :status,
                     CAST(:diagnostics AS jsonb)
                 )
@@ -1007,6 +1007,7 @@ class IngestionRepository:
                 "parse_attempt_id": parse_attempt_id,
                 "document_version_id": document_version_id,
                 "snapshot_hash": snapshot_hash,
+                "canonical_ir_json": canonical_json(canonical_ir),
                 "canonical_ir_ref": canonical_ir_ref,
                 "canonical_ir_schema_ref": canonical_ir_schema_ref,
                 "parser_id": parser_id,
@@ -1442,6 +1443,57 @@ class IngestionRepository:
         ).mappings().first()
         if row is None:
             raise IngestionPersistenceError(f"missing indexable snapshot: {indexable_snapshot_id}")
+        return dict(row)
+
+    def get_parse_snapshot(self, parse_snapshot_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
+                       document_version_id, snapshot_hash, canonical_ir_json,
+                       canonical_ir_ref, canonical_ir_schema_ref, parser_id,
+                       parser_version, status, diagnostics, created_at
+                FROM ingestion_parse_snapshots
+                WHERE parse_snapshot_id = :parse_snapshot_id
+                """
+            ),
+            {"parse_snapshot_id": parse_snapshot_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse snapshot: {parse_snapshot_id}")
+        return dict(row)
+
+    def get_document_version(self, document_version_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT document_version_id, tenant_id, workspace_id, source_object_id,
+                       version_no, content_hash, metadata_hash, immutability_ref,
+                       status, created_at
+                FROM ingestion_document_versions
+                WHERE document_version_id = :document_version_id
+                """
+            ),
+            {"document_version_id": document_version_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing document version: {document_version_id}")
+        return dict(row)
+
+    def get_quality_decision(self, quality_decision_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT quality_decision_id, tenant_id, parse_snapshot_id, coverage_score,
+                       confidence_score, decision, review_task_ref, decision_hash, decided_at
+                FROM ingestion_quality_gate_decisions
+                WHERE quality_decision_id = :quality_decision_id
+                """
+            ),
+            {"quality_decision_id": quality_decision_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing quality decision: {quality_decision_id}")
         return dict(row)
 
     def get_review_task(self, review_task_id: str) -> dict[str, Any]:

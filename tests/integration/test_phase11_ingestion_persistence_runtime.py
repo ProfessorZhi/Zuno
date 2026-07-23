@@ -8,7 +8,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy import exc, text
 
-from zuno.knowledge.ingestion import DeleteRestoreRuntime, HumanReviewRuntime, ReviewDecisionReceipt, ReviewTask
+from zuno.knowledge.ingestion import (
+    DeleteRestoreRuntime,
+    HumanReviewRuntime,
+    PackageAProductionIngestionRuntime,
+    ReviewDecisionReceipt,
+    ReviewTask,
+)
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
@@ -424,6 +430,201 @@ def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after
 
     assert resumed.duplicate is True
     assert resumed.decision_hash == receipt.decision_hash
+
+
+def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engine) -> None:
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=None,
+        worker_id="phase11-package-a-worker",
+    )
+    document_version_id = "document-version:approved-resume:1"
+    source_object_id = "source:approved-resume:1"
+    workspace_id = "workspace_review"
+    security_epoch_ref = "security_epoch:workspace_review"
+    document_payload = {
+        "metadata": {
+            "document_id": source_object_id,
+            "source_id": source_object_id,
+            "source_object_ref": "s3://bucket/tenant-a/workspace_review/review.md",
+            "object_manifest_ref": "manifest:approved-resume:1",
+            "workspace_id": workspace_id,
+            "source_uri": "s3://bucket/tenant-a/workspace_review/review.md",
+            "mime_type": "text/markdown",
+            "hash": HEX_64,
+            "source_sha256": HEX_64,
+            "parser_id": "native_markdown",
+            "parser_version": "phase11-package-a-v1",
+            "document_version_id": document_version_id,
+            "security_epoch_ref": security_epoch_ref,
+        },
+        "blocks": [
+            {
+                "block_id": "block-low-confidence",
+                "type": "paragraph",
+                "text": "Low confidence parse result.",
+                "source_span": {"page": 1, "line_range": [1, 1]},
+                "confidence": 0.5,
+            }
+        ],
+        "tables": [],
+        "figures": [],
+        "transform_ledger": [],
+        "provenance": {
+            "parser_id": "native_markdown",
+            "parser_version": "phase11-package-a-v1",
+            "source_uri": "s3://bucket/tenant-a/workspace_review/review.md",
+            "confidence": 0.5,
+        },
+    }
+    task = ReviewTask(
+        review_task_id="review-task:approved-resume:1",
+        parse_snapshot_id="parse-snapshot:approved-resume:1",
+        document_version_id=document_version_id,
+        workspace_id=workspace_id,
+        reviewer_scope="workspace_reviewer",
+        security_epoch_ref=security_epoch_ref,
+        expires_at=datetime(2026, 7, 24, 0, 0, tzinfo=timezone.utc).timestamp(),
+        reason="quality_review_required",
+        decision_hash=HEX_64,
+    )
+
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id=source_object_id,
+            tenant_id="tenant-a",
+            workspace_id=workspace_id,
+            filename="review.md",
+            mime_type="text/markdown",
+            storage_uri="s3://bucket/tenant-a/workspace_review/review.md",
+            object_manifest_ref="manifest:approved-resume:1",
+            source_sha256=HEX_64,
+            size_bytes=1,
+            classification_ref="classification:internal",
+            security_epoch_ref=security_epoch_ref,
+        )
+        repo.record_document_version(
+            document_version_id=document_version_id,
+            tenant_id="tenant-a",
+            workspace_id=workspace_id,
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "review.md"},
+            immutability_ref="immutability:approved-resume:1",
+        )
+        repo.record_parse_plan(
+            parse_plan_id="parse-plan:approved-resume:1",
+            tenant_id="tenant-a",
+            document_version_id=document_version_id,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:approved-resume:1",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:approved-resume:1",
+            security_decision_ref="security-decision:approved-resume:1",
+        )
+        repo.record_parse_job(
+            parse_job_id="parse-job:approved-resume:1",
+            tenant_id="tenant-a",
+            parse_plan_id="parse-plan:approved-resume:1",
+            document_version_id=document_version_id,
+            idempotency_key="parse:approved-resume:1",
+        )
+        repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:approved-resume:1",
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:approved-resume:1",
+            attempt_no=1,
+            worker_id="worker:approved-resume:1",
+            lease_ref="lease:approved-resume:1",
+            fencing_token=1,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id=task.parse_snapshot_id,
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:approved-resume:1",
+            parse_attempt_id="parse-attempt:approved-resume:1",
+            document_version_id=document_version_id,
+            canonical_ir=document_payload,
+            canonical_ir_ref="canonical-ir:approved-resume:1",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="phase11-package-a-v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id="quality:approved-resume:1",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=0.98,
+            confidence_score=0.88,
+            decision="human_review",
+            review_task_ref=task.review_task_id,
+        )
+        repo.record_review_task(
+            review_task_id=task.review_task_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            quality_decision_id=quality.ref,
+            document_version_id=document_version_id,
+            workspace_id=workspace_id,
+            reviewer_scope=task.reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+            status=task.status,
+            reason=task.reason,
+            decision_hash=task.decision_hash,
+            expires_at=task.expires_at,
+        )
+        receipt = HumanReviewRuntime(review_ttl_seconds=60).decide(
+            task=task,
+            reviewer_id="reviewer:approved-resume",
+            reviewer_scope=task.reviewer_scope,
+            status="approved",
+            security_epoch_ref=security_epoch_ref,
+        )
+        repo.record_review_decision_receipt(
+            decision_id=receipt.decision_id,
+            tenant_id="tenant-a",
+            review_task_id=receipt.review_task_id,
+            status=receipt.status,
+            reviewer_id=receipt.reviewer_id,
+            reviewer_scope=receipt.reviewer_scope,
+            security_epoch_ref=receipt.security_epoch_ref,
+            reason=receipt.reason,
+            decision_hash=receipt.decision_hash,
+            decided_at=receipt.decided_at,
+        )
+
+    first = runtime.resume_approved_review(
+        tenant_id="tenant-a",
+        review_task_id=task.review_task_id,
+        decision_id=receipt.decision_id,
+    )
+    second = runtime.resume_approved_review(
+        tenant_id="tenant-a",
+        review_task_id=task.review_task_id,
+        decision_id=receipt.decision_id,
+    )
+
+    assert first.status == "succeeded"
+    assert first.acked_after_domain_commit is True
+    assert first.indexable_snapshot_id is not None
+    assert first.outbox_event_id is not None
+    assert second.indexable_snapshot_id == first.indexable_snapshot_id
+    assert second.outbox_event_id == first.outbox_event_id
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+        persisted = conn.execute(
+            text(
+                """
+                SELECT canonical_ir_json
+                FROM ingestion_parse_snapshots
+                WHERE parse_snapshot_id = :parse_snapshot_id
+                """
+            ),
+            {"parse_snapshot_id": task.parse_snapshot_id},
+        ).mappings().one()
+        assert persisted["canonical_ir_json"]["metadata"]["document_version_id"] == document_version_id
 
 
 def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(engine) -> None:

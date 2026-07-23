@@ -8,10 +8,10 @@ from urllib.parse import urlparse
 
 from sqlalchemy import Engine
 
-from zuno.knowledge.ingestion.contracts import ParseDocumentRequest
+from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseDocumentRequest, ParseJobSnapshot
 from zuno.knowledge.ingestion.gateway import ParseGateway
 from zuno.knowledge.ingestion.handoff import SnapshotHandoffRuntime
-from zuno.knowledge.ingestion.review import HumanReviewRuntime
+from zuno.knowledge.ingestion.review import HumanReviewRuntime, QualityGateResult, QualityMetric, ReviewDecisionReceipt, ReviewTask
 from zuno.knowledge.ingestion.source_object_commit import SourceObjectCommitRuntime
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_sha256
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
@@ -220,6 +220,128 @@ class PackageAProductionIngestionRuntime:
             outbox_event_id=outbox.ref,
             object_ref=source_commit.object_ref,
         )
+
+    def resume_approved_review(
+        self,
+        *,
+        tenant_id: str,
+        review_task_id: str,
+        decision_id: str,
+    ) -> PackageAWorkerReceipt:
+        with IngestionUnitOfWork(self.engine) as repo:
+            review_task_row = repo.get_review_task(review_task_id)
+            if str(review_task_row["tenant_id"]) != str(tenant_id):
+                raise IngestionPersistenceError("approved review resume tenant mismatch")
+            decision_row = repo.get_review_decision_receipt(decision_id)
+            if str(decision_row["review_task_id"]) != str(review_task_id):
+                raise IngestionPersistenceError("approved review resume decision mismatch")
+            review_task_data = dict(review_task_row)
+            if hasattr(review_task_data.get("expires_at"), "timestamp"):
+                review_task_data["expires_at"] = review_task_data["expires_at"].timestamp()
+            review_receipt_data = dict(decision_row)
+            if hasattr(review_receipt_data.get("decided_at"), "timestamp"):
+                review_receipt_data["decided_at"] = review_receipt_data["decided_at"].timestamp()
+            review_task = ReviewTask.model_validate(review_task_data)
+            review_receipt = ReviewDecisionReceipt.model_validate(review_receipt_data)
+            if review_receipt.status != "approved":
+                raise IngestionPersistenceError("approved review resume requires approved decision")
+            parse_snapshot_row = repo.get_parse_snapshot(str(review_task_row["parse_snapshot_id"]))
+            quality_row = repo.get_quality_decision(str(review_task_row["quality_decision_id"]))
+            document_row = repo.get_document_version(str(review_task_row["document_version_id"]))
+            context = repo.load_parse_job_context(
+                parse_job_id=str(parse_snapshot_row["parse_job_id"]),
+                tenant_id=str(tenant_id),
+            )
+            document = CanonicalDocumentIR.model_validate(parse_snapshot_row["canonical_ir_json"])
+            parse_snapshot = self._build_review_resume_snapshot(
+                parse_snapshot_row=parse_snapshot_row,
+                context=context,
+            )
+            quality_gate = self._build_quality_gate_result(
+                quality_row=quality_row,
+                review_task=review_task,
+            )
+            if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate, receipt=review_receipt):
+                raise IngestionPersistenceError("approved review resume is not publishable")
+            visibility_ref = f"visibility:{context['workspace_id']}:{context['source_object_id']}"
+            indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(
+                document=document,
+                parse_snapshot=parse_snapshot,
+                quality_gate=quality_gate,
+                visibility_ref=visibility_ref,
+                review_receipt=review_receipt,
+            )
+            replay = None
+            try:
+                replay = repo.load_snapshot_handoff_replay_receipt(
+                    tenant_id=tenant_id,
+                    handoff_idempotency_key=indexable_snapshot.idempotency_key,
+                )
+            except IngestionPersistenceError:
+                replay = None
+            if replay is not None:
+                self._validate_snapshot_handoff_replay_receipt(
+                    replay={
+                        "parse_snapshot_id": parse_snapshot_row["parse_snapshot_id"],
+                        "document_version_id": document_row["document_version_id"],
+                        "quality_decision_id": quality_gate.quality_decision_id,
+                        "workspace_id": context["workspace_id"],
+                        "source_object_id": context["source_object_id"],
+                        "handoff_idempotency_key": indexable_snapshot.idempotency_key,
+                        "indexable_snapshot_id": replay["indexable_snapshot_id"],
+                        "outbox_event_id": replay["outbox_event_id"],
+                        "outbox_idempotency_key": replay["outbox_payload_idempotency_key"],
+                        "handoff_envelope_hash": replay["handoff_envelope_hash"],
+                        "visibility_ref": replay["visibility_ref"],
+                        "knowledge_handoff_status": replay["knowledge_handoff_status"],
+                        "outbox_publish_status": replay["outbox_publish_status"],
+                    },
+                    handoff_replay=replay,
+                )
+                return PackageAWorkerReceipt(
+                    parse_job_id=str(parse_snapshot_row["parse_job_id"]),
+                    parse_attempt_id=str(parse_snapshot_row["parse_attempt_id"]),
+                    status="succeeded",
+                    acked_after_domain_commit=True,
+                    indexable_snapshot_id=str(replay["indexable_snapshot_id"]),
+                    outbox_event_id=str(replay["outbox_event_id"]),
+                    handoff_idempotency_key=str(replay["handoff_idempotency_key"]),
+                    outbox_idempotency_key=str(replay["outbox_payload_idempotency_key"]),
+                )
+            indexable = repo.record_indexable_snapshot(
+                indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
+                tenant_id=tenant_id,
+                parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+                document_version_id=str(document_row["document_version_id"]),
+                quality_decision_id=quality_gate.quality_decision_id,
+                visibility_ref=visibility_ref,
+                payload=indexable_snapshot.payload,
+                handoff_idempotency_key=indexable_snapshot.idempotency_key,
+            )
+            outbox = repo.enqueue_outbox_event(
+                outbox_event_id=snapshot_outbox.outbox_event_id,
+                tenant_id=tenant_id,
+                aggregate_ref=indexable.ref,
+                event_type="ingestion.indexable_snapshot.ready",
+                payload={
+                    "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+                    "document_version_id": indexable_snapshot.document_version_id,
+                    "quality_decision_id": indexable_snapshot.quality_decision_id,
+                    "canonical_hash": indexable_snapshot.canonical_hash,
+                    "idempotency_key": indexable_snapshot.idempotency_key,
+                },
+                idempotency_key=snapshot_outbox.idempotency_key,
+            )
+            return PackageAWorkerReceipt(
+                parse_job_id=str(parse_snapshot_row["parse_job_id"]),
+                parse_attempt_id=str(parse_snapshot_row["parse_attempt_id"]),
+                status="succeeded",
+                acked_after_domain_commit=True,
+                indexable_snapshot_id=indexable.ref,
+                outbox_event_id=outbox.ref,
+                handoff_idempotency_key=indexable_snapshot.idempotency_key,
+                outbox_idempotency_key=snapshot_outbox.idempotency_key,
+            )
 
     def _load_workspace_upload_replay_receipt(
         self,
@@ -1373,6 +1495,65 @@ class PackageAProductionIngestionRuntime:
     @staticmethod
     def _quality_failure_code(quality_gate) -> str:
         return f"quality_gate_{str(quality_gate.verdict).lower()}"
+
+    @staticmethod
+    def _build_quality_gate_result(*, quality_row: dict[str, Any], review_task: ReviewTask) -> QualityGateResult:
+        verdict_map = {
+            "publish": "PASS",
+            "human_review": "REVIEW",
+            "block": "BLOCK",
+            "fallback": "FALLBACK",
+        }
+        verdict = verdict_map.get(str(quality_row["decision"]), "REVIEW")
+        return QualityGateResult(
+            quality_decision_id=str(quality_row["quality_decision_id"]),
+            parse_snapshot_id=str(quality_row["parse_snapshot_id"]),
+            verdict=verdict,
+            metrics=[
+                QualityMetric(
+                    name="coverage",
+                    value=float(quality_row["coverage_score"]),
+                    threshold=0.0,
+                    passed=True,
+                    reason="persisted_quality_gate_coverage",
+                ),
+                QualityMetric(
+                    name="confidence",
+                    value=float(quality_row["confidence_score"]),
+                    threshold=0.0,
+                    passed=True,
+                    reason="persisted_quality_gate_confidence",
+                ),
+            ],
+            review_task_id=review_task.review_task_id,
+            decision_hash=str(quality_row["decision_hash"]),
+        )
+
+    @staticmethod
+    def _build_review_resume_snapshot(*, parse_snapshot_row: dict[str, Any], context: dict[str, Any]) -> ParseJobSnapshot:
+        return ParseJobSnapshot.model_validate(
+            {
+                "job_id": str(parse_snapshot_row["parse_job_id"]),
+                "status": str(parse_snapshot_row["status"]),
+                "document_id": str(context["source_object_id"]),
+                "workspace_id": str(context["workspace_id"]),
+                "source_uri": str(context["storage_uri"]),
+                "mime_type": str(context["mime_type"]),
+                "parser_id": str(parse_snapshot_row["parser_id"]),
+                "parser_format": str(context["declared_format"]),
+                "attempt": int(context["attempt_count"] or 1),
+                "attempt_count": int(context["attempt_count"] or 1),
+                "parse_plan_id": str(context["parse_plan_id"]),
+                "parse_attempt_id": str(parse_snapshot_row["parse_attempt_id"]),
+                "parse_idempotency_key": str(context["idempotency_key"]),
+                "retryable": False,
+                "source_provenance": {
+                    "source_object_id": str(context["source_object_id"]),
+                    "document_version_id": str(context["document_version_id"]),
+                },
+                "adapter_boundary": {"resume_mode": "approved_review"},
+            }
+        )
 
     @staticmethod
     def _validate_parser_identity(*, result, snapshot, parse_job_id: str, parse_attempt_id: str) -> None:
