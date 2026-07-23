@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import os
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from sqlalchemy import exc, text
 
+from zuno.knowledge.ingestion import DeleteRestoreRuntime, HumanReviewRuntime, ReviewDecisionReceipt, ReviewTask
+from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
 
@@ -266,6 +269,183 @@ def test_ingestion_delete_lifecycle_legal_hold_blocks_physical_delete_ref(engine
     assert restored["legal_hold_ref"] == "legal-hold:case-1"
     assert restored["physical_delete_ref"] is None
     assert restored["restored_authorization"] is False
+
+
+def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart(engine) -> None:
+    runtime = HumanReviewRuntime(review_ttl_seconds=60)
+    task = ReviewTask(
+        review_task_id="review-task:resume:1",
+        parse_snapshot_id="parse-snapshot:resume:1",
+        document_version_id="document-version:resume:1",
+        workspace_id="workspace_review",
+        reviewer_scope="workspace_reviewer",
+        security_epoch_ref="security_epoch:workspace_review",
+        expires_at=datetime(2026, 7, 24, 0, 0, tzinfo=timezone.utc).timestamp(),
+        reason="quality_review_required",
+        decision_hash=HEX_64,
+    )
+
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:resume:1",
+            tenant_id="tenant-a",
+            workspace_id="workspace_review",
+            filename="review.md",
+            mime_type="text/markdown",
+            storage_uri="s3://bucket/workspace_review/review.md",
+            object_manifest_ref="manifest:resume:1",
+            source_sha256=HEX_64,
+            size_bytes=1,
+            classification_ref="classification:internal",
+            security_epoch_ref=task.security_epoch_ref,
+        )
+        document = repo.record_document_version(
+            document_version_id=task.document_version_id,
+            tenant_id="tenant-a",
+            workspace_id=task.workspace_id,
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "review.md"},
+            immutability_ref="immutability:resume:1",
+        )
+        repo.record_parse_plan(
+            parse_plan_id="parse-plan:resume:1",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:resume:1",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:resume:1",
+            security_decision_ref="security-decision:resume:1",
+        )
+        repo.record_parse_job(
+            parse_job_id="parse-job:resume:1",
+            tenant_id="tenant-a",
+            parse_plan_id="parse-plan:resume:1",
+            document_version_id=document.ref,
+            idempotency_key="parse:resume:1",
+        )
+        repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:resume:1",
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:resume:1",
+            attempt_no=1,
+            worker_id="worker:resume:1",
+            lease_ref="lease:resume:1",
+            fencing_token=1,
+        )
+        repo.record_parse_snapshot(
+            parse_snapshot_id=task.parse_snapshot_id,
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:resume:1",
+            parse_attempt_id="parse-attempt:resume:1",
+            document_version_id=document.ref,
+            canonical_ir={"blocks": [{"block_id": "block:1", "text": "review"}]},
+            canonical_ir_ref="canonical-ir:resume:1",
+            canonical_ir_schema_ref="CanonicalDocumentIR:v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        repo.record_quality_decision(
+            quality_decision_id="quality:resume:1",
+            tenant_id="tenant-a",
+            parse_snapshot_id=task.parse_snapshot_id,
+            coverage_score=0.98,
+            confidence_score=0.88,
+            decision="human_review",
+        )
+        repo.record_review_task(
+            review_task_id=task.review_task_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=task.parse_snapshot_id,
+            quality_decision_id="quality:resume:1",
+            document_version_id=task.document_version_id,
+            workspace_id=task.workspace_id,
+            reviewer_scope=task.reviewer_scope,
+            security_epoch_ref=task.security_epoch_ref,
+            status=task.status,
+            reason=task.reason,
+            decision_hash=task.decision_hash,
+            expires_at=task.expires_at,
+        )
+        receipt = runtime.decide(
+            task=task,
+            reviewer_id="reviewer:phase11",
+            reviewer_scope=task.reviewer_scope,
+            status="approved",
+            security_epoch_ref=task.security_epoch_ref,
+        )
+        repo.record_review_decision_receipt(
+            decision_id=receipt.decision_id,
+            tenant_id="tenant-a",
+            review_task_id=receipt.review_task_id,
+            status=receipt.status,
+            reviewer_id=receipt.reviewer_id,
+            reviewer_scope=receipt.reviewer_scope,
+            security_epoch_ref=receipt.security_epoch_ref,
+            reason=receipt.reason,
+            decision_hash=receipt.decision_hash,
+            decided_at=receipt.decided_at,
+        )
+        loaded_task_row = repo.get_review_task(task.review_task_id)
+        loaded_receipt_row = repo.get_review_decision_receipt(receipt.decision_id)
+        loaded_task = ReviewTask(
+            review_task_id=str(loaded_task_row["review_task_id"]),
+            parse_snapshot_id=str(loaded_task_row["parse_snapshot_id"]),
+            document_version_id=str(loaded_task_row["document_version_id"]),
+            workspace_id=str(loaded_task_row["workspace_id"]),
+            reviewer_scope=str(loaded_task_row["reviewer_scope"]),
+            security_epoch_ref=str(loaded_task_row["security_epoch_ref"]),
+            status=str(loaded_task_row["status"]),
+            expires_at=loaded_task_row["expires_at"].timestamp(),
+            reason=str(loaded_task_row["reason"]),
+            decision_hash=str(loaded_task_row["decision_hash"]),
+        )
+        loaded_receipt = ReviewDecisionReceipt(
+            review_task_id=str(loaded_receipt_row["review_task_id"]),
+            decision_id=str(loaded_receipt_row["decision_id"]),
+            status=str(loaded_receipt_row["status"]),
+            reviewer_id=str(loaded_receipt_row["reviewer_id"]),
+            reviewer_scope=str(loaded_receipt_row["reviewer_scope"]),
+            security_epoch_ref=str(loaded_receipt_row["security_epoch_ref"]),
+            decision_hash=str(loaded_receipt_row["decision_hash"]),
+            reason=str(loaded_receipt_row["reason"]),
+            decided_at=loaded_receipt_row["decided_at"].timestamp(),
+        )
+        resumed = runtime.decide(
+            task=loaded_task,
+            reviewer_id=loaded_receipt.reviewer_id,
+            reviewer_scope=loaded_receipt.reviewer_scope,
+            status="approved",
+            security_epoch_ref=loaded_receipt.security_epoch_ref,
+            existing_receipt=loaded_receipt,
+        )
+
+    assert resumed.duplicate is True
+    assert resumed.decision_hash == receipt.decision_hash
+
+
+def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(engine) -> None:
+    runtime = DeleteRestoreRuntime()
+    requested = runtime.request_delete(
+        snapshot_ref="snapshot:phase11:restore",
+        visibility_ref="visibility:workspace-a:restore",
+    )
+    cleanup = runtime.request_cleanup(requested)
+    physical = runtime.mark_physical_delete(cleanup)
+    verified = runtime.verify_delete(physical)
+
+    with IngestionUnitOfWork(engine) as repo:
+        repo.record_delete_lifecycle(tenant_id="tenant-a", **verified.model_dump())
+        loaded = DeleteLifecycleReceipt.model_validate(repo.get_delete_lifecycle(verified.delete_ref))
+        restored = runtime.restore(loaded)
+        repo.reconcile_delete_lifecycle(restored)
+        replayed = repo.get_delete_lifecycle(restored.delete_ref)
+
+    assert replayed["state"] == "restored"
+    assert replayed["restored_authorization"] is False
+    assert replayed["history"][-1] == "restored"
 
 
 def test_ingestion_review_decision_requires_review_task(engine) -> None:

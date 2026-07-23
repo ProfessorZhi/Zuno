@@ -6,6 +6,9 @@ from zuno.agent.runtime import (
     Phase08CutoverController,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
+    Phase08RunService,
+    build_phase08_run_graph,
+    build_phase08_test_checkpointer,
 )
 
 
@@ -35,6 +38,10 @@ def _legacy_runner(calls: list[tuple[str, bool]]):
     return _run
 
 
+def _new_runtime() -> Phase08RunService:
+    return Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer()))
+
+
 class _UnavailableRuntime:
     def start(self, state):
         del state
@@ -43,7 +50,7 @@ class _UnavailableRuntime:
 
 def test_shadow_mode_compares_same_request_hash_without_double_side_effect() -> None:
     calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(mode="shadow", legacy_runner=_legacy_runner(calls))
+    controller = Phase08CutoverController(mode="shadow", legacy_runner=_legacy_runner(calls), new_runtime=_new_runtime())
     request = _request()
 
     response = controller.handle(request)
@@ -57,7 +64,7 @@ def test_shadow_mode_compares_same_request_hash_without_double_side_effect() -> 
 
 def test_canary_uses_new_runtime_once_and_keeps_legacy_shadow_dry() -> None:
     calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(mode="canary", legacy_runner=_legacy_runner(calls))
+    controller = Phase08CutoverController(mode="canary", legacy_runner=_legacy_runner(calls), new_runtime=_new_runtime())
     request = _request()
 
     response = controller.handle(request)
@@ -104,7 +111,7 @@ def test_rollback_mode_never_invokes_new_runtime() -> None:
 
 
 def test_new_default_rejects_duplicate_side_effect_claim() -> None:
-    controller = Phase08CutoverController(mode="new_default", legacy_runner=_legacy_runner([]))
+    controller = Phase08CutoverController(mode="new_default", legacy_runner=_legacy_runner([]), new_runtime=_new_runtime())
     request = _request()
 
     controller.handle(request)

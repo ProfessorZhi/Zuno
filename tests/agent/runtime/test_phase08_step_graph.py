@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from zuno.agent.runtime import Phase08StepService, build_phase08_step_graph
+import pytest
+
+from zuno.agent.runtime import (
+    Phase08RuntimeError,
+    Phase08StepService,
+    build_phase08_step_graph,
+    build_phase08_test_checkpointer,
+)
 
 
 def _step_state(**overrides):
@@ -18,7 +25,7 @@ def _step_state(**overrides):
 
 
 def test_step_graph_success_blocked_denied_invalid_retry_and_abstain() -> None:
-    service = Phase08StepService(graph=build_phase08_step_graph())
+    service = Phase08StepService(graph=build_phase08_step_graph(checkpointer=build_phase08_test_checkpointer()))
 
     success = service.run(_step_state())
     blocked = service.run(_step_state(blocked_reason="missing_input"))
@@ -27,10 +34,20 @@ def test_step_graph_success_blocked_denied_invalid_retry_and_abstain() -> None:
     retryable = service.run(_step_state(retryable_failure=True))
     abstained = service.run(_step_state(abstain_requested=True))
 
-    assert success["output_ref"] == "output:step-run:p08:t05:1"
+    assert success["step_phase"] == "commit_step_result"
+    assert success["validation_ref"].startswith("agent-domain:deterministic-validation:")
+    assert success["output_ref"].startswith("agent-domain:output:")
+    assert success["step_result_commit_ref"].startswith("agent-domain:step-result-completed:")
     assert blocked["outcome_status"] == "blocked"
+    assert blocked["step_result_commit_ref"].startswith("agent-domain:step-result-blocked:")
     assert denied["outcome_status"] == "denied"
     assert invalid["failure_ref"] == "invalid_proposal"
     assert retryable["retry_count"] == 1
     assert retryable["outcome_status"] == "retryable"
+    assert "step_result_commit_ref" not in retryable
     assert abstained["outcome_status"] == "abstained"
+
+
+def test_step_graph_requires_explicit_checkpointer_boundary() -> None:
+    with pytest.raises(Phase08RuntimeError, match="explicit durable checkpointer"):
+        build_phase08_step_graph()

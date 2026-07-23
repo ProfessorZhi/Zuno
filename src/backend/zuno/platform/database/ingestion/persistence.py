@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import Engine, bindparam, text
 from sqlalchemy.engine import Connection
 
+from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.contracts import CrossModuleEnvelopeV1, canonical_json, canonical_sha256
 from zuno.platform.database.foundation import InfrastructureRepository, InboxReceipt
 
@@ -1450,6 +1451,44 @@ class IngestionRepository:
         if row is None:
             raise IngestionPersistenceError(f"missing delete lifecycle: {delete_ref}")
         return dict(row)
+
+    def reconcile_delete_lifecycle(self, receipt: DeleteLifecycleReceipt) -> IngestionReceipt:
+        current = self.get_delete_lifecycle(receipt.delete_ref)
+        tenant_id = str(current["tenant_id"])
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_delete_lifecycles
+                SET state = :state,
+                    visibility_ref = :visibility_ref,
+                    indexable_snapshot_id = :indexable_snapshot_id,
+                    handoff_outbox_event_id = :handoff_outbox_event_id,
+                    parse_job_id = :parse_job_id,
+                    parse_attempt_id = :parse_attempt_id,
+                    fencing_token = :fencing_token,
+                    cleanup_ref = :cleanup_ref,
+                    projection_cleanup_ref = :projection_cleanup_ref,
+                    physical_delete_ref = :physical_delete_ref,
+                    verification_ref = :verification_ref,
+                    cleanup_verified = :cleanup_verified,
+                    physical_delete_verified = :physical_delete_verified,
+                    legal_hold_ref = :legal_hold_ref,
+                    restored_authorization = :restored_authorization,
+                    duplicate = :duplicate,
+                    late_worker_result_rejected = :late_worker_result_rejected,
+                    receipt_hash = :receipt_hash,
+                    history = CAST(:history AS jsonb)
+                WHERE delete_ref = :delete_ref
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                **receipt.model_dump(),
+                "history": canonical_json(receipt.history),
+            },
+        )
+        return IngestionReceipt(receipt.delete_ref, tenant_id, receipt.state, receipt.receipt_hash)
 
     @staticmethod
     def _require_hash(value: str, field_name: str) -> None:

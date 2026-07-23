@@ -77,7 +77,7 @@ LegacyRunner = Callable[[Phase08RuntimeRequest, bool], Phase08RuntimeResponse]
 class Phase08CutoverController:
     mode: CutoverMode
     legacy_runner: LegacyRunner
-    new_runtime: Phase08RunService = field(default_factory=Phase08RunService)
+    new_runtime: Phase08RunService | None = None
     side_effect_ledger: SideEffectLedger = field(default_factory=SideEffectLedger)
 
     def handle(self, request: Phase08RuntimeRequest) -> Phase08RuntimeResponse:
@@ -140,6 +140,8 @@ class Phase08CutoverController:
         return self.legacy_runner(request, allow_side_effect)
 
     def _run_new(self, request: Phase08RuntimeRequest, *, allow_side_effect: bool) -> Phase08RuntimeResponse:
+        if self.new_runtime is None:
+            raise Phase08CutoverError("phase08 durable runtime is not configured")
         state = self.new_runtime.start(
             {
                 "run_id": f"run:{request.task_id}:phase08",
