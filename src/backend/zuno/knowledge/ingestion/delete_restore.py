@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import hashlib
 import json
 from typing import Any, Literal
+from urllib.parse import urlparse
 
+from minio.error import S3Error
 from pydantic import BaseModel, Field
+from sqlalchemy import Engine
+
+from zuno.platform.storage.durable import DurableMinioObjectStore, ObjectCommitTicket
+from zuno.platform.storage.object_store import ObjectStoreReceipt
 
 
 DeleteState = Literal[
@@ -22,6 +29,8 @@ class DeleteLifecycleReceipt(BaseModel):
     snapshot_ref: str
     state: DeleteState
     visibility_ref: str
+    object_ref: str | None = None
+    restore_point_name: str | None = None
     indexable_snapshot_id: str | None = None
     handoff_outbox_event_id: str | None = None
     parse_job_id: str | None = None
@@ -47,6 +56,8 @@ class DeleteRestoreRuntime:
         *,
         snapshot_ref: str,
         visibility_ref: str,
+        object_ref: str | None = None,
+        restore_point_name: str | None = None,
         legal_hold_ref: str | None = None,
         existing: DeleteLifecycleReceipt | None = None,
     ) -> DeleteLifecycleReceipt:
@@ -62,6 +73,8 @@ class DeleteRestoreRuntime:
             snapshot_ref=snapshot_ref,
             state=state,
             visibility_ref=visibility_ref,
+            object_ref=object_ref,
+            restore_point_name=restore_point_name,
             cleanup_ref=None if legal_hold_ref else f"cleanup_{delete_ref}",
             legal_hold_ref=legal_hold_ref,
             receipt_hash=_hash(
@@ -69,6 +82,8 @@ class DeleteRestoreRuntime:
                     "delete_ref": delete_ref,
                     "snapshot_ref": snapshot_ref,
                     "visibility_ref": visibility_ref,
+                    "object_ref": object_ref,
+                    "restore_point_name": restore_point_name,
                     "state": state,
                     "legal_hold_ref": legal_hold_ref,
                 }
@@ -84,6 +99,8 @@ class DeleteRestoreRuntime:
         fencing_token: int,
         visibility_ref: str,
         snapshot_ref: str | None = None,
+        object_ref: str | None = None,
+        restore_point_name: str | None = None,
         legal_hold_ref: str | None = None,
     ) -> DeleteLifecycleReceipt:
         if fencing_token <= 0:
@@ -91,6 +108,8 @@ class DeleteRestoreRuntime:
         requested = self.request_delete(
             snapshot_ref=snapshot_ref or f"parse_inflight:{parse_job_id}",
             visibility_ref=visibility_ref,
+            object_ref=object_ref,
+            restore_point_name=restore_point_name,
             legal_hold_ref=legal_hold_ref,
         )
         return requested.model_copy(
@@ -119,11 +138,15 @@ class DeleteRestoreRuntime:
         handoff_outbox_event_id: str,
         visibility_ref: str,
         projection_cleanup_ref: str,
+        object_ref: str | None = None,
+        restore_point_name: str | None = None,
         legal_hold_ref: str | None = None,
     ) -> DeleteLifecycleReceipt:
         requested = self.request_delete(
             snapshot_ref=indexable_snapshot_id,
             visibility_ref=visibility_ref,
+            object_ref=object_ref,
+            restore_point_name=restore_point_name,
             legal_hold_ref=legal_hold_ref,
         )
         return requested.model_copy(
@@ -139,6 +162,8 @@ class DeleteRestoreRuntime:
                         "handoff_outbox_event_id": handoff_outbox_event_id,
                         "projection_cleanup_ref": projection_cleanup_ref,
                         "visibility_ref": visibility_ref,
+                        "object_ref": object_ref,
+                        "restore_point_name": restore_point_name,
                         "state": requested.state,
                     }
                 ),
@@ -222,9 +247,185 @@ class DeleteRestoreRuntime:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class DeleteLifecycleCommand:
+    tenant_id: str
+    snapshot_ref: str
+    visibility_ref: str
+    object_ref: str
+    restore_point_name: str
+    indexable_snapshot_id: str | None = None
+    handoff_outbox_event_id: str | None = None
+    projection_cleanup_ref: str | None = None
+    legal_hold_ref: str | None = None
+
+
+@dataclass
+class PersistentDeleteRestoreCoordinator:
+    engine: Engine
+    object_store: DurableMinioObjectStore
+    runtime: DeleteRestoreRuntime = field(default_factory=DeleteRestoreRuntime)
+
+    cleanup_topic = "ingestion.delete.cleanup.requested"
+
+    def request_delete_after_snapshot(self, command: DeleteLifecycleCommand) -> DeleteLifecycleReceipt:
+        indexable_snapshot_id = command.indexable_snapshot_id or command.snapshot_ref
+        projection_cleanup_ref = command.projection_cleanup_ref or f"projection-cleanup:{indexable_snapshot_id}"
+        handoff_outbox_event_id = command.handoff_outbox_event_id or f"handoff-outbox:{indexable_snapshot_id}"
+        receipt = self.runtime.request_delete_after_snapshot(
+            indexable_snapshot_id=indexable_snapshot_id,
+            handoff_outbox_event_id=handoff_outbox_event_id,
+            visibility_ref=command.visibility_ref,
+            projection_cleanup_ref=projection_cleanup_ref,
+            object_ref=command.object_ref,
+            restore_point_name=command.restore_point_name,
+            legal_hold_ref=command.legal_hold_ref,
+        )
+        from zuno.platform.database.foundation import InfrastructureRepository
+        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+
+        with IngestionUnitOfWork(self.engine) as repo:
+            repo.record_delete_lifecycle(tenant_id=command.tenant_id, **receipt.model_dump())
+            InfrastructureRepository(repo.connection).enqueue_outbox(
+                event_id=f"outbox:{receipt.delete_ref}:cleanup",
+                aggregate_id=receipt.delete_ref,
+                topic=self.cleanup_topic,
+                payload={
+                    "delete_ref": receipt.delete_ref,
+                    "snapshot_ref": receipt.snapshot_ref,
+                    "visibility_ref": receipt.visibility_ref,
+                    "object_ref": receipt.object_ref,
+                    "restore_point_name": receipt.restore_point_name,
+                    "projection_cleanup_ref": receipt.projection_cleanup_ref,
+                },
+                idempotency_key=f"cleanup:{receipt.delete_ref}",
+                tenant_id=command.tenant_id,
+                ordering_key=receipt.delete_ref,
+            )
+        return receipt
+
+    def execute_cleanup(self, *, tenant_id: str, delete_ref: str) -> DeleteLifecycleReceipt:
+        from zuno.platform.database.foundation import InfrastructureRepository
+        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+
+        with IngestionUnitOfWork(self.engine) as repo:
+            current_row = repo.get_delete_lifecycle(delete_ref)
+            if str(current_row["tenant_id"]) != str(tenant_id):
+                raise ValueError("delete cleanup tenant mismatch")
+            current = DeleteLifecycleReceipt.model_validate(current_row)
+            if current.legal_hold_ref:
+                return current
+            if current.state == "verified":
+                return current
+            if not current.object_ref or not current.restore_point_name:
+                raise ValueError("delete cleanup requires object_ref and restore_point_name")
+            ticket = self._ticket(repo, current.object_ref)
+            try:
+                self.object_store.store.create_restore_point(
+                    bucket=ticket.bucket,
+                    object_name=ticket.committed_object_name,
+                    restore_point_name=current.restore_point_name,
+                )
+            except S3Error as exc:
+                if exc.code not in {"NoSuchKey", "NoSuchObject"}:
+                    raise
+            cleanup = self.runtime.request_cleanup(current)
+            try:
+                deleted = self.object_store.delete_committed(ticket)
+                physical_delete_ref = f"s3://{deleted.bucket}/{deleted.object_name}"
+            except S3Error as exc:
+                if exc.code not in {"NoSuchKey", "NoSuchObject"}:
+                    raise
+                manifest = InfrastructureRepository(repo.connection).object_manifest(
+                    object_ref=current.object_ref
+                )
+                if manifest is None:
+                    raise
+                InfrastructureRepository(repo.connection).record_object_manifest(
+                    object_ref=current.object_ref,
+                    content_hash=manifest.content_hash,
+                    size_bytes=manifest.size_bytes,
+                    owner=self.object_store.owner,
+                    visibility="deleted",
+                )
+                physical_delete_ref = current.object_ref
+            self._verify_absent(ticket)
+            verified = self.runtime.verify_delete(
+                cleanup.model_copy(
+                    update={
+                        "physical_delete_ref": physical_delete_ref,
+                        "history": [*cleanup.history, "physically_deleted"],
+                    }
+                ),
+                cleanup_verified=True,
+                physical_delete_verified=True,
+            )
+            repo.reconcile_delete_lifecycle(verified)
+            return verified
+
+    def restore_deleted(self, *, tenant_id: str, delete_ref: str) -> DeleteLifecycleReceipt:
+        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+
+        with IngestionUnitOfWork(self.engine) as repo:
+            current_row = repo.get_delete_lifecycle(delete_ref)
+            if str(current_row["tenant_id"]) != str(tenant_id):
+                raise ValueError("delete restore tenant mismatch")
+            current = DeleteLifecycleReceipt.model_validate(current_row)
+            if not current.object_ref or not current.restore_point_name:
+                raise ValueError("restore requires object_ref and restore_point_name")
+            ticket = self._ticket(repo, current.object_ref)
+            self.object_store.restore(ticket, restore_point_name=current.restore_point_name)
+            restored = self.runtime.restore(current)
+            repo.reconcile_delete_lifecycle(restored)
+            return restored
+
+    def _ticket(self, repo: Any, object_ref: str) -> ObjectCommitTicket:
+        from zuno.platform.database.foundation import InfrastructureRepository
+
+        bucket, object_name = _parse_s3_object_ref(object_ref)
+        manifest = InfrastructureRepository(repo.connection).object_manifest(object_ref=object_ref)
+        if manifest is None:
+            raise ValueError(f"missing object manifest: {object_ref}")
+        return ObjectCommitTicket(
+            bucket=bucket,
+            committed_object_name=object_name,
+            staged_receipt=ObjectStoreReceipt(
+                bucket=bucket,
+                object_name=object_name,
+                content_hash=manifest.content_hash,
+                size_bytes=manifest.size_bytes,
+                visibility=manifest.visibility,
+            ),
+        )
+
+    def _verify_absent(self, ticket: ObjectCommitTicket) -> None:
+        try:
+            self.object_store.store.read_object(
+                bucket=ticket.bucket,
+                object_name=ticket.committed_object_name,
+            )
+        except S3Error as exc:
+            if exc.code in {"NoSuchKey", "NoSuchObject"}:
+                return
+            raise
+        raise ValueError("physical delete verification failed: object still exists")
+
+
+def _parse_s3_object_ref(object_ref: str) -> tuple[str, str]:
+    parsed = urlparse(object_ref)
+    if parsed.scheme != "s3" or not parsed.netloc or not parsed.path.strip("/"):
+        raise ValueError("object_ref must be an s3://bucket/object reference")
+    return parsed.netloc, parsed.path.lstrip("/")
+
+
 def _hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
-__all__ = ["DeleteLifecycleReceipt", "DeleteRestoreRuntime"]
+__all__ = [
+    "DeleteLifecycleCommand",
+    "DeleteLifecycleReceipt",
+    "DeleteRestoreRuntime",
+    "PersistentDeleteRestoreCoordinator",
+]

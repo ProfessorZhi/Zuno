@@ -1310,6 +1310,8 @@ class IngestionRepository:
         visibility_ref: str,
         receipt_hash: str,
         history: list[str],
+        object_ref: str | None = None,
+        restore_point_name: str | None = None,
         indexable_snapshot_id: str | None = None,
         handoff_outbox_event_id: str | None = None,
         parse_job_id: str | None = None,
@@ -1334,18 +1336,20 @@ class IngestionRepository:
                 """
                 INSERT INTO ingestion_delete_lifecycles(
                     delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
-                    indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
-                    parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
-                    physical_delete_ref, verification_ref, cleanup_verified,
-                    physical_delete_verified, legal_hold_ref, restored_authorization,
-                    duplicate, late_worker_result_rejected, receipt_hash, history
+                    object_ref, restore_point_name, indexable_snapshot_id,
+                    handoff_outbox_event_id, parse_job_id, parse_attempt_id,
+                    fencing_token, cleanup_ref, projection_cleanup_ref, physical_delete_ref,
+                    verification_ref, cleanup_verified, physical_delete_verified,
+                    legal_hold_ref, restored_authorization, duplicate,
+                    late_worker_result_rejected, receipt_hash, history
                 ) VALUES (
                     :delete_ref, :tenant_id, :snapshot_ref, :state, :visibility_ref,
-                    :indexable_snapshot_id, :handoff_outbox_event_id, :parse_job_id,
-                    :parse_attempt_id, :fencing_token, :cleanup_ref, :projection_cleanup_ref,
-                    :physical_delete_ref, :verification_ref, :cleanup_verified,
-                    :physical_delete_verified, :legal_hold_ref, :restored_authorization,
-                    :duplicate, :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
+                    :object_ref, :restore_point_name, :indexable_snapshot_id,
+                    :handoff_outbox_event_id, :parse_job_id, :parse_attempt_id,
+                    :fencing_token, :cleanup_ref, :projection_cleanup_ref, :physical_delete_ref,
+                    :verification_ref, :cleanup_verified, :physical_delete_verified,
+                    :legal_hold_ref, :restored_authorization, :duplicate,
+                    :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
                 )
                 ON CONFLICT (delete_ref) DO NOTHING
                 """
@@ -1356,6 +1360,8 @@ class IngestionRepository:
                 "snapshot_ref": snapshot_ref,
                 "state": state,
                 "visibility_ref": visibility_ref,
+                "object_ref": object_ref,
+                "restore_point_name": restore_point_name,
                 "indexable_snapshot_id": indexable_snapshot_id,
                 "handoff_outbox_event_id": handoff_outbox_event_id,
                 "parse_job_id": parse_job_id,
@@ -1534,8 +1540,9 @@ class IngestionRepository:
             text(
                 """
                 SELECT delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
-                       indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
-                       parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
+                       object_ref, restore_point_name, indexable_snapshot_id,
+                       handoff_outbox_event_id, parse_job_id, parse_attempt_id,
+                       fencing_token, cleanup_ref, projection_cleanup_ref,
                        physical_delete_ref, verification_ref, cleanup_verified,
                        physical_delete_verified, legal_hold_ref, restored_authorization,
                        duplicate, late_worker_result_rejected, receipt_hash, history
@@ -1558,6 +1565,8 @@ class IngestionRepository:
                 UPDATE ingestion_delete_lifecycles
                 SET state = :state,
                     visibility_ref = :visibility_ref,
+                    object_ref = :object_ref,
+                    restore_point_name = :restore_point_name,
                     indexable_snapshot_id = :indexable_snapshot_id,
                     handoff_outbox_event_id = :handoff_outbox_event_id,
                     parse_job_id = :parse_job_id,

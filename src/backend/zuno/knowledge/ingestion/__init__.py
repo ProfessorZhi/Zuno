@@ -23,7 +23,7 @@ from .contracts import (
     canonical_document_ir_contract_report,
     round_trip_canonical_document_ir,
 )
-from .delete_restore import DeleteLifecycleReceipt, DeleteRestoreRuntime
+from .delete_restore import DeleteLifecycleCommand, DeleteLifecycleReceipt, DeleteRestoreRuntime, PersistentDeleteRestoreCoordinator
 from .gateway import ParseGateway
 from .handoff import (
     IndexableDocumentSnapshotV1,
@@ -95,7 +95,9 @@ __all__ = [
     "DocumentProvenance",
     "DocumentTable",
     "DeleteLifecycleReceipt",
+    "DeleteLifecycleCommand",
     "DeleteRestoreRuntime",
+    "PersistentDeleteRestoreCoordinator",
     "IndexHandoffPayload",
     "IndexableDocumentSnapshotV1",
     "HumanReviewRuntime",
