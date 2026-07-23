@@ -1,7 +1,7 @@
 # zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
-current_phase: PHASE08
+current_phase: PHASE11
 program_version: 2
 phase_count: 22
 execution_mode: full-scope / runtime-first / vertical-slice-checkpoints / evidence-gated
@@ -38,7 +38,7 @@ Product RuntimeRequest
 - PHASE03：从“共享 Contract 内核”提升为十一模块完整 Contract Bundle、Producer/Consumer Adoption 与 Multi-client Type Pipeline。
 - PHASE04：从“PostgreSQL Primitive 最小闭环”提升为 PostgreSQL、RabbitMQ、S3-compatible Object Store、LangGraph PostgreSQL Checkpointer、Backup/Restore、Fault/Concurrency 的完整耐久基础。
 
-已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 已完成 Coordinator Closure；2026-07-20 Goal01 audit 将 PHASE11 重新打开为 in_progress；PHASE08 仍 ready，因为只依赖 PHASE04–07；PHASE12 仍 planned，等待 PHASE08 completed 与 PHASE11 completed。
+已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 已完成 Coordinator Closure；PHASE08 已完成 Coordinator Closure；2026-07-20 Goal01 audit 将 PHASE11 重新打开为 in_progress；PHASE12 仍 planned，等待 PHASE11 completed。
 
 ## 3. Phase 依赖图
 

@@ -14,9 +14,9 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE05 completed：Security Control Plane 在完整 Phase Scope 内达到 `implementation_available`；不代表 production ready。
 - PHASE06 completed：Observability Minimum Black Box 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
-- PHASE08 ready：PHASE08 只依赖 PHASE04、PHASE05、PHASE06、PHASE07，PHASE11 不再作为 PHASE08 ready 的依赖。
+- PHASE08 completed：Deterministic Single Controller Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE09 产品默认路径、quality proven 或 production ready。
 - PHASE11 reopened/in_progress：Goal01 audit 确认 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 诊断和不完整 Human Review 证据不足以证明 PHASE11 原始完整生产默认路径。
-- PHASE12 planned：等待 PHASE08 completed 与 PHASE11 completed。
+- PHASE12 planned：等待 PHASE11 completed；PHASE08 依赖已满足。
 - PHASE09–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过或 production ready。

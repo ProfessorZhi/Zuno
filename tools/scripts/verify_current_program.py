@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE08"
+CURRENT_PHASE = "PHASE11"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -191,7 +191,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[4]: "completed",
         PHASE_FILES[5]: "completed",
         PHASE_FILES[6]: "completed",
-        PHASE_FILES[7]: "ready",
+        PHASE_FILES[7]: "completed",
         PHASE_FILES[10]: "in_progress",
     }
     for filename, expected in expected_phase_states.items():
@@ -300,14 +300,14 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE08",
+                "current_phase: PHASE11",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
                 "PHASE06 completed",
                 "PHASE07 completed",
+                "PHASE08 completed",
                 "PHASE11 reopened/in_progress",
-                "PHASE08 仍 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
                 "measurement blocked",
@@ -321,7 +321,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE08",
+                "current_phase: PHASE11",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -345,7 +345,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE05, file: .agent/programs/PHASE05_security-control-plane.md, state: completed",
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
-                "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: ready",
+                "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed",
                 "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: in_progress",
             ],
             "program-manifest.yaml",
