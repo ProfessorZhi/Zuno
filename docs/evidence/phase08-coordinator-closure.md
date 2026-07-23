@@ -2,14 +2,14 @@
 
 phase_id: PHASE08
 date: 2026-07-23
-status: approved
-coordinator_approval: approved
-phase08_state: completed
+status: superseded_reopened
+coordinator_approval: superseded_repair_required
+phase08_state: in_progress
 production_ready: false
 
 ## Closure Decision
 
-Coordinator 批准 PHASE08 Deterministic Single Controller Runtime 从 `ready` 晋升为 `completed`。本批准只表示 PHASE08 完整 Phase Scope 内达到 `implementation_available`，不表示 production ready、quality proven、PHASE09 产品主路径完成或 PHASE12 解锁完成。
+本 PHASE08 Coordinator Closure 已被 Goal02 repair 目标 supersede。PHASE08 当前重新打开为 `in_progress`，直到 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit、Owner integration 和真实 cutover 重新完成并通过独立审查。
 
 ## 审查依据
 

@@ -1,7 +1,7 @@
 ---
 phase: PHASE11
-status: completed
-coordinator_approval: approved
+status: superseded_reopened
+coordinator_approval: superseded_repair_required
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -11,9 +11,9 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## Decision
 
-Coordinator approves PHASE11 as `completed` for the Program scope: Durable Ingestion and Source Lineage has implementation, migration, test, runtime integration and evidence sufficient for Phase closure.
+This prior PHASE11 Coordinator Closure is superseded by the Goal02 repair objective. PHASE11 is reopened as `in_progress` until durable Human Review Resume and real Delete / Restore / Reconciliation are implemented and independently reviewed.
 
-This approval does not mark Zuno production ready, quality proven, PHASE12 completed, PHASE09 completed, or PHASE10 completed.
+This superseded approval does not mark Zuno production ready, quality proven, PHASE12 completed, PHASE09 completed, or PHASE10 completed.
 
 ## Approved Scope
 

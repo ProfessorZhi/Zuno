@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE09
+current_phase: PHASE08
 phase_count: 22
 program_version: 2
 activated_at: 2026-07-14
@@ -41,12 +41,12 @@ Current 审计
 - PHASE03 已有共享 Contract 内核是部分实现，尚未覆盖十一模块完整 Contract、真实 Producer/Consumer、Web/Desktop 类型和重复定义清理。
 - PHASE04 completed。PostgreSQL、Alembic、UoW、Outbox/Inbox、RabbitMQ、Idempotency、Lease/Fencing、MinIO/S3、官方 LangGraph PostgreSQL Checkpointer、Backup/Restore、Generic Replay Framework、Fault Recovery 和 Operator Readiness 已按 PHASE04 范围完成；这不表示 PHASE05–22 Runtime 已实现，也不表示 production ready。
 
-这些已有产物保留并作为后续实现输入。PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE08 completed；PHASE11 completed；PHASE09 ready，等待正式实施；PHASE12 ready，等待正式实施；PHASE10、PHASE12–22 不得提前提升为 Current。
+这些已有产物保留并作为后续实现输入。PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE08 in_progress；PHASE11 in_progress；PHASE09 planned；PHASE12 planned；Goal02 in_progress；PHASE09、PHASE10、PHASE12 及后续不得提前提升为 Current。
 
 ## 当前阶段
 
 ```text
-PHASE09_product-surface-backend-runtime
+PHASE08_deterministic-single-controller-runtime
 ```
 
 PHASE01 先重新冻结最新 `main` Current、完整 Requirement Ledger、Runtime/Persistence/Frontend/Legacy Inventory 和风险依赖，确保后续实现没有遗漏范围。PHASE02–04 按订正后的完整完成定义依次推进。
@@ -137,4 +137,4 @@ production ready not established
 已有 PHASE03/04 代码是可复用的部分实现，不代表完整阶段完成。PHASE22 之前不得声明 Agentic GraphRAG 稳定优于 Baseline，不得把文档完成、最小闭环或局部 CI 绿灯写成系统完成。
 
 
-Goal02 completed compatibility phrase: PHASE08 completed; PHASE11 completed; PHASE09 ready waits for implementation; PHASE12 ready waits for implementation.
+Goal02 repair compatibility phrase: PHASE08 in_progress; PHASE11 in_progress; PHASE09 planned; PHASE12 planned; production ready not established.

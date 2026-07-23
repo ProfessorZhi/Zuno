@@ -14,11 +14,11 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE05 completed：Security Control Plane 在完整 Phase Scope 内达到 `implementation_available`；不代表 production ready。
 - PHASE06 completed：Observability Minimum Black Box 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
-- PHASE08 completed：Deterministic Single Controller Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE09 产品默认路径、quality proven 或 production ready。
-- PHASE11 completed：Durable Ingestion and Source Lineage 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE12 Knowledge Index、quality proven 或 production ready。
-- PHASE09 ready：PHASE08 依赖已满足，但 PHASE09 尚未实施。
-- PHASE12 ready：PHASE08 与 PHASE11 依赖已满足，但 PHASE12 尚未实施。
-- PHASE10、PHASE12–22 不得提前冒充 Current。
+- PHASE08 in_progress：0b1e087a 的 completed 声明被 Goal02 repair 目标订正；需补 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit 和真实 cutover。
+- PHASE11 in_progress：0b1e087a 的 completed 声明被 Goal02 repair 目标订正；需补 durable Human Review Resume 与真实 Delete / Restore / Reconciliation。
+- PHASE09 planned：PHASE08 未重新 closure 前不得 ready 或实施。
+- PHASE12 planned：PHASE11 未重新 closure 前不得 ready 或实施。
+- PHASE09、PHASE10、PHASE12–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 

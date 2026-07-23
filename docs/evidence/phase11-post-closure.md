@@ -1,6 +1,6 @@
 ---
 phase: PHASE11
-status: post_closure_passed
+status: superseded_reopened
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -10,7 +10,7 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## 结论
 
-PHASE11 completed 状态已同步到 Program Manifest、Current Program、Readiness、Closure Checklist 和 Production Readiness。Goal02 完成后 `current_phase=PHASE09`，PHASE09 和 PHASE12 均为 ready，但仍不得冒充 Current 实现。
+本 Post-Closure 已被 Goal02 repair 目标 supersede。当前如实状态为 PHASE08 in_progress、PHASE11 in_progress、current_phase=PHASE08、PHASE09/PHASE12 planned。
 
 ## 验证命令
 

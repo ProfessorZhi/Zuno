@@ -1,7 +1,7 @@
 # zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
-current_phase: PHASE09
+current_phase: PHASE08
 program_version: 2
 phase_count: 22
 execution_mode: full-scope / runtime-first / vertical-slice-checkpoints / evidence-gated
@@ -38,7 +38,7 @@ Product RuntimeRequest
 - PHASE03：从“共享 Contract 内核”提升为十一模块完整 Contract Bundle、Producer/Consumer Adoption 与 Multi-client Type Pipeline。
 - PHASE04：从“PostgreSQL Primitive 最小闭环”提升为 PostgreSQL、RabbitMQ、S3-compatible Object Store、LangGraph PostgreSQL Checkpointer、Backup/Restore、Fault/Concurrency 的完整耐久基础。
 
-已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 已完成 Coordinator Closure；PHASE08 已完成 Coordinator Closure；2026-07-20 Goal01 audit 曾将 PHASE11 重新打开，2026-07-23 Goal02 已完成 PHASE11 Coordinator Closure；PHASE09 ready，等待正式实施；PHASE12 ready，等待正式实施。
+已有产物保留为部分证据，不作为 Phase Completion。PHASE04 completed 后，PHASE05、PHASE06、PHASE07 已完成 Coordinator Closure；0b1e087a 的 PHASE08/PHASE11 closure 被 Goal02 repair 目标订正为 in_progress；PHASE09、PHASE12 退回 planned，等待真实 closure 后再 ready。
 
 ## 3. Phase 依赖图
 
@@ -97,11 +97,11 @@ flowchart TB
 | 05 | Security Control Plane | 09 | PHASE05 completed：Principal、Scope、Epoch、Authorization、Approval、SecretLease、Redaction、Audit Requirement implementation available |
 | 06 | Observability Minimum Black Box | 10 | PHASE06 completed：Append-only Ingest、Trace、Audit、Dedup/Gap、Projection/Rebuild 和授权只读 Query API implementation available |
 | 07 | Model Gateway Runtime | 04 | PHASE07 completed：统一 Chat / Embedding / Rerank / Judge、Provider Adapter、Attempt、Usage、Fallback、Trace 和 bypass guard implementation available |
-| 08 | Deterministic Single Controller Runtime | 06 | 单步 Plan 的真实 AgentRunGraph/StepExecutionGraph 可恢复运行 |
-| 09 | Product Surface Backend Runtime | 01 | PHASE09 ready：Command/Query/Projection/SSE/Signal/Compatibility API 尚未实施 |
+| 08 | Deterministic Single Controller Runtime | 06 | PHASE08 in_progress：需补 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit 和真实 cutover |
+| 09 | Product Surface Backend Runtime | 01 | PHASE09 planned：Command/Query/Projection/SSE/Signal/Compatibility API 尚未实施 |
 | 10 | Web and Desktop Product Adaptation | 01 | Web/Desktop 使用新 Contract、Projection、AvailableAction 和 SSE Resume |
-| 11 | Durable Ingestion and Source Lineage | 02 | PHASE11 completed：生产默认 SourceObject→DocumentVersion→ParseSnapshot→IR→SourceSpan、Quality Gate、Indexable Snapshot、Outbox/Delete/Restore 已按完整路径证明 |
-| 12 | Knowledge Version and Standard RAG | 03 | PHASE12 ready：KnowledgeVersion、Index Cutover、Evidence/Citation、Hybrid RAG 尚未实施 |
+| 11 | Durable Ingestion and Source Lineage | 02 | PHASE11 in_progress：需补 Human Review Resume 与真实 Delete/Restore/Reconciliation |
+| 12 | Knowledge Version and Standard RAG | 03 | PHASE12 planned：KnowledgeVersion、Index Cutover、Evidence/Citation、Hybrid RAG 尚未实施 |
 | 13 | Memory and Context Governance Runtime | 05 | ContextPackVersion、Candidate/Governance/Activation、Privacy Delete |
 | 14 | Capability and Skill Control Plane | 07 | Versioned Capability/Skill、Availability、Feasibility、Progressive Loading |
 | 15 | Tool Definition and Read-only Cutover | 08 | 唯一 Invocation Gateway、PreparedAction、Read-only Adapter 收口 |

@@ -1,7 +1,7 @@
 # PHASE09 Product Surface Backend Runtime
 
 phase_id: PHASE09
-status: ready
+status: planned
 depends_on: PHASE08
 owner: Module 01 Product Surface
 

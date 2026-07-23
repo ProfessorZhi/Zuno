@@ -1,6 +1,6 @@
 ---
 phase: PHASE11
-status: pre_closure_passed
+status: superseded_reopened
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -10,7 +10,7 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## 结论
 
-PHASE11 Durable Ingestion and Source Lineage 已满足进入 Coordinator Closure 的条件。P11-T01～P11-T08 均有当前代码、迁移、测试和可复现 evidence。
+本 Pre-Closure 已被 Goal02 repair 目标 supersede。PHASE11 当前重新打开为 in_progress；保留本文件作为历史 evidence，但不得作为最终 Closure。
 
 ## 证据包
 

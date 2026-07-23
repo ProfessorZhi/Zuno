@@ -2,13 +2,13 @@
 
 phase_id: PHASE08
 date: 2026-07-23
-status: passed
+status: superseded_reopened
 gate: pre_closure
 coordinator_review_required: true
 
 ## 结论
 
-PHASE08 Deterministic Single Controller Runtime 的 P08-T01 到 P08-T08 已在 Goal02 分支完成代码、迁移、单元测试、PostgreSQL 集成测试、LangGraph runtime 测试和 cutover shadow 测试。本 Gate 只证明 PHASE08 phase scope 达到 `implementation_available`，不声明 production ready、quality proven、PHASE09 completed 或 PHASE12 ready。
+本 PHASE08 Pre-Closure 已被 Goal02 repair 目标 supersede。保留已有代码、迁移、测试和 evidence，但不得作为最终 Closure，直到 durable runtime / native recovery blocker 重新完成。
 
 ## 覆盖
 

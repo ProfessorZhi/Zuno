@@ -2,12 +2,12 @@
 
 phase_id: PHASE08
 date: 2026-07-23
-status: recorded
+status: superseded_reopened
 gate: post_closure
 
 ## 状态更新
 
-PHASE08 completed 结论已写入：
+本 PHASE08 completed 结论已被 Goal02 repair 目标 supersede。当前如实状态为 PHASE08 in_progress。
 
 - `docs/evidence/phase08-pre-closure.md`
 - `docs/evidence/phase08-coordinator-closure.md`
