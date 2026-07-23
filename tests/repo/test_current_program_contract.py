@@ -26,7 +26,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE12"
+    assert manifest["current_phase"] == "PHASE09"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
     assert manifest["measurement_status"] == "measurement_blocked"
@@ -41,6 +41,7 @@ def test_phase_states_reflect_goal02_phase11_closure() -> None:
         "PHASE06_observability-minimum-black-box.md": "status: completed",
         "PHASE07_model-gateway-runtime.md": "status: completed",
         "PHASE08_deterministic-single-controller-runtime.md": "status: completed",
+        "PHASE09_product-surface-backend-runtime.md": "status: ready",
         "PHASE11_durable-ingestion-and-source-lineage.md": "status: completed",
         "PHASE12_knowledge-version-and-standard-rag.md": "status: ready",
     }
@@ -51,6 +52,7 @@ def test_phase_states_reflect_goal02_phase11_closure() -> None:
     manifest = (program_root / "program-manifest.yaml").read_text(encoding="utf-8")
     assert "minimum_vertical_slice_is_phase_completion: false" in manifest
     assert "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed" in manifest
+    assert "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: ready" in manifest
     assert "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: ready" in manifest
 
@@ -68,6 +70,7 @@ def test_phase11_closure_makes_phase12_ready_without_implementation_claim() -> N
     assert "coordinator_approval: approved" in readiness
     assert "target_not_current: 0" in readiness
     assert "PHASE11 completed" in current
+    assert "PHASE09 ready" in current
     assert "PHASE12 ready" in current
     assert "PHASE11 completed" in production
 

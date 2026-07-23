@@ -2,11 +2,11 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE12
+current_phase: PHASE09
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE12 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 ready / PHASE12 ready
 
 ## PHASE01–04 订正状态
 
@@ -20,7 +20,8 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE06 Observability Minimum Black Box 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE07 Model Gateway Runtime 已由 Coordinator Closure 批准为 completed。
 - [x] PHASE11 Durable Ingestion and Source Lineage 已由 Goal02 Coordinator Closure 批准为 completed。
-- [x] PHASE08 completed；PHASE12 ready，等待正式实施。
+- [x] PHASE08 completed；PHASE09 ready，等待正式实施。
+- [x] PHASE11 completed；PHASE12 ready，等待正式实施。
 
 ## Phase 状态
 

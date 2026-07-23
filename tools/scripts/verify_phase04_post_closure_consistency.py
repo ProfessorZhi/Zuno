@@ -106,7 +106,7 @@ def verify_phase04_post_closure_consistency() -> list[str]:
             errors.append(f"program-manifest.yaml missing closure phrase: {phrase}")
     if not _contains_any(
         manifest,
-        ["current_phase: PHASE05", "current_phase: PHASE07", "current_phase: PHASE08", "current_phase: PHASE11", "current_phase: PHASE12"],
+        ["current_phase: PHASE05", "current_phase: PHASE07", "current_phase: PHASE08", "current_phase: PHASE09", "current_phase: PHASE11", "current_phase: PHASE12"],
     ):
         errors.append("program-manifest.yaml missing closure phrase: current phase at or after PHASE05")
     if not _contains_any(
@@ -124,7 +124,7 @@ def verify_phase04_post_closure_consistency() -> list[str]:
             errors.append(f"current.md missing closure phrase: {phrase}")
     if not _contains_any(
         current,
-        ["current_phase: PHASE05", "current_phase: PHASE07", "current_phase: PHASE08", "current_phase: PHASE11", "current_phase: PHASE12"],
+        ["current_phase: PHASE05", "current_phase: PHASE07", "current_phase: PHASE08", "current_phase: PHASE09", "current_phase: PHASE11", "current_phase: PHASE12"],
     ):
         errors.append("current.md missing closure phrase: current phase at or after PHASE05")
     if not _contains_any(current, ["PHASE05 ready", "PHASE05 completed"]):

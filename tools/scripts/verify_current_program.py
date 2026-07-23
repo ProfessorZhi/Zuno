@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE12"
+CURRENT_PHASE = "PHASE09"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -192,6 +192,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[5]: "completed",
         PHASE_FILES[6]: "completed",
         PHASE_FILES[7]: "completed",
+        PHASE_FILES[8]: "ready",
         PHASE_FILES[10]: "completed",
         PHASE_FILES[11]: "ready",
     }
@@ -301,7 +302,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE12",
+                "current_phase: PHASE09",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
@@ -309,6 +310,7 @@ def verify_current_program() -> list[str]:
                 "PHASE07 completed",
                 "PHASE08 completed",
                 "PHASE11 completed",
+                "PHASE09 ready",
                 "PHASE12 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "partial implementation available",
@@ -323,7 +325,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE12",
+                "current_phase: PHASE09",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "partial implementation",
@@ -348,6 +350,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
                 "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed",
+                "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: ready",
                 "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed",
                 "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: ready",
             ],
@@ -525,6 +528,7 @@ def verify_current_program() -> list[str]:
         "target_not_current: 0",
         "PHASE08 completed",
         "PHASE12 implementation start",
+        "PHASE09 ready",
     ]:
         if phrase not in phase11_readiness:
             errors.append(f"PHASE11 completed readiness missing phrase: {phrase}")

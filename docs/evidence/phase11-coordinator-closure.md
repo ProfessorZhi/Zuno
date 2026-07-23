@@ -36,4 +36,4 @@ This approval does not mark Zuno production ready, quality proven, PHASE12 compl
 
 ## Gate Result
 
-PHASE11 may be marked `completed` in Program state. PHASE12 may become the next current phase, but remains unimplemented until its own work packages are executed and verified.
+PHASE11 may be marked `completed` in Program state. Goal02 final state sets `current_phase=PHASE09`; PHASE09 and PHASE12 may be marked ready, but both remain unimplemented until their own work packages are executed and verified.

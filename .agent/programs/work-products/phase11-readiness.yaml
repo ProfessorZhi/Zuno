@@ -25,12 +25,14 @@ focused_commands:
   - pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/integration/test_phase11_package_a_production_runtime.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/knowledge/test_ingestion_delete_restore.py tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider --tb=short
 downstream:
   phase08_completed: true
-  phase12_planned: true
+  phase09_ready: true
+  phase12_ready: true
   phase12_waits_for:
     - PHASE12 implementation start
   dependency_statement:
     - PHASE08 completed
     - PHASE11 completed
+    - PHASE09 ready
     - PHASE12 ready
 boundary:
   implementation_available_not_production_ready: true

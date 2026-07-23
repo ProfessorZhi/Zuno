@@ -35,17 +35,19 @@ def verify_phase11_post_closure_consistency() -> list[str]:
         "manifest": [
             "id: PHASE11",
             "state: completed",
+            "id: PHASE09",
+            "state: ready",
             "id: PHASE08",
             "state: completed",
             "id: PHASE12",
             "state: ready",
         ],
-        "current": ["current_phase: PHASE12", "PHASE11 completed", "PHASE12 ready"],
+        "current": ["current_phase: PHASE09", "PHASE11 completed", "PHASE09 ready", "PHASE12 ready"],
         "closure checklist": [
             "PHASE11 completed",
             "- [x] PHASE11 Durable Ingestion and Source Lineage",
         ],
-        "production readiness": ["PHASE11 completed", "PHASE12 ready", "not production ready"],
+        "production readiness": ["PHASE11 completed", "PHASE09 ready", "PHASE12 ready", "not production ready"],
         "coordinator closure": ["status: completed", "coordinator_approval: approved"],
     }
     for label, phrases in required.items():
