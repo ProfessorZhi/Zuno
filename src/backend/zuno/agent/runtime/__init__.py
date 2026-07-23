@@ -19,6 +19,19 @@ from zuno.agent.runtime.contracts import (
     StrategyMode,
 )
 from zuno.agent.runtime.graph import build_agent_graph
+from zuno.agent.runtime.phase08 import (
+    PHASE08_RUN_SCHEMA,
+    PHASE08_STEP_SCHEMA,
+    Phase08Conflict,
+    Phase08RuntimeError,
+    Phase08RunService,
+    Phase08SignalRecord,
+    Phase08StepService,
+    append_signal,
+    build_phase08_run_graph,
+    build_phase08_step_graph,
+    reconcile_generations,
+)
 from zuno.agent.runtime.factory import RuntimeAssembly, RuntimeDependencyFactory
 from zuno.agent.runtime.planning import (
     PlanExecutor,
@@ -51,7 +64,14 @@ __all__ = [
     "PlanExecutor",
     "PlanValidationError",
     "PlanValidator",
+    "PHASE08_RUN_SCHEMA",
+    "PHASE08_STEP_SCHEMA",
     "ReflectionDecision",
+    "Phase08Conflict",
+    "Phase08RuntimeError",
+    "Phase08RunService",
+    "Phase08SignalRecord",
+    "Phase08StepService",
     "RuntimeCounters",
     "RuntimeLimits",
     "RuntimeAssembly",
@@ -67,6 +87,10 @@ __all__ = [
     "UnsupportedRuntimeStateVersion",
     "UnifiedAgentRuntimeService",
     "build_agent_graph",
+    "build_phase08_run_graph",
+    "build_phase08_step_graph",
+    "append_signal",
+    "reconcile_generations",
     "normalized_observation_from_controller_payload",
     "normalized_observation_from_runtime_observation",
     "runtime_state_from_controller_state",
