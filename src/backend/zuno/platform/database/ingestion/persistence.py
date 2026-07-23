@@ -1128,7 +1128,7 @@ class IngestionRepository:
     ) -> IngestionReceipt:
         self._require_hash(decision_hash, "decision_hash")
         expires_at_dt = self._datetime_from_epoch_or_value(expires_at)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_review_tasks(
@@ -1140,6 +1140,7 @@ class IngestionRepository:
                     :document_version_id, :workspace_id, :reviewer_scope, :security_epoch_ref,
                     :status, :reason, :decision_hash, :expires_at
                 )
+                ON CONFLICT (review_task_id) DO NOTHING
                 """
             ),
             {
@@ -1157,6 +1158,20 @@ class IngestionRepository:
                 "expires_at": expires_at_dt,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT decision_hash, status
+                    FROM ingestion_review_tasks
+                    WHERE review_task_id = :review_task_id
+                    """
+                ),
+                {"review_task_id": review_task_id},
+            ).mappings().first()
+            if existing and existing["decision_hash"] == decision_hash:
+                return IngestionReceipt(review_task_id, tenant_id, f"duplicate:{existing['status']}", decision_hash)
+            raise IngestionPersistenceError(f"conflicting review task: {review_task_id}")
         return IngestionReceipt(review_task_id, tenant_id, status, decision_hash)
 
     def record_review_decision_receipt(
@@ -1175,7 +1190,7 @@ class IngestionRepository:
     ) -> IngestionReceipt:
         self._require_hash(decision_hash, "decision_hash")
         decided_at_dt = self._datetime_from_epoch_or_value(decided_at)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_review_decision_receipts(
@@ -1185,6 +1200,7 @@ class IngestionRepository:
                     :decision_id, :tenant_id, :review_task_id, :status, :reviewer_id,
                     :reviewer_scope, :security_epoch_ref, :reason, :decision_hash, :decided_at
                 )
+                ON CONFLICT (review_task_id) DO NOTHING
                 """
             ),
             {
@@ -1200,6 +1216,20 @@ class IngestionRepository:
                 "decided_at": decided_at_dt,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT decision_id, decision_hash, status
+                    FROM ingestion_review_decision_receipts
+                    WHERE review_task_id = :review_task_id
+                    """
+                ),
+                {"review_task_id": review_task_id},
+            ).mappings().first()
+            if existing and existing["decision_hash"] == decision_hash:
+                return IngestionReceipt(str(existing["decision_id"]), tenant_id, f"duplicate:{existing['status']}", decision_hash)
+            raise IngestionPersistenceError(f"conflicting review decision receipt: {review_task_id}")
         self.connection.execute(
             text(
                 """
@@ -1298,7 +1328,7 @@ class IngestionRepository:
         self._require_hash(receipt_hash, "receipt_hash")
         if fencing_token is not None and fencing_token <= 0:
             raise IngestionPersistenceError("delete lifecycle fencing_token must be positive")
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_delete_lifecycles(
@@ -1316,6 +1346,7 @@ class IngestionRepository:
                     :physical_delete_verified, :legal_hold_ref, :restored_authorization,
                     :duplicate, :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
                 )
+                ON CONFLICT (delete_ref) DO NOTHING
                 """
             ),
             {
@@ -1343,6 +1374,20 @@ class IngestionRepository:
                 "history": canonical_json(history),
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT receipt_hash, state
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": delete_ref},
+            ).mappings().first()
+            if existing and existing["receipt_hash"] == receipt_hash:
+                return IngestionReceipt(delete_ref, tenant_id, f"duplicate:{existing['state']}", receipt_hash)
+            raise IngestionPersistenceError(f"conflicting delete lifecycle: {delete_ref}")
         return IngestionReceipt(delete_ref, tenant_id, state, receipt_hash)
 
     def enqueue_outbox_event(
