@@ -1,6 +1,6 @@
 ---
 phase: PHASE11
-status: superseded_reopened
+status: completed
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -10,7 +10,7 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## 结论
 
-本 Pre-Closure 已被 Goal02 repair 目标 supersede。PHASE11 当前重新打开为 in_progress；保留本文件作为历史 evidence，但不得作为最终 Closure。
+本 Pre-Closure 已由 Goal02 final closure repair 重新批准。PHASE11 当前为 completed；本文件作为最终 Closure evidence 的一部分，仍不声明 production ready。
 
 ## 证据包
 

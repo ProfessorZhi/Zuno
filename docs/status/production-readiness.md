@@ -14,15 +14,25 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE05 completed：Security Control Plane 在完整 Phase Scope 内达到 `implementation_available`；不代表 production ready。
 - PHASE06 completed：Observability Minimum Black Box 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
-- PHASE08 in_progress：0b1e087a 的 completed 声明被 Goal02 repair 目标订正；需补 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit 和真实 cutover。
-- PHASE11 in_progress：0b1e087a 的 completed 声明被 Goal02 repair 目标订正；需补 durable Human Review Resume 与真实 Delete / Restore / Reconciliation。
-- PHASE09 planned：PHASE08 未重新 closure 前不得 ready 或实施。
-- PHASE12 planned：PHASE11 未重新 closure 前不得 ready 或实施。
+- PHASE08 completed：Goal02 final closure 已重新证明 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit 和 cutover 证据；不代表 production ready。
+- PHASE11 completed：Goal02 final closure 已重新证明 durable Human Review Resume 与 Delete / Restore / Reconciliation 证据；不代表 production ready。
+- PHASE09 ready：PHASE08 依赖已满足，但本轮未实施 PHASE09。
+- PHASE12 ready：PHASE08 与 PHASE11 依赖已满足，但本轮未实施 PHASE12。
 - PHASE09、PHASE10、PHASE12–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
-## PHASE11 Closure Boundary
+## Goal02 Closure Boundary
+
+Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE12 ready；not production ready。
+
+PHASE08 completion 已证明：
+
+- AgentRunGraph 使用官方 LangGraph PostgreSQL Checkpointer，生产入口无隐式 InMemorySaver 回退。
+- Native interrupt / `Command(resume=...)` 可在 restart 后从同一 thread checkpoint 继续，且不重复 Plan。
+- 固定 AgentRunGraph 节点对齐 `initialize → authorize → context_snapshot → create_plan → validate_plan → activate_plan → execute_step → final_gate → finalize → run_outcome`。
+- 固定 StepExecutionGraph 节点对齐 `load_step → resolve_input → security_gate → proposal → deterministic_validation → execute_owner_port → observation → action_evaluation → step_acceptance → commit_step_result`。
+- TaskContract、GoalVersion、PlanVersion、ExecutionContextSnapshot 和 Budget 领域事实使用 PostgreSQL Repository / Alembic migration。
 
 PHASE11 已在 2026-07-23 Goal02 closure 中完成 P11-T01 到 P11-T08，并将 80 个 Mandatory Requirement 更新为 `implementation_available`。该结论只覆盖 Input / Document Ingestion 的 Durable Ingestion and Source Lineage phase scope。
 

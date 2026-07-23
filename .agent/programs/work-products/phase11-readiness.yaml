@@ -1,14 +1,14 @@
 phase_id: PHASE11
 phase_name: Durable Ingestion and Source Lineage
-current_phase_status: in_progress
-coordinator_approval: pending_repair
+current_phase_status: completed
+coordinator_approval: approved
 closure_decision_ref: docs/evidence/phase11-coordinator-closure.md
 pre_closure_ref: docs/evidence/phase11-pre-closure.md
 post_closure_gate: tools/scripts/verify_phase11_post_closure_consistency.py
 requirement_ledger:
   mandatory_total: 80
   implementation_available: 80
-  target_not_current: repair_blockers_pending
+  target_not_current: 0
 evidence_refs:
   - docs/evidence/input-runtime-batch.md
   - docs/evidence/phase11-ingestion-source-lineage.md
@@ -24,16 +24,16 @@ focused_commands:
   - python tools/scripts/verify_input_runtime_batch.py
   - pytest -q tests/repo/test_phase11_ingestion_source_lineage.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/integration/test_phase11_package_a_production_runtime.py tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/knowledge/test_ingestion_delete_restore.py tests/repo/test_phase11_legacy_upload_parser_cutover.py tests/knowledge/test_legacy_cutover_adapter.py tests/storage/test_pipeline.py -p no:cacheprovider --tb=short
 downstream:
-  phase08_in_progress: true
-  phase09_planned: true
-  phase12_planned: true
+  phase08_completed: true
+  phase09_ready: true
+  phase12_ready: true
   phase12_waits_for:
     - PHASE12 implementation start
   dependency_statement:
-    - PHASE08 in_progress
-    - PHASE11 in_progress
-    - PHASE09 planned
-    - PHASE12 planned
+    - PHASE08 completed
+    - PHASE11 completed
+    - PHASE09 ready
+    - PHASE12 ready
 boundary:
   implementation_available_not_production_ready: true
   external_dependencies_target_blocked_not_mocked: true
@@ -45,4 +45,4 @@ closure:
   superseded_at: 2026-07-23
   goal02_branch: integration/goal02-agent-core-ingestion-closure
   closure_commit: 932603014fefecaeb55291c0f0f6eff581c3812a
-  repair_status: in_progress
+  repair_status: completed
