@@ -637,6 +637,58 @@ def test_workspace_task_runtime_runs_read_only_tool_and_streams_audit_events() -
     assert streamed_tool["data"]["audit_ref"].startswith("audit_")
 
 
+def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() -> None:
+    from zuno.agent.runtime import (
+        Phase08RunService,
+        SideEffectLedger,
+        build_phase08_run_graph,
+        build_phase08_test_checkpointer,
+    )
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_phase08_cutover(
+        mode="canary",
+        new_runtime=Phase08RunService(
+            graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())
+        ),
+        side_effect_ledger=SideEffectLedger(),
+    )
+    try:
+        client = _client()
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Run the phase08 canary product entry",
+                "model_id": "model-local",
+                "session_id": "session_phase08_canary",
+                "workspace_id": "workspace_phase08",
+                "task_id": "task_phase08_canary",
+                "trace_id": "trace_phase08_canary",
+                "goal": "phase08 canary closure",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        created = create_response.json()["data"]
+        assert created["task"]["status"] == "completed"
+
+        events = client.get("/api/v1/workspace/task/task_phase08_canary/events").json()["data"]
+        cutover = next(event for event in events if event["type"] == "phase08_cutover")
+        assert cutover["payload"]["runtime_topology"] == "phase08_cutover"
+        assert cutover["payload"]["mode"] == "canary"
+        assert cutover["payload"]["primary_runtime"] == "phase08"
+        assert cutover["payload"]["shadow_output_ref"] == "workspace-task:task_phase08_canary:legacy-output"
+        assert cutover["payload"]["shadow_match"] is False
+        assert cutover["payload"]["request_hash"]
+        assert cutover["payload"]["side_effect_ref"] == "side-effect:workspace-task:task_phase08_canary:phase08-cutover"
+        assert "task_completed" in [event["type"] for event in events]
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
 def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool() -> None:
     client = _client()
 

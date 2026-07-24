@@ -19,6 +19,7 @@ branch: integration/goal02-final-closure-repair
 - P08-T04 到 P08-T07：固定 `initialize -> authorize -> context_snapshot -> create_plan -> validate_plan -> activate_plan -> execute_step -> final_gate -> finalize -> run_outcome` LangGraph 运行图、固定 StepExecutionGraph、generation reconciliation、interrupt/signal/cancel/deadline。
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
 - Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
+- Product cutover entry：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` 让 Workspace task 入口显式进入 `Phase08CutoverController`，默认不启用；启用后可按 `shadow`、`canary`、`new_default`、`rollback` 记录 `phase08_cutover` 审计事件。
 
 ## 已运行命令
 
@@ -57,6 +58,9 @@ python -m py_compile src/backend/zuno/agent/runtime/phase08.py src/backend/zuno/
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_production_run_service_uses_postgres_checkpointer_and_final_gate_port -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py -p no:cacheprovider --tb=short
 pytest -q tests/agent/runtime/test_phase08_fixed_run_graph.py tests/agent/runtime/test_phase08_step_graph.py -p no:cacheprovider --tb=short
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry -p no:cacheprovider --tb=short
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_runs_read_only_tool_and_streams_audit_events tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_path -p no:cacheprovider --tb=short
+pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -66,6 +70,9 @@ py_compile passed
 1 passed in 43.03s
 5 passed in 39.04s
 7 passed in 28.71s
+1 passed, 1 warning in 45.75s
+3 passed, 1 warning in 47.76s
+5 passed in 31.74s
 ```
 
 ## 证据 Commit

@@ -20,6 +20,7 @@ production_ready: false
 - Fixed runtime surface：`src/backend/zuno/agent/runtime/phase08.py`
 - Shadow / canary / rollback：`src/backend/zuno/agent/runtime/phase08_cutover.py`
 - Production service factory：`phase08_postgres_run_service()` binds official `PostgresSaver` and `PostgresPhase08FinalGatePort`.
+- Product entry cutover：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` routes Workspace task creation through `Phase08CutoverController` when explicitly configured.
 - Focused tests：`tests/agent/test_phase08_*.py`、`tests/integration/agent/test_phase08_*.py`、`tests/agent/runtime/test_phase08_*.py`
 
 ## 边界
@@ -31,9 +32,10 @@ PHASE08 不拥有 Product Surface、Web/Desktop、Knowledge Version、Tool Side 
 ```powershell
 pytest -q tests/agent/runtime/test_phase08_fixed_run_graph.py tests/agent/runtime/test_phase08_step_graph.py tests/integration/agent/test_phase08_official_postgres_runtime_recovery.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py -p no:cacheprovider --tb=short
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry -p no:cacheprovider --tb=short
 ```
 
-结果：`6 passed`；追加 persistence closure：`5 passed in 39.04s`。
+结果：`6 passed`；追加 persistence closure：`5 passed in 39.04s`；Workspace product canary：`1 passed, 1 warning in 45.75s`。
 
 ## 下游影响
 

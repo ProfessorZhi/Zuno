@@ -40,6 +40,7 @@ from zuno.agent.runtime.phase08 import (
     reconcile_generations,
 )
 from zuno.agent.runtime.phase08_cutover import (
+    CutoverMode,
     Phase08CutoverController,
     Phase08CutoverError,
     Phase08CutoverAudit,
@@ -74,6 +75,7 @@ __all__ = [
     "AgentRuntimeSnapshot",
     "AgentRuntimeState",
     "AgentRunStore",
+    "CutoverMode",
     "FinalizationStatus",
     "NodeOutcome",
     "NormalizedObservation",

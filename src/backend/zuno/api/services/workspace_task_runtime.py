@@ -17,7 +17,17 @@ from zuno.agent.contracts import PlannerOutput, RetrievalProfile
 from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
 from zuno.agent.harness import ControllerRuntimeState
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
-from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import (
+    CutoverMode,
+    Phase08CutoverController,
+    Phase08RuntimeRequest,
+    Phase08RuntimeResponse,
+    Phase08RunService,
+    RuntimeStartRequest,
+    SQLiteAgentRunStore,
+    SideEffectLedger,
+    UnifiedAgentRuntimeService,
+)
 from zuno.api.services.user import UserPayload
 from zuno.capability.runtime import (
     SecurityApprovalFactSink,
@@ -187,6 +197,10 @@ class WorkspaceTaskRuntimeService:
     _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
     _package_a_production_configured: bool = False
     _package_a_upload_bucket: str = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+    _phase08_cutover_mode: CutoverMode | None = None
+    _phase08_cutover_runtime: Phase08RunService | None = None
+    _phase08_cutover_ledger: Any | None = None
+    _phase08_cutover_audit: Any | None = None
     _durable_ingestion_store: SQLiteDurableIngestionStore | None = None
     _source_object_store: LocalObjectStore | None = None
     _pending_tool_requests: dict[str, ToolRuntimeRequest] = {}
@@ -296,6 +310,20 @@ class WorkspaceTaskRuntimeService:
         cls._unified_runtime_store = store
 
     @classmethod
+    def configure_phase08_cutover(
+        cls,
+        *,
+        mode: CutoverMode | None,
+        new_runtime: Phase08RunService | None = None,
+        side_effect_ledger: Any | None = None,
+        audit: Any | None = None,
+    ) -> None:
+        cls._phase08_cutover_mode = mode
+        cls._phase08_cutover_runtime = new_runtime
+        cls._phase08_cutover_ledger = side_effect_ledger
+        cls._phase08_cutover_audit = audit
+
+    @classmethod
     def configure_security_approval_sink(
         cls,
         sink: SecurityApprovalFactSink | None,
@@ -342,6 +370,10 @@ class WorkspaceTaskRuntimeService:
         cls._package_a_production_runtime = None
         cls._package_a_production_configured = False
         cls._package_a_upload_bucket = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
+        cls._phase08_cutover_mode = None
+        cls._phase08_cutover_runtime = None
+        cls._phase08_cutover_ledger = None
+        cls._phase08_cutover_audit = None
         cls._security_product_action_guard = None
 
     @classmethod
@@ -1228,6 +1260,12 @@ class WorkspaceTaskRuntimeService:
             login_user=login_user,
             goal=goal,
         )
+        cls._run_phase08_cutover_for_task(
+            task=task,
+            simple_task=simple_task,
+            login_user=login_user,
+            goal=goal,
+        )
         cls._complete_task(
             task_id=task_id,
             simple_task=simple_task,
@@ -1400,6 +1438,77 @@ class WorkspaceTaskRuntimeService:
                     },
                 )
             )
+
+    @classmethod
+    def _run_phase08_cutover_for_task(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+        goal: str,
+    ) -> None:
+        mode = cls._phase08_cutover_mode
+        if mode is None:
+            return
+        request = Phase08RuntimeRequest(
+            request_id=f"workspace-task:{task.task_id}",
+            tenant_id=login_user.user_id,
+            workspace_id=task.workspace_id,
+            user_id=login_user.user_id,
+            task_id=task.task_id,
+            trace_id=task.trace_id or f"trace:{task.task_id}",
+            goal=goal,
+            idempotency_key=f"workspace-task:{task.task_id}:phase08-cutover",
+            budget_requested_units=int((task.budget or WorkspaceTaskBudget()).max_steps or 1),
+            budget_available_units=int((task.budget or WorkspaceTaskBudget()).max_steps or 1),
+        )
+
+        def legacy_runner(
+            request: Phase08RuntimeRequest,
+            allow_side_effect: bool,
+        ) -> Phase08RuntimeResponse:
+            return Phase08RuntimeResponse(
+                runtime="workspace_legacy",
+                request_hash=request.request_hash,
+                output_ref=f"workspace-task:{task.task_id}:legacy-output",
+                trace_ref=task.trace_id or request.trace_id,
+                side_effect_ref=(
+                    f"workspace-task:{task.task_id}:legacy-effect"
+                    if allow_side_effect
+                    else None
+                ),
+            )
+
+        controller = Phase08CutoverController(
+            mode=mode,
+            legacy_runner=legacy_runner,
+            new_runtime=cls._phase08_cutover_runtime,
+            side_effect_ledger=cls._phase08_cutover_ledger or SideEffectLedger(),
+            audit=cls._phase08_cutover_audit,
+        )
+        response = controller.handle(request)
+        cls._events.setdefault(task.task_id, []).append(
+            cls._event(
+                task_id=task.task_id,
+                trace_id=task.trace_id or "",
+                event_type="phase08_cutover",
+                status=response.runtime,
+                payload={
+                    "runtime_topology": "phase08_cutover",
+                    "mode": mode,
+                    "primary_runtime": response.runtime,
+                    "request_hash": response.request_hash,
+                    "output_ref": response.output_ref,
+                    "trace_ref": response.trace_ref,
+                    "side_effect_ref": response.side_effect_ref,
+                    "shadow_output_ref": response.shadow_output_ref,
+                    "shadow_trace_ref": response.shadow_trace_ref,
+                    "shadow_match": response.shadow_match,
+                    "rollback_reason": response.rollback_reason,
+                },
+            )
+        )
 
     @classmethod
     def _complete_task(
