@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 
 def _ocr_parse():
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
@@ -62,6 +64,61 @@ def test_human_review_runtime_blocks_publish_until_approved() -> None:
     )
     assert duplicate.duplicate is True
     assert duplicate.decision_hash == receipt.decision_hash
+
+
+def test_human_review_runtime_rejects_conflicting_duplicate_decision() -> None:
+    from zuno.knowledge.ingestion import HumanReviewRuntime
+
+    result, snapshot = _ocr_parse()
+    assert result.document is not None
+
+    runtime = HumanReviewRuntime(review_ttl_seconds=60)
+    _, task = runtime.evaluate(
+        document=result.document,
+        parse_snapshot=snapshot,
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+    assert task is not None
+
+    receipt = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+
+    duplicate = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review",
+        existing_receipt=receipt,
+    )
+
+    assert duplicate.duplicate is True
+    assert duplicate.decision_hash == receipt.decision_hash
+
+    with pytest.raises(ValueError, match="conflicting review decision"):
+        runtime.decide(
+            task=task,
+            reviewer_id="reviewer_1",
+            reviewer_scope="workspace_reviewer",
+            status="rejected",
+            security_epoch_ref="security_epoch:workspace_review",
+            existing_receipt=receipt,
+        )
+
+    with pytest.raises(ValueError, match="conflicting review decision"):
+        runtime.decide(
+            task=task,
+            reviewer_id="reviewer_2",
+            reviewer_scope="workspace_reviewer",
+            status="approved",
+            security_epoch_ref="security_epoch:workspace_review",
+            existing_receipt=receipt,
+        )
 
 
 def test_human_review_runtime_records_rejected_expired_and_cancelled_states() -> None:

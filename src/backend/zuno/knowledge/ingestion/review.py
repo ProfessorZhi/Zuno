@@ -144,15 +144,45 @@ class HumanReviewRuntime:
         existing_receipt: ReviewDecisionReceipt | None = None,
         now: float | None = None,
     ) -> ReviewDecisionReceipt:
-        if existing_receipt is not None:
-            return existing_receipt.model_copy(update={"duplicate": True})
-        current_time = time.time() if now is None else now
-        final_status: ReviewDecisionStatus = "expired" if current_time > task.expires_at else status
+        requested_status: ReviewDecisionStatus = status
         if reviewer_scope != task.reviewer_scope:
-            final_status = "rejected"
+            requested_status = "rejected"
         if security_epoch_ref != task.security_epoch_ref:
-            final_status = "rejected"
+            requested_status = "rejected"
+        current_time = time.time() if now is None else now
+        final_status: ReviewDecisionStatus = (
+            "expired" if current_time > task.expires_at else requested_status
+        )
         decision_id = f"review_decision_{task.review_task_id}"
+        requested_decision_hashes = {
+            _hash(
+                {
+                    "review_task_id": task.review_task_id,
+                    "decision_id": decision_id,
+                    "status": requested_status,
+                    "reviewer_id": reviewer_id,
+                    "reviewer_scope": reviewer_scope,
+                    "security_epoch_ref": security_epoch_ref,
+                }
+            ),
+            _hash(
+                {
+                    "review_task_id": task.review_task_id,
+                    "decision_id": decision_id,
+                    "status": final_status,
+                    "reviewer_id": reviewer_id,
+                    "reviewer_scope": reviewer_scope,
+                    "security_epoch_ref": security_epoch_ref,
+                }
+            ),
+        }
+        if existing_receipt is not None:
+            if (
+                existing_receipt.review_task_id != task.review_task_id
+                or existing_receipt.decision_hash not in requested_decision_hashes
+            ):
+                raise ValueError(f"conflicting review decision: {task.review_task_id}")
+            return existing_receipt.model_copy(update={"duplicate": True})
         decision_hash = _hash(
             {
                 "review_task_id": task.review_task_id,

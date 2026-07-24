@@ -2,8 +2,8 @@
 phase: PHASE11
 scope: P11-T04..P11-T07
 status: completion_candidate
-date: 2026-07-23
-branch: integration/goal02-agent-core-ingestion-closure
+date: 2026-07-24
+branch: integration/goal02-final-closure-repair
 ---
 
 # PHASE11 P11-T04～T07 Runtime Evidence
@@ -22,6 +22,7 @@ branch: integration/goal02-agent-core-ingestion-closure
 - 新增 `IngestionRepository.record_review_task()`、`record_review_decision_receipt()`、`get_review_task()`、`get_review_decision_receipt()`。
 - Package A production runtime 在质量闸门进入 `human_review` 时持久化 ReviewTask。
 - 低质量文档不会创建 `ingestion_indexable_document_snapshots` 或 handoff outbox，但会留下 ParseSnapshot、QualityGateDecision 和 ReviewTask。
+- Human Review duplicate decision 现在按 canonical `decision_hash` 判定：重复相同 Decision 返回原 Receipt；同一 ReviewTask 的不同 Decision 在运行时抛出 conflict，并由 PostgreSQL `ingestion_review_decision_receipts(review_task_id)` 唯一约束拒绝不同 hash。
 
 ## 为什么本轮不重写 Parser / IR / Handoff
 
@@ -44,6 +45,8 @@ python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
 pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
+pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart -p no:cacheprovider --tb=short
 alembic -c infra/db/alembic.ini heads
 alembic -c infra/db/alembic.ini upgrade head
 ```
@@ -58,7 +61,9 @@ alembic -c infra/db/alembic.ini upgrade head
 - `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider --tb=short`：`6 passed in 18.20s`。
 - `pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short`：`1 passed in 8.45s`。
 - P11-T04～T07 组合测试：`69 passed in 23.13s`。
-- Alembic head：`20260724_24 (head)`。
+- `pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short`：`5 passed in 7.95s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart -p no:cacheprovider --tb=short`：`1 passed in 9.68s`。
+- Alembic head：`20260724_29 (head)`。
 - Alembic upgrade：通过。
 
 ## 剩余边界

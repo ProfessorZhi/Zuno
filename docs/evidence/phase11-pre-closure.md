@@ -25,6 +25,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - PostgreSQL 是 PHASE11 领域事实源；SQLite、本地队列和 legacy adapter 只保留为开发/兼容边界。
 - Queue ACK 不冒充领域成功；Package A worker 在 domain commit / replay consistency 后才 ACK。
 - Human Review task、decision receipt、resume handoff 与 DeleteLifecycle 已有 PostgreSQL 审计事实。
+- Human Review decision 已覆盖重复相同 Decision 幂等返回原 Receipt、不同 Decision 运行时 conflict，以及 PostgreSQL 唯一约束拒绝不同 decision hash。
 - Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
 - Input 不直接拥有 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
 
@@ -34,6 +35,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - `python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`：通过。
 - PHASE11 E2E/Fault 测试组合：`120 passed in 154.80s (0:02:34)`。
 - P11-T08 focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py` 为 `20 passed in 25.23s`；`tests/knowledge/test_ingestion_delete_restore.py` 为 `7 passed in 8.38s`。
+- Human Review decision focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.95s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart` 为 `1 passed in 9.68s`。
 - Alembic head：`20260724_29 (head)`。
 
 ## Closure 边界

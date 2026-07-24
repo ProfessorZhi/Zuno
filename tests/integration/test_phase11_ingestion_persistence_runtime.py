@@ -646,6 +646,36 @@ def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after
             security_epoch_ref=loaded_receipt.security_epoch_ref,
             existing_receipt=loaded_receipt,
         )
+        with pytest.raises(ValueError, match="conflicting review decision"):
+            runtime.decide(
+                task=loaded_task,
+                reviewer_id=loaded_receipt.reviewer_id,
+                reviewer_scope=loaded_receipt.reviewer_scope,
+                status="rejected",
+                security_epoch_ref=loaded_receipt.security_epoch_ref,
+                existing_receipt=loaded_receipt,
+                now=loaded_task.expires_at - 1,
+            )
+        conflicting_receipt = runtime.decide(
+            task=loaded_task,
+            reviewer_id="reviewer:phase11:conflict",
+            reviewer_scope=loaded_receipt.reviewer_scope,
+            status="rejected",
+            security_epoch_ref=loaded_receipt.security_epoch_ref,
+        )
+        with pytest.raises(IngestionPersistenceError, match="conflicting review decision receipt"):
+            repo.record_review_decision_receipt(
+                decision_id=f"{conflicting_receipt.decision_id}:conflict",
+                tenant_id="tenant-a",
+                review_task_id=conflicting_receipt.review_task_id,
+                status=conflicting_receipt.status,
+                reviewer_id=conflicting_receipt.reviewer_id,
+                reviewer_scope=conflicting_receipt.reviewer_scope,
+                security_epoch_ref=conflicting_receipt.security_epoch_ref,
+                reason=conflicting_receipt.reason,
+                decision_hash=conflicting_receipt.decision_hash,
+                decided_at=conflicting_receipt.decided_at,
+            )
 
     assert resumed.duplicate is True
     assert resumed.decision_hash == receipt.decision_hash
