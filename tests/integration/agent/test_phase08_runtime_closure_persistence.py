@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from zuno.agent.domain import AgentDomainConflict, AgentRun, GoalInputClassification, GoalVersion, TaskContract
 from zuno.agent.runtime import (
+    PHASE08_RUN_SCHEMA,
     Phase08CutoverController,
     Phase08CutoverError,
     Phase08RuntimeRequest,
@@ -24,6 +25,7 @@ from zuno.agent.runtime import (
     build_phase08_step_graph,
     build_phase08_test_checkpointer,
     phase08_postgres_run_service,
+    reconcile_generations,
 )
 from zuno.platform.database.agent import AgentDomainUnitOfWork
 from zuno.platform.database.foundation import create_foundation_engine
@@ -245,18 +247,48 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
             payload={"reason": "user_cancelled"},
             status="accepted",
         )
+        decision = reconcile_generations(
+            domain_generation=3,
+            checkpoint_generation=2,
+            schema_version=PHASE08_RUN_SCHEMA,
+        )
         finding = repo.record_reconciliation_finding(
             finding_id="reconcile:p08:domain-ahead",
             tenant_id=task.tenant_id,
             run_id=run.run_id,
-            status="domain_ahead",
-            fact_owner="domain",
-            auto_repair=True,
-            replay_allowed=False,
-            terminate_run=False,
-            audit_event_ref="audit:p08:domain-ahead",
+            status=decision["status"],
+            fact_owner=decision["fact_owner"],
+            auto_repair=decision["auto_repair"],
+            replay_allowed=decision["replay_allowed"],
+            terminate_run=decision["terminate_run"],
+            audit_event_ref=decision["audit_event_ref"],
             payload={"domain_generation": 3, "checkpoint_generation": 2},
         )
+        duplicate_finding = repo.record_reconciliation_finding(
+            finding_id="reconcile:p08:domain-ahead",
+            tenant_id=task.tenant_id,
+            run_id=run.run_id,
+            status=decision["status"],
+            fact_owner=decision["fact_owner"],
+            auto_repair=decision["auto_repair"],
+            replay_allowed=decision["replay_allowed"],
+            terminate_run=decision["terminate_run"],
+            audit_event_ref=decision["audit_event_ref"],
+            payload={"domain_generation": 3, "checkpoint_generation": 2},
+        )
+        with pytest.raises(AgentDomainConflict, match="conflicting reconciliation finding"):
+            repo.record_reconciliation_finding(
+                finding_id="reconcile:p08:domain-ahead",
+                tenant_id=task.tenant_id,
+                run_id=run.run_id,
+                status=decision["status"],
+                fact_owner=decision["fact_owner"],
+                auto_repair=False,
+                replay_allowed=decision["replay_allowed"],
+                terminate_run=decision["terminate_run"],
+                audit_event_ref=decision["audit_event_ref"],
+                payload={"domain_generation": 3, "checkpoint_generation": 2},
+            )
         cutover = repo.record_cutover_audit_event(
             cutover_event_id="cutover:p08:canary",
             tenant_id=task.tenant_id,
@@ -271,6 +303,7 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
         )
         assert signal.ref == "signal:p08:cancel"
         assert finding.status == "domain_ahead"
+        assert duplicate_finding.status == "duplicate:domain_ahead"
         assert cutover.status == "canary"
 
 

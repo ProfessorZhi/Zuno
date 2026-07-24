@@ -858,7 +858,8 @@ class AgentDomainRepository:
         audit_event_ref: str,
         payload: dict[str, Any],
     ) -> AgentDomainReceipt:
-        self.connection.execute(
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_reconciliation_findings(
@@ -868,6 +869,7 @@ class AgentDomainRepository:
                     :finding_id, :tenant_id, :run_id, :status, :fact_owner,
                     :auto_repair, :replay_allowed, :terminate_run, :audit_event_ref, :payload_hash
                 )
+                ON CONFLICT (finding_id) DO NOTHING
                 """
             ),
             {
@@ -880,9 +882,35 @@ class AgentDomainRepository:
                 "replay_allowed": replay_allowed,
                 "terminate_run": terminate_run,
                 "audit_event_ref": audit_event_ref,
-                "payload_hash": _canonical_hash(payload),
+                "payload_hash": payload_hash,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT tenant_id, run_id, status, fact_owner, auto_repair,
+                           replay_allowed, terminate_run, audit_event_ref, payload_hash
+                    FROM agent_reconciliation_findings
+                    WHERE finding_id = :finding_id
+                    """
+                ),
+                {"finding_id": finding_id},
+            ).mappings().first()
+            if (
+                existing
+                and str(existing["tenant_id"]) == str(tenant_id)
+                and str(existing["run_id"]) == str(run_id)
+                and existing["status"] == status
+                and existing["fact_owner"] == fact_owner
+                and bool(existing["auto_repair"]) is bool(auto_repair)
+                and bool(existing["replay_allowed"]) is bool(replay_allowed)
+                and bool(existing["terminate_run"]) is bool(terminate_run)
+                and existing["audit_event_ref"] == audit_event_ref
+                and existing["payload_hash"] == payload_hash
+            ):
+                return AgentDomainReceipt(finding_id, f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting reconciliation finding: {finding_id}")
         return AgentDomainReceipt(finding_id, status, 1)
 
     def record_cutover_audit_event(

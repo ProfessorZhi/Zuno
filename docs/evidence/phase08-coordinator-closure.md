@@ -22,6 +22,7 @@ production_ready: false
 - Production service factory：`phase08_postgres_run_service()` binds official `PostgresSaver` and `PostgresPhase08FinalGatePort`.
 - Product entry cutover：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` routes Workspace task creation through `Phase08CutoverController` when explicitly configured.
 - Shadow suppression：PHASE08 shadow runs keep official checkpoint evidence but do not write `agent_final_gate_receipts`、`agent_run_outcomes` or `agent_effect_claims`.
+- Reconciliation policy：all required statuses now carry explicit owner / auto repair / replay / terminate / audit / idempotency decisions, and PostgreSQL finding replay returns duplicate or conflict instead of raw database errors.
 - Fallback guard：after a persisted PHASE08 `agent_effect_claims` row exists for the request idempotency key, automatic legacy fallback is blocked and audited with `fallback_allowed=false`.
 - Focused tests：`tests/agent/test_phase08_*.py`、`tests/integration/agent/test_phase08_*.py`、`tests/agent/runtime/test_phase08_*.py`
 
@@ -41,6 +42,8 @@ pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::t
 结果：`6 passed`；追加 persistence closure：`5 passed in 39.04s`；Workspace product canary：`1 passed, 1 warning in 45.75s`；shadow suppression：`1 passed in 31.80s`。
 
 Fallback guard focused validation：`tests/agent/runtime/test_phase08_cutover_shadow.py::test_fallback_is_blocked_after_phase08_side_effect_claim` 为 `1 passed in 34.34s`；`tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim` 为 `1 passed in 41.26s`。
+
+Reconciliation policy focused validation：`tests/agent/runtime/test_phase08_reconciliation_and_signals.py::test_generation_reconciliation_detects_ahead_behind_orphan_and_stale_schema` 为 `1 passed in 36.10s`；`tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_signal_reconciliation_and_cutover_are_persistent` 为 `1 passed in 42.83s`。
 
 ## 下游影响
 
