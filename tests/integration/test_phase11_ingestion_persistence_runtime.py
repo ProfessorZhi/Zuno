@@ -1368,6 +1368,131 @@ def test_ingestion_delete_visibility_port_denial_prevents_lifecycle_and_outbox(e
         assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 0
 
 
+def test_ingestion_duplicate_delete_after_snapshot_reuses_lifecycle_and_cleanup_outbox(engine) -> None:
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="source.md",
+            mime_type="text/markdown",
+            storage_uri="s3://phase11-duplicate-delete/workspace-a/source.md",
+            object_manifest_ref="manifest:phase11:duplicate-delete",
+            source_sha256=HEX_64,
+            size_bytes=42,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:phase11-duplicate-delete",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "source.md"},
+            immutability_ref="immutability:phase11-duplicate-delete",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:phase11-duplicate-delete",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:phase11-duplicate-delete",
+            security_decision_ref="security-decision:phase11-duplicate-delete",
+        )
+        job = repo.record_parse_job(
+            parse_job_id="parse-job:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:phase11:duplicate-delete",
+        )
+        attempt = repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            attempt_no=1,
+            worker_id="worker:phase11-duplicate-delete",
+            lease_ref="lease:phase11-duplicate-delete",
+            fencing_token=1,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id="parse-snapshot:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            parse_attempt_id=attempt.ref,
+            document_version_id=document.ref,
+            canonical_ir={"metadata": {"document_id": source.ref}, "blocks": []},
+            canonical_ir_ref="canonical-ir:phase11-duplicate-delete",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id="quality:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=1.0,
+            confidence_score=1.0,
+            decision="publish",
+        )
+        repo.record_indexable_snapshot(
+            indexable_snapshot_id="snapshot:phase11:duplicate-delete",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            document_version_id=document.ref,
+            quality_decision_id=quality.ref,
+            visibility_ref="visibility:workspace-a:duplicate-delete",
+            payload={"object_ref": "s3://phase11-duplicate-delete/workspace-a/source.md"},
+            handoff_idempotency_key="handoff:phase11:duplicate-delete",
+        )
+
+    coordinator = PersistentDeleteRestoreCoordinator(
+        engine=engine,
+        object_store=None,
+    )
+    command = DeleteLifecycleCommand(
+        tenant_id="tenant-a",
+        snapshot_ref="snapshot:phase11:duplicate-delete",
+        indexable_snapshot_id="snapshot:phase11:duplicate-delete",
+        handoff_outbox_event_id="outbox:snapshot:phase11:duplicate-delete",
+        visibility_ref="visibility:workspace-a:duplicate-delete",
+        object_ref="s3://phase11-duplicate-delete/workspace-a/source.md",
+        restore_point_name="_restore/workspace-a/source.md",
+        projection_cleanup_ref="projection-cleanup:snapshot:phase11:duplicate-delete",
+    )
+
+    first = coordinator.request_delete_after_snapshot(command)
+    duplicate = coordinator.request_delete_after_snapshot(command)
+
+    assert duplicate.delete_ref == first.delete_ref
+    assert duplicate.duplicate is True
+    assert duplicate.receipt_hash == first.receipt_hash
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_delete_lifecycles")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 1
+
+    conflicting = DeleteLifecycleCommand(
+        tenant_id="tenant-a",
+        snapshot_ref=command.snapshot_ref,
+        indexable_snapshot_id=command.indexable_snapshot_id,
+        handoff_outbox_event_id=command.handoff_outbox_event_id,
+        visibility_ref=command.visibility_ref,
+        object_ref="s3://phase11-duplicate-delete/workspace-a/other-source.md",
+        restore_point_name=command.restore_point_name,
+        projection_cleanup_ref=command.projection_cleanup_ref,
+    )
+    with pytest.raises(IngestionPersistenceError, match="conflicting delete lifecycle"):
+        coordinator.request_delete_after_snapshot(conflicting)
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_delete_lifecycles")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 1
+
+
 def test_ingestion_delete_knowledge_cleanup_port_denial_prevents_object_delete(engine) -> None:
     content = b"phase11 knowledge cleanup port denied"
     bucket = f"phase11-cleanup-port-denied-{uuid4().hex}"

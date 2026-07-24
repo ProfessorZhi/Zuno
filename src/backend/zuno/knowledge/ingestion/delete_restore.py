@@ -612,9 +612,23 @@ class PersistentDeleteRestoreCoordinator:
             legal_hold_ref=command.legal_hold_ref,
         )
         from zuno.platform.database.foundation import InfrastructureRepository
-        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+        from zuno.platform.database.ingestion.persistence import (
+            IngestionPersistenceError,
+            IngestionUnitOfWork,
+        )
 
         with IngestionUnitOfWork(self.engine) as repo:
+            try:
+                existing_row = repo.get_delete_lifecycle(receipt.delete_ref)
+            except IngestionPersistenceError as exc:
+                if "missing delete lifecycle" not in str(exc):
+                    raise
+            else:
+                if str(existing_row["tenant_id"]) != str(command.tenant_id):
+                    raise IngestionPersistenceError(f"conflicting delete lifecycle tenant: {receipt.delete_ref}")
+                if existing_row["receipt_hash"] != receipt.receipt_hash:
+                    raise IngestionPersistenceError(f"conflicting delete lifecycle: {receipt.delete_ref}")
+                return DeleteLifecycleReceipt.model_validate(existing_row).model_copy(update={"duplicate": True})
             visibility = self.visibility_port.revoke_visibility(
                 tenant_id=command.tenant_id,
                 receipt=receipt,
