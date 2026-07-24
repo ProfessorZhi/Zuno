@@ -1004,6 +1004,172 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
         raw_store.remove_bucket_tree(bucket)
 
 
+def test_ingestion_delete_cleanup_reconciles_object_already_missing(engine) -> None:
+    content = b"phase11 object already missing"
+    bucket = f"phase11-missing-{uuid4().hex}"
+    raw_store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    durable_store = DurableMinioObjectStore(
+        store=raw_store,
+        engine=engine,
+        owner="phase11-delete-missing-test",
+    )
+    try:
+        ticket = durable_store.stage(
+            bucket=bucket,
+            committed_object_name="workspace-a/already-missing.md",
+            content=content,
+        )
+        committed = durable_store.commit(ticket)
+        object_ref = f"s3://{bucket}/{committed.object_name}"
+        with IngestionUnitOfWork(engine) as repo:
+            source = repo.record_source_object(
+                source_object_id="source:phase11:already-missing",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                filename="already-missing.md",
+                mime_type="text/markdown",
+                storage_uri=object_ref,
+                object_manifest_ref=f"manifest:{object_ref}",
+                source_sha256=committed.content_hash,
+                size_bytes=committed.size_bytes,
+                classification_ref="classification:internal",
+                security_epoch_ref="security-epoch:phase11-missing",
+            )
+            document = repo.record_document_version(
+                document_version_id="document-version:phase11:already-missing",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                source_object_id=source.ref,
+                version_no=1,
+                content_hash=committed.content_hash,
+                metadata={"filename": "already-missing.md"},
+                immutability_ref="immutability:phase11:already-missing",
+            )
+            plan = repo.record_parse_plan(
+                parse_plan_id="parse-plan:phase11:already-missing",
+                tenant_id="tenant-a",
+                document_version_id=document.ref,
+                parser_route={"primary": "native_markdown"},
+                parser_policy_ref="parser-policy:phase11-missing",
+                parser_bundle={"parser": "native_markdown", "version": "v1"},
+                quality_policy_ref="quality-policy:phase11-missing",
+                security_decision_ref="security-decision:phase11-missing",
+            )
+            job = repo.record_parse_job(
+                parse_job_id="parse-job:phase11:already-missing",
+                tenant_id="tenant-a",
+                parse_plan_id=plan.ref,
+                document_version_id=document.ref,
+                idempotency_key="parse:phase11:already-missing",
+            )
+            attempt = repo.record_parse_attempt(
+                parse_attempt_id="parse-attempt:phase11:already-missing",
+                tenant_id="tenant-a",
+                parse_job_id=job.ref,
+                attempt_no=1,
+                worker_id="worker:phase11-missing",
+                lease_ref="lease:phase11-missing",
+                fencing_token=1,
+            )
+            snapshot = repo.record_parse_snapshot(
+                parse_snapshot_id="parse-snapshot:phase11:already-missing",
+                tenant_id="tenant-a",
+                parse_job_id=job.ref,
+                parse_attempt_id=attempt.ref,
+                document_version_id=document.ref,
+                canonical_ir={"metadata": {"document_id": source.ref}, "blocks": []},
+                canonical_ir_ref="canonical-ir:phase11-missing",
+                canonical_ir_schema_ref="canonical-document-ir-v1",
+                parser_id="native_markdown",
+                parser_version="v1",
+            )
+            quality = repo.record_quality_decision(
+                quality_decision_id="quality:phase11:already-missing",
+                tenant_id="tenant-a",
+                parse_snapshot_id=snapshot.ref,
+                coverage_score=1.0,
+                confidence_score=1.0,
+                decision="publish",
+            )
+            repo.record_indexable_snapshot(
+                indexable_snapshot_id="snapshot:phase11:already-missing",
+                tenant_id="tenant-a",
+                parse_snapshot_id=snapshot.ref,
+                document_version_id=document.ref,
+                quality_decision_id=quality.ref,
+                visibility_ref="visibility:workspace-a:already-missing",
+                payload={"object_ref": object_ref},
+                handoff_idempotency_key="handoff:phase11:already-missing",
+            )
+        coordinator = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=durable_store,
+        )
+        requested = coordinator.request_delete_after_snapshot(
+            DeleteLifecycleCommand(
+                tenant_id="tenant-a",
+                snapshot_ref="snapshot:phase11:already-missing",
+                indexable_snapshot_id="snapshot:phase11:already-missing",
+                handoff_outbox_event_id="outbox:snapshot:phase11:already-missing",
+                visibility_ref="visibility:workspace-a:already-missing",
+                object_ref=object_ref,
+                restore_point_name="_restore/workspace-a/already-missing.md",
+                projection_cleanup_ref="projection-cleanup:snapshot:phase11:already-missing",
+            )
+        )
+        coordinator.confirm_knowledge_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+            cleanup_ref=requested.cleanup_ref,
+        )
+        raw_store.client.remove_object(bucket, committed.object_name)
+
+        verified = coordinator.execute_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+        )
+
+        assert verified.state == "verified"
+        assert verified.cleanup_verified is True
+        assert verified.physical_delete_verified is True
+        assert verified.physical_delete_ref == object_ref
+        with engine.connect() as conn:
+            lifecycle = conn.execute(
+                text(
+                    """
+                    SELECT state, physical_delete_ref, cleanup_verified,
+                           physical_delete_verified
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": requested.delete_ref},
+            ).mappings().one()
+            manifest = conn.execute(
+                text(
+                    """
+                    SELECT visibility
+                    FROM infra_object_manifests
+                    WHERE object_ref = :object_ref
+                    """
+                ),
+                {"object_ref": object_ref},
+            ).mappings().one()
+        assert lifecycle["state"] == "verified"
+        assert lifecycle["physical_delete_ref"] == object_ref
+        assert lifecycle["cleanup_verified"] is True
+        assert lifecycle["physical_delete_verified"] is True
+        assert manifest["visibility"] == "deleted"
+        with pytest.raises(S3Error):
+            raw_store.read_object(bucket=bucket, object_name=committed.object_name)
+    finally:
+        raw_store.remove_bucket_tree(bucket)
+
+
 def test_ingestion_review_decision_requires_review_task(engine) -> None:
     with pytest.raises(exc.IntegrityError):
         with IngestionUnitOfWork(engine) as repo:
