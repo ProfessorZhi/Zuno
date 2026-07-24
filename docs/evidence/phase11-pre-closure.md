@@ -29,7 +29,7 @@ commit: see branch HEAD
 - Human Review decision 已覆盖重复相同 Decision 幂等返回原 Receipt、不同 Decision 运行时 conflict，以及 PostgreSQL 唯一约束拒绝不同 decision hash。
 - Human Review decision 在同一 PostgreSQL 事务中把已 `review_pending` 的 ParseAttempt / ParseJob 推进到 `approved`、`rejected`、`expired` 或 `cancelled`，不再只更新 ReviewTask。
 - Human Review decision 已接入授权 Port，revoked reviewer 和 stale Security Epoch 均拒绝 approval，PostgreSQL 只留下 rejected receipt 且不创建 Indexable Snapshot / Handoff Outbox。
-- Approved Review Resume 已覆盖从已有 ParseSnapshot 恢复、恰好一次 Indexable Snapshot / Handoff Outbox，并在 outbox commit/replay 后把 ParseAttempt / ParseJob 推进到 `handoff_pending`；Knowledge handoff / outbox publish 均保持 pending replayable。
+- Approved Review Resume 已覆盖从已有 ParseSnapshot 恢复、恰好一次 Indexable Snapshot / Handoff Outbox，并在 outbox commit/replay 后把 ParseAttempt / ParseJob 推进到 `handoff_pending`；Knowledge handoff 确认后通过持久化仓库事务把 Indexable Snapshot / Handoff Outbox / ParseAttempt / ParseJob 一起推进到 `published`，重复确认返回原 replay receipt。
 - ParseSnapshot replay 已覆盖同一 parser result 的 duplicate receipt，以及同一 ParseJob/Attempt 的不同 parser payload fail-closed。
 - Indexable Snapshot / Handoff Outbox replay 已覆盖同一 handoff idempotency key 与同一 payload 的 duplicate receipt，以及同一 key 不同 snapshot / outbox payload fail-closed。
 - Snapshot-only crash recovery 已覆盖 approved resume 在 Indexable Snapshot 已提交但 Handoff Outbox 缺失时，从 PostgreSQL snapshot lineage 恢复并补建唯一 outbox。
@@ -54,13 +54,13 @@ commit: see branch HEAD
 - Human Review binding focused regression：`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 9.71s`；`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.47s`。
 - Human Review authorization focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `6 passed in 9.36s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff` 为 `1 passed in 12.32s`；Package A review_pending regression 为 `1 passed in 7.97s`。
 - Approved Review Resume pending/replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 14.23s`。
-- Approved Review handoff_pending focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 9.40s`。
+- Approved Review handoff_pending/published focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 8.70s`。
 - ParseSnapshot replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 12.14s`。
 - Indexable Snapshot / Handoff Outbox replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 10.40s`。
 - Snapshot-only crash recovery focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 22.25s`。
 - Non-approved Review focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff` 为 `3 passed in 10.76s`。
 - Human Review decision parse status focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff` 为 `4 passed in 11.96s`。
-- Alembic head：`20260724_33 (head)`。
+- Alembic head：`20260724_34 (head)`。
 
 ## Closure 边界
 

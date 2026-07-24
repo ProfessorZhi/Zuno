@@ -1516,6 +1516,127 @@ class IngestionRepository:
         if job.rowcount != 1:
             raise IngestionPersistenceError("review handoff pending parse job update rejected")
 
+    def mark_review_handoff_published(
+        self,
+        *,
+        tenant_id: str,
+        handoff_idempotency_key: str,
+    ) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT indexable.indexable_snapshot_id,
+                       indexable.parse_snapshot_id,
+                       indexable.knowledge_handoff_status,
+                       outbox.outbox_event_id,
+                       outbox.publish_status AS outbox_publish_status,
+                       attempt.parse_attempt_id,
+                       attempt.status AS attempt_status,
+                       job.parse_job_id,
+                       job.status AS job_status
+                FROM ingestion_indexable_document_snapshots AS indexable
+                JOIN ingestion_outbox_events AS outbox
+                  ON outbox.tenant_id = indexable.tenant_id
+                 AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
+                 AND outbox.idempotency_key = indexable.handoff_idempotency_key
+                JOIN ingestion_parse_snapshots AS snapshot
+                  ON snapshot.parse_snapshot_id = indexable.parse_snapshot_id
+                 AND snapshot.tenant_id = indexable.tenant_id
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.tenant_id = indexable.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = indexable.tenant_id
+                WHERE indexable.tenant_id = :tenant_id
+                  AND indexable.handoff_idempotency_key = :handoff_idempotency_key
+                FOR UPDATE
+                """
+            ),
+            {"tenant_id": tenant_id, "handoff_idempotency_key": handoff_idempotency_key},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(
+                f"missing snapshot handoff publish receipt: {handoff_idempotency_key}"
+            )
+        if (
+            row["knowledge_handoff_status"] == "published"
+            and row["outbox_publish_status"] == "published"
+            and row["attempt_status"] == "published"
+            and row["job_status"] == "published"
+        ):
+            return self.load_snapshot_handoff_replay_receipt(
+                tenant_id=tenant_id,
+                handoff_idempotency_key=handoff_idempotency_key,
+            )
+        if row["knowledge_handoff_status"] not in {"pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires publishable snapshot status")
+        if row["outbox_publish_status"] not in {"pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires publishable outbox status")
+        if row["attempt_status"] not in {"handoff_pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires handoff pending attempt status")
+        if row["job_status"] not in {"handoff_pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires handoff pending job status")
+        if row["attempt_status"] != row["job_status"]:
+            raise IngestionPersistenceError("review handoff publish split parse status rejected")
+
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_indexable_document_snapshots
+                SET knowledge_handoff_status = 'published'
+                WHERE indexable_snapshot_id = :indexable_snapshot_id
+                  AND tenant_id = :tenant_id
+                  AND knowledge_handoff_status = 'pending'
+                """
+            ),
+            {"indexable_snapshot_id": row["indexable_snapshot_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_outbox_events
+                SET publish_status = 'published'
+                WHERE outbox_event_id = :outbox_event_id
+                  AND tenant_id = :tenant_id
+                  AND publish_status = 'pending'
+                """
+            ),
+            {"outbox_event_id": row["outbox_event_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'published'
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'handoff_pending'
+                """
+            ),
+            {"parse_attempt_id": row["parse_attempt_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = 'published',
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'handoff_pending'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id},
+        )
+        return self.load_snapshot_handoff_replay_receipt(
+            tenant_id=tenant_id,
+            handoff_idempotency_key=handoff_idempotency_key,
+        )
+
     def record_indexable_snapshot(
         self,
         *,

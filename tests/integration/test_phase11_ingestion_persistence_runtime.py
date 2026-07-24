@@ -1305,6 +1305,34 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     assert replay["outbox_publish_status"] == "pending"
     assert replay["outbox_payload_idempotency_key"] == first.handoff_idempotency_key
     with IngestionUnitOfWork(engine) as repo:
+        published = repo.mark_review_handoff_published(
+            tenant_id="tenant-a",
+            handoff_idempotency_key=first.handoff_idempotency_key or "",
+        )
+        duplicate_published = repo.mark_review_handoff_published(
+            tenant_id="tenant-a",
+            handoff_idempotency_key=first.handoff_idempotency_key or "",
+        )
+    assert published["knowledge_handoff_status"] == "published"
+    assert published["outbox_publish_status"] == "published"
+    assert duplicate_published == published
+    with engine.connect() as conn:
+        statuses = conn.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                """
+            ),
+            {"parse_attempt_id": "parse-attempt:approved-resume:1"},
+        ).mappings().one()
+        assert statuses["attempt_status"] == "published"
+        assert statuses["job_status"] == "published"
+    with IngestionUnitOfWork(engine) as repo:
         parse_snapshot_row = repo.get_parse_snapshot(task.parse_snapshot_id)
         quality_row = repo.get_quality_decision("quality:approved-resume:1")
         review_task_row = repo.get_review_task(task.review_task_id)
@@ -1355,9 +1383,9 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             idempotency_key=snapshot_outbox.idempotency_key,
         )
         assert duplicate_indexable.ref == first.indexable_snapshot_id
-        assert duplicate_indexable.status == "duplicate:pending"
+        assert duplicate_indexable.status == "duplicate:published"
         assert duplicate_outbox.ref == first.outbox_event_id
-        assert duplicate_outbox.status == "duplicate:pending"
+        assert duplicate_outbox.status == "duplicate:published"
         with pytest.raises(IngestionPersistenceError, match="conflicting indexable snapshot"):
             repo.record_indexable_snapshot(
                 indexable_snapshot_id="snapshot_conflicting_approved_resume",
