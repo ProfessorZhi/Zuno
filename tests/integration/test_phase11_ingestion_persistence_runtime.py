@@ -25,6 +25,7 @@ from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
 from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTopology, RabbitMQTransport
+from zuno.platform.storage.object_store import ObjectAuthorizationError
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
 
 
@@ -1224,6 +1225,178 @@ def test_ingestion_delete_cleanup_dlq_replay_does_not_restore_revoked_data(engin
     assert lifecycle["physical_delete_ref"] is None
     assert outbox["status"] == "published"
     assert outbox["claim_owner"] is None
+
+
+def test_ingestion_delete_cleanup_minio_delete_failure_keeps_lifecycle_unverified(engine) -> None:
+    content = b"phase11 minio delete denied"
+    bucket = f"phase11-delete-denied-{uuid4().hex}"
+    raw_store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    durable_store = DurableMinioObjectStore(
+        store=raw_store,
+        engine=engine,
+        owner="phase11-delete-denied-test",
+    )
+    try:
+        ticket = durable_store.stage(
+            bucket=bucket,
+            committed_object_name="workspace-a/delete-denied.md",
+            content=content,
+        )
+        committed = durable_store.commit(ticket)
+        object_ref = f"s3://{bucket}/{committed.object_name}"
+        with IngestionUnitOfWork(engine) as repo:
+            source = repo.record_source_object(
+                source_object_id="source:phase11:delete-denied",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                filename="delete-denied.md",
+                mime_type="text/markdown",
+                storage_uri=object_ref,
+                object_manifest_ref=f"manifest:{object_ref}",
+                source_sha256=committed.content_hash,
+                size_bytes=committed.size_bytes,
+                classification_ref="classification:internal",
+                security_epoch_ref="security-epoch:phase11-delete-denied",
+            )
+            document = repo.record_document_version(
+                document_version_id="document-version:phase11:delete-denied",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                source_object_id=source.ref,
+                version_no=1,
+                content_hash=committed.content_hash,
+                metadata={"filename": "delete-denied.md"},
+                immutability_ref="immutability:phase11:delete-denied",
+            )
+            plan = repo.record_parse_plan(
+                parse_plan_id="parse-plan:phase11:delete-denied",
+                tenant_id="tenant-a",
+                document_version_id=document.ref,
+                parser_route={"primary": "native_markdown"},
+                parser_policy_ref="parser-policy:phase11-delete-denied",
+                parser_bundle={"parser": "native_markdown", "version": "v1"},
+                quality_policy_ref="quality-policy:phase11-delete-denied",
+                security_decision_ref="security-decision:phase11-delete-denied",
+            )
+            job = repo.record_parse_job(
+                parse_job_id="parse-job:phase11:delete-denied",
+                tenant_id="tenant-a",
+                parse_plan_id=plan.ref,
+                document_version_id=document.ref,
+                idempotency_key="parse:phase11:delete-denied",
+            )
+            attempt = repo.record_parse_attempt(
+                parse_attempt_id="parse-attempt:phase11:delete-denied",
+                tenant_id="tenant-a",
+                parse_job_id=job.ref,
+                attempt_no=1,
+                worker_id="worker:phase11-delete-denied",
+                lease_ref="lease:phase11-delete-denied",
+                fencing_token=1,
+            )
+            snapshot = repo.record_parse_snapshot(
+                parse_snapshot_id="parse-snapshot:phase11:delete-denied",
+                tenant_id="tenant-a",
+                parse_job_id=job.ref,
+                parse_attempt_id=attempt.ref,
+                document_version_id=document.ref,
+                canonical_ir={"metadata": {"document_id": source.ref}, "blocks": []},
+                canonical_ir_ref="canonical-ir:phase11-delete-denied",
+                canonical_ir_schema_ref="canonical-document-ir-v1",
+                parser_id="native_markdown",
+                parser_version="v1",
+            )
+            quality = repo.record_quality_decision(
+                quality_decision_id="quality:phase11:delete-denied",
+                tenant_id="tenant-a",
+                parse_snapshot_id=snapshot.ref,
+                coverage_score=1.0,
+                confidence_score=1.0,
+                decision="publish",
+            )
+            repo.record_indexable_snapshot(
+                indexable_snapshot_id="snapshot:phase11:delete-denied",
+                tenant_id="tenant-a",
+                parse_snapshot_id=snapshot.ref,
+                document_version_id=document.ref,
+                quality_decision_id=quality.ref,
+                visibility_ref="visibility:workspace-a:delete-denied",
+                payload={"object_ref": object_ref},
+                handoff_idempotency_key="handoff:phase11:delete-denied",
+            )
+        denied_store = DurableMinioObjectStore(
+            store=MinioObjectStore(
+                endpoint=MINIO_ENDPOINT,
+                access_key=MINIO_ACCESS_KEY,
+                secret_key=MINIO_SECRET_KEY,
+                authorization_hook=lambda action, _bucket, _object_name: action != "object:delete",
+            ),
+            engine=engine,
+            owner="phase11-delete-denied-test",
+        )
+        coordinator = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=denied_store,
+        )
+        requested = coordinator.request_delete_after_snapshot(
+            DeleteLifecycleCommand(
+                tenant_id="tenant-a",
+                snapshot_ref="snapshot:phase11:delete-denied",
+                indexable_snapshot_id="snapshot:phase11:delete-denied",
+                handoff_outbox_event_id="outbox:snapshot:phase11:delete-denied",
+                visibility_ref="visibility:workspace-a:delete-denied",
+                object_ref=object_ref,
+                restore_point_name="_restore/workspace-a/delete-denied.md",
+                projection_cleanup_ref="projection-cleanup:snapshot:phase11:delete-denied",
+            )
+        )
+        confirmed = coordinator.confirm_knowledge_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+            cleanup_ref=requested.cleanup_ref,
+        )
+
+        with pytest.raises(ObjectAuthorizationError, match="object:delete"):
+            coordinator.execute_cleanup(
+                tenant_id="tenant-a",
+                delete_ref=confirmed.delete_ref,
+            )
+
+        assert raw_store.read_object(bucket=bucket, object_name=committed.object_name) == content
+        with engine.connect() as conn:
+            lifecycle = conn.execute(
+                text(
+                    """
+                    SELECT state, cleanup_verified, physical_delete_verified,
+                           physical_delete_ref, verification_ref
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": requested.delete_ref},
+            ).mappings().one()
+            manifest = conn.execute(
+                text(
+                    """
+                    SELECT visibility
+                    FROM infra_object_manifests
+                    WHERE object_ref = :object_ref
+                    """
+                ),
+                {"object_ref": object_ref},
+            ).mappings().one()
+        assert lifecycle["state"] == "cleanup_requested"
+        assert lifecycle["cleanup_verified"] is True
+        assert lifecycle["physical_delete_verified"] is False
+        assert lifecycle["physical_delete_ref"] is None
+        assert lifecycle["verification_ref"] is None
+        assert manifest["visibility"] == "visible"
+    finally:
+        raw_store.remove_bucket_tree(bucket)
 
 
 def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real_object(engine) -> None:
