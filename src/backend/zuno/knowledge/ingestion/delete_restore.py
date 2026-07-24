@@ -461,13 +461,13 @@ class DeleteRestoreRuntime:
         *,
         cleanup_ref: str | None = None,
     ) -> DeleteLifecycleReceipt:
+        expected_cleanup_ref = receipt.cleanup_ref or f"cleanup_{receipt.delete_ref}"
+        if cleanup_ref is not None and cleanup_ref != expected_cleanup_ref:
+            raise ValueError("knowledge cleanup confirmation does not match delete receipt")
         if receipt.legal_hold_ref:
             return receipt
         if receipt.state == "verified":
             return receipt
-        expected_cleanup_ref = receipt.cleanup_ref or f"cleanup_{receipt.delete_ref}"
-        if cleanup_ref is not None and cleanup_ref != expected_cleanup_ref:
-            raise ValueError("knowledge cleanup confirmation does not match delete receipt")
         history = list(receipt.history)
         if "cleanup_requested" not in history:
             history.append("cleanup_requested")

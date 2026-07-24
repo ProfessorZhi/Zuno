@@ -1648,6 +1648,25 @@ def test_ingestion_duplicate_delete_after_snapshot_reuses_lifecycle_and_cleanup_
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM ingestion_delete_lifecycles")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 1
+    confirmed = coordinator.confirm_knowledge_cleanup(
+        tenant_id="tenant-a",
+        delete_ref=first.delete_ref,
+        cleanup_ref=first.cleanup_ref,
+    )
+    duplicate_confirmation = coordinator.confirm_knowledge_cleanup(
+        tenant_id="tenant-a",
+        delete_ref=first.delete_ref,
+        cleanup_ref=first.cleanup_ref,
+    )
+    assert duplicate_confirmation.cleanup_ref == confirmed.cleanup_ref
+    assert duplicate_confirmation.cleanup_verified is True
+    assert duplicate_confirmation.history.count("knowledge_cleanup_confirmed") == 1
+    with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
+        coordinator.confirm_knowledge_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=first.delete_ref,
+            cleanup_ref="cleanup:phase11:conflicting-confirmation",
+        )
 
     conflicting = DeleteLifecycleCommand(
         tenant_id="tenant-a",
