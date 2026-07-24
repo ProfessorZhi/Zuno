@@ -77,7 +77,10 @@ def test_run_graph_handles_interrupt_resume_cancel_and_deadline() -> None:
     assert resumed["pending_interrupt_refs"] == []
     assert resumed["plan_created_count"] == 1
     assert cancelled["finalization_status"] == "cancelled"
-    assert cancelled["phase"] == "finalize"
+    assert cancelled["phase"] == "run_outcome"
+    assert cancelled["latest_control_decision_ref"] == "cancelled"
+    assert cancelled["run_outcome_committed"] is True
+    assert service.get_state(_state(thread_id="thread:p08:t04:cancel"))["phase"] == "run_outcome"
     assert expired["finalization_status"] == "failed"
     assert expired["latest_control_decision_ref"] == "deadline_expired"
 
@@ -92,6 +95,20 @@ def test_resume_without_interrupt_returns_terminal_state_without_replay() -> Non
     assert resumed["phase"] == "run_outcome"
     assert resumed["plan_created_count"] == 1
     assert resumed["outcome_ref"] == final_state["outcome_ref"]
+
+
+def test_cancel_after_terminal_run_returns_terminal_without_rewriting_outcome() -> None:
+    service = Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer()))
+
+    final_state = service.start(_state(thread_id="thread:p08:t04:terminal-cancel"))
+    cancelled = service.cancel(final_state, reason="late_cancel")
+    checkpoint_state = service.get_state(final_state)
+
+    assert cancelled["cancel_status"] == "terminal:no_active_run"
+    assert cancelled["finalization_status"] == "finalized"
+    assert cancelled["outcome_ref"] == final_state["outcome_ref"]
+    assert checkpoint_state["outcome_ref"] == final_state["outcome_ref"]
+    assert checkpoint_state["finalization_status"] == "finalized"
 
 
 def test_resume_without_active_interrupt_rejects_nonterminal_checkpoint() -> None:

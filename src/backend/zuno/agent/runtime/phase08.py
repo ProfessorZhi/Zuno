@@ -156,6 +156,15 @@ class Phase08RunService:
         if _snapshot_has_interrupt(snapshot):
             return self.graph.invoke(Command(resume={"decision": "cancelled", "reason": reason}), config=config)
         next_state = dict(snapshot.values or state)
+        if next_state.get("phase") == "run_outcome" or next_state.get("finalization_status") in {
+            "finalized",
+            "cancelled",
+            "blocked",
+            "failed",
+            "abstained",
+        }:
+            next_state["cancel_status"] = "terminal:no_active_run"
+            return next_state
         signal = Phase08SignalRecord(
             signal_id=str(next_state.get("cancel_signal_id") or f"signal:{next_state.get('run_id', 'run')}:cancel"),
             run_id=str(next_state.get("run_id") or state.get("run_id")),
@@ -168,9 +177,14 @@ class Phase08RunService:
         next_state["interrupt_requested"] = False
         next_state["pending_interrupt_refs"] = []
         next_state["cancel_reason"] = reason
+        next_state["latest_control_decision_ref"] = "cancelled"
         next_state["finalization_status"] = "cancelled"
-        next_state["phase"] = "finalize"
-        return next_state
+        next_state["outcome_ref"] = _domain_ref(next_state, "run-outcome-cancelled")
+        next_state["run_outcome_committed"] = True
+        next_state["phase"] = "run_outcome"
+        next_state["checkpoint_generation"] = int(next_state.get("checkpoint_generation", 0)) + 1
+        self.graph.update_state(config, next_state)
+        return dict(self.graph.get_state(config).values)
 
     def get_state(self, state: dict[str, Any]) -> dict[str, Any]:
         snapshot = self.graph.get_state(_thread_config(state))
