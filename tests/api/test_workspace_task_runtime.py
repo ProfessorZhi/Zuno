@@ -689,6 +689,53 @@ def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() ->
         WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
 
+def test_workspace_task_runtime_shadow_cutover_does_not_fail_product_when_new_runtime_unavailable() -> None:
+    class UnavailableRuntime:
+        def start(self, state):
+            del state
+            raise RuntimeError("phase08 shadow unavailable")
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_phase08_cutover(
+        mode="shadow",
+        new_runtime=UnavailableRuntime(),  # type: ignore[arg-type]
+        side_effect_ledger=None,
+    )
+    try:
+        client = _client()
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Run the phase08 shadow product entry",
+                "model_id": "model-local",
+                "session_id": "session_phase08_shadow",
+                "workspace_id": "workspace_phase08",
+                "task_id": "task_phase08_shadow_unavailable",
+                "trace_id": "trace_phase08_shadow_unavailable",
+                "goal": "phase08 shadow closure",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        created = create_response.json()["data"]
+        assert created["task"]["status"] == "completed"
+
+        events = client.get("/api/v1/workspace/task/task_phase08_shadow_unavailable/events").json()["data"]
+        cutover = next(event for event in events if event["type"] == "phase08_cutover")
+        assert cutover["payload"]["mode"] == "shadow"
+        assert cutover["payload"]["primary_runtime"] == "workspace_legacy"
+        assert cutover["payload"]["side_effect_ref"] == "workspace-task:task_phase08_shadow_unavailable:legacy-effect"
+        assert cutover["payload"]["shadow_output_ref"] is None
+        assert cutover["payload"]["shadow_match"] is False
+        assert cutover["payload"]["rollback_reason"] == "shadow_unavailable:RuntimeError"
+        assert "task_completed" in [event["type"] for event in events]
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
 def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool() -> None:
     client = _client()
 

@@ -65,6 +65,25 @@ def test_shadow_mode_compares_same_request_hash_without_double_side_effect() -> 
     assert controller.side_effect_ledger.claimed_keys == set()
 
 
+def test_shadow_mode_keeps_legacy_primary_when_new_runtime_is_unavailable() -> None:
+    calls: list[tuple[str, bool]] = []
+    controller = Phase08CutoverController(
+        mode="shadow",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
+    )
+    request = _request()
+
+    response = controller.handle(request)
+
+    assert response.runtime == "legacy"
+    assert response.rollback_reason == "shadow_unavailable:RuntimeError"
+    assert response.side_effect_ref == f"legacy-side-effect:{request.idempotency_key}"
+    assert response.shadow_match is False
+    assert controller.side_effect_ledger.claimed_keys == set()
+    assert calls == [(request.idempotency_key, True)]
+
+
 def test_canary_uses_new_runtime_once_and_keeps_legacy_shadow_dry() -> None:
     calls: list[tuple[str, bool]] = []
     controller = Phase08CutoverController(mode="canary", legacy_runner=_legacy_runner(calls), new_runtime=_new_runtime())

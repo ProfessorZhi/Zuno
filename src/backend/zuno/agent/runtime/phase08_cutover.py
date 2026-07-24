@@ -192,7 +192,26 @@ class Phase08CutoverController:
 
         if self.mode == "shadow":
             legacy = self._run_legacy(request, allow_side_effect=True)
-            shadow = self._run_new(request, allow_side_effect=False)
+            try:
+                shadow = self._run_new(request, allow_side_effect=False)
+            except Exception as exc:
+                response = Phase08RuntimeResponse(
+                    runtime=legacy.runtime,
+                    request_hash=request.request_hash,
+                    output_ref=legacy.output_ref,
+                    trace_ref=legacy.trace_ref,
+                    side_effect_ref=legacy.side_effect_ref,
+                    shadow_match=False,
+                    rollback_reason=f"shadow_unavailable:{type(exc).__name__}",
+                )
+                self._record_audit(
+                    request,
+                    response,
+                    primary_runtime="legacy",
+                    effect_committed=True,
+                    fallback_allowed=False,
+                )
+                return response
             response = Phase08RuntimeResponse(
                 runtime=legacy.runtime,
                 request_hash=request.request_hash,
