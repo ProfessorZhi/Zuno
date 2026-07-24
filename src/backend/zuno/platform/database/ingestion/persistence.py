@@ -1397,7 +1397,7 @@ class IngestionRepository:
                 "payload": payload,
             }
         )
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_indexable_document_snapshots(
@@ -1409,6 +1409,7 @@ class IngestionRepository:
                     :quality_decision_id, :snapshot_hash, :handoff_envelope_hash,
                     :visibility_ref, :handoff_idempotency_key, :knowledge_handoff_status
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1424,6 +1425,49 @@ class IngestionRepository:
                 "knowledge_handoff_status": knowledge_handoff_status,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT indexable_snapshot_id, tenant_id, parse_snapshot_id,
+                           document_version_id, quality_decision_id, snapshot_hash,
+                           handoff_envelope_hash, visibility_ref, handoff_idempotency_key,
+                           knowledge_handoff_status
+                    FROM ingestion_indexable_document_snapshots
+                    WHERE indexable_snapshot_id = :indexable_snapshot_id
+                       OR parse_snapshot_id = :parse_snapshot_id
+                       OR (
+                            CAST(:handoff_idempotency_key AS varchar) IS NOT NULL
+                        AND tenant_id = :tenant_id
+                        AND handoff_idempotency_key = :handoff_idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "indexable_snapshot_id": indexable_snapshot_id,
+                    "tenant_id": tenant_id,
+                    "parse_snapshot_id": parse_snapshot_id,
+                    "handoff_idempotency_key": handoff_idempotency_key,
+                },
+            ).mappings().all()
+            expected = {
+                "tenant_id": tenant_id,
+                "parse_snapshot_id": parse_snapshot_id,
+                "document_version_id": document_version_id,
+                "quality_decision_id": quality_decision_id,
+                "snapshot_hash": snapshot_hash,
+                "handoff_envelope_hash": handoff_hash,
+                "visibility_ref": visibility_ref,
+                "handoff_idempotency_key": handoff_idempotency_key,
+            }
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in expected.items()):
+                return IngestionReceipt(
+                    str(existing[0]["indexable_snapshot_id"]),
+                    tenant_id,
+                    f"duplicate:{existing[0]['knowledge_handoff_status']}",
+                    handoff_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting indexable snapshot: {indexable_snapshot_id}")
         return IngestionReceipt(indexable_snapshot_id, tenant_id, knowledge_handoff_status, handoff_hash)
 
     def record_delete_lifecycle(
@@ -1537,7 +1581,7 @@ class IngestionRepository:
         publish_status: str = "pending",
     ) -> IngestionReceipt:
         payload_hash = canonical_sha256(payload)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_outbox_events(
@@ -1547,6 +1591,7 @@ class IngestionRepository:
                     :outbox_event_id, :tenant_id, :aggregate_ref, :event_type,
                     :payload_hash, CAST(:payload AS jsonb), :idempotency_key, :publish_status
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1560,6 +1605,44 @@ class IngestionRepository:
                 "publish_status": publish_status,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT outbox_event_id, tenant_id, aggregate_ref, event_type,
+                           payload_hash, idempotency_key, publish_status
+                    FROM ingestion_outbox_events
+                    WHERE outbox_event_id = :outbox_event_id
+                       OR (
+                            CAST(:idempotency_key AS varchar) IS NOT NULL
+                        AND tenant_id = :tenant_id
+                        AND event_type = :event_type
+                        AND idempotency_key = :idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "outbox_event_id": outbox_event_id,
+                    "tenant_id": tenant_id,
+                    "event_type": event_type,
+                    "idempotency_key": idempotency_key,
+                },
+            ).mappings().all()
+            expected = {
+                "tenant_id": tenant_id,
+                "aggregate_ref": aggregate_ref,
+                "event_type": event_type,
+                "payload_hash": payload_hash,
+                "idempotency_key": idempotency_key,
+            }
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in expected.items()):
+                return IngestionReceipt(
+                    str(existing[0]["outbox_event_id"]),
+                    tenant_id,
+                    f"duplicate:{existing[0]['publish_status']}",
+                    payload_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting outbox event: {outbox_event_id}")
         return IngestionReceipt(outbox_event_id, tenant_id, publish_status, payload_hash)
 
     def get_indexable_snapshot(self, indexable_snapshot_id: str) -> dict[str, Any]:

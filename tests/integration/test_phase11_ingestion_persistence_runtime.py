@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import exc, text
 
 from zuno.knowledge.ingestion import (
+    CanonicalDocumentIR,
     DeleteLifecycleCommand,
     DeleteRestoreRuntime,
     HumanReviewRuntime,
@@ -1219,6 +1220,86 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     assert replay["knowledge_handoff_status"] == "pending"
     assert replay["outbox_publish_status"] == "pending"
     assert replay["outbox_payload_idempotency_key"] == first.handoff_idempotency_key
+    with IngestionUnitOfWork(engine) as repo:
+        parse_snapshot_row = repo.get_parse_snapshot(task.parse_snapshot_id)
+        quality_row = repo.get_quality_decision("quality:approved-resume:1")
+        review_task_row = repo.get_review_task(task.review_task_id)
+        document_row = repo.get_document_version(document_version_id)
+        context = repo.load_parse_job_context(
+            parse_job_id=str(parse_snapshot_row["parse_job_id"]),
+            tenant_id="tenant-a",
+        )
+        review_task_data = dict(review_task_row)
+        if hasattr(review_task_data.get("expires_at"), "timestamp"):
+            review_task_data["expires_at"] = review_task_data["expires_at"].timestamp()
+        review_task = ReviewTask.model_validate(review_task_data)
+        indexable_snapshot, snapshot_outbox = runtime.handoff_runtime.create_snapshot(
+            document=CanonicalDocumentIR.model_validate(document_payload),
+            parse_snapshot=runtime._build_review_resume_snapshot(
+                parse_snapshot_row=parse_snapshot_row,
+                context=context,
+            ),
+            quality_gate=runtime._build_quality_gate_result(
+                quality_row=quality_row,
+                review_task=review_task,
+            ),
+            visibility_ref=f"visibility:{workspace_id}:{source_object_id}",
+            review_receipt=receipt,
+        )
+        duplicate_indexable = repo.record_indexable_snapshot(
+            indexable_snapshot_id=indexable_snapshot.indexable_snapshot_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+            document_version_id=str(document_row["document_version_id"]),
+            quality_decision_id=indexable_snapshot.quality_decision_id,
+            visibility_ref=f"visibility:{workspace_id}:{source_object_id}",
+            payload=indexable_snapshot.payload,
+            handoff_idempotency_key=indexable_snapshot.idempotency_key,
+        )
+        duplicate_outbox = repo.enqueue_outbox_event(
+            outbox_event_id=snapshot_outbox.outbox_event_id,
+            tenant_id="tenant-a",
+            aggregate_ref=indexable_snapshot.indexable_snapshot_id,
+            event_type="ingestion.indexable_snapshot.ready",
+            payload={
+                "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+                "document_version_id": indexable_snapshot.document_version_id,
+                "quality_decision_id": indexable_snapshot.quality_decision_id,
+                "canonical_hash": indexable_snapshot.canonical_hash,
+                "idempotency_key": indexable_snapshot.idempotency_key,
+            },
+            idempotency_key=snapshot_outbox.idempotency_key,
+        )
+        assert duplicate_indexable.ref == first.indexable_snapshot_id
+        assert duplicate_indexable.status == "duplicate:pending"
+        assert duplicate_outbox.ref == first.outbox_event_id
+        assert duplicate_outbox.status == "duplicate:pending"
+        with pytest.raises(IngestionPersistenceError, match="conflicting indexable snapshot"):
+            repo.record_indexable_snapshot(
+                indexable_snapshot_id="snapshot_conflicting_approved_resume",
+                tenant_id="tenant-a",
+                parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+                document_version_id=str(document_row["document_version_id"]),
+                quality_decision_id=indexable_snapshot.quality_decision_id,
+                visibility_ref=f"visibility:{workspace_id}:{source_object_id}",
+                payload={**indexable_snapshot.payload, "visibility_ref": "visibility:conflict"},
+                handoff_idempotency_key=indexable_snapshot.idempotency_key,
+            )
+        with pytest.raises(IngestionPersistenceError, match="conflicting outbox event"):
+            repo.enqueue_outbox_event(
+                outbox_event_id="outbox_conflicting_approved_resume",
+                tenant_id="tenant-a",
+                aggregate_ref=indexable_snapshot.indexable_snapshot_id,
+                event_type="ingestion.indexable_snapshot.ready",
+                payload={
+                    "indexable_snapshot_id": "snapshot_conflicting_approved_resume",
+                    "document_version_id": indexable_snapshot.document_version_id,
+                    "quality_decision_id": indexable_snapshot.quality_decision_id,
+                    "canonical_hash": indexable_snapshot.canonical_hash,
+                    "idempotency_key": indexable_snapshot.idempotency_key,
+                },
+                idempotency_key=snapshot_outbox.idempotency_key,
+            )
 
 
 @pytest.mark.parametrize("decision_status", ["rejected", "expired", "cancelled"])
