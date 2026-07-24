@@ -71,6 +71,221 @@ class RestoreAuthorizationReceipt(BaseModel):
     security_epoch_ref: str | None = None
 
 
+class VisibilityRevocationPort(Protocol):
+    def revoke_visibility(
+        self,
+        *,
+        tenant_id: str,
+        receipt: DeleteLifecycleReceipt,
+    ) -> "VisibilityRevocationReceipt":
+        ...
+
+
+class VisibilityRevocationReceipt(BaseModel):
+    tenant_id: str
+    delete_ref: str
+    visibility_ref: str
+    revoked: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReceiptVisibilityRevocationPort:
+    def revoke_visibility(
+        self,
+        *,
+        tenant_id: str,
+        receipt: DeleteLifecycleReceipt,
+    ) -> VisibilityRevocationReceipt:
+        return VisibilityRevocationReceipt(
+            tenant_id=tenant_id,
+            delete_ref=receipt.delete_ref,
+            visibility_ref=receipt.visibility_ref,
+            revoked=True,
+            reason="visibility_revoked_by_delete_lifecycle",
+        )
+
+
+class KnowledgeCleanupPort(Protocol):
+    def require_cleanup_confirmed(self, receipt: DeleteLifecycleReceipt) -> "KnowledgeCleanupReceipt":
+        ...
+
+
+class KnowledgeCleanupReceipt(BaseModel):
+    delete_ref: str
+    cleanup_ref: str | None
+    confirmed: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReceiptKnowledgeCleanupPort:
+    def require_cleanup_confirmed(self, receipt: DeleteLifecycleReceipt) -> KnowledgeCleanupReceipt:
+        if not receipt.cleanup_verified:
+            return KnowledgeCleanupReceipt(
+                delete_ref=receipt.delete_ref,
+                cleanup_ref=receipt.cleanup_ref,
+                confirmed=False,
+                reason="knowledge_cleanup_confirmation_missing",
+            )
+        return KnowledgeCleanupReceipt(
+            delete_ref=receipt.delete_ref,
+            cleanup_ref=receipt.cleanup_ref,
+            confirmed=True,
+            reason="knowledge_cleanup_confirmed",
+        )
+
+
+class ObjectDeletePort(Protocol):
+    def delete_object(
+        self,
+        *,
+        repo: Any,
+        receipt: DeleteLifecycleReceipt,
+        ticket: ObjectCommitTicket,
+    ) -> "ObjectDeletePortReceipt":
+        ...
+
+
+class ObjectDeletePortReceipt(BaseModel):
+    delete_ref: str
+    physical_delete_ref: str
+    deleted: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class DurableObjectDeletePort:
+    object_store: DurableMinioObjectStore
+
+    def delete_object(
+        self,
+        *,
+        repo: Any,
+        receipt: DeleteLifecycleReceipt,
+        ticket: ObjectCommitTicket,
+    ) -> ObjectDeletePortReceipt:
+        from zuno.platform.database.foundation import InfrastructureRepository
+
+        if not receipt.object_ref or not receipt.restore_point_name:
+            raise ValueError("delete cleanup requires object_ref and restore_point_name")
+        try:
+            self.object_store.store.create_restore_point(
+                bucket=ticket.bucket,
+                object_name=ticket.committed_object_name,
+                restore_point_name=receipt.restore_point_name,
+            )
+        except S3Error as exc:
+            if exc.code not in {"NoSuchKey", "NoSuchObject"}:
+                raise
+        try:
+            deleted = self.object_store.delete_committed(ticket)
+            physical_delete_ref = f"s3://{deleted.bucket}/{deleted.object_name}"
+        except S3Error as exc:
+            if exc.code not in {"NoSuchKey", "NoSuchObject"}:
+                raise
+            manifest = InfrastructureRepository(repo.connection).object_manifest(
+                object_ref=receipt.object_ref
+            )
+            if manifest is None:
+                raise
+            InfrastructureRepository(repo.connection).record_object_manifest(
+                object_ref=receipt.object_ref,
+                content_hash=manifest.content_hash,
+                size_bytes=manifest.size_bytes,
+                owner=self.object_store.owner,
+                visibility="deleted",
+            )
+            physical_delete_ref = receipt.object_ref
+        return ObjectDeletePortReceipt(
+            delete_ref=receipt.delete_ref,
+            physical_delete_ref=physical_delete_ref,
+            deleted=True,
+            reason="minio_object_deleted",
+        )
+
+
+class ObjectVerificationPort(Protocol):
+    def verify_absent(
+        self,
+        *,
+        receipt: DeleteLifecycleReceipt,
+        ticket: ObjectCommitTicket,
+    ) -> "ObjectVerificationReceipt":
+        ...
+
+
+class ObjectVerificationReceipt(BaseModel):
+    delete_ref: str
+    verification_ref: str
+    absent: bool
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class DurableObjectVerificationPort:
+    object_store: DurableMinioObjectStore
+
+    def verify_absent(
+        self,
+        *,
+        receipt: DeleteLifecycleReceipt,
+        ticket: ObjectCommitTicket,
+    ) -> ObjectVerificationReceipt:
+        try:
+            self.object_store.store.read_object(
+                bucket=ticket.bucket,
+                object_name=ticket.committed_object_name,
+            )
+        except S3Error as exc:
+            if exc.code in {"NoSuchKey", "NoSuchObject"}:
+                return ObjectVerificationReceipt(
+                    delete_ref=receipt.delete_ref,
+                    verification_ref=f"verify_{receipt.delete_ref}",
+                    absent=True,
+                    reason="minio_absence_verified",
+                )
+            raise
+        raise ValueError("physical delete verification failed: object still exists")
+
+
+class AuditPort(Protocol):
+    def record_delete_event(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        event_type: str,
+        payload: dict[str, Any],
+    ) -> "AuditReceipt":
+        ...
+
+
+class AuditReceipt(BaseModel):
+    tenant_id: str
+    delete_ref: str
+    event_type: str
+    recorded: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ReceiptAuditPort:
+    def record_delete_event(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        event_type: str,
+        payload: dict[str, Any],
+    ) -> AuditReceipt:
+        return AuditReceipt(
+            tenant_id=tenant_id,
+            delete_ref=delete_ref,
+            event_type=event_type,
+            recorded=True,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class StaticRestoreAuthorizationPort:
     revoked_refs: frozenset[str] = frozenset()
@@ -361,9 +576,20 @@ class PersistentDeleteRestoreCoordinator:
     engine: Engine
     object_store: DurableMinioObjectStore
     runtime: DeleteRestoreRuntime = field(default_factory=DeleteRestoreRuntime)
+    visibility_port: VisibilityRevocationPort = field(default_factory=ReceiptVisibilityRevocationPort)
+    knowledge_cleanup_port: KnowledgeCleanupPort = field(default_factory=ReceiptKnowledgeCleanupPort)
+    object_delete_port: ObjectDeletePort | None = None
+    object_verification_port: ObjectVerificationPort | None = None
     authorization_port: RestoreAuthorizationPort = field(default_factory=StaticRestoreAuthorizationPort)
+    audit_port: AuditPort = field(default_factory=ReceiptAuditPort)
 
     cleanup_topic = "ingestion.delete.cleanup.requested"
+
+    def __post_init__(self) -> None:
+        if self.object_delete_port is None:
+            self.object_delete_port = DurableObjectDeletePort(self.object_store)
+        if self.object_verification_port is None:
+            self.object_verification_port = DurableObjectVerificationPort(self.object_store)
 
     def request_delete_after_snapshot(self, command: DeleteLifecycleCommand) -> DeleteLifecycleReceipt:
         indexable_snapshot_id = command.indexable_snapshot_id or command.snapshot_ref
@@ -382,6 +608,12 @@ class PersistentDeleteRestoreCoordinator:
         from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
 
         with IngestionUnitOfWork(self.engine) as repo:
+            visibility = self.visibility_port.revoke_visibility(
+                tenant_id=command.tenant_id,
+                receipt=receipt,
+            )
+            if not visibility.revoked:
+                raise ValueError(visibility.reason)
             repo.record_delete_lifecycle(tenant_id=command.tenant_id, **receipt.model_dump())
             InfrastructureRepository(repo.connection).enqueue_outbox(
                 event_id=f"outbox:{receipt.delete_ref}:cleanup",
@@ -399,10 +631,15 @@ class PersistentDeleteRestoreCoordinator:
                 tenant_id=command.tenant_id,
                 ordering_key=receipt.delete_ref,
             )
+            self.audit_port.record_delete_event(
+                tenant_id=command.tenant_id,
+                delete_ref=receipt.delete_ref,
+                event_type="delete_visibility_revoked_cleanup_outbox_committed",
+                payload={"visibility_ref": receipt.visibility_ref, "cleanup_ref": receipt.cleanup_ref},
+            )
         return receipt
 
     def execute_cleanup(self, *, tenant_id: str, delete_ref: str) -> DeleteLifecycleReceipt:
-        from zuno.platform.database.foundation import InfrastructureRepository
         from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
 
         with IngestionUnitOfWork(self.engine) as repo:
@@ -414,47 +651,36 @@ class PersistentDeleteRestoreCoordinator:
                 return current
             if current.state == "verified":
                 return current
-            if not current.cleanup_verified:
+            cleanup_confirmation = self.knowledge_cleanup_port.require_cleanup_confirmed(current)
+            if not cleanup_confirmation.confirmed:
                 raise ValueError("physical delete requires knowledge cleanup confirmation")
             if not current.object_ref or not current.restore_point_name:
                 raise ValueError("delete cleanup requires object_ref and restore_point_name")
             ticket = self._ticket(repo, current.object_ref)
-            try:
-                self.object_store.store.create_restore_point(
-                    bucket=ticket.bucket,
-                    object_name=ticket.committed_object_name,
-                    restore_point_name=current.restore_point_name,
-                )
-            except S3Error as exc:
-                if exc.code not in {"NoSuchKey", "NoSuchObject"}:
-                    raise
             cleanup = self.runtime.confirm_knowledge_cleanup(current)
-            try:
-                deleted = self.object_store.delete_committed(ticket)
-                physical_delete_ref = f"s3://{deleted.bucket}/{deleted.object_name}"
-            except S3Error as exc:
-                if exc.code not in {"NoSuchKey", "NoSuchObject"}:
-                    raise
-                manifest = InfrastructureRepository(repo.connection).object_manifest(
-                    object_ref=current.object_ref
-                )
-                if manifest is None:
-                    raise
-                InfrastructureRepository(repo.connection).record_object_manifest(
-                    object_ref=current.object_ref,
-                    content_hash=manifest.content_hash,
-                    size_bytes=manifest.size_bytes,
-                    owner=self.object_store.owner,
-                    visibility="deleted",
-                )
-                physical_delete_ref = current.object_ref
-            self._verify_absent(ticket)
+            delete_result = self._object_delete_port().delete_object(
+                repo=repo,
+                receipt=current,
+                ticket=ticket,
+            )
+            self._object_verification_port().verify_absent(
+                receipt=current,
+                ticket=ticket,
+            )
             verified = self.runtime.verify_delete(
-                self.runtime.mark_physical_delete(cleanup).model_copy(update={"physical_delete_ref": physical_delete_ref}),
+                self.runtime.mark_physical_delete(cleanup).model_copy(
+                    update={"physical_delete_ref": delete_result.physical_delete_ref}
+                ),
                 cleanup_verified=True,
                 physical_delete_verified=True,
             )
             repo.reconcile_delete_lifecycle(verified)
+            self.audit_port.record_delete_event(
+                tenant_id=tenant_id,
+                delete_ref=delete_ref,
+                event_type="delete_physical_absence_verified",
+                payload={"physical_delete_ref": verified.physical_delete_ref},
+            )
             return verified
 
     def confirm_knowledge_cleanup(
@@ -562,17 +788,15 @@ class PersistentDeleteRestoreCoordinator:
             ),
         )
 
-    def _verify_absent(self, ticket: ObjectCommitTicket) -> None:
-        try:
-            self.object_store.store.read_object(
-                bucket=ticket.bucket,
-                object_name=ticket.committed_object_name,
-            )
-        except S3Error as exc:
-            if exc.code in {"NoSuchKey", "NoSuchObject"}:
-                return
-            raise
-        raise ValueError("physical delete verification failed: object still exists")
+    def _object_delete_port(self) -> ObjectDeletePort:
+        if self.object_delete_port is None:
+            self.object_delete_port = DurableObjectDeletePort(self.object_store)
+        return self.object_delete_port
+
+    def _object_verification_port(self) -> ObjectVerificationPort:
+        if self.object_verification_port is None:
+            self.object_verification_port = DurableObjectVerificationPort(self.object_store)
+        return self.object_verification_port
 
     def _authorize_restore(
         self,
@@ -622,11 +846,26 @@ def _hash(payload: dict[str, Any]) -> str:
 
 
 __all__ = [
+    "AuditPort",
+    "AuditReceipt",
     "DeleteLifecycleCommand",
     "DeleteLifecycleReceipt",
     "DeleteRestoreRuntime",
+    "DurableObjectDeletePort",
+    "DurableObjectVerificationPort",
+    "KnowledgeCleanupPort",
+    "KnowledgeCleanupReceipt",
+    "ObjectDeletePort",
+    "ObjectDeletePortReceipt",
+    "ObjectVerificationPort",
+    "ObjectVerificationReceipt",
     "PersistentDeleteRestoreCoordinator",
+    "ReceiptAuditPort",
+    "ReceiptKnowledgeCleanupPort",
+    "ReceiptVisibilityRevocationPort",
     "RestoreAuthorizationPort",
     "RestoreAuthorizationReceipt",
     "StaticRestoreAuthorizationPort",
+    "VisibilityRevocationPort",
+    "VisibilityRevocationReceipt",
 ]
