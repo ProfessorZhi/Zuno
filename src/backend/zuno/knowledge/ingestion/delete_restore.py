@@ -306,16 +306,11 @@ class DeleteRestoreRuntime:
         fencing_token: int | None = None,
     ) -> DeleteLifecycleReceipt:
         if parse_attempt_id is not None and parse_attempt_id != receipt.parse_attempt_id:
-            return receipt.model_copy(update={"late_worker_result_rejected": True})
+            return _mark_late_worker_rejected(receipt)
         if fencing_token is not None and receipt.fencing_token is not None and fencing_token != receipt.fencing_token:
-            return receipt.model_copy(update={"late_worker_result_rejected": True})
+            return _mark_late_worker_rejected(receipt)
         if receipt.state in {"visibility_revoked", "cleanup_requested", "physically_deleted", "verified", "restored"}:
-            return receipt.model_copy(
-                update={
-                    "late_worker_result_rejected": True,
-                    "history": [*receipt.history, "late_worker_result_rejected"],
-                }
-            )
+            return _mark_late_worker_rejected(receipt)
         return receipt
 
     def restore(
@@ -525,6 +520,29 @@ class PersistentDeleteRestoreCoordinator:
             repo.reconcile_delete_lifecycle(restored)
             return restored
 
+    def reject_late_worker_result(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        parse_attempt_id: str | None = None,
+        fencing_token: int | None = None,
+    ) -> DeleteLifecycleReceipt:
+        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+
+        with IngestionUnitOfWork(self.engine) as repo:
+            current_row = repo.get_delete_lifecycle(delete_ref)
+            if str(current_row["tenant_id"]) != str(tenant_id):
+                raise ValueError("late worker rejection tenant mismatch")
+            current = DeleteLifecycleReceipt.model_validate(current_row)
+            rejected = self.runtime.reject_late_worker_result(
+                current,
+                parse_attempt_id=parse_attempt_id,
+                fencing_token=fencing_token,
+            )
+            repo.reconcile_delete_lifecycle(rejected)
+            return rejected
+
     def _ticket(self, repo: Any, object_ref: str) -> ObjectCommitTicket:
         from zuno.platform.database.foundation import InfrastructureRepository
 
@@ -584,6 +602,18 @@ def _parse_s3_object_ref(object_ref: str) -> tuple[str, str]:
     if parsed.scheme != "s3" or not parsed.netloc or not parsed.path.strip("/"):
         raise ValueError("object_ref must be an s3://bucket/object reference")
     return parsed.netloc, parsed.path.lstrip("/")
+
+
+def _mark_late_worker_rejected(receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
+    history = list(receipt.history)
+    if "late_worker_result_rejected" not in history:
+        history.append("late_worker_result_rejected")
+    return receipt.model_copy(
+        update={
+            "late_worker_result_rejected": True,
+            "history": history,
+        }
+    )
 
 
 def _hash(payload: dict[str, Any]) -> str:

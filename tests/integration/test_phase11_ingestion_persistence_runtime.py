@@ -667,6 +667,108 @@ def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(en
     assert replayed["history"][-1] == "restored"
 
 
+def test_ingestion_delete_during_parse_persists_late_worker_rejection_after_restart(engine) -> None:
+    runtime = DeleteRestoreRuntime()
+    requested = runtime.request_delete_during_parse(
+        parse_job_id="parse-job:phase11:late-worker",
+        parse_attempt_id="parse-attempt:phase11:late-worker:1",
+        fencing_token=7,
+        visibility_ref="visibility:workspace-a:late-worker",
+        object_ref="s3://phase11-late-worker/workspace-a/source.md",
+        restore_point_name="_restore/workspace-a/source.md",
+    )
+    verified = runtime.verify_delete(
+        runtime.mark_physical_delete(
+            runtime.confirm_knowledge_cleanup(runtime.request_cleanup(requested))
+        )
+    )
+
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:phase11:late-worker",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="source.md",
+            mime_type="text/markdown",
+            storage_uri=verified.object_ref or "s3://phase11-late-worker/workspace-a/source.md",
+            object_manifest_ref="manifest:phase11:late-worker",
+            source_sha256=HEX_64,
+            size_bytes=42,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:phase11-late-worker",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:phase11:late-worker",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "source.md"},
+            immutability_ref="immutability:phase11:late-worker",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:phase11:late-worker",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:phase11-late-worker",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:phase11-late-worker",
+            security_decision_ref="security-decision:phase11-late-worker",
+        )
+        repo.record_parse_job(
+            parse_job_id=verified.parse_job_id or "parse-job:phase11:late-worker",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:phase11:late-worker",
+        )
+        repo.record_parse_attempt(
+            parse_attempt_id=verified.parse_attempt_id or "parse-attempt:phase11:late-worker:1",
+            tenant_id="tenant-a",
+            parse_job_id=verified.parse_job_id or "parse-job:phase11:late-worker",
+            attempt_no=1,
+            worker_id="worker:phase11-late-worker",
+            lease_ref="lease:phase11-late-worker",
+            fencing_token=verified.fencing_token or 7,
+        )
+        repo.record_delete_lifecycle(tenant_id="tenant-a", **verified.model_dump())
+
+    coordinator = PersistentDeleteRestoreCoordinator(
+        engine=engine,
+        object_store=None,
+    )
+    rejected = coordinator.reject_late_worker_result(
+        tenant_id="tenant-a",
+        delete_ref=verified.delete_ref,
+        parse_attempt_id=verified.parse_attempt_id,
+        fencing_token=verified.fencing_token + 1,
+    )
+
+    assert rejected.late_worker_result_rejected is True
+    assert rejected.state == "verified"
+    assert rejected.history[-1] == "late_worker_result_rejected"
+    with engine.connect() as conn:
+        persisted = conn.execute(
+            text(
+                """
+                SELECT state, parse_job_id, parse_attempt_id, fencing_token,
+                       late_worker_result_rejected, history
+                FROM ingestion_delete_lifecycles
+                WHERE delete_ref = :delete_ref
+                """
+            ),
+            {"delete_ref": verified.delete_ref},
+        ).mappings().one()
+    assert persisted["state"] == "verified"
+    assert persisted["parse_job_id"] == verified.parse_job_id
+    assert persisted["parse_attempt_id"] == verified.parse_attempt_id
+    assert persisted["fencing_token"] == verified.fencing_token
+    assert persisted["late_worker_result_rejected"] is True
+    assert persisted["history"][-1] == "late_worker_result_rejected"
+
+
 def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real_object(engine) -> None:
     content = b"phase11 durable delete restore"
     bucket = f"phase11-delete-{uuid4().hex}"
