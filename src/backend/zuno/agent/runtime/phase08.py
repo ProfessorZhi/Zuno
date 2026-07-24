@@ -50,6 +50,7 @@ def phase08_postgres_run_service(*, conn_string: str, engine: Any) -> Iterator["
         yield Phase08RunService(
             graph=build_phase08_run_graph(
                 checkpointer=saver,
+                owner_port=PostgresPhase08OwnerPort(engine),
                 final_gate_port=PostgresPhase08FinalGatePort(engine),
             )
         )
@@ -62,6 +63,7 @@ def build_phase08_test_checkpointer() -> InMemorySaver:
 def build_phase08_run_graph(
     *,
     checkpointer: Any | None = None,
+    owner_port: Phase08OwnerPort | None = None,
     final_gate_port: Phase08FinalGatePort | None = None,
 ) -> Any:
     if checkpointer is None:
@@ -73,7 +75,7 @@ def build_phase08_run_graph(
     graph.add_node("create_plan", _plan_run)
     graph.add_node("validate_plan", _validate_plan)
     graph.add_node("activate_plan", _activate_plan)
-    graph.add_node("execute_step", _execute_run)
+    graph.add_node("execute_step", lambda state: _execute_run(state, owner_port=owner_port))
     graph.add_node("final_gate", lambda state: _final_gate_run(state, final_gate_port=final_gate_port))
     graph.add_node("finalize", _finalize_run)
     graph.add_node("run_outcome", _run_outcome)
@@ -504,7 +506,7 @@ def _activate_plan(state: dict[str, Any]) -> dict[str, Any]:
     return _advance(next_state, "execute_step")
 
 
-def _execute_run(state: dict[str, Any]) -> dict[str, Any]:
+def _execute_run(state: dict[str, Any], *, owner_port: Phase08OwnerPort | None = None) -> dict[str, Any]:
     next_state = dict(state)
     if next_state.get("interrupt_requested"):
         resume_value = interrupt(
@@ -536,6 +538,17 @@ def _execute_run(state: dict[str, Any]) -> dict[str, Any]:
         next_state["latest_control_decision_ref"] = "abstain"
         next_state["finalization_status"] = "abstained"
         return _advance(next_state, "finalize")
+    if owner_port is not None and not next_state.get("shadow_domain_commit_suppressed"):
+        step_run_id = str(next_state.get("step_run_id") or f"step-run:{next_state.get('run_id', 'run')}:primary")
+        next_state.setdefault("step_run_id", step_run_id)
+        next_state.setdefault("owner_port", "knowledge")
+        next_state.setdefault("effect_idempotency_key", f"effect:{step_run_id}:{next_state['owner_port']}")
+        next_state.setdefault("effect_claim_id", f"effect-claim:{step_run_id}:{next_state['owner_port']}")
+        next_state.setdefault("effect_ref", next_state["effect_idempotency_key"])
+        next_state.setdefault("owner_port_proposal", {"action_run_id": f"action:{step_run_id}"})
+        next_state.setdefault("owner_port_observation", {"status": "completed", "owner_port": next_state["owner_port"]})
+        next_state.setdefault("owner_port_acceptance", {"accepted": True, "schema": "phase08-owner-port-v1"})
+        next_state = owner_port.execute(next_state)
     next_state.setdefault("branch_result_refs", [])
     if not next_state["branch_result_refs"]:
         next_state["branch_result_refs"].append(_domain_ref(next_state, "branch-result"))

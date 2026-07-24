@@ -725,13 +725,29 @@ def test_phase08_production_run_service_uses_postgres_checkpointer_and_final_gat
                     """
                     SELECT
                         (SELECT count(*) FROM checkpoints WHERE thread_id = :thread_id) AS checkpoints,
+                        (SELECT count(*) FROM agent_action_runs WHERE run_id = :run_id) AS actions,
+                        (SELECT count(*) FROM agent_observations WHERE action_run_id = :action_run_id) AS observations,
+                        (SELECT count(*) FROM agent_step_acceptances WHERE step_run_id = :step_run_id) AS acceptances,
+                        (SELECT count(*) FROM agent_effect_claims
+                         WHERE tenant_id = :tenant_id AND idempotency_key = :effect_idempotency_key) AS effects,
                         (SELECT count(*) FROM agent_final_gate_receipts WHERE run_id = :run_id) AS final_gates,
                         (SELECT count(*) FROM agent_run_outcomes WHERE run_id = :run_id) AS outcomes
                     """
                 ),
-                {"thread_id": thread_id, "run_id": run.run_id},
+                {
+                    "thread_id": thread_id,
+                    "run_id": run.run_id,
+                    "tenant_id": task.tenant_id,
+                    "step_run_id": f"step-run:{run.run_id}:primary",
+                    "action_run_id": f"action:step-run:{run.run_id}:primary",
+                    "effect_idempotency_key": f"effect:step-run:{run.run_id}:primary:knowledge",
+                },
             ).mappings().one()
         assert counts["checkpoints"] >= 1
+        assert counts["actions"] == 1
+        assert counts["observations"] == 1
+        assert counts["acceptances"] == 1
+        assert counts["effects"] == 1
         assert counts["final_gates"] == 1
         assert counts["outcomes"] == 1
     finally:
