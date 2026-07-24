@@ -1,16 +1,16 @@
 ---
 phase: PHASE11
-status: superseded
-date: 2026-07-23
-branch: integration/goal02-agent-core-ingestion-closure
-commit: 932603014fefecaeb55291c0f0f6eff581c3812a
+status: completion_candidate
+date: 2026-07-24
+branch: integration/goal02-final-closure-repair
+commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 ---
 
 # PHASE11 Pre-Closure
 
 ## 结论
 
-本 Pre-Closure 已由 Goal02 final closure repair 重新批准。PHASE11 当前为 completed；本文件作为最终 Closure evidence 的一部分，仍不声明 production ready。
+本 Pre-Closure 在 Goal02 final closure repair 中重新整理为 `completion_candidate`。当前证据已经覆盖 P11-T01～P11-T08 的主要生产路径、PostgreSQL 持久化、RabbitMQ cleanup contract、MinIO delete / restore、Human Review resume、outbox replay 和故障恢复线索，但 PHASE11 仍必须等待 Coordinator Closure；本文件不把 PHASE11 标记为 completed，也不声明 production ready。
 
 ## 证据包
 
@@ -24,7 +24,8 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 - Input 生产默认路径已进入 SourceObject → DocumentVersion → ParsePlan / Job / Attempt → ParseSnapshot → CanonicalDocumentIR → SourceSpan → Quality Gate / Human Review → IndexableDocumentSnapshot → Outbox Handoff。
 - PostgreSQL 是 PHASE11 领域事实源；SQLite、本地队列和 legacy adapter 只保留为开发/兼容边界。
 - Queue ACK 不冒充领域成功；Package A worker 在 domain commit / replay consistency 后才 ACK。
-- Human Review task、decision receipt 与 DeleteLifecycle 已有 PostgreSQL 审计事实。
+- Human Review task、decision receipt、resume handoff 与 DeleteLifecycle 已有 PostgreSQL 审计事实。
+- Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
 - Input 不直接拥有 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
 
 ## 验证结果
@@ -32,8 +33,9 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 - `python tools/scripts/verify_phase11_ingestion_source_lineage.py`：通过。
 - `python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`：通过。
 - PHASE11 E2E/Fault 测试组合：`120 passed in 154.80s (0:02:34)`。
-- Alembic head：`20260724_25 (head)`。
+- P11-T08 focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py` 为 `20 passed in 25.23s`；`tests/knowledge/test_ingestion_delete_restore.py` 为 `7 passed in 8.38s`。
+- Alembic head：`20260724_29 (head)`。
 
 ## Closure 边界
 
-本 Pre-Closure 不声明 production ready、quality proven、PHASE12 completed 或 PHASE09/10 当前化。
+本 Pre-Closure 不声明 production ready、quality proven、PHASE11 completed、PHASE12 completed 或 PHASE09/10 当前化。Coordinator Closure 仍为 `pending`，PR #41 不得合并。
