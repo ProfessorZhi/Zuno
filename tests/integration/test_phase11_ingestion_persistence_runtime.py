@@ -1115,9 +1115,34 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     assert first.outbox_event_id is not None
     assert second.indexable_snapshot_id == first.indexable_snapshot_id
     assert second.outbox_event_id == first.outbox_event_id
+    assert second.handoff_idempotency_key == first.handoff_idempotency_key
+    assert second.outbox_idempotency_key == first.outbox_idempotency_key
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+        handoff = conn.execute(
+            text(
+                """
+                SELECT indexable.knowledge_handoff_status,
+                       indexable.handoff_idempotency_key,
+                       outbox.publish_status,
+                       outbox.idempotency_key,
+                       outbox.payload ->> 'indexable_snapshot_id' AS payload_snapshot_id,
+                       outbox.payload ->> 'idempotency_key' AS payload_handoff_key
+                FROM ingestion_indexable_document_snapshots AS indexable
+                JOIN ingestion_outbox_events AS outbox
+                  ON outbox.aggregate_ref = indexable.indexable_snapshot_id
+                WHERE indexable.indexable_snapshot_id = :indexable_snapshot_id
+                """
+            ),
+            {"indexable_snapshot_id": first.indexable_snapshot_id},
+        ).mappings().one()
+        assert handoff["knowledge_handoff_status"] == "pending"
+        assert handoff["publish_status"] == "pending"
+        assert handoff["handoff_idempotency_key"] == first.handoff_idempotency_key
+        assert handoff["idempotency_key"] == first.outbox_idempotency_key
+        assert handoff["payload_snapshot_id"] == first.indexable_snapshot_id
+        assert handoff["payload_handoff_key"] == first.handoff_idempotency_key
         persisted = conn.execute(
             text(
                 """
@@ -1129,6 +1154,14 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             {"parse_snapshot_id": task.parse_snapshot_id},
         ).mappings().one()
         assert persisted["canonical_ir_json"]["metadata"]["document_version_id"] == document_version_id
+    with IngestionUnitOfWork(engine) as repo:
+        replay = repo.load_snapshot_handoff_replay_receipt(
+            tenant_id="tenant-a",
+            handoff_idempotency_key=first.handoff_idempotency_key or "",
+        )
+    assert replay["knowledge_handoff_status"] == "pending"
+    assert replay["outbox_publish_status"] == "pending"
+    assert replay["outbox_payload_idempotency_key"] == first.handoff_idempotency_key
 
 
 def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(engine) -> None:

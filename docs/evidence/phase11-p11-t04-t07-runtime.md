@@ -25,6 +25,7 @@ branch: integration/goal02-final-closure-repair
 - ReviewTask 现在绑定 reviewer principal、reviewer scope、Security Decision Ref、Security Epoch、parse review idempotency key、trace_id 和 audit_ref；Package A production worker 从 parse delivery lineage 中填充这些事实。
 - Human Review duplicate decision 现在按 canonical `decision_hash` 判定：重复相同 Decision 返回原 Receipt；同一 ReviewTask 的不同 Decision 在运行时抛出 conflict，并由 PostgreSQL `ingestion_review_decision_receipts(review_task_id)` 唯一约束拒绝不同 hash。
 - Review Decision 现在经 `ReviewDecisionAuthorizationPort` fail-closed：revoked reviewer、principal mismatch、scope mismatch、stale Security Epoch 或 revoked Security Decision Ref 不能 approve，只能持久化 rejected receipt。
+- Approved Review Resume 现在由 focused PostgreSQL 用例证明：从已有 ParseSnapshot 恢复，不重新 Parser；只创建一个 Indexable Snapshot 和一个 Handoff Outbox；Knowledge 暂不可用时 `knowledge_handoff_status` 和 outbox `publish_status` 均保持 `pending`，可由 replay receipt 继续。
 
 ## 为什么本轮不重写 Parser / IR / Handoff
 
@@ -53,6 +54,7 @@ pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_
 pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
 pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once -p no:cacheprovider --tb=short
 alembic -c infra/db/alembic.ini heads
 alembic -c infra/db/alembic.ini upgrade head
 ```
@@ -74,6 +76,7 @@ alembic -c infra/db/alembic.ini upgrade head
 - `pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short`：`6 passed in 9.36s`。
 - `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff -p no:cacheprovider --tb=short`：`1 passed in 12.32s`。
 - `pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short`：`1 passed in 7.97s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once -p no:cacheprovider --tb=short`：`1 passed in 14.23s`。
 - Alembic head：`20260724_31 (head)`。
 - Alembic upgrade：通过。
 
