@@ -539,6 +539,13 @@ def _final_gate_run(state: dict[str, Any], *, final_gate_port: Phase08FinalGateP
         next_state["latest_control_decision_ref"] = "final_gate_missing_domain_refs"
         next_state["finalization_status"] = "failed"
         return _advance(next_state, "finalize")
+    if next_state.get("shadow_domain_commit_suppressed"):
+        run_id = str(next_state.get("run_id", "run"))
+        next_state["final_gate_receipt_ref"] = f"shadow-suppressed:final-gate:{run_id}"
+        next_state["publication_receipt_ref"] = f"shadow-suppressed:publication:{run_id}"
+        next_state["outcome_receipt_ref"] = f"shadow-suppressed:run-outcome:{run_id}"
+        next_state["run_outcome_committed"] = False
+        return _advance(next_state, "finalize")
     if final_gate_port is not None:
         next_state = final_gate_port.commit(next_state)
     else:
@@ -570,7 +577,10 @@ def _finalize_run(state: dict[str, Any]) -> dict[str, Any]:
 
 def _run_outcome(state: dict[str, Any]) -> dict[str, Any]:
     next_state = dict(state)
-    next_state["run_outcome_committed"] = next_state.get("outcome_ref") is not None
+    next_state["run_outcome_committed"] = (
+        next_state.get("outcome_ref") is not None
+        and not next_state.get("shadow_domain_commit_suppressed")
+    )
     return _advance(next_state, "run_outcome")
 
 

@@ -253,6 +253,7 @@ class Phase08CutoverController:
                 "current_security_epoch_ref": request.security_epoch_ref,
                 "budget_requested_units": request.budget_requested_units,
                 "budget_available_units": request.budget_available_units,
+                "shadow_domain_commit_suppressed": not allow_side_effect,
             }
         )
         if state.get("finalization_status") != "finalized":

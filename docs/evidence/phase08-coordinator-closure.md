@@ -21,6 +21,7 @@ production_ready: false
 - Shadow / canary / rollback：`src/backend/zuno/agent/runtime/phase08_cutover.py`
 - Production service factory：`phase08_postgres_run_service()` binds official `PostgresSaver` and `PostgresPhase08FinalGatePort`.
 - Product entry cutover：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` routes Workspace task creation through `Phase08CutoverController` when explicitly configured.
+- Shadow suppression：PHASE08 shadow runs keep official checkpoint evidence but do not write `agent_final_gate_receipts`、`agent_run_outcomes` or `agent_effect_claims`.
 - Focused tests：`tests/agent/test_phase08_*.py`、`tests/integration/agent/test_phase08_*.py`、`tests/agent/runtime/test_phase08_*.py`
 
 ## 边界
@@ -33,9 +34,10 @@ PHASE08 不拥有 Product Surface、Web/Desktop、Knowledge Version、Tool Side 
 pytest -q tests/agent/runtime/test_phase08_fixed_run_graph.py tests/agent/runtime/test_phase08_step_graph.py tests/integration/agent/test_phase08_official_postgres_runtime_recovery.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py -p no:cacheprovider --tb=short
 pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits -p no:cacheprovider --tb=short
 ```
 
-结果：`6 passed`；追加 persistence closure：`5 passed in 39.04s`；Workspace product canary：`1 passed, 1 warning in 45.75s`。
+结果：`6 passed`；追加 persistence closure：`5 passed in 39.04s`；Workspace product canary：`1 passed, 1 warning in 45.75s`；shadow suppression：`1 passed in 31.80s`。
 
 ## 下游影响
 

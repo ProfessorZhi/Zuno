@@ -345,6 +345,86 @@ def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine
     assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
 
 
+def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine) -> None:
+    thread_id = "thread:task-p08-shadow-postgres:phase08"
+    goal = _goal("goal:p08:shadow-postgres")
+    task = _task(goal, "task-contract:p08:shadow-postgres")
+    run = _run(task, "run:task-p08-shadow-postgres:phase08")
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+
+    request = Phase08RuntimeRequest(
+        request_id="request:p08:shadow-postgres",
+        tenant_id=task.tenant_id,
+        workspace_id=task.workspace_id,
+        user_id=task.principal_id,
+        task_id="task-p08-shadow-postgres",
+        trace_id=run.trace_id,
+        goal="shadow must not commit phase08 outcome",
+        idempotency_key="idem:p08:shadow-postgres",
+    )
+    calls: list[tuple[str, bool]] = []
+
+    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
+        calls.append((request.idempotency_key, allow_side_effect))
+        return Phase08RuntimeResponse(
+            runtime="legacy",
+            request_hash=request.request_hash,
+            output_ref="answer:legacy-shadow",
+            trace_ref=f"legacy-trace:{request.trace_id}",
+            side_effect_ref="legacy-side-effect:shadow" if allow_side_effect else None,
+        )
+
+    try:
+        with phase08_postgres_run_service(conn_string=POSTGRES_DSN, engine=engine) as service:
+            controller = Phase08CutoverController(
+                mode="shadow",
+                legacy_runner=legacy_runner,
+                new_runtime=service,
+                side_effect_ledger=PostgresPhase08CutoverLedger(engine),
+                audit=PostgresPhase08CutoverLedger(engine),
+            )
+            response = controller.handle(request)
+
+        assert response.runtime == "legacy"
+        assert response.side_effect_ref == "legacy-side-effect:shadow"
+        assert response.shadow_output_ref.startswith("answer:")
+        assert calls == [(request.idempotency_key, True)]
+        with engine.connect() as conn:
+            counts = conn.execute(
+                text(
+                    """
+                    SELECT
+                        (SELECT count(*) FROM checkpoints WHERE thread_id = :thread_id) AS checkpoints,
+                        (SELECT count(*) FROM agent_final_gate_receipts WHERE run_id = :run_id) AS final_gates,
+                        (SELECT count(*) FROM agent_run_outcomes WHERE run_id = :run_id) AS outcomes,
+                        (SELECT count(*) FROM agent_effect_claims
+                         WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
+                        (SELECT count(*) FROM agent_cutover_audit_events
+                         WHERE tenant_id = :tenant_id AND request_id = :request_id AND mode = 'shadow') AS audits
+                    """
+                ),
+                {
+                    "thread_id": thread_id,
+                    "run_id": run.run_id,
+                    "tenant_id": request.tenant_id,
+                    "idempotency_key": request.idempotency_key,
+                    "request_id": request.request_id,
+                },
+            ).mappings().one()
+        assert counts["checkpoints"] >= 1
+        assert counts["final_gates"] == 0
+        assert counts["outcomes"] == 0
+        assert counts["effects"] == 0
+        assert counts["audits"] == 1
+    finally:
+        with engine.begin() as conn:
+            for table in ("checkpoint_writes", "checkpoint_blobs", "checkpoints"):
+                conn.execute(text(f"DELETE FROM {table} WHERE thread_id = :thread_id"), {"thread_id": thread_id})
+
+
 def test_phase08_graph_owner_port_and_final_gate_write_postgres_ledgers(engine) -> None:
     goal = _goal("goal:p08:graph-ledger")
     task = _task(goal, "task-contract:p08:graph-ledger")
