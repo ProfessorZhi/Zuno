@@ -73,13 +73,20 @@ def test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authoriz
     )
     cleanup = runtime.request_cleanup(held)
     physical = runtime.mark_physical_delete(cleanup)
-    restored = runtime.restore(physical)
+    try:
+        runtime.restore(physical)
+    except ValueError as exc:
+        assert "fresh authorization" in str(exc)
+    else:
+        raise AssertionError("restore without fresh authorization must fail")
+    restored = runtime.restore(physical, restore_authorization_ref="restore-auth:case_1")
 
     assert held.state == "legal_hold"
     assert cleanup.state == "legal_hold"
     assert physical.physical_delete_ref is None
     assert restored.state == "restored"
-    assert restored.restored_authorization is False
+    assert restored.restored_authorization is True
+    assert restored.restore_authorization_ref == "restore-auth:case_1"
 
 
 def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:

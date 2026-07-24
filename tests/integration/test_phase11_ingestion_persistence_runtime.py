@@ -656,12 +656,13 @@ def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(en
     with IngestionUnitOfWork(engine) as repo:
         repo.record_delete_lifecycle(tenant_id="tenant-a", **verified.model_dump())
         loaded = DeleteLifecycleReceipt.model_validate(repo.get_delete_lifecycle(verified.delete_ref))
-        restored = runtime.restore(loaded)
+        restored = runtime.restore(loaded, restore_authorization_ref="restore-auth:phase11:restore")
         repo.reconcile_delete_lifecycle(restored)
         replayed = repo.get_delete_lifecycle(restored.delete_ref)
 
     assert replayed["state"] == "restored"
-    assert replayed["restored_authorization"] is False
+    assert replayed["restored_authorization"] is True
+    assert replayed["restore_authorization_ref"] == "restore-auth:phase11:restore"
     assert replayed["history"][-1] == "restored"
 
 
@@ -817,19 +818,35 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
         with pytest.raises(S3Error):
             raw_store.read_object(bucket=bucket, object_name=committed.object_name)
 
+        with pytest.raises(ValueError, match="fresh authorization"):
+            coordinator.restore_deleted(
+                tenant_id="tenant-a",
+                delete_ref=requested.delete_ref,
+            )
+
         restored = coordinator.restore_deleted(
             tenant_id="tenant-a",
             delete_ref=requested.delete_ref,
+            restore_authorization_ref="restore-auth:phase11:delete-real-object",
+        )
+        duplicate_restore = coordinator.restore_deleted(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+            restore_authorization_ref="restore-auth:phase11:delete-real-object",
         )
 
         assert restored.state == "restored"
+        assert restored.restored_authorization is True
+        assert restored.restore_authorization_ref == "restore-auth:phase11:delete-real-object"
+        assert duplicate_restore.duplicate is True
         assert raw_store.read_object(bucket=bucket, object_name=committed.object_name) == content
         with engine.connect() as conn:
             lifecycle = conn.execute(
                 text(
                     """
                     SELECT state, object_ref, restore_point_name, cleanup_verified,
-                           physical_delete_verified
+                           physical_delete_verified, restored_authorization,
+                           restore_authorization_ref, duplicate
                     FROM ingestion_delete_lifecycles
                     WHERE delete_ref = :delete_ref
                     """
@@ -861,6 +878,9 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
         assert lifecycle["restore_point_name"] == "_restore/workspace-a/delete-target.md"
         assert lifecycle["cleanup_verified"] is True
         assert lifecycle["physical_delete_verified"] is True
+        assert lifecycle["restored_authorization"] is True
+        assert lifecycle["restore_authorization_ref"] == "restore-auth:phase11:delete-real-object"
+        assert lifecycle["duplicate"] is True
         assert outbox["topic"] == PersistentDeleteRestoreCoordinator.cleanup_topic
         assert outbox["status"] == "published"
         assert outbox["object_ref"] == object_ref

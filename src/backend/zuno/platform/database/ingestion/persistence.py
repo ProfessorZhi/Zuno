@@ -1325,6 +1325,7 @@ class IngestionRepository:
         physical_delete_verified: bool = False,
         legal_hold_ref: str | None = None,
         restored_authorization: bool = False,
+        restore_authorization_ref: str | None = None,
         duplicate: bool = False,
         late_worker_result_rejected: bool = False,
     ) -> IngestionReceipt:
@@ -1340,7 +1341,7 @@ class IngestionRepository:
                     handoff_outbox_event_id, parse_job_id, parse_attempt_id,
                     fencing_token, cleanup_ref, projection_cleanup_ref, physical_delete_ref,
                     verification_ref, cleanup_verified, physical_delete_verified,
-                    legal_hold_ref, restored_authorization, duplicate,
+                    legal_hold_ref, restored_authorization, restore_authorization_ref, duplicate,
                     late_worker_result_rejected, receipt_hash, history
                 ) VALUES (
                     :delete_ref, :tenant_id, :snapshot_ref, :state, :visibility_ref,
@@ -1348,7 +1349,7 @@ class IngestionRepository:
                     :handoff_outbox_event_id, :parse_job_id, :parse_attempt_id,
                     :fencing_token, :cleanup_ref, :projection_cleanup_ref, :physical_delete_ref,
                     :verification_ref, :cleanup_verified, :physical_delete_verified,
-                    :legal_hold_ref, :restored_authorization, :duplicate,
+                    :legal_hold_ref, :restored_authorization, :restore_authorization_ref, :duplicate,
                     :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
                 )
                 ON CONFLICT (delete_ref) DO NOTHING
@@ -1375,6 +1376,7 @@ class IngestionRepository:
                 "physical_delete_verified": physical_delete_verified,
                 "legal_hold_ref": legal_hold_ref,
                 "restored_authorization": restored_authorization,
+                "restore_authorization_ref": restore_authorization_ref,
                 "duplicate": duplicate,
                 "late_worker_result_rejected": late_worker_result_rejected,
                 "receipt_hash": receipt_hash,
@@ -1545,7 +1547,8 @@ class IngestionRepository:
                        fencing_token, cleanup_ref, projection_cleanup_ref,
                        physical_delete_ref, verification_ref, cleanup_verified,
                        physical_delete_verified, legal_hold_ref, restored_authorization,
-                       duplicate, late_worker_result_rejected, receipt_hash, history
+                       restore_authorization_ref, duplicate, late_worker_result_rejected,
+                       receipt_hash, history
                 FROM ingestion_delete_lifecycles
                 WHERE delete_ref = :delete_ref
                 """
@@ -1580,6 +1583,7 @@ class IngestionRepository:
                     physical_delete_verified = :physical_delete_verified,
                     legal_hold_ref = :legal_hold_ref,
                     restored_authorization = :restored_authorization,
+                    restore_authorization_ref = :restore_authorization_ref,
                     duplicate = :duplicate,
                     late_worker_result_rejected = :late_worker_result_rejected,
                     receipt_hash = :receipt_hash,

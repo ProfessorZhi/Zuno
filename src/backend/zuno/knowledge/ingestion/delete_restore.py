@@ -44,6 +44,7 @@ class DeleteLifecycleReceipt(BaseModel):
     physical_delete_verified: bool = False
     legal_hold_ref: str | None = None
     restored_authorization: bool = False
+    restore_authorization_ref: str | None = None
     duplicate: bool = False
     late_worker_result_rejected: bool = False
     receipt_hash: str
@@ -266,12 +267,32 @@ class DeleteRestoreRuntime:
             )
         return receipt
 
-    def restore(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
+    def restore(
+        self,
+        receipt: DeleteLifecycleReceipt,
+        *,
+        restore_authorization_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
+        if receipt.state == "restored":
+            if restore_authorization_ref is not None and receipt.restore_authorization_ref not in {
+                None,
+                restore_authorization_ref,
+            }:
+                raise ValueError("conflicting restore authorization")
+            return receipt.model_copy(update={"duplicate": True})
+        if not restore_authorization_ref:
+            raise ValueError("restore requires fresh authorization")
+        history = list(receipt.history)
+        authorization_marker = f"restore_authorized:{restore_authorization_ref}"
+        if authorization_marker not in history:
+            history.append(authorization_marker)
+        history.append("restored")
         return receipt.model_copy(
             update={
                 "state": "restored",
-                "restored_authorization": False,
-                "history": [*receipt.history, "restored"],
+                "restored_authorization": True,
+                "restore_authorization_ref": restore_authorization_ref,
+                "history": history,
             }
         )
 
@@ -407,7 +428,13 @@ class PersistentDeleteRestoreCoordinator:
             repo.reconcile_delete_lifecycle(confirmed)
             return confirmed
 
-    def restore_deleted(self, *, tenant_id: str, delete_ref: str) -> DeleteLifecycleReceipt:
+    def restore_deleted(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        restore_authorization_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
         from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
 
         with IngestionUnitOfWork(self.engine) as repo:
@@ -415,11 +442,23 @@ class PersistentDeleteRestoreCoordinator:
             if str(current_row["tenant_id"]) != str(tenant_id):
                 raise ValueError("delete restore tenant mismatch")
             current = DeleteLifecycleReceipt.model_validate(current_row)
+            if current.state == "restored":
+                restored = self.runtime.restore(
+                    current,
+                    restore_authorization_ref=restore_authorization_ref,
+                )
+                repo.reconcile_delete_lifecycle(restored)
+                return restored
+            if not restore_authorization_ref:
+                raise ValueError("restore requires fresh authorization")
             if not current.object_ref or not current.restore_point_name:
                 raise ValueError("restore requires object_ref and restore_point_name")
             ticket = self._ticket(repo, current.object_ref)
             self.object_store.restore(ticket, restore_point_name=current.restore_point_name)
-            restored = self.runtime.restore(current)
+            restored = self.runtime.restore(
+                current,
+                restore_authorization_ref=restore_authorization_ref,
+            )
             repo.reconcile_delete_lifecycle(restored)
             return restored
 
