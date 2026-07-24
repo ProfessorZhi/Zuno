@@ -25,6 +25,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - PostgreSQL 是 PHASE11 领域事实源；SQLite、本地队列和 legacy adapter 只保留为开发/兼容边界。
 - Queue ACK 不冒充领域成功；Package A worker 在 domain commit / replay consistency 后才 ACK。
 - Human Review task、decision receipt、resume handoff 与 DeleteLifecycle 已有 PostgreSQL 审计事实；Package A production worker 对 human_review 进入 `review_pending`，不再写成 failed。
+- Human Review task 绑定 reviewer principal/scope、Security Decision Ref、Security Epoch、review idempotency key、trace_id 和 audit_ref。
 - Human Review decision 已覆盖重复相同 Decision 幂等返回原 Receipt、不同 Decision 运行时 conflict，以及 PostgreSQL 唯一约束拒绝不同 decision hash。
 - Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
 - Input 不直接拥有 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
@@ -37,7 +38,8 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - P11-T08 focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py` 为 `20 passed in 25.23s`；`tests/knowledge/test_ingestion_delete_restore.py` 为 `7 passed in 8.38s`。
 - Human Review decision focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.95s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart` 为 `1 passed in 9.68s`。
 - Human Review review_pending focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 9.07s`；`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 8.61s`。
-- Alembic head：`20260724_30 (head)`。
+- Human Review binding focused regression：`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 9.71s`；`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.47s`。
+- Alembic head：`20260724_31 (head)`。
 
 ## Closure 边界
 

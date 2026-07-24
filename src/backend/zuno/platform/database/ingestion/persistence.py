@@ -1171,6 +1171,11 @@ class IngestionRepository:
         reason: str,
         decision_hash: str,
         expires_at: datetime | float,
+        reviewer_principal_id: str | None = None,
+        security_decision_ref: str | None = None,
+        idempotency_key: str | None = None,
+        trace_id: str | None = None,
+        audit_ref: str | None = None,
     ) -> IngestionReceipt:
         self._require_hash(decision_hash, "decision_hash")
         expires_at_dt = self._datetime_from_epoch_or_value(expires_at)
@@ -1179,12 +1184,14 @@ class IngestionRepository:
                 """
                 INSERT INTO ingestion_review_tasks(
                     review_task_id, tenant_id, parse_snapshot_id, quality_decision_id,
-                    document_version_id, workspace_id, reviewer_scope, security_epoch_ref,
-                    status, reason, decision_hash, expires_at
+                    document_version_id, workspace_id, reviewer_principal_id, reviewer_scope,
+                    security_decision_ref, security_epoch_ref, idempotency_key, trace_id,
+                    audit_ref, status, reason, decision_hash, expires_at
                 ) VALUES (
                     :review_task_id, :tenant_id, :parse_snapshot_id, :quality_decision_id,
-                    :document_version_id, :workspace_id, :reviewer_scope, :security_epoch_ref,
-                    :status, :reason, :decision_hash, :expires_at
+                    :document_version_id, :workspace_id, :reviewer_principal_id, :reviewer_scope,
+                    :security_decision_ref, :security_epoch_ref, :idempotency_key, :trace_id,
+                    :audit_ref, :status, :reason, :decision_hash, :expires_at
                 )
                 ON CONFLICT (review_task_id) DO NOTHING
                 """
@@ -1196,8 +1203,13 @@ class IngestionRepository:
                 "quality_decision_id": quality_decision_id,
                 "document_version_id": document_version_id,
                 "workspace_id": workspace_id,
+                "reviewer_principal_id": reviewer_principal_id,
                 "reviewer_scope": reviewer_scope,
+                "security_decision_ref": security_decision_ref,
                 "security_epoch_ref": security_epoch_ref,
+                "idempotency_key": idempotency_key,
+                "trace_id": trace_id,
+                "audit_ref": audit_ref,
                 "status": status,
                 "reason": reason,
                 "decision_hash": decision_hash,

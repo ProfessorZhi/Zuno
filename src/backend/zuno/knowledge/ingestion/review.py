@@ -37,8 +37,13 @@ class ReviewTask(BaseModel):
     parse_snapshot_id: str
     document_version_id: str
     workspace_id: str
+    reviewer_principal_id: str | None = None
     reviewer_scope: str
+    security_decision_ref: str | None = None
     security_epoch_ref: str
+    idempotency_key: str | None = None
+    trace_id: str | None = None
+    audit_ref: str | None = None
     status: ReviewDecisionStatus = "pending"
     expires_at: float
     reason: str
@@ -79,6 +84,11 @@ class HumanReviewRuntime:
         parse_snapshot: ParseJobSnapshot,
         security_epoch_ref: str,
         reviewer_scope: str = "workspace_reviewer",
+        reviewer_principal_id: str | None = None,
+        security_decision_ref: str | None = None,
+        idempotency_key: str | None = None,
+        trace_id: str | None = None,
+        audit_ref: str | None = None,
     ) -> tuple[QualityGateResult, ReviewTask | None]:
         metrics = self._metrics(document)
         requires_review = any(
@@ -96,8 +106,13 @@ class HumanReviewRuntime:
                 parse_snapshot_id=parse_snapshot.job_id,
                 document_version_id=document.metadata.document_version_id,
                 workspace_id=document.metadata.workspace_id,
+                reviewer_principal_id=reviewer_principal_id,
                 reviewer_scope=reviewer_scope,
+                security_decision_ref=security_decision_ref,
                 security_epoch_ref=security_epoch_ref,
+                idempotency_key=idempotency_key,
+                trace_id=trace_id,
+                audit_ref=audit_ref,
                 expires_at=time.time() + self.review_ttl_seconds,
                 reason="quality_review_required",
                 decision_hash=_hash(
@@ -105,7 +120,13 @@ class HumanReviewRuntime:
                         "review_task_id": review_task_id,
                         "parse_snapshot_id": parse_snapshot.job_id,
                         "document_version_id": document.metadata.document_version_id,
+                        "reviewer_principal_id": reviewer_principal_id,
+                        "reviewer_scope": reviewer_scope,
+                        "security_decision_ref": security_decision_ref,
                         "security_epoch_ref": security_epoch_ref,
+                        "idempotency_key": idempotency_key,
+                        "trace_id": trace_id,
+                        "audit_ref": audit_ref,
                         "status": "pending",
                     }
                 ),

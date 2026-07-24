@@ -222,6 +222,7 @@ def _seed_retryable_job(engine, *, content: bytes) -> CrossModuleEnvelopeV1:
         "mime_type": "text/markdown",
         "declared_format": "markdown",
         "classification_ref": "internal",
+        "principal_id": "principal:pkg-a:reviewer",
         "parser_policy_ref": "parser-policy:pkg-a",
         "quality_policy_ref": "quality-policy:pkg-a",
         "security_decision_ref": "security-decision:pkg-a",
@@ -2350,6 +2351,11 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
                            quality.decision AS quality_decision,
                            quality.review_task_ref AS review_task_ref,
                            review_task.review_task_id AS review_task_id,
+                           review_task.reviewer_principal_id AS reviewer_principal_id,
+                           review_task.security_decision_ref AS review_security_decision_ref,
+                           review_task.idempotency_key AS review_idempotency_key,
+                           review_task.trace_id AS review_trace_id,
+                           review_task.audit_ref AS review_audit_ref,
                            review_task.status AS review_task_status,
                            review_task.reason AS review_task_reason
                     FROM ingestion_parse_attempts AS attempt
@@ -2374,6 +2380,11 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
             assert row["job_status"] == "review_pending"
             assert row["quality_decision"] == "human_review"
             assert row["review_task_ref"] == row["review_task_id"]
+            assert row["reviewer_principal_id"] == "principal:pkg-a:reviewer"
+            assert row["review_security_decision_ref"] == "security-decision:pkg-a"
+            assert row["review_idempotency_key"] == f"{envelope.idempotency_key}:review:{receipt.parse_attempt_id}"
+            assert row["review_trace_id"] == "trace-pkg-a-retry"
+            assert row["review_audit_ref"] == f"audit:review-task:{receipt.parse_attempt_id}"
             assert row["review_task_status"] == "pending"
             assert row["review_task_reason"] == "quality_review_required"
             assert conn.execute(text("SELECT count(*) FROM ingestion_source_spans")).scalar_one() == 1

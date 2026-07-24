@@ -1052,6 +1052,11 @@ class PackageAProductionIngestionRuntime:
             document=result.document,
             parse_snapshot=snapshot,
             security_epoch_ref=str(context["security_epoch_ref"]),
+            reviewer_principal_id=str(payload.get("principal_id") or f"principal:{tenant_id}:{context['workspace_id']}:reviewer"),
+            security_decision_ref=str(context["security_decision_ref"]),
+            idempotency_key=f"{context['idempotency_key']}:review:{parse_attempt_id}",
+            trace_id=str(envelope.trace_id),
+            audit_ref=f"audit:review-task:{parse_attempt_id}",
         )
         parse_snapshot_id = f"parse-snapshot:{parse_attempt_id}"
         snapshot_receipt = repo.record_parse_snapshot(
@@ -1093,8 +1098,13 @@ class PackageAProductionIngestionRuntime:
                 quality_decision_id=quality.ref,
                 document_version_id=str(context["document_version_id"]),
                 workspace_id=review_task.workspace_id,
+                reviewer_principal_id=review_task.reviewer_principal_id,
                 reviewer_scope=review_task.reviewer_scope,
+                security_decision_ref=review_task.security_decision_ref,
                 security_epoch_ref=review_task.security_epoch_ref,
+                idempotency_key=review_task.idempotency_key,
+                trace_id=review_task.trace_id,
+                audit_ref=review_task.audit_ref,
                 status=review_task.status,
                 reason=review_task.reason,
                 decision_hash=review_task.decision_hash,
@@ -1194,6 +1204,7 @@ class PackageAProductionIngestionRuntime:
             "mime_type": command.mime_type,
             "declared_format": self._declared_format(command.mime_type, command.filename),
             "classification_ref": command.classification_ref,
+            "principal_id": command.principal_id,
             "parser_policy_ref": command.parser_policy_ref,
             "quality_policy_ref": command.quality_policy_ref,
             "security_decision_ref": command.security_decision_ref,
