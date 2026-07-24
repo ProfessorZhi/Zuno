@@ -914,6 +914,18 @@ def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after
             decision_hash=receipt.decision_hash,
             decided_at=receipt.decided_at,
         )
+        duplicate_receipt = repo.record_review_decision_receipt(
+            decision_id=receipt.decision_id,
+            tenant_id="tenant-a",
+            review_task_id=receipt.review_task_id,
+            status=receipt.status,
+            reviewer_id=receipt.reviewer_id,
+            reviewer_scope=receipt.reviewer_scope,
+            security_epoch_ref=receipt.security_epoch_ref,
+            reason=receipt.reason,
+            decision_hash=receipt.decision_hash,
+            decided_at=receipt.decided_at,
+        )
         loaded_task_row = repo.get_review_task(task.review_task_id)
         loaded_receipt_row = repo.get_review_decision_receipt(receipt.decision_id)
         loaded_task = ReviewTask(
@@ -977,9 +989,24 @@ def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after
                 decision_hash=conflicting_receipt.decision_hash,
                 decided_at=conflicting_receipt.decided_at,
             )
+        with pytest.raises(IngestionPersistenceError, match="conflicting review decision receipt"):
+            repo.record_review_decision_receipt(
+                decision_id=receipt.decision_id,
+                tenant_id="tenant-a",
+                review_task_id="review-task:resume:missing-conflict",
+                status="rejected",
+                reviewer_id=receipt.reviewer_id,
+                reviewer_scope=receipt.reviewer_scope,
+                security_epoch_ref=receipt.security_epoch_ref,
+                reason="conflicting_decision_id_rejected",
+                decision_hash="c" * 64,
+                decided_at=receipt.decided_at,
+            )
 
     assert resumed.duplicate is True
     assert resumed.decision_hash == receipt.decision_hash
+    assert duplicate_receipt.ref == receipt.decision_id
+    assert duplicate_receipt.status == f"duplicate:{receipt.status}"
 
 
 def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engine) -> None:

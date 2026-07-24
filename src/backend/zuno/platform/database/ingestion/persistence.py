@@ -1327,7 +1327,7 @@ class IngestionRepository:
                     :decision_id, :tenant_id, :review_task_id, :status, :reviewer_id,
                     :reviewer_scope, :security_epoch_ref, :reason, :decision_hash, :decided_at
                 )
-                ON CONFLICT (review_task_id) DO NOTHING
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1347,14 +1347,34 @@ class IngestionRepository:
             existing = self.connection.execute(
                 text(
                     """
-                    SELECT decision_id, decision_hash, status
+                    SELECT decision_id, tenant_id, review_task_id, status, reviewer_id,
+                           reviewer_scope, security_epoch_ref, reason, decision_hash, decided_at
                     FROM ingestion_review_decision_receipts
-                    WHERE review_task_id = :review_task_id
+                    WHERE decision_id = :decision_id
+                       OR review_task_id = :review_task_id
                     """
                 ),
-                {"review_task_id": review_task_id},
-            ).mappings().first()
-            if existing and existing["decision_hash"] == decision_hash:
+                {"decision_id": decision_id, "review_task_id": review_task_id},
+            ).mappings().all()
+            expected = {
+                "decision_id": decision_id,
+                "tenant_id": tenant_id,
+                "review_task_id": review_task_id,
+                "status": status,
+                "reviewer_id": reviewer_id,
+                "reviewer_scope": reviewer_scope,
+                "security_epoch_ref": security_epoch_ref,
+                "reason": reason,
+                "decision_hash": decision_hash,
+            }
+            exact = [
+                row
+                for row in existing
+                if all(row[key] == value for key, value in expected.items())
+                and row["decided_at"] == decided_at_dt
+            ]
+            if len(exact) == 1:
+                existing = exact[0]
                 return IngestionReceipt(str(existing["decision_id"]), tenant_id, f"duplicate:{existing['status']}", decision_hash)
             raise IngestionPersistenceError(f"conflicting review decision receipt: {review_task_id}")
         self.connection.execute(
