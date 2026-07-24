@@ -800,27 +800,46 @@ class AgentDomainRepository:
         status: str,
     ) -> AgentDomainReceipt:
         payload_hash = _canonical_hash(payload)
-        try:
-            self.connection.execute(
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_runtime_signals(
+                    signal_id, tenant_id, run_id, signal_type, payload_hash, status
+                ) VALUES (
+                    :signal_id, :tenant_id, :run_id, :signal_type, :payload_hash, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "signal_id": signal_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "signal_type": signal_type,
+                "payload_hash": payload_hash,
+                "status": status,
+            },
+        )
+        if result.rowcount != 1:
+            same_id = self.connection.execute(
                 text(
                     """
-                    INSERT INTO agent_runtime_signals(
-                        signal_id, tenant_id, run_id, signal_type, payload_hash, status
-                    ) VALUES (
-                        :signal_id, :tenant_id, :run_id, :signal_type, :payload_hash, :status
-                    )
+                    SELECT signal_id, tenant_id, run_id, signal_type, payload_hash, status
+                    FROM agent_runtime_signals
+                    WHERE signal_id = :signal_id
                     """
                 ),
-                {
-                    "signal_id": signal_id,
-                    "tenant_id": tenant_id,
-                    "run_id": run_id,
-                    "signal_type": signal_type,
-                    "payload_hash": payload_hash,
-                    "status": status,
-                },
-            )
-        except IntegrityError as exc:
+                {"signal_id": signal_id},
+            ).mappings().first()
+            if (
+                same_id
+                and str(same_id["tenant_id"]) == str(tenant_id)
+                and str(same_id["run_id"]) == str(run_id)
+                and same_id["signal_type"] == signal_type
+                and same_id["payload_hash"] == payload_hash
+                and same_id["status"] == status
+            ):
+                return AgentDomainReceipt(str(same_id["signal_id"]), f"duplicate:{same_id['status']}", 1)
             existing = self.connection.execute(
                 text(
                     """
@@ -841,7 +860,7 @@ class AgentDomainRepository:
             ).mappings().first()
             if existing:
                 return AgentDomainReceipt(str(existing["signal_id"]), f"duplicate:{existing['status']}", 1)
-            raise AgentDomainConflict(f"conflicting signal for {run_id}") from exc
+            raise AgentDomainConflict(f"conflicting signal for {run_id}")
         return AgentDomainReceipt(signal_id, status, 1)
 
     def record_reconciliation_finding(

@@ -247,6 +247,31 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
             payload={"reason": "user_cancelled"},
             status="accepted",
         )
+        duplicate_signal_by_id = repo.record_signal(
+            signal_id="signal:p08:cancel",
+            tenant_id=task.tenant_id,
+            run_id=run.run_id,
+            signal_type="cancel",
+            payload={"reason": "user_cancelled"},
+            status="accepted",
+        )
+        duplicate_signal_by_payload = repo.record_signal(
+            signal_id="signal:p08:cancel:replay",
+            tenant_id=task.tenant_id,
+            run_id=run.run_id,
+            signal_type="cancel",
+            payload={"reason": "user_cancelled"},
+            status="accepted",
+        )
+        with pytest.raises(AgentDomainConflict, match="conflicting signal"):
+            repo.record_signal(
+                signal_id="signal:p08:cancel",
+                tenant_id=task.tenant_id,
+                run_id=run.run_id,
+                signal_type="cancel",
+                payload={"reason": "different_cancel"},
+                status="accepted",
+            )
         decision = reconcile_generations(
             domain_generation=3,
             checkpoint_generation=2,
@@ -302,6 +327,9 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
             trace_ref=run.trace_id,
         )
         assert signal.ref == "signal:p08:cancel"
+        assert duplicate_signal_by_id.status == "duplicate:accepted"
+        assert duplicate_signal_by_payload.ref == "signal:p08:cancel"
+        assert duplicate_signal_by_payload.status == "duplicate:accepted"
         assert finding.status == "domain_ahead"
         assert duplicate_finding.status == "duplicate:domain_ahead"
         assert cutover.status == "canary"

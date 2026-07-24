@@ -19,6 +19,7 @@ branch: integration/goal02-final-closure-repair
 - P08-T04 到 P08-T07：固定 `initialize -> authorize -> context_snapshot -> create_plan -> validate_plan -> activate_plan -> execute_step -> final_gate -> finalize -> run_outcome` LangGraph 运行图、固定 StepExecutionGraph、generation reconciliation、interrupt/signal/cancel/deadline。
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
 - Reconciliation policy：`aligned`、`domain_ahead`、`checkpoint_ahead`、`orphan_checkpoint`、`orphan_domain`、`stale_schema`、`stale_controller_epoch`、`unrecoverable_conflict` 均有机器验证的 owner / auto repair / replay / terminate / audit / idempotency 决策；PostgreSQL reconciliation finding replay 相同 payload 返回 duplicate，不同策略或 payload fail closed。
+- Signal ledger：PostgreSQL `agent_runtime_signals` replay 通过 `signal_id` 或 payload 唯一约束返回 duplicate；同 `signal_id` 不同 payload fail closed，且不让当前事务进入 aborted 状态。
 - Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
 - Product cutover entry：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` 让 Workspace task 入口显式进入 `Phase08CutoverController`，默认不启用；启用后可按 `shadow`、`canary`、`new_default`、`rollback` 记录 `phase08_cutover` 审计事件。
 - Shadow suppression：shadow 路径允许官方 Checkpointer 记录可恢复执行痕迹，但禁止 PHASE08 Final Gate、RunOutcome 和 Effect Claim 写入领域表，避免 shadow 产生产品效果、usage settlement 或完成事实。
@@ -89,7 +90,7 @@ py_compile passed
 1 passed in 34.34s
 1 passed in 41.26s
 1 passed in 36.10s
-1 passed in 42.83s
+1 passed in 37.48s
 ```
 
 ## 证据 Commit
