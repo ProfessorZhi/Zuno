@@ -57,7 +57,7 @@ alembic -c infra/db/alembic.ini upgrade head
 agent system verification passed.
 Current program verification passed.
 refined Agent Core target architecture verification passed.
-20260724_31 (head)
+20260724_32 (head)
 ```
 
 2026-07-24 追加验证：
@@ -106,6 +106,12 @@ py_compile passed
 2 passed in 14.25s
 2 passed in 9.80s
 4 passed in 10.77s
+```
+
+当前 schema head 复核：
+
+```text
+20260724_32 (head)
 ```
 
 ## 证据 Commit
