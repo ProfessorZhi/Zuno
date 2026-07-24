@@ -23,6 +23,7 @@ def _state(**overrides):
         "security_epoch_ref": "security-epoch:p08:t04:1",
         "current_security_epoch_ref": "security-epoch:p08:t04:1",
         "deadline_at": datetime(2026, 7, 24, 0, 0, tzinfo=timezone.utc),
+        "observed_at": datetime(2026, 7, 23, 23, 0, tzinfo=timezone.utc),
         "budget_requested_units": 10,
         "budget_available_units": 100,
     }

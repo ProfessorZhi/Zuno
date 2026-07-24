@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Iterator
+from typing import Any, Iterator, Protocol
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -23,6 +23,16 @@ class Phase08Conflict(Phase08RuntimeError):
     pass
 
 
+class Phase08OwnerPort(Protocol):
+    def execute(self, state: dict[str, Any]) -> dict[str, Any]:
+        ...
+
+
+class Phase08FinalGatePort(Protocol):
+    def commit(self, state: dict[str, Any]) -> dict[str, Any]:
+        ...
+
+
 @contextmanager
 def phase08_postgres_checkpointer(*, conn_string: str) -> Iterator[Any]:
     if not conn_string:
@@ -36,7 +46,11 @@ def build_phase08_test_checkpointer() -> InMemorySaver:
     return InMemorySaver()
 
 
-def build_phase08_run_graph(*, checkpointer: Any | None = None) -> Any:
+def build_phase08_run_graph(
+    *,
+    checkpointer: Any | None = None,
+    final_gate_port: Phase08FinalGatePort | None = None,
+) -> Any:
     if checkpointer is None:
         raise Phase08RuntimeError("PHASE08 run graph requires an explicit durable checkpointer")
     graph = StateGraph(dict)
@@ -47,7 +61,7 @@ def build_phase08_run_graph(*, checkpointer: Any | None = None) -> Any:
     graph.add_node("validate_plan", _validate_plan)
     graph.add_node("activate_plan", _activate_plan)
     graph.add_node("execute_step", _execute_run)
-    graph.add_node("final_gate", _final_gate_run)
+    graph.add_node("final_gate", lambda state: _final_gate_run(state, final_gate_port=final_gate_port))
     graph.add_node("finalize", _finalize_run)
     graph.add_node("run_outcome", _run_outcome)
     graph.add_edge(START, "initialize")
@@ -64,7 +78,11 @@ def build_phase08_run_graph(*, checkpointer: Any | None = None) -> Any:
     return graph.compile(checkpointer=checkpointer)
 
 
-def build_phase08_step_graph(*, checkpointer: Any | None = None) -> Any:
+def build_phase08_step_graph(
+    *,
+    checkpointer: Any | None = None,
+    owner_port: Phase08OwnerPort | None = None,
+) -> Any:
     if checkpointer is None:
         raise Phase08RuntimeError("PHASE08 step graph requires an explicit durable checkpointer")
     graph = StateGraph(dict)
@@ -73,7 +91,7 @@ def build_phase08_step_graph(*, checkpointer: Any | None = None) -> Any:
     graph.add_node("security_gate", _step_security_gate)
     graph.add_node("proposal", _step_proposal)
     graph.add_node("deterministic_validation", _deterministic_validation)
-    graph.add_node("execute_owner_port", _execute_owner_port)
+    graph.add_node("execute_owner_port", lambda state: _execute_owner_port(state, owner_port=owner_port))
     graph.add_node("observation", _step_observation)
     graph.add_node("action_evaluation", _step_evaluation)
     graph.add_node("step_acceptance", _step_acceptance)
@@ -132,6 +150,105 @@ class Phase08StepService:
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         return self.graph.invoke(dict(state), config=_thread_config(state))
+
+
+@dataclass(frozen=True, slots=True)
+class PostgresPhase08OwnerPort:
+    engine: Any
+
+    def execute(self, state: dict[str, Any]) -> dict[str, Any]:
+        tenant_id = _required_state_ref(state, "tenant_id")
+        run_id = _required_state_ref(state, "run_id")
+        step_run_id = _required_state_ref(state, "step_run_id")
+        owner_port = str(state.get("owner_port") or "knowledge")
+        trace_ref = str(state.get("trace_id") or state.get("trace_ref") or f"trace:{run_id}")
+        proposal = dict(state.get("owner_port_proposal") or {"action_run_id": state.get("latest_action_run_id")})
+        observation = dict(state.get("owner_port_observation") or {"status": "completed", "owner_port": owner_port})
+        acceptance = dict(state.get("owner_port_acceptance") or {"accepted": True, "schema": "phase08-owner-port-v1"})
+        evidence_refs = [str(item) for item in state.get("evidence_refs") or [f"evidence:{step_run_id}"]]
+        effect_idempotency_key = str(state.get("effect_idempotency_key") or f"effect:{step_run_id}:{owner_port}")
+        effect_claim_id = str(state.get("effect_claim_id") or f"effect-claim:{step_run_id}:{owner_port}")
+        effect_ref = str(state.get("effect_ref") or effect_idempotency_key)
+        from zuno.platform.database.agent import AgentDomainUnitOfWork
+
+        with AgentDomainUnitOfWork(self.engine) as repo:
+            effect = repo.claim_effect(
+                effect_claim_id=effect_claim_id,
+                tenant_id=tenant_id,
+                idempotency_key=effect_idempotency_key,
+                payload={
+                    "owner_port": owner_port,
+                    "step_run_id": step_run_id,
+                    "proposal": proposal,
+                    "effect_ref": effect_ref,
+                },
+                owner_port=owner_port,
+                effect_ref=effect_ref,
+            )
+            acceptance_receipt = repo.record_action_observation_acceptance(
+                tenant_id=tenant_id,
+                run_id=run_id,
+                step_run_id=step_run_id,
+                owner_port=owner_port,
+                proposal=proposal,
+                observation=observation,
+                acceptance=acceptance,
+                trace_ref=trace_ref,
+                evidence_refs=evidence_refs,
+            )
+        next_state = dict(state)
+        next_state["owner_port"] = owner_port
+        next_state["latest_action_run_id"] = f"action:{step_run_id}"
+        next_state["latest_observation_ref"] = f"observation:{step_run_id}"
+        next_state["latest_acceptance_ref"] = acceptance_receipt.ref
+        next_state["effect_claim_ref"] = effect.ref
+        next_state["owner_port_committed"] = True
+        next_state["evidence_refs"] = evidence_refs
+        return next_state
+
+
+@dataclass(frozen=True, slots=True)
+class PostgresPhase08FinalGatePort:
+    engine: Any
+
+    def commit(self, state: dict[str, Any]) -> dict[str, Any]:
+        tenant_id = _required_state_ref(state, "tenant_id")
+        run_id = _required_state_ref(state, "run_id")
+        publication_ref = str(state.get("publication_receipt_ref") or f"publication:{run_id}")
+        evidence_refs = list(state.get("evidence_refs") or [])
+        evidence_ref = str(state.get("evidence_ref") or (evidence_refs[0] if evidence_refs else f"evidence:{run_id}"))
+        step_acceptance_ref = str(
+            state.get("latest_acceptance_ref")
+            or state.get("step_acceptance_ref")
+            or f"acceptance:{state.get('step_run_id', run_id)}"
+        )
+        from zuno.platform.database.agent import AgentDomainUnitOfWork
+
+        with AgentDomainUnitOfWork(self.engine) as repo:
+            outcome = repo.record_final_gate_and_outcome(
+                tenant_id=tenant_id,
+                run_id=run_id,
+                decision=str(state.get("final_gate_decision") or "approved"),
+                answer_policy_ref=str(state.get("answer_policy_ref") or "answer-policy:phase08"),
+                evidence_ref=evidence_ref,
+                security_decision_ref=str(
+                    state.get("security_decision_ref")
+                    or state.get("security_context_ref")
+                    or state.get("security_epoch_ref")
+                    or "security-decision:phase08"
+                ),
+                budget_settlement_ref=str(state.get("budget_settlement_ref") or f"budget-settlement:{run_id}"),
+                step_acceptance_ref=step_acceptance_ref,
+                publication_eligible=bool(state.get("publication_eligible", True)),
+                outcome_status=str(state.get("outcome_status") or "completed"),
+                publication_ref=publication_ref,
+            )
+        next_state = dict(state)
+        next_state["final_gate_receipt_ref"] = f"final-gate:{run_id}"
+        next_state["publication_receipt_ref"] = publication_ref
+        next_state["outcome_receipt_ref"] = outcome.ref
+        next_state["run_outcome_committed"] = True
+        return next_state
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,7 +409,7 @@ def _execute_run(state: dict[str, Any]) -> dict[str, Any]:
     return _advance(next_state, "final_gate")
 
 
-def _final_gate_run(state: dict[str, Any]) -> dict[str, Any]:
+def _final_gate_run(state: dict[str, Any], *, final_gate_port: Phase08FinalGatePort | None = None) -> dict[str, Any]:
     next_state = dict(state)
     if next_state.get("finalization_status") in {"interrupted", "cancelled", "blocked", "abstained", "failed"}:
         return _advance(next_state, "finalize")
@@ -302,9 +419,12 @@ def _final_gate_run(state: dict[str, Any]) -> dict[str, Any]:
         next_state["latest_control_decision_ref"] = "final_gate_missing_domain_refs"
         next_state["finalization_status"] = "failed"
         return _advance(next_state, "finalize")
-    next_state["final_gate_receipt_ref"] = _domain_ref(next_state, "final-gate")
-    next_state["publication_receipt_ref"] = _domain_ref(next_state, "publication")
-    next_state["outcome_receipt_ref"] = _domain_ref(next_state, "run-outcome")
+    if final_gate_port is not None:
+        next_state = final_gate_port.commit(next_state)
+    else:
+        next_state["final_gate_receipt_ref"] = _domain_ref(next_state, "final-gate")
+        next_state["publication_receipt_ref"] = _domain_ref(next_state, "publication")
+        next_state["outcome_receipt_ref"] = _domain_ref(next_state, "run-outcome")
     return _advance(next_state, "finalize")
 
 
@@ -394,11 +514,13 @@ def _deterministic_validation(state: dict[str, Any]) -> dict[str, Any]:
     return _advance_step(next_state, "execute_owner_port")
 
 
-def _execute_owner_port(state: dict[str, Any]) -> dict[str, Any]:
+def _execute_owner_port(state: dict[str, Any], *, owner_port: Phase08OwnerPort | None = None) -> dict[str, Any]:
     next_state = dict(state)
     if next_state.get("outcome_status") == "retryable":
         return next_state
     next_state.setdefault("latest_action_run_id", f"action:{next_state.get('step_run_id', 'step')}")
+    if owner_port is not None:
+        next_state = owner_port.execute(next_state)
     return _advance_step(next_state, "observation")
 
 
@@ -427,8 +549,8 @@ def _step_acceptance(state: dict[str, Any]) -> dict[str, Any]:
     if status == "retryable":
         return next_state
     if status == "completed":
-        next_state["latest_acceptance_ref"] = _step_domain_ref(next_state, "acceptance")
-        next_state["output_ref"] = _step_domain_ref(next_state, "output")
+        next_state.setdefault("latest_acceptance_ref", _step_domain_ref(next_state, "acceptance"))
+        next_state.setdefault("output_ref", _step_domain_ref(next_state, "output"))
     elif status == "blocked":
         next_state["failure_ref"] = next_state.get("failure_ref") or "blocked"
     elif status == "denied":
@@ -511,14 +633,25 @@ def _require_refs(state: dict[str, Any]) -> None:
         raise Phase08RuntimeError("run state incomplete")
 
 
+def _required_state_ref(state: dict[str, Any], field_name: str) -> str:
+    value = str(state.get(field_name) or "")
+    if not value.strip():
+        raise Phase08RuntimeError(f"PHASE08 state missing required field: {field_name}")
+    return value
+
+
 __all__ = [
     "PHASE08_RUN_SCHEMA",
     "PHASE08_STEP_SCHEMA",
     "Phase08Conflict",
     "Phase08RuntimeError",
+    "Phase08FinalGatePort",
+    "Phase08OwnerPort",
     "Phase08RunService",
     "Phase08SignalRecord",
     "Phase08StepService",
+    "PostgresPhase08FinalGatePort",
+    "PostgresPhase08OwnerPort",
     "append_signal",
     "build_phase08_run_graph",
     "build_phase08_step_graph",

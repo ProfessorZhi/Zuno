@@ -533,7 +533,10 @@ class AgentDomainRepository:
         action_run_id = f"action:{step_run_id}"
         observation_id = f"observation:{step_run_id}"
         acceptance_id = f"acceptance:{step_run_id}"
-        self.connection.execute(
+        proposal_hash = _canonical_hash(proposal)
+        observation_hash = _canonical_hash(observation)
+        acceptance_hash = _canonical_hash(acceptance)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_action_runs(
@@ -543,6 +546,7 @@ class AgentDomainRepository:
                     :action_run_id, :tenant_id, :run_id, :step_run_id, :owner_port,
                     :proposal_hash, :status, :trace_ref
                 )
+                ON CONFLICT (action_run_id) DO NOTHING
                 """
             ),
             {
@@ -551,12 +555,30 @@ class AgentDomainRepository:
                 "run_id": run_id,
                 "step_run_id": step_run_id,
                 "owner_port": owner_port,
-                "proposal_hash": _canonical_hash(proposal),
+                "proposal_hash": proposal_hash,
                 "status": status,
                 "trace_ref": trace_ref,
             },
         )
-        self.connection.execute(
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT proposal_hash, owner_port, status
+                    FROM agent_action_runs
+                    WHERE action_run_id = :action_run_id
+                    """
+                ),
+                {"action_run_id": action_run_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["proposal_hash"] != proposal_hash
+                or existing["owner_port"] != owner_port
+            ):
+                raise AgentDomainConflict(f"conflicting action run for {step_run_id}")
+
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_observations(
@@ -564,18 +586,37 @@ class AgentDomainRepository:
                 ) VALUES (
                     :observation_id, :tenant_id, :action_run_id, :observation_hash, :status, CAST(:evidence_refs AS JSON)
                 )
+                ON CONFLICT (observation_id) DO NOTHING
                 """
             ),
             {
                 "observation_id": observation_id,
                 "tenant_id": tenant_id,
                 "action_run_id": action_run_id,
-                "observation_hash": _canonical_hash(observation),
+                "observation_hash": observation_hash,
                 "status": status,
                 "evidence_refs": json.dumps(evidence_refs, sort_keys=True, separators=(",", ":")),
             },
         )
-        self.connection.execute(
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT action_run_id, observation_hash, status
+                    FROM agent_observations
+                    WHERE observation_id = :observation_id
+                    """
+                ),
+                {"observation_id": observation_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["action_run_id"] != action_run_id
+                or existing["observation_hash"] != observation_hash
+            ):
+                raise AgentDomainConflict(f"conflicting observation for {step_run_id}")
+
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_step_acceptances(
@@ -583,6 +624,7 @@ class AgentDomainRepository:
                 ) VALUES (
                     :acceptance_id, :tenant_id, :step_run_id, :observation_id, :acceptance_hash, :status
                 )
+                ON CONFLICT (tenant_id, step_run_id) DO NOTHING
                 """
             ),
             {
@@ -590,10 +632,28 @@ class AgentDomainRepository:
                 "tenant_id": tenant_id,
                 "step_run_id": step_run_id,
                 "observation_id": observation_id,
-                "acceptance_hash": _canonical_hash(acceptance),
+                "acceptance_hash": acceptance_hash,
                 "status": status,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT acceptance_id, observation_id, acceptance_hash, status
+                    FROM agent_step_acceptances
+                    WHERE tenant_id = :tenant_id AND step_run_id = :step_run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_id": step_run_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["observation_id"] != observation_id
+                or existing["acceptance_hash"] != acceptance_hash
+            ):
+                raise AgentDomainConflict(f"conflicting step acceptance for {step_run_id}")
+            return AgentDomainReceipt(str(existing["acceptance_id"]), f"duplicate:{existing['status']}", 1)
         return AgentDomainReceipt(acceptance_id, status, 1)
 
     def record_final_gate_and_outcome(

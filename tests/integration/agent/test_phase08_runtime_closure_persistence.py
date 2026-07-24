@@ -2,13 +2,22 @@ from __future__ import annotations
 
 import os
 import subprocess
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from sqlalchemy import text
 
 from zuno.agent.domain import AgentDomainConflict, AgentRun, GoalInputClassification, GoalVersion, TaskContract
+from zuno.agent.runtime import (
+    Phase08RunService,
+    Phase08StepService,
+    PostgresPhase08FinalGatePort,
+    PostgresPhase08OwnerPort,
+    build_phase08_run_graph,
+    build_phase08_step_graph,
+    build_phase08_test_checkpointer,
+)
 from zuno.platform.database.agent import AgentDomainUnitOfWork
 from zuno.platform.database.foundation import create_foundation_engine
 
@@ -117,6 +126,17 @@ def test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent(engine) -
             trace_ref=run.trace_id,
             evidence_refs=["evidence:doc:1"],
         )
+        duplicate_acceptance = repo.record_action_observation_acceptance(
+            tenant_id=task.tenant_id,
+            run_id=run.run_id,
+            step_run_id="step-run:p08:closure:1",
+            owner_port="knowledge",
+            proposal={"kind": "retrieve", "query": "evidence"},
+            observation={"status": "completed", "evidence": ["doc:1"]},
+            acceptance={"accepted": True, "schema": "answer:v1"},
+            trace_ref=run.trace_id,
+            evidence_refs=["evidence:doc:1"],
+        )
         effect = repo.claim_effect(
             effect_claim_id="effect-claim:p08:closure:1",
             tenant_id=task.tenant_id,
@@ -134,8 +154,22 @@ def test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent(engine) -
             effect_ref="effect:p08:closure:1",
         )
         assert acceptance.ref == "acceptance:step-run:p08:closure:1"
+        assert duplicate_acceptance.status == "duplicate:accepted"
         assert effect.ref == "effect-claim:p08:closure:1"
         assert duplicate_effect.status == "duplicate:claimed"
+
+        with pytest.raises(AgentDomainConflict, match="conflicting action run"):
+            repo.record_action_observation_acceptance(
+                tenant_id=task.tenant_id,
+                run_id=run.run_id,
+                step_run_id="step-run:p08:closure:1",
+                owner_port="knowledge",
+                proposal={"kind": "retrieve", "query": "different"},
+                observation={"status": "completed", "evidence": ["doc:1"]},
+                acceptance={"accepted": True, "schema": "answer:v1"},
+                trace_ref=run.trace_id,
+                evidence_refs=["evidence:doc:1"],
+            )
 
         with pytest.raises(AgentDomainConflict, match="conflicting effect payload"):
             repo.claim_effect(
@@ -221,6 +255,103 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
         assert signal.ref == "signal:p08:cancel"
         assert finding.status == "domain_ahead"
         assert cutover.status == "canary"
+
+
+def test_phase08_graph_owner_port_and_final_gate_write_postgres_ledgers(engine) -> None:
+    goal = _goal("goal:p08:graph-ledger")
+    task = _task(goal, "task-contract:p08:graph-ledger")
+    run = _run(task, "run:p08:graph-ledger")
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+
+    step_service = Phase08StepService(
+        graph=build_phase08_step_graph(
+            checkpointer=build_phase08_test_checkpointer(),
+            owner_port=PostgresPhase08OwnerPort(engine),
+        )
+    )
+    step_state = step_service.run(
+        {
+            "tenant_id": task.tenant_id,
+            "run_id": run.run_id,
+            "thread_id": "thread:p08:graph-ledger:step",
+            "trace_id": run.trace_id,
+            "step_run_id": "step-run:p08:graph-ledger:1",
+            "step_definition_id": "step-def:p08:graph-ledger:1",
+            "plan_version_id": "plan:p08:graph-ledger:1",
+            "controller_epoch": 1,
+            "execution_epoch": 1,
+            "owner_port": "knowledge",
+            "owner_port_proposal": {"kind": "retrieve", "query": "phase08 graph ledger"},
+            "owner_port_observation": {"status": "completed", "documents": ["doc:p08"]},
+            "owner_port_acceptance": {"accepted": True, "schema": "phase08-answer-v1"},
+            "evidence_refs": ["evidence:p08:graph-ledger"],
+        }
+    )
+
+    assert step_state["owner_port_committed"] is True
+    assert step_state["latest_acceptance_ref"] == "acceptance:step-run:p08:graph-ledger:1"
+    assert step_state["effect_claim_ref"] == "effect-claim:step-run:p08:graph-ledger:1:knowledge"
+
+    run_service = Phase08RunService(
+        graph=build_phase08_run_graph(
+            checkpointer=build_phase08_test_checkpointer(),
+            final_gate_port=PostgresPhase08FinalGatePort(engine),
+        )
+    )
+    final_state = run_service.start(
+        {
+            "tenant_id": task.tenant_id,
+            "run_id": run.run_id,
+            "thread_id": "thread:p08:graph-ledger:run",
+            "trace_id": run.trace_id,
+            "task_contract_id": task.task_contract_id,
+            "active_goal_version_id": goal.goal_version_id,
+            "security_context_ref": task.security_context_ref,
+            "security_epoch_ref": task.security_epoch_ref,
+            "current_security_epoch_ref": task.security_epoch_ref,
+            "deadline_at": _now(),
+            "observed_at": _now() - timedelta(hours=1),
+            "budget_requested_units": 1,
+            "budget_available_units": 10,
+            "latest_acceptance_ref": step_state["latest_acceptance_ref"],
+            "evidence_refs": ["evidence:p08:graph-ledger"],
+            "budget_settlement_ref": "budget-settlement:p08:graph-ledger",
+        }
+    )
+
+    assert final_state["final_gate_receipt_ref"] == f"final-gate:{run.run_id}"
+    assert final_state["outcome_ref"] == f"run-outcome:{run.run_id}"
+    with engine.connect() as conn:
+        counts = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM agent_action_runs WHERE run_id = :run_id) AS actions,
+                    (SELECT count(*) FROM agent_observations WHERE action_run_id = :action_run_id) AS observations,
+                    (SELECT count(*) FROM agent_step_acceptances WHERE step_run_id = :step_run_id) AS acceptances,
+                    (SELECT count(*) FROM agent_effect_claims WHERE effect_claim_id = :effect_claim_id) AS effects,
+                    (SELECT count(*) FROM agent_final_gate_receipts WHERE run_id = :run_id) AS final_gates,
+                    (SELECT count(*) FROM agent_run_outcomes WHERE run_id = :run_id) AS outcomes
+                """
+            ),
+            {
+                "run_id": run.run_id,
+                "action_run_id": "action:step-run:p08:graph-ledger:1",
+                "step_run_id": "step-run:p08:graph-ledger:1",
+                "effect_claim_id": "effect-claim:step-run:p08:graph-ledger:1:knowledge",
+            },
+        ).mappings().one()
+    assert dict(counts) == {
+        "actions": 1,
+        "observations": 1,
+        "acceptances": 1,
+        "effects": 1,
+        "final_gates": 1,
+        "outcomes": 1,
+    }
 
 
 def _now() -> datetime:
