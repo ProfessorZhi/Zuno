@@ -64,6 +64,18 @@ class _DenyKnowledgeCleanupPort:
         )
 
 
+class _FailAfterPhysicalDeleteAuditPort:
+    def record_delete_event(self, *, tenant_id, delete_ref, event_type, payload):
+        if event_type == "delete_physical_absence_verified":
+            raise RuntimeError("simulated_domain_commit_failure_after_minio_delete")
+        return {
+            "tenant_id": tenant_id,
+            "delete_ref": delete_ref,
+            "event_type": event_type,
+            "recorded": True,
+        }
+
+
 def _cleanup_topology() -> RabbitMQTopology:
     suffix = uuid4().hex
     return RabbitMQTopology(
@@ -1053,6 +1065,113 @@ def test_ingestion_delete_minio_success_requires_absence_verification(engine) ->
         assert lifecycle["physical_delete_ref"] is None
         assert lifecycle["verification_ref"] is None
         assert manifest["visibility"] == "deleted"
+    finally:
+        raw_store.remove_bucket_tree(bucket)
+
+
+def test_ingestion_delete_reconciles_after_minio_success_before_domain_commit(engine) -> None:
+    content = b"phase11 minio success before db commit"
+    bucket = f"phase11-delete-db-fail-{uuid4().hex}"
+    raw_store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    durable_store = DurableMinioObjectStore(
+        store=raw_store,
+        engine=engine,
+        owner="phase11-delete-db-fail-test",
+    )
+    try:
+        ticket = durable_store.stage(
+            bucket=bucket,
+            committed_object_name="workspace-a/delete-db-fail.md",
+            content=content,
+        )
+        committed = durable_store.commit(ticket)
+        object_ref = f"s3://{bucket}/{committed.object_name}"
+        runtime = DeleteRestoreRuntime()
+        requested = runtime.request_delete(
+            snapshot_ref="snapshot:phase11:delete-db-fail",
+            visibility_ref="visibility:workspace-a:delete-db-fail",
+            object_ref=object_ref,
+            restore_point_name="_restore/workspace-a/delete-db-fail.md",
+        )
+        confirmed = runtime.confirm_knowledge_cleanup(runtime.request_cleanup(requested))
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_delete_lifecycle(tenant_id="tenant-a", **confirmed.model_dump())
+
+        crashing_coordinator = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=durable_store,
+            audit_port=_FailAfterPhysicalDeleteAuditPort(),
+        )
+        with pytest.raises(RuntimeError, match="simulated_domain_commit_failure_after_minio_delete"):
+            crashing_coordinator.execute_cleanup(
+                tenant_id="tenant-a",
+                delete_ref=confirmed.delete_ref,
+            )
+
+        with pytest.raises(S3Error):
+            raw_store.read_object(bucket=bucket, object_name=committed.object_name)
+        with engine.connect() as conn:
+            after_crash = conn.execute(
+                text(
+                    """
+                    SELECT state, cleanup_verified, physical_delete_verified,
+                           physical_delete_ref, verification_ref
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": confirmed.delete_ref},
+            ).mappings().one()
+            manifest_after_crash = conn.execute(
+                text(
+                    """
+                    SELECT visibility
+                    FROM infra_object_manifests
+                    WHERE object_ref = :object_ref
+                    """
+                ),
+                {"object_ref": object_ref},
+            ).mappings().one()
+        assert after_crash["state"] == "cleanup_requested"
+        assert after_crash["cleanup_verified"] is True
+        assert after_crash["physical_delete_verified"] is False
+        assert after_crash["physical_delete_ref"] is None
+        assert after_crash["verification_ref"] is None
+        assert manifest_after_crash["visibility"] == "deleted"
+
+        recovered = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=durable_store,
+        ).execute_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=confirmed.delete_ref,
+        )
+
+        assert recovered.state == "verified"
+        assert recovered.physical_delete_ref == object_ref
+        assert recovered.cleanup_verified is True
+        assert recovered.physical_delete_verified is True
+        with engine.connect() as conn:
+            lifecycle = conn.execute(
+                text(
+                    """
+                    SELECT state, cleanup_verified, physical_delete_verified,
+                           physical_delete_ref, verification_ref
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": confirmed.delete_ref},
+            ).mappings().one()
+        assert lifecycle["state"] == "verified"
+        assert lifecycle["cleanup_verified"] is True
+        assert lifecycle["physical_delete_verified"] is True
+        assert lifecycle["physical_delete_ref"] == object_ref
+        assert lifecycle["verification_ref"] == f"verify_{confirmed.delete_ref}"
     finally:
         raw_store.remove_bucket_tree(bucket)
 

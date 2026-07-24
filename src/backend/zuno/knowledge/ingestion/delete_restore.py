@@ -169,6 +169,13 @@ class DurableObjectDeletePort:
 
         if not receipt.object_ref or not receipt.restore_point_name:
             raise ValueError("delete cleanup requires object_ref and restore_point_name")
+        if ticket.staged_receipt.visibility == "deleted":
+            return ObjectDeletePortReceipt(
+                delete_ref=receipt.delete_ref,
+                physical_delete_ref=receipt.object_ref,
+                deleted=True,
+                reason="object_manifest_already_deleted",
+            )
         try:
             self.object_store.store.create_restore_point(
                 bucket=ticket.bucket,
