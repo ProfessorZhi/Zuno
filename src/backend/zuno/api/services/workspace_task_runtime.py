@@ -318,6 +318,8 @@ class WorkspaceTaskRuntimeService:
         side_effect_ledger: Any | None = None,
         audit: Any | None = None,
     ) -> None:
+        if mode is not None and mode != "rollback" and new_runtime is None:
+            raise ValueError("phase08 cutover requires new_runtime outside rollback mode")
         cls._phase08_cutover_mode = mode
         cls._phase08_cutover_runtime = new_runtime
         cls._phase08_cutover_ledger = side_effect_ledger if side_effect_ledger is not None else (

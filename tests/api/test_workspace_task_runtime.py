@@ -5,6 +5,7 @@ import json
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
 
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
@@ -687,6 +688,23 @@ def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() ->
         assert WorkspaceTaskRuntimeService._phase08_cutover_ledger is configured_ledger
         assert configured_ledger is not None
         assert configured_ledger.claimed_keys == {"workspace-task:task_phase08_canary:phase08-cutover"}
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
+def test_workspace_task_runtime_cutover_requires_new_runtime_outside_rollback() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    try:
+        with pytest.raises(ValueError, match="requires new_runtime"):
+            WorkspaceTaskRuntimeService.configure_phase08_cutover(
+                mode="shadow",
+                new_runtime=None,
+            )
+        WorkspaceTaskRuntimeService.configure_phase08_cutover(
+            mode="rollback",
+            new_runtime=None,
+        )
+        assert WorkspaceTaskRuntimeService._phase08_cutover_mode == "rollback"
     finally:
         WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
