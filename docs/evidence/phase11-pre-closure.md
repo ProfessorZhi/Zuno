@@ -27,6 +27,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - Human Review task、decision receipt、resume handoff 与 DeleteLifecycle 已有 PostgreSQL 审计事实；Package A production worker 对 human_review 进入 `review_pending`，不再写成 failed。
 - Human Review task 绑定 reviewer principal/scope、Security Decision Ref、Security Epoch、review idempotency key、trace_id 和 audit_ref。
 - Human Review decision 已覆盖重复相同 Decision 幂等返回原 Receipt、不同 Decision 运行时 conflict，以及 PostgreSQL 唯一约束拒绝不同 decision hash。
+- Human Review decision 已接入授权 Port，revoked reviewer 和 stale Security Epoch 均拒绝 approval，PostgreSQL 只留下 rejected receipt 且不创建 Indexable Snapshot / Handoff Outbox。
 - Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
 - Input 不直接拥有 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
 
@@ -39,6 +40,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - Human Review decision focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.95s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart` 为 `1 passed in 9.68s`。
 - Human Review review_pending focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 9.07s`；`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 8.61s`。
 - Human Review binding focused regression：`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 9.71s`；`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.47s`。
+- Human Review authorization focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `6 passed in 9.36s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff` 为 `1 passed in 12.32s`；Package A review_pending regression 为 `1 passed in 7.97s`。
 - Alembic head：`20260724_31 (head)`。
 
 ## Closure 边界

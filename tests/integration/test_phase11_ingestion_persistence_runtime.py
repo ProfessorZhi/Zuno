@@ -21,6 +21,7 @@ from zuno.knowledge.ingestion import (
     ReviewDecisionReceipt,
     ReviewTask,
     StaticRestoreAuthorizationPort,
+    StaticReviewDecisionAuthorizationPort,
     VisibilityRevocationReceipt,
 )
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
@@ -589,6 +590,164 @@ def test_ingestion_parse_attempt_can_wait_for_human_review_without_failure(engin
     assert row["failure_code"] is None
     assert row["lease_state"] == "released"
     assert row["job_status"] == "review_pending"
+
+
+def test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff(engine) -> None:
+    runtime = HumanReviewRuntime(
+        review_ttl_seconds=60,
+        authorization_port=StaticReviewDecisionAuthorizationPort(
+            revoked_reviewer_ids=frozenset({"reviewer:revoked"})
+        ),
+    )
+    task = ReviewTask(
+        review_task_id="review-task:revoked-reviewer:1",
+        parse_snapshot_id="parse-snapshot:revoked-reviewer:1",
+        document_version_id="document-version:revoked-reviewer:1",
+        workspace_id="workspace_review",
+        reviewer_principal_id="reviewer:revoked",
+        reviewer_scope="workspace_reviewer",
+        security_decision_ref="security-decision:revoked-reviewer:1",
+        security_epoch_ref="security_epoch:workspace_review",
+        idempotency_key="review:revoked-reviewer:1",
+        trace_id="trace:revoked-reviewer:1",
+        audit_ref="audit:revoked-reviewer:1",
+        expires_at=1893456000.0,
+        reason="quality_review_required",
+        decision_hash=HEX_64,
+    )
+
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:revoked-reviewer:1",
+            tenant_id="tenant-a",
+            workspace_id=task.workspace_id,
+            filename="revoked-reviewer.md",
+            mime_type="text/markdown",
+            storage_uri="s3://bucket/workspace_review/revoked-reviewer.md",
+            object_manifest_ref="manifest:revoked-reviewer:1",
+            source_sha256=HEX_64,
+            size_bytes=1,
+            classification_ref="classification:internal",
+            security_epoch_ref=task.security_epoch_ref,
+        )
+        document = repo.record_document_version(
+            document_version_id=task.document_version_id,
+            tenant_id="tenant-a",
+            workspace_id=task.workspace_id,
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "revoked-reviewer.md"},
+            immutability_ref="immutability:revoked-reviewer:1",
+        )
+        repo.record_parse_plan(
+            parse_plan_id="parse-plan:revoked-reviewer:1",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:revoked-reviewer:1",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:revoked-reviewer:1",
+            security_decision_ref=task.security_decision_ref or "security-decision:revoked-reviewer:1",
+        )
+        repo.record_parse_job(
+            parse_job_id="parse-job:revoked-reviewer:1",
+            tenant_id="tenant-a",
+            parse_plan_id="parse-plan:revoked-reviewer:1",
+            document_version_id=document.ref,
+            idempotency_key="parse:revoked-reviewer:1",
+        )
+        repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:revoked-reviewer:1",
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:revoked-reviewer:1",
+            attempt_no=1,
+            worker_id="worker:revoked-reviewer:1",
+            lease_ref="lease:revoked-reviewer:1",
+            fencing_token=1,
+        )
+        repo.record_parse_snapshot(
+            parse_snapshot_id=task.parse_snapshot_id,
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:revoked-reviewer:1",
+            parse_attempt_id="parse-attempt:revoked-reviewer:1",
+            document_version_id=document.ref,
+            canonical_ir={"blocks": [{"block_id": "block:1", "text": "review"}]},
+            canonical_ir_ref="canonical-ir:revoked-reviewer:1",
+            canonical_ir_schema_ref="CanonicalDocumentIR:v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id="quality:revoked-reviewer:1",
+            tenant_id="tenant-a",
+            parse_snapshot_id=task.parse_snapshot_id,
+            coverage_score=0.98,
+            confidence_score=0.88,
+            decision="human_review",
+            review_task_ref=task.review_task_id,
+        )
+        repo.record_review_task(
+            review_task_id=task.review_task_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=task.parse_snapshot_id,
+            quality_decision_id=quality.ref,
+            document_version_id=task.document_version_id,
+            workspace_id=task.workspace_id,
+            reviewer_principal_id=task.reviewer_principal_id,
+            reviewer_scope=task.reviewer_scope,
+            security_decision_ref=task.security_decision_ref,
+            security_epoch_ref=task.security_epoch_ref,
+            idempotency_key=task.idempotency_key,
+            trace_id=task.trace_id,
+            audit_ref=task.audit_ref,
+            status=task.status,
+            reason=task.reason,
+            decision_hash=task.decision_hash,
+            expires_at=task.expires_at,
+        )
+        receipt = runtime.decide(
+            task=task,
+            reviewer_id="reviewer:revoked",
+            reviewer_scope=task.reviewer_scope,
+            status="approved",
+            security_epoch_ref=task.security_epoch_ref,
+        )
+        repo.record_review_decision_receipt(
+            decision_id=receipt.decision_id,
+            tenant_id="tenant-a",
+            review_task_id=receipt.review_task_id,
+            status=receipt.status,
+            reviewer_id=receipt.reviewer_id,
+            reviewer_scope=receipt.reviewer_scope,
+            security_epoch_ref=receipt.security_epoch_ref,
+            reason=receipt.reason,
+            decision_hash=receipt.decision_hash,
+            decided_at=receipt.decided_at,
+        )
+
+    assert receipt.status == "rejected"
+    assert receipt.reason == "reviewer_authorization_revoked"
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT review_task.status AS task_status,
+                       receipt.status AS receipt_status,
+                       receipt.reason AS receipt_reason
+                FROM ingestion_review_tasks AS review_task
+                JOIN ingestion_review_decision_receipts AS receipt
+                  ON receipt.review_task_id = review_task.review_task_id
+                WHERE review_task.review_task_id = :review_task_id
+                """
+            ),
+            {"review_task_id": task.review_task_id},
+        ).mappings().one()
+        assert row["task_status"] == "rejected"
+        assert row["receipt_status"] == "rejected"
+        assert row["receipt_reason"] == "reviewer_authorization_revoked"
+        assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
 
 
 def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart(engine) -> None:

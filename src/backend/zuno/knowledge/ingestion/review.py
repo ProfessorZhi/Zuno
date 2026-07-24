@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 import time
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -63,6 +63,16 @@ class ReviewDecisionReceipt(BaseModel):
     decided_at: float = Field(default_factory=time.time)
 
 
+class ReviewDecisionAuthorizationReceipt(BaseModel):
+    review_task_id: str
+    reviewer_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    authorized: bool
+    reason: str
+    authorization_ref: str
+
+
 class ReviewExpirationSweepReceipt(BaseModel):
     sweep_id: str
     now: float
@@ -72,10 +82,65 @@ class ReviewExpirationSweepReceipt(BaseModel):
     sweep_hash: str
 
 
+class ReviewDecisionAuthorizationPort(Protocol):
+    def authorize_review_decision(
+        self,
+        *,
+        task: ReviewTask,
+        reviewer_id: str,
+        reviewer_scope: str,
+        security_epoch_ref: str,
+    ) -> ReviewDecisionAuthorizationReceipt: ...
+
+
+@dataclass(frozen=True, slots=True)
+class StaticReviewDecisionAuthorizationPort:
+    revoked_reviewer_ids: frozenset[str] = frozenset()
+    revoked_security_decision_refs: frozenset[str] = frozenset()
+
+    def authorize_review_decision(
+        self,
+        *,
+        task: ReviewTask,
+        reviewer_id: str,
+        reviewer_scope: str,
+        security_epoch_ref: str,
+    ) -> ReviewDecisionAuthorizationReceipt:
+        authorized = True
+        reason = "review_authorization_accepted"
+        if task.reviewer_principal_id is not None and reviewer_id != task.reviewer_principal_id:
+            authorized = False
+            reason = "reviewer_principal_mismatch"
+        elif reviewer_id in self.revoked_reviewer_ids:
+            authorized = False
+            reason = "reviewer_authorization_revoked"
+        elif reviewer_scope != task.reviewer_scope:
+            authorized = False
+            reason = "review_scope_mismatch"
+        elif security_epoch_ref != task.security_epoch_ref:
+            authorized = False
+            reason = "review_security_epoch_mismatch"
+        elif task.security_decision_ref in self.revoked_security_decision_refs:
+            authorized = False
+            reason = "review_security_decision_revoked"
+        return ReviewDecisionAuthorizationReceipt(
+            review_task_id=task.review_task_id,
+            reviewer_id=reviewer_id,
+            reviewer_scope=reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+            authorized=authorized,
+            reason=reason,
+            authorization_ref=f"review-auth:{task.review_task_id}:{reviewer_id}:{security_epoch_ref}",
+        )
+
+
 @dataclass
 class HumanReviewRuntime:
     review_ttl_seconds: int = 3600
     min_confidence: float = 0.9
+    authorization_port: ReviewDecisionAuthorizationPort = field(
+        default_factory=StaticReviewDecisionAuthorizationPort
+    )
 
     def evaluate(
         self,
@@ -166,9 +231,13 @@ class HumanReviewRuntime:
         now: float | None = None,
     ) -> ReviewDecisionReceipt:
         requested_status: ReviewDecisionStatus = status
-        if reviewer_scope != task.reviewer_scope:
-            requested_status = "rejected"
-        if security_epoch_ref != task.security_epoch_ref:
+        authorization = self.authorization_port.authorize_review_decision(
+            task=task,
+            reviewer_id=reviewer_id,
+            reviewer_scope=reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+        )
+        if status == "approved" and not authorization.authorized:
             requested_status = "rejected"
         current_time = time.time() if now is None else now
         final_status: ReviewDecisionStatus = (
@@ -222,7 +291,7 @@ class HumanReviewRuntime:
             reviewer_scope=reviewer_scope,
             security_epoch_ref=security_epoch_ref,
             decision_hash=decision_hash,
-            reason="review_decision_recorded",
+            reason=authorization.reason if not authorization.authorized else "review_decision_recorded",
             decided_at=current_time,
         )
 
@@ -311,6 +380,9 @@ __all__ = [
     "QualityGateResult",
     "QualityMetric",
     "ReviewDecisionReceipt",
+    "ReviewDecisionAuthorizationPort",
+    "ReviewDecisionAuthorizationReceipt",
+    "StaticReviewDecisionAuthorizationPort",
     "ReviewExpirationSweepReceipt",
     "ReviewTask",
 ]
