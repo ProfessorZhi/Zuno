@@ -496,6 +496,101 @@ def test_ingestion_delete_lifecycle_legal_hold_blocks_physical_delete_ref(engine
     assert restored["restored_authorization"] is False
 
 
+def test_ingestion_parse_attempt_can_wait_for_human_review_without_failure(engine) -> None:
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:review-pending:1",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="review-pending.md",
+            mime_type="text/markdown",
+            storage_uri="s3://bucket/workspace-a/review-pending.md",
+            object_manifest_ref="manifest:review-pending:1",
+            source_sha256=HEX_64,
+            size_bytes=42,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:review-pending",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:review-pending:1",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "review-pending.md"},
+            immutability_ref="immutability:review-pending:1",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:review-pending:1",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:review-pending",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:review-pending",
+            security_decision_ref="security-decision:review-pending",
+        )
+        job = repo.record_parse_job(
+            parse_job_id="parse-job:review-pending:1",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:tenant-a:review-pending:v1",
+        )
+        attempt = repo.claim_parse_attempt_lease(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            document_version_id=document.ref,
+            parse_plan_id=plan.ref,
+            parse_job_id=job.ref,
+            worker_id="worker:review-pending",
+            idempotency_key="parse:tenant-a:review-pending:v1:attempt:1",
+            security_epoch_ref="security-epoch:review-pending",
+            lease_ttl_seconds=60,
+        )
+        fencing_token = int(attempt.payload_hash or "0")
+        repo.mark_parse_attempt_running(
+            parse_attempt_id=attempt.ref,
+            parse_job_id=job.ref,
+            tenant_id="tenant-a",
+            worker_id="worker:review-pending",
+            fencing_token=fencing_token,
+        )
+        repo.mark_parse_attempt_review_pending(
+            parse_attempt_id=attempt.ref,
+            parse_job_id=job.ref,
+            tenant_id="tenant-a",
+            worker_id="worker:review-pending",
+            fencing_token=fencing_token,
+        )
+
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       attempt.failure_code AS failure_code,
+                       lease.state AS lease_state,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_leases AS lease
+                  ON lease.parse_attempt_id = attempt.parse_attempt_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                """
+            ),
+            {"parse_attempt_id": attempt.ref},
+        ).mappings().one()
+
+    assert row["attempt_status"] == "review_pending"
+    assert row["failure_code"] is None
+    assert row["lease_state"] == "released"
+    assert row["job_status"] == "review_pending"
+
+
 def test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart(engine) -> None:
     runtime = HumanReviewRuntime(review_ttl_seconds=60)
     task = ReviewTask(

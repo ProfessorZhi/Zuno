@@ -844,6 +844,51 @@ class IngestionRepository:
             raise IngestionPersistenceError("parse lease terminal update rejected by fencing")
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status=status)
 
+    def mark_parse_attempt_review_pending(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+    ) -> None:
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="review_pending",
+            expected_statuses=("running",),
+        )
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET state = 'released', heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease review pending update rejected by fencing")
+        self.update_parse_job_status(
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            status="review_pending",
+        )
+
     def update_parse_job_status(self, *, parse_job_id: str, tenant_id: str, status: str) -> None:
         result = self.connection.execute(
             text(

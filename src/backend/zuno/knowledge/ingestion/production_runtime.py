@@ -1101,21 +1101,18 @@ class PackageAProductionIngestionRuntime:
                 expires_at=review_task.expires_at,
             )
         if not HumanReviewRuntime.can_publish_snapshot(gate=quality_gate):
-            repo.fail_parse_attempt(
+            repo.mark_parse_attempt_review_pending(
                 parse_attempt_id=parse_attempt_id,
                 parse_job_id=parse_job_id,
                 tenant_id=tenant_id,
                 worker_id=self.worker_id,
                 fencing_token=fencing_token,
-                status="failed",
-                failure_code=self._quality_failure_code(quality_gate),
             )
             return PackageAWorkerReceipt(
                 parse_job_id=parse_job_id,
                 parse_attempt_id=parse_attempt_id,
-                status="failed",
+                status="review_pending",
                 acked_after_domain_commit=True,
-                failure_code=self._quality_failure_code(quality_gate),
             )
         visibility_ref = f"visibility:{context['workspace_id']}:{context['source_object_id']}"
         indexable_snapshot, snapshot_outbox = self.handoff_runtime.create_snapshot(

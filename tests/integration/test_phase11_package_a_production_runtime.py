@@ -2330,10 +2330,11 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
     try:
         receipt = asyncio.run(runtime.process_rabbitmq_delivery(delivery))
 
-        assert receipt.status == "failed"
+        assert receipt.status == "review_pending"
         assert receipt.acked_after_domain_commit is True
         assert receipt.indexable_snapshot_id is None
         assert receipt.outbox_event_id is None
+        assert receipt.failure_code is None
         assert delivery.acked is True
         assert delivery.nacked is False
         assert delivery.rejected is False
@@ -2367,10 +2368,10 @@ def test_gate_b_quality_review_records_snapshot_without_indexable_handoff(monkey
                 ),
                 {"parse_attempt_id": receipt.parse_attempt_id},
             ).mappings().one()
-            assert row["attempt_status"] == "failed"
-            assert row["failure_code"] == "quality_gate_review"
+            assert row["attempt_status"] == "review_pending"
+            assert row["failure_code"] is None
             assert row["lease_state"] == "released"
-            assert row["job_status"] == "failed"
+            assert row["job_status"] == "review_pending"
             assert row["quality_decision"] == "human_review"
             assert row["review_task_ref"] == row["review_task_id"]
             assert row["review_task_status"] == "pending"
