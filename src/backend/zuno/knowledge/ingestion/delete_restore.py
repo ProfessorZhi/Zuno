@@ -541,15 +541,15 @@ class DeleteRestoreRuntime:
         *,
         restore_authorization_ref: str | None = None,
     ) -> DeleteLifecycleReceipt:
+        if not restore_authorization_ref:
+            raise ValueError("restore requires fresh authorization")
         if receipt.state == "restored":
-            if restore_authorization_ref is not None and receipt.restore_authorization_ref not in {
+            if receipt.restore_authorization_ref not in {
                 None,
                 restore_authorization_ref,
             }:
                 raise ValueError("conflicting restore authorization")
             return receipt.model_copy(update={"duplicate": True})
-        if not restore_authorization_ref:
-            raise ValueError("restore requires fresh authorization")
         history = list(receipt.history)
         authorization_marker = f"restore_authorized:{restore_authorization_ref}"
         if authorization_marker not in history:
@@ -742,12 +742,13 @@ class PersistentDeleteRestoreCoordinator:
                 raise ValueError("delete restore tenant mismatch")
             current = DeleteLifecycleReceipt.model_validate(current_row)
             if current.state == "restored":
-                if restore_authorization_ref is not None:
-                    self._authorize_restore(
-                        tenant_id=tenant_id,
-                        delete_ref=delete_ref,
-                        restore_authorization_ref=restore_authorization_ref,
-                    )
+                if not restore_authorization_ref:
+                    raise ValueError("restore requires fresh authorization")
+                self._authorize_restore(
+                    tenant_id=tenant_id,
+                    delete_ref=delete_ref,
+                    restore_authorization_ref=restore_authorization_ref,
+                )
                 restored = self.runtime.restore(
                     current,
                     restore_authorization_ref=restore_authorization_ref,

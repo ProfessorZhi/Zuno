@@ -2882,6 +2882,11 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
             delete_ref=requested.delete_ref,
             restore_authorization_ref="restore-auth:phase11:delete-real-object",
         )
+        with pytest.raises(ValueError, match="restore requires fresh authorization"):
+            coordinator.restore_deleted(
+                tenant_id="tenant-a",
+                delete_ref=requested.delete_ref,
+            )
         duplicate_restore = coordinator.restore_deleted(
             tenant_id="tenant-a",
             delete_ref=requested.delete_ref,

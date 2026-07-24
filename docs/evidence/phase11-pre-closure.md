@@ -45,7 +45,7 @@ commit: see branch HEAD
 - `python tools/scripts/verify_phase11_ingestion_source_lineage.py`：通过。
 - `python tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`：通过。
 - PHASE11 E2E/Fault 测试组合：`120 passed in 154.80s (0:02:34)`。
-- P11-T08 focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py` 为 `20 passed in 25.23s`；`tests/knowledge/test_ingestion_delete_restore.py` 为 `7 passed in 8.38s`。
+- P11-T08 focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py` 为 `20 passed in 25.23s`；restore authorization focused regression 为 `1 passed in 9.94s`；`tests/knowledge/test_ingestion_delete_restore.py` 为 `7 passed in 8.87s`。
 - Delete coordinator idempotency focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_duplicate_delete_after_snapshot_reuses_lifecycle_and_cleanup_outbox` 为 `1 passed in 10.13s`。
 - Cleanup confirmation idempotency focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_duplicate_delete_after_snapshot_reuses_lifecycle_and_cleanup_outbox` 为 `1 passed in 9.85s`。
 - Human Review decision focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.95s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart` 为 `1 passed in 9.68s`。

@@ -80,6 +80,13 @@ def test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authoriz
     else:
         raise AssertionError("restore without fresh authorization must fail")
     restored = runtime.restore(physical, restore_authorization_ref="restore-auth:case_1")
+    try:
+        runtime.restore(restored)
+    except ValueError as exc:
+        assert "fresh authorization" in str(exc)
+    else:
+        raise AssertionError("duplicate restore without fresh authorization must fail")
+    duplicate_restored = runtime.restore(restored, restore_authorization_ref="restore-auth:case_1")
 
     assert held.state == "legal_hold"
     assert cleanup.state == "legal_hold"
@@ -87,6 +94,7 @@ def test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authoriz
     assert restored.state == "restored"
     assert restored.restored_authorization is True
     assert restored.restore_authorization_ref == "restore-auth:case_1"
+    assert duplicate_restored.duplicate is True
 
 
 def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:
