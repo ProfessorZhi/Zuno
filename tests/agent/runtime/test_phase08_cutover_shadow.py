@@ -4,9 +4,11 @@ import pytest
 
 from zuno.agent.runtime import (
     Phase08CutoverController,
+    Phase08CutoverError,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
     Phase08RunService,
+    SideEffectLedger,
     build_phase08_run_graph,
     build_phase08_test_checkpointer,
 )
@@ -118,3 +120,28 @@ def test_new_default_rejects_duplicate_side_effect_claim() -> None:
     controller.handle(request)
     with pytest.raises(Exception, match="duplicate side effect claim"):
         controller.handle(request)
+
+
+def test_fallback_is_blocked_after_phase08_side_effect_claim() -> None:
+    calls: list[tuple[str, bool]] = []
+    ledger = SideEffectLedger()
+    canary = Phase08CutoverController(
+        mode="canary",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_new_runtime(),
+        side_effect_ledger=ledger,
+    )
+    request = _request()
+
+    canary.handle(request)
+    unavailable = Phase08CutoverController(
+        mode="new_default",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
+        side_effect_ledger=ledger,
+    )
+
+    with pytest.raises(Phase08CutoverError, match="fallback_blocked_after_effect"):
+        unavailable.handle(request)
+
+    assert calls == [(request.idempotency_key, False)]

@@ -70,6 +70,9 @@ class Phase08SideEffectLedger(Protocol):
     def claim(self, request: Phase08RuntimeRequest, *, runtime: str) -> str:
         ...
 
+    def has_claim(self, request: Phase08RuntimeRequest) -> bool:
+        ...
+
 
 class Phase08CutoverAudit(Protocol):
     def record(
@@ -95,6 +98,9 @@ class SideEffectLedger:
             raise Phase08SideEffectClaimError("duplicate side effect claim")
         self.claimed_keys.add(idempotency_key)
         return f"side-effect:{idempotency_key}"
+
+    def has_claim(self, request: Phase08RuntimeRequest) -> bool:
+        return request.idempotency_key in self.claimed_keys
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +134,15 @@ class PostgresPhase08CutoverLedger:
         if receipt.status.startswith("duplicate:"):
             return effect_ref
         return effect_ref
+
+    def has_claim(self, request: Phase08RuntimeRequest) -> bool:
+        from zuno.platform.database.agent import AgentDomainUnitOfWork
+
+        with AgentDomainUnitOfWork(self.engine) as repo:
+            return repo.has_effect_claim(
+                tenant_id=request.tenant_id,
+                idempotency_key=request.idempotency_key,
+            )
 
     def record(
         self,
@@ -196,29 +211,9 @@ class Phase08CutoverController:
         except Phase08SideEffectClaimError:
             raise
         except Phase08CutoverError as exc:
-            legacy = self._run_legacy(request, allow_side_effect=True)
-            response = Phase08RuntimeResponse(
-                runtime=legacy.runtime,
-                request_hash=request.request_hash,
-                output_ref=legacy.output_ref,
-                trace_ref=legacy.trace_ref,
-                side_effect_ref=legacy.side_effect_ref,
-                rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
-            )
-            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
-            return response
+            return self._fallback_to_legacy(request, exc)
         except Exception as exc:
-            legacy = self._run_legacy(request, allow_side_effect=True)
-            response = Phase08RuntimeResponse(
-                runtime=legacy.runtime,
-                request_hash=request.request_hash,
-                output_ref=legacy.output_ref,
-                trace_ref=legacy.trace_ref,
-                side_effect_ref=legacy.side_effect_ref,
-                rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
-            )
-            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
-            return response
+            return self._fallback_to_legacy(request, exc)
         if self.mode == "canary":
             legacy_shadow = self._run_legacy(request, allow_side_effect=False)
             response = Phase08RuntimeResponse(
@@ -266,6 +261,36 @@ class Phase08CutoverController:
             trace_ref=str(state["trace_id"]),
             side_effect_ref=side_effect_ref,
         )
+
+    def _fallback_to_legacy(self, request: Phase08RuntimeRequest, exc: Exception) -> Phase08RuntimeResponse:
+        if self.side_effect_ledger.has_claim(request):
+            response = Phase08RuntimeResponse(
+                runtime="phase08",
+                request_hash=request.request_hash,
+                output_ref=f"answer:{request.request_hash[:16]}",
+                trace_ref=request.trace_id,
+                side_effect_ref=f"side-effect:{request.idempotency_key}",
+                rollback_reason=f"fallback_blocked_after_effect:{type(exc).__name__}",
+            )
+            self._record_audit(
+                request,
+                response,
+                primary_runtime="phase08",
+                effect_committed=True,
+                fallback_allowed=False,
+            )
+            raise Phase08CutoverError(response.rollback_reason) from exc
+        legacy = self._run_legacy(request, allow_side_effect=True)
+        response = Phase08RuntimeResponse(
+            runtime=legacy.runtime,
+            request_hash=request.request_hash,
+            output_ref=legacy.output_ref,
+            trace_ref=legacy.trace_ref,
+            side_effect_ref=legacy.side_effect_ref,
+            rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
+        )
+        self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
+        return response
 
     def _record_audit(
         self,

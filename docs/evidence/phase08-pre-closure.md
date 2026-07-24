@@ -21,6 +21,7 @@ branch: integration/goal02-final-closure-repair
 - Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
 - Product cutover entry：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` 让 Workspace task 入口显式进入 `Phase08CutoverController`，默认不启用；启用后可按 `shadow`、`canary`、`new_default`、`rollback` 记录 `phase08_cutover` 审计事件。
 - Shadow suppression：shadow 路径允许官方 Checkpointer 记录可恢复执行痕迹，但禁止 PHASE08 Final Gate、RunOutcome 和 Effect Claim 写入领域表，避免 shadow 产生产品效果、usage settlement 或完成事实。
+- Fallback guard：若同一请求已有 PHASE08 `agent_effect_claims` 持久记录，后续新 runtime 不可用时自动 legacy fallback 会 fail closed，并记录 `fallback_allowed=false` 的 cutover audit，防止已提交 effect 后重复执行 legacy side effect。
 
 ## 已运行命令
 
@@ -49,7 +50,7 @@ alembic -c infra/db/alembic.ini upgrade head
 agent system verification passed.
 Current program verification passed.
 refined Agent Core target architecture verification passed.
-20260724_29 (head)
+20260724_31 (head)
 ```
 
 2026-07-24 追加验证：
@@ -65,6 +66,8 @@ pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py -p no:cacheprovider
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py -p no:cacheprovider --tb=short
 pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry -p no:cacheprovider --tb=short
+pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py::test_fallback_is_blocked_after_phase08_side_effect_claim -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -80,6 +83,8 @@ py_compile passed
 1 passed in 31.80s
 6 passed in 36.75s
 6 passed, 1 warning in 43.23s
+1 passed in 34.34s
+1 passed in 41.26s
 ```
 
 ## 证据 Commit

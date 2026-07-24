@@ -11,6 +11,7 @@ from sqlalchemy import text
 from zuno.agent.domain import AgentDomainConflict, AgentRun, GoalInputClassification, GoalVersion, TaskContract
 from zuno.agent.runtime import (
     Phase08CutoverController,
+    Phase08CutoverError,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
     Phase08SideEffectClaimError,
@@ -38,6 +39,12 @@ POSTGRES_DSN = os.environ.get(
     "postgresql://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
 )
 HEX_64 = "a" * 64
+
+
+class _UnavailablePhase08Runtime:
+    def start(self, state):
+        del state
+        raise RuntimeError("phase08 unavailable after previous effect")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -343,6 +350,72 @@ def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine
     with pytest.raises(Phase08SideEffectClaimError, match="conflicting effect payload"):
         second.handle(conflicting)
     assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
+
+
+def test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim(engine) -> None:
+    request = Phase08RuntimeRequest(
+        request_id="request:p08:cutover:fallback-blocked",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        user_id="principal-a",
+        task_id="task-p08-cutover-fallback-blocked",
+        trace_id="trace:p08:cutover:fallback-blocked",
+        goal="block legacy fallback after phase08 side effect",
+        idempotency_key="idem:p08:cutover:fallback-blocked",
+    )
+    calls: list[tuple[str, bool]] = []
+
+    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
+        calls.append((request.idempotency_key, allow_side_effect))
+        return Phase08RuntimeResponse(
+            runtime="legacy",
+            request_hash=request.request_hash,
+            output_ref=f"answer:{request.request_hash[:16]}",
+            trace_ref=f"legacy-trace:{request.trace_id}",
+            side_effect_ref=f"legacy-side-effect:{request.idempotency_key}" if allow_side_effect else None,
+        )
+
+    Phase08CutoverController(
+        mode="canary",
+        legacy_runner=legacy_runner,
+        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
+        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
+        audit=PostgresPhase08CutoverLedger(engine),
+    ).handle(request)
+
+    unavailable = Phase08CutoverController(
+        mode="new_default",
+        legacy_runner=legacy_runner,
+        new_runtime=_UnavailablePhase08Runtime(),  # type: ignore[arg-type]
+        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
+        audit=PostgresPhase08CutoverLedger(engine),
+    )
+    with pytest.raises(Phase08CutoverError, match="fallback_blocked_after_effect"):
+        unavailable.handle(request)
+
+    assert calls == [(request.idempotency_key, False)]
+    with engine.connect() as conn:
+        counts = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM agent_effect_claims
+                     WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
+                    (SELECT count(*) FROM agent_cutover_audit_events
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id) AS audits,
+                    (SELECT count(*) FROM agent_cutover_audit_events
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id
+                       AND mode = 'new_default' AND fallback_allowed = false
+                       AND primary_runtime = 'phase08') AS blocked_audits
+                """
+            ),
+            {
+                "tenant_id": request.tenant_id,
+                "idempotency_key": request.idempotency_key,
+                "request_id": request.request_id,
+            },
+        ).mappings().one()
+    assert dict(counts) == {"effects": 1, "audits": 2, "blocked_audits": 1}
 
 
 def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine) -> None:

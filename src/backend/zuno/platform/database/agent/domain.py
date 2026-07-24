@@ -516,6 +516,23 @@ class AgentDomainRepository:
             raise AgentDomainConflict(f"conflicting effect payload for {idempotency_key}")
         return AgentDomainReceipt(effect_claim_id, status, 1)
 
+    def has_effect_claim(self, *, tenant_id: str, idempotency_key: str) -> bool:
+        return (
+            self.connection.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM agent_effect_claims
+                    WHERE tenant_id = :tenant_id
+                      AND idempotency_key = :idempotency_key
+                    LIMIT 1
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).first()
+            is not None
+        )
+
     def record_action_observation_acceptance(
         self,
         *,
