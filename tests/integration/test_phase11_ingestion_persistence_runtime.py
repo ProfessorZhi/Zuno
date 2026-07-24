@@ -15,6 +15,7 @@ from zuno.knowledge.ingestion import (
     DeleteLifecycleCommand,
     DeleteRestoreRuntime,
     HumanReviewRuntime,
+    KnowledgeCleanupReceipt,
     PackageAProductionIngestionRuntime,
     PersistentDeleteRestoreCoordinator,
     ReviewDecisionReceipt,
@@ -50,6 +51,16 @@ class _DenyVisibilityRevocationPort:
             visibility_ref=receipt.visibility_ref,
             revoked=False,
             reason="visibility_revocation_denied",
+        )
+
+
+class _DenyKnowledgeCleanupPort:
+    def require_cleanup_confirmed(self, receipt):
+        return KnowledgeCleanupReceipt(
+            delete_ref=receipt.delete_ref,
+            cleanup_ref=receipt.cleanup_ref,
+            confirmed=False,
+            reason="knowledge_cleanup_port_denied",
         )
 
 
@@ -872,6 +883,83 @@ def test_ingestion_delete_visibility_port_denial_prevents_lifecycle_and_outbox(e
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM ingestion_delete_lifecycles")).scalar_one() == 0
         assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 0
+
+
+def test_ingestion_delete_knowledge_cleanup_port_denial_prevents_object_delete(engine) -> None:
+    content = b"phase11 knowledge cleanup port denied"
+    bucket = f"phase11-cleanup-port-denied-{uuid4().hex}"
+    raw_store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    durable_store = DurableMinioObjectStore(
+        store=raw_store,
+        engine=engine,
+        owner="phase11-cleanup-port-denied-test",
+    )
+    try:
+        ticket = durable_store.stage(
+            bucket=bucket,
+            committed_object_name="workspace-a/cleanup-port-denied.md",
+            content=content,
+        )
+        committed = durable_store.commit(ticket)
+        object_ref = f"s3://{bucket}/{committed.object_name}"
+        runtime = DeleteRestoreRuntime()
+        requested = runtime.request_delete(
+            snapshot_ref="snapshot:phase11:cleanup-port-denied",
+            visibility_ref="visibility:workspace-a:cleanup-port-denied",
+            object_ref=object_ref,
+            restore_point_name="_restore/workspace-a/cleanup-port-denied.md",
+        )
+        confirmed = runtime.confirm_knowledge_cleanup(runtime.request_cleanup(requested))
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_delete_lifecycle(tenant_id="tenant-a", **confirmed.model_dump())
+
+        coordinator = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=durable_store,
+            knowledge_cleanup_port=_DenyKnowledgeCleanupPort(),
+        )
+
+        with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
+            coordinator.execute_cleanup(
+                tenant_id="tenant-a",
+                delete_ref=confirmed.delete_ref,
+            )
+
+        assert raw_store.read_object(bucket=bucket, object_name=committed.object_name) == content
+        with engine.connect() as conn:
+            lifecycle = conn.execute(
+                text(
+                    """
+                    SELECT state, cleanup_verified, physical_delete_verified,
+                           physical_delete_ref, verification_ref
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": confirmed.delete_ref},
+            ).mappings().one()
+            manifest = conn.execute(
+                text(
+                    """
+                    SELECT visibility
+                    FROM infra_object_manifests
+                    WHERE object_ref = :object_ref
+                    """
+                ),
+                {"object_ref": object_ref},
+            ).mappings().one()
+        assert lifecycle["state"] == "cleanup_requested"
+        assert lifecycle["cleanup_verified"] is True
+        assert lifecycle["physical_delete_verified"] is False
+        assert lifecycle["physical_delete_ref"] is None
+        assert lifecycle["verification_ref"] is None
+        assert manifest["visibility"] == "visible"
+    finally:
+        raw_store.remove_bucket_tree(bucket)
 
 
 def test_ingestion_delete_during_parse_persists_late_worker_rejection_after_restart(engine) -> None:
