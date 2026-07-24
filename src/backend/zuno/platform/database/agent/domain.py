@@ -882,7 +882,7 @@ class AgentDomainRepository:
         request_hash: str,
         trace_ref: str,
     ) -> AgentDomainReceipt:
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_cutover_audit_events(
@@ -892,6 +892,7 @@ class AgentDomainRepository:
                     :cutover_event_id, :tenant_id, :workspace_id, :request_id, :mode,
                     :primary_runtime, :effect_committed, :fallback_allowed, :request_hash, :trace_ref
                 )
+                ON CONFLICT (tenant_id, request_id, mode) DO NOTHING
                 """
             ),
             {
@@ -907,6 +908,29 @@ class AgentDomainRepository:
                 "trace_ref": trace_ref,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT cutover_event_id, primary_runtime, effect_committed,
+                           fallback_allowed, request_hash
+                    FROM agent_cutover_audit_events
+                    WHERE tenant_id = :tenant_id
+                      AND request_id = :request_id
+                      AND mode = :mode
+                    """
+                ),
+                {"tenant_id": tenant_id, "request_id": request_id, "mode": mode},
+            ).mappings().first()
+            if (
+                existing
+                and existing["primary_runtime"] == primary_runtime
+                and existing["effect_committed"] == effect_committed
+                and existing["fallback_allowed"] == fallback_allowed
+                and existing["request_hash"] == request_hash
+            ):
+                return AgentDomainReceipt(str(existing["cutover_event_id"]), f"duplicate:{mode}", 1)
+            raise AgentDomainConflict(f"conflicting cutover audit event for {request_id}:{mode}")
         return AgentDomainReceipt(cutover_event_id, mode, 1)
 
     def _record_event(

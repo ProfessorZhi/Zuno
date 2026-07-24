@@ -10,8 +10,13 @@ from sqlalchemy import text
 
 from zuno.agent.domain import AgentDomainConflict, AgentRun, GoalInputClassification, GoalVersion, TaskContract
 from zuno.agent.runtime import (
+    Phase08CutoverController,
+    Phase08RuntimeRequest,
+    Phase08RuntimeResponse,
+    Phase08SideEffectClaimError,
     Phase08RunService,
     Phase08StepService,
+    PostgresPhase08CutoverLedger,
     PostgresPhase08FinalGatePort,
     PostgresPhase08OwnerPort,
     build_phase08_run_graph,
@@ -255,6 +260,84 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
         assert signal.ref == "signal:p08:cancel"
         assert finding.status == "domain_ahead"
         assert cutover.status == "canary"
+
+
+def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine) -> None:
+    request = Phase08RuntimeRequest(
+        request_id="request:p08:cutover:postgres",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        user_id="principal-a",
+        task_id="task-p08-cutover-postgres",
+        trace_id="trace:p08:cutover:postgres",
+        goal="answer through phase08 cutover",
+        idempotency_key="idem:p08:cutover:postgres",
+    )
+    calls: list[tuple[str, bool]] = []
+
+    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
+        calls.append((request.idempotency_key, allow_side_effect))
+        return Phase08RuntimeResponse(
+            runtime="legacy",
+            request_hash=request.request_hash,
+            output_ref=f"answer:{request.request_hash[:16]}",
+            trace_ref=f"legacy-trace:{request.trace_id}",
+            side_effect_ref=f"legacy-side-effect:{request.idempotency_key}" if allow_side_effect else None,
+        )
+
+    first = Phase08CutoverController(
+        mode="canary",
+        legacy_runner=legacy_runner,
+        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
+        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
+        audit=PostgresPhase08CutoverLedger(engine),
+    )
+    second = Phase08CutoverController(
+        mode="canary",
+        legacy_runner=legacy_runner,
+        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
+        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
+        audit=PostgresPhase08CutoverLedger(engine),
+    )
+
+    first_response = first.handle(request)
+    second_response = second.handle(request)
+
+    assert first_response.runtime == "phase08"
+    assert second_response.side_effect_ref == first_response.side_effect_ref
+    assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
+    with engine.connect() as conn:
+        counts = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM agent_effect_claims
+                     WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
+                    (SELECT count(*) FROM agent_cutover_audit_events
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id AND mode = 'canary') AS audits
+                """
+            ),
+            {
+                "tenant_id": request.tenant_id,
+                "idempotency_key": request.idempotency_key,
+                "request_id": request.request_id,
+            },
+        ).mappings().one()
+    assert dict(counts) == {"effects": 1, "audits": 1}
+
+    conflicting = Phase08RuntimeRequest(
+        request_id="request:p08:cutover:postgres:conflict",
+        tenant_id=request.tenant_id,
+        workspace_id=request.workspace_id,
+        user_id=request.user_id,
+        task_id=request.task_id,
+        trace_id=request.trace_id,
+        goal="different payload must conflict",
+        idempotency_key=request.idempotency_key,
+    )
+    with pytest.raises(Phase08SideEffectClaimError, match="conflicting effect payload"):
+        second.handle(conflicting)
+    assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
 
 
 def test_phase08_graph_owner_port_and_final_gate_write_postgres_ledgers(engine) -> None:

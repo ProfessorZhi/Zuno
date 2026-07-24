@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
-from typing import Callable, Literal
+from typing import Any, Callable, Literal, Protocol
 
+from zuno.agent.domain import AgentDomainConflict
 from zuno.agent.runtime.phase08 import Phase08RunService
 
 
@@ -15,9 +16,14 @@ class Phase08CutoverError(RuntimeError):
     pass
 
 
+class Phase08SideEffectClaimError(Phase08CutoverError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class Phase08RuntimeRequest:
     request_id: str
+    tenant_id: str
     workspace_id: str
     user_id: str
     task_id: str
@@ -33,6 +39,7 @@ class Phase08RuntimeRequest:
         return _hash(
             {
                 "request_id": self.request_id,
+                "tenant_id": self.tenant_id,
                 "workspace_id": self.workspace_id,
                 "user_id": self.user_id,
                 "task_id": self.task_id,
@@ -59,15 +66,96 @@ class Phase08RuntimeResponse:
     rollback_reason: str | None = None
 
 
+class Phase08SideEffectLedger(Protocol):
+    def claim(self, request: Phase08RuntimeRequest, *, runtime: str) -> str:
+        ...
+
+
+class Phase08CutoverAudit(Protocol):
+    def record(
+        self,
+        request: Phase08RuntimeRequest,
+        *,
+        mode: CutoverMode,
+        primary_runtime: str,
+        effect_committed: bool,
+        fallback_allowed: bool,
+        trace_ref: str,
+    ) -> str:
+        ...
+
+
 @dataclass
 class SideEffectLedger:
     claimed_keys: set[str] = field(default_factory=set)
 
-    def claim(self, idempotency_key: str) -> str:
+    def claim(self, request: Phase08RuntimeRequest, *, runtime: str) -> str:
+        idempotency_key = request.idempotency_key
         if idempotency_key in self.claimed_keys:
-            raise Phase08CutoverError("duplicate side effect claim")
+            raise Phase08SideEffectClaimError("duplicate side effect claim")
         self.claimed_keys.add(idempotency_key)
         return f"side-effect:{idempotency_key}"
+
+
+@dataclass(frozen=True, slots=True)
+class PostgresPhase08CutoverLedger:
+    engine: Any
+
+    def claim(self, request: Phase08RuntimeRequest, *, runtime: str) -> str:
+        from zuno.platform.database.agent import AgentDomainUnitOfWork
+
+        effect_claim_id = f"effect-claim:cutover:{request.request_id}:{runtime}"
+        effect_ref = f"side-effect:{request.idempotency_key}"
+        payload = {
+            "request_id": request.request_id,
+            "request_hash": request.request_hash,
+            "runtime": runtime,
+            "workspace_id": request.workspace_id,
+            "task_id": request.task_id,
+        }
+        try:
+            with AgentDomainUnitOfWork(self.engine) as repo:
+                receipt = repo.claim_effect(
+                    effect_claim_id=effect_claim_id,
+                    tenant_id=request.tenant_id,
+                    idempotency_key=request.idempotency_key,
+                    payload=payload,
+                    owner_port=f"phase08-cutover:{runtime}",
+                    effect_ref=effect_ref,
+                )
+        except AgentDomainConflict as exc:
+            raise Phase08SideEffectClaimError(str(exc)) from exc
+        if receipt.status.startswith("duplicate:"):
+            return effect_ref
+        return effect_ref
+
+    def record(
+        self,
+        request: Phase08RuntimeRequest,
+        *,
+        mode: CutoverMode,
+        primary_runtime: str,
+        effect_committed: bool,
+        fallback_allowed: bool,
+        trace_ref: str,
+    ) -> str:
+        from zuno.platform.database.agent import AgentDomainUnitOfWork
+
+        event_id = f"cutover:{request.request_id}:{mode}"
+        with AgentDomainUnitOfWork(self.engine) as repo:
+            receipt = repo.record_cutover_audit_event(
+                cutover_event_id=event_id,
+                tenant_id=request.tenant_id,
+                workspace_id=request.workspace_id,
+                request_id=request.request_id,
+                mode=mode,
+                primary_runtime=primary_runtime,
+                effect_committed=effect_committed,
+                fallback_allowed=fallback_allowed,
+                request_hash=request.request_hash,
+                trace_ref=trace_ref,
+            )
+        return receipt.ref
 
 
 LegacyRunner = Callable[[Phase08RuntimeRequest, bool], Phase08RuntimeResponse]
@@ -78,16 +166,19 @@ class Phase08CutoverController:
     mode: CutoverMode
     legacy_runner: LegacyRunner
     new_runtime: Phase08RunService | None = None
-    side_effect_ledger: SideEffectLedger = field(default_factory=SideEffectLedger)
+    side_effect_ledger: Phase08SideEffectLedger = field(default_factory=SideEffectLedger)
+    audit: Phase08CutoverAudit | None = None
 
     def handle(self, request: Phase08RuntimeRequest) -> Phase08RuntimeResponse:
         if self.mode == "rollback":
-            return self._run_legacy(request, allow_side_effect=True)
+            response = self._run_legacy(request, allow_side_effect=True)
+            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=False)
+            return response
 
         if self.mode == "shadow":
             legacy = self._run_legacy(request, allow_side_effect=True)
             shadow = self._run_new(request, allow_side_effect=False)
-            return Phase08RuntimeResponse(
+            response = Phase08RuntimeResponse(
                 runtime=legacy.runtime,
                 request_hash=request.request_hash,
                 output_ref=legacy.output_ref,
@@ -97,14 +188,16 @@ class Phase08CutoverController:
                 shadow_trace_ref=shadow.trace_ref,
                 shadow_match=legacy.output_ref == shadow.output_ref,
             )
+            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=False)
+            return response
 
         try:
             primary = self._run_new(request, allow_side_effect=True)
+        except Phase08SideEffectClaimError:
+            raise
         except Phase08CutoverError as exc:
-            if "duplicate side effect claim" in str(exc):
-                raise
             legacy = self._run_legacy(request, allow_side_effect=True)
-            return Phase08RuntimeResponse(
+            response = Phase08RuntimeResponse(
                 runtime=legacy.runtime,
                 request_hash=request.request_hash,
                 output_ref=legacy.output_ref,
@@ -112,9 +205,11 @@ class Phase08CutoverController:
                 side_effect_ref=legacy.side_effect_ref,
                 rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
             )
+            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
+            return response
         except Exception as exc:
             legacy = self._run_legacy(request, allow_side_effect=True)
-            return Phase08RuntimeResponse(
+            response = Phase08RuntimeResponse(
                 runtime=legacy.runtime,
                 request_hash=request.request_hash,
                 output_ref=legacy.output_ref,
@@ -122,9 +217,11 @@ class Phase08CutoverController:
                 side_effect_ref=legacy.side_effect_ref,
                 rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
             )
+            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
+            return response
         if self.mode == "canary":
             legacy_shadow = self._run_legacy(request, allow_side_effect=False)
-            return Phase08RuntimeResponse(
+            response = Phase08RuntimeResponse(
                 runtime=primary.runtime,
                 request_hash=request.request_hash,
                 output_ref=primary.output_ref,
@@ -134,6 +231,9 @@ class Phase08CutoverController:
                 shadow_trace_ref=legacy_shadow.trace_ref,
                 shadow_match=primary.output_ref == legacy_shadow.output_ref,
             )
+            self._record_audit(request, response, primary_runtime="phase08", effect_committed=True, fallback_allowed=False)
+            return response
+        self._record_audit(request, primary, primary_runtime="phase08", effect_committed=True, fallback_allowed=False)
         return primary
 
     def _run_legacy(self, request: Phase08RuntimeRequest, *, allow_side_effect: bool) -> Phase08RuntimeResponse:
@@ -157,13 +257,33 @@ class Phase08CutoverController:
         )
         if state.get("finalization_status") != "finalized":
             raise Phase08CutoverError(f"new runtime did not finalize: {state.get('finalization_status')}")
-        side_effect_ref = self.side_effect_ledger.claim(request.idempotency_key) if allow_side_effect else None
+        side_effect_ref = self.side_effect_ledger.claim(request, runtime="phase08") if allow_side_effect else None
         return Phase08RuntimeResponse(
             runtime="phase08",
             request_hash=request.request_hash,
             output_ref=f"answer:{request.request_hash[:16]}",
             trace_ref=str(state["trace_id"]),
             side_effect_ref=side_effect_ref,
+        )
+
+    def _record_audit(
+        self,
+        request: Phase08RuntimeRequest,
+        response: Phase08RuntimeResponse,
+        *,
+        primary_runtime: str,
+        effect_committed: bool,
+        fallback_allowed: bool,
+    ) -> None:
+        if self.audit is None:
+            return
+        self.audit.record(
+            request,
+            mode=self.mode,
+            primary_runtime=primary_runtime,
+            effect_committed=effect_committed,
+            fallback_allowed=fallback_allowed,
+            trace_ref=response.trace_ref,
         )
 
 
@@ -176,7 +296,11 @@ __all__ = [
     "CutoverMode",
     "Phase08CutoverController",
     "Phase08CutoverError",
+    "Phase08CutoverAudit",
     "Phase08RuntimeRequest",
     "Phase08RuntimeResponse",
+    "Phase08SideEffectClaimError",
+    "Phase08SideEffectLedger",
+    "PostgresPhase08CutoverLedger",
     "SideEffectLedger",
 ]

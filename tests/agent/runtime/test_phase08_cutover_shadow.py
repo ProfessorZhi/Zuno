@@ -15,6 +15,7 @@ from zuno.agent.runtime import (
 def _request() -> Phase08RuntimeRequest:
     return Phase08RuntimeRequest(
         request_id="request:p08:t08:1",
+        tenant_id="tenant-a",
         workspace_id="workspace-a",
         user_id="user-a",
         task_id="task-p08-t08",
