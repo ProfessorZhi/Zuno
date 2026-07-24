@@ -5,6 +5,7 @@ import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal, cast
 from uuid import uuid4
 
 from minio.error import S3Error
@@ -1162,6 +1163,159 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     assert replay["knowledge_handoff_status"] == "pending"
     assert replay["outbox_publish_status"] == "pending"
     assert replay["outbox_payload_idempotency_key"] == first.handoff_idempotency_key
+
+
+@pytest.mark.parametrize("decision_status", ["rejected", "expired", "cancelled"])
+def test_ingestion_non_approved_review_never_resumes_handoff(engine, decision_status: str) -> None:
+    runtime = PackageAProductionIngestionRuntime(
+        engine=engine,
+        object_store=None,
+        worker_id="phase11-package-a-worker",
+    )
+    suffix = decision_status.replace("_", "-")
+    document_version_id = f"document-version:non-approved:{suffix}:1"
+    source_object_id = f"source:non-approved:{suffix}:1"
+    workspace_id = "workspace_review"
+    security_epoch_ref = "security_epoch:workspace_review"
+    task = ReviewTask(
+        review_task_id=f"review-task:non-approved:{suffix}:1",
+        parse_snapshot_id=f"parse-snapshot:non-approved:{suffix}:1",
+        document_version_id=document_version_id,
+        workspace_id=workspace_id,
+        reviewer_scope="workspace_reviewer",
+        security_epoch_ref=security_epoch_ref,
+        expires_at=1893456000.0,
+        reason="quality_review_required",
+        decision_hash=HEX_64,
+    )
+
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id=source_object_id,
+            tenant_id="tenant-a",
+            workspace_id=workspace_id,
+            filename=f"non-approved-{suffix}.md",
+            mime_type="text/markdown",
+            storage_uri=f"s3://bucket/tenant-a/workspace_review/non-approved-{suffix}.md",
+            object_manifest_ref=f"manifest:non-approved:{suffix}:1",
+            source_sha256=HEX_64,
+            size_bytes=1,
+            classification_ref="classification:internal",
+            security_epoch_ref=security_epoch_ref,
+        )
+        repo.record_document_version(
+            document_version_id=document_version_id,
+            tenant_id="tenant-a",
+            workspace_id=workspace_id,
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": f"non-approved-{suffix}.md"},
+            immutability_ref=f"immutability:non-approved:{suffix}:1",
+        )
+        repo.record_parse_plan(
+            parse_plan_id=f"parse-plan:non-approved:{suffix}:1",
+            tenant_id="tenant-a",
+            document_version_id=document_version_id,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref=f"parser-policy:non-approved:{suffix}:1",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref=f"quality-policy:non-approved:{suffix}:1",
+            security_decision_ref=f"security-decision:non-approved:{suffix}:1",
+        )
+        repo.record_parse_job(
+            parse_job_id=f"parse-job:non-approved:{suffix}:1",
+            tenant_id="tenant-a",
+            parse_plan_id=f"parse-plan:non-approved:{suffix}:1",
+            document_version_id=document_version_id,
+            idempotency_key=f"parse:non-approved:{suffix}:1",
+        )
+        repo.record_parse_attempt(
+            parse_attempt_id=f"parse-attempt:non-approved:{suffix}:1",
+            tenant_id="tenant-a",
+            parse_job_id=f"parse-job:non-approved:{suffix}:1",
+            attempt_no=1,
+            worker_id=f"worker:non-approved:{suffix}:1",
+            lease_ref=f"lease:non-approved:{suffix}:1",
+            fencing_token=1,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id=task.parse_snapshot_id,
+            tenant_id="tenant-a",
+            parse_job_id=f"parse-job:non-approved:{suffix}:1",
+            parse_attempt_id=f"parse-attempt:non-approved:{suffix}:1",
+            document_version_id=document_version_id,
+            canonical_ir={"blocks": [{"block_id": "block:1", "text": "review"}]},
+            canonical_ir_ref=f"canonical-ir:non-approved:{suffix}:1",
+            canonical_ir_schema_ref="CanonicalDocumentIR:v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id=f"quality:non-approved:{suffix}:1",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=0.98,
+            confidence_score=0.88,
+            decision="human_review",
+            review_task_ref=task.review_task_id,
+        )
+        repo.record_review_task(
+            review_task_id=task.review_task_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            quality_decision_id=quality.ref,
+            document_version_id=document_version_id,
+            workspace_id=workspace_id,
+            reviewer_scope=task.reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+            status=task.status,
+            reason=task.reason,
+            decision_hash=task.decision_hash,
+            expires_at=task.expires_at,
+        )
+        decision_runtime = HumanReviewRuntime(review_ttl_seconds=60)
+        if decision_status == "expired":
+            receipt = decision_runtime.decide(
+                task=task,
+                reviewer_id=f"reviewer:non-approved:{suffix}",
+                reviewer_scope=task.reviewer_scope,
+                status="approved",
+                security_epoch_ref=security_epoch_ref,
+                now=task.expires_at + 1,
+            )
+        else:
+            receipt = decision_runtime.decide(
+                task=task,
+                reviewer_id=f"reviewer:non-approved:{suffix}",
+                reviewer_scope=task.reviewer_scope,
+                status=cast(Literal["rejected", "cancelled"], decision_status),
+                security_epoch_ref=security_epoch_ref,
+                now=task.expires_at - 1,
+            )
+        repo.record_review_decision_receipt(
+            decision_id=receipt.decision_id,
+            tenant_id="tenant-a",
+            review_task_id=receipt.review_task_id,
+            status=receipt.status,
+            reviewer_id=receipt.reviewer_id,
+            reviewer_scope=receipt.reviewer_scope,
+            security_epoch_ref=receipt.security_epoch_ref,
+            reason=receipt.reason,
+            decision_hash=receipt.decision_hash,
+            decided_at=receipt.decided_at,
+        )
+
+    assert receipt.status == decision_status
+    with pytest.raises(IngestionPersistenceError, match="requires approved decision"):
+        runtime.resume_approved_review(
+            tenant_id="tenant-a",
+            review_task_id=task.review_task_id,
+            decision_id=receipt.decision_id,
+        )
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
 
 
 def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(engine) -> None:
