@@ -14,6 +14,7 @@ branch: integration/goal02-final-closure-repair
 ## 覆盖
 
 - P08-T01：`GoalVersion`、`TaskContract`、`AgentRun`、领域事件、PostgreSQL 约束和乐观版本冲突。
+- P08-T01 replay ledger：`GoalVersion`、`TaskContract`、`AgentRun` 重启重放同 payload 返回 duplicate；同 sequence、idempotency key 或 task_contract 绑定的不同 payload fail closed 为 `AgentDomainConflict`，不再暴露原始数据库唯一约束异常。
 - P08-T02：不可变 `PlanVersion`、单步 `DeterministicStepDefinition`、语义哈希、激活一次、PostgreSQL 约束。
 - PlanVersion ledger：同一 `PlanVersion` / `StepDefinition` replay 返回 duplicate；同一 Goal 下相同 plan hash 的重放复用原 plan；同一 plan id 不同 payload fail closed，不再暴露原始数据库唯一约束异常。
 - P08-T03：不可变 `ExecutionContextSnapshot`、预算预留和结算 ledger、stale epoch、deadline 和预算不足。
@@ -78,6 +79,7 @@ pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::t
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_execution_context_budget_persistence.py::test_execution_snapshot_and_budget_ledger_round_trip -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_plan_version_persistence.py::test_plan_version_persistence_records_single_step_and_activation tests/integration/agent/test_phase08_plan_version_persistence.py::test_plan_version_duplicate_hash_replays_and_conflicts_per_goal -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_task_contract_persistence.py -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -100,6 +102,7 @@ py_compile passed
 1 passed in 35.45s
 1 passed in 8.16s
 2 passed in 9.80s
+4 passed in 10.77s
 ```
 
 ## 证据 Commit

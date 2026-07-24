@@ -62,7 +62,11 @@ class AgentDomainRepository:
         self.connection = connection
 
     def record_goal_version(self, goal: GoalVersion) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = {
+            **_goal_params(goal),
+            "input_classification": goal.input_classification.value,
+        }
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_goal_versions (
@@ -75,17 +79,44 @@ class AgentDomainRepository:
                     :goal_sequence, :input_classification, :objective_hash,
                     :output_contract_ref, :constraints_hash
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            {
-                **_goal_params(goal),
-                "input_classification": goal.input_classification.value,
-            },
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT goal_version_id, tenant_id, workspace_id, principal_id,
+                           goal_sequence, input_classification, objective_hash,
+                           output_contract_ref, constraints_hash
+                    FROM agent_goal_versions
+                    WHERE goal_version_id = :goal_version_id
+                       OR (
+                            tenant_id = :tenant_id
+                        AND workspace_id = :workspace_id
+                        AND principal_id = :principal_id
+                        AND goal_sequence = :goal_sequence
+                       )
+                    """
+                ),
+                {
+                    "goal_version_id": goal.goal_version_id,
+                    "tenant_id": goal.tenant_id,
+                    "workspace_id": goal.workspace_id,
+                    "principal_id": goal.principal_id,
+                    "goal_sequence": goal.goal_sequence,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(str(existing[0]["goal_version_id"]), "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting GoalVersion for {goal.goal_version_id}")
         return AgentDomainReceipt(goal.goal_version_id, "RECORDED", 1)
 
     def record_task_contract(self, task: TaskContract) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _task_params(task)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_task_contracts (
@@ -98,14 +129,46 @@ class AgentDomainRepository:
                     :goal_version_id, :idempotency_key, :security_context_ref,
                     :security_epoch_ref, :deadline_at, :budget_ref, :status, :aggregate_version
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _task_params(task),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT task_contract_id, tenant_id, workspace_id, principal_id,
+                           goal_version_id, idempotency_key, security_context_ref,
+                           security_epoch_ref, deadline_at, budget_ref, status, aggregate_version
+                    FROM agent_task_contracts
+                    WHERE task_contract_id = :task_contract_id
+                       OR (
+                            tenant_id = :tenant_id
+                        AND workspace_id = :workspace_id
+                        AND idempotency_key = :idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "task_contract_id": task.task_contract_id,
+                    "tenant_id": task.tenant_id,
+                    "workspace_id": task.workspace_id,
+                    "idempotency_key": task.idempotency_key,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing[0]["task_contract_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting TaskContract for {task.task_contract_id}")
         return AgentDomainReceipt(task.task_contract_id, task.status, task.aggregate_version)
 
     def record_agent_run(self, run: AgentRun) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _run_params(run)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_domain_runs (
@@ -118,10 +181,33 @@ class AgentDomainRepository:
                     :trace_id, :status, :aggregate_version, :domain_generation,
                     :started_at, :ended_at, :failure_code
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _run_params(run),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT run_id, tenant_id, workspace_id, principal_id, task_contract_id,
+                           trace_id, status, aggregate_version, domain_generation,
+                           started_at, ended_at, failure_code
+                    FROM agent_domain_runs
+                    WHERE run_id = :run_id
+                       OR task_contract_id = :task_contract_id
+                    """
+                ),
+                {"run_id": run.run_id, "task_contract_id": run.task_contract_id},
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing[0]["run_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                    int(existing[0]["domain_generation"]),
+                )
+            raise AgentDomainConflict(f"conflicting AgentRun for {run.run_id}")
         self._record_event(
             run_id=run.run_id,
             tenant_id=run.tenant_id,
