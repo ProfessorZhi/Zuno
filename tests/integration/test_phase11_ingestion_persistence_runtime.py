@@ -22,7 +22,7 @@ from zuno.knowledge.ingestion import (
     StaticRestoreAuthorizationPort,
 )
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
 from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTopology, RabbitMQTransport
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
@@ -75,6 +75,89 @@ async def _publish_and_ack_cleanup_contract(*, engine, event_id: str) -> dict:
             assert payload["event_id"] == event_id
             assert payload["topic"] == PersistentDeleteRestoreCoordinator.cleanup_topic
             return dict(payload["payload"])
+        finally:
+            await transport.delete_topology(topology)
+
+
+async def _publish_cleanup_then_replay_after_crash(*, engine, event_id: str) -> tuple[dict, dict]:
+    topology = _cleanup_topology()
+    async with RabbitMQTransport(RABBITMQ_URL) as transport:
+        await transport.declare_topology(topology)
+        try:
+            with InfrastructureUnitOfWork(engine) as repo:
+                assert repo.claim_outbox_event(event_id=event_id, worker_id="phase11-delete-crashed-publisher")
+                record = repo.load_claimed_outbox_event(
+                    event_id=event_id,
+                    worker_id="phase11-delete-crashed-publisher",
+                )
+            await transport.publish(
+                topology,
+                message_id=record.event_id,
+                payload={
+                    "aggregate_id": record.aggregate_id,
+                    "event_id": record.event_id,
+                    "idempotency_key": record.idempotency_key,
+                    "payload": record.payload,
+                    "payload_hash": record.payload_hash,
+                    "topic": record.topic,
+                },
+                tenant_id="tenant-a",
+                trace_id="trace-phase11-delete-cleanup-crash",
+                ordering_key=record.ordering_key,
+                ordering_sequence=record.ordering_sequence,
+                outbox_publish_attempt=record.publish_attempts + 1,
+                outbox_retry_count=record.retry_count,
+                outbox_replay_count=record.replay_count,
+            )
+            first_delivery = await transport.get(topology.queue, timeout=5.0)
+            assert first_delivery is not None
+            first_payload = dict(first_delivery.payload)
+            with InfrastructureUnitOfWork(engine) as repo:
+                first_hash = repo.record_inbox(
+                    consumer="phase11-delete-cleanup-consumer",
+                    message_id=first_delivery.message_id,
+                    payload=first_delivery.payload,
+                )
+            await first_delivery.ack()
+
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE infra_outbox_events
+                        SET claimed_at = now() - interval '5 minutes'
+                        WHERE event_id = :event_id
+                        """
+                    ),
+                    {"event_id": event_id},
+                )
+            with InfrastructureUnitOfWork(engine) as repo:
+                assert repo.reclaim_stale_outbox_claims(older_than_seconds=1) == [event_id]
+
+            publisher = PostgresOutboxRabbitMQPublisher(
+                engine=engine,
+                transport=transport,
+                topology=topology,
+                worker_id="phase11-delete-cleanup-replay-publisher",
+                tenant_id="tenant-a",
+                trace_id="trace-phase11-delete-cleanup-replay",
+                topics=(PersistentDeleteRestoreCoordinator.cleanup_topic,),
+            )
+            assert [item.event_id for item in await publisher.publish_pending(limit=1)] == [event_id]
+            replay_delivery = await transport.get(topology.queue, timeout=5.0)
+            assert replay_delivery is not None
+            replay_payload = dict(replay_delivery.payload)
+            with InfrastructureUnitOfWork(engine) as repo:
+                assert (
+                    repo.record_inbox(
+                        consumer="phase11-delete-cleanup-consumer",
+                        message_id=replay_delivery.message_id,
+                        payload=replay_delivery.payload,
+                    )
+                    == first_hash
+                )
+            await replay_delivery.ack()
+            return first_payload, replay_payload
         finally:
             await transport.delete_topology(topology)
 
@@ -809,6 +892,150 @@ def test_ingestion_delete_during_parse_persists_late_worker_rejection_after_rest
     assert persisted["fencing_token"] == verified.fencing_token
     assert persisted["late_worker_result_rejected"] is True
     assert persisted["history"][-1] == "late_worker_result_rejected"
+
+
+def test_ingestion_delete_cleanup_publish_crash_replays_without_physical_delete(engine) -> None:
+    object_ref = "s3://phase11-cleanup-crash/workspace-a/delete-target.md"
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="delete-target.md",
+            mime_type="text/markdown",
+            storage_uri=object_ref,
+            object_manifest_ref=f"manifest:{object_ref}",
+            source_sha256=HEX_64,
+            size_bytes=42,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:phase11-cleanup-crash",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "delete-target.md"},
+            immutability_ref="immutability:phase11:cleanup-crash",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:phase11-cleanup-crash",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:phase11-cleanup-crash",
+            security_decision_ref="security-decision:phase11-cleanup-crash",
+        )
+        job = repo.record_parse_job(
+            parse_job_id="parse-job:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:phase11:cleanup-crash",
+        )
+        attempt = repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            attempt_no=1,
+            worker_id="worker:phase11-cleanup-crash",
+            lease_ref="lease:phase11-cleanup-crash",
+            fencing_token=1,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id="parse-snapshot:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            parse_attempt_id=attempt.ref,
+            document_version_id=document.ref,
+            canonical_ir={"metadata": {"document_id": source.ref}, "blocks": []},
+            canonical_ir_ref="canonical-ir:phase11-cleanup-crash",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id="quality:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=1.0,
+            confidence_score=1.0,
+            decision="publish",
+        )
+        repo.record_indexable_snapshot(
+            indexable_snapshot_id="snapshot:phase11:cleanup-crash",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            document_version_id=document.ref,
+            quality_decision_id=quality.ref,
+            visibility_ref="visibility:workspace-a:cleanup-crash",
+            payload={"object_ref": object_ref},
+            handoff_idempotency_key="handoff:phase11:cleanup-crash",
+        )
+    coordinator = PersistentDeleteRestoreCoordinator(
+        engine=engine,
+        object_store=None,
+    )
+    requested = coordinator.request_delete_after_snapshot(
+        DeleteLifecycleCommand(
+            tenant_id="tenant-a",
+            snapshot_ref="snapshot:phase11:cleanup-crash",
+            indexable_snapshot_id="snapshot:phase11:cleanup-crash",
+            handoff_outbox_event_id="outbox:snapshot:phase11:cleanup-crash",
+            visibility_ref="visibility:workspace-a:cleanup-crash",
+            object_ref=object_ref,
+            restore_point_name="_restore/workspace-a/delete-target.md",
+            projection_cleanup_ref="projection-cleanup:snapshot:phase11:cleanup-crash",
+        )
+    )
+
+    first, replay = asyncio.run(
+        _publish_cleanup_then_replay_after_crash(
+            engine=engine,
+            event_id=f"outbox:{requested.delete_ref}:cleanup",
+        )
+    )
+
+    assert first["event_id"] == replay["event_id"] == f"outbox:{requested.delete_ref}:cleanup"
+    assert first["payload"] == replay["payload"]
+    assert first["payload"]["delete_ref"] == requested.delete_ref
+    with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
+        coordinator.execute_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+        )
+    with engine.connect() as conn:
+        lifecycle = conn.execute(
+            text(
+                """
+                SELECT state, cleanup_verified, physical_delete_verified,
+                       physical_delete_ref
+                FROM ingestion_delete_lifecycles
+                WHERE delete_ref = :delete_ref
+                """
+            ),
+            {"delete_ref": requested.delete_ref},
+        ).mappings().one()
+        outbox = conn.execute(
+            text(
+                """
+                SELECT status, claim_owner
+                FROM infra_outbox_events
+                WHERE event_id = :event_id
+                """
+            ),
+            {"event_id": f"outbox:{requested.delete_ref}:cleanup"},
+        ).mappings().one()
+    assert lifecycle["state"] == "visibility_revoked"
+    assert lifecycle["cleanup_verified"] is False
+    assert lifecycle["physical_delete_verified"] is False
+    assert lifecycle["physical_delete_ref"] is None
+    assert outbox["status"] == "published"
+    assert outbox["claim_owner"] is None
 
 
 def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real_object(engine) -> None:
