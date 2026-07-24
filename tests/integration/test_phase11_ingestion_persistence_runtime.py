@@ -1084,6 +1084,33 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             parser_id="native_markdown",
             parser_version="phase11-package-a-v1",
         )
+        duplicate_snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id=task.parse_snapshot_id,
+            tenant_id="tenant-a",
+            parse_job_id="parse-job:approved-resume:1",
+            parse_attempt_id="parse-attempt:approved-resume:1",
+            document_version_id=document_version_id,
+            canonical_ir=document_payload,
+            canonical_ir_ref="canonical-ir:approved-resume:1",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="phase11-package-a-v1",
+        )
+        with pytest.raises(IngestionPersistenceError, match="conflicting parse snapshot"):
+            repo.record_parse_snapshot(
+                parse_snapshot_id="parse-snapshot:approved-resume:conflicting-replay",
+                tenant_id="tenant-a",
+                parse_job_id="parse-job:approved-resume:1",
+                parse_attempt_id="parse-attempt:approved-resume:1",
+                document_version_id=document_version_id,
+                canonical_ir={"blocks": [{"block_id": "different", "text": "different"}]},
+                canonical_ir_ref="canonical-ir:approved-resume:different",
+                canonical_ir_schema_ref="canonical-document-ir-v1",
+                parser_id="native_markdown",
+                parser_version="phase11-package-a-v1",
+            )
+        assert duplicate_snapshot.ref == snapshot.ref
+        assert duplicate_snapshot.status == "duplicate:succeeded"
         quality = repo.record_quality_decision(
             quality_decision_id="quality:approved-resume:1",
             tenant_id="tenant-a",

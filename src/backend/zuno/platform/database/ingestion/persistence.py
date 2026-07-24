@@ -1060,7 +1060,7 @@ class IngestionRepository:
                 f"late parser result rejected for job status: {current['job_status']}"
             )
         snapshot_hash = canonical_sha256(canonical_ir)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_parse_snapshots(
@@ -1073,6 +1073,7 @@ class IngestionRepository:
                     :canonical_ir_schema_ref, :parser_id, :parser_version, :status,
                     CAST(:diagnostics AS jsonb)
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1091,6 +1092,44 @@ class IngestionRepository:
                 "diagnostics": canonical_json(diagnostics or []),
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
+                           document_version_id, snapshot_hash, canonical_ir_ref,
+                           canonical_ir_schema_ref, parser_id, parser_version, status
+                    FROM ingestion_parse_snapshots
+                    WHERE parse_snapshot_id = :parse_snapshot_id
+                       OR (parse_job_id = :parse_job_id AND parse_attempt_id = :parse_attempt_id)
+                    """
+                ),
+                {
+                    "parse_snapshot_id": parse_snapshot_id,
+                    "parse_job_id": parse_job_id,
+                    "parse_attempt_id": parse_attempt_id,
+                },
+            ).mappings().first()
+            if (
+                existing
+                and str(existing["tenant_id"]) == str(tenant_id)
+                and str(existing["parse_job_id"]) == str(parse_job_id)
+                and str(existing["parse_attempt_id"]) == str(parse_attempt_id)
+                and str(existing["document_version_id"]) == str(document_version_id)
+                and existing["snapshot_hash"] == snapshot_hash
+                and existing["canonical_ir_ref"] == canonical_ir_ref
+                and existing["canonical_ir_schema_ref"] == canonical_ir_schema_ref
+                and existing["parser_id"] == parser_id
+                and existing["parser_version"] == parser_version
+                and existing["status"] == status
+            ):
+                return IngestionReceipt(
+                    str(existing["parse_snapshot_id"]),
+                    tenant_id,
+                    f"duplicate:{existing['status']}",
+                    snapshot_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting parse snapshot: {parse_snapshot_id}")
         return IngestionReceipt(parse_snapshot_id, tenant_id, status, snapshot_hash)
 
     def record_source_span(
