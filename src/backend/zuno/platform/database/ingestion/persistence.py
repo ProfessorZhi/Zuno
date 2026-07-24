@@ -1029,6 +1029,36 @@ class IngestionRepository:
         status: str = "succeeded",
         diagnostics: list[dict[str, Any]] | None = None,
     ) -> IngestionReceipt:
+        current = self.connection.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                  AND attempt.parse_job_id = :parse_job_id
+                  AND attempt.tenant_id = :tenant_id
+                  AND job.tenant_id = :tenant_id
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+            },
+        ).mappings().first()
+        if current is None:
+            raise IngestionPersistenceError(f"missing parse attempt for snapshot: {parse_attempt_id}")
+        if current["attempt_status"] not in {"created", "lease_claimed", "running"}:
+            raise IngestionPersistenceError(
+                f"late parser result rejected for attempt status: {current['attempt_status']}"
+            )
+        if current["job_status"] not in {"queued", "running"}:
+            raise IngestionPersistenceError(
+                f"late parser result rejected for job status: {current['job_status']}"
+            )
         snapshot_hash = canonical_sha256(canonical_ir)
         self.connection.execute(
             text(

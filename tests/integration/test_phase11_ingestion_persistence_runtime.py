@@ -592,6 +592,35 @@ def test_ingestion_parse_attempt_can_wait_for_human_review_without_failure(engin
     assert row["lease_state"] == "released"
     assert row["job_status"] == "review_pending"
 
+    with pytest.raises(IngestionPersistenceError, match="late parser result rejected"):
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_parse_snapshot(
+                parse_snapshot_id="parse-snapshot:review-pending:late",
+                tenant_id="tenant-a",
+                parse_job_id=job.ref,
+                parse_attempt_id=attempt.ref,
+                document_version_id=document.ref,
+                canonical_ir={"blocks": [{"block_id": "late", "text": "late parser result"}]},
+                canonical_ir_ref="canonical-ir:review-pending:late",
+                canonical_ir_schema_ref="CanonicalDocumentIR:v1",
+                parser_id="native_markdown",
+                parser_version="v1",
+            )
+
+    with engine.connect() as conn:
+        assert (
+            conn.execute(
+                text(
+                    """
+                    SELECT count(*)
+                    FROM ingestion_parse_snapshots
+                    WHERE parse_snapshot_id = 'parse-snapshot:review-pending:late'
+                    """
+                )
+            ).scalar_one()
+            == 0
+        )
+
 
 def test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff(engine) -> None:
     runtime = HumanReviewRuntime(

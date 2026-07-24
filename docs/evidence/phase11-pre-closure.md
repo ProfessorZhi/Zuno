@@ -30,6 +30,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - Human Review decision 已接入授权 Port，revoked reviewer 和 stale Security Epoch 均拒绝 approval，PostgreSQL 只留下 rejected receipt 且不创建 Indexable Snapshot / Handoff Outbox。
 - Approved Review Resume 已覆盖从已有 ParseSnapshot 恢复、恰好一次 Indexable Snapshot / Handoff Outbox，以及 Knowledge handoff / outbox publish 均保持 pending replayable。
 - Non-approved Review Decision 已覆盖 `rejected`、`expired`、`cancelled` 永不 resume handoff，PostgreSQL 不创建 Indexable Snapshot / Handoff Outbox。
+- Late parser result 已覆盖 review_pending 后迟到 parser result fail-closed，不再写入新的 ParseSnapshot。
 - Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
 - Delete coordinator 已覆盖重复 delete command replay 复用已有 PostgreSQL lifecycle 和 cleanup outbox，且相同 `delete_ref` 的不同 payload fail closed。
 - Input 不直接拥有 Chunk、Entity、Relation、KnowledgeVersion 或 Index。
@@ -43,6 +44,7 @@ commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
 - Delete coordinator idempotency focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_duplicate_delete_after_snapshot_reuses_lifecycle_and_cleanup_outbox` 为 `1 passed in 10.13s`。
 - Human Review decision focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.95s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart` 为 `1 passed in 9.68s`。
 - Human Review review_pending focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 9.07s`；`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 8.61s`。
+- Late parser result focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 13.01s`。
 - Human Review binding focused regression：`tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff` 为 `1 passed in 9.71s`；`tests/knowledge/test_ingestion_human_review.py` 为 `5 passed in 7.47s`。
 - Human Review authorization focused regression：`tests/knowledge/test_ingestion_human_review.py` 为 `6 passed in 9.36s`；`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff` 为 `1 passed in 12.32s`；Package A review_pending regression 为 `1 passed in 7.97s`。
 - Approved Review Resume pending/replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 14.23s`。
