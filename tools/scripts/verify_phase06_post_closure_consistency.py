@@ -45,8 +45,8 @@ def verify_phase06_post_closure_consistency() -> list[str]:
         ("pre-closure evidence", PRE_CLOSURE, ["status: passed", "gate: pre_closure"]),
         ("closure decision", CLOSURE, ["status: approved", "coordinator_approval: approved", "phase06_state: completed"]),
         ("readiness", READINESS, ["current_phase_status: completed", "coordinator_approval: approved", "target_not_current: 0"]),
-        ("manifest", MANIFEST, ["current_phase: PHASE08", "id: PHASE06", "state: completed", "id: PHASE07", "state: completed", "id: PHASE08", "state: in_progress"]),
-        ("current", CURRENT, ["current_phase: PHASE08", "PHASE06 completed", "PHASE08 in_progress"]),
+        ("manifest", MANIFEST, ["current_phase: PHASE08", "id: PHASE06", "state: completed", "id: PHASE07", "state: completed", "id: PHASE08", "state: in_progress", "id: PHASE09", "state: planned"]),
+        ("current", CURRENT, ["current_phase: PHASE08", "PHASE06 completed", "PHASE08 in_progress", "PHASE09 planned"]),
         ("closure checklist", CHECKLIST, ["[x] PHASE06 Observability Minimum Black Box"]),
     ]:
         text = _read(path)

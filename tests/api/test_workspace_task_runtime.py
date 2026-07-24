@@ -5,6 +5,7 @@ import json
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
 
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
@@ -635,6 +636,124 @@ def test_workspace_task_runtime_runs_read_only_tool_and_streams_audit_events() -
     streamed_tool = next(payload for payload in streamed_payloads if payload["event"] == "tool_result")
     assert streamed_tool["data"]["tool_id"] == "filesystem.read"
     assert streamed_tool["data"]["audit_ref"].startswith("audit_")
+
+
+def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() -> None:
+    from zuno.agent.runtime import (
+        Phase08RunService,
+        build_phase08_run_graph,
+        build_phase08_test_checkpointer,
+    )
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_phase08_cutover(
+        mode="canary",
+        new_runtime=Phase08RunService(
+            graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())
+        ),
+    )
+    configured_ledger = WorkspaceTaskRuntimeService._phase08_cutover_ledger
+    try:
+        client = _client()
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Run the phase08 canary product entry",
+                "model_id": "model-local",
+                "session_id": "session_phase08_canary",
+                "workspace_id": "workspace_phase08",
+                "task_id": "task_phase08_canary",
+                "trace_id": "trace_phase08_canary",
+                "goal": "phase08 canary closure",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        created = create_response.json()["data"]
+        assert created["task"]["status"] == "completed"
+
+        events = client.get("/api/v1/workspace/task/task_phase08_canary/events").json()["data"]
+        cutover = next(event for event in events if event["type"] == "phase08_cutover")
+        assert cutover["payload"]["runtime_topology"] == "phase08_cutover"
+        assert cutover["payload"]["mode"] == "canary"
+        assert cutover["payload"]["primary_runtime"] == "phase08"
+        assert cutover["payload"]["shadow_output_ref"] == "workspace-task:task_phase08_canary:legacy-output"
+        assert cutover["payload"]["shadow_match"] is False
+        assert cutover["payload"]["request_hash"]
+        assert cutover["payload"]["side_effect_ref"] == "side-effect:workspace-task:task_phase08_canary:phase08-cutover"
+        assert "task_completed" in [event["type"] for event in events]
+        assert WorkspaceTaskRuntimeService._phase08_cutover_ledger is configured_ledger
+        assert configured_ledger is not None
+        assert configured_ledger.claimed_keys == {"workspace-task:task_phase08_canary:phase08-cutover"}
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
+def test_workspace_task_runtime_cutover_requires_new_runtime_outside_rollback() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    try:
+        with pytest.raises(ValueError, match="requires new_runtime"):
+            WorkspaceTaskRuntimeService.configure_phase08_cutover(
+                mode="shadow",
+                new_runtime=None,
+            )
+        WorkspaceTaskRuntimeService.configure_phase08_cutover(
+            mode="rollback",
+            new_runtime=None,
+        )
+        assert WorkspaceTaskRuntimeService._phase08_cutover_mode == "rollback"
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
+def test_workspace_task_runtime_shadow_cutover_does_not_fail_product_when_new_runtime_unavailable() -> None:
+    class UnavailableRuntime:
+        def start(self, state):
+            del state
+            raise RuntimeError("phase08 shadow unavailable")
+
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_phase08_cutover(
+        mode="shadow",
+        new_runtime=UnavailableRuntime(),  # type: ignore[arg-type]
+        side_effect_ledger=None,
+    )
+    try:
+        client = _client()
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Run the phase08 shadow product entry",
+                "model_id": "model-local",
+                "session_id": "session_phase08_shadow",
+                "workspace_id": "workspace_phase08",
+                "task_id": "task_phase08_shadow_unavailable",
+                "trace_id": "trace_phase08_shadow_unavailable",
+                "goal": "phase08 shadow closure",
+                "product_mode": "general_agent",
+                "plugins": [],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        created = create_response.json()["data"]
+        assert created["task"]["status"] == "completed"
+
+        events = client.get("/api/v1/workspace/task/task_phase08_shadow_unavailable/events").json()["data"]
+        cutover = next(event for event in events if event["type"] == "phase08_cutover")
+        assert cutover["payload"]["mode"] == "shadow"
+        assert cutover["payload"]["primary_runtime"] == "workspace_legacy"
+        assert cutover["payload"]["side_effect_ref"] == "workspace-task:task_phase08_shadow_unavailable:legacy-effect"
+        assert cutover["payload"]["shadow_output_ref"] is None
+        assert cutover["payload"]["shadow_match"] is False
+        assert cutover["payload"]["rollback_reason"] == "shadow_unavailable:RuntimeError"
+        assert "task_completed" in [event["type"] for event in events]
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
 
 def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool() -> None:

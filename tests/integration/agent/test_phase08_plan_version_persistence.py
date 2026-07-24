@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from sqlalchemy import exc, text
+from sqlalchemy import text
 
 from zuno.agent.domain import (
     AgentDomainConflict,
@@ -55,6 +55,16 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_cutover_audit_events,
+                    agent_reconciliation_findings,
+                    agent_runtime_signals,
+                    agent_run_outcomes,
+                    agent_final_gate_receipts,
+                    agent_effect_claims,
+                    agent_step_acceptances,
+                    agent_observations,
+                    agent_action_runs,
+                    agent_request_idempotency_keys,
                     agent_execution_context_snapshots,
                     agent_budget_settlements,
                     agent_budget_reservations,
@@ -122,47 +132,74 @@ def test_plan_version_persistence_records_single_step_and_activation(engine) -> 
 
     with AgentDomainUnitOfWork(engine) as repo:
         repo.record_goal_version(goal)
-        repo.record_plan_version(plan)
+        recorded = repo.record_plan_version(plan)
+        duplicate_plan = repo.record_plan_version(plan)
+        duplicate_step = repo.record_step_definition(plan.steps[0])
         active = repo.load_plan_version(plan.plan_version_id).activate(expected_version=1, activated_at=_now())
         repo.activate_plan_version(active, expected_version=1)
         loaded = repo.load_plan_version(plan.plan_version_id)
 
+    assert recorded.status == PlanVersionStatus.DRAFT.value
+    assert duplicate_plan.status == f"duplicate:{PlanVersionStatus.DRAFT.value}"
+    assert duplicate_step.status == "duplicate:RECORDED"
     assert loaded.status is PlanVersionStatus.ACTIVE
     assert loaded.aggregate_version == 2
     assert loaded.steps[0].step_hash == plan.steps[0].step_hash
 
 
-def test_plan_version_duplicate_hash_is_rejected_per_goal(engine) -> None:
+def test_plan_version_duplicate_hash_replays_and_conflicts_per_goal(engine) -> None:
     goal = _goal()
     plan = _plan()
 
     with AgentDomainUnitOfWork(engine) as repo:
         repo.record_goal_version(goal)
         repo.record_plan_version(plan)
-
-    with pytest.raises(exc.IntegrityError):
-        with AgentDomainUnitOfWork(engine) as repo:
-            duplicate = PlanVersion.create_single_step(
+        duplicate = PlanVersion.create_single_step(
+            plan_version_id="plan:p08:t02:pg:duplicate",
+            tenant_id=plan.tenant_id,
+            workspace_id=plan.workspace_id,
+            goal_version_id=plan.goal_version_id,
+            step=DeterministicStepDefinition(
+                step_definition_id="step-def:p08:t02:pg:duplicate",
                 plan_version_id="plan:p08:t02:pg:duplicate",
                 tenant_id=plan.tenant_id,
-                workspace_id=plan.workspace_id,
-                goal_version_id=plan.goal_version_id,
-                step=DeterministicStepDefinition(
-                    step_definition_id="step-def:p08:t02:pg:duplicate",
-                    plan_version_id="plan:p08:t02:pg:duplicate",
-                    tenant_id=plan.tenant_id,
-                    step_no=1,
-                    objective_ref=plan.steps[0].objective_ref,
-                    input_contract_ref=plan.steps[0].input_contract_ref,
-                    output_contract_ref=plan.steps[0].output_contract_ref,
-                    acceptance_refs=plan.steps[0].acceptance_refs,
-                    executor_type=plan.steps[0].executor_type,
-                    required_evidence_refs=plan.steps[0].required_evidence_refs,
-                    budget_ref=plan.steps[0].budget_ref,
-                    deadline_at=plan.steps[0].deadline_at,
-                ),
-            )
-            repo.record_plan_version(duplicate)
+                step_no=1,
+                objective_ref=plan.steps[0].objective_ref,
+                input_contract_ref=plan.steps[0].input_contract_ref,
+                output_contract_ref=plan.steps[0].output_contract_ref,
+                acceptance_refs=plan.steps[0].acceptance_refs,
+                executor_type=plan.steps[0].executor_type,
+                required_evidence_refs=plan.steps[0].required_evidence_refs,
+                budget_ref=plan.steps[0].budget_ref,
+                deadline_at=plan.steps[0].deadline_at,
+            ),
+        )
+        replayed = repo.record_plan_version(duplicate)
+        conflicting = PlanVersion.create_single_step(
+            plan_version_id=plan.plan_version_id,
+            tenant_id=plan.tenant_id,
+            workspace_id=plan.workspace_id,
+            goal_version_id=plan.goal_version_id,
+            step=DeterministicStepDefinition(
+                step_definition_id=plan.steps[0].step_definition_id,
+                plan_version_id=plan.plan_version_id,
+                tenant_id=plan.tenant_id,
+                step_no=1,
+                objective_ref="objective:conflicting",
+                input_contract_ref=plan.steps[0].input_contract_ref,
+                output_contract_ref=plan.steps[0].output_contract_ref,
+                acceptance_refs=plan.steps[0].acceptance_refs,
+                executor_type=plan.steps[0].executor_type,
+                required_evidence_refs=plan.steps[0].required_evidence_refs,
+                budget_ref=plan.steps[0].budget_ref,
+                deadline_at=plan.steps[0].deadline_at,
+            ),
+        )
+        with pytest.raises(AgentDomainConflict, match="conflicting PlanVersion"):
+            repo.record_plan_version(conflicting)
+
+    assert replayed.ref == plan.plan_version_id
+    assert replayed.status == f"duplicate:{PlanVersionStatus.DRAFT.value}"
 
 
 def test_plan_version_optimistic_conflict_blocks_stale_activation(engine) -> None:

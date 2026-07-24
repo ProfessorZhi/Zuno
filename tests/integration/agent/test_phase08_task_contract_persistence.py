@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from sqlalchemy import exc, text
+from sqlalchemy import text
 
 from zuno.agent.domain import (
     AgentDomainConflict,
@@ -54,6 +54,16 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_cutover_audit_events,
+                    agent_reconciliation_findings,
+                    agent_runtime_signals,
+                    agent_run_outcomes,
+                    agent_final_gate_receipts,
+                    agent_effect_claims,
+                    agent_step_acceptances,
+                    agent_observations,
+                    agent_action_runs,
+                    agent_request_idempotency_keys,
                     agent_execution_context_snapshots,
                     agent_budget_settlements,
                     agent_budget_reservations,
@@ -123,9 +133,12 @@ def test_agent_domain_uow_persists_task_contract_goal_and_run_lifecycle(engine) 
     run = _run(task)
 
     with AgentDomainUnitOfWork(engine) as repo:
-        repo.record_goal_version(goal)
-        repo.record_task_contract(task)
-        repo.record_agent_run(run)
+        recorded_goal = repo.record_goal_version(goal)
+        recorded_task = repo.record_task_contract(task)
+        recorded_run = repo.record_agent_run(run)
+        duplicate_goal = repo.record_goal_version(goal)
+        duplicate_task = repo.record_task_contract(task)
+        duplicate_run = repo.record_agent_run(run)
         authorized = repo.load_run(run.run_id).authorize(expected_version=1)
         repo.transition_run(authorized, expected_version=1)
         started = repo.load_run(run.run_id).start(expected_version=2, started_at=_now())
@@ -133,6 +146,12 @@ def test_agent_domain_uow_persists_task_contract_goal_and_run_lifecycle(engine) 
         completed = repo.load_run(run.run_id).complete(expected_version=3, ended_at=_now())
         repo.transition_run(completed, expected_version=3)
 
+    assert recorded_goal.status == "RECORDED"
+    assert recorded_task.status == "ACTIVE"
+    assert recorded_run.status == AgentRunStatus.CREATED.value
+    assert duplicate_goal.status == "duplicate:RECORDED"
+    assert duplicate_task.status == "duplicate:ACTIVE"
+    assert duplicate_run.status == f"duplicate:{AgentRunStatus.CREATED.value}"
     with engine.connect() as conn:
         row = conn.execute(text("SELECT status, aggregate_version, domain_generation FROM agent_domain_runs")).one()
         event_count = conn.execute(text("SELECT count(*) FROM agent_domain_events")).scalar_one()
@@ -159,9 +178,37 @@ def test_agent_task_contract_duplicate_request_is_tenant_workspace_scoped(engine
     assert replayed is not None
     assert replayed.task_contract_id == task.task_contract_id
 
-    with pytest.raises(exc.IntegrityError):
+    with pytest.raises(AgentDomainConflict, match="conflicting TaskContract"):
         with AgentDomainUnitOfWork(engine) as repo:
             repo.record_task_contract(_task(goal, task_contract_id="task-contract:p08:t01:duplicate"))
+
+
+def test_agent_goal_and_run_replay_conflicts_are_domain_conflicts(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+
+        with pytest.raises(AgentDomainConflict, match="conflicting GoalVersion"):
+            repo.record_goal_version(
+                GoalVersion(
+                    goal_version_id=goal.goal_version_id,
+                    tenant_id=goal.tenant_id,
+                    workspace_id=goal.workspace_id,
+                    principal_id=goal.principal_id,
+                    goal_sequence=goal.goal_sequence,
+                    input_classification=goal.input_classification,
+                    objective_hash="f" * 64,
+                    output_contract_ref=goal.output_contract_ref,
+                    constraints_hash=goal.constraints_hash,
+                )
+            )
+        with pytest.raises(AgentDomainConflict, match="conflicting AgentRun"):
+            repo.record_agent_run(_run(task, run_id="run:p08:t01:pg:conflict"))
 
 
 def test_agent_run_optimistic_conflict_blocks_stale_transition(engine) -> None:

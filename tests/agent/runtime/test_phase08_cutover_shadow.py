@@ -4,9 +4,11 @@ import pytest
 
 from zuno.agent.runtime import (
     Phase08CutoverController,
+    Phase08CutoverError,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
     Phase08RunService,
+    SideEffectLedger,
     build_phase08_run_graph,
     build_phase08_test_checkpointer,
 )
@@ -15,6 +17,7 @@ from zuno.agent.runtime import (
 def _request() -> Phase08RuntimeRequest:
     return Phase08RuntimeRequest(
         request_id="request:p08:t08:1",
+        tenant_id="tenant-a",
         workspace_id="workspace-a",
         user_id="user-a",
         task_id="task-p08-t08",
@@ -60,6 +63,25 @@ def test_shadow_mode_compares_same_request_hash_without_double_side_effect() -> 
     assert response.shadow_match is True
     assert calls == [(request.idempotency_key, True)]
     assert controller.side_effect_ledger.claimed_keys == set()
+
+
+def test_shadow_mode_keeps_legacy_primary_when_new_runtime_is_unavailable() -> None:
+    calls: list[tuple[str, bool]] = []
+    controller = Phase08CutoverController(
+        mode="shadow",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
+    )
+    request = _request()
+
+    response = controller.handle(request)
+
+    assert response.runtime == "legacy"
+    assert response.rollback_reason == "shadow_unavailable:RuntimeError"
+    assert response.side_effect_ref == f"legacy-side-effect:{request.idempotency_key}"
+    assert response.shadow_match is False
+    assert controller.side_effect_ledger.claimed_keys == set()
+    assert calls == [(request.idempotency_key, True)]
 
 
 def test_canary_uses_new_runtime_once_and_keeps_legacy_shadow_dry() -> None:
@@ -117,3 +139,28 @@ def test_new_default_rejects_duplicate_side_effect_claim() -> None:
     controller.handle(request)
     with pytest.raises(Exception, match="duplicate side effect claim"):
         controller.handle(request)
+
+
+def test_fallback_is_blocked_after_phase08_side_effect_claim() -> None:
+    calls: list[tuple[str, bool]] = []
+    ledger = SideEffectLedger()
+    canary = Phase08CutoverController(
+        mode="canary",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_new_runtime(),
+        side_effect_ledger=ledger,
+    )
+    request = _request()
+
+    canary.handle(request)
+    unavailable = Phase08CutoverController(
+        mode="new_default",
+        legacy_runner=_legacy_runner(calls),
+        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
+        side_effect_ledger=ledger,
+    )
+
+    with pytest.raises(Phase08CutoverError, match="fallback_blocked_after_effect"):
+        unavailable.handle(request)
+
+    assert calls == [(request.idempotency_key, False)]

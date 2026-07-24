@@ -234,6 +234,7 @@ class DeleteLifecycleTable(SQLModel, table=True):
     verification_ref: str | None = Field(default=None, index=True)
     legal_hold_ref: str | None = Field(default=None, index=True)
     restored_authorization: bool = Field(default=False, index=True)
+    restore_authorization_ref: str | None = Field(default=None, index=True)
     duplicate: bool = Field(default=False, index=True)
     late_worker_result_rejected: bool = Field(default=False, index=True)
     receipt_hash: str = Field(index=True)

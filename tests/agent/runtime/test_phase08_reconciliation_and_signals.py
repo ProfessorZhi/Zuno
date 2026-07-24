@@ -23,10 +23,99 @@ def _state():
 
 
 def test_generation_reconciliation_detects_ahead_behind_orphan_and_stale_schema() -> None:
-    assert reconcile_generations(domain_generation=2, checkpoint_generation=1, schema_version=PHASE08_RUN_SCHEMA)["status"] == "checkpoint_fail"
-    assert reconcile_generations(domain_generation=1, checkpoint_generation=2, schema_version=PHASE08_RUN_SCHEMA)["status"] == "checkpoint_ahead"
-    assert reconcile_generations(domain_generation=0, checkpoint_generation=0, schema_version=PHASE08_RUN_SCHEMA)["status"] == "orphan_run"
-    assert reconcile_generations(domain_generation=1, checkpoint_generation=1, schema_version="stale")["status"] == "stale_schema"
+    cases = [
+        (
+            reconcile_generations(domain_generation=1, checkpoint_generation=1, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "aligned",
+                "fact_owner": "domain",
+                "auto_repair": False,
+                "replay_allowed": True,
+                "terminate_run": False,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=2, checkpoint_generation=1, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "domain_ahead",
+                "fact_owner": "domain",
+                "auto_repair": True,
+                "replay_allowed": False,
+                "terminate_run": False,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=1, checkpoint_generation=2, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "checkpoint_ahead",
+                "fact_owner": "checkpoint",
+                "auto_repair": False,
+                "replay_allowed": False,
+                "terminate_run": True,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=0, checkpoint_generation=2, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "orphan_checkpoint",
+                "fact_owner": "domain",
+                "auto_repair": False,
+                "replay_allowed": False,
+                "terminate_run": True,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=2, checkpoint_generation=0, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "orphan_domain",
+                "fact_owner": "domain",
+                "auto_repair": True,
+                "replay_allowed": False,
+                "terminate_run": False,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=1, checkpoint_generation=1, schema_version="stale"),
+            {
+                "status": "stale_schema",
+                "fact_owner": "domain",
+                "auto_repair": False,
+                "replay_allowed": False,
+                "terminate_run": True,
+            },
+        ),
+        (
+            reconcile_generations(
+                domain_generation=1,
+                checkpoint_generation=1,
+                schema_version=PHASE08_RUN_SCHEMA,
+                controller_epoch=1,
+                expected_controller_epoch=2,
+            ),
+            {
+                "status": "stale_controller_epoch",
+                "fact_owner": "domain",
+                "auto_repair": False,
+                "replay_allowed": False,
+                "terminate_run": True,
+            },
+        ),
+        (
+            reconcile_generations(domain_generation=-1, checkpoint_generation=1, schema_version=PHASE08_RUN_SCHEMA),
+            {
+                "status": "unrecoverable_conflict",
+                "fact_owner": "none",
+                "auto_repair": False,
+                "replay_allowed": False,
+                "terminate_run": True,
+            },
+        ),
+    ]
+    for actual, expected in cases:
+        for key, value in expected.items():
+            assert actual[key] == value
+        assert actual["audit_event_ref"] == f"audit:phase08-reconcile:{expected['status']}"
+        assert actual["idempotency_key"].startswith(f"phase08-reconcile:{expected['status']}:")
 
 
 def test_signal_journal_rejects_duplicates_wrong_scope_and_honors_deny() -> None:

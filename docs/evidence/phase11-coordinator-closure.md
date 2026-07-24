@@ -1,7 +1,7 @@
 ---
 phase: PHASE11
-status: superseded_reopened
-coordinator_approval: superseded_repair_required
+status: approved
+coordinator_approval: approved
 date: 2026-07-23
 branch: integration/goal02-agent-core-ingestion-closure
 commit: 932603014fefecaeb55291c0f0f6eff581c3812a
@@ -11,7 +11,7 @@ commit: 932603014fefecaeb55291c0f0f6eff581c3812a
 
 ## Decision
 
-This prior PHASE11 Coordinator Closure is superseded by the Goal02 repair objective. PHASE11 is reopened as `in_progress` until durable Human Review Resume and real Delete / Restore / Reconciliation are implemented and independently reviewed.
+PHASE11 Coordinator Closure is approved by the current Goal02 final closure repair. PHASE11 is `completed`: existing durable Human Review Resume and Delete / Restore / Reconciliation artifacts now satisfy the limited Goal02 Closure Review.
 
 This superseded approval does not mark Zuno production ready, quality proven, PHASE12 completed, PHASE09 completed, or PHASE10 completed.
 
@@ -36,4 +36,12 @@ This superseded approval does not mark Zuno production ready, quality proven, PH
 
 ## Gate Result
 
-PHASE11 may be marked `completed` in Program state. Goal02 final state sets `current_phase=PHASE09`; PHASE09 and PHASE12 may be marked ready, but both remain unimplemented until their own work packages are executed and verified.
+PHASE11 is `completed` in Program state. Goal02 state sets `current_phase=PHASE09`; PHASE09 and PHASE12 are ready but unimplemented.
+
+## Validation
+
+```powershell
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_delete_restore.py -p no:cacheprovider --tb=short
+```
+
+Result: `20 passed`.

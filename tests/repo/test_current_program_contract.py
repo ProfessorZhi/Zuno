@@ -67,8 +67,8 @@ def test_goal02_repair_reopens_phase08_and_phase11_without_implementing_downstre
     )
 
     assert "current_phase_status: in_progress" in readiness
-    assert "coordinator_approval: pending_repair" in readiness
-    assert "repair_blockers_pending" in readiness
+    assert "coordinator_approval: pending" in readiness
+    assert "target_not_current: 0" in readiness
     assert "PHASE08 in_progress" in current
     assert "PHASE11 in_progress" in current
     assert "PHASE09 planned" in current

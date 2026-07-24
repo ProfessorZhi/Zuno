@@ -184,6 +184,7 @@ class DeleteLifecycleRecord(BaseModel):
     verification_ref: str | None = None
     legal_hold_ref: str | None = None
     restored_authorization: bool = False
+    restore_authorization_ref: str | None = None
     duplicate: bool = False
     late_worker_result_rejected: bool = False
     receipt_hash: str

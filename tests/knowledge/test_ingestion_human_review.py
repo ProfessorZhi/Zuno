@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 
 def _ocr_parse():
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
@@ -64,6 +66,61 @@ def test_human_review_runtime_blocks_publish_until_approved() -> None:
     assert duplicate.decision_hash == receipt.decision_hash
 
 
+def test_human_review_runtime_rejects_conflicting_duplicate_decision() -> None:
+    from zuno.knowledge.ingestion import HumanReviewRuntime
+
+    result, snapshot = _ocr_parse()
+    assert result.document is not None
+
+    runtime = HumanReviewRuntime(review_ttl_seconds=60)
+    _, task = runtime.evaluate(
+        document=result.document,
+        parse_snapshot=snapshot,
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+    assert task is not None
+
+    receipt = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+
+    duplicate = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_1",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review",
+        existing_receipt=receipt,
+    )
+
+    assert duplicate.duplicate is True
+    assert duplicate.decision_hash == receipt.decision_hash
+
+    with pytest.raises(ValueError, match="conflicting review decision"):
+        runtime.decide(
+            task=task,
+            reviewer_id="reviewer_1",
+            reviewer_scope="workspace_reviewer",
+            status="rejected",
+            security_epoch_ref="security_epoch:workspace_review",
+            existing_receipt=receipt,
+        )
+
+    with pytest.raises(ValueError, match="conflicting review decision"):
+        runtime.decide(
+            task=task,
+            reviewer_id="reviewer_2",
+            reviewer_scope="workspace_reviewer",
+            status="approved",
+            security_epoch_ref="security_epoch:workspace_review",
+            existing_receipt=receipt,
+        )
+
+
 def test_human_review_runtime_records_rejected_expired_and_cancelled_states() -> None:
     from zuno.knowledge.ingestion import HumanReviewRuntime
 
@@ -106,6 +163,58 @@ def test_human_review_runtime_records_rejected_expired_and_cancelled_states() ->
     assert HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=rejected) is False
     assert HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=cancelled) is False
     assert HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=expired) is False
+
+
+def test_human_review_runtime_rejects_revoked_reviewer_and_stale_epoch_approval() -> None:
+    from zuno.knowledge.ingestion import HumanReviewRuntime, StaticReviewDecisionAuthorizationPort
+
+    result, snapshot = _ocr_parse()
+    assert result.document is not None
+    runtime = HumanReviewRuntime(
+        review_ttl_seconds=60,
+        authorization_port=StaticReviewDecisionAuthorizationPort(
+            revoked_reviewer_ids=frozenset({"reviewer_revoked"})
+        ),
+    )
+    gate, task = runtime.evaluate(
+        document=result.document,
+        parse_snapshot=snapshot,
+        security_epoch_ref="security_epoch:workspace_review",
+        reviewer_principal_id="reviewer_revoked",
+        security_decision_ref="security_decision:review",
+    )
+    assert task is not None
+
+    revoked = runtime.decide(
+        task=task,
+        reviewer_id="reviewer_revoked",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review",
+    )
+    stale_runtime = HumanReviewRuntime(review_ttl_seconds=60)
+    stale_gate, stale_task = stale_runtime.evaluate(
+        document=result.document,
+        parse_snapshot=snapshot,
+        security_epoch_ref="security_epoch:workspace_review",
+        reviewer_principal_id="reviewer_1",
+        security_decision_ref="security_decision:review",
+    )
+    assert stale_task is not None
+    stale_epoch = stale_runtime.decide(
+        task=stale_task,
+        reviewer_id="reviewer_1",
+        reviewer_scope="workspace_reviewer",
+        status="approved",
+        security_epoch_ref="security_epoch:workspace_review:stale",
+    )
+
+    assert revoked.status == "rejected"
+    assert revoked.reason == "reviewer_authorization_revoked"
+    assert stale_epoch.status == "rejected"
+    assert stale_epoch.reason == "review_security_epoch_mismatch"
+    assert HumanReviewRuntime.can_publish_snapshot(gate=gate, receipt=revoked) is False
+    assert HumanReviewRuntime.can_publish_snapshot(gate=stale_gate, receipt=stale_epoch) is False
 
 
 def test_human_review_runtime_expiration_sweep_expires_only_pending_overdue_tasks() -> None:

@@ -169,16 +169,17 @@ class DurableMinioObjectStore:
 
     def delete_committed(self, ticket: ObjectCommitTicket) -> ObjectStoreReceipt:
         manifest = self._required_committed_manifest(ticket.object_ref)
+        receipt = self.store.delete_object(
+            bucket=ticket.bucket,
+            object_name=ticket.committed_object_name,
+        )
         self._record_manifest(
             object_ref=ticket.object_ref,
             content_hash=manifest.content_hash,
             size_bytes=manifest.size_bytes,
             visibility="deleted",
         )
-        return self.store.delete_object(
-            bucket=ticket.bucket,
-            object_name=ticket.committed_object_name,
-        )
+        return receipt
 
     def restore(
         self,

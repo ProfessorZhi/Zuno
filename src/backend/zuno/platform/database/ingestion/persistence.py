@@ -844,6 +844,51 @@ class IngestionRepository:
             raise IngestionPersistenceError("parse lease terminal update rejected by fencing")
         self.update_parse_job_status(parse_job_id=parse_job_id, tenant_id=tenant_id, status=status)
 
+    def mark_parse_attempt_review_pending(
+        self,
+        *,
+        parse_attempt_id: str,
+        parse_job_id: str,
+        tenant_id: str,
+        worker_id: str,
+        fencing_token: int,
+    ) -> None:
+        self._update_attempt_if_current(
+            parse_attempt_id=parse_attempt_id,
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            worker_id=worker_id,
+            fencing_token=fencing_token,
+            status="review_pending",
+            expected_statuses=("running",),
+        )
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_leases
+                SET state = 'released', heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND worker_id = :worker_id
+                  AND fencing_token = :fencing_token
+                  AND state in ('claimed','renewed')
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "worker_id": worker_id,
+                "fencing_token": fencing_token,
+            },
+        )
+        if result.rowcount != 1:
+            raise IngestionPersistenceError("parse lease review pending update rejected by fencing")
+        self.update_parse_job_status(
+            parse_job_id=parse_job_id,
+            tenant_id=tenant_id,
+            status="review_pending",
+        )
+
     def update_parse_job_status(self, *, parse_job_id: str, tenant_id: str, status: str) -> None:
         result = self.connection.execute(
             text(
@@ -984,20 +1029,51 @@ class IngestionRepository:
         status: str = "succeeded",
         diagnostics: list[dict[str, Any]] | None = None,
     ) -> IngestionReceipt:
+        current = self.connection.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                  AND attempt.parse_job_id = :parse_job_id
+                  AND attempt.tenant_id = :tenant_id
+                  AND job.tenant_id = :tenant_id
+                """
+            ),
+            {
+                "parse_attempt_id": parse_attempt_id,
+                "parse_job_id": parse_job_id,
+                "tenant_id": tenant_id,
+            },
+        ).mappings().first()
+        if current is None:
+            raise IngestionPersistenceError(f"missing parse attempt for snapshot: {parse_attempt_id}")
+        if current["attempt_status"] not in {"created", "lease_claimed", "running"}:
+            raise IngestionPersistenceError(
+                f"late parser result rejected for attempt status: {current['attempt_status']}"
+            )
+        if current["job_status"] not in {"queued", "running"}:
+            raise IngestionPersistenceError(
+                f"late parser result rejected for job status: {current['job_status']}"
+            )
         snapshot_hash = canonical_sha256(canonical_ir)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_parse_snapshots(
                     parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
-                    document_version_id, snapshot_hash, canonical_ir_ref,
+                    document_version_id, snapshot_hash, canonical_ir_json, canonical_ir_ref,
                     canonical_ir_schema_ref, parser_id, parser_version, status, diagnostics
                 ) VALUES (
                     :parse_snapshot_id, :tenant_id, :parse_job_id, :parse_attempt_id,
-                    :document_version_id, :snapshot_hash, :canonical_ir_ref,
+                    :document_version_id, :snapshot_hash, CAST(:canonical_ir_json AS jsonb), :canonical_ir_ref,
                     :canonical_ir_schema_ref, :parser_id, :parser_version, :status,
                     CAST(:diagnostics AS jsonb)
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1007,6 +1083,7 @@ class IngestionRepository:
                 "parse_attempt_id": parse_attempt_id,
                 "document_version_id": document_version_id,
                 "snapshot_hash": snapshot_hash,
+                "canonical_ir_json": canonical_json(canonical_ir),
                 "canonical_ir_ref": canonical_ir_ref,
                 "canonical_ir_schema_ref": canonical_ir_schema_ref,
                 "parser_id": parser_id,
@@ -1015,6 +1092,44 @@ class IngestionRepository:
                 "diagnostics": canonical_json(diagnostics or []),
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
+                           document_version_id, snapshot_hash, canonical_ir_ref,
+                           canonical_ir_schema_ref, parser_id, parser_version, status
+                    FROM ingestion_parse_snapshots
+                    WHERE parse_snapshot_id = :parse_snapshot_id
+                       OR (parse_job_id = :parse_job_id AND parse_attempt_id = :parse_attempt_id)
+                    """
+                ),
+                {
+                    "parse_snapshot_id": parse_snapshot_id,
+                    "parse_job_id": parse_job_id,
+                    "parse_attempt_id": parse_attempt_id,
+                },
+            ).mappings().first()
+            if (
+                existing
+                and str(existing["tenant_id"]) == str(tenant_id)
+                and str(existing["parse_job_id"]) == str(parse_job_id)
+                and str(existing["parse_attempt_id"]) == str(parse_attempt_id)
+                and str(existing["document_version_id"]) == str(document_version_id)
+                and existing["snapshot_hash"] == snapshot_hash
+                and existing["canonical_ir_ref"] == canonical_ir_ref
+                and existing["canonical_ir_schema_ref"] == canonical_ir_schema_ref
+                and existing["parser_id"] == parser_id
+                and existing["parser_version"] == parser_version
+                and existing["status"] == status
+            ):
+                return IngestionReceipt(
+                    str(existing["parse_snapshot_id"]),
+                    tenant_id,
+                    f"duplicate:{existing['status']}",
+                    snapshot_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting parse snapshot: {parse_snapshot_id}")
         return IngestionReceipt(parse_snapshot_id, tenant_id, status, snapshot_hash)
 
     def record_source_span(
@@ -1125,21 +1240,29 @@ class IngestionRepository:
         reason: str,
         decision_hash: str,
         expires_at: datetime | float,
+        reviewer_principal_id: str | None = None,
+        security_decision_ref: str | None = None,
+        idempotency_key: str | None = None,
+        trace_id: str | None = None,
+        audit_ref: str | None = None,
     ) -> IngestionReceipt:
         self._require_hash(decision_hash, "decision_hash")
         expires_at_dt = self._datetime_from_epoch_or_value(expires_at)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_review_tasks(
                     review_task_id, tenant_id, parse_snapshot_id, quality_decision_id,
-                    document_version_id, workspace_id, reviewer_scope, security_epoch_ref,
-                    status, reason, decision_hash, expires_at
+                    document_version_id, workspace_id, reviewer_principal_id, reviewer_scope,
+                    security_decision_ref, security_epoch_ref, idempotency_key, trace_id,
+                    audit_ref, status, reason, decision_hash, expires_at
                 ) VALUES (
                     :review_task_id, :tenant_id, :parse_snapshot_id, :quality_decision_id,
-                    :document_version_id, :workspace_id, :reviewer_scope, :security_epoch_ref,
-                    :status, :reason, :decision_hash, :expires_at
+                    :document_version_id, :workspace_id, :reviewer_principal_id, :reviewer_scope,
+                    :security_decision_ref, :security_epoch_ref, :idempotency_key, :trace_id,
+                    :audit_ref, :status, :reason, :decision_hash, :expires_at
                 )
+                ON CONFLICT (review_task_id) DO NOTHING
                 """
             ),
             {
@@ -1149,14 +1272,33 @@ class IngestionRepository:
                 "quality_decision_id": quality_decision_id,
                 "document_version_id": document_version_id,
                 "workspace_id": workspace_id,
+                "reviewer_principal_id": reviewer_principal_id,
                 "reviewer_scope": reviewer_scope,
+                "security_decision_ref": security_decision_ref,
                 "security_epoch_ref": security_epoch_ref,
+                "idempotency_key": idempotency_key,
+                "trace_id": trace_id,
+                "audit_ref": audit_ref,
                 "status": status,
                 "reason": reason,
                 "decision_hash": decision_hash,
                 "expires_at": expires_at_dt,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT decision_hash, status
+                    FROM ingestion_review_tasks
+                    WHERE review_task_id = :review_task_id
+                    """
+                ),
+                {"review_task_id": review_task_id},
+            ).mappings().first()
+            if existing and existing["decision_hash"] == decision_hash:
+                return IngestionReceipt(review_task_id, tenant_id, f"duplicate:{existing['status']}", decision_hash)
+            raise IngestionPersistenceError(f"conflicting review task: {review_task_id}")
         return IngestionReceipt(review_task_id, tenant_id, status, decision_hash)
 
     def record_review_decision_receipt(
@@ -1175,7 +1317,7 @@ class IngestionRepository:
     ) -> IngestionReceipt:
         self._require_hash(decision_hash, "decision_hash")
         decided_at_dt = self._datetime_from_epoch_or_value(decided_at)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_review_decision_receipts(
@@ -1185,6 +1327,7 @@ class IngestionRepository:
                     :decision_id, :tenant_id, :review_task_id, :status, :reviewer_id,
                     :reviewer_scope, :security_epoch_ref, :reason, :decision_hash, :decided_at
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1200,6 +1343,40 @@ class IngestionRepository:
                 "decided_at": decided_at_dt,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT decision_id, tenant_id, review_task_id, status, reviewer_id,
+                           reviewer_scope, security_epoch_ref, reason, decision_hash, decided_at
+                    FROM ingestion_review_decision_receipts
+                    WHERE decision_id = :decision_id
+                       OR review_task_id = :review_task_id
+                    """
+                ),
+                {"decision_id": decision_id, "review_task_id": review_task_id},
+            ).mappings().all()
+            expected = {
+                "decision_id": decision_id,
+                "tenant_id": tenant_id,
+                "review_task_id": review_task_id,
+                "status": status,
+                "reviewer_id": reviewer_id,
+                "reviewer_scope": reviewer_scope,
+                "security_epoch_ref": security_epoch_ref,
+                "reason": reason,
+                "decision_hash": decision_hash,
+            }
+            exact = [
+                row
+                for row in existing
+                if all(row[key] == value for key, value in expected.items())
+                and row["decided_at"] == decided_at_dt
+            ]
+            if len(exact) == 1:
+                existing = exact[0]
+                return IngestionReceipt(str(existing["decision_id"]), tenant_id, f"duplicate:{existing['status']}", decision_hash)
+            raise IngestionPersistenceError(f"conflicting review decision receipt: {review_task_id}")
         self.connection.execute(
             text(
                 """
@@ -1215,7 +1392,270 @@ class IngestionRepository:
                 "status": status,
             },
         )
+        self._mark_reviewed_parse_attempt_and_job(
+            review_task_id=review_task_id,
+            tenant_id=tenant_id,
+            status=status,
+        )
         return IngestionReceipt(decision_id, tenant_id, status, decision_hash)
+
+    def _mark_reviewed_parse_attempt_and_job(self, *, review_task_id: str, tenant_id: str, status: str) -> None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT snapshot.parse_attempt_id, snapshot.parse_job_id,
+                       attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_review_tasks AS review_task
+                JOIN ingestion_parse_snapshots AS snapshot
+                  ON snapshot.parse_snapshot_id = review_task.parse_snapshot_id
+                 AND snapshot.tenant_id = review_task.tenant_id
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.parse_job_id = snapshot.parse_job_id
+                 AND attempt.tenant_id = snapshot.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = snapshot.tenant_id
+                WHERE review_task.review_task_id = :review_task_id
+                  AND review_task.tenant_id = :tenant_id
+                """
+            ),
+            {"review_task_id": review_task_id, "tenant_id": tenant_id},
+        ).mappings().one_or_none()
+        if row is None:
+            raise IngestionPersistenceError(f"missing review parse snapshot binding: {review_task_id}")
+        if row["attempt_status"] != "review_pending" and row["job_status"] != "review_pending":
+            return
+        if row["attempt_status"] != "review_pending" or row["job_status"] != "review_pending":
+            raise IngestionPersistenceError("review decision parse status update found split state")
+        attempt = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = :status,
+                    heartbeat_at = now(),
+                    finished_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'review_pending'
+                """
+            ),
+            {
+                "parse_attempt_id": row["parse_attempt_id"],
+                "parse_job_id": row["parse_job_id"],
+                "tenant_id": tenant_id,
+                "status": status,
+            },
+        )
+        if attempt.rowcount != 1:
+            raise IngestionPersistenceError("review decision parse attempt status update rejected")
+        job = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = :status,
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'review_pending'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id, "status": status},
+        )
+        if job.rowcount != 1:
+            raise IngestionPersistenceError("review decision parse job status update rejected")
+
+    def mark_review_handoff_pending(self, *, parse_snapshot_id: str, tenant_id: str) -> None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT snapshot.parse_attempt_id, snapshot.parse_job_id,
+                       attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_snapshots AS snapshot
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.parse_job_id = snapshot.parse_job_id
+                 AND attempt.tenant_id = snapshot.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = snapshot.tenant_id
+                WHERE snapshot.parse_snapshot_id = :parse_snapshot_id
+                  AND snapshot.tenant_id = :tenant_id
+                """
+            ),
+            {"parse_snapshot_id": parse_snapshot_id, "tenant_id": tenant_id},
+        ).mappings().one_or_none()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse snapshot for handoff pending: {parse_snapshot_id}")
+        if row["attempt_status"] == "handoff_pending" and row["job_status"] == "handoff_pending":
+            return
+        if row["attempt_status"] != "approved" or row["job_status"] != "approved":
+            raise IngestionPersistenceError("review handoff pending requires approved parse status")
+        attempt = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'handoff_pending',
+                    heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'approved'
+                """
+            ),
+            {
+                "parse_attempt_id": row["parse_attempt_id"],
+                "parse_job_id": row["parse_job_id"],
+                "tenant_id": tenant_id,
+            },
+        )
+        if attempt.rowcount != 1:
+            raise IngestionPersistenceError("review handoff pending parse attempt update rejected")
+        job = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = 'handoff_pending',
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'approved'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id},
+        )
+        if job.rowcount != 1:
+            raise IngestionPersistenceError("review handoff pending parse job update rejected")
+
+    def mark_review_handoff_published(
+        self,
+        *,
+        tenant_id: str,
+        handoff_idempotency_key: str,
+    ) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT indexable.indexable_snapshot_id,
+                       indexable.parse_snapshot_id,
+                       indexable.knowledge_handoff_status,
+                       outbox.outbox_event_id,
+                       outbox.publish_status AS outbox_publish_status,
+                       attempt.parse_attempt_id,
+                       attempt.status AS attempt_status,
+                       job.parse_job_id,
+                       job.status AS job_status
+                FROM ingestion_indexable_document_snapshots AS indexable
+                JOIN ingestion_outbox_events AS outbox
+                  ON outbox.tenant_id = indexable.tenant_id
+                 AND outbox.event_type = 'ingestion.indexable_snapshot.ready'
+                 AND outbox.idempotency_key = indexable.handoff_idempotency_key
+                JOIN ingestion_parse_snapshots AS snapshot
+                  ON snapshot.parse_snapshot_id = indexable.parse_snapshot_id
+                 AND snapshot.tenant_id = indexable.tenant_id
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.tenant_id = indexable.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = indexable.tenant_id
+                WHERE indexable.tenant_id = :tenant_id
+                  AND indexable.handoff_idempotency_key = :handoff_idempotency_key
+                FOR UPDATE
+                """
+            ),
+            {"tenant_id": tenant_id, "handoff_idempotency_key": handoff_idempotency_key},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(
+                f"missing snapshot handoff publish receipt: {handoff_idempotency_key}"
+            )
+        if (
+            row["knowledge_handoff_status"] == "published"
+            and row["outbox_publish_status"] == "published"
+            and row["attempt_status"] == "published"
+            and row["job_status"] == "published"
+        ):
+            return self.load_snapshot_handoff_replay_receipt(
+                tenant_id=tenant_id,
+                handoff_idempotency_key=handoff_idempotency_key,
+            )
+        if row["knowledge_handoff_status"] not in {"pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires publishable snapshot status")
+        if row["outbox_publish_status"] not in {"pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires publishable outbox status")
+        if row["attempt_status"] not in {"handoff_pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires handoff pending attempt status")
+        if row["job_status"] not in {"handoff_pending", "published"}:
+            raise IngestionPersistenceError("review handoff publish requires handoff pending job status")
+        if row["attempt_status"] != row["job_status"]:
+            raise IngestionPersistenceError("review handoff publish split parse status rejected")
+
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_indexable_document_snapshots
+                SET knowledge_handoff_status = 'published'
+                WHERE indexable_snapshot_id = :indexable_snapshot_id
+                  AND tenant_id = :tenant_id
+                  AND knowledge_handoff_status = 'pending'
+                """
+            ),
+            {"indexable_snapshot_id": row["indexable_snapshot_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_outbox_events
+                SET publish_status = 'published'
+                WHERE outbox_event_id = :outbox_event_id
+                  AND tenant_id = :tenant_id
+                  AND publish_status = 'pending'
+                """
+            ),
+            {"outbox_event_id": row["outbox_event_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'published'
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'handoff_pending'
+                """
+            ),
+            {"parse_attempt_id": row["parse_attempt_id"], "tenant_id": tenant_id},
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = 'published',
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'handoff_pending'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id},
+        )
+        return self.load_snapshot_handoff_replay_receipt(
+            tenant_id=tenant_id,
+            handoff_idempotency_key=handoff_idempotency_key,
+        )
 
     def record_indexable_snapshot(
         self,
@@ -1240,7 +1680,7 @@ class IngestionRepository:
                 "payload": payload,
             }
         )
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_indexable_document_snapshots(
@@ -1252,6 +1692,7 @@ class IngestionRepository:
                     :quality_decision_id, :snapshot_hash, :handoff_envelope_hash,
                     :visibility_ref, :handoff_idempotency_key, :knowledge_handoff_status
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1267,6 +1708,49 @@ class IngestionRepository:
                 "knowledge_handoff_status": knowledge_handoff_status,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT indexable_snapshot_id, tenant_id, parse_snapshot_id,
+                           document_version_id, quality_decision_id, snapshot_hash,
+                           handoff_envelope_hash, visibility_ref, handoff_idempotency_key,
+                           knowledge_handoff_status
+                    FROM ingestion_indexable_document_snapshots
+                    WHERE indexable_snapshot_id = :indexable_snapshot_id
+                       OR parse_snapshot_id = :parse_snapshot_id
+                       OR (
+                            CAST(:handoff_idempotency_key AS varchar) IS NOT NULL
+                        AND tenant_id = :tenant_id
+                        AND handoff_idempotency_key = :handoff_idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "indexable_snapshot_id": indexable_snapshot_id,
+                    "tenant_id": tenant_id,
+                    "parse_snapshot_id": parse_snapshot_id,
+                    "handoff_idempotency_key": handoff_idempotency_key,
+                },
+            ).mappings().all()
+            expected = {
+                "tenant_id": tenant_id,
+                "parse_snapshot_id": parse_snapshot_id,
+                "document_version_id": document_version_id,
+                "quality_decision_id": quality_decision_id,
+                "snapshot_hash": snapshot_hash,
+                "handoff_envelope_hash": handoff_hash,
+                "visibility_ref": visibility_ref,
+                "handoff_idempotency_key": handoff_idempotency_key,
+            }
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in expected.items()):
+                return IngestionReceipt(
+                    str(existing[0]["indexable_snapshot_id"]),
+                    tenant_id,
+                    f"duplicate:{existing[0]['knowledge_handoff_status']}",
+                    handoff_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting indexable snapshot: {indexable_snapshot_id}")
         return IngestionReceipt(indexable_snapshot_id, tenant_id, knowledge_handoff_status, handoff_hash)
 
     def record_delete_lifecycle(
@@ -1279,6 +1763,8 @@ class IngestionRepository:
         visibility_ref: str,
         receipt_hash: str,
         history: list[str],
+        object_ref: str | None = None,
+        restore_point_name: str | None = None,
         indexable_snapshot_id: str | None = None,
         handoff_outbox_event_id: str | None = None,
         parse_job_id: str | None = None,
@@ -1292,30 +1778,34 @@ class IngestionRepository:
         physical_delete_verified: bool = False,
         legal_hold_ref: str | None = None,
         restored_authorization: bool = False,
+        restore_authorization_ref: str | None = None,
         duplicate: bool = False,
         late_worker_result_rejected: bool = False,
     ) -> IngestionReceipt:
         self._require_hash(receipt_hash, "receipt_hash")
         if fencing_token is not None and fencing_token <= 0:
             raise IngestionPersistenceError("delete lifecycle fencing_token must be positive")
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_delete_lifecycles(
                     delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
-                    indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
-                    parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
-                    physical_delete_ref, verification_ref, cleanup_verified,
-                    physical_delete_verified, legal_hold_ref, restored_authorization,
-                    duplicate, late_worker_result_rejected, receipt_hash, history
+                    object_ref, restore_point_name, indexable_snapshot_id,
+                    handoff_outbox_event_id, parse_job_id, parse_attempt_id,
+                    fencing_token, cleanup_ref, projection_cleanup_ref, physical_delete_ref,
+                    verification_ref, cleanup_verified, physical_delete_verified,
+                    legal_hold_ref, restored_authorization, restore_authorization_ref, duplicate,
+                    late_worker_result_rejected, receipt_hash, history
                 ) VALUES (
                     :delete_ref, :tenant_id, :snapshot_ref, :state, :visibility_ref,
-                    :indexable_snapshot_id, :handoff_outbox_event_id, :parse_job_id,
-                    :parse_attempt_id, :fencing_token, :cleanup_ref, :projection_cleanup_ref,
-                    :physical_delete_ref, :verification_ref, :cleanup_verified,
-                    :physical_delete_verified, :legal_hold_ref, :restored_authorization,
-                    :duplicate, :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
+                    :object_ref, :restore_point_name, :indexable_snapshot_id,
+                    :handoff_outbox_event_id, :parse_job_id, :parse_attempt_id,
+                    :fencing_token, :cleanup_ref, :projection_cleanup_ref, :physical_delete_ref,
+                    :verification_ref, :cleanup_verified, :physical_delete_verified,
+                    :legal_hold_ref, :restored_authorization, :restore_authorization_ref, :duplicate,
+                    :late_worker_result_rejected, :receipt_hash, CAST(:history AS jsonb)
                 )
+                ON CONFLICT (delete_ref) DO NOTHING
                 """
             ),
             {
@@ -1324,6 +1814,8 @@ class IngestionRepository:
                 "snapshot_ref": snapshot_ref,
                 "state": state,
                 "visibility_ref": visibility_ref,
+                "object_ref": object_ref,
+                "restore_point_name": restore_point_name,
                 "indexable_snapshot_id": indexable_snapshot_id,
                 "handoff_outbox_event_id": handoff_outbox_event_id,
                 "parse_job_id": parse_job_id,
@@ -1337,12 +1829,27 @@ class IngestionRepository:
                 "physical_delete_verified": physical_delete_verified,
                 "legal_hold_ref": legal_hold_ref,
                 "restored_authorization": restored_authorization,
+                "restore_authorization_ref": restore_authorization_ref,
                 "duplicate": duplicate,
                 "late_worker_result_rejected": late_worker_result_rejected,
                 "receipt_hash": receipt_hash,
                 "history": canonical_json(history),
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT receipt_hash, state
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": delete_ref},
+            ).mappings().first()
+            if existing and existing["receipt_hash"] == receipt_hash:
+                return IngestionReceipt(delete_ref, tenant_id, f"duplicate:{existing['state']}", receipt_hash)
+            raise IngestionPersistenceError(f"conflicting delete lifecycle: {delete_ref}")
         return IngestionReceipt(delete_ref, tenant_id, state, receipt_hash)
 
     def enqueue_outbox_event(
@@ -1357,7 +1864,7 @@ class IngestionRepository:
         publish_status: str = "pending",
     ) -> IngestionReceipt:
         payload_hash = canonical_sha256(payload)
-        self.connection.execute(
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO ingestion_outbox_events(
@@ -1367,6 +1874,7 @@ class IngestionRepository:
                     :outbox_event_id, :tenant_id, :aggregate_ref, :event_type,
                     :payload_hash, CAST(:payload AS jsonb), :idempotency_key, :publish_status
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
             {
@@ -1380,6 +1888,44 @@ class IngestionRepository:
                 "publish_status": publish_status,
             },
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT outbox_event_id, tenant_id, aggregate_ref, event_type,
+                           payload_hash, idempotency_key, publish_status
+                    FROM ingestion_outbox_events
+                    WHERE outbox_event_id = :outbox_event_id
+                       OR (
+                            CAST(:idempotency_key AS varchar) IS NOT NULL
+                        AND tenant_id = :tenant_id
+                        AND event_type = :event_type
+                        AND idempotency_key = :idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "outbox_event_id": outbox_event_id,
+                    "tenant_id": tenant_id,
+                    "event_type": event_type,
+                    "idempotency_key": idempotency_key,
+                },
+            ).mappings().all()
+            expected = {
+                "tenant_id": tenant_id,
+                "aggregate_ref": aggregate_ref,
+                "event_type": event_type,
+                "payload_hash": payload_hash,
+                "idempotency_key": idempotency_key,
+            }
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in expected.items()):
+                return IngestionReceipt(
+                    str(existing[0]["outbox_event_id"]),
+                    tenant_id,
+                    f"duplicate:{existing[0]['publish_status']}",
+                    payload_hash,
+                )
+            raise IngestionPersistenceError(f"conflicting outbox event: {outbox_event_id}")
         return IngestionReceipt(outbox_event_id, tenant_id, publish_status, payload_hash)
 
     def get_indexable_snapshot(self, indexable_snapshot_id: str) -> dict[str, Any]:
@@ -1397,6 +1943,57 @@ class IngestionRepository:
         ).mappings().first()
         if row is None:
             raise IngestionPersistenceError(f"missing indexable snapshot: {indexable_snapshot_id}")
+        return dict(row)
+
+    def get_parse_snapshot(self, parse_snapshot_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
+                       document_version_id, snapshot_hash, canonical_ir_json,
+                       canonical_ir_ref, canonical_ir_schema_ref, parser_id,
+                       parser_version, status, diagnostics, created_at
+                FROM ingestion_parse_snapshots
+                WHERE parse_snapshot_id = :parse_snapshot_id
+                """
+            ),
+            {"parse_snapshot_id": parse_snapshot_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse snapshot: {parse_snapshot_id}")
+        return dict(row)
+
+    def get_document_version(self, document_version_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT document_version_id, tenant_id, workspace_id, source_object_id,
+                       version_no, content_hash, metadata_hash, immutability_ref,
+                       status, created_at
+                FROM ingestion_document_versions
+                WHERE document_version_id = :document_version_id
+                """
+            ),
+            {"document_version_id": document_version_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing document version: {document_version_id}")
+        return dict(row)
+
+    def get_quality_decision(self, quality_decision_id: str) -> dict[str, Any]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT quality_decision_id, tenant_id, parse_snapshot_id, coverage_score,
+                       confidence_score, decision, review_task_ref, decision_hash, decided_at
+                FROM ingestion_quality_gate_decisions
+                WHERE quality_decision_id = :quality_decision_id
+                """
+            ),
+            {"quality_decision_id": quality_decision_id},
+        ).mappings().first()
+        if row is None:
+            raise IngestionPersistenceError(f"missing quality decision: {quality_decision_id}")
         return dict(row)
 
     def get_review_task(self, review_task_id: str) -> dict[str, Any]:
@@ -1437,11 +2034,13 @@ class IngestionRepository:
             text(
                 """
                 SELECT delete_ref, tenant_id, snapshot_ref, state, visibility_ref,
-                       indexable_snapshot_id, handoff_outbox_event_id, parse_job_id,
-                       parse_attempt_id, fencing_token, cleanup_ref, projection_cleanup_ref,
+                       object_ref, restore_point_name, indexable_snapshot_id,
+                       handoff_outbox_event_id, parse_job_id, parse_attempt_id,
+                       fencing_token, cleanup_ref, projection_cleanup_ref,
                        physical_delete_ref, verification_ref, cleanup_verified,
                        physical_delete_verified, legal_hold_ref, restored_authorization,
-                       duplicate, late_worker_result_rejected, receipt_hash, history
+                       restore_authorization_ref, duplicate, late_worker_result_rejected,
+                       receipt_hash, history
                 FROM ingestion_delete_lifecycles
                 WHERE delete_ref = :delete_ref
                 """
@@ -1461,6 +2060,8 @@ class IngestionRepository:
                 UPDATE ingestion_delete_lifecycles
                 SET state = :state,
                     visibility_ref = :visibility_ref,
+                    object_ref = :object_ref,
+                    restore_point_name = :restore_point_name,
                     indexable_snapshot_id = :indexable_snapshot_id,
                     handoff_outbox_event_id = :handoff_outbox_event_id,
                     parse_job_id = :parse_job_id,
@@ -1474,6 +2075,7 @@ class IngestionRepository:
                     physical_delete_verified = :physical_delete_verified,
                     legal_hold_ref = :legal_hold_ref,
                     restored_authorization = :restored_authorization,
+                    restore_authorization_ref = :restore_authorization_ref,
                     duplicate = :duplicate,
                     late_worker_result_rejected = :late_worker_result_rejected,
                     receipt_hash = :receipt_hash,

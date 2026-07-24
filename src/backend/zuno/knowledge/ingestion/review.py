@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 import time
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -37,8 +37,13 @@ class ReviewTask(BaseModel):
     parse_snapshot_id: str
     document_version_id: str
     workspace_id: str
+    reviewer_principal_id: str | None = None
     reviewer_scope: str
+    security_decision_ref: str | None = None
     security_epoch_ref: str
+    idempotency_key: str | None = None
+    trace_id: str | None = None
+    audit_ref: str | None = None
     status: ReviewDecisionStatus = "pending"
     expires_at: float
     reason: str
@@ -58,6 +63,16 @@ class ReviewDecisionReceipt(BaseModel):
     decided_at: float = Field(default_factory=time.time)
 
 
+class ReviewDecisionAuthorizationReceipt(BaseModel):
+    review_task_id: str
+    reviewer_id: str
+    reviewer_scope: str
+    security_epoch_ref: str
+    authorized: bool
+    reason: str
+    authorization_ref: str
+
+
 class ReviewExpirationSweepReceipt(BaseModel):
     sweep_id: str
     now: float
@@ -67,10 +82,65 @@ class ReviewExpirationSweepReceipt(BaseModel):
     sweep_hash: str
 
 
+class ReviewDecisionAuthorizationPort(Protocol):
+    def authorize_review_decision(
+        self,
+        *,
+        task: ReviewTask,
+        reviewer_id: str,
+        reviewer_scope: str,
+        security_epoch_ref: str,
+    ) -> ReviewDecisionAuthorizationReceipt: ...
+
+
+@dataclass(frozen=True, slots=True)
+class StaticReviewDecisionAuthorizationPort:
+    revoked_reviewer_ids: frozenset[str] = frozenset()
+    revoked_security_decision_refs: frozenset[str] = frozenset()
+
+    def authorize_review_decision(
+        self,
+        *,
+        task: ReviewTask,
+        reviewer_id: str,
+        reviewer_scope: str,
+        security_epoch_ref: str,
+    ) -> ReviewDecisionAuthorizationReceipt:
+        authorized = True
+        reason = "review_authorization_accepted"
+        if task.reviewer_principal_id is not None and reviewer_id != task.reviewer_principal_id:
+            authorized = False
+            reason = "reviewer_principal_mismatch"
+        elif reviewer_id in self.revoked_reviewer_ids:
+            authorized = False
+            reason = "reviewer_authorization_revoked"
+        elif reviewer_scope != task.reviewer_scope:
+            authorized = False
+            reason = "review_scope_mismatch"
+        elif security_epoch_ref != task.security_epoch_ref:
+            authorized = False
+            reason = "review_security_epoch_mismatch"
+        elif task.security_decision_ref in self.revoked_security_decision_refs:
+            authorized = False
+            reason = "review_security_decision_revoked"
+        return ReviewDecisionAuthorizationReceipt(
+            review_task_id=task.review_task_id,
+            reviewer_id=reviewer_id,
+            reviewer_scope=reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+            authorized=authorized,
+            reason=reason,
+            authorization_ref=f"review-auth:{task.review_task_id}:{reviewer_id}:{security_epoch_ref}",
+        )
+
+
 @dataclass
 class HumanReviewRuntime:
     review_ttl_seconds: int = 3600
     min_confidence: float = 0.9
+    authorization_port: ReviewDecisionAuthorizationPort = field(
+        default_factory=StaticReviewDecisionAuthorizationPort
+    )
 
     def evaluate(
         self,
@@ -79,6 +149,11 @@ class HumanReviewRuntime:
         parse_snapshot: ParseJobSnapshot,
         security_epoch_ref: str,
         reviewer_scope: str = "workspace_reviewer",
+        reviewer_principal_id: str | None = None,
+        security_decision_ref: str | None = None,
+        idempotency_key: str | None = None,
+        trace_id: str | None = None,
+        audit_ref: str | None = None,
     ) -> tuple[QualityGateResult, ReviewTask | None]:
         metrics = self._metrics(document)
         requires_review = any(
@@ -96,8 +171,13 @@ class HumanReviewRuntime:
                 parse_snapshot_id=parse_snapshot.job_id,
                 document_version_id=document.metadata.document_version_id,
                 workspace_id=document.metadata.workspace_id,
+                reviewer_principal_id=reviewer_principal_id,
                 reviewer_scope=reviewer_scope,
+                security_decision_ref=security_decision_ref,
                 security_epoch_ref=security_epoch_ref,
+                idempotency_key=idempotency_key,
+                trace_id=trace_id,
+                audit_ref=audit_ref,
                 expires_at=time.time() + self.review_ttl_seconds,
                 reason="quality_review_required",
                 decision_hash=_hash(
@@ -105,7 +185,13 @@ class HumanReviewRuntime:
                         "review_task_id": review_task_id,
                         "parse_snapshot_id": parse_snapshot.job_id,
                         "document_version_id": document.metadata.document_version_id,
+                        "reviewer_principal_id": reviewer_principal_id,
+                        "reviewer_scope": reviewer_scope,
+                        "security_decision_ref": security_decision_ref,
                         "security_epoch_ref": security_epoch_ref,
+                        "idempotency_key": idempotency_key,
+                        "trace_id": trace_id,
+                        "audit_ref": audit_ref,
                         "status": "pending",
                     }
                 ),
@@ -144,15 +230,49 @@ class HumanReviewRuntime:
         existing_receipt: ReviewDecisionReceipt | None = None,
         now: float | None = None,
     ) -> ReviewDecisionReceipt:
-        if existing_receipt is not None:
-            return existing_receipt.model_copy(update={"duplicate": True})
+        requested_status: ReviewDecisionStatus = status
+        authorization = self.authorization_port.authorize_review_decision(
+            task=task,
+            reviewer_id=reviewer_id,
+            reviewer_scope=reviewer_scope,
+            security_epoch_ref=security_epoch_ref,
+        )
+        if status == "approved" and not authorization.authorized:
+            requested_status = "rejected"
         current_time = time.time() if now is None else now
-        final_status: ReviewDecisionStatus = "expired" if current_time > task.expires_at else status
-        if reviewer_scope != task.reviewer_scope:
-            final_status = "rejected"
-        if security_epoch_ref != task.security_epoch_ref:
-            final_status = "rejected"
+        final_status: ReviewDecisionStatus = (
+            "expired" if current_time > task.expires_at else requested_status
+        )
         decision_id = f"review_decision_{task.review_task_id}"
+        requested_decision_hashes = {
+            _hash(
+                {
+                    "review_task_id": task.review_task_id,
+                    "decision_id": decision_id,
+                    "status": requested_status,
+                    "reviewer_id": reviewer_id,
+                    "reviewer_scope": reviewer_scope,
+                    "security_epoch_ref": security_epoch_ref,
+                }
+            ),
+            _hash(
+                {
+                    "review_task_id": task.review_task_id,
+                    "decision_id": decision_id,
+                    "status": final_status,
+                    "reviewer_id": reviewer_id,
+                    "reviewer_scope": reviewer_scope,
+                    "security_epoch_ref": security_epoch_ref,
+                }
+            ),
+        }
+        if existing_receipt is not None:
+            if (
+                existing_receipt.review_task_id != task.review_task_id
+                or existing_receipt.decision_hash not in requested_decision_hashes
+            ):
+                raise ValueError(f"conflicting review decision: {task.review_task_id}")
+            return existing_receipt.model_copy(update={"duplicate": True})
         decision_hash = _hash(
             {
                 "review_task_id": task.review_task_id,
@@ -171,7 +291,7 @@ class HumanReviewRuntime:
             reviewer_scope=reviewer_scope,
             security_epoch_ref=security_epoch_ref,
             decision_hash=decision_hash,
-            reason="review_decision_recorded",
+            reason=authorization.reason if not authorization.authorized else "review_decision_recorded",
             decided_at=current_time,
         )
 
@@ -260,6 +380,9 @@ __all__ = [
     "QualityGateResult",
     "QualityMetric",
     "ReviewDecisionReceipt",
+    "ReviewDecisionAuthorizationPort",
+    "ReviewDecisionAuthorizationReceipt",
+    "StaticReviewDecisionAuthorizationPort",
     "ReviewExpirationSweepReceipt",
     "ReviewTask",
 ]

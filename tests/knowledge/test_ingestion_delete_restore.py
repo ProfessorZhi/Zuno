@@ -37,7 +37,8 @@ def test_delete_lifecycle_orders_visibility_cleanup_physical_delete_and_verifica
         visibility_ref="visibility:workspace:file_1",
     )
     cleanup = runtime.request_cleanup(requested)
-    physical = runtime.mark_physical_delete(cleanup)
+    confirmed = runtime.confirm_knowledge_cleanup(cleanup)
+    physical = runtime.mark_physical_delete(confirmed)
     verified = runtime.verify_delete(physical)
     late_rejected = runtime.reject_late_worker_result(verified)
 
@@ -48,6 +49,7 @@ def test_delete_lifecycle_orders_visibility_cleanup_physical_delete_and_verifica
     assert verified.history == [
         "visibility_revoked",
         "cleanup_requested",
+        "knowledge_cleanup_confirmed",
         "physically_deleted",
         "verified",
     ]
@@ -71,13 +73,28 @@ def test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authoriz
     )
     cleanup = runtime.request_cleanup(held)
     physical = runtime.mark_physical_delete(cleanup)
-    restored = runtime.restore(physical)
+    try:
+        runtime.restore(physical)
+    except ValueError as exc:
+        assert "fresh authorization" in str(exc)
+    else:
+        raise AssertionError("restore without fresh authorization must fail")
+    restored = runtime.restore(physical, restore_authorization_ref="restore-auth:case_1")
+    try:
+        runtime.restore(restored)
+    except ValueError as exc:
+        assert "fresh authorization" in str(exc)
+    else:
+        raise AssertionError("duplicate restore without fresh authorization must fail")
+    duplicate_restored = runtime.restore(restored, restore_authorization_ref="restore-auth:case_1")
 
     assert held.state == "legal_hold"
     assert cleanup.state == "legal_hold"
     assert physical.physical_delete_ref is None
     assert restored.state == "restored"
-    assert restored.restored_authorization is False
+    assert restored.restored_authorization is True
+    assert restored.restore_authorization_ref == "restore-auth:case_1"
+    assert duplicate_restored.duplicate is True
 
 
 def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:
@@ -86,10 +103,12 @@ def test_delete_ref_is_carried_by_later_indexable_snapshot() -> None:
     document, parse_snapshot, gate = _parsed_text_document()
     delete_receipt = DeleteRestoreRuntime().verify_delete(
         DeleteRestoreRuntime().mark_physical_delete(
-            DeleteRestoreRuntime().request_cleanup(
-                DeleteRestoreRuntime().request_delete(
-                    snapshot_ref="snapshot_old",
-                    visibility_ref="visibility:workspace_handoff:doc_snapshot_handoff",
+            DeleteRestoreRuntime().confirm_knowledge_cleanup(
+                DeleteRestoreRuntime().request_cleanup(
+                    DeleteRestoreRuntime().request_delete(
+                        snapshot_ref="snapshot_old",
+                        visibility_ref="visibility:workspace_handoff:doc_snapshot_handoff",
+                    )
                 )
             )
         )
@@ -126,9 +145,12 @@ def test_delete_after_snapshot_binds_outbox_projection_cleanup_and_verification_
         projection_cleanup_ref=f"projection_cleanup:{snapshot.indexable_snapshot_id}",
     )
     cleanup = runtime.request_cleanup(requested)
-    physical = runtime.mark_physical_delete(cleanup)
+    with pytest.raises(ValueError, match="knowledge cleanup"):
+        runtime.mark_physical_delete(cleanup)
+    confirmed = runtime.confirm_knowledge_cleanup(cleanup)
+    physical = runtime.mark_physical_delete(confirmed)
 
-    with pytest.raises(ValueError, match="projection cleanup"):
+    with pytest.raises(ValueError, match="knowledge cleanup"):
         runtime.verify_delete(physical, cleanup_verified=False)
     with pytest.raises(ValueError, match="physical delete"):
         runtime.verify_delete(physical, physical_delete_verified=False)
@@ -167,7 +189,7 @@ def test_delete_during_parse_rejects_late_worker_result_by_attempt_and_fencing()
         visibility_ref="visibility:workspace:file_parse_delete",
     )
     cleanup = runtime.request_cleanup(requested)
-    physical = runtime.mark_physical_delete(cleanup)
+    physical = runtime.mark_physical_delete(runtime.confirm_knowledge_cleanup(cleanup))
     verified = runtime.verify_delete(physical)
     rejected_current = runtime.reject_late_worker_result(
         verified,
@@ -222,7 +244,7 @@ def test_sqlite_store_round_trips_delete_lifecycle_receipt() -> None:
 
     receipt = DeleteRestoreRuntime().verify_delete(
         DeleteRestoreRuntime().mark_physical_delete(
-            DeleteRestoreRuntime().request_cleanup(
+            DeleteRestoreRuntime().confirm_knowledge_cleanup(
                 DeleteRestoreRuntime().request_delete(
                     snapshot_ref="snapshot_doc_1",
                     visibility_ref="visibility:workspace:file_1",

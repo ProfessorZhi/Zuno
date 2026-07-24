@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -56,6 +57,16 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_cutover_audit_events,
+                    agent_reconciliation_findings,
+                    agent_runtime_signals,
+                    agent_run_outcomes,
+                    agent_final_gate_receipts,
+                    agent_effect_claims,
+                    agent_step_acceptances,
+                    agent_observations,
+                    agent_action_runs,
+                    agent_request_idempotency_keys,
                     agent_execution_context_snapshots,
                     agent_budget_settlements,
                     agent_budget_reservations,
@@ -161,11 +172,23 @@ def test_execution_snapshot_and_budget_ledger_round_trip(engine) -> None:
         repo.record_goal_version(goal)
         repo.record_task_contract(task)
         repo.record_agent_run(run)
-        repo.record_budget_reservation(reservation)
-        repo.record_execution_context_snapshot(snapshot)
+        recorded_reservation = repo.record_budget_reservation(reservation)
+        duplicate_reservation = repo.record_budget_reservation(reservation)
+        with pytest.raises(AgentDomainConflict, match="conflicting BudgetReservation"):
+            repo.record_budget_reservation(replace(reservation, reserved_units=80))
+        recorded_snapshot = repo.record_execution_context_snapshot(snapshot)
+        duplicate_snapshot = repo.record_execution_context_snapshot(snapshot)
+        with pytest.raises(AgentDomainConflict, match="conflicting execution context snapshot"):
+            repo.record_execution_context_snapshot(
+                replace(snapshot, model_policy_ref="model-policy:p08:t03:pg:conflict", context_hash="")
+            )
         loaded_snapshot = repo.load_execution_context_snapshot(snapshot.execution_snapshot_id)
         loaded_reservation = repo.load_budget_reservation(reservation.budget_reservation_id)
 
+    assert recorded_reservation.status == BudgetReservationStatus.RESERVED.value
+    assert duplicate_reservation.status == f"duplicate:{BudgetReservationStatus.RESERVED.value}"
+    assert recorded_snapshot.status == "RECORDED"
+    assert duplicate_snapshot.status == "duplicate:RECORDED"
     assert loaded_snapshot.context_hash == snapshot.context_hash
     assert loaded_snapshot.resume_refs() == snapshot.resume_refs()
     assert loaded_reservation.status is BudgetReservationStatus.RESERVED
@@ -187,7 +210,16 @@ def test_budget_settlement_is_atomic_and_stale_settlement_conflicts(engine) -> N
             consumed_units=64,
             reason_ref="reason:p08:t03:pg",
         )
-        repo.settle_budget_reservation(settled, settlement, expected_version=1)
+        with pytest.raises(AgentDomainConflict, match="expected aggregate_version"):
+            repo.settle_budget_reservation(settled, settlement, expected_version=0)
+        recorded_settlement = repo.settle_budget_reservation(settled, settlement, expected_version=1)
+        duplicate_settlement = repo.settle_budget_reservation(settled, settlement, expected_version=1)
+        with pytest.raises(AgentDomainConflict, match="conflicting BudgetSettlement"):
+            repo.settle_budget_reservation(
+                replace(settled, aggregate_version=2),
+                replace(settlement, consumed_units=63, released_units=37),
+                expected_version=1,
+            )
 
     with engine.connect() as conn:
         row = conn.execute(
@@ -200,11 +232,9 @@ def test_budget_settlement_is_atomic_and_stale_settlement_conflicts(engine) -> N
             )
         ).one()
 
+    assert recorded_settlement.status == BudgetReservationStatus.SETTLED.value
+    assert duplicate_settlement.status == f"duplicate:{BudgetReservationStatus.SETTLED.value}"
     assert row.status == BudgetReservationStatus.SETTLED.value
     assert row.aggregate_version == 2
     assert row.consumed_units == 64
     assert row.released_units == 36
-
-    with pytest.raises(AgentDomainConflict, match="expected aggregate_version"):
-        with AgentDomainUnitOfWork(engine) as repo:
-            repo.settle_budget_reservation(settled, settlement, expected_version=1)

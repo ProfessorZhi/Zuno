@@ -62,7 +62,11 @@ class AgentDomainRepository:
         self.connection = connection
 
     def record_goal_version(self, goal: GoalVersion) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = {
+            **_goal_params(goal),
+            "input_classification": goal.input_classification.value,
+        }
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_goal_versions (
@@ -75,17 +79,44 @@ class AgentDomainRepository:
                     :goal_sequence, :input_classification, :objective_hash,
                     :output_contract_ref, :constraints_hash
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            {
-                **_goal_params(goal),
-                "input_classification": goal.input_classification.value,
-            },
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT goal_version_id, tenant_id, workspace_id, principal_id,
+                           goal_sequence, input_classification, objective_hash,
+                           output_contract_ref, constraints_hash
+                    FROM agent_goal_versions
+                    WHERE goal_version_id = :goal_version_id
+                       OR (
+                            tenant_id = :tenant_id
+                        AND workspace_id = :workspace_id
+                        AND principal_id = :principal_id
+                        AND goal_sequence = :goal_sequence
+                       )
+                    """
+                ),
+                {
+                    "goal_version_id": goal.goal_version_id,
+                    "tenant_id": goal.tenant_id,
+                    "workspace_id": goal.workspace_id,
+                    "principal_id": goal.principal_id,
+                    "goal_sequence": goal.goal_sequence,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(str(existing[0]["goal_version_id"]), "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting GoalVersion for {goal.goal_version_id}")
         return AgentDomainReceipt(goal.goal_version_id, "RECORDED", 1)
 
     def record_task_contract(self, task: TaskContract) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _task_params(task)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_task_contracts (
@@ -98,14 +129,46 @@ class AgentDomainRepository:
                     :goal_version_id, :idempotency_key, :security_context_ref,
                     :security_epoch_ref, :deadline_at, :budget_ref, :status, :aggregate_version
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _task_params(task),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT task_contract_id, tenant_id, workspace_id, principal_id,
+                           goal_version_id, idempotency_key, security_context_ref,
+                           security_epoch_ref, deadline_at, budget_ref, status, aggregate_version
+                    FROM agent_task_contracts
+                    WHERE task_contract_id = :task_contract_id
+                       OR (
+                            tenant_id = :tenant_id
+                        AND workspace_id = :workspace_id
+                        AND idempotency_key = :idempotency_key
+                       )
+                    """
+                ),
+                {
+                    "task_contract_id": task.task_contract_id,
+                    "tenant_id": task.tenant_id,
+                    "workspace_id": task.workspace_id,
+                    "idempotency_key": task.idempotency_key,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing[0]["task_contract_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting TaskContract for {task.task_contract_id}")
         return AgentDomainReceipt(task.task_contract_id, task.status, task.aggregate_version)
 
     def record_agent_run(self, run: AgentRun) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _run_params(run)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_domain_runs (
@@ -118,10 +181,33 @@ class AgentDomainRepository:
                     :trace_id, :status, :aggregate_version, :domain_generation,
                     :started_at, :ended_at, :failure_code
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _run_params(run),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT run_id, tenant_id, workspace_id, principal_id, task_contract_id,
+                           trace_id, status, aggregate_version, domain_generation,
+                           started_at, ended_at, failure_code
+                    FROM agent_domain_runs
+                    WHERE run_id = :run_id
+                       OR task_contract_id = :task_contract_id
+                    """
+                ),
+                {"run_id": run.run_id, "task_contract_id": run.task_contract_id},
+            ).mappings().all()
+            if len(existing) == 1 and all(existing[0][key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing[0]["run_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                    int(existing[0]["domain_generation"]),
+                )
+            raise AgentDomainConflict(f"conflicting AgentRun for {run.run_id}")
         self._record_event(
             run_id=run.run_id,
             tenant_id=run.tenant_id,
@@ -194,7 +280,8 @@ class AgentDomainRepository:
         )
 
     def record_plan_version(self, plan: PlanVersion) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _plan_params(plan)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_plan_versions (
@@ -205,16 +292,45 @@ class AgentDomainRepository:
                     :plan_version_id, :tenant_id, :workspace_id, :goal_version_id,
                     :plan_kind, :status, :plan_hash, :aggregate_version, :activated_at
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _plan_params(plan),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT plan_version_id, tenant_id, workspace_id, goal_version_id,
+                           plan_kind, status, plan_hash, aggregate_version
+                    FROM agent_plan_versions
+                    WHERE plan_version_id = :plan_version_id
+                       OR (goal_version_id = :goal_version_id AND plan_hash = :plan_hash)
+                    """
+                ),
+                {
+                    "plan_version_id": plan.plan_version_id,
+                    "goal_version_id": plan.goal_version_id,
+                    "plan_hash": plan.plan_hash,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(
+                existing[0][key] == params[key]
+                for key in ("tenant_id", "workspace_id", "goal_version_id", "plan_kind", "plan_hash")
+            ):
+                return AgentDomainReceipt(
+                    str(existing[0]["plan_version_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting PlanVersion for {plan.plan_version_id}")
         for step in plan.steps:
             self.record_step_definition(step)
         return AgentDomainReceipt(plan.plan_version_id, plan.status.value, plan.aggregate_version)
 
     def record_step_definition(self, step: DeterministicStepDefinition) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _step_params(step)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_plan_step_definitions (
@@ -229,10 +345,35 @@ class AgentDomainRepository:
                     CAST(:acceptance_refs AS JSON), :executor_type, CAST(:required_evidence_refs AS JSON),
                     :budget_ref, :deadline_at, :step_hash
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _step_params(step),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT step_definition_id, plan_version_id, tenant_id, step_no, step_hash
+                    FROM agent_plan_step_definitions
+                    WHERE step_definition_id = :step_definition_id
+                       OR (plan_version_id = :plan_version_id AND step_no = :step_no)
+                       OR (plan_version_id = :plan_version_id AND step_hash = :step_hash)
+                    """
+                ),
+                {
+                    "step_definition_id": step.step_definition_id,
+                    "plan_version_id": step.plan_version_id,
+                    "step_no": step.step_no,
+                    "step_hash": step.step_hash,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(
+                existing[0][key] == params[key]
+                for key in ("plan_version_id", "tenant_id", "step_no", "step_hash")
+            ):
+                return AgentDomainReceipt(str(existing[0]["step_definition_id"]), "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting StepDefinition for {step.step_definition_id}")
         return AgentDomainReceipt(step.step_definition_id, "RECORDED", 1)
 
     def load_plan_version(self, plan_version_id: str) -> PlanVersion:
@@ -283,7 +424,8 @@ class AgentDomainRepository:
         return AgentDomainReceipt(next_plan.plan_version_id, next_plan.status.value, next_plan.aggregate_version)
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _budget_reservation_params(reservation)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_budget_reservations (
@@ -294,10 +436,31 @@ class AgentDomainRepository:
                     :budget_reservation_id, :run_id, :tenant_id, :budget_ref, :reservation_scope,
                     :requested_units, :reserved_units, :status, :aggregate_version
                 )
+                ON CONFLICT (budget_reservation_id) DO NOTHING
                 """
             ),
-            _budget_reservation_params(reservation),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT budget_reservation_id, run_id, tenant_id, budget_ref,
+                           reservation_scope, requested_units, reserved_units,
+                           status, aggregate_version
+                    FROM agent_budget_reservations
+                    WHERE budget_reservation_id = :budget_reservation_id
+                    """
+                ),
+                {"budget_reservation_id": reservation.budget_reservation_id},
+            ).mappings().one()
+            if all(existing[key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing["budget_reservation_id"]),
+                    f"duplicate:{existing['status']}",
+                    int(existing["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting BudgetReservation for {reservation.budget_reservation_id}")
         return AgentDomainReceipt(
             reservation.budget_reservation_id,
             reservation.status.value,
@@ -319,6 +482,30 @@ class AgentDomainRepository:
         expected_version: int,
     ) -> AgentDomainReceipt:
         previous = self.load_budget_reservation(next_reservation.budget_reservation_id)
+        settlement_params = _budget_settlement_params(settlement)
+        if previous.status is BudgetReservationStatus.SETTLED:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT budget_settlement_id, budget_reservation_id, run_id, tenant_id,
+                           consumed_units, released_units, reason_ref
+                    FROM agent_budget_settlements
+                    WHERE budget_reservation_id = :budget_reservation_id
+                    """
+                ),
+                {"budget_reservation_id": next_reservation.budget_reservation_id},
+            ).mappings().one_or_none()
+            if (
+                previous == next_reservation
+                and existing is not None
+                and all(existing[key] == value for key, value in settlement_params.items())
+            ):
+                return AgentDomainReceipt(
+                    next_reservation.budget_reservation_id,
+                    f"duplicate:{next_reservation.status.value}",
+                    next_reservation.aggregate_version,
+                )
+            raise AgentDomainConflict(f"conflicting BudgetSettlement for {next_reservation.budget_reservation_id}")
         if previous.aggregate_version != expected_version:
             raise AgentDomainConflict(
                 f"expected aggregate_version {expected_version}, observed {previous.aggregate_version}"
@@ -356,7 +543,7 @@ class AgentDomainRepository:
                 )
                 """
             ),
-            _budget_settlement_params(settlement),
+            settlement_params,
         )
         return AgentDomainReceipt(
             next_reservation.budget_reservation_id,
@@ -365,7 +552,8 @@ class AgentDomainRepository:
         )
 
     def record_execution_context_snapshot(self, snapshot: ExecutionContextSnapshot) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _execution_snapshot_params(snapshot)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_execution_context_snapshots (
@@ -380,10 +568,46 @@ class AgentDomainRepository:
                     :capability_profile_ref, :knowledge_snapshot_ref, :answer_policy_ref,
                     :budget_reservation_id, :deadline_at, :context_hash
                 )
+                ON CONFLICT (execution_snapshot_id) DO NOTHING
                 """
             ),
-            _execution_snapshot_params(snapshot),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT execution_snapshot_id, run_id, tenant_id, workspace_id, principal_id,
+                           task_contract_id, security_context_ref, security_epoch_ref,
+                           model_policy_ref, capability_profile_ref, knowledge_snapshot_ref,
+                           answer_policy_ref, budget_reservation_id, deadline_at, context_hash
+                    FROM agent_execution_context_snapshots
+                    WHERE execution_snapshot_id = :execution_snapshot_id
+                    """
+                ),
+                {"execution_snapshot_id": snapshot.execution_snapshot_id},
+            ).mappings().first()
+            comparable = {
+                key: params[key]
+                for key in (
+                    "run_id",
+                    "tenant_id",
+                    "workspace_id",
+                    "principal_id",
+                    "task_contract_id",
+                    "security_context_ref",
+                    "security_epoch_ref",
+                    "model_policy_ref",
+                    "capability_profile_ref",
+                    "knowledge_snapshot_ref",
+                    "answer_policy_ref",
+                    "budget_reservation_id",
+                    "context_hash",
+                )
+            }
+            if existing and all(existing[key] == value for key, value in comparable.items()):
+                return AgentDomainReceipt(snapshot.execution_snapshot_id, "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting execution context snapshot: {snapshot.execution_snapshot_id}")
         return AgentDomainReceipt(snapshot.execution_snapshot_id, "RECORDED", 1)
 
     def load_execution_context_snapshot(self, execution_snapshot_id: str) -> ExecutionContextSnapshot:
@@ -417,6 +641,585 @@ class AgentDomainRepository:
             {"tenant_id": tenant_id, "workspace_id": workspace_id, "idempotency_key": idempotency_key},
         ).mappings().first()
         return None if row is None else _task_from_row(row)
+
+    def claim_request_idempotency(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        aggregate_ref: str,
+        status: str = "claimed",
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_request_idempotency_keys(
+                    idempotency_key, tenant_id, workspace_id, payload_hash, aggregate_ref, status
+                ) VALUES (
+                    :idempotency_key, :tenant_id, :workspace_id, :payload_hash, :aggregate_ref, :status
+                )
+                ON CONFLICT (tenant_id, idempotency_key) DO NOTHING
+                """
+            ),
+            {
+                "idempotency_key": idempotency_key,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "payload_hash": payload_hash,
+                "aggregate_ref": aggregate_ref,
+                "status": status,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT payload_hash, aggregate_ref, status
+                    FROM agent_request_idempotency_keys
+                    WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).mappings().first()
+            if existing and existing["payload_hash"] == payload_hash:
+                return AgentDomainReceipt(str(existing["aggregate_ref"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting idempotency payload for {idempotency_key}")
+        return AgentDomainReceipt(aggregate_ref, status, 1)
+
+    def claim_effect(
+        self,
+        *,
+        effect_claim_id: str,
+        tenant_id: str,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        owner_port: str,
+        effect_ref: str,
+        status: str = "claimed",
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_effect_claims(
+                    effect_claim_id, tenant_id, idempotency_key, payload_hash,
+                    owner_port, status, effect_ref
+                ) VALUES (
+                    :effect_claim_id, :tenant_id, :idempotency_key, :payload_hash,
+                    :owner_port, :status, :effect_ref
+                )
+                ON CONFLICT (tenant_id, idempotency_key) DO NOTHING
+                """
+            ),
+            {
+                "effect_claim_id": effect_claim_id,
+                "tenant_id": tenant_id,
+                "idempotency_key": idempotency_key,
+                "payload_hash": payload_hash,
+                "owner_port": owner_port,
+                "status": status,
+                "effect_ref": effect_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT effect_claim_id, payload_hash, status
+                    FROM agent_effect_claims
+                    WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).mappings().first()
+            if existing and existing["payload_hash"] == payload_hash:
+                return AgentDomainReceipt(str(existing["effect_claim_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting effect payload for {idempotency_key}")
+        return AgentDomainReceipt(effect_claim_id, status, 1)
+
+    def has_effect_claim(self, *, tenant_id: str, idempotency_key: str) -> bool:
+        return (
+            self.connection.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM agent_effect_claims
+                    WHERE tenant_id = :tenant_id
+                      AND idempotency_key = :idempotency_key
+                    LIMIT 1
+                    """
+                ),
+                {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+            ).first()
+            is not None
+        )
+
+    def record_action_observation_acceptance(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        step_run_id: str,
+        owner_port: str,
+        proposal: dict[str, Any],
+        observation: dict[str, Any],
+        acceptance: dict[str, Any],
+        trace_ref: str,
+        evidence_refs: list[str],
+        status: str = "accepted",
+    ) -> AgentDomainReceipt:
+        action_run_id = f"action:{step_run_id}"
+        observation_id = f"observation:{step_run_id}"
+        acceptance_id = f"acceptance:{step_run_id}"
+        proposal_hash = _canonical_hash(proposal)
+        observation_hash = _canonical_hash(observation)
+        acceptance_hash = _canonical_hash(acceptance)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_action_runs(
+                    action_run_id, tenant_id, run_id, step_run_id, owner_port,
+                    proposal_hash, status, trace_ref
+                ) VALUES (
+                    :action_run_id, :tenant_id, :run_id, :step_run_id, :owner_port,
+                    :proposal_hash, :status, :trace_ref
+                )
+                ON CONFLICT (action_run_id) DO NOTHING
+                """
+            ),
+            {
+                "action_run_id": action_run_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "step_run_id": step_run_id,
+                "owner_port": owner_port,
+                "proposal_hash": proposal_hash,
+                "status": status,
+                "trace_ref": trace_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT proposal_hash, owner_port, status
+                    FROM agent_action_runs
+                    WHERE action_run_id = :action_run_id
+                    """
+                ),
+                {"action_run_id": action_run_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["proposal_hash"] != proposal_hash
+                or existing["owner_port"] != owner_port
+            ):
+                raise AgentDomainConflict(f"conflicting action run for {step_run_id}")
+
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_observations(
+                    observation_id, tenant_id, action_run_id, observation_hash, status, evidence_refs
+                ) VALUES (
+                    :observation_id, :tenant_id, :action_run_id, :observation_hash, :status, CAST(:evidence_refs AS JSON)
+                )
+                ON CONFLICT (observation_id) DO NOTHING
+                """
+            ),
+            {
+                "observation_id": observation_id,
+                "tenant_id": tenant_id,
+                "action_run_id": action_run_id,
+                "observation_hash": observation_hash,
+                "status": status,
+                "evidence_refs": json.dumps(evidence_refs, sort_keys=True, separators=(",", ":")),
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT action_run_id, observation_hash, status
+                    FROM agent_observations
+                    WHERE observation_id = :observation_id
+                    """
+                ),
+                {"observation_id": observation_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["action_run_id"] != action_run_id
+                or existing["observation_hash"] != observation_hash
+            ):
+                raise AgentDomainConflict(f"conflicting observation for {step_run_id}")
+
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_step_acceptances(
+                    acceptance_id, tenant_id, step_run_id, observation_id, acceptance_hash, status
+                ) VALUES (
+                    :acceptance_id, :tenant_id, :step_run_id, :observation_id, :acceptance_hash, :status
+                )
+                ON CONFLICT (tenant_id, step_run_id) DO NOTHING
+                """
+            ),
+            {
+                "acceptance_id": acceptance_id,
+                "tenant_id": tenant_id,
+                "step_run_id": step_run_id,
+                "observation_id": observation_id,
+                "acceptance_hash": acceptance_hash,
+                "status": status,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT acceptance_id, observation_id, acceptance_hash, status
+                    FROM agent_step_acceptances
+                    WHERE tenant_id = :tenant_id AND step_run_id = :step_run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_id": step_run_id},
+            ).mappings().first()
+            if (
+                not existing
+                or existing["observation_id"] != observation_id
+                or existing["acceptance_hash"] != acceptance_hash
+            ):
+                raise AgentDomainConflict(f"conflicting step acceptance for {step_run_id}")
+            return AgentDomainReceipt(str(existing["acceptance_id"]), f"duplicate:{existing['status']}", 1)
+        return AgentDomainReceipt(acceptance_id, status, 1)
+
+    def record_final_gate_and_outcome(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        decision: str,
+        answer_policy_ref: str,
+        evidence_ref: str,
+        security_decision_ref: str,
+        budget_settlement_ref: str,
+        step_acceptance_ref: str,
+        publication_eligible: bool,
+        outcome_status: str,
+        publication_ref: str | None,
+    ) -> AgentDomainReceipt:
+        final_gate_id = f"final-gate:{run_id}"
+        outcome_id = f"run-outcome:{run_id}"
+        decision_payload = {
+            "run_id": run_id,
+            "decision": decision,
+            "answer_policy_ref": answer_policy_ref,
+            "evidence_ref": evidence_ref,
+            "security_decision_ref": security_decision_ref,
+            "budget_settlement_ref": budget_settlement_ref,
+            "step_acceptance_ref": step_acceptance_ref,
+            "publication_eligible": publication_eligible,
+        }
+        decision_hash = _canonical_hash(decision_payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_final_gate_receipts(
+                    final_gate_id, tenant_id, run_id, decision, decision_hash,
+                    answer_policy_ref, evidence_ref, security_decision_ref,
+                    budget_settlement_ref, step_acceptance_ref, publication_eligible
+                ) VALUES (
+                    :final_gate_id, :tenant_id, :run_id, :decision, :decision_hash,
+                    :answer_policy_ref, :evidence_ref, :security_decision_ref,
+                    :budget_settlement_ref, :step_acceptance_ref, :publication_eligible
+                )
+                ON CONFLICT (tenant_id, run_id) DO NOTHING
+                """
+            ),
+            {
+                "final_gate_id": final_gate_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "decision": decision,
+                "decision_hash": decision_hash,
+                "answer_policy_ref": answer_policy_ref,
+                "evidence_ref": evidence_ref,
+                "security_decision_ref": security_decision_ref,
+                "budget_settlement_ref": budget_settlement_ref,
+                "step_acceptance_ref": step_acceptance_ref,
+                "publication_eligible": publication_eligible,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT final_gate_id, decision_hash, decision
+                    FROM agent_final_gate_receipts
+                    WHERE tenant_id = :tenant_id AND run_id = :run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "run_id": run_id},
+            ).mappings().first()
+            if not existing or existing["decision_hash"] != decision_hash:
+                raise AgentDomainConflict(f"conflicting final gate for {run_id}")
+            final_gate_id = str(existing["final_gate_id"])
+        outcome_hash = _canonical_hash(
+            {
+                "run_id": run_id,
+                "status": outcome_status,
+                "final_gate_id": final_gate_id,
+                "publication_ref": publication_ref,
+            }
+        )
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_run_outcomes(
+                    run_outcome_id, tenant_id, run_id, final_gate_id, status, outcome_hash, publication_ref
+                ) VALUES (
+                    :run_outcome_id, :tenant_id, :run_id, :final_gate_id, :status, :outcome_hash, :publication_ref
+                )
+                ON CONFLICT (tenant_id, run_id) DO NOTHING
+                """
+            ),
+            {
+                "run_outcome_id": outcome_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "final_gate_id": final_gate_id,
+                "status": outcome_status,
+                "outcome_hash": outcome_hash,
+                "publication_ref": publication_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT run_outcome_id, outcome_hash, status
+                    FROM agent_run_outcomes
+                    WHERE tenant_id = :tenant_id AND run_id = :run_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "run_id": run_id},
+            ).mappings().first()
+            if existing and existing["outcome_hash"] == outcome_hash:
+                return AgentDomainReceipt(str(existing["run_outcome_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting run outcome for {run_id}")
+        return AgentDomainReceipt(outcome_id, outcome_status, 1)
+
+    def record_signal(
+        self,
+        *,
+        signal_id: str,
+        tenant_id: str,
+        run_id: str,
+        signal_type: str,
+        payload: dict[str, Any],
+        status: str,
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_runtime_signals(
+                    signal_id, tenant_id, run_id, signal_type, payload_hash, status
+                ) VALUES (
+                    :signal_id, :tenant_id, :run_id, :signal_type, :payload_hash, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "signal_id": signal_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "signal_type": signal_type,
+                "payload_hash": payload_hash,
+                "status": status,
+            },
+        )
+        if result.rowcount != 1:
+            same_id = self.connection.execute(
+                text(
+                    """
+                    SELECT signal_id, tenant_id, run_id, signal_type, payload_hash, status
+                    FROM agent_runtime_signals
+                    WHERE signal_id = :signal_id
+                    """
+                ),
+                {"signal_id": signal_id},
+            ).mappings().first()
+            if (
+                same_id
+                and str(same_id["tenant_id"]) == str(tenant_id)
+                and str(same_id["run_id"]) == str(run_id)
+                and same_id["signal_type"] == signal_type
+                and same_id["payload_hash"] == payload_hash
+                and same_id["status"] == status
+            ):
+                return AgentDomainReceipt(str(same_id["signal_id"]), f"duplicate:{same_id['status']}", 1)
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT signal_id, status
+                    FROM agent_runtime_signals
+                    WHERE tenant_id = :tenant_id
+                      AND run_id = :run_id
+                      AND signal_type = :signal_type
+                      AND payload_hash = :payload_hash
+                    """
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "signal_type": signal_type,
+                    "payload_hash": payload_hash,
+                },
+            ).mappings().first()
+            if existing:
+                return AgentDomainReceipt(str(existing["signal_id"]), f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting signal for {run_id}")
+        return AgentDomainReceipt(signal_id, status, 1)
+
+    def record_reconciliation_finding(
+        self,
+        *,
+        finding_id: str,
+        tenant_id: str,
+        run_id: str,
+        status: str,
+        fact_owner: str,
+        auto_repair: bool,
+        replay_allowed: bool,
+        terminate_run: bool,
+        audit_event_ref: str,
+        payload: dict[str, Any],
+    ) -> AgentDomainReceipt:
+        payload_hash = _canonical_hash(payload)
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_reconciliation_findings(
+                    finding_id, tenant_id, run_id, status, fact_owner,
+                    auto_repair, replay_allowed, terminate_run, audit_event_ref, payload_hash
+                ) VALUES (
+                    :finding_id, :tenant_id, :run_id, :status, :fact_owner,
+                    :auto_repair, :replay_allowed, :terminate_run, :audit_event_ref, :payload_hash
+                )
+                ON CONFLICT (finding_id) DO NOTHING
+                """
+            ),
+            {
+                "finding_id": finding_id,
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "status": status,
+                "fact_owner": fact_owner,
+                "auto_repair": auto_repair,
+                "replay_allowed": replay_allowed,
+                "terminate_run": terminate_run,
+                "audit_event_ref": audit_event_ref,
+                "payload_hash": payload_hash,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT tenant_id, run_id, status, fact_owner, auto_repair,
+                           replay_allowed, terminate_run, audit_event_ref, payload_hash
+                    FROM agent_reconciliation_findings
+                    WHERE finding_id = :finding_id
+                    """
+                ),
+                {"finding_id": finding_id},
+            ).mappings().first()
+            if (
+                existing
+                and str(existing["tenant_id"]) == str(tenant_id)
+                and str(existing["run_id"]) == str(run_id)
+                and existing["status"] == status
+                and existing["fact_owner"] == fact_owner
+                and bool(existing["auto_repair"]) is bool(auto_repair)
+                and bool(existing["replay_allowed"]) is bool(replay_allowed)
+                and bool(existing["terminate_run"]) is bool(terminate_run)
+                and existing["audit_event_ref"] == audit_event_ref
+                and existing["payload_hash"] == payload_hash
+            ):
+                return AgentDomainReceipt(finding_id, f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting reconciliation finding: {finding_id}")
+        return AgentDomainReceipt(finding_id, status, 1)
+
+    def record_cutover_audit_event(
+        self,
+        *,
+        cutover_event_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        request_id: str,
+        mode: str,
+        primary_runtime: str,
+        effect_committed: bool,
+        fallback_allowed: bool,
+        request_hash: str,
+        trace_ref: str,
+    ) -> AgentDomainReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_cutover_audit_events(
+                    cutover_event_id, tenant_id, workspace_id, request_id, mode,
+                    primary_runtime, effect_committed, fallback_allowed, request_hash, trace_ref
+                ) VALUES (
+                    :cutover_event_id, :tenant_id, :workspace_id, :request_id, :mode,
+                    :primary_runtime, :effect_committed, :fallback_allowed, :request_hash, :trace_ref
+                )
+                ON CONFLICT (tenant_id, request_id, mode) DO NOTHING
+                """
+            ),
+            {
+                "cutover_event_id": cutover_event_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "request_id": request_id,
+                "mode": mode,
+                "primary_runtime": primary_runtime,
+                "effect_committed": effect_committed,
+                "fallback_allowed": fallback_allowed,
+                "request_hash": request_hash,
+                "trace_ref": trace_ref,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT cutover_event_id, primary_runtime, effect_committed,
+                           fallback_allowed, request_hash
+                    FROM agent_cutover_audit_events
+                    WHERE tenant_id = :tenant_id
+                      AND request_id = :request_id
+                      AND mode = :mode
+                    """
+                ),
+                {"tenant_id": tenant_id, "request_id": request_id, "mode": mode},
+            ).mappings().first()
+            if (
+                existing
+                and existing["primary_runtime"] == primary_runtime
+                and existing["effect_committed"] == effect_committed
+                and existing["fallback_allowed"] == fallback_allowed
+                and existing["request_hash"] == request_hash
+            ):
+                return AgentDomainReceipt(str(existing["cutover_event_id"]), f"duplicate:{mode}", 1)
+            raise AgentDomainConflict(f"conflicting cutover audit event for {request_id}:{mode}")
+        return AgentDomainReceipt(cutover_event_id, mode, 1)
 
     def _record_event(
         self,
@@ -588,6 +1391,13 @@ def _execution_snapshot_params(snapshot: ExecutionContextSnapshot) -> dict[str, 
         "deadline_at": snapshot.deadline_at,
         "context_hash": snapshot.context_hash,
     }
+
+
+def _canonical_hash(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    import hashlib
+
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def _task_from_row(row: Any) -> TaskContract:

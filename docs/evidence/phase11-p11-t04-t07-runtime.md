@@ -2,8 +2,8 @@
 phase: PHASE11
 scope: P11-T04..P11-T07
 status: completion_candidate
-date: 2026-07-23
-branch: integration/goal02-agent-core-ingestion-closure
+date: 2026-07-24
+branch: integration/goal02-final-closure-repair
 ---
 
 # PHASE11 P11-T04～T07 Runtime Evidence
@@ -21,7 +21,16 @@ branch: integration/goal02-agent-core-ingestion-closure
   - `ingestion_review_decision_receipts`
 - 新增 `IngestionRepository.record_review_task()`、`record_review_decision_receipt()`、`get_review_task()`、`get_review_decision_receipt()`。
 - Package A production runtime 在质量闸门进入 `human_review` 时持久化 ReviewTask。
-- 低质量文档不会创建 `ingestion_indexable_document_snapshots` 或 handoff outbox，但会留下 ParseSnapshot、QualityGateDecision 和 ReviewTask。
+- 低质量文档不会创建 `ingestion_indexable_document_snapshots` 或 handoff outbox，但会留下 ParseSnapshot、QualityDecision、ReviewTask，并把 ParseAttempt / ParseJob 持久推进到 `review_pending`，不再把人工复核写成 `failed`。
+- ReviewTask 现在绑定 reviewer principal、reviewer scope、Security Decision Ref、Security Epoch、parse review idempotency key、trace_id 和 audit_ref；Package A production worker 从 parse delivery lineage 中填充这些事实。
+- Human Review duplicate decision 现在按 canonical `decision_hash` 判定：重复相同 Decision 返回原 Receipt；同一 ReviewTask 的不同 Decision 在运行时抛出 conflict，并由 PostgreSQL `ingestion_review_decision_receipts(review_task_id)` 唯一约束拒绝不同 hash。
+- Review Decision 现在经 `ReviewDecisionAuthorizationPort` fail-closed：revoked reviewer、principal mismatch、scope mismatch、stale Security Epoch 或 revoked Security Decision Ref 不能 approve，只能持久化 rejected receipt。
+- Approved Review Resume 现在由 focused PostgreSQL 用例证明：从已有 ParseSnapshot 恢复，不重新 Parser；只创建一个 Indexable Snapshot 和一个 Handoff Outbox；Knowledge 暂不可用时 `knowledge_handoff_status` 和 outbox `publish_status` 均保持 `pending`，可由 replay receipt 继续。
+- ParseSnapshot replay 现在由 focused PostgreSQL 用例证明：同一 parser result 在 crash-after-commit / response-lost 后重放返回 duplicate receipt；同一 ParseJob/Attempt 的不同 parser payload fail-closed。
+- Indexable Snapshot / Handoff Outbox replay 现在由 focused PostgreSQL 用例证明：同一 handoff idempotency key 与同一 payload 返回 duplicate receipt；同一 key 的不同 snapshot payload 或 outbox payload fail-closed。
+- Snapshot-only crash recovery 现在由 focused PostgreSQL 用例证明：如果 approved resume 已提交 Indexable Snapshot 但 Handoff Outbox 尚未提交，下一次 resume 会校验 snapshot lineage 后幂等补建唯一 outbox。
+- Non-approved Review Decision 现在由 focused PostgreSQL 用例证明：`rejected`、`expired`、`cancelled` 调用 approved resume 会 fail-closed，且不会创建 Indexable Snapshot 或 Handoff Outbox。
+- Late parser result 现在由 focused PostgreSQL 用例证明：ParseAttempt / ParseJob 进入 `review_pending` 后，迟到 parser result 会 fail-closed，不再写入新的 ParseSnapshot。
 
 ## 为什么本轮不重写 Parser / IR / Handoff
 
@@ -44,6 +53,14 @@ python tools/scripts/verify_agent_core_target_protocols.py
 pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
 pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_document_ingestion_contract.py tests/knowledge/test_ingestion_human_review.py tests/knowledge/test_ingestion_snapshot_handoff.py tests/integration/test_phase11_ingestion_persistence_runtime.py tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
+pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short
+pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once -p no:cacheprovider --tb=short
+pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff -p no:cacheprovider --tb=short
 alembic -c infra/db/alembic.ini heads
 alembic -c infra/db/alembic.ini upgrade head
 ```
@@ -58,7 +75,20 @@ alembic -c infra/db/alembic.ini upgrade head
 - `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py -p no:cacheprovider --tb=short`：`6 passed in 18.20s`。
 - `pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short`：`1 passed in 8.45s`。
 - P11-T04～T07 组合测试：`69 passed in 23.13s`。
-- Alembic head：`20260724_24 (head)`。
+- `pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short`：`5 passed in 7.95s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_human_review_resume_round_trips_review_task_and_receipt_after_restart -p no:cacheprovider --tb=short`：`1 passed in 9.68s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure -p no:cacheprovider --tb=short`：`1 passed in 9.07s`。
+- `pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short`：`1 passed in 9.71s`。
+- `pytest -q tests/knowledge/test_ingestion_human_review.py -p no:cacheprovider --tb=short`：`6 passed in 9.36s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_review_decision_revoked_reviewer_rejects_without_handoff -p no:cacheprovider --tb=short`：`1 passed in 12.32s`。
+- `pytest -q tests/integration/test_phase11_package_a_production_runtime.py::test_gate_b_quality_review_records_snapshot_without_indexable_handoff -p no:cacheprovider --tb=short`：`1 passed in 7.97s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once -p no:cacheprovider --tb=short`：`1 passed in 14.23s`。
+- ParseSnapshot replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 12.14s`。
+- Indexable Snapshot / Handoff Outbox replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 10.40s`。
+- Snapshot-only crash recovery focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 22.25s`。
+- `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff -p no:cacheprovider --tb=short`：`3 passed in 10.76s`。
+- Late parser result focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 13.01s`。
+- Alembic head：`20260724_34 (head)`。
 - Alembic upgrade：通过。
 
 ## 剩余边界
