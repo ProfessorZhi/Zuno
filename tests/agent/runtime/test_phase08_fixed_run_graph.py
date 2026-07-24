@@ -6,6 +6,7 @@ import pytest
 
 from zuno.agent.runtime import (
     PHASE08_RUN_SCHEMA,
+    Phase08Conflict,
     Phase08RunService,
     Phase08RuntimeError,
     build_phase08_run_graph,
@@ -76,5 +77,28 @@ def test_run_graph_handles_interrupt_resume_cancel_and_deadline() -> None:
     assert resumed["pending_interrupt_refs"] == []
     assert resumed["plan_created_count"] == 1
     assert cancelled["finalization_status"] == "cancelled"
+    assert cancelled["phase"] == "finalize"
     assert expired["finalization_status"] == "failed"
     assert expired["latest_control_decision_ref"] == "deadline_expired"
+
+
+def test_resume_without_interrupt_returns_terminal_state_without_replay() -> None:
+    service = Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer()))
+
+    final_state = service.start(_state(thread_id="thread:p08:t04:terminal-resume"))
+    resumed = service.resume(final_state)
+
+    assert resumed["resume_status"] == "terminal:no_interrupt"
+    assert resumed["phase"] == "run_outcome"
+    assert resumed["plan_created_count"] == 1
+    assert resumed["outcome_ref"] == final_state["outcome_ref"]
+
+
+def test_resume_without_active_interrupt_rejects_nonterminal_checkpoint() -> None:
+    service = Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer()))
+    state = _state(thread_id="thread:p08:t04:nonterminal-resume")
+    config = {"configurable": {"thread_id": state["thread_id"]}}
+    service.graph.update_state(config, {**state, "phase": "execute_step", "finalization_status": "not_ready"})
+
+    with pytest.raises(Phase08Conflict, match="active interrupt"):
+        service.resume(state)

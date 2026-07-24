@@ -121,23 +121,43 @@ class Phase08RunService:
     def resume(self, state: dict[str, Any]) -> dict[str, Any]:
         config = _thread_config(state)
         snapshot = self.graph.get_state(config)
-        if not snapshot.tasks or not snapshot.tasks[0].interrupts:
-            next_state = dict(snapshot.values or state)
-            next_state["resume_requested"] = True
-            next_state["finalization_status"] = "finalized"
-            next_state["pending_interrupt_refs"] = []
-            return self.graph.invoke(next_state, config=config)
+        if not _snapshot_has_interrupt(snapshot):
+            current_state = dict(snapshot.values or {})
+            if not current_state:
+                raise Phase08Conflict("resume requires an existing interrupt checkpoint")
+            if current_state.get("phase") == "run_outcome" or current_state.get("finalization_status") in {
+                "finalized",
+                "cancelled",
+                "blocked",
+                "failed",
+                "abstained",
+            }:
+                current_state["resume_status"] = "terminal:no_interrupt"
+                return current_state
+            raise Phase08Conflict("resume requires an active interrupt")
         return self.graph.invoke(Command(resume={"decision": "approved"}), config=config)
 
     def cancel(self, state: dict[str, Any], *, reason: str) -> dict[str, Any]:
-        next_state = dict(state)
-        next_state["cancel_requested"] = True
+        config = _thread_config(state)
+        snapshot = self.graph.get_state(config)
+        if _snapshot_has_interrupt(snapshot):
+            return self.graph.invoke(Command(resume={"decision": "cancelled", "reason": reason}), config=config)
+        next_state = dict(snapshot.values or state)
+        signal = Phase08SignalRecord(
+            signal_id=str(next_state.get("cancel_signal_id") or f"signal:{next_state.get('run_id', 'run')}:cancel"),
+            run_id=str(next_state.get("run_id") or state.get("run_id")),
+            security_epoch_ref=str(next_state.get("security_epoch_ref") or state.get("security_epoch_ref")),
+            decision="deny",
+            reason=reason,
+            status="accepted",
+        )
+        next_state = append_signal(next_state, signal)
         next_state["interrupt_requested"] = False
         next_state["pending_interrupt_refs"] = []
         next_state["cancel_reason"] = reason
         next_state["finalization_status"] = "cancelled"
-        next_state["phase"] = "initialize"
-        return self.graph.invoke(next_state, config=_thread_config(state))
+        next_state["phase"] = "finalize"
+        return next_state
 
     def get_state(self, state: dict[str, Any]) -> dict[str, Any]:
         snapshot = self.graph.get_state(_thread_config(state))
@@ -290,16 +310,98 @@ def append_signal(state: dict[str, Any], signal: Phase08SignalRecord) -> dict[st
     return next_state
 
 
-def reconcile_generations(*, domain_generation: int, checkpoint_generation: int, schema_version: str) -> dict[str, Any]:
+def reconcile_generations(
+    *,
+    domain_generation: int,
+    checkpoint_generation: int,
+    schema_version: str,
+    controller_epoch: int | None = None,
+    expected_controller_epoch: int | None = None,
+) -> dict[str, Any]:
     if schema_version != PHASE08_RUN_SCHEMA:
-        return {"status": "stale_schema", "reason": schema_version}
-    if checkpoint_generation < domain_generation:
-        return {"status": "checkpoint_fail", "reason": "checkpoint behind domain"}
-    if checkpoint_generation > domain_generation:
-        return {"status": "checkpoint_ahead", "reason": "checkpoint ahead of domain"}
+        return _reconciliation_decision(
+            status="stale_schema",
+            reason=schema_version,
+            fact_owner="domain",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
+    if (
+        controller_epoch is not None
+        and expected_controller_epoch is not None
+        and controller_epoch != expected_controller_epoch
+    ):
+        return _reconciliation_decision(
+            status="stale_controller_epoch",
+            reason=f"{controller_epoch}!={expected_controller_epoch}",
+            fact_owner="domain",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
+    if domain_generation < 0 or checkpoint_generation < 0:
+        return _reconciliation_decision(
+            status="unrecoverable_conflict",
+            reason="negative generation",
+            fact_owner="none",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
+    if domain_generation == 0 and checkpoint_generation == 0:
+        return _reconciliation_decision(
+            status="orphan_domain",
+            reason="no domain fact or checkpoint generation",
+            fact_owner="domain",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
+    if domain_generation == 0:
+        return _reconciliation_decision(
+            status="orphan_checkpoint",
+            reason="checkpoint without domain fact",
+            fact_owner="domain",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
     if checkpoint_generation == 0:
-        return {"status": "orphan_run", "reason": "no checkpoint"}
-    return {"status": "reconciled", "reason": "aligned"}
+        return _reconciliation_decision(
+            status="orphan_domain",
+            reason="domain fact without checkpoint",
+            fact_owner="domain",
+            auto_repair=True,
+            replay_allowed=False,
+            terminate_run=False,
+        )
+    if checkpoint_generation < domain_generation:
+        return _reconciliation_decision(
+            status="domain_ahead",
+            reason="checkpoint behind domain",
+            fact_owner="domain",
+            auto_repair=True,
+            replay_allowed=False,
+            terminate_run=False,
+        )
+    if checkpoint_generation > domain_generation:
+        return _reconciliation_decision(
+            status="checkpoint_ahead",
+            reason="checkpoint ahead of domain",
+            fact_owner="checkpoint",
+            auto_repair=False,
+            replay_allowed=False,
+            terminate_run=True,
+        )
+    return _reconciliation_decision(
+        status="aligned",
+        reason="domain and checkpoint generations match",
+        fact_owner="domain",
+        auto_repair=False,
+        replay_allowed=True,
+        terminate_run=False,
+    )
 
 
 def _initialize_run(state: dict[str, Any]) -> dict[str, Any]:
@@ -389,6 +491,11 @@ def _execute_run(state: dict[str, Any]) -> dict[str, Any]:
         next_state["resume_payload"] = resume_value
         next_state["interrupt_requested"] = False
         next_state["pending_interrupt_refs"] = []
+        if isinstance(resume_value, dict) and resume_value.get("decision") == "cancelled":
+            next_state["latest_control_decision_ref"] = "cancelled"
+            next_state["cancel_reason"] = resume_value.get("reason") or "cancelled"
+            next_state["finalization_status"] = "cancelled"
+            return _advance(next_state, "finalize")
         next_state["finalization_status"] = "not_ready"
     if next_state.get("interrupt_requested"):
         interrupt_ref = f"interrupt:{next_state.get('run_id', 'run')}:approval"
@@ -587,6 +694,10 @@ def _thread_config(state: dict[str, Any]) -> dict[str, Any]:
     return {"configurable": {"thread_id": str(state.get("thread_id") or state.get("run_id") or state.get("step_run_id") or "phase08")}}
 
 
+def _snapshot_has_interrupt(snapshot: Any) -> bool:
+    return bool(getattr(snapshot, "tasks", None) and any(getattr(task, "interrupts", None) for task in snapshot.tasks))
+
+
 def _interrupted_state(graph: Any, state: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
     if "__interrupt__" not in result:
         return result
@@ -638,6 +749,27 @@ def _required_state_ref(state: dict[str, Any], field_name: str) -> str:
     if not value.strip():
         raise Phase08RuntimeError(f"PHASE08 state missing required field: {field_name}")
     return value
+
+
+def _reconciliation_decision(
+    *,
+    status: str,
+    reason: str,
+    fact_owner: str,
+    auto_repair: bool,
+    replay_allowed: bool,
+    terminate_run: bool,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "reason": reason,
+        "fact_owner": fact_owner,
+        "auto_repair": auto_repair,
+        "replay_allowed": replay_allowed,
+        "terminate_run": terminate_run,
+        "audit_event_ref": f"audit:phase08-reconcile:{status}",
+        "idempotency_key": f"phase08-reconcile:{status}:{reason}",
+    }
 
 
 __all__ = [
