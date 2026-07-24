@@ -31,6 +31,7 @@ commit: see branch HEAD
 - Approved Review Resume 已覆盖从已有 ParseSnapshot 恢复、恰好一次 Indexable Snapshot / Handoff Outbox，以及 Knowledge handoff / outbox publish 均保持 pending replayable。
 - ParseSnapshot replay 已覆盖同一 parser result 的 duplicate receipt，以及同一 ParseJob/Attempt 的不同 parser payload fail-closed。
 - Indexable Snapshot / Handoff Outbox replay 已覆盖同一 handoff idempotency key 与同一 payload 的 duplicate receipt，以及同一 key 不同 snapshot / outbox payload fail-closed。
+- Snapshot-only crash recovery 已覆盖 approved resume 在 Indexable Snapshot 已提交但 Handoff Outbox 缺失时，从 PostgreSQL snapshot lineage 恢复并补建唯一 outbox。
 - Non-approved Review Decision 已覆盖 `rejected`、`expired`、`cancelled` 永不 resume handoff，PostgreSQL 不创建 Indexable Snapshot / Handoff Outbox。
 - Late parser result 已覆盖 review_pending 后迟到 parser result fail-closed，不再写入新的 ParseSnapshot。
 - Delete / Restore 通过明确 Port 推进 visibility revoke、cleanup confirmation、MinIO physical delete、absence verification、fresh authorization 和 reconciliation。
@@ -52,6 +53,7 @@ commit: see branch HEAD
 - Approved Review Resume pending/replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 14.23s`。
 - ParseSnapshot replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 12.14s`。
 - Indexable Snapshot / Handoff Outbox replay focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 10.40s`。
+- Snapshot-only crash recovery focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 22.25s`。
 - Non-approved Review focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff` 为 `3 passed in 10.76s`。
 - Alembic head：`20260724_31 (head)`。
 

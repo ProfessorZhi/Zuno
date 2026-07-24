@@ -1155,6 +1155,43 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             decision_hash=receipt.decision_hash,
             decided_at=receipt.decided_at,
         )
+        parse_snapshot_row = repo.get_parse_snapshot(task.parse_snapshot_id)
+        quality_row = repo.get_quality_decision(quality.ref)
+        review_task_row = repo.get_review_task(task.review_task_id)
+        document_row = repo.get_document_version(document_version_id)
+        context = repo.load_parse_job_context(
+            parse_job_id=str(parse_snapshot_row["parse_job_id"]),
+            tenant_id="tenant-a",
+        )
+        review_task_data = dict(review_task_row)
+        if hasattr(review_task_data.get("expires_at"), "timestamp"):
+            review_task_data["expires_at"] = review_task_data["expires_at"].timestamp()
+        crash_replay_snapshot, _ = runtime.handoff_runtime.create_snapshot(
+            document=CanonicalDocumentIR.model_validate(document_payload),
+            parse_snapshot=runtime._build_review_resume_snapshot(
+                parse_snapshot_row=parse_snapshot_row,
+                context=context,
+            ),
+            quality_gate=runtime._build_quality_gate_result(
+                quality_row=quality_row,
+                review_task=ReviewTask.model_validate(review_task_data),
+            ),
+            visibility_ref=f"visibility:{workspace_id}:{source_object_id}",
+            review_receipt=receipt,
+        )
+        repo.record_indexable_snapshot(
+            indexable_snapshot_id=crash_replay_snapshot.indexable_snapshot_id,
+            tenant_id="tenant-a",
+            parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+            document_version_id=str(document_row["document_version_id"]),
+            quality_decision_id=crash_replay_snapshot.quality_decision_id,
+            visibility_ref=f"visibility:{workspace_id}:{source_object_id}",
+            payload=crash_replay_snapshot.payload,
+            handoff_idempotency_key=crash_replay_snapshot.idempotency_key,
+        )
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
 
     first = runtime.resume_approved_review(
         tenant_id="tenant-a",

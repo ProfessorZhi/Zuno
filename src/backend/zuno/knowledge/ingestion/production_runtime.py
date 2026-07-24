@@ -271,6 +271,7 @@ class PackageAProductionIngestionRuntime:
                 visibility_ref=visibility_ref,
                 review_receipt=review_receipt,
             )
+            handoff_payload = self._snapshot_handoff_outbox_payload(indexable_snapshot)
             replay = None
             try:
                 replay = repo.load_snapshot_handoff_replay_receipt(
@@ -280,22 +281,44 @@ class PackageAProductionIngestionRuntime:
             except IngestionPersistenceError:
                 replay = None
             if replay is not None:
+                expected_replay = {
+                    "parse_snapshot_id": parse_snapshot_row["parse_snapshot_id"],
+                    "document_version_id": document_row["document_version_id"],
+                    "quality_decision_id": quality_gate.quality_decision_id,
+                    "workspace_id": context["workspace_id"],
+                    "source_object_id": context["source_object_id"],
+                    "handoff_idempotency_key": indexable_snapshot.idempotency_key,
+                    "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+                    "outbox_event_id": snapshot_outbox.outbox_event_id,
+                    "outbox_idempotency_key": snapshot_outbox.idempotency_key,
+                    "handoff_envelope_hash": self._snapshot_handoff_envelope_hash(
+                        indexable_snapshot,
+                        parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+                    ),
+                    "visibility_ref": visibility_ref,
+                    "knowledge_handoff_status": replay["knowledge_handoff_status"],
+                    "outbox_publish_status": replay["outbox_publish_status"],
+                }
+                if replay.get("outbox_event_id") in {None, ""}:
+                    self._validate_snapshot_handoff_replay_receipt(
+                        replay=expected_replay,
+                        handoff_replay=replay,
+                        require_outbox=False,
+                    )
+                    repo.enqueue_outbox_event(
+                        outbox_event_id=snapshot_outbox.outbox_event_id,
+                        tenant_id=tenant_id,
+                        aggregate_ref=str(replay["indexable_snapshot_id"]),
+                        event_type="ingestion.indexable_snapshot.ready",
+                        payload=handoff_payload,
+                        idempotency_key=snapshot_outbox.idempotency_key,
+                    )
+                    replay = repo.load_snapshot_handoff_replay_receipt(
+                        tenant_id=tenant_id,
+                        handoff_idempotency_key=indexable_snapshot.idempotency_key,
+                    )
                 self._validate_snapshot_handoff_replay_receipt(
-                    replay={
-                        "parse_snapshot_id": parse_snapshot_row["parse_snapshot_id"],
-                        "document_version_id": document_row["document_version_id"],
-                        "quality_decision_id": quality_gate.quality_decision_id,
-                        "workspace_id": context["workspace_id"],
-                        "source_object_id": context["source_object_id"],
-                        "handoff_idempotency_key": indexable_snapshot.idempotency_key,
-                        "indexable_snapshot_id": replay["indexable_snapshot_id"],
-                        "outbox_event_id": replay["outbox_event_id"],
-                        "outbox_idempotency_key": replay["outbox_payload_idempotency_key"],
-                        "handoff_envelope_hash": replay["handoff_envelope_hash"],
-                        "visibility_ref": replay["visibility_ref"],
-                        "knowledge_handoff_status": replay["knowledge_handoff_status"],
-                        "outbox_publish_status": replay["outbox_publish_status"],
-                    },
+                    replay=expected_replay,
                     handoff_replay=replay,
                 )
                 return PackageAWorkerReceipt(
@@ -323,13 +346,7 @@ class PackageAProductionIngestionRuntime:
                 tenant_id=tenant_id,
                 aggregate_ref=indexable.ref,
                 event_type="ingestion.indexable_snapshot.ready",
-                payload={
-                    "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
-                    "document_version_id": indexable_snapshot.document_version_id,
-                    "quality_decision_id": indexable_snapshot.quality_decision_id,
-                    "canonical_hash": indexable_snapshot.canonical_hash,
-                    "idempotency_key": indexable_snapshot.idempotency_key,
-                },
+                payload=handoff_payload,
                 idempotency_key=snapshot_outbox.idempotency_key,
             )
             return PackageAWorkerReceipt(
@@ -684,6 +701,7 @@ class PackageAProductionIngestionRuntime:
         *,
         replay: dict[str, Any],
         handoff_replay: dict[str, Any],
+        require_outbox: bool = True,
     ) -> None:
         PackageAProductionIngestionRuntime._require_replay_fields(
             handoff_replay,
@@ -693,20 +711,31 @@ class PackageAProductionIngestionRuntime:
                 "visibility_ref",
                 "quality_decision_id",
                 "knowledge_handoff_status",
+            ),
+            status="snapshot_handoff",
+        )
+        if require_outbox:
+            PackageAProductionIngestionRuntime._require_replay_fields(
+                handoff_replay,
+                (
                 "outbox_publish_status",
                 "outbox_payload_hash",
                 "outbox_payload_indexable_snapshot_id",
                 "outbox_payload_document_version_id",
                 "outbox_payload_quality_decision_id",
                 "outbox_payload_idempotency_key",
-            ),
-            status="snapshot_handoff",
-        )
-        for field_name in ("indexable_snapshot_id", "outbox_event_id", "handoff_idempotency_key"):
+                ),
+                status="snapshot_handoff",
+            )
+        for field_name in ("indexable_snapshot_id", "handoff_idempotency_key", "handoff_envelope_hash"):
             if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay mismatch: {field_name}"
                 )
+        if require_outbox and str(handoff_replay.get("outbox_event_id")) != str(replay.get("outbox_event_id")):
+            raise IngestionPersistenceError(
+                "Package A snapshot handoff replay mismatch: outbox_event_id"
+            )
         for field_name in ("parse_snapshot_id", "document_version_id", "quality_decision_id"):
             if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
                 raise IngestionPersistenceError(
@@ -717,22 +746,23 @@ class PackageAProductionIngestionRuntime:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay lineage mismatch: visibility_ref"
             )
-        outbox_payload_fields = {
-            "outbox_payload_indexable_snapshot_id": "indexable_snapshot_id",
-            "outbox_payload_document_version_id": "document_version_id",
-            "outbox_payload_quality_decision_id": "quality_decision_id",
-            "outbox_payload_idempotency_key": "handoff_idempotency_key",
-        }
-        for outbox_field_name, replay_field_name in outbox_payload_fields.items():
-            if str(handoff_replay.get(outbox_field_name)) != str(replay.get(replay_field_name)):
-                raise IngestionPersistenceError(
-                    f"Package A snapshot handoff replay outbox mismatch: {outbox_field_name}"
-                )
+        if require_outbox:
+            outbox_payload_fields = {
+                "outbox_payload_indexable_snapshot_id": "indexable_snapshot_id",
+                "outbox_payload_document_version_id": "document_version_id",
+                "outbox_payload_quality_decision_id": "quality_decision_id",
+                "outbox_payload_idempotency_key": "handoff_idempotency_key",
+            }
+            for outbox_field_name, replay_field_name in outbox_payload_fields.items():
+                if str(handoff_replay.get(outbox_field_name)) != str(replay.get(replay_field_name)):
+                    raise IngestionPersistenceError(
+                        f"Package A snapshot handoff replay outbox mismatch: {outbox_field_name}"
+                    )
         if str(handoff_replay.get("knowledge_handoff_status")) in {"blocked", "dead_letter"}:
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay conflict: knowledge_handoff_status"
             )
-        if str(handoff_replay.get("outbox_publish_status")) == "dead_letter":
+        if require_outbox and str(handoff_replay.get("outbox_publish_status")) == "dead_letter":
             raise IngestionPersistenceError(
                 "Package A snapshot handoff replay conflict: outbox_publish_status"
             )
@@ -1174,6 +1204,28 @@ class PackageAProductionIngestionRuntime:
             outbox_event_id=outbox.ref,
             handoff_idempotency_key=indexable_snapshot.idempotency_key,
             outbox_idempotency_key=snapshot_outbox.idempotency_key,
+        )
+
+    @staticmethod
+    def _snapshot_handoff_outbox_payload(indexable_snapshot) -> dict[str, Any]:
+        return {
+            "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+            "document_version_id": indexable_snapshot.document_version_id,
+            "quality_decision_id": indexable_snapshot.quality_decision_id,
+            "canonical_hash": indexable_snapshot.canonical_hash,
+            "idempotency_key": indexable_snapshot.idempotency_key,
+        }
+
+    @staticmethod
+    def _snapshot_handoff_envelope_hash(indexable_snapshot, *, parse_snapshot_id: str | None = None) -> str:
+        return canonical_sha256(
+            {
+                "indexable_snapshot_id": indexable_snapshot.indexable_snapshot_id,
+                "parse_snapshot_id": parse_snapshot_id or indexable_snapshot.parse_snapshot_id,
+                "document_version_id": indexable_snapshot.document_version_id,
+                "quality_decision_id": indexable_snapshot.quality_decision_id,
+                "payload": indexable_snapshot.payload,
+            }
         )
 
     def _parse_requested_envelope(
