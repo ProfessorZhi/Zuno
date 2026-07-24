@@ -509,7 +509,7 @@ class DeleteRestoreRuntime:
             raise ValueError("delete verification requires knowledge cleanup confirmation")
         if not physical_delete_verified:
             raise ValueError("delete verification requires physical delete confirmation")
-        verification_ref = f"verify_{receipt.delete_ref}"
+        verification_ref = receipt.verification_ref or f"verify_{receipt.delete_ref}"
         return receipt.model_copy(
             update={
                 "state": "verified",
@@ -684,13 +684,18 @@ class PersistentDeleteRestoreCoordinator:
                 receipt=current,
                 ticket=ticket,
             )
-            self._object_verification_port().verify_absent(
+            verification_result = self._object_verification_port().verify_absent(
                 receipt=current,
                 ticket=ticket,
             )
+            if not verification_result.absent:
+                raise ValueError(verification_result.reason)
             verified = self.runtime.verify_delete(
                 self.runtime.mark_physical_delete(cleanup).model_copy(
-                    update={"physical_delete_ref": delete_result.physical_delete_ref}
+                    update={
+                        "physical_delete_ref": delete_result.physical_delete_ref,
+                        "verification_ref": verification_result.verification_ref,
+                    }
                 ),
                 cleanup_verified=True,
                 physical_delete_verified=True,
