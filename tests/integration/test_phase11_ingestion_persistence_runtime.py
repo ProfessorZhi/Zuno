@@ -18,6 +18,7 @@ from zuno.knowledge.ingestion import (
     PersistentDeleteRestoreCoordinator,
     ReviewDecisionReceipt,
     ReviewTask,
+    StaticRestoreAuthorizationPort,
 )
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import create_foundation_engine
@@ -823,6 +824,18 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
                 tenant_id="tenant-a",
                 delete_ref=requested.delete_ref,
             )
+        coordinator.authorization_port = StaticRestoreAuthorizationPort(
+            revoked_refs=frozenset({"restore-auth:phase11:revoked"}),
+        )
+        with pytest.raises(ValueError, match="restore_authorization_revoked"):
+            coordinator.restore_deleted(
+                tenant_id="tenant-a",
+                delete_ref=requested.delete_ref,
+                restore_authorization_ref="restore-auth:phase11:revoked",
+            )
+        with pytest.raises(S3Error):
+            raw_store.read_object(bucket=bucket, object_name=committed.object_name)
+        coordinator.authorization_port = StaticRestoreAuthorizationPort()
 
         restored = coordinator.restore_deleted(
             tenant_id="tenant-a",

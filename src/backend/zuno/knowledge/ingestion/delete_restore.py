@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 from urllib.parse import urlparse
 
 from minio.error import S3Error
@@ -49,6 +49,57 @@ class DeleteLifecycleReceipt(BaseModel):
     late_worker_result_rejected: bool = False
     receipt_hash: str
     history: list[str] = Field(default_factory=list)
+
+
+class RestoreAuthorizationPort(Protocol):
+    def authorize_restore(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        restore_authorization_ref: str,
+    ) -> "RestoreAuthorizationReceipt":
+        ...
+
+
+class RestoreAuthorizationReceipt(BaseModel):
+    tenant_id: str
+    delete_ref: str
+    restore_authorization_ref: str
+    authorized: bool
+    reason: str
+    security_epoch_ref: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class StaticRestoreAuthorizationPort:
+    revoked_refs: frozenset[str] = frozenset()
+    security_epoch_ref: str | None = None
+
+    def authorize_restore(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        restore_authorization_ref: str,
+    ) -> RestoreAuthorizationReceipt:
+        if restore_authorization_ref in self.revoked_refs:
+            return RestoreAuthorizationReceipt(
+                tenant_id=tenant_id,
+                delete_ref=delete_ref,
+                restore_authorization_ref=restore_authorization_ref,
+                authorized=False,
+                reason="restore_authorization_revoked",
+                security_epoch_ref=self.security_epoch_ref,
+            )
+        return RestoreAuthorizationReceipt(
+            tenant_id=tenant_id,
+            delete_ref=delete_ref,
+            restore_authorization_ref=restore_authorization_ref,
+            authorized=True,
+            reason="restore_authorization_accepted",
+            security_epoch_ref=self.security_epoch_ref,
+        )
 
 
 class DeleteRestoreRuntime:
@@ -315,6 +366,7 @@ class PersistentDeleteRestoreCoordinator:
     engine: Engine
     object_store: DurableMinioObjectStore
     runtime: DeleteRestoreRuntime = field(default_factory=DeleteRestoreRuntime)
+    authorization_port: RestoreAuthorizationPort = field(default_factory=StaticRestoreAuthorizationPort)
 
     cleanup_topic = "ingestion.delete.cleanup.requested"
 
@@ -443,6 +495,12 @@ class PersistentDeleteRestoreCoordinator:
                 raise ValueError("delete restore tenant mismatch")
             current = DeleteLifecycleReceipt.model_validate(current_row)
             if current.state == "restored":
+                if restore_authorization_ref is not None:
+                    self._authorize_restore(
+                        tenant_id=tenant_id,
+                        delete_ref=delete_ref,
+                        restore_authorization_ref=restore_authorization_ref,
+                    )
                 restored = self.runtime.restore(
                     current,
                     restore_authorization_ref=restore_authorization_ref,
@@ -451,6 +509,11 @@ class PersistentDeleteRestoreCoordinator:
                 return restored
             if not restore_authorization_ref:
                 raise ValueError("restore requires fresh authorization")
+            self._authorize_restore(
+                tenant_id=tenant_id,
+                delete_ref=delete_ref,
+                restore_authorization_ref=restore_authorization_ref,
+            )
             if not current.object_ref or not current.restore_point_name:
                 raise ValueError("restore requires object_ref and restore_point_name")
             ticket = self._ticket(repo, current.object_ref)
@@ -493,6 +556,28 @@ class PersistentDeleteRestoreCoordinator:
             raise
         raise ValueError("physical delete verification failed: object still exists")
 
+    def _authorize_restore(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        restore_authorization_ref: str,
+    ) -> RestoreAuthorizationReceipt:
+        authorization = self.authorization_port.authorize_restore(
+            tenant_id=tenant_id,
+            delete_ref=delete_ref,
+            restore_authorization_ref=restore_authorization_ref,
+        )
+        if (
+            str(authorization.tenant_id) != str(tenant_id)
+            or str(authorization.delete_ref) != str(delete_ref)
+            or authorization.restore_authorization_ref != restore_authorization_ref
+        ):
+            raise ValueError("restore authorization receipt mismatch")
+        if not authorization.authorized:
+            raise ValueError(authorization.reason)
+        return authorization
+
 
 def _parse_s3_object_ref(object_ref: str) -> tuple[str, str]:
     parsed = urlparse(object_ref)
@@ -511,4 +596,7 @@ __all__ = [
     "DeleteLifecycleReceipt",
     "DeleteRestoreRuntime",
     "PersistentDeleteRestoreCoordinator",
+    "RestoreAuthorizationPort",
+    "RestoreAuthorizationReceipt",
+    "StaticRestoreAuthorizationPort",
 ]
