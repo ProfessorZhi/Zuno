@@ -320,7 +320,9 @@ class WorkspaceTaskRuntimeService:
     ) -> None:
         cls._phase08_cutover_mode = mode
         cls._phase08_cutover_runtime = new_runtime
-        cls._phase08_cutover_ledger = side_effect_ledger
+        cls._phase08_cutover_ledger = side_effect_ledger if side_effect_ledger is not None else (
+            SideEffectLedger() if mode is not None else None
+        )
         cls._phase08_cutover_audit = audit
 
     @classmethod

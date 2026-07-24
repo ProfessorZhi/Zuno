@@ -28,6 +28,7 @@ branch: integration/goal02-final-closure-repair
 - Finalization ledger：Final Gate / RunOutcome replay 相同 payload 返回 duplicate；同一 run 的不同 Final Gate 决策或不同 RunOutcome publication fail closed。
 - Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
 - Product cutover entry：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` 让 Workspace task 入口显式进入 `Phase08CutoverController`，默认不启用；启用后可按 `shadow`、`canary`、`new_default`、`rollback` 记录 `phase08_cutover` 审计事件。
+- Product cutover ledger lifecycle：Workspace cutover 启用但未显式传入 ledger 时，默认 `SideEffectLedger` 绑定到配置生命周期，不在每次任务执行时重建，避免同一配置窗口内丢失 effect claim / fallback guard。
 - Shadow suppression：shadow 路径允许官方 Checkpointer 记录可恢复执行痕迹，但禁止 PHASE08 Final Gate、RunOutcome 和 Effect Claim 写入领域表，避免 shadow 产生产品效果、usage settlement 或完成事实。
 - Shadow unavailable guard：shadow 路径的新 runtime dry-run 不可用时，产品入口保留已成功的 legacy primary 响应，记录 `shadow_unavailable:*` cutover audit，不触发 PHASE08 effect claim，也不重复 legacy side effect。
 - Fallback guard：若同一请求已有 PHASE08 `agent_effect_claims` 持久记录，后续新 runtime 不可用时自动 legacy fallback 会 fail closed，并记录 `fallback_allowed=false` 的 cutover audit，防止已提交 effect 后重复执行 legacy side effect。
@@ -86,6 +87,7 @@ pytest -q tests/integration/agent/test_phase08_plan_version_persistence.py::test
 pytest -q tests/integration/agent/test_phase08_task_contract_persistence.py -p no:cacheprovider --tb=short
 pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py::test_shadow_mode_keeps_legacy_primary_when_new_runtime_is_unavailable tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_shadow_cutover_does_not_fail_product_when_new_runtime_unavailable -p no:cacheprovider --tb=short
 pytest -q tests/agent/runtime/test_phase08_fixed_run_graph.py::test_run_graph_handles_interrupt_resume_cancel_and_deadline tests/agent/runtime/test_phase08_fixed_run_graph.py::test_cancel_after_terminal_run_returns_terminal_without_rewriting_outcome tests/integration/agent/test_phase08_official_postgres_runtime_recovery.py::test_phase08_run_graph_cancels_interrupted_postgres_checkpoint_after_restart -p no:cacheprovider --tb=short
+pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -112,6 +114,7 @@ py_compile passed
 4 passed in 10.77s
 2 passed, 1 warning in 53.63s
 3 passed in 31.28s
+1 passed, 1 warning in 25.32s
 ```
 
 当前 schema head 复核：

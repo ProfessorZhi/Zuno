@@ -640,7 +640,6 @@ def test_workspace_task_runtime_runs_read_only_tool_and_streams_audit_events() -
 def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() -> None:
     from zuno.agent.runtime import (
         Phase08RunService,
-        SideEffectLedger,
         build_phase08_run_graph,
         build_phase08_test_checkpointer,
     )
@@ -651,8 +650,8 @@ def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() ->
         new_runtime=Phase08RunService(
             graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())
         ),
-        side_effect_ledger=SideEffectLedger(),
     )
+    configured_ledger = WorkspaceTaskRuntimeService._phase08_cutover_ledger
     try:
         client = _client()
         create_response = client.post(
@@ -685,6 +684,9 @@ def test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry() ->
         assert cutover["payload"]["request_hash"]
         assert cutover["payload"]["side_effect_ref"] == "side-effect:workspace-task:task_phase08_canary:phase08-cutover"
         assert "task_completed" in [event["type"] for event in events]
+        assert WorkspaceTaskRuntimeService._phase08_cutover_ledger is configured_ledger
+        assert configured_ledger is not None
+        assert configured_ledger.claimed_keys == {"workspace-task:task_phase08_canary:phase08-cutover"}
     finally:
         WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
