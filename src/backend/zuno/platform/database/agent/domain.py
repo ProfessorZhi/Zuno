@@ -194,7 +194,8 @@ class AgentDomainRepository:
         )
 
     def record_plan_version(self, plan: PlanVersion) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _plan_params(plan)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_plan_versions (
@@ -205,16 +206,45 @@ class AgentDomainRepository:
                     :plan_version_id, :tenant_id, :workspace_id, :goal_version_id,
                     :plan_kind, :status, :plan_hash, :aggregate_version, :activated_at
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _plan_params(plan),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT plan_version_id, tenant_id, workspace_id, goal_version_id,
+                           plan_kind, status, plan_hash, aggregate_version
+                    FROM agent_plan_versions
+                    WHERE plan_version_id = :plan_version_id
+                       OR (goal_version_id = :goal_version_id AND plan_hash = :plan_hash)
+                    """
+                ),
+                {
+                    "plan_version_id": plan.plan_version_id,
+                    "goal_version_id": plan.goal_version_id,
+                    "plan_hash": plan.plan_hash,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(
+                existing[0][key] == params[key]
+                for key in ("tenant_id", "workspace_id", "goal_version_id", "plan_kind", "plan_hash")
+            ):
+                return AgentDomainReceipt(
+                    str(existing[0]["plan_version_id"]),
+                    f"duplicate:{existing[0]['status']}",
+                    int(existing[0]["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting PlanVersion for {plan.plan_version_id}")
         for step in plan.steps:
             self.record_step_definition(step)
         return AgentDomainReceipt(plan.plan_version_id, plan.status.value, plan.aggregate_version)
 
     def record_step_definition(self, step: DeterministicStepDefinition) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _step_params(step)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_plan_step_definitions (
@@ -229,10 +259,35 @@ class AgentDomainRepository:
                     CAST(:acceptance_refs AS JSON), :executor_type, CAST(:required_evidence_refs AS JSON),
                     :budget_ref, :deadline_at, :step_hash
                 )
+                ON CONFLICT DO NOTHING
                 """
             ),
-            _step_params(step),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT step_definition_id, plan_version_id, tenant_id, step_no, step_hash
+                    FROM agent_plan_step_definitions
+                    WHERE step_definition_id = :step_definition_id
+                       OR (plan_version_id = :plan_version_id AND step_no = :step_no)
+                       OR (plan_version_id = :plan_version_id AND step_hash = :step_hash)
+                    """
+                ),
+                {
+                    "step_definition_id": step.step_definition_id,
+                    "plan_version_id": step.plan_version_id,
+                    "step_no": step.step_no,
+                    "step_hash": step.step_hash,
+                },
+            ).mappings().all()
+            if len(existing) == 1 and all(
+                existing[0][key] == params[key]
+                for key in ("plan_version_id", "tenant_id", "step_no", "step_hash")
+            ):
+                return AgentDomainReceipt(str(existing[0]["step_definition_id"]), "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting StepDefinition for {step.step_definition_id}")
         return AgentDomainReceipt(step.step_definition_id, "RECORDED", 1)
 
     def load_plan_version(self, plan_version_id: str) -> PlanVersion:
