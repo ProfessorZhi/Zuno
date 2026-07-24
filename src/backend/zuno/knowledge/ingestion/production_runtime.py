@@ -101,6 +101,18 @@ class PackageAWorkerReceipt:
     duplicate_delivery: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class PackageASnapshotHandoffConfirmationReceipt:
+    indexable_snapshot_id: str
+    parse_snapshot_id: str
+    outbox_event_id: str
+    handoff_idempotency_key: str
+    knowledge_receipt_ref: str
+    knowledge_handoff_status: str
+    outbox_publish_status: str
+    status: str = "published"
+
+
 class PackageAProductionIngestionRuntime:
     def __init__(
         self,
@@ -367,6 +379,32 @@ class PackageAProductionIngestionRuntime:
                 handoff_idempotency_key=indexable_snapshot.idempotency_key,
                 outbox_idempotency_key=snapshot_outbox.idempotency_key,
             )
+
+    def confirm_snapshot_handoff_published(
+        self,
+        *,
+        tenant_id: str,
+        handoff_idempotency_key: str,
+        knowledge_receipt_ref: str,
+    ) -> PackageASnapshotHandoffConfirmationReceipt:
+        if not handoff_idempotency_key:
+            raise IngestionPersistenceError("snapshot handoff confirmation requires idempotency key")
+        if not knowledge_receipt_ref:
+            raise IngestionPersistenceError("snapshot handoff confirmation requires knowledge receipt")
+        with IngestionUnitOfWork(self.engine) as repo:
+            replay = repo.mark_review_handoff_published(
+                tenant_id=tenant_id,
+                handoff_idempotency_key=handoff_idempotency_key,
+            )
+        return PackageASnapshotHandoffConfirmationReceipt(
+            indexable_snapshot_id=str(replay["indexable_snapshot_id"]),
+            parse_snapshot_id=str(replay["parse_snapshot_id"]),
+            outbox_event_id=str(replay["outbox_event_id"]),
+            handoff_idempotency_key=str(replay["handoff_idempotency_key"]),
+            knowledge_receipt_ref=knowledge_receipt_ref,
+            knowledge_handoff_status=str(replay["knowledge_handoff_status"]),
+            outbox_publish_status=str(replay["outbox_publish_status"]),
+        )
 
     def _load_workspace_upload_replay_receipt(
         self,
@@ -1642,6 +1680,7 @@ __all__ = [
     "PACKAGE_A_PARSE_CONTRACT_NAME",
     "PACKAGE_A_PARSE_CONSUMER_MODULE",
     "PACKAGE_A_PARSE_REQUESTED_TOPIC",
+    "PackageASnapshotHandoffConfirmationReceipt",
     "PackageAObjectVerificationError",
     "PackageAParserIdentityError",
     "PackageARejectDeliveryError",

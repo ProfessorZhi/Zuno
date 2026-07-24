@@ -1304,17 +1304,19 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     assert replay["knowledge_handoff_status"] == "pending"
     assert replay["outbox_publish_status"] == "pending"
     assert replay["outbox_payload_idempotency_key"] == first.handoff_idempotency_key
-    with IngestionUnitOfWork(engine) as repo:
-        published = repo.mark_review_handoff_published(
-            tenant_id="tenant-a",
-            handoff_idempotency_key=first.handoff_idempotency_key or "",
-        )
-        duplicate_published = repo.mark_review_handoff_published(
-            tenant_id="tenant-a",
-            handoff_idempotency_key=first.handoff_idempotency_key or "",
-        )
-    assert published["knowledge_handoff_status"] == "published"
-    assert published["outbox_publish_status"] == "published"
+    published = runtime.confirm_snapshot_handoff_published(
+        tenant_id="tenant-a",
+        handoff_idempotency_key=first.handoff_idempotency_key or "",
+        knowledge_receipt_ref=f"knowledge_receipt:{first.indexable_snapshot_id}",
+    )
+    duplicate_published = runtime.confirm_snapshot_handoff_published(
+        tenant_id="tenant-a",
+        handoff_idempotency_key=first.handoff_idempotency_key or "",
+        knowledge_receipt_ref=f"knowledge_receipt:{first.indexable_snapshot_id}",
+    )
+    assert published.knowledge_handoff_status == "published"
+    assert published.outbox_publish_status == "published"
+    assert published.knowledge_receipt_ref == f"knowledge_receipt:{first.indexable_snapshot_id}"
     assert duplicate_published == published
     with engine.connect() as conn:
         statuses = conn.execute(
