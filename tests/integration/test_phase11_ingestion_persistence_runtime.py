@@ -1135,6 +1135,22 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             decision_hash=task.decision_hash,
             expires_at=task.expires_at,
         )
+        repo.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'review_pending'
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"parse_attempt_id": "parse-attempt:approved-resume:1", "tenant_id": "tenant-a"},
+        )
+        repo.update_parse_job_status(
+            parse_job_id="parse-job:approved-resume:1",
+            tenant_id="tenant-a",
+            status="review_pending",
+        )
         receipt = HumanReviewRuntime(review_ttl_seconds=60).decide(
             task=task,
             reviewer_id="reviewer:approved-resume",
@@ -1215,6 +1231,21 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 1
+        statuses = conn.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                """
+            ),
+            {"parse_attempt_id": "parse-attempt:approved-resume:1"},
+        ).mappings().one()
+        assert statuses["attempt_status"] == "approved"
+        assert statuses["job_status"] == "approved"
         handoff = conn.execute(
             text(
                 """
@@ -1448,6 +1479,22 @@ def test_ingestion_non_approved_review_never_resumes_handoff(engine, decision_st
             decision_hash=task.decision_hash,
             expires_at=task.expires_at,
         )
+        repo.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'review_pending'
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"parse_attempt_id": f"parse-attempt:non-approved:{suffix}:1", "tenant_id": "tenant-a"},
+        )
+        repo.update_parse_job_status(
+            parse_job_id=f"parse-job:non-approved:{suffix}:1",
+            tenant_id="tenant-a",
+            status="review_pending",
+        )
         decision_runtime = HumanReviewRuntime(review_ttl_seconds=60)
         if decision_status == "expired":
             receipt = decision_runtime.decide(
@@ -1490,6 +1537,21 @@ def test_ingestion_non_approved_review_never_resumes_handoff(engine, decision_st
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM ingestion_indexable_document_snapshots")).scalar_one() == 0
         assert conn.execute(text("SELECT count(*) FROM ingestion_outbox_events")).scalar_one() == 0
+        statuses = conn.execute(
+            text(
+                """
+                SELECT attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_attempts AS attempt
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = attempt.parse_job_id
+                WHERE attempt.parse_attempt_id = :parse_attempt_id
+                """
+            ),
+            {"parse_attempt_id": f"parse-attempt:non-approved:{suffix}:1"},
+        ).mappings().one()
+        assert statuses["attempt_status"] == decision_status
+        assert statuses["job_status"] == decision_status
 
 
 def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(engine) -> None:

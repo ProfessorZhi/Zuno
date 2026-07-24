@@ -1372,7 +1372,83 @@ class IngestionRepository:
                 "status": status,
             },
         )
+        self._mark_reviewed_parse_attempt_and_job(
+            review_task_id=review_task_id,
+            tenant_id=tenant_id,
+            status=status,
+        )
         return IngestionReceipt(decision_id, tenant_id, status, decision_hash)
+
+    def _mark_reviewed_parse_attempt_and_job(self, *, review_task_id: str, tenant_id: str, status: str) -> None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT snapshot.parse_attempt_id, snapshot.parse_job_id,
+                       attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_review_tasks AS review_task
+                JOIN ingestion_parse_snapshots AS snapshot
+                  ON snapshot.parse_snapshot_id = review_task.parse_snapshot_id
+                 AND snapshot.tenant_id = review_task.tenant_id
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.parse_job_id = snapshot.parse_job_id
+                 AND attempt.tenant_id = snapshot.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = snapshot.tenant_id
+                WHERE review_task.review_task_id = :review_task_id
+                  AND review_task.tenant_id = :tenant_id
+                """
+            ),
+            {"review_task_id": review_task_id, "tenant_id": tenant_id},
+        ).mappings().one_or_none()
+        if row is None:
+            raise IngestionPersistenceError(f"missing review parse snapshot binding: {review_task_id}")
+        if row["attempt_status"] != "review_pending" and row["job_status"] != "review_pending":
+            return
+        if row["attempt_status"] != "review_pending" or row["job_status"] != "review_pending":
+            raise IngestionPersistenceError("review decision parse status update found split state")
+        attempt = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = :status,
+                    heartbeat_at = now(),
+                    finished_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'review_pending'
+                """
+            ),
+            {
+                "parse_attempt_id": row["parse_attempt_id"],
+                "parse_job_id": row["parse_job_id"],
+                "tenant_id": tenant_id,
+                "status": status,
+            },
+        )
+        if attempt.rowcount != 1:
+            raise IngestionPersistenceError("review decision parse attempt status update rejected")
+        job = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = :status,
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'review_pending'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id, "status": status},
+        )
+        if job.rowcount != 1:
+            raise IngestionPersistenceError("review decision parse job status update rejected")
 
     def record_indexable_snapshot(
         self,
