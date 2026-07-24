@@ -18,6 +18,7 @@ branch: integration/goal02-final-closure-repair
 - P08-T02：不可变 `PlanVersion`、单步 `DeterministicStepDefinition`、语义哈希、激活一次、PostgreSQL 约束。
 - PlanVersion ledger：同一 `PlanVersion` / `StepDefinition` replay 返回 duplicate；同一 Goal 下相同 plan hash 的重放复用原 plan；同一 plan id 不同 payload fail closed，不再暴露原始数据库唯一约束异常。
 - P08-T03：不可变 `ExecutionContextSnapshot`、预算预留和结算 ledger、stale epoch、deadline 和预算不足。
+- Budget ledger replay：`BudgetReservation` 同 payload 重放返回 duplicate、不同 payload fail closed；`BudgetSettlement` 在提交后响应丢失场景中同 payload 重放返回 duplicate，错误 expected version 和不同 settlement payload 仍 fail closed。
 - ExecutionContextSnapshot ledger：同一 `execution_snapshot_id` 和相同上下文 hash 的 restart replay 返回 duplicate；同一 snapshot id 的不同 policy/context payload fail closed，不让数据库唯一约束变成未分类异常。
 - P08-T04 到 P08-T07：固定 `initialize -> authorize -> context_snapshot -> create_plan -> validate_plan -> activate_plan -> execute_step -> final_gate -> finalize -> run_outcome` LangGraph 运行图、固定 StepExecutionGraph、generation reconciliation、interrupt/signal/cancel/deadline。
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
@@ -78,6 +79,7 @@ pytest -q tests/agent/runtime/test_phase08_reconciliation_and_signals.py::test_g
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_signal_reconciliation_and_cutover_are_persistent -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_execution_context_budget_persistence.py::test_execution_snapshot_and_budget_ledger_round_trip -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_execution_context_budget_persistence.py -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_plan_version_persistence.py::test_plan_version_persistence_records_single_step_and_activation tests/integration/agent/test_phase08_plan_version_persistence.py::test_plan_version_duplicate_hash_replays_and_conflicts_per_goal -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_task_contract_persistence.py -p no:cacheprovider --tb=short
 ```
@@ -101,6 +103,7 @@ py_compile passed
 1 passed in 37.48s
 1 passed in 35.45s
 1 passed in 8.16s
+2 passed in 14.25s
 2 passed in 9.80s
 4 passed in 10.77s
 ```

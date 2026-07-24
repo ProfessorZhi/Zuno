@@ -424,7 +424,8 @@ class AgentDomainRepository:
         return AgentDomainReceipt(next_plan.plan_version_id, next_plan.status.value, next_plan.aggregate_version)
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _budget_reservation_params(reservation)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_budget_reservations (
@@ -435,10 +436,31 @@ class AgentDomainRepository:
                     :budget_reservation_id, :run_id, :tenant_id, :budget_ref, :reservation_scope,
                     :requested_units, :reserved_units, :status, :aggregate_version
                 )
+                ON CONFLICT (budget_reservation_id) DO NOTHING
                 """
             ),
-            _budget_reservation_params(reservation),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT budget_reservation_id, run_id, tenant_id, budget_ref,
+                           reservation_scope, requested_units, reserved_units,
+                           status, aggregate_version
+                    FROM agent_budget_reservations
+                    WHERE budget_reservation_id = :budget_reservation_id
+                    """
+                ),
+                {"budget_reservation_id": reservation.budget_reservation_id},
+            ).mappings().one()
+            if all(existing[key] == value for key, value in params.items()):
+                return AgentDomainReceipt(
+                    str(existing["budget_reservation_id"]),
+                    f"duplicate:{existing['status']}",
+                    int(existing["aggregate_version"]),
+                )
+            raise AgentDomainConflict(f"conflicting BudgetReservation for {reservation.budget_reservation_id}")
         return AgentDomainReceipt(
             reservation.budget_reservation_id,
             reservation.status.value,
@@ -460,6 +482,30 @@ class AgentDomainRepository:
         expected_version: int,
     ) -> AgentDomainReceipt:
         previous = self.load_budget_reservation(next_reservation.budget_reservation_id)
+        settlement_params = _budget_settlement_params(settlement)
+        if previous.status is BudgetReservationStatus.SETTLED:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT budget_settlement_id, budget_reservation_id, run_id, tenant_id,
+                           consumed_units, released_units, reason_ref
+                    FROM agent_budget_settlements
+                    WHERE budget_reservation_id = :budget_reservation_id
+                    """
+                ),
+                {"budget_reservation_id": next_reservation.budget_reservation_id},
+            ).mappings().one_or_none()
+            if (
+                previous == next_reservation
+                and existing is not None
+                and all(existing[key] == value for key, value in settlement_params.items())
+            ):
+                return AgentDomainReceipt(
+                    next_reservation.budget_reservation_id,
+                    f"duplicate:{next_reservation.status.value}",
+                    next_reservation.aggregate_version,
+                )
+            raise AgentDomainConflict(f"conflicting BudgetSettlement for {next_reservation.budget_reservation_id}")
         if previous.aggregate_version != expected_version:
             raise AgentDomainConflict(
                 f"expected aggregate_version {expected_version}, observed {previous.aggregate_version}"
@@ -497,7 +543,7 @@ class AgentDomainRepository:
                 )
                 """
             ),
-            _budget_settlement_params(settlement),
+            settlement_params,
         )
         return AgentDomainReceipt(
             next_reservation.budget_reservation_id,
