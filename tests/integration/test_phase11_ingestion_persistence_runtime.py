@@ -217,12 +217,14 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
         )
         delete_receipt = DeleteRestoreRuntime().verify_delete(
             DeleteRestoreRuntime().mark_physical_delete(
-                DeleteRestoreRuntime().request_cleanup(
-                    DeleteRestoreRuntime().request_delete_after_snapshot(
-                        indexable_snapshot_id=indexable.ref,
-                        handoff_outbox_event_id=outbox.ref,
-                        visibility_ref="visibility:workspace-a:active",
-                        projection_cleanup_ref=f"projection-cleanup:{indexable.ref}",
+                DeleteRestoreRuntime().confirm_knowledge_cleanup(
+                    DeleteRestoreRuntime().request_cleanup(
+                        DeleteRestoreRuntime().request_delete_after_snapshot(
+                            indexable_snapshot_id=indexable.ref,
+                            handoff_outbox_event_id=outbox.ref,
+                            visibility_ref="visibility:workspace-a:active",
+                            projection_cleanup_ref=f"projection-cleanup:{indexable.ref}",
+                        )
                     )
                 )
             )
@@ -248,6 +250,7 @@ def test_ingestion_uow_persists_source_to_indexable_snapshot_handoff(engine) -> 
     assert restored_delete["physical_delete_verified"] is True
     assert restored_delete["history"][-1] == "verified"
     assert outbox.status == "pending"
+
     with engine.connect() as conn:
         for table in [
             "ingestion_source_objects",
@@ -591,6 +594,7 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             reviewer_scope=task.reviewer_scope,
             status="approved",
             security_epoch_ref=security_epoch_ref,
+            now=task.expires_at - 1,
         )
         repo.record_review_decision_receipt(
             decision_id=receipt.decision_id,
@@ -645,7 +649,8 @@ def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(en
         visibility_ref="visibility:workspace-a:restore",
     )
     cleanup = runtime.request_cleanup(requested)
-    physical = runtime.mark_physical_delete(cleanup)
+    confirmed = runtime.confirm_knowledge_cleanup(cleanup)
+    physical = runtime.mark_physical_delete(confirmed)
     verified = runtime.verify_delete(physical)
 
     with IngestionUnitOfWork(engine) as repo:
@@ -778,14 +783,37 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
                 projection_cleanup_ref="projection-cleanup:snapshot:phase11:delete-real-object",
             )
         )
-        verified = coordinator.execute_cleanup(
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE infra_outbox_events
+                    SET status = 'published'
+                    WHERE event_id = :event_id
+                    """
+                ),
+                {"event_id": f"outbox:{requested.delete_ref}:cleanup"},
+            )
+        with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
+            coordinator.execute_cleanup(
+                tenant_id="tenant-a",
+                delete_ref=requested.delete_ref,
+            )
+
+        confirmed = coordinator.confirm_knowledge_cleanup(
             tenant_id="tenant-a",
             delete_ref=requested.delete_ref,
+            cleanup_ref=requested.cleanup_ref,
+        )
+        verified = coordinator.execute_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=confirmed.delete_ref,
         )
 
         assert verified.state == "verified"
         assert verified.cleanup_verified is True
         assert verified.physical_delete_verified is True
+        assert "knowledge_cleanup_confirmed" in verified.history
         with pytest.raises(S3Error):
             raw_store.read_object(bucket=bucket, object_name=committed.object_name)
 
@@ -834,7 +862,7 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
         assert lifecycle["cleanup_verified"] is True
         assert lifecycle["physical_delete_verified"] is True
         assert outbox["topic"] == PersistentDeleteRestoreCoordinator.cleanup_topic
-        assert outbox["status"] == "pending"
+        assert outbox["status"] == "published"
         assert outbox["object_ref"] == object_ref
         assert manifest["visibility"] == "restored"
     finally:

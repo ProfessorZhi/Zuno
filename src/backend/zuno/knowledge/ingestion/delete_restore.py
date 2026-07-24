@@ -181,9 +181,38 @@ class DeleteRestoreRuntime:
             }
         )
 
+    def confirm_knowledge_cleanup(
+        self,
+        receipt: DeleteLifecycleReceipt,
+        *,
+        cleanup_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
+        if receipt.legal_hold_ref:
+            return receipt
+        if receipt.state == "verified":
+            return receipt
+        expected_cleanup_ref = receipt.cleanup_ref or f"cleanup_{receipt.delete_ref}"
+        if cleanup_ref is not None and cleanup_ref != expected_cleanup_ref:
+            raise ValueError("knowledge cleanup confirmation does not match delete receipt")
+        history = list(receipt.history)
+        if "cleanup_requested" not in history:
+            history.append("cleanup_requested")
+        if "knowledge_cleanup_confirmed" not in history:
+            history.append("knowledge_cleanup_confirmed")
+        return receipt.model_copy(
+            update={
+                "state": "cleanup_requested",
+                "cleanup_ref": expected_cleanup_ref,
+                "cleanup_verified": True,
+                "history": history,
+            }
+        )
+
     def mark_physical_delete(self, receipt: DeleteLifecycleReceipt) -> DeleteLifecycleReceipt:
         if receipt.legal_hold_ref:
             return receipt
+        if not receipt.cleanup_verified:
+            raise ValueError("physical delete requires knowledge cleanup confirmation")
         physical_delete_ref = f"physical_{receipt.delete_ref}"
         return receipt.model_copy(
             update={
@@ -203,7 +232,7 @@ class DeleteRestoreRuntime:
         if receipt.legal_hold_ref:
             return receipt
         if not cleanup_verified:
-            raise ValueError("delete verification requires projection cleanup confirmation")
+            raise ValueError("delete verification requires knowledge cleanup confirmation")
         if not physical_delete_verified:
             raise ValueError("delete verification requires physical delete confirmation")
         verification_ref = f"verify_{receipt.delete_ref}"
@@ -317,6 +346,8 @@ class PersistentDeleteRestoreCoordinator:
                 return current
             if current.state == "verified":
                 return current
+            if not current.cleanup_verified:
+                raise ValueError("physical delete requires knowledge cleanup confirmation")
             if not current.object_ref or not current.restore_point_name:
                 raise ValueError("delete cleanup requires object_ref and restore_point_name")
             ticket = self._ticket(repo, current.object_ref)
@@ -329,7 +360,7 @@ class PersistentDeleteRestoreCoordinator:
             except S3Error as exc:
                 if exc.code not in {"NoSuchKey", "NoSuchObject"}:
                     raise
-            cleanup = self.runtime.request_cleanup(current)
+            cleanup = self.runtime.confirm_knowledge_cleanup(current)
             try:
                 deleted = self.object_store.delete_committed(ticket)
                 physical_delete_ref = f"s3://{deleted.bucket}/{deleted.object_name}"
@@ -351,17 +382,30 @@ class PersistentDeleteRestoreCoordinator:
                 physical_delete_ref = current.object_ref
             self._verify_absent(ticket)
             verified = self.runtime.verify_delete(
-                cleanup.model_copy(
-                    update={
-                        "physical_delete_ref": physical_delete_ref,
-                        "history": [*cleanup.history, "physically_deleted"],
-                    }
-                ),
+                self.runtime.mark_physical_delete(cleanup).model_copy(update={"physical_delete_ref": physical_delete_ref}),
                 cleanup_verified=True,
                 physical_delete_verified=True,
             )
             repo.reconcile_delete_lifecycle(verified)
             return verified
+
+    def confirm_knowledge_cleanup(
+        self,
+        *,
+        tenant_id: str,
+        delete_ref: str,
+        cleanup_ref: str | None = None,
+    ) -> DeleteLifecycleReceipt:
+        from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
+
+        with IngestionUnitOfWork(self.engine) as repo:
+            current_row = repo.get_delete_lifecycle(delete_ref)
+            if str(current_row["tenant_id"]) != str(tenant_id):
+                raise ValueError("delete cleanup confirmation tenant mismatch")
+            current = DeleteLifecycleReceipt.model_validate(current_row)
+            confirmed = self.runtime.confirm_knowledge_cleanup(current, cleanup_ref=cleanup_ref)
+            repo.reconcile_delete_lifecycle(confirmed)
+            return confirmed
 
     def restore_deleted(self, *, tenant_id: str, delete_ref: str) -> DeleteLifecycleReceipt:
         from zuno.platform.database.ingestion.persistence import IngestionUnitOfWork
