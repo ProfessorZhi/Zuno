@@ -79,4 +79,4 @@ alembic -c infra/db/alembic.ini upgrade head
 
 - 本证据不声明旧 `ChunkModel` 类型从全仓库删除；它仍可存在于兼容 DTO、历史服务或 legacy adapter 内。
 - 本证据声明的是生产默认 ingestion 路径不再依赖旧 parser/upload 直写路径。
-- 本证据仍只是 P11-T08 的 `completion_candidate`。PHASE11 Coordinator Closure 仍为 `pending`，PR #41 不得合并。
+- 本证据对应的 Goal02 limited Closure Review 已完成。PHASE11 Coordinator Closure 为 `approved`，PR #41 可进入最终合并门禁。

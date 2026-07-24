@@ -136,4 +136,4 @@ py_compile passed
 
 ## 边界
 
-PHASE08 当前为 in_progress，不表示完整产品默认路径、Web/Desktop、PHASE09、PHASE10、PHASE12、质量评测或 production readiness 已完成。PHASE09 与 PHASE12 当前为 planned。
+PHASE08 当前为 completed，不表示完整产品默认路径、Web/Desktop、PHASE09、PHASE10、PHASE12、质量评测或 production readiness 已完成。PHASE09 与 PHASE12 当前为 ready。

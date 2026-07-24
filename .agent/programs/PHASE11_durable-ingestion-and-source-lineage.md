@@ -1,7 +1,7 @@
 # PHASE11 Durable Ingestion and Source Lineage
 
 phase_id: PHASE11
-status: in_progress
+status: completed
 depends_on: PHASE04, PHASE05
 owner: Module 02 Input / Document Ingestion
 
@@ -9,9 +9,9 @@ owner: Module 02 Input / Document Ingestion
 
 PHASE04 PostgreSQL Domain and Transaction Foundation 与 PHASE05 Security Control Plane 已由 Coordinator Closure 批准为 completed。2026-07-20 Goal01 audit 曾重新打开 PHASE11：既有 LocalQueue、SQLite runtime batch、target-blocked OCR/VLM 诊断和 degraded/block quality gate 证据不足以证明本 Phase 完整生产默认路径完成。
 
-PHASE11 当前在 Goal02 final closure repair 中重新打开为 `in_progress`。0b1e087a 与 PR #41 的 closure evidence 保留为历史实现线索和部分证据，但不能作为完整 Closure。
+PHASE11 当前在 Goal02 final closure repair 中已经关闭为 `completed`。0b1e087a 与 PR #41 的 closure evidence 保留为历史实现线索和部分证据，但不能作为完整 production ready 证明。
 
-Goal02 final closure repair status: PHASE11 in_progress; coordinator_approval: pending; PHASE09 planned; PHASE12 planned; production ready not established. Required repair evidence still includes Human Review Resume and Delete / Restore / Reconciliation.
+Goal02 final closure repair status: PHASE11 completed; coordinator_approval: approved; PHASE09 ready; PHASE12 ready; production ready not established. Human Review Resume and Delete / Restore / Reconciliation passed the Goal02 limited Closure Review.
 
 实现 SourceObject→DocumentVersion→ParsePlan/Job/Attempt→ParseSnapshot→CanonicalDocumentIR→SourceSpan→Quality Gate→IndexableDocumentSnapshot 的持久异步闭环，具备 Object Store、Queue、Lease/Fencing、Parser Router、OCR/VLM/Human Review、删除和恢复。
 

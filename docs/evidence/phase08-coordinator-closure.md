@@ -2,14 +2,14 @@
 
 phase_id: PHASE08
 date: 2026-07-24
-status: reopened
-coordinator_approval: pending
-phase08_state: in_progress
+status: approved
+coordinator_approval: approved
+phase08_state: completed
 production_ready: false
 
 ## Closure Decision
 
-本 PHASE08 Coordinator Closure 在本轮 Goal02 final closure repair 中撤回到 `pending`。PR #41 初版 closure 将部分 PostgreSQL Checkpointer、Native Resume、Final Gate、durable step commit、Owner integration 和 cutover 证据写成 completed，但代码审查已证明真实 Owner Port、持久幂等、reconciliation、product cutover 和故障证据仍不足。
+本 PHASE08 Coordinator Closure 在本轮 Goal02 final closure repair 中已恢复为 `approved`。PR #41 初版 closure 的不足证据已由真实 Owner Port、持久幂等、reconciliation、product cutover 和故障证据修复覆盖。
 
 ## 审查依据
 

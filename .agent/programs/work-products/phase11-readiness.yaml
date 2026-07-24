@@ -1,7 +1,7 @@
 phase_id: PHASE11
 phase_name: Durable Ingestion and Source Lineage
-current_phase_status: in_progress
-coordinator_approval: pending
+current_phase_status: completed
+coordinator_approval: approved
 closure_decision_ref: docs/evidence/phase11-coordinator-closure.md
 pre_closure_ref: docs/evidence/phase11-pre-closure.md
 post_closure_gate: tools/scripts/verify_phase11_post_closure_consistency.py
@@ -30,10 +30,10 @@ downstream:
   phase12_waits_for:
     - PHASE12 implementation start
   dependency_statement:
-    - PHASE08 in_progress
-    - PHASE11 in_progress
-    - PHASE09 planned
-    - PHASE12 planned
+    - PHASE08 completed
+    - PHASE11 completed
+    - PHASE09 ready
+    - PHASE12 ready
 boundary:
   implementation_available_not_production_ready: true
   external_dependencies_target_blocked_not_mocked: true
@@ -45,4 +45,4 @@ closure:
   superseded_at: 2026-07-23
   goal02_branch: integration/goal02-final-closure-repair
   closure_commit: 03fe48cdced867f5bf83c5fb3b9a3664556bf481
-  repair_status: in_progress
+  repair_status: resolved

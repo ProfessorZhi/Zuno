@@ -1,7 +1,7 @@
 # PHASE08 Deterministic Single Controller Runtime
 
 phase_id: PHASE08
-status: in_progress
+status: completed
 depends_on: PHASE04, PHASE05, PHASE06, PHASE07
 owner: Module 06 Agent Core
 
@@ -9,7 +9,7 @@ owner: Module 06 Agent Core
 
 实现最小但真实的 Single Controller：每个请求创建 TaskContract、GoalVersion、ExecutionContextSnapshot、Deterministic Single-Step PlanVersion，并通过正式 AgentRunGraph 和 StepExecutionGraph 完成执行、Checkpoint、Interrupt/Resume、Cancel、Deadline、Finalization 和 RunOutcome。此 Phase 不实现动态并行 DAG。
 
-Goal02 final closure repair status: PHASE08 reopened as `in_progress`. Existing graph, PostgreSQL, migration and test artifacts are retained as partial evidence, but Coordinator Closure is not approved until real Owner Port, durable idempotency/effect ledger, native resume, reconciliation, product cutover and fault evidence satisfy the mandatory Goal02 closure gate. Production ready remains not established.
+Goal02 final closure repair status: PHASE08 completed. The production run service now binds official PostgreSQL Checkpointer, PostgreSQL Owner Port, Final Gate / RunOutcome persistence, durable idempotency/effect ledger, native resume, reconciliation, product cutover and focused fault evidence. Production ready remains not established.
 
 ## Minimal Read Set
 

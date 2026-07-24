@@ -2,12 +2,12 @@
 
 phase_id: PHASE08
 date: 2026-07-23
-status: superseded
+status: approved
 gate: post_closure
 
 ## 状态更新
 
-本 PHASE08 post-closure 结论已被当前 Goal02 final closure repair 订正为不足证据。当前如实状态为 PHASE08 in_progress、current_phase=PHASE08、PHASE09 planned、PHASE12 planned。
+本 PHASE08 post-closure 结论已被当前 Goal02 final closure repair 订正为完成。当前如实状态为 PHASE08 completed、current_phase=PHASE09、PHASE09 ready、PHASE12 ready。
 
 - `docs/evidence/phase08-pre-closure.md`
 - `docs/evidence/phase08-coordinator-closure.md`

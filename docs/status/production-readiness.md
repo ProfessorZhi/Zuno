@@ -14,17 +14,17 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE05 completed：Security Control Plane 在完整 Phase Scope 内达到 `implementation_available`；不代表 production ready。
 - PHASE06 completed：Observability Minimum Black Box 在完整 Phase Scope 内达到 `implementation_available`；不代表 PHASE20 Eval/Release Gate、quality proven 或 production ready。
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
-- PHASE08 in_progress：PR #41 初版 Goal02 final closure 证据不足，当前正在修复真实 Owner Port、持久幂等、Native Resume、Reconciliation、Product Cutover 和 Fault Evidence；不代表 production ready。
-- PHASE11 in_progress：PR #41 初版 Goal02 final closure 证据不足，当前正在修复 Human Review Resume、Delete / Restore、RabbitMQ、Knowledge Confirmation、MinIO Verification 和 Reconciliation；不代表 production ready。
-- PHASE09 planned：PHASE08 依赖尚未重新关闭，本轮不得实施 PHASE09。
-- PHASE12 planned：PHASE08 与 PHASE11 依赖尚未重新关闭，本轮不得实施 PHASE12。
+- PHASE08 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
+- PHASE11 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
+- PHASE09 ready：PHASE08 依赖已重新关闭，但本轮未实施 PHASE09。
+- PHASE12 ready：PHASE08 与 PHASE11 依赖已重新关闭，但本轮未实施 PHASE12。
 - PHASE09、PHASE10、PHASE12–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
 ## Goal02 Closure Boundary
 
-Goal02 in_progress：PHASE08 in_progress；PHASE11 in_progress；PHASE09 planned；PHASE12 planned；not production ready。
+Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE12 ready；not production ready。
 
 PHASE08 当前保留的部分证据：
 
