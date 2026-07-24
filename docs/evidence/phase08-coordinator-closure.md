@@ -16,7 +16,7 @@ production_ready: false
 - PHASE08 Pre-Closure：`docs/evidence/phase08-pre-closure.md`
 - Domain facts：`src/backend/zuno/agent/domain/task_contracts.py`
 - PostgreSQL repository：`src/backend/zuno/platform/database/agent/domain.py`
-- Alembic head：`20260724_32`
+- Alembic head：`20260724_33`
 - Fixed runtime surface：`src/backend/zuno/agent/runtime/phase08.py`
 - Shadow / canary / rollback：`src/backend/zuno/agent/runtime/phase08_cutover.py`
 - Production service factory：`phase08_postgres_run_service()` binds official `PostgresSaver` and `PostgresPhase08FinalGatePort`.

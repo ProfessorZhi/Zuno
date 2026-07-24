@@ -72,8 +72,8 @@ alembic -c infra/db/alembic.ini upgrade head
 - Absence verification port focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_delete_absence_port_must_confirm_absent_before_verified tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real_object` 为 `2 passed in 18.94s`。
 - Delete / restore unit contract：`7 passed in 8.38s`。
 - PHASE04 MinIO object store regression：`3 passed in 2.17s`。
-- Alembic head：`20260724_32 (head)`。
-- Alembic upgrade：本次变更未新增 migration；最新 schema head 为 `20260724_32 (head)`。
+- Alembic head：`20260724_33 (head)`。
+- Alembic upgrade：最新 schema head 为 `20260724_33 (head)`。
 
 ## 剩余边界
 

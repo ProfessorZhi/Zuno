@@ -321,6 +321,10 @@ class PackageAProductionIngestionRuntime:
                     replay=expected_replay,
                     handoff_replay=replay,
                 )
+                repo.mark_review_handoff_pending(
+                    parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+                    tenant_id=tenant_id,
+                )
                 return PackageAWorkerReceipt(
                     parse_job_id=str(parse_snapshot_row["parse_job_id"]),
                     parse_attempt_id=str(parse_snapshot_row["parse_attempt_id"]),
@@ -348,6 +352,10 @@ class PackageAProductionIngestionRuntime:
                 event_type="ingestion.indexable_snapshot.ready",
                 payload=handoff_payload,
                 idempotency_key=snapshot_outbox.idempotency_key,
+            )
+            repo.mark_review_handoff_pending(
+                parse_snapshot_id=str(parse_snapshot_row["parse_snapshot_id"]),
+                tenant_id=tenant_id,
             )
             return PackageAWorkerReceipt(
                 parse_job_id=str(parse_snapshot_row["parse_job_id"]),

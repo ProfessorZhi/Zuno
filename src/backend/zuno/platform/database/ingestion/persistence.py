@@ -1450,6 +1450,72 @@ class IngestionRepository:
         if job.rowcount != 1:
             raise IngestionPersistenceError("review decision parse job status update rejected")
 
+    def mark_review_handoff_pending(self, *, parse_snapshot_id: str, tenant_id: str) -> None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT snapshot.parse_attempt_id, snapshot.parse_job_id,
+                       attempt.status AS attempt_status,
+                       job.status AS job_status
+                FROM ingestion_parse_snapshots AS snapshot
+                JOIN ingestion_parse_attempts AS attempt
+                  ON attempt.parse_attempt_id = snapshot.parse_attempt_id
+                 AND attempt.parse_job_id = snapshot.parse_job_id
+                 AND attempt.tenant_id = snapshot.tenant_id
+                JOIN ingestion_parse_jobs AS job
+                  ON job.parse_job_id = snapshot.parse_job_id
+                 AND job.tenant_id = snapshot.tenant_id
+                WHERE snapshot.parse_snapshot_id = :parse_snapshot_id
+                  AND snapshot.tenant_id = :tenant_id
+                """
+            ),
+            {"parse_snapshot_id": parse_snapshot_id, "tenant_id": tenant_id},
+        ).mappings().one_or_none()
+        if row is None:
+            raise IngestionPersistenceError(f"missing parse snapshot for handoff pending: {parse_snapshot_id}")
+        if row["attempt_status"] == "handoff_pending" and row["job_status"] == "handoff_pending":
+            return
+        if row["attempt_status"] != "approved" or row["job_status"] != "approved":
+            raise IngestionPersistenceError("review handoff pending requires approved parse status")
+        attempt = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_attempts
+                SET status = 'handoff_pending',
+                    heartbeat_at = now()
+                WHERE parse_attempt_id = :parse_attempt_id
+                  AND parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'approved'
+                """
+            ),
+            {
+                "parse_attempt_id": row["parse_attempt_id"],
+                "parse_job_id": row["parse_job_id"],
+                "tenant_id": tenant_id,
+            },
+        )
+        if attempt.rowcount != 1:
+            raise IngestionPersistenceError("review handoff pending parse attempt update rejected")
+        job = self.connection.execute(
+            text(
+                """
+                UPDATE ingestion_parse_jobs
+                SET status = 'handoff_pending',
+                    attempt_count = (
+                        SELECT count(*) FROM ingestion_parse_attempts
+                        WHERE parse_job_id = :parse_job_id
+                    )
+                WHERE parse_job_id = :parse_job_id
+                  AND tenant_id = :tenant_id
+                  AND status = 'approved'
+                """
+            ),
+            {"parse_job_id": row["parse_job_id"], "tenant_id": tenant_id},
+        )
+        if job.rowcount != 1:
+            raise IngestionPersistenceError("review handoff pending parse job update rejected")
+
     def record_indexable_snapshot(
         self,
         *,

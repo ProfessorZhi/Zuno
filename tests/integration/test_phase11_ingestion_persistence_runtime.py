@@ -1260,8 +1260,8 @@ def test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once(engi
             ),
             {"parse_attempt_id": "parse-attempt:approved-resume:1"},
         ).mappings().one()
-        assert statuses["attempt_status"] == "approved"
-        assert statuses["job_status"] == "approved"
+        assert statuses["attempt_status"] == "handoff_pending"
+        assert statuses["job_status"] == "handoff_pending"
         handoff = conn.execute(
             text(
                 """

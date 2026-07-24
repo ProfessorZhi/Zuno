@@ -88,7 +88,7 @@ alembic -c infra/db/alembic.ini upgrade head
 - Snapshot-only crash recovery focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_approved_review_resume_persists_snapshot_and_outbox_once` 为 `1 passed in 22.25s`。
 - `pytest -q tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_non_approved_review_never_resumes_handoff -p no:cacheprovider --tb=short`：`3 passed in 10.76s`。
 - Late parser result focused regression：`tests/integration/test_phase11_ingestion_persistence_runtime.py::test_ingestion_parse_attempt_can_wait_for_human_review_without_failure` 为 `1 passed in 13.01s`。
-- Alembic head：`20260724_32 (head)`。
+- Alembic head：`20260724_33 (head)`。
 - Alembic upgrade：通过。
 
 ## 剩余边界
