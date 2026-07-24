@@ -962,6 +962,101 @@ def test_ingestion_delete_knowledge_cleanup_port_denial_prevents_object_delete(e
         raw_store.remove_bucket_tree(bucket)
 
 
+def test_ingestion_delete_minio_success_requires_absence_verification(engine) -> None:
+    content = b"phase11 minio delete needs verification"
+    bucket = f"phase11-delete-verify-denied-{uuid4().hex}"
+    raw_store = MinioObjectStore(
+        endpoint=MINIO_ENDPOINT,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+    )
+    durable_store = DurableMinioObjectStore(
+        store=raw_store,
+        engine=engine,
+        owner="phase11-delete-verify-denied-test",
+    )
+    try:
+        ticket = durable_store.stage(
+            bucket=bucket,
+            committed_object_name="workspace-a/delete-verify-denied.md",
+            content=content,
+        )
+        committed = durable_store.commit(ticket)
+        object_ref = f"s3://{bucket}/{committed.object_name}"
+        runtime = DeleteRestoreRuntime()
+        requested = runtime.request_delete(
+            snapshot_ref="snapshot:phase11:delete-verify-denied",
+            visibility_ref="visibility:workspace-a:delete-verify-denied",
+            object_ref=object_ref,
+            restore_point_name="_restore/workspace-a/delete-verify-denied.md",
+        )
+        confirmed = runtime.confirm_knowledge_cleanup(runtime.request_cleanup(requested))
+        with IngestionUnitOfWork(engine) as repo:
+            repo.record_delete_lifecycle(tenant_id="tenant-a", **confirmed.model_dump())
+
+        read_count = {"value": 0}
+
+        def deny_absence_verification_read(action, _bucket, _object_name):
+            if action != "object:read":
+                return True
+            read_count["value"] += 1
+            return read_count["value"] <= 2
+
+        verify_denied_store = DurableMinioObjectStore(
+            store=MinioObjectStore(
+                endpoint=MINIO_ENDPOINT,
+                access_key=MINIO_ACCESS_KEY,
+                secret_key=MINIO_SECRET_KEY,
+                authorization_hook=deny_absence_verification_read,
+            ),
+            engine=engine,
+            owner="phase11-delete-verify-denied-test",
+        )
+        coordinator = PersistentDeleteRestoreCoordinator(
+            engine=engine,
+            object_store=verify_denied_store,
+        )
+
+        with pytest.raises(ObjectAuthorizationError, match="object:read"):
+            coordinator.execute_cleanup(
+                tenant_id="tenant-a",
+                delete_ref=confirmed.delete_ref,
+            )
+
+        with pytest.raises(S3Error):
+            raw_store.read_object(bucket=bucket, object_name=committed.object_name)
+        with engine.connect() as conn:
+            lifecycle = conn.execute(
+                text(
+                    """
+                    SELECT state, cleanup_verified, physical_delete_verified,
+                           physical_delete_ref, verification_ref
+                    FROM ingestion_delete_lifecycles
+                    WHERE delete_ref = :delete_ref
+                    """
+                ),
+                {"delete_ref": confirmed.delete_ref},
+            ).mappings().one()
+            manifest = conn.execute(
+                text(
+                    """
+                    SELECT visibility
+                    FROM infra_object_manifests
+                    WHERE object_ref = :object_ref
+                    """
+                ),
+                {"object_ref": object_ref},
+            ).mappings().one()
+        assert lifecycle["state"] == "cleanup_requested"
+        assert lifecycle["cleanup_verified"] is True
+        assert lifecycle["physical_delete_verified"] is False
+        assert lifecycle["physical_delete_ref"] is None
+        assert lifecycle["verification_ref"] is None
+        assert manifest["visibility"] == "deleted"
+    finally:
+        raw_store.remove_bucket_tree(bucket)
+
+
 def test_ingestion_delete_during_parse_persists_late_worker_rejection_after_restart(engine) -> None:
     runtime = DeleteRestoreRuntime()
     requested = runtime.request_delete_during_parse(
