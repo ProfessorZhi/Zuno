@@ -20,6 +20,7 @@ from zuno.knowledge.ingestion import (
     ReviewDecisionReceipt,
     ReviewTask,
     StaticRestoreAuthorizationPort,
+    VisibilityRevocationReceipt,
 )
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
@@ -39,6 +40,17 @@ MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
 RABBITMQ_URL = "amqp://guest:guest@localhost:5672/"
 HEX_64 = "b" * 64
+
+
+class _DenyVisibilityRevocationPort:
+    def revoke_visibility(self, *, tenant_id, receipt):
+        return VisibilityRevocationReceipt(
+            tenant_id=tenant_id,
+            delete_ref=receipt.delete_ref,
+            visibility_ref=receipt.visibility_ref,
+            revoked=False,
+            reason="visibility_revocation_denied",
+        )
 
 
 def _cleanup_topology() -> RabbitMQTopology:
@@ -834,6 +846,32 @@ def test_ingestion_delete_restore_reconciles_restored_lifecycle_after_restart(en
     assert replayed["restored_authorization"] is True
     assert replayed["restore_authorization_ref"] == "restore-auth:phase11:restore"
     assert replayed["history"][-1] == "restored"
+
+
+def test_ingestion_delete_visibility_port_denial_prevents_lifecycle_and_outbox(engine) -> None:
+    coordinator = PersistentDeleteRestoreCoordinator(
+        engine=engine,
+        object_store=None,
+        visibility_port=_DenyVisibilityRevocationPort(),
+    )
+
+    with pytest.raises(ValueError, match="visibility_revocation_denied"):
+        coordinator.request_delete_after_snapshot(
+            DeleteLifecycleCommand(
+                tenant_id="tenant-a",
+                snapshot_ref="snapshot:phase11:visibility-denied",
+                indexable_snapshot_id="snapshot:phase11:visibility-denied",
+                handoff_outbox_event_id="outbox:snapshot:phase11:visibility-denied",
+                visibility_ref="visibility:workspace-a:visibility-denied",
+                object_ref="s3://phase11-visibility-denied/workspace-a/source.md",
+                restore_point_name="_restore/workspace-a/source.md",
+                projection_cleanup_ref="projection-cleanup:snapshot:phase11:visibility-denied",
+            )
+        )
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM ingestion_delete_lifecycles")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM infra_outbox_events")).scalar_one() == 0
 
 
 def test_ingestion_delete_during_parse_persists_late_worker_rejection_after_restart(engine) -> None:
