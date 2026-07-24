@@ -162,6 +162,49 @@ async def _publish_cleanup_then_replay_after_crash(*, engine, event_id: str) -> 
             await transport.delete_topology(topology)
 
 
+async def _publish_cleanup_to_dlq_then_replay(*, engine, event_id: str) -> tuple[dict, dict]:
+    topology = _cleanup_topology()
+    async with RabbitMQTransport(RABBITMQ_URL) as transport:
+        await transport.declare_topology(topology)
+        try:
+            publisher = PostgresOutboxRabbitMQPublisher(
+                engine=engine,
+                transport=transport,
+                topology=topology,
+                worker_id="phase11-delete-cleanup-dlq-publisher",
+                tenant_id="tenant-a",
+                trace_id="trace-phase11-delete-cleanup-dlq",
+                topics=(PersistentDeleteRestoreCoordinator.cleanup_topic,),
+            )
+            assert [item.event_id for item in await publisher.publish_pending(limit=1)] == [event_id]
+            delivery = await transport.get(topology.queue, timeout=5.0)
+            assert delivery is not None
+            await transport.retry_or_dead_letter(
+                topology,
+                delivery,
+                max_attempts=1,
+                retry_trace_id="trace-phase11-delete-cleanup-dlq-dead-letter",
+            )
+            dlq_delivery = await transport.get(topology.dead_letter_queue, timeout=5.0)
+            assert dlq_delivery is not None
+            dead_letter_payload = dict(dlq_delivery.payload)
+            await transport.replay_dead_letter(
+                topology,
+                dlq_delivery,
+                replay_trace_id="trace-phase11-delete-cleanup-dlq-replay",
+            )
+            await dlq_delivery.ack()
+            replay_delivery = await transport.get(topology.queue, timeout=5.0)
+            assert replay_delivery is not None
+            replay_payload = dict(replay_delivery.payload)
+            await replay_delivery.ack()
+            assert replay_delivery.headers["replayed_from_dlq"] is True
+            assert int(replay_delivery.headers["outbox_replay_count"]) >= 1
+            return dead_letter_payload, replay_payload
+        finally:
+            await transport.delete_topology(topology)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def migrated_postgres() -> None:
     env = {
@@ -1033,6 +1076,151 @@ def test_ingestion_delete_cleanup_publish_crash_replays_without_physical_delete(
     assert lifecycle["state"] == "visibility_revoked"
     assert lifecycle["cleanup_verified"] is False
     assert lifecycle["physical_delete_verified"] is False
+    assert lifecycle["physical_delete_ref"] is None
+    assert outbox["status"] == "published"
+    assert outbox["claim_owner"] is None
+
+
+def test_ingestion_delete_cleanup_dlq_replay_does_not_restore_revoked_data(engine) -> None:
+    object_ref = "s3://phase11-cleanup-dlq/workspace-a/delete-target.md"
+    with IngestionUnitOfWork(engine) as repo:
+        source = repo.record_source_object(
+            source_object_id="source:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            filename="delete-target.md",
+            mime_type="text/markdown",
+            storage_uri=object_ref,
+            object_manifest_ref=f"manifest:{object_ref}",
+            source_sha256=HEX_64,
+            size_bytes=42,
+            classification_ref="classification:internal",
+            security_epoch_ref="security-epoch:phase11-cleanup-dlq",
+        )
+        document = repo.record_document_version(
+            document_version_id="document-version:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_object_id=source.ref,
+            version_no=1,
+            content_hash=HEX_64,
+            metadata={"filename": "delete-target.md"},
+            immutability_ref="immutability:phase11:cleanup-dlq",
+        )
+        plan = repo.record_parse_plan(
+            parse_plan_id="parse-plan:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            document_version_id=document.ref,
+            parser_route={"primary": "native_markdown"},
+            parser_policy_ref="parser-policy:phase11-cleanup-dlq",
+            parser_bundle={"parser": "native_markdown", "version": "v1"},
+            quality_policy_ref="quality-policy:phase11-cleanup-dlq",
+            security_decision_ref="security-decision:phase11-cleanup-dlq",
+        )
+        job = repo.record_parse_job(
+            parse_job_id="parse-job:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            parse_plan_id=plan.ref,
+            document_version_id=document.ref,
+            idempotency_key="parse:phase11:cleanup-dlq",
+        )
+        attempt = repo.record_parse_attempt(
+            parse_attempt_id="parse-attempt:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            attempt_no=1,
+            worker_id="worker:phase11-cleanup-dlq",
+            lease_ref="lease:phase11-cleanup-dlq",
+            fencing_token=1,
+        )
+        snapshot = repo.record_parse_snapshot(
+            parse_snapshot_id="parse-snapshot:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            parse_job_id=job.ref,
+            parse_attempt_id=attempt.ref,
+            document_version_id=document.ref,
+            canonical_ir={"metadata": {"document_id": source.ref}, "blocks": []},
+            canonical_ir_ref="canonical-ir:phase11-cleanup-dlq",
+            canonical_ir_schema_ref="canonical-document-ir-v1",
+            parser_id="native_markdown",
+            parser_version="v1",
+        )
+        quality = repo.record_quality_decision(
+            quality_decision_id="quality:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            coverage_score=1.0,
+            confidence_score=1.0,
+            decision="publish",
+        )
+        repo.record_indexable_snapshot(
+            indexable_snapshot_id="snapshot:phase11:cleanup-dlq",
+            tenant_id="tenant-a",
+            parse_snapshot_id=snapshot.ref,
+            document_version_id=document.ref,
+            quality_decision_id=quality.ref,
+            visibility_ref="visibility:workspace-a:cleanup-dlq",
+            payload={"object_ref": object_ref},
+            handoff_idempotency_key="handoff:phase11:cleanup-dlq",
+        )
+    coordinator = PersistentDeleteRestoreCoordinator(
+        engine=engine,
+        object_store=None,
+    )
+    requested = coordinator.request_delete_after_snapshot(
+        DeleteLifecycleCommand(
+            tenant_id="tenant-a",
+            snapshot_ref="snapshot:phase11:cleanup-dlq",
+            indexable_snapshot_id="snapshot:phase11:cleanup-dlq",
+            handoff_outbox_event_id="outbox:snapshot:phase11:cleanup-dlq",
+            visibility_ref="visibility:workspace-a:cleanup-dlq",
+            object_ref=object_ref,
+            restore_point_name="_restore/workspace-a/delete-target.md",
+            projection_cleanup_ref="projection-cleanup:snapshot:phase11:cleanup-dlq",
+        )
+    )
+
+    dead_lettered, replayed = asyncio.run(
+        _publish_cleanup_to_dlq_then_replay(
+            engine=engine,
+            event_id=f"outbox:{requested.delete_ref}:cleanup",
+        )
+    )
+
+    assert dead_lettered == replayed
+    assert replayed["event_id"] == f"outbox:{requested.delete_ref}:cleanup"
+    assert replayed["payload"]["delete_ref"] == requested.delete_ref
+    with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
+        coordinator.execute_cleanup(
+            tenant_id="tenant-a",
+            delete_ref=requested.delete_ref,
+        )
+    with engine.connect() as conn:
+        lifecycle = conn.execute(
+            text(
+                """
+                SELECT state, cleanup_verified, physical_delete_verified,
+                       restored_authorization, physical_delete_ref
+                FROM ingestion_delete_lifecycles
+                WHERE delete_ref = :delete_ref
+                """
+            ),
+            {"delete_ref": requested.delete_ref},
+        ).mappings().one()
+        outbox = conn.execute(
+            text(
+                """
+                SELECT status, claim_owner
+                FROM infra_outbox_events
+                WHERE event_id = :event_id
+                """
+            ),
+            {"event_id": f"outbox:{requested.delete_ref}:cleanup"},
+        ).mappings().one()
+    assert lifecycle["state"] == "visibility_revoked"
+    assert lifecycle["cleanup_verified"] is False
+    assert lifecycle["physical_delete_verified"] is False
+    assert lifecycle["restored_authorization"] is False
     assert lifecycle["physical_delete_ref"] is None
     assert outbox["status"] == "published"
     assert outbox["claim_owner"] is None
