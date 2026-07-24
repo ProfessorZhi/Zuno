@@ -36,6 +36,7 @@ from zuno.agent.runtime.phase08 import (
     build_phase08_step_graph,
     build_phase08_test_checkpointer,
     phase08_postgres_checkpointer,
+    phase08_postgres_run_service,
     reconcile_generations,
 )
 from zuno.agent.runtime.phase08_cutover import (
@@ -121,6 +122,7 @@ __all__ = [
     "build_phase08_step_graph",
     "build_phase08_test_checkpointer",
     "phase08_postgres_checkpointer",
+    "phase08_postgres_run_service",
     "append_signal",
     "reconcile_generations",
     "normalized_observation_from_controller_payload",

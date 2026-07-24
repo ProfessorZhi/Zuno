@@ -42,6 +42,19 @@ def phase08_postgres_checkpointer(*, conn_string: str) -> Iterator[Any]:
         yield saver
 
 
+@contextmanager
+def phase08_postgres_run_service(*, conn_string: str, engine: Any) -> Iterator["Phase08RunService"]:
+    if engine is None:
+        raise Phase08RuntimeError("PHASE08 production run service requires an Agent Domain PostgreSQL engine")
+    with phase08_postgres_checkpointer(conn_string=conn_string) as saver:
+        yield Phase08RunService(
+            graph=build_phase08_run_graph(
+                checkpointer=saver,
+                final_gate_port=PostgresPhase08FinalGatePort(engine),
+            )
+        )
+
+
 def build_phase08_test_checkpointer() -> InMemorySaver:
     return InMemorySaver()
 
@@ -789,5 +802,6 @@ __all__ = [
     "build_phase08_step_graph",
     "build_phase08_test_checkpointer",
     "phase08_postgres_checkpointer",
+    "phase08_postgres_run_service",
     "reconcile_generations",
 ]

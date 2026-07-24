@@ -1,14 +1,15 @@
 # PHASE08 Pre-Closure Evidence
 
 phase_id: PHASE08
-date: 2026-07-23
-status: superseded
+date: 2026-07-24
+status: completion_candidate
 gate: pre_closure
 coordinator_review_required: true
+branch: integration/goal02-final-closure-repair
 
 ## 结论
 
-本 PHASE08 Pre-Closure 结论已被当前 Goal02 final closure repair 订正为不足证据。已有代码、迁移、测试和 evidence 保留为部分证据，但不能构成当前 PHASE08 completed 结论。
+本 PHASE08 Pre-Closure 在当前 Goal02 final closure repair 中整理为 `completion_candidate`。已有代码、迁移、测试和 evidence 覆盖真实 PostgreSQL Domain Commit、官方 PostgreSQL Checkpointer、Final Gate / RunOutcome 持久化、Owner Port ledger、cutover audit 和 focused fault 线索，但 PHASE08 仍必须等待 Coordinator Closure；本文件不把 PHASE08 标记为 completed。
 
 ## 覆盖
 
@@ -17,6 +18,7 @@ coordinator_review_required: true
 - P08-T03：不可变 `ExecutionContextSnapshot`、预算预留和结算 ledger、stale epoch、deadline 和预算不足。
 - P08-T04 到 P08-T07：固定 `initialize -> authorize -> context_snapshot -> create_plan -> validate_plan -> activate_plan -> execute_step -> final_gate -> finalize -> run_outcome` LangGraph 运行图、固定 StepExecutionGraph、generation reconciliation、interrupt/signal/cancel/deadline。
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
+- Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
 
 ## 已运行命令
 
@@ -45,7 +47,25 @@ alembic -c infra/db/alembic.ini upgrade head
 agent system verification passed.
 Current program verification passed.
 refined Agent Core target architecture verification passed.
-20260724_25 (head)
+20260724_29 (head)
+```
+
+2026-07-24 追加验证：
+
+```powershell
+python -m py_compile src/backend/zuno/agent/runtime/phase08.py src/backend/zuno/agent/runtime/__init__.py tests/integration/agent/test_phase08_runtime_closure_persistence.py
+pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_production_run_service_uses_postgres_checkpointer_and_final_gate_port -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py -p no:cacheprovider --tb=short
+pytest -q tests/agent/runtime/test_phase08_fixed_run_graph.py tests/agent/runtime/test_phase08_step_graph.py -p no:cacheprovider --tb=short
+```
+
+结果：
+
+```text
+py_compile passed
+1 passed in 43.03s
+5 passed in 39.04s
+7 passed in 28.71s
 ```
 
 ## 证据 Commit

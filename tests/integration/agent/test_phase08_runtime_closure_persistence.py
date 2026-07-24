@@ -22,6 +22,7 @@ from zuno.agent.runtime import (
     build_phase08_run_graph,
     build_phase08_step_graph,
     build_phase08_test_checkpointer,
+    phase08_postgres_run_service,
 )
 from zuno.platform.database.agent import AgentDomainUnitOfWork
 from zuno.platform.database.foundation import create_foundation_engine
@@ -31,6 +32,10 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DATABASE_URL = os.environ.get(
     "ZUNO_TEST_POSTGRES_URL",
     "postgresql+psycopg://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
+)
+POSTGRES_DSN = os.environ.get(
+    "ZUNO_TEST_POSTGRES_DSN",
+    "postgresql://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
 )
 HEX_64 = "a" * 64
 
@@ -435,6 +440,62 @@ def test_phase08_graph_owner_port_and_final_gate_write_postgres_ledgers(engine) 
         "final_gates": 1,
         "outcomes": 1,
     }
+
+
+def test_phase08_production_run_service_uses_postgres_checkpointer_and_final_gate_port(engine) -> None:
+    thread_id = "thread:p08:production-service"
+    goal = _goal("goal:p08:production-service")
+    task = _task(goal, "task-contract:p08:production-service")
+    run = _run(task, "run:p08:production-service")
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+
+    try:
+        with phase08_postgres_run_service(conn_string=POSTGRES_DSN, engine=engine) as service:
+            final_state = service.start(
+                {
+                    "tenant_id": task.tenant_id,
+                    "run_id": run.run_id,
+                    "thread_id": thread_id,
+                    "trace_id": run.trace_id,
+                    "task_contract_id": task.task_contract_id,
+                    "active_goal_version_id": goal.goal_version_id,
+                    "security_context_ref": task.security_context_ref,
+                    "security_epoch_ref": task.security_epoch_ref,
+                    "current_security_epoch_ref": task.security_epoch_ref,
+                    "deadline_at": _now(),
+                    "observed_at": _now() - timedelta(hours=1),
+                    "budget_requested_units": 1,
+                    "budget_available_units": 10,
+                    "latest_acceptance_ref": "acceptance:phase08-production-service",
+                    "evidence_refs": ["evidence:p08:production-service"],
+                    "budget_settlement_ref": "budget-settlement:p08:production-service",
+                }
+            )
+
+        assert final_state["final_gate_receipt_ref"] == f"final-gate:{run.run_id}"
+        assert final_state["outcome_ref"] == f"run-outcome:{run.run_id}"
+        with engine.connect() as conn:
+            counts = conn.execute(
+                text(
+                    """
+                    SELECT
+                        (SELECT count(*) FROM checkpoints WHERE thread_id = :thread_id) AS checkpoints,
+                        (SELECT count(*) FROM agent_final_gate_receipts WHERE run_id = :run_id) AS final_gates,
+                        (SELECT count(*) FROM agent_run_outcomes WHERE run_id = :run_id) AS outcomes
+                    """
+                ),
+                {"thread_id": thread_id, "run_id": run.run_id},
+            ).mappings().one()
+        assert counts["checkpoints"] >= 1
+        assert counts["final_gates"] == 1
+        assert counts["outcomes"] == 1
+    finally:
+        with engine.begin() as conn:
+            for table in ("checkpoint_writes", "checkpoint_blobs", "checkpoints"):
+                conn.execute(text(f"DELETE FROM {table} WHERE thread_id = :thread_id"), {"thread_id": thread_id})
 
 
 def _now() -> datetime:
