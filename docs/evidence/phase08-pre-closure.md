@@ -20,6 +20,7 @@ branch: integration/goal02-final-closure-repair
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
 - Reconciliation policy：`aligned`、`domain_ahead`、`checkpoint_ahead`、`orphan_checkpoint`、`orphan_domain`、`stale_schema`、`stale_controller_epoch`、`unrecoverable_conflict` 均有机器验证的 owner / auto repair / replay / terminate / audit / idempotency 决策；PostgreSQL reconciliation finding replay 相同 payload 返回 duplicate，不同策略或 payload fail closed。
 - Signal ledger：PostgreSQL `agent_runtime_signals` replay 通过 `signal_id` 或 payload 唯一约束返回 duplicate；同 `signal_id` 不同 payload fail closed，且不让当前事务进入 aborted 状态。
+- Finalization ledger：Final Gate / RunOutcome replay 相同 payload 返回 duplicate；同一 run 的不同 Final Gate 决策或不同 RunOutcome publication fail closed。
 - Production run service：`phase08_postgres_run_service()` 在一个明确生产构造入口中绑定官方 `PostgresSaver` 与 `PostgresPhase08FinalGatePort`，避免产品接线绕过 Final Gate / RunOutcome 领域持久化。
 - Product cutover entry：`WorkspaceTaskRuntimeService.configure_phase08_cutover()` 让 Workspace task 入口显式进入 `Phase08CutoverController`，默认不启用；启用后可按 `shadow`、`canary`、`new_default`、`rollback` 记录 `phase08_cutover` 审计事件。
 - Shadow suppression：shadow 路径允许官方 Checkpointer 记录可恢复执行痕迹，但禁止 PHASE08 Final Gate、RunOutcome 和 Effect Claim 写入领域表，避免 shadow 产生产品效果、usage settlement 或完成事实。
@@ -72,6 +73,7 @@ pytest -q tests/agent/runtime/test_phase08_cutover_shadow.py::test_fallback_is_b
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim -p no:cacheprovider --tb=short
 pytest -q tests/agent/runtime/test_phase08_reconciliation_and_signals.py::test_generation_reconciliation_detects_ahead_behind_orphan_and_stale_schema -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_signal_reconciliation_and_cutover_are_persistent -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -91,6 +93,7 @@ py_compile passed
 1 passed in 41.26s
 1 passed in 36.10s
 1 passed in 37.48s
+1 passed in 35.45s
 ```
 
 ## 证据 Commit

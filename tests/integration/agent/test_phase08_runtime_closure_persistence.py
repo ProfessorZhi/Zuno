@@ -226,6 +226,34 @@ def test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent(engine) -
             outcome_status="completed",
             publication_ref="publication:p08:closure",
         )
+        with pytest.raises(AgentDomainConflict, match="conflicting final gate"):
+            repo.record_final_gate_and_outcome(
+                tenant_id=task.tenant_id,
+                run_id=run.run_id,
+                decision="denied",
+                answer_policy_ref="answer-policy:p08",
+                evidence_ref="evidence:doc:1",
+                security_decision_ref=task.security_context_ref,
+                budget_settlement_ref="budget-settlement:p08",
+                step_acceptance_ref=acceptance.ref,
+                publication_eligible=False,
+                outcome_status="blocked",
+                publication_ref=None,
+            )
+        with pytest.raises(AgentDomainConflict, match="conflicting run outcome"):
+            repo.record_final_gate_and_outcome(
+                tenant_id=task.tenant_id,
+                run_id=run.run_id,
+                decision="approved",
+                answer_policy_ref="answer-policy:p08",
+                evidence_ref="evidence:doc:1",
+                security_decision_ref=task.security_context_ref,
+                budget_settlement_ref="budget-settlement:p08",
+                step_acceptance_ref=acceptance.ref,
+                publication_eligible=True,
+                outcome_status="completed",
+                publication_ref="publication:p08:other",
+            )
         assert outcome.ref == f"run-outcome:{run.run_id}"
         assert duplicate_outcome.status == "duplicate:completed"
 
