@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -23,6 +24,7 @@ from zuno.knowledge.ingestion import (
 from zuno.knowledge.ingestion.delete_restore import DeleteLifecycleReceipt
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.ingestion import IngestionPersistenceError, IngestionUnitOfWork
+from zuno.platform.queue import PostgresOutboxRabbitMQPublisher, RabbitMQTopology, RabbitMQTransport
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
 
 
@@ -34,7 +36,47 @@ DATABASE_URL = os.environ.get(
 MINIO_ENDPOINT = "localhost:9000"
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
+RABBITMQ_URL = "amqp://guest:guest@localhost:5672/"
 HEX_64 = "b" * 64
+
+
+def _cleanup_topology() -> RabbitMQTopology:
+    suffix = uuid4().hex
+    return RabbitMQTopology(
+        exchange=f"phase11.delete.cleanup.exchange.{suffix}",
+        queue=f"phase11.delete.cleanup.queue.{suffix}",
+        routing_key=f"phase11.delete.cleanup.route.{suffix}",
+        dead_letter_exchange=f"phase11.delete.cleanup.dlx.{suffix}",
+        dead_letter_queue=f"phase11.delete.cleanup.dlq.{suffix}",
+        dead_letter_routing_key=f"phase11.delete.cleanup.dead.{suffix}",
+    )
+
+
+async def _publish_and_ack_cleanup_contract(*, engine, event_id: str) -> dict:
+    topology = _cleanup_topology()
+    async with RabbitMQTransport(RABBITMQ_URL) as transport:
+        await transport.declare_topology(topology)
+        try:
+            publisher = PostgresOutboxRabbitMQPublisher(
+                engine=engine,
+                transport=transport,
+                topology=topology,
+                worker_id="phase11-delete-cleanup-publisher",
+                tenant_id="tenant-a",
+                trace_id="trace-phase11-delete-cleanup",
+                topics=(PersistentDeleteRestoreCoordinator.cleanup_topic,),
+            )
+            published = await publisher.publish_pending(limit=1)
+            assert [item.event_id for item in published] == [event_id]
+            delivery = await transport.get(topology.queue, timeout=5.0)
+            assert delivery is not None
+            await delivery.ack()
+            payload = delivery.payload
+            assert payload["event_id"] == event_id
+            assert payload["topic"] == PersistentDeleteRestoreCoordinator.cleanup_topic
+            return dict(payload["payload"])
+        finally:
+            await transport.delete_topology(topology)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -887,17 +929,14 @@ def test_ingestion_delete_restore_coordinator_deletes_verifies_and_restores_real
                 projection_cleanup_ref="projection-cleanup:snapshot:phase11:delete-real-object",
             )
         )
-        with engine.begin() as conn:
-            conn.execute(
-                text(
-                    """
-                    UPDATE infra_outbox_events
-                    SET status = 'published'
-                    WHERE event_id = :event_id
-                    """
-                ),
-                {"event_id": f"outbox:{requested.delete_ref}:cleanup"},
+        cleanup_delivery = asyncio.run(
+            _publish_and_ack_cleanup_contract(
+                engine=engine,
+                event_id=f"outbox:{requested.delete_ref}:cleanup",
             )
+        )
+        assert cleanup_delivery["delete_ref"] == requested.delete_ref
+        assert cleanup_delivery["projection_cleanup_ref"] == requested.projection_cleanup_ref
         with pytest.raises(ValueError, match="knowledge cleanup confirmation"):
             coordinator.execute_cleanup(
                 tenant_id="tenant-a",
