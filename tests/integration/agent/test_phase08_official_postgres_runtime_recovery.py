@@ -26,6 +26,7 @@ def _state(thread_id: str) -> dict[str, object]:
         "security_epoch_ref": "security-epoch:p08:t04:pg",
         "current_security_epoch_ref": "security-epoch:p08:t04:pg",
         "deadline_at": datetime(2026, 7, 24, 0, 0, tzinfo=timezone.utc),
+        "observed_at": datetime(2026, 7, 23, 23, 0, tzinfo=timezone.utc),
         "budget_requested_units": 10,
         "budget_available_units": 100,
         "interrupt_requested": True,
@@ -58,6 +59,39 @@ def test_phase08_run_graph_resumes_from_official_postgres_checkpoint_after_resta
             assert resumed["plan_created_count"] == 1
             assert resumed["publication_ref"].startswith("agent-domain:publication:")
             assert resumed["phase"] == "run_outcome"
+            assert final_snapshot.next == ()
+
+            duplicate_resume = restarted_service.resume({"thread_id": thread_id})
+
+            assert duplicate_resume["resume_status"] == "terminal:no_interrupt"
+            assert duplicate_resume["phase"] == "run_outcome"
+            assert duplicate_resume["plan_created_count"] == 1
+            assert duplicate_resume["outcome_ref"] == resumed["outcome_ref"]
+            assert duplicate_resume["final_gate_receipt_ref"] == resumed["final_gate_receipt_ref"]
+    finally:
+        _cleanup_checkpoints(thread_id)
+
+
+def test_phase08_run_graph_cancels_interrupted_postgres_checkpoint_after_restart() -> None:
+    thread_id = f"phase08-runtime-cancel-{uuid4()}"
+    try:
+        with PostgresSaver.from_conn_string(POSTGRES_DSN) as saver:
+            saver.setup()
+            service = Phase08RunService(graph=build_phase08_run_graph(checkpointer=saver))
+            interrupted = service.start(_state(thread_id))
+
+            assert interrupted["finalization_status"] == "interrupted"
+
+        with PostgresSaver.from_conn_string(POSTGRES_DSN) as restarted_saver:
+            restarted_service = Phase08RunService(graph=build_phase08_run_graph(checkpointer=restarted_saver))
+            cancelled = restarted_service.cancel({"thread_id": thread_id}, reason="user_cancelled_after_restart")
+            final_snapshot = restarted_service.graph.get_state({"configurable": {"thread_id": thread_id}})
+
+            assert cancelled["finalization_status"] == "cancelled"
+            assert cancelled["phase"] == "run_outcome"
+            assert cancelled["latest_control_decision_ref"] == "cancelled"
+            assert cancelled["cancel_reason"] == "user_cancelled_after_restart"
+            assert cancelled["plan_created_count"] == 1
             assert final_snapshot.next == ()
     finally:
         _cleanup_checkpoints(thread_id)
