@@ -16,6 +16,7 @@ branch: integration/goal02-final-closure-repair
 - P08-T01：`GoalVersion`、`TaskContract`、`AgentRun`、领域事件、PostgreSQL 约束和乐观版本冲突。
 - P08-T02：不可变 `PlanVersion`、单步 `DeterministicStepDefinition`、语义哈希、激活一次、PostgreSQL 约束。
 - P08-T03：不可变 `ExecutionContextSnapshot`、预算预留和结算 ledger、stale epoch、deadline 和预算不足。
+- ExecutionContextSnapshot ledger：同一 `execution_snapshot_id` 和相同上下文 hash 的 restart replay 返回 duplicate；同一 snapshot id 的不同 policy/context payload fail closed，不让数据库唯一约束变成未分类异常。
 - P08-T04 到 P08-T07：固定 `initialize -> authorize -> context_snapshot -> create_plan -> validate_plan -> activate_plan -> execute_step -> final_gate -> finalize -> run_outcome` LangGraph 运行图、固定 StepExecutionGraph、generation reconciliation、interrupt/signal/cancel/deadline。
 - P08-T08：shadow / canary / new default / rollback 控制器，保证同 request hash、new runtime unavailable rollback 和 shadow 不双写 side effect。
 - Reconciliation policy：`aligned`、`domain_ahead`、`checkpoint_ahead`、`orphan_checkpoint`、`orphan_domain`、`stale_schema`、`stale_controller_epoch`、`unrecoverable_conflict` 均有机器验证的 owner / auto repair / replay / terminate / audit / idempotency 决策；PostgreSQL reconciliation finding replay 相同 payload 返回 duplicate，不同策略或 payload fail closed。
@@ -74,6 +75,7 @@ pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::t
 pytest -q tests/agent/runtime/test_phase08_reconciliation_and_signals.py::test_generation_reconciliation_detects_ahead_behind_orphan_and_stale_schema -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_signal_reconciliation_and_cutover_are_persistent -p no:cacheprovider --tb=short
 pytest -q tests/integration/agent/test_phase08_runtime_closure_persistence.py::test_phase08_runtime_closure_ledgers_are_persistent_and_idempotent -p no:cacheprovider --tb=short
+pytest -q tests/integration/agent/test_phase08_execution_context_budget_persistence.py::test_execution_snapshot_and_budget_ledger_round_trip -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -94,6 +96,7 @@ py_compile passed
 1 passed in 36.10s
 1 passed in 37.48s
 1 passed in 35.45s
+1 passed in 8.16s
 ```
 
 ## 证据 Commit

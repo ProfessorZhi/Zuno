@@ -365,7 +365,8 @@ class AgentDomainRepository:
         )
 
     def record_execution_context_snapshot(self, snapshot: ExecutionContextSnapshot) -> AgentDomainReceipt:
-        self.connection.execute(
+        params = _execution_snapshot_params(snapshot)
+        result = self.connection.execute(
             text(
                 """
                 INSERT INTO agent_execution_context_snapshots (
@@ -380,10 +381,46 @@ class AgentDomainRepository:
                     :capability_profile_ref, :knowledge_snapshot_ref, :answer_policy_ref,
                     :budget_reservation_id, :deadline_at, :context_hash
                 )
+                ON CONFLICT (execution_snapshot_id) DO NOTHING
                 """
             ),
-            _execution_snapshot_params(snapshot),
+            params,
         )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT execution_snapshot_id, run_id, tenant_id, workspace_id, principal_id,
+                           task_contract_id, security_context_ref, security_epoch_ref,
+                           model_policy_ref, capability_profile_ref, knowledge_snapshot_ref,
+                           answer_policy_ref, budget_reservation_id, deadline_at, context_hash
+                    FROM agent_execution_context_snapshots
+                    WHERE execution_snapshot_id = :execution_snapshot_id
+                    """
+                ),
+                {"execution_snapshot_id": snapshot.execution_snapshot_id},
+            ).mappings().first()
+            comparable = {
+                key: params[key]
+                for key in (
+                    "run_id",
+                    "tenant_id",
+                    "workspace_id",
+                    "principal_id",
+                    "task_contract_id",
+                    "security_context_ref",
+                    "security_epoch_ref",
+                    "model_policy_ref",
+                    "capability_profile_ref",
+                    "knowledge_snapshot_ref",
+                    "answer_policy_ref",
+                    "budget_reservation_id",
+                    "context_hash",
+                )
+            }
+            if existing and all(existing[key] == value for key, value in comparable.items()):
+                return AgentDomainReceipt(snapshot.execution_snapshot_id, "duplicate:RECORDED", 1)
+            raise AgentDomainConflict(f"conflicting execution context snapshot: {snapshot.execution_snapshot_id}")
         return AgentDomainReceipt(snapshot.execution_snapshot_id, "RECORDED", 1)
 
     def load_execution_context_snapshot(self, execution_snapshot_id: str) -> ExecutionContextSnapshot:

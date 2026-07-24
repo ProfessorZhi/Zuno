@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -56,6 +57,16 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_cutover_audit_events,
+                    agent_reconciliation_findings,
+                    agent_runtime_signals,
+                    agent_run_outcomes,
+                    agent_final_gate_receipts,
+                    agent_effect_claims,
+                    agent_step_acceptances,
+                    agent_observations,
+                    agent_action_runs,
+                    agent_request_idempotency_keys,
                     agent_execution_context_snapshots,
                     agent_budget_settlements,
                     agent_budget_reservations,
@@ -162,10 +173,17 @@ def test_execution_snapshot_and_budget_ledger_round_trip(engine) -> None:
         repo.record_task_contract(task)
         repo.record_agent_run(run)
         repo.record_budget_reservation(reservation)
-        repo.record_execution_context_snapshot(snapshot)
+        recorded_snapshot = repo.record_execution_context_snapshot(snapshot)
+        duplicate_snapshot = repo.record_execution_context_snapshot(snapshot)
+        with pytest.raises(AgentDomainConflict, match="conflicting execution context snapshot"):
+            repo.record_execution_context_snapshot(
+                replace(snapshot, model_policy_ref="model-policy:p08:t03:pg:conflict", context_hash="")
+            )
         loaded_snapshot = repo.load_execution_context_snapshot(snapshot.execution_snapshot_id)
         loaded_reservation = repo.load_budget_reservation(reservation.budget_reservation_id)
 
+    assert recorded_snapshot.status == "RECORDED"
+    assert duplicate_snapshot.status == "duplicate:RECORDED"
     assert loaded_snapshot.context_hash == snapshot.context_hash
     assert loaded_snapshot.resume_refs() == snapshot.resume_refs()
     assert loaded_reservation.status is BudgetReservationStatus.RESERVED
