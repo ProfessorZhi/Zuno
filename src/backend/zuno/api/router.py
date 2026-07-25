@@ -17,6 +17,7 @@ from zuno.api.v1 import (
     mcp_stdio_server,
     mcp_user_config,
     message,
+    product,
     observability,
     tool,
     upload,
@@ -32,6 +33,7 @@ router.include_router(config.router)
 router.include_router(completion.router)
 router.include_router(dialog.router)
 router.include_router(message.router)
+router.include_router(product.router)
 router.include_router(agent.router)
 router.include_router(history.router)
 router.include_router(user.router)
