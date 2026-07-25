@@ -16,15 +16,24 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
 - PHASE08 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
 - PHASE11 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
-- PHASE09 ready：PHASE08 依赖已重新关闭，但本轮未实施 PHASE09。
-- PHASE12 ready：PHASE08 与 PHASE11 依赖已重新关闭，但本轮未实施 PHASE12。
-- PHASE09、PHASE10、PHASE12–22 不得提前冒充 Current。
+- PHASE09 completed：Product Surface 后端 Command、Receipt、Projection、Action Token 和受控 API 路径已有 PostgreSQL 迁移、仓储、API 和集成测试基线；不代表 Web/Desktop 产品适配完成。
+- PHASE12 completed：KnowledgeVersion、Snapshot、Index Visibility、Cutover、Query/Evidence/CitationLineage 的 PostgreSQL 迁移、仓储和 Standard RAG 基线已完成；不代表 Agentic 多轮纠正完成。
+- PHASE13 completed：MemoryVersion、Snapshot、ContextPackVersion、Manifest Snapshot、Privacy Delete Receipt 和默认 MemoryEngine 数据库存储路径已有实现与 PostgreSQL 集成测试基线。
+- PHASE14 completed：Capability/Skill Definition、Version、Installation、Selection、Availability 和 Supply-chain guard 基线已有 PostgreSQL 迁移、仓储、API 和集成测试基线；Tool 执行事实仍归 PHASE15/16。
+- PHASE15 completed：Tool Provider/Definition/Version/Operation、Installation、Activation、PreparedToolAction、ToolAttempt、Observation、ExecutionReceipt 和只读默认 Tool Runtime 安全审计接线已有实现与 PostgreSQL 集成测试基线。
+- PHASE10 ready：PHASE09 依赖已完成，Web/Desktop Product Adaptation 可启动但尚未实现。
+- PHASE16 ready：PHASE15 依赖已完成，Tool Side Effect and Reconciliation 可启动但尚未实现。
+- current_phase = PHASE10；PHASE17–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
 ## Goal02 Closure Boundary
 
 Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE12 ready；not production ready。
+
+## Goal03 Closure Boundary
+
+Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；PHASE14 completed；PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production readiness not established。
 
 PHASE08 当前保留的部分证据：
 
@@ -50,7 +59,7 @@ PHASE11 当前保留的部分证据：
 - Delete / Legal Hold / Restore 按 visibility revoke → cleanup request → physical delete → verification 顺序验证，restore 不自动恢复已撤销授权。
 - Legacy upload/parser 默认入口完成 cutover、进入期限 Adapter 或删除。
 
-PHASE11 当前证据不证明：
+PHASE11 当前证据不证明以下后续模块；该列表只约束 Goal02 / PHASE11 证据边界，不覆盖 Goal03 后续实现证据：
 
 - PHASE12 KnowledgeVersion、Index Cutover 或 Standard RAG 已完成。
 - PHASE09 / PHASE10 Product Backend、Web 或 Desktop 默认路径已完成。
