@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from uuid import uuid4
 
+from sqlalchemy import text
 from sqlmodel import Session, select
 
 from zuno.platform.services.memory.layers import (
@@ -26,6 +27,7 @@ from zuno.platform.database.models.memory_runtime import (
     MemoryReviewDecisionTable,
     MemoryTaskSummaryTable,
 )
+from zuno.platform.contracts import canonical_json
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,11 +215,66 @@ class DatabaseMemoryStore(InMemoryLayerStore):
 
     def append_raw_event(self, event: RawMemoryEvent) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
-            session.merge(_raw_event_to_table(event))
+            session.execute(
+                text(
+                    """
+                    INSERT INTO memory_raw_event (
+                        event_id, user_id, agent_id, project_id, thread_id,
+                        trace_id, task_id, event_type, layer, payload, metadata
+                    )
+                    VALUES (
+                        :event_id, :user_id, :agent_id, :project_id, :thread_id,
+                        :trace_id, :task_id, :event_type, :layer,
+                        CAST(:payload AS jsonb), CAST(:metadata AS jsonb)
+                    )
+                    ON CONFLICT (event_id) DO NOTHING
+                    """
+                ),
+                {
+                    "event_id": event.event_id,
+                    "user_id": event.scope.user_id,
+                    "agent_id": event.scope.agent_id,
+                    "project_id": event.scope.project_id,
+                    "thread_id": event.scope.thread_id,
+                    "trace_id": str(event.metadata.get("trace_id") or ""),
+                    "task_id": str(event.metadata.get("task_id") or ""),
+                    "event_type": event.event_type,
+                    "layer": event.layer.value,
+                    "payload": canonical_json(event.payload),
+                    "metadata": canonical_json(event.metadata),
+                },
+            )
 
     def save_task_summary(self, summary: TaskMemorySummary) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
-            session.merge(_task_summary_to_table(summary))
+            session.execute(
+                text(
+                    """
+                    INSERT INTO memory_task_summary (
+                        summary_id, user_id, agent_id, project_id, thread_id,
+                        layer, content, source_event_ids, token_count, metadata
+                    )
+                    VALUES (
+                        :summary_id, :user_id, :agent_id, :project_id, :thread_id,
+                        :layer, :content, CAST(:source_event_ids AS jsonb), :token_count,
+                        CAST(:metadata AS jsonb)
+                    )
+                    ON CONFLICT (summary_id) DO NOTHING
+                    """
+                ),
+                {
+                    "summary_id": summary.summary_id,
+                    "user_id": summary.scope.user_id,
+                    "agent_id": summary.scope.agent_id,
+                    "project_id": summary.scope.project_id,
+                    "thread_id": summary.scope.thread_id,
+                    "layer": summary.layer.value,
+                    "content": summary.content,
+                    "source_event_ids": canonical_json(list(summary.source_event_ids)),
+                    "token_count": summary.token_count,
+                    "metadata": canonical_json(summary.metadata),
+                },
+            )
 
     def save_memory_candidate(self, candidate: MemoryCandidate) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
@@ -305,7 +362,35 @@ class DatabaseMemoryStore(InMemoryLayerStore):
             metadata=dict(metadata or {}),
         )
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
-            session.merge(_governance_entry_to_table(entry))
+            session.execute(
+                text(
+                    """
+                    INSERT INTO memory_governance_ledger (
+                        entry_id, action, user_id, agent_id, project_id, thread_id,
+                        trace_id, task_id, source_event_ids, reason, metadata
+                    )
+                    VALUES (
+                        :entry_id, :action, :user_id, :agent_id, :project_id, :thread_id,
+                        :trace_id, :task_id, CAST(:source_event_ids AS jsonb), :reason,
+                        CAST(:metadata AS jsonb)
+                    )
+                    ON CONFLICT (entry_id) DO NOTHING
+                    """
+                ),
+                {
+                    "entry_id": entry.entry_id,
+                    "action": entry.action,
+                    "user_id": entry.scope.user_id,
+                    "agent_id": entry.scope.agent_id,
+                    "project_id": entry.scope.project_id,
+                    "thread_id": entry.scope.thread_id,
+                    "trace_id": entry.trace_id,
+                    "task_id": entry.task_id,
+                    "source_event_ids": canonical_json(list(entry.source_event_ids)),
+                    "reason": entry.reason,
+                    "metadata": canonical_json(entry.metadata),
+                },
+            )
         return entry
 
     def governance_ledger(self, scope: MemoryScope) -> tuple[dict[str, Any], ...]:

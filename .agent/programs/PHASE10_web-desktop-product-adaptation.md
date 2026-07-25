@@ -1,7 +1,7 @@
 # PHASE10 Web and Desktop Product Adaptation
 
 phase_id: PHASE10
-status: planned
+status: ready
 depends_on: PHASE09
 owner: Module 01 Product Surface
 

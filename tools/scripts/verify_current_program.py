@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE09"
+CURRENT_PHASE = "PHASE10"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -192,9 +192,14 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[5]: "completed",
         PHASE_FILES[6]: "completed",
         PHASE_FILES[7]: "completed",
-        PHASE_FILES[8]: "ready",
+        PHASE_FILES[8]: "completed",
+        PHASE_FILES[9]: "ready",
         PHASE_FILES[10]: "completed",
-        PHASE_FILES[11]: "ready",
+        PHASE_FILES[11]: "completed",
+        PHASE_FILES[12]: "completed",
+        PHASE_FILES[13]: "completed",
+        PHASE_FILES[14]: "completed",
+        PHASE_FILES[15]: "ready",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -302,7 +307,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE09",
+                "current_phase: PHASE10",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
@@ -310,12 +315,17 @@ def verify_current_program() -> list[str]:
                 "PHASE07 completed",
                 "PHASE08 completed",
                 "PHASE11 completed",
-                "PHASE09 ready",
-                "PHASE12 ready",
+                "PHASE09 completed",
+                "PHASE12 completed",
+                "PHASE13 completed",
+                "PHASE14 completed",
+                "PHASE15 completed",
+                "PHASE10 ready",
+                "PHASE16 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
-                "partial implementation available",
+                "implementation available",
                 "measurement blocked",
-                "quality not yet proven",
+                "production readiness not established",
             ],
             "current.md",
         )
@@ -325,10 +335,10 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE09",
+                "current_phase: PHASE10",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
-                "partial implementation",
+                "implementation available",
                 "RabbitMQ",
                 "Object Store",
                 "LangGraph PostgreSQL Checkpointer",
@@ -350,9 +360,14 @@ def verify_current_program() -> list[str]:
                 "id: PHASE06, file: .agent/programs/PHASE06_observability-minimum-black-box.md, state: completed",
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
                 "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed",
-                "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: ready",
+                "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: completed",
+                "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: ready",
                 "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed",
-                "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: ready",
+                "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed",
+                "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
+                "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
+                "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
+                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: ready",
             ],
             "program-manifest.yaml",
         )

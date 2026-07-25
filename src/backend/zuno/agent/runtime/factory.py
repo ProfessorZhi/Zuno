@@ -72,8 +72,9 @@ class RuntimeDependencyFactory:
         if not self.config.enable_memory:
             return None
         from zuno.memory.engine import MemoryEngine
+        from zuno.memory.store import DatabaseMemoryStore
 
-        return MemoryEngine()
+        return MemoryEngine(store=DatabaseMemoryStore())
 
     def _knowledge_runtime(self) -> object | None:
         if self.config.knowledge_index_runtime is None:
@@ -86,8 +87,12 @@ class RuntimeDependencyFactory:
         if not self.config.enable_local_tool_runtime:
             return None
         from zuno.capability.runtime import build_default_tool_control_plane_runtime
+        from zuno.database import engine
+        from zuno.platform.security import PostgresSecurityApprovalFactSink
 
-        return build_default_tool_control_plane_runtime()
+        return build_default_tool_control_plane_runtime(
+            security_approval_sink=PostgresSecurityApprovalFactSink(engine)
+        )
 
 
 __all__ = ["RuntimeAssembly", "RuntimeDependencyFactory"]
