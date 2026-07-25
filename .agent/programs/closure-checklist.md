@@ -6,7 +6,7 @@ current_phase: PHASE09
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 ready / PHASE12 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 in_progress / PHASE12 in_progress / PHASE14 in_progress / PHASE13 blocked / PHASE15 blocked / PHASE10 planned / PHASE16 planned
 
 ## PHASE01–04 订正状态
 

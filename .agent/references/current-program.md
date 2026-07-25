@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE10
+current_phase: PHASE09
 phase_count: 22
 program_version: 2
 
@@ -10,7 +10,7 @@ program_version: 2
 
 2026-07-20 Goal01 audit 曾将 PHASE11 从 completed 重新打开为 in_progress；2026-07-23 的 0b1e087a closure 与 PR #41 初版 Goal02 final closure 被本轮目标订正为不足证据。Goal02 final closure repair 已恢复传输并通过有限 Closure Review：PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE08 completed；PHASE11 completed。
 
-Goal03 Backend Platform Expansion 已完成后端平台扩展实现基线：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10 ready；PHASE16 ready；当前执行入口为 PHASE10。不得把本轮实现误写成 production ready。
+Goal03 Backend Platform Expansion 已重新打开：PHASE09、PHASE12、PHASE14 in_progress；PHASE13、PHASE15 blocked，等待对应上游完成；PHASE10、PHASE16 planned；当前执行入口为 PHASE09。不得把局部持久化基线误写成 completed 或 production ready。
 
 入口：
 

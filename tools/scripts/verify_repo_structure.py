@@ -99,7 +99,7 @@ def verify_active_program_contract() -> list[str]:
     required_current = [
         "state: active",
         f"active_program: {ACTIVE_PROGRAM_NAME}",
-        "current_phase: PHASE08",
+        "current_phase: PHASE09",
     ]
     for phrase in required_current:
         if phrase not in current:
@@ -110,7 +110,7 @@ def verify_active_program_contract() -> list[str]:
     required_manifest = [
         f"id: {ACTIVE_PROGRAM_NAME}",
         "state: active",
-        "current_phase: PHASE08",
+        "current_phase: PHASE09",
         "phase_count: 22",
     ]
     for phrase in required_manifest:

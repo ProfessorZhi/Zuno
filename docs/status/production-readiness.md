@@ -16,14 +16,14 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE07 completed：Model Gateway Runtime 在完整 Phase Scope 内达到 `implementation_available`；不代表 quality proven 或 production ready。
 - PHASE08 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
 - PHASE11 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
-- PHASE09 completed：Product Surface 后端 Command、Receipt、Projection、Action Token 和受控 API 路径已有 PostgreSQL 迁移、仓储、API 和集成测试基线；不代表 Web/Desktop 产品适配完成。
-- PHASE12 completed：KnowledgeVersion、Snapshot、Index Visibility、Cutover、Query/Evidence/CitationLineage 的 PostgreSQL 迁移、仓储和 Standard RAG 基线已完成；不代表 Agentic 多轮纠正完成。
-- PHASE13 completed：MemoryVersion、Snapshot、ContextPackVersion、Manifest Snapshot、Privacy Delete Receipt 和默认 MemoryEngine 数据库存储路径已有实现与 PostgreSQL 集成测试基线。
-- PHASE14 completed：Capability/Skill Definition、Version、Installation、Selection、Availability 和 Supply-chain guard 基线已有 PostgreSQL 迁移、仓储、API 和集成测试基线；Tool 执行事实仍归 PHASE15/16。
-- PHASE15 completed：Tool Provider/Definition/Version/Operation、Installation、Activation、PreparedToolAction、ToolAttempt、Observation、ExecutionReceipt 和只读默认 Tool Runtime 安全审计接线已有实现与 PostgreSQL 集成测试基线。
-- PHASE10 ready：PHASE09 依赖已完成，Web/Desktop Product Adaptation 可启动但尚未实现。
-- PHASE16 ready：PHASE15 依赖已完成，Tool Side Effect and Reconciliation 可启动但尚未实现。
-- current_phase = PHASE10；PHASE17–22 不得提前冒充 Current。
+- PHASE09 in_progress：Product Surface 后端已有 PR #42 局部持久化基线，但默认 Product Runtime、Owner dispatch、Projection/SSE/AvailableAction/Cutover 仍需按代码和故障测试重新证明。
+- PHASE12 in_progress：KnowledgeVersion、Snapshot、Index Visibility、Cutover、Query/Evidence/CitationLineage 已有 PR #42 局部持久化基线，但真实 Standard RAG 默认路径、Adapter、ACL/Temporal/Conflict 和恢复语义仍需重新证明。
+- PHASE13 blocked：等待 PHASE12 完成后启动 Memory and Context Governance Runtime。
+- PHASE14 in_progress：Capability/Skill Definition、Version、Installation、Selection、Availability 和 Supply-chain guard 已有 PR #42 局部持久化基线，但 Planner 默认 Snapshot 路径、progressive loading、legacy registry cutover 和旁路 Guard 仍需重新证明。
+- PHASE15 blocked：等待 PHASE14 完成后启动 Tool Runtime Definition and Read-only Cutover。
+- PHASE10 planned：等待 PHASE09 完成后启动 Web/Desktop Product Adaptation。
+- PHASE16 planned：等待 PHASE15 完成后启动 Tool Side Effect and Reconciliation。
+- current_phase = PHASE09；PHASE17–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
@@ -33,7 +33,7 @@ Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE
 
 ## Goal03 Closure Boundary
 
-Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；PHASE14 completed；PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production readiness not established。
+Goal03 in_progress：PHASE09 in_progress；PHASE12 in_progress；PHASE14 in_progress；PHASE13 blocked；PHASE15 blocked；PHASE10 planned；PHASE16 planned；current_phase PHASE09；production readiness not established。
 
 PHASE08 当前保留的部分证据：
 
