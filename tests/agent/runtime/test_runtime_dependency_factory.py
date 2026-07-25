@@ -8,6 +8,8 @@ from zuno.agent.runtime.execution.model_step import ModelStepExecutor
 from zuno.agent.runtime.execution.tool_step import ToolStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.knowledge.indexing.runtime import KnowledgeIndexRuntime
+from zuno.memory.engine import MemoryEngine
+from zuno.memory.store import DatabaseMemoryStore
 
 
 def _state() -> AgentRuntimeState:
@@ -39,7 +41,10 @@ def test_runtime_dependency_factory_builds_completion_dependencies(tmp_path) -> 
     assert assembly.store is store
     assert assembly.dependencies.model_gateway is not None
     assert assembly.dependencies.memory_engine is not None
+    assert isinstance(assembly.dependencies.memory_engine, MemoryEngine)
+    assert isinstance(assembly.dependencies.memory_engine.store, DatabaseMemoryStore)
     assert assembly.dependencies.tool_control_plane is not None
+    assert getattr(assembly.dependencies.tool_control_plane, "_security_approval_sink", None) is not None
     assert assembly.dependencies.knowledge_runtime is None
 
 
