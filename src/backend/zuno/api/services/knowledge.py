@@ -2,6 +2,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, List
 
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.database.knowledge import KnowledgeUnitOfWork, KnowledgeVersionDraft
+from zuno.database import engine
 from zuno.database.dao.knowledge import KnowledgeDao
 from zuno.database.dao.knowledge_file import KnowledgeFileDao
 from zuno.database.dao.llm import LLMDao
@@ -674,10 +677,149 @@ class KnowledgeService:
         }
         if normalized_action not in supported_actions:
             raise ValueError(f"Unsupported reindex action: {action}")
+        knowledge = await KnowledgeDao.select_user_by_id(knowledge_id)
+        if not knowledge:
+            raise ValueError("knowledge not found")
+        knowledge_files = await KnowledgeFileDao.select_knowledge_file(knowledge_id)
+        payload = knowledge.to_dict()
+        normalized_config = cls._normalize_knowledge_config(
+            payload.get("knowledge_config"),
+            payload.get("default_retrieval_mode"),
+        )
+        tenant_id = f"user:{payload.get('user_id') or 'unknown'}"
+        workspace_id = f"workspace:{knowledge_id}"
+        file_manifest = [
+            {
+                "file_id": file.id,
+                "file_name": file.file_name,
+                "oss_url": file.oss_url,
+                "status": file.status,
+                "parse_status": file.parse_status,
+                "rag_index_status": file.rag_index_status,
+                "graph_index_status": file.graph_index_status,
+            }
+            for file in knowledge_files
+        ]
+        index_spec = {
+            "action": normalized_action,
+            "retrieval_mode": normalized_config["retrieval_settings"]["default_mode"],
+            "index_capability": normalized_config["index_capability"],
+            "file_count": len(knowledge_files),
+        }
+        fingerprint = canonical_sha256(
+            {
+                "knowledge_id": knowledge_id,
+                "action": normalized_action,
+                "files": file_manifest,
+                "index_spec": index_spec,
+            }
+        )[:24]
+        knowledge_version_id = f"knowledge-version:{fingerprint}"
+        snapshot_id = f"knowledge-snapshot:{fingerprint}"
+        cutover_id = f"knowledge-cutover:{fingerprint}"
+        with KnowledgeUnitOfWork(engine) as repo:
+            version_no = repo.next_version_no(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_space_id=knowledge_id,
+            )
+            repo.create_version(
+                KnowledgeVersionDraft(
+                    knowledge_version_id=knowledge_version_id,
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    knowledge_space_id=knowledge_id,
+                    version_no=version_no,
+                    document_set={
+                        "knowledge_id": knowledge_id,
+                        "knowledge_name": payload.get("name"),
+                        "knowledge_file_ids": [file.id for file in knowledge_files],
+                        "action": normalized_action,
+                    },
+                    source_span_manifest={
+                        "source_spans": [
+                            {
+                                "source_span_ref": f"legacy:file:{file.id}",
+                                "file_name": file.file_name,
+                                "oss_url": file.oss_url,
+                            }
+                            for file in knowledge_files
+                        ],
+                    },
+                    index_spec=index_spec,
+                    security_epoch_ref=f"security-epoch:{knowledge_id}:current",
+                )
+            )
+            for file in knowledge_files:
+                repo.append_chunk(
+                    chunk_id=f"knowledge-chunk:{file.id}",
+                    tenant_id=tenant_id,
+                    knowledge_version_id=knowledge_version_id,
+                    document_version_id=f"document-version:{file.id}",
+                    source_span_ref=f"legacy:file:{file.id}",
+                    chunk_payload={
+                        "file_name": file.file_name,
+                        "oss_url": file.oss_url,
+                        "size_bytes": file.file_size,
+                    },
+                    acl_ref=f"knowledge-acl:{knowledge_id}",
+                    authority_ref=f"knowledge-authority:{knowledge_id}",
+                )
+            visible_index_kinds = ["BM25", "VECTOR"]
+            if normalized_action in {"graph_index", "community_detection", "community_report", "full_rebuild"}:
+                visible_index_kinds.append("GRAPH")
+            for index_kind in visible_index_kinds:
+                repo.record_index_visibility(
+                    job_id=f"knowledge-index-job:{knowledge_version_id}:{index_kind.lower()}",
+                    tenant_id=tenant_id,
+                    knowledge_version_id=knowledge_version_id,
+                    index_kind=index_kind,
+                    lease_ref=f"lease:{knowledge_version_id}:{index_kind.lower()}",
+                    fencing_token=1,
+                    attempt_no=1,
+                    write_batch={
+                        "knowledge_id": knowledge_id,
+                        "action": normalized_action,
+                        "index_kind": index_kind,
+                    },
+                    visibility_receipt_ref=f"visibility:{knowledge_version_id}:{index_kind.lower()}",
+                )
+            repo.mark_ready(knowledge_version_id=knowledge_version_id)
+            repo.create_snapshot(
+                snapshot_id=snapshot_id,
+                tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
+                snapshot_payload={
+                    "knowledge_id": knowledge_id,
+                    "knowledge_version_id": knowledge_version_id,
+                    "action": normalized_action,
+                    "file_count": len(knowledge_files),
+                },
+                serving_watermark_ref=f"serving-watermark:{knowledge_version_id}",
+            )
+            repo.cutover(
+                cutover_id=cutover_id,
+                tenant_id=tenant_id,
+                knowledge_space_id=knowledge_id,
+                to_version_id=knowledge_version_id,
+                expected_generation=repo.next_cutover_expected_generation(
+                    tenant_id=tenant_id,
+                    knowledge_space_id=knowledge_id,
+                ),
+                decision_payload={
+                    "knowledge_id": knowledge_id,
+                    "action": normalized_action,
+                    "snapshot_id": snapshot_id,
+                    "knowledge_version_id": knowledge_version_id,
+                },
+            )
         return {
             "knowledge_id": knowledge_id,
             "action": normalized_action,
-            "status": "accepted",
+            "status": "published",
+            "knowledge_version_id": knowledge_version_id,
+            "snapshot_id": snapshot_id,
+            "cutover_id": cutover_id,
         }
 
     @classmethod
@@ -717,7 +859,82 @@ class KnowledgeService:
             query_method=query_method,
             top_k=top_k,
         )
+        cls.record_search_query_run(
+            user_id=user_id,
+            knowledge_ids=knowledge_ids,
+            query=query,
+            product_mode=product_mode,
+            query_method=query_method,
+            top_k=top_k,
+            result=result,
+        )
         return cls._knowledge_query_result_to_search_payload(result)
+
+    @staticmethod
+    def record_search_query_run(
+        *,
+        user_id: str,
+        knowledge_ids: List[str],
+        query: str,
+        product_mode: str,
+        query_method: str | None,
+        top_k: int,
+        result: Any,
+    ) -> None:
+        from zuno.database import engine
+
+        tenant_id = f"user:{user_id}"
+        workspace_id = "workspace:default"
+        knowledge_space_id = str(knowledge_ids[0])
+        request_payload = {
+            "knowledge_ids": list(knowledge_ids),
+            "query": query,
+            "product_mode": product_mode,
+            "query_method": query_method,
+            "top_k": top_k,
+            "strict_grounding": True,
+        }
+        fingerprint = canonical_sha256(
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "request": request_payload,
+            }
+        )[:24]
+        query_run_id = f"knowledge-query:{fingerprint}"
+        round_id = f"knowledge-round:{fingerprint}:1"
+        with KnowledgeUnitOfWork(engine) as repo:
+            snapshot_id = repo.active_snapshot_id(
+                tenant_id=tenant_id,
+                knowledge_space_id=knowledge_space_id,
+            )
+            if snapshot_id is None:
+                raise ValueError(
+                    "Knowledge search requires an ACTIVE Knowledge Snapshot before PHASE12 default query"
+                )
+            repo.start_query_run(
+                query_run_id=query_run_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_core_decision_ref=f"api:knowledge-search:{fingerprint}",
+                snapshot_id=snapshot_id,
+                request_payload=request_payload,
+            )
+            repo.start_retrieval_round(
+                round_id=round_id,
+                query_run_id=query_run_id,
+                round_no=1,
+                retriever_set={
+                    "retrievers_used": list(getattr(result, "retrievers_used", []) or []),
+                    "resolved_query_method": getattr(result, "resolved_query_method", None),
+                    "fallback_reason": getattr(result, "fallback_reason", None),
+                },
+                status="COMPLETED",
+            )
+            repo.mark_query_run_status(
+                query_run_id=query_run_id,
+                status="PARTIAL_EVIDENCE",
+            )
 
     @staticmethod
     def _knowledge_query_result_to_search_payload(result) -> dict[str, Any]:
