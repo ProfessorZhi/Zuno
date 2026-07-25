@@ -5,6 +5,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py"
+REPAIR_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_37_wave_a_product_runtime_dispatch.py"
 
 
 def test_goal03_wave_a_migration_is_append_only_single_head_successor() -> None:
@@ -46,3 +47,13 @@ def test_goal03_wave_a_migration_contains_owner_fact_tables_and_guards() -> None
 
     for fragment in required_fragments:
         assert fragment in text
+
+
+def test_goal03_wave_a_repair_migration_adds_product_message_fact() -> None:
+    text = REPAIR_MIGRATION.read_text(encoding="utf-8")
+
+    assert 'revision = "20260725_37"' in text
+    assert 'down_revision = "20260725_36"' in text
+    assert "product_messages" in text
+    assert "fk_product_messages_submission" in text
+    assert "ck_product_messages_publication_boundary" in text

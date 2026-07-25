@@ -49,6 +49,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    infra_outbox_events,
+                    infra_outbox_sequences,
                     capability_transition_events,
                     capability_selection_results,
                     capability_availability_snapshots,
@@ -72,6 +74,7 @@ def engine(migrated_postgres):
                     product_projection_events,
                     product_command_receipts,
                     product_commands,
+                    product_messages,
                     product_submissions,
                     product_conversation_threads,
                     product_agent_versions,
@@ -144,6 +147,42 @@ def test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain
         assert first.status == "ACCEPTED"
         assert duplicate.status == "DUPLICATE"
         assert duplicate.command_id == first.command_id
+        second = repo.submit_command(_product_command("client:2", {"query": "summary"}, "command:4"))
+        assert second.status == "ACCEPTED"
+
+        product_rows = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM product_submissions) AS submissions,
+                    (SELECT count(*) FROM product_messages) AS messages,
+                    (SELECT count(*) FROM product_commands) AS commands,
+                    (SELECT count(*) FROM product_command_receipts WHERE status = 'ACCEPTED') AS accepted_receipts,
+                    (SELECT count(*) FROM infra_outbox_events WHERE topic = 'product.runtime_request.dispatch') AS dispatch_events
+                """
+            )
+        ).mappings().one()
+        assert dict(product_rows) == {
+            "submissions": 2,
+            "messages": 2,
+            "commands": 2,
+            "accepted_receipts": 2,
+            "dispatch_events": 2,
+        }
+        dispatch = conn.execute(
+            text(
+                """
+                SELECT aggregate_id, payload ->> 'consumer_module' AS consumer_module,
+                       payload ->> 'message_id' AS message_id, ordering_sequence
+                FROM infra_outbox_events
+                WHERE event_id = 'outbox:command:1'
+                """
+            )
+        ).mappings().one()
+        assert dispatch["aggregate_id"] == "command:1"
+        assert dispatch["consumer_module"] == "Agent Core"
+        assert dispatch["message_id"] == "message:submission:command:1"
+        assert dispatch["ordering_sequence"] == 1
 
         with pytest.raises(ProductPersistenceConflict):
             repo.submit_command(_product_command("client:1", {"query": "different"}, "command:3"))

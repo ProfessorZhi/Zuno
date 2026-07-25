@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import Connection, Engine, text
 
 from zuno.platform.contracts import canonical_sha256
+from zuno.platform.database.foundation import InfrastructureRepository
 
 
 class ProductPersistenceConflict(RuntimeError):
@@ -31,6 +32,7 @@ class ProductCommandSubmission:
     payload: dict[str, Any]
     journal_sequence_no: int
     outbox_message_id: str
+    message_id: str | None = None
 
     @property
     def request_hash(self) -> str:
@@ -100,6 +102,7 @@ class ProductRepository:
             )
             return ProductCommandReceiptRef(str(existing["command_id"]), receipt, "DUPLICATE", duplicate=True)
 
+        message_id = command.message_id or f"message:{command.submission_id}"
         self.connection.execute(
             text(
                 """
@@ -122,6 +125,60 @@ class ProductRepository:
                 "request_hash": command.request_hash,
                 "raw_intent_ref": command.raw_intent_ref,
             },
+        )
+        message_sequence_no = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT coalesce(max(sequence_no), 0) + 1
+                    FROM product_messages
+                    WHERE conversation_id = :conversation_id
+                    """
+                ),
+                {"conversation_id": command.conversation_id},
+            ).scalar_one()
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_messages (
+                    message_id, tenant_id, workspace_id, conversation_id,
+                    submission_id, principal_id, message_role, message_hash,
+                    sequence_no, publication_ref
+                )
+                VALUES (
+                    :message_id, :tenant_id, :workspace_id, :conversation_id,
+                    :submission_id, :principal_id, 'USER', :message_hash,
+                    :sequence_no, null
+                )
+                """
+            ),
+            {
+                "message_id": message_id,
+                "tenant_id": command.tenant_id,
+                "workspace_id": command.workspace_id,
+                "conversation_id": command.conversation_id,
+                "submission_id": command.submission_id,
+                "principal_id": command.principal_id,
+                "message_hash": command.request_hash,
+                "sequence_no": message_sequence_no,
+            },
+        )
+        journal_sequence_no = int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT coalesce(max(journal_sequence_no), 0) + 1
+                    FROM product_commands
+                    WHERE tenant_id = :tenant_id
+                      AND workspace_id = :workspace_id
+                    """
+                ),
+                {
+                    "tenant_id": command.tenant_id,
+                    "workspace_id": command.workspace_id,
+                },
+            ).scalar_one()
         )
         self.connection.execute(
             text(
@@ -147,7 +204,7 @@ class ProductRepository:
                 "owner_module": command.owner_module,
                 "runtime_request_ref": command.runtime_request_ref,
                 "payload_hash": command.request_hash,
-                "journal_sequence_no": command.journal_sequence_no,
+                "journal_sequence_no": journal_sequence_no,
                 "outbox_message_id": command.outbox_message_id,
             },
         )
@@ -156,6 +213,29 @@ class ProductRepository:
             command.tenant_id,
             "ACCEPTED",
             {"runtime_request_ref": command.runtime_request_ref},
+        )
+        InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=command.outbox_message_id,
+            tenant_id=command.tenant_id,
+            aggregate_id=command.command_id,
+            topic="product.runtime_request.dispatch",
+            idempotency_key=command.client_request_id,
+            ordering_key=command.conversation_id,
+            payload={
+                "contract_name": "RuntimeRequest",
+                "producer_module": "Product Surface",
+                "consumer_module": "Agent Core",
+                "tenant_id": command.tenant_id,
+                "workspace_id": command.workspace_id,
+                "conversation_id": command.conversation_id,
+                "submission_id": command.submission_id,
+                "message_id": message_id,
+                "command_id": command.command_id,
+                "runtime_request_ref": command.runtime_request_ref,
+                "active_agent_version_id": command.active_agent_version_id,
+                "principal_id": command.principal_id,
+                "payload_hash": command.request_hash,
+            },
         )
         return ProductCommandReceiptRef(command.command_id, receipt, "ACCEPTED")
 
