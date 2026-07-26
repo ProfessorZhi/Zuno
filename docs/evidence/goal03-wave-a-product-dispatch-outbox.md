@@ -21,6 +21,7 @@ commit_scope: Product Surface Backend Runtime repair
 - `infra_outbox_events.topic = product.runtime_request.dispatch`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复相同 client request 只追加 duplicate receipt，不重复创建 command/message/outbox。
 - 不同 client request 的 Product journal sequence 在 Repository 内递增，不依赖调用方硬编码。
+- `ProductService.consume_runtime_request_dispatch(...)` 可以认领 `product.runtime_request.dispatch` outbox，并把首条未处理消息幂等转换成 Agent Core 的 `GoalVersion`、`TaskContract`、`AgentRun` 和 Product owner receipt，再将 inbox 标记为 processed。
 
 ## 验证
 
@@ -37,11 +38,10 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 5 passed
 Product Surface target architecture verification passed.
 20260725_37 (head)
-3 passed
+10 passed
 ```
 
 ## 未证明
 
-- Agent Core consumer 尚未从 `product.runtime_request.dispatch` outbox 默认消费并创建/恢复 AgentRun。
 - Projection reducer、SSE cursor/reconnect/expiry、AvailableAction、revocation cleanup 和 legacy API cutover fault tests 尚未完成。
 - PHASE09 仍是 `in_progress`，不能据此关闭 Goal03 Wave A Gate。

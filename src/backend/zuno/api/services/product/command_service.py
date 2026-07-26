@@ -4,10 +4,16 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from zuno.platform.database.product import ProductCommandSubmission, ProductUnitOfWork
+from zuno.agent.domain import AgentRun, GoalInputClassification, GoalVersion, TaskContract
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.database.agent import AgentDomainRepository
+from zuno.platform.database.foundation import InfrastructureRepository
+from zuno.platform.database.product import ProductCommandSubmission, ProductRepository, ProductUnitOfWork
 
 
 PRODUCT_DEFAULT_SECURITY_EPOCH_REF = "security-epoch:product:default"
+PRODUCT_RUNTIME_DISPATCH_TOPIC = "product.runtime_request.dispatch"
+PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +39,17 @@ class ProductRuntimeRequestResult:
     status: str
     projection: ProductProjectionResult
     available_actions: tuple[ProductAvailableActionResult, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProductRuntimeDispatchConsumeResult:
+    event_id: str
+    command_id: str
+    agent_run_id: str | None
+    agent_run_status: str
+    owner_receipt_ref: str | None
+    inbox_first_seen: bool
+    outbox_status: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +159,127 @@ class ProductService:
         )
 
     @staticmethod
+    def consume_runtime_request_dispatch(
+        *,
+        event_id: str,
+        worker_id: str,
+        engine: Any | None = None,
+    ) -> ProductRuntimeDispatchConsumeResult:
+        if engine is None:
+            from zuno.database import engine as default_engine
+
+            engine = default_engine
+
+        with engine.begin() as conn:
+            infra_repo = InfrastructureRepository(conn)
+            if not infra_repo.claim_outbox_event(event_id=event_id, worker_id=worker_id):
+                return ProductRuntimeDispatchConsumeResult(
+                    event_id=event_id,
+                    command_id="",
+                    agent_run_id=None,
+                    agent_run_status="not_pending",
+                    owner_receipt_ref=None,
+                    inbox_first_seen=False,
+                    outbox_status="not_claimed",
+                )
+            record = infra_repo.load_claimed_outbox_event(event_id=event_id, worker_id=worker_id)
+            payload = dict(record.payload)
+            if record.topic != PRODUCT_RUNTIME_DISPATCH_TOPIC or payload.get("consumer_module") != "Agent Core":
+                raise ValueError("outbox event is not a Product RuntimeRequest dispatch for Agent Core")
+            tenant_id = str(payload["tenant_id"])
+            workspace_id = str(payload["workspace_id"])
+            principal_id = str(payload["principal_id"])
+            command_id = str(payload["command_id"])
+            runtime_request_ref = str(payload["runtime_request_ref"])
+            receipt = infra_repo.record_inbox_receipt(
+                consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
+                message_id=record.event_id,
+                payload=payload,
+                tenant_id=tenant_id,
+                ordering_key=record.ordering_key,
+                ordering_sequence=record.ordering_sequence,
+            )
+            agent_run_id = f"agent-run:{runtime_request_ref}"
+            owner_receipt_ref: str | None = None
+            agent_run_status = "duplicate"
+            if receipt.first_seen:
+                agent_repo = AgentDomainRepository(conn)
+                now = datetime.now(timezone.utc)
+                task_contract_id = f"task-contract:{runtime_request_ref}"
+                goal_version_id = f"goal:{runtime_request_ref}"
+                agent_repo.record_goal_version(
+                    GoalVersion(
+                        goal_version_id=goal_version_id,
+                        tenant_id=tenant_id,
+                        workspace_id=workspace_id,
+                        principal_id=principal_id,
+                        goal_sequence=int(record.ordering_sequence or 1),
+                        input_classification=GoalInputClassification.NEW_TASK,
+                        objective_hash=str(payload["payload_hash"]),
+                        output_contract_ref=f"output-contract:{runtime_request_ref}",
+                        constraints_hash=canonical_sha256(
+                            {
+                                "active_agent_version_id": payload.get("active_agent_version_id"),
+                                "command_id": command_id,
+                            }
+                        ),
+                    )
+                )
+                agent_repo.record_task_contract(
+                    TaskContract(
+                        task_contract_id=task_contract_id,
+                        tenant_id=tenant_id,
+                        workspace_id=workspace_id,
+                        principal_id=principal_id,
+                        goal_version_id=goal_version_id,
+                        idempotency_key=record.idempotency_key,
+                        security_context_ref=f"security-context:{runtime_request_ref}",
+                        security_epoch_ref=PRODUCT_DEFAULT_SECURITY_EPOCH_REF,
+                        deadline_at=now + timedelta(hours=1),
+                        budget_ref=f"budget:{runtime_request_ref}",
+                    )
+                )
+                run_receipt = agent_repo.record_agent_run(
+                    AgentRun(
+                        run_id=agent_run_id,
+                        tenant_id=tenant_id,
+                        workspace_id=workspace_id,
+                        principal_id=principal_id,
+                        task_contract_id=task_contract_id,
+                        trace_id=f"trace:{runtime_request_ref}",
+                    )
+                )
+                owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
+                ProductRepository(conn).append_owner_receipt(
+                    tenant_id=tenant_id,
+                    command_id=command_id,
+                    status="ACCEPTED",
+                    owner_receipt_ref=owner_receipt_ref,
+                    payload={
+                        "runtime_request_ref": runtime_request_ref,
+                        "agent_run_ref": run_receipt.ref,
+                        "task_contract_ref": task_contract_id,
+                        "outbox_event_id": record.event_id,
+                    },
+                )
+                infra_repo.mark_inbox_processed(
+                    tenant_id=tenant_id,
+                    consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
+                    message_id=record.event_id,
+                )
+                agent_run_status = run_receipt.status
+            infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
+        return ProductRuntimeDispatchConsumeResult(
+            event_id=event_id,
+            command_id=command_id,
+            agent_run_id=agent_run_id,
+            agent_run_status=agent_run_status,
+            owner_receipt_ref=owner_receipt_ref,
+            inbox_first_seen=receipt.first_seen,
+            outbox_status="published",
+        )
+
+    @staticmethod
     def list_stream_events(
         *,
         tenant_id: str,
@@ -173,6 +311,7 @@ class ProductService:
 __all__ = [
     "ProductAvailableActionResult",
     "ProductProjectionResult",
+    "ProductRuntimeDispatchConsumeResult",
     "ProductRuntimeRequestResult",
     "ProductService",
     "ProductStreamEventResult",

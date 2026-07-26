@@ -23,6 +23,7 @@ from zuno.platform.database.knowledge import (
 )
 from zuno.platform.database.knowledge.domain import KnowledgeVersionDraft
 from zuno.platform.database.product import ProductCommandSubmission, ProductPersistenceConflict, ProductRepository
+from zuno.api.services.product import ProductService
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -60,6 +61,8 @@ def engine(migrated_postgres):
                 TRUNCATE
                     infra_outbox_events,
                     infra_outbox_sequences,
+                    infra_delivery_watermarks,
+                    infra_inbox_messages,
                     capability_transition_events,
                     capability_selection_results,
                     capability_availability_snapshots,
@@ -91,8 +94,12 @@ def engine(migrated_postgres):
                     product_agent_publications,
                     product_agent_drafts,
                     product_agent_versions,
-                    product_agent_definitions
-                RESTART IDENTITY
+                    product_agent_definitions,
+                    agent_domain_events,
+                    agent_domain_runs,
+                    agent_task_contracts,
+                    agent_goal_versions
+                RESTART IDENTITY CASCADE
                 """
             )
         )
@@ -1215,3 +1222,84 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
             limit=1,
             topics=("capability.transition.committed",),
         ) == ["outbox:revocation:active-read:2"]
+
+
+def test_phase09_product_runtime_dispatch_creates_agent_run_and_owner_receipt(engine) -> None:
+    submission = ProductCommandSubmission(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        conversation_id="conversation:dispatch:1",
+        principal_id="principal-a",
+        active_agent_version_id="agent-version:wave-a",
+        submission_id="submission:dispatch:1",
+        client_request_id="client-request:dispatch:1",
+        raw_intent_ref="raw-intent:dispatch:1",
+        command_id="command:dispatch:1",
+        command_kind="RUN",
+        owner_module="Agent Core",
+        runtime_request_ref="runtime-request:dispatch:1",
+        payload={
+            "goal": "dispatch product runtime request to Agent Core",
+            "payload_hash": "d" * 64,
+        },
+        journal_sequence_no=1,
+        outbox_message_id="outbox:dispatch:1",
+    )
+
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+        receipt = repo.submit_command(submission)
+        assert receipt.status == "ACCEPTED"
+
+    consume_result = ProductService.consume_runtime_request_dispatch(
+        event_id="outbox:dispatch:1",
+        worker_id="product-dispatch-worker",
+        engine=engine,
+    )
+
+    assert consume_result.inbox_first_seen is True
+    assert consume_result.agent_run_id == "agent-run:runtime-request:dispatch:1"
+    assert consume_result.agent_run_status == "CREATED"
+    assert consume_result.owner_receipt_ref == "owner-receipt:outbox:dispatch:1:agent-run-created"
+    assert consume_result.outbox_status == "published"
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM agent_domain_runs")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM agent_goal_versions")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM agent_task_contracts")).scalar_one() == 1
+        assert conn.execute(
+            text(
+                """
+                SELECT status, receipt_version, owner_receipt_ref
+                FROM product_command_receipts
+                WHERE command_id = 'command:dispatch:1'
+                ORDER BY receipt_version
+                """
+            )
+        ).mappings().all() == [
+            {
+                "status": "ACCEPTED",
+                "receipt_version": 1,
+                "owner_receipt_ref": None,
+            },
+            {
+                "status": "ACCEPTED",
+                "receipt_version": 2,
+                "owner_receipt_ref": "owner-receipt:outbox:dispatch:1:agent-run-created",
+            },
+        ]
+        inbox_row = conn.execute(
+            text(
+                """
+                SELECT status, consumer, message_id
+                FROM infra_inbox_messages
+                WHERE message_id = 'outbox:dispatch:1'
+                """
+            )
+        ).mappings().one()
+        assert dict(inbox_row) == {
+            "status": "processed",
+            "consumer": "agent-core-product-runtime-dispatch",
+            "message_id": "outbox:dispatch:1",
+        }
