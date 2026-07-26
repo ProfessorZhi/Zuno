@@ -1,3 +1,4 @@
+from inspect import signature
 from typing import List, Union
 
 from fastapi import APIRouter, Body, Depends
@@ -13,6 +14,14 @@ from zuno.schema.knowledge import (
 from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["Knowledge"])
+
+
+async def _verify_knowledge_permission(knowledge_id: str, user_id: str, *, action: str) -> None:
+    verify = KnowledgeService.verify_user_permission
+    if "action" in signature(verify).parameters:
+        await verify(knowledge_id, user_id, action=action)
+    else:
+        await verify(knowledge_id, user_id)
 
 
 @router.post("/knowledge/create", response_model=UnifiedResponseModel)
@@ -56,7 +65,7 @@ async def update_knowledge(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_req.knowledge_id, login_user.user_id, action="update")
+        await _verify_knowledge_permission(knowledge_req.knowledge_id, login_user.user_id, action="update")
         await KnowledgeService.update_knowledge(
             knowledge_req.knowledge_id,
             knowledge_req.knowledge_name,
@@ -79,7 +88,7 @@ async def delete_knowledge(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="delete")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="delete")
         await KnowledgeService.delete_knowledge(knowledge_id)
         return resp_200()
     except Exception as err:
@@ -93,7 +102,7 @@ async def get_knowledge_files(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="files")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="files")
         result = await KnowledgeService.select_knowledge_files(knowledge_id)
         return resp_200(data=result)
     except Exception as err:
@@ -113,7 +122,7 @@ async def reindex_knowledge(
             normalized_ids = list(knowledge_ids or [])
 
         for knowledge_id in normalized_ids:
-            await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="reindex")
+            await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="reindex")
 
         for knowledge_id in normalized_ids:
             await KnowledgeService.reindex_knowledge(knowledge_id)
@@ -131,7 +140,7 @@ async def analyze_knowledge_config_impact(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="config_impact")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="config_impact")
         previous_config = await KnowledgeService.get_knowledge_config(knowledge_id)
         normalized_next_config = (
             next_config.model_dump() if isinstance(next_config, KnowledgeConfig) else next_config
@@ -150,7 +159,7 @@ async def get_knowledge_config(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="config_read")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="config_read")
         return resp_200(data=await KnowledgeService.get_knowledge_config(knowledge_id))
     except Exception as err:
         logger.error(err)
@@ -165,7 +174,7 @@ async def update_knowledge_config(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="config_update")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="config_update")
         normalized_next_config = (
             next_config.model_dump() if isinstance(next_config, KnowledgeConfig) else next_config
         )
@@ -189,7 +198,7 @@ async def reindex_knowledge_action(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action=f"reindex_{action}")
+        await _verify_knowledge_permission(knowledge_id, login_user.user_id, action=f"reindex_{action}")
         result = await KnowledgeService.run_reindex_action(knowledge_id, action)
         return resp_200(data=result)
     except Exception as err:
@@ -218,7 +227,7 @@ async def search_knowledge(
 ):
     try:
         for knowledge_id in knowledge_ids:
-            await KnowledgeService.verify_user_permission(knowledge_id, login_user.user_id, action="search")
+            await _verify_knowledge_permission(knowledge_id, login_user.user_id, action="search")
 
         result = await KnowledgeService.search_knowledge(
             user_id=login_user.user_id,
