@@ -251,7 +251,7 @@ def test_phase09_product_owner_receipts_are_append_only_and_versioned(engine) ->
             {"command_id": receipt.command_id},
         ).mappings().all()
         assert [row["receipt_version"] for row in receipt_rows] == [1, 2, 3]
-        assert [row["status"] for row in receipt_rows] == ["ACCEPTED", "REJECTED", "OWNER_TIMEOUT"]
+        assert [row["status"] for row in receipt_rows] == ["ACCEPTED", "REJECTED", "LATE_OWNER_RECEIPT"]
         assert receipt_rows[1]["owner_receipt_ref"] == "owner:receipt:1"
         assert receipt_rows[2]["owner_receipt_ref"] == "owner:receipt:2"
         assert first_owner_receipt == f"{receipt.command_id}:receipt:2"
@@ -259,6 +259,16 @@ def test_phase09_product_owner_receipts_are_append_only_and_versioned(engine) ->
         assert receipt_rows[0]["receipt_id"] == f"{receipt.command_id}:receipt:1"
         assert receipt_rows[0]["receipt_hash"] != receipt_rows[1]["receipt_hash"]
         assert receipt_rows[1]["receipt_hash"] != receipt_rows[2]["receipt_hash"]
+        expected_late_hash = canonical_sha256(
+            {
+                "late_owner_receipt": True,
+                "late_reason": "owner_receipt_after_prior_owner_receipt",
+                "reported_owner_status": "OWNER_TIMEOUT",
+                "reported_owner_receipt_ref": "owner:receipt:2",
+                "owner_payload": {"owner_status": "timeout", "owner_port": "Agent Core"},
+            }
+        )
+        assert receipt_rows[2]["receipt_hash"] == expected_late_hash
 
 
 def test_phase09_product_owner_receipt_rejects_unknown_command(engine) -> None:

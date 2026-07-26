@@ -500,6 +500,15 @@ class ProductRepository:
     ) -> str:
         if payload.get("domain_success_ref"):
             raise ProductPersistenceConflict("Product receipt cannot claim owner domain success")
+        if self._has_owner_receipt(command_id=command_id, tenant_id=tenant_id):
+            payload = {
+                "late_owner_receipt": True,
+                "late_reason": "owner_receipt_after_prior_owner_receipt",
+                "reported_owner_status": status,
+                "reported_owner_receipt_ref": owner_receipt_ref,
+                "owner_payload": payload,
+            }
+            status = "LATE_OWNER_RECEIPT"
         return self._append_receipt(
             command_id,
             tenant_id,
@@ -1114,6 +1123,22 @@ class ProductRepository:
             raise ProductPersistenceConflict("unknown Product AgentVersion")
         if row["status"] != status:
             raise ProductPersistenceConflict(f"Product AgentVersion must be {status}")
+
+    def _has_owner_receipt(self, *, command_id: str, tenant_id: str) -> bool:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT 1
+                FROM product_command_receipts
+                WHERE command_id = :command_id
+                  AND tenant_id = :tenant_id
+                  AND owner_receipt_ref IS NOT NULL
+                LIMIT 1
+                """
+            ),
+            {"command_id": command_id, "tenant_id": tenant_id},
+        ).scalar_one_or_none()
+        return row is not None
 
     def _append_receipt(
         self,

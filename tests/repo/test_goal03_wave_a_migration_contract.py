@@ -8,6 +8,9 @@ MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_kn
 REPAIR_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_37_wave_a_product_runtime_dispatch.py"
 PRODUCT_AGENT_ASSET_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_38_goal03_product_agent_publication_installation.py"
 CAPABILITY_SUPPLY_CHAIN_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_39_capability_version_supply_chain.py"
+PRODUCT_LATE_OWNER_RECEIPT_MIGRATION = (
+    REPO_ROOT / "infra/db/alembic/versions/20260726_40_product_late_owner_receipt.py"
+)
 
 
 def test_goal03_wave_a_migration_is_append_only_single_head_successor() -> None:
@@ -99,3 +102,12 @@ def test_goal03_wave_a_capability_version_supply_chain_migration_adds_verified_r
         "ck_capability_versions_verified_refs",
     ):
         assert fragment in text
+
+
+def test_goal03_wave_a_product_late_owner_receipt_migration_extends_receipt_status() -> None:
+    text = PRODUCT_LATE_OWNER_RECEIPT_MIGRATION.read_text(encoding="utf-8")
+
+    assert 'revision = "20260726_40"' in text
+    assert 'down_revision = "20260726_39"' in text
+    assert "ck_product_receipts_status" in text
+    assert "LATE_OWNER_RECEIPT" in text

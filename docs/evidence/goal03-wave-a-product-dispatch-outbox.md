@@ -17,6 +17,7 @@ commit_scope: Product Surface Backend Runtime repair
   - `product_command_receipts`
   - `infra_outbox_events`
 - `CommandReceipt` 采用 append-only 版本序列；owner/late terminal receipt 继续追加新版本，不覆盖既有 receipt。
+- 同一命令已有 owner receipt 后，后续 owner receipt 会被显式标记为 `LATE_OWNER_RECEIPT`，原始 owner 状态只进入审计 hash payload，不能冒充新的 owner 终态。
 - unknown command 的 owner receipt 会 fail closed 为 `owner receipt target unavailable`，不会冒充已存在命令的后续回执。
 - `infra_outbox_events.topic = product.runtime_request.dispatch`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复相同 client request 只追加 duplicate receipt，不重复创建 command/message/outbox。
@@ -39,8 +40,8 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 ```text
 5 passed
 Product Surface target architecture verification passed.
-20260725_37 (head)
-10 passed
+20260726_40 (head)
+13 passed
 ```
 
 Focused rerun after Agent Core owner unavailable retry guard:
@@ -55,6 +56,26 @@ python -m compileall -q src/backend/zuno/api/services/product/command_service.py
 ```text
 2 passed
 compileall passed
+```
+
+Focused rerun after late owner receipt guard:
+
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_owner_receipts_are_append_only_and_versioned tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
+python -m pytest -q tests/api/test_goal03_product_route.py tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/platform/database/product/domain.py tests/integration/test_goal03_wave_a_persistence.py tests/repo/test_goal03_wave_a_migration_contract.py
+python .agent/scripts/verify_doc_boundaries.py
+alembic -c infra/db/alembic.ini heads
+```
+
+结果：
+
+```text
+7 passed
+12 passed, 1 warning
+compileall passed
+Doc boundary verification passed.
+20260726_40 (head)
 ```
 
 ## 未证明
