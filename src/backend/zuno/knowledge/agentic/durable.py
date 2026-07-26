@@ -80,7 +80,14 @@ class DurableKnowledgeRetrievalPort:
 
     def retrieve(self, request: CorrectiveRetrievalRequest) -> CorrectiveRetrievalResult:
         result = self._runtime.retrieve(request)
-        persistence_trace = self._persist(request, result)
+        try:
+            persistence_trace = self._persist(request, result)
+        except Exception as exc:
+            persistence_trace = {
+                "status": "blocked",
+                "reason": "durable_persistence_failed",
+                "failure_type": type(exc).__name__,
+            }
         trace = dict(result.trace)
         trace["durable_knowledge_port"] = persistence_trace
         return replace(result, trace=trace)

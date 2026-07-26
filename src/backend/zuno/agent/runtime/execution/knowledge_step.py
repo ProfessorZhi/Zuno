@@ -63,13 +63,16 @@ class KnowledgeStepExecutor:
         ledger_records = result.ledger.records()
         evidence_ids = [record.evidence_id for record in ledger_records]
         citation_ids = [f"citation:{record.evidence_id}" for record in ledger_records if record.strict_citation_allowed]
+        durable_trace = result.trace.get("durable_knowledge_port")
+        durable_blocked = isinstance(durable_trace, dict) and durable_trace.get("status") == "blocked"
         observation = NormalizedObservation(
             observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
             step_id=step.step_id,
             kind=ObservationKind.RETRIEVAL,
-            status=ObservationStatus.COMPLETED,
+            status=ObservationStatus.BLOCKED if durable_blocked else ObservationStatus.COMPLETED,
             source=type(deps.knowledge_runtime).__name__,
             summary=f"corrective retrieval action={result.final_action.value} verdict={result.final_verdict.value}",
+            failure_reason="durable_knowledge_persistence_failed" if durable_blocked else None,
             evidence_ids=evidence_ids,
             citation_ids=citation_ids,
             metadata={
@@ -79,10 +82,10 @@ class KnowledgeStepExecutor:
                 "final_verdict": result.final_verdict.value,
                 "rounds": list(result.rounds),
                 "ledger": result.ledger.to_trace(),
-                "durable_knowledge_port": result.trace.get("durable_knowledge_port"),
+                "durable_knowledge_port": durable_trace,
             },
         )
-        return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.COMPLETED, observation=observation)
+        return StepExecutionResult(step_id=step.step_id, status=observation.status, observation=observation)
 
     def _knowledge_space_ids(self, state: AgentRuntimeState) -> list[str]:
         task_state = state.context_pack.task_state if state.context_pack else {}

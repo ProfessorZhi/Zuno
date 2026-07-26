@@ -199,6 +199,12 @@ class _FakeKnowledgeUow:
         return None
 
 
+class _FailingKnowledgeRepo(_FakeKnowledgeRepo):
+    def start_query_run(self, **kwargs) -> None:
+        self.calls.append(("start_query_run", kwargs))
+        raise RuntimeError("postgres-write-unavailable")
+
+
 def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineage() -> None:
     repo = _FakeKnowledgeRepo()
     runtime = DurableKnowledgeRetrievalPort(
@@ -239,3 +245,44 @@ def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineag
     assert citation_call["authorization_ref"] == "authorization:durable"
     assert result.trace["durable_knowledge_port"]["status"] == "committed"
     assert result.trace["durable_knowledge_port"]["evidence_committed"] == 1
+
+
+def test_knowledge_step_blocks_when_durable_persistence_fails() -> None:
+    repo = _FailingKnowledgeRepo()
+    runtime = DurableKnowledgeRetrievalPort(
+        runtime=_runtime(),
+        unit_of_work_factory=lambda: _FakeKnowledgeUow(repo),
+    )
+    state = AgentRuntimeState(
+        run_id="run_durable_fail",
+        thread_id="thread_durable_fail",
+        workspace_id="workspace_corrective",
+        user_id="user_durable_fail",
+        task_id="task_durable_fail",
+        trace_id="trace_durable_fail",
+        goal="renewal notice 30 days anniversary",
+        context_pack=ContextPack(
+            context_pack_id="context_durable_fail",
+            user_goal="renewal notice 30 days anniversary",
+            task_state={"knowledge_space_ids": ["ks_corrective"]},
+        ),
+    )
+
+    result = KnowledgeStepExecutor().execute(
+        state=state,
+        step=PlanStep(
+            step_id="step_durable_fail",
+            goal="retrieve grounded renewal evidence",
+            action_type="retrieve_evidence",
+        ),
+        deps=RuntimeDependencies(knowledge_runtime=runtime),
+    )
+
+    assert result.observation.status == "blocked"
+    assert result.observation.failure_reason == "durable_knowledge_persistence_failed"
+    assert result.observation.metadata["durable_knowledge_port"] == {
+        "status": "blocked",
+        "reason": "durable_persistence_failed",
+        "failure_type": "RuntimeError",
+    }
+    assert [name for name, _ in repo.calls] == ["active_snapshot_id", "start_query_run"]
