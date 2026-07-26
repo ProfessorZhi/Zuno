@@ -43,5 +43,5 @@ Product Surface target architecture verification passed.
 
 ## 未证明
 
-- 浏览器 E2E reconnect/cutover、跨 Owner Projection rebuild worker 编排和 legacy API cutover fault tests 尚未完成。
+- 浏览器 E2E reconnect/cutover 和更大范围 legacy API cutover fault tests 尚未完成。
 - PHASE09 仍是 `in_progress`，不能据此关闭 Goal03 Wave A Gate。

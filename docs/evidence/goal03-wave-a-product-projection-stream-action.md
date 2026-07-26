@@ -44,6 +44,13 @@ ProductRepository.record_projection_rebuild
 → record gap projection event
 → client Last-Event-ID receives RESYNC_REQUIRED
 
+ProductService.consume_projection_rebuild_request
+→ claim PHASE04 outbox topic product.projection.rebuild.requested
+→ record Product worker inbox receipt
+→ ProductRepository.record_projection_rebuild
+→ mark inbox processed
+→ complete outbox
+
 POST /api/v1/completion
 → resolve_completion_cutover_mode
 → CompletionService.stream_unified_runtime
@@ -116,6 +123,18 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_ph
 ```
 
 ```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_projection_rebuild_worker_consumes_owner_outbox -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+1 passed
+11 passed
+```
+
+```powershell
 python -m compileall -q src/backend/zuno/platform/database/product
 git diff --check
 ```
@@ -131,4 +150,4 @@ git diff --check passed with LF/CRLF warnings only
 
 本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析和 fail-closed 事件语义。
 
-本证据不单独证明完整 PHASE09 completed；真实浏览器 E2E client reconnect、跨 Owner Projection rebuild worker 编排和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；真实浏览器 E2E client reconnect 和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。

@@ -1303,3 +1303,100 @@ def test_phase09_product_runtime_dispatch_creates_agent_run_and_owner_receipt(en
             "consumer": "agent-core-product-runtime-dispatch",
             "message_id": "outbox:dispatch:1",
         }
+
+
+def test_phase09_product_projection_rebuild_worker_consumes_owner_outbox(engine) -> None:
+    now = datetime.now(timezone.utc)
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+        receipt = repo.submit_command(
+            _product_command("client:rebuild-worker", {"query": "renewal"}, "command:rebuild-worker")
+        )
+        projection = repo.record_projection_event(
+            projection_event_id="projection:rebuild-worker:accepted",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_module="Product Surface",
+            source_event_id=receipt.command_id,
+            source_watermark=repo.next_projection_watermark(tenant_id="tenant-a", workspace_id="workspace-a"),
+            projection_payload={"command_id": receipt.command_id},
+            redaction_decision_ref="redaction:rebuild-worker:server",
+        )
+        cursor = repo.open_stream_cursor(
+            cursor_id="cursor:rebuild-worker:1",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            projection_event_id=projection.projection_event_id,
+            last_sequence_no=projection.source_watermark,
+            effective_security_epoch_ref="security-epoch:wave-a",
+            expires_at=now + timedelta(minutes=5),
+            reauthorized_at=now,
+        )
+        InfrastructureRepository(conn).enqueue_outbox(
+            event_id="outbox:projection-rebuild:1",
+            tenant_id="tenant-a",
+            aggregate_id="workspace-a",
+            topic="product.projection.rebuild.requested",
+            idempotency_key="projection-rebuild:workspace-a:1",
+            ordering_key="workspace-a",
+            payload={
+                "contract_name": "ProductProjectionRebuildRequest",
+                "producer_module": "Agent Core",
+                "consumer_module": "Product Surface",
+                "tenant_id": "tenant-a",
+                "workspace_id": "workspace-a",
+                "rebuild_id": "rebuild:owner:1",
+                "reason": "agent_core_projection_gap",
+            },
+        )
+
+    result = ProductService.consume_projection_rebuild_request(
+        event_id="outbox:projection-rebuild:1",
+        worker_id="product-projection-worker",
+        engine=engine,
+    )
+
+    assert result.inbox_first_seen is True
+    assert result.projection_status == "recorded"
+    assert result.projection_event_id == "projection-rebuild:rebuild:owner:1"
+    assert result.outbox_status == "published"
+    after_rebuild = datetime.now(timezone.utc)
+
+    with engine.connect() as conn:
+        projection_rows = conn.execute(
+            text(
+                """
+                SELECT projection_event_id, gap_detected, source_module
+                FROM product_projection_events
+                WHERE projection_event_id = 'projection-rebuild:rebuild:owner:1'
+                """
+            )
+        ).mappings().one()
+        assert dict(projection_rows) == {
+            "projection_event_id": "projection-rebuild:rebuild:owner:1",
+            "gap_detected": True,
+            "source_module": "Product Projection Rebuild",
+        }
+        inbox_row = conn.execute(
+            text(
+                """
+                SELECT status, consumer
+                FROM infra_inbox_messages
+                WHERE message_id = 'outbox:projection-rebuild:1'
+                """
+            )
+        ).mappings().one()
+        assert dict(inbox_row) == {
+            "status": "processed",
+            "consumer": "product-projection-rebuild-worker",
+        }
+        resync = ProductRepository(conn).list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            last_event_id=cursor.cursor_id,
+            now=after_rebuild,
+        )
+        assert resync[0].projection_event_id == f"resync:{cursor.cursor_id}"
+        assert resync[0].gap_detected is True

@@ -14,6 +14,8 @@ from zuno.platform.database.product import ProductCommandSubmission, ProductRepo
 PRODUCT_DEFAULT_SECURITY_EPOCH_REF = "security-epoch:product:default"
 PRODUCT_RUNTIME_DISPATCH_TOPIC = "product.runtime_request.dispatch"
 PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
+PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
+PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +50,16 @@ class ProductRuntimeDispatchConsumeResult:
     agent_run_id: str | None
     agent_run_status: str
     owner_receipt_ref: str | None
+    inbox_first_seen: bool
+    outbox_status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductProjectionRebuildConsumeResult:
+    event_id: str
+    rebuild_id: str
+    projection_event_id: str | None
+    projection_status: str
     inbox_first_seen: bool
     outbox_status: str
 
@@ -280,6 +292,74 @@ class ProductService:
         )
 
     @staticmethod
+    def consume_projection_rebuild_request(
+        *,
+        event_id: str,
+        worker_id: str,
+        engine: Any | None = None,
+    ) -> ProductProjectionRebuildConsumeResult:
+        if engine is None:
+            from zuno.database import engine as default_engine
+
+            engine = default_engine
+
+        with engine.begin() as conn:
+            infra_repo = InfrastructureRepository(conn)
+            if not infra_repo.claim_outbox_event(event_id=event_id, worker_id=worker_id):
+                return ProductProjectionRebuildConsumeResult(
+                    event_id=event_id,
+                    rebuild_id="",
+                    projection_event_id=None,
+                    projection_status="not_pending",
+                    inbox_first_seen=False,
+                    outbox_status="not_claimed",
+                )
+            record = infra_repo.load_claimed_outbox_event(event_id=event_id, worker_id=worker_id)
+            payload = dict(record.payload)
+            if (
+                record.topic != PRODUCT_PROJECTION_REBUILD_TOPIC
+                or payload.get("consumer_module") != "Product Surface"
+            ):
+                raise ValueError("outbox event is not a Product projection rebuild request")
+            tenant_id = str(payload["tenant_id"])
+            workspace_id = str(payload["workspace_id"])
+            rebuild_id = str(payload["rebuild_id"])
+            reason = str(payload.get("reason") or "owner_projection_rebuild")
+            receipt = infra_repo.record_inbox_receipt(
+                consumer=PRODUCT_PROJECTION_REBUILD_CONSUMER,
+                message_id=record.event_id,
+                payload=payload,
+                tenant_id=tenant_id,
+                ordering_key=record.ordering_key,
+                ordering_sequence=record.ordering_sequence,
+            )
+            projection_event_id: str | None = None
+            projection_status = "duplicate"
+            if receipt.first_seen:
+                rebuild = ProductRepository(conn).record_projection_rebuild(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    rebuild_id=rebuild_id,
+                    reason=reason,
+                )
+                projection_event_id = rebuild.projection_event_id
+                projection_status = "duplicate" if rebuild.duplicate else "recorded"
+                infra_repo.mark_inbox_processed(
+                    tenant_id=tenant_id,
+                    consumer=PRODUCT_PROJECTION_REBUILD_CONSUMER,
+                    message_id=record.event_id,
+                )
+            infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
+        return ProductProjectionRebuildConsumeResult(
+            event_id=event_id,
+            rebuild_id=rebuild_id,
+            projection_event_id=projection_event_id,
+            projection_status=projection_status,
+            inbox_first_seen=receipt.first_seen,
+            outbox_status="published",
+        )
+
+    @staticmethod
     def list_stream_events(
         *,
         tenant_id: str,
@@ -311,6 +391,7 @@ class ProductService:
 __all__ = [
     "ProductAvailableActionResult",
     "ProductProjectionResult",
+    "ProductProjectionRebuildConsumeResult",
     "ProductRuntimeDispatchConsumeResult",
     "ProductRuntimeRequestResult",
     "ProductService",
