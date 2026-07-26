@@ -4,11 +4,13 @@ status: partial_runtime_evidence
 phase: PHASE14
 commit_scope: GeneralAgent capability context summary cutover
 
-本文只证明本次 Wave A 的默认 general agent 上下文组装切片：`GeneralAgent.prepare_context()` 继续使用 capability selection 结果，但传入模型上下文的 capability item 只保留摘要视图，不再直接暴露完整 `CapabilityRecord`。
+本文只证明本次 Wave A 的默认 general agent 上下文组装切片：`GeneralAgent.prepare_context()` 使用当前 runtime tool inventory 做确定性 capability selection，传入模型上下文的 capability item 只保留摘要视图，不再实例化旧 `CapabilityRegistry` / `DynamicCapabilitySelector` 或直接暴露完整 `CapabilityRecord`。
 
 ## 已证明
 
 - capability item 的 `content` 由摘要视图字符串生成，而不是完整 `CapabilityRecord.to_dict()`。
+- `GeneralAgent.prepare_context()` 不再调用 `DynamicCapabilitySelector(CapabilityRegistry(...))`。
+- 新增静态 guard 测试，禁止默认 GeneralAgent 上下文路径重新实例化 legacy selector / registry。
 - 摘要视图只包含：
   - `name`
   - `type`
@@ -29,10 +31,10 @@ python -m pytest -q tests/agent/test_generalagent_context_memory_runtime.py -p n
 结果：
 
 ```text
-passed
+8 passed
 ```
 
 ## 未证明
 
-- 本证据不证明 PHASE14 的 full legacy registry cutover、安装/激活全链路或 supply-chain crash recovery 全部完成。
-- 该切片只证明默认 model-visible context 已改为摘要视图。
+- 本证据不证明 PHASE14 的所有 legacy facade 已删除；`zuno.capability.registry` / `zuno.capability.selector` 仍作为兼容 facade 存在。
+- 该切片只证明默认 GeneralAgent context selection 与 model-visible context 已不再依赖 legacy registry / selector。

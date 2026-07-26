@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import asyncio
 from types import SimpleNamespace
+from pathlib import Path
 
 from langchain_core.messages import AIMessageChunk, HumanMessage
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _agent_config(enable_memory: bool = True):
@@ -55,6 +59,15 @@ def test_general_agent_prepares_context_packet_and_selected_capability_trace() -
     assert capability_view["schema_keys"] == ["query"]
     assert "permissions" not in capability_item.content
     assert "owner" not in capability_item.content
+
+
+def test_general_agent_default_context_does_not_instantiate_legacy_capability_selector() -> None:
+    source = (
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py"
+    ).read_text(encoding="utf-8")
+
+    assert "DynamicCapabilitySelector" not in source
+    assert "CapabilityRegistry(" not in source
 
 
 def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits_memory() -> None:
