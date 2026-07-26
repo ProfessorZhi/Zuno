@@ -59,20 +59,49 @@ def input_gate(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRunt
 def build_context(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     caller_task_state = dict(state.context_pack.task_state) if state.context_pack else {}
     if deps.memory_engine is not None and hasattr(deps.memory_engine, "build_context_pack"):
+        memory_health = _memory_persistence_health(deps)
+        if not memory_health.get("available", True):
+            context_pack = _fallback_context_pack(
+                state,
+                caller_task_state=caller_task_state,
+                memory_health=memory_health,
+            )
+            return _record_node(
+                replace(state, context_pack=context_pack),
+                RuntimeNode.BUILD_CONTEXT,
+                summary="context pack prepared with memory persistence unavailable",
+            )
         scope = _memory_scope(state)
-        memory_context = deps.memory_engine.build_context_pack(
-            scope=scope,
-            context_pack_id=f"context:{state.run_id}",
-            user_goal=state.goal,
-            task_state={**caller_task_state, "thread_id": state.thread_id, "task_id": state.task_id},
-            selected_evidence=[],
-            allowed_capabilities=state.capability_plan.allowed_capabilities,
-            safety_policy={"memory_context": "enabled"},
-            output_contract={"runtime": "unified_graph_memory_context"},
-            budget_tokens=state.limits.token_budget or 512,
-            task_id=state.task_id,
-            trace_id=state.trace_id,
-        )
+        try:
+            memory_context = deps.memory_engine.build_context_pack(
+                scope=scope,
+                context_pack_id=f"context:{state.run_id}",
+                user_goal=state.goal,
+                task_state={**caller_task_state, "thread_id": state.thread_id, "task_id": state.task_id},
+                selected_evidence=[],
+                allowed_capabilities=state.capability_plan.allowed_capabilities,
+                safety_policy={"memory_context": "enabled"},
+                output_contract={"runtime": "unified_graph_memory_context"},
+                budget_tokens=state.limits.token_budget or 512,
+                task_id=state.task_id,
+                trace_id=state.trace_id,
+            )
+        except Exception as exc:
+            context_pack = _fallback_context_pack(
+                state,
+                caller_task_state=caller_task_state,
+                memory_health={
+                    "available": False,
+                    "ready": False,
+                    "source": "memory_engine",
+                    "error_code": type(exc).__name__,
+                },
+            )
+            return _record_node(
+                replace(state, context_pack=context_pack),
+                RuntimeNode.BUILD_CONTEXT,
+                summary="context pack prepared after memory persistence error",
+            )
         context_payload = dict(memory_context["context_pack"])
         items = list(memory_context.get("items") or [])
         context_payload["task_state"] = {
@@ -326,44 +355,65 @@ def finalize(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntim
 
 
 def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-    if deps.memory_engine is not None:
+    task_state = dict(state.context_pack.task_state) if state.context_pack else {}
+    if deps.memory_engine is not None and not task_state.get("memory_persistence_unavailable"):
         scope = _memory_scope(state)
-        event = deps.memory_engine.append_event(
-            scope=scope,
-            event_id=f"event:{state.run_id}:post_turn",
-            event_type="agent_turn",
-            payload={
-                "task": state.goal,
-                "finalization_status": _enum_value(state.finalization_status),
-                "reflection_decision": _enum_value(state.reflection_decision) if state.reflection_decision else "",
-                "artifact_refs": list(state.artifact_refs),
-                "evidence_refs": list(state.evidence_refs),
-            },
-            trace_id=state.trace_id,
-            task_id=state.task_id,
-        )
-        deps.memory_engine.summarize_task(
-            scope=scope,
-            summary_id=f"summary:{state.run_id}",
-            content=f"{state.goal} -> {_enum_value(state.finalization_status)}",
-            source_event_ids=(event.event_id,),
-            token_count=max(1, len(state.goal) // 4),
-            metadata={"trace_id": state.trace_id, "task_id": state.task_id},
-        )
-        refs = [f"summary:{state.run_id}"]
-        lesson = _REFLEXION_BUILDER.build(state)
-        if lesson is not None:
-            candidate = deps.memory_engine.submit_reflexion_lesson_candidate(
+        try:
+            event = deps.memory_engine.append_event(
                 scope=scope,
-                lesson=lesson,
-                retention_policy=RetentionPolicy(ttl_days=365),
+                event_id=f"event:{state.run_id}:post_turn",
+                event_type="agent_turn",
+                payload={
+                    "task": state.goal,
+                    "finalization_status": _enum_value(state.finalization_status),
+                    "reflection_decision": _enum_value(state.reflection_decision) if state.reflection_decision else "",
+                    "artifact_refs": list(state.artifact_refs),
+                    "evidence_refs": list(state.evidence_refs),
+                },
+                trace_id=state.trace_id,
+                task_id=state.task_id,
             )
-            refs.append(candidate.candidate_id)
-        return _record_node(
-            replace(state, memory_candidate_refs=[*state.memory_candidate_refs, *refs]),
-            RuntimeNode.POST_TURN_COMMIT,
-            summary="post-turn memory committed",
-        )
+            deps.memory_engine.summarize_task(
+                scope=scope,
+                summary_id=f"summary:{state.run_id}",
+                content=f"{state.goal} -> {_enum_value(state.finalization_status)}",
+                source_event_ids=(event.event_id,),
+                token_count=max(1, len(state.goal) // 4),
+                metadata={"trace_id": state.trace_id, "task_id": state.task_id},
+            )
+            refs = [f"summary:{state.run_id}"]
+            lesson = _REFLEXION_BUILDER.build(state)
+            if lesson is not None:
+                candidate = deps.memory_engine.submit_reflexion_lesson_candidate(
+                    scope=scope,
+                    lesson=lesson,
+                    retention_policy=RetentionPolicy(ttl_days=365),
+                )
+                refs.append(candidate.candidate_id)
+            return _record_node(
+                replace(state, memory_candidate_refs=[*state.memory_candidate_refs, *refs]),
+                RuntimeNode.POST_TURN_COMMIT,
+                summary="post-turn memory committed",
+            )
+        except Exception as exc:
+            task_state = {**task_state, "memory_persistence_unavailable": True, "memory_persistence_error": type(exc).__name__}
+            context_pack = (
+                state.context_pack.model_copy(update={"task_state": task_state})
+                if state.context_pack
+                else None
+            )
+            return _record_node(
+                replace(
+                    state,
+                    context_pack=context_pack,
+                    memory_candidate_refs=[
+                        *state.memory_candidate_refs,
+                        f"memory_candidate:{state.run_id}:persistence_unavailable",
+                    ],
+                ),
+                RuntimeNode.POST_TURN_COMMIT,
+                summary="post-turn memory skipped after persistence error",
+            )
     memory_refs = state.memory_candidate_refs or [f"memory_candidate:{state.run_id}:summary"]
     return _record_node(
         replace(state, memory_candidate_refs=memory_refs),
@@ -378,6 +428,54 @@ def _memory_scope(state: AgentRuntimeState) -> MemoryScope:
         agent_id="unified_runtime",
         project_id=state.workspace_id,
         thread_id=state.thread_id,
+    )
+
+
+def _memory_persistence_health(deps: RuntimeDependencies) -> dict:
+    store = getattr(deps.memory_engine, "store", None)
+    if store is None or not hasattr(store, "persistence_health"):
+        return {"available": True, "ready": True, "source": type(store).__name__ if store is not None else "none"}
+    return dict(store.persistence_health())
+
+
+def _fallback_context_pack(
+    state: AgentRuntimeState,
+    *,
+    caller_task_state: dict,
+    memory_health: dict,
+) -> ContextPack:
+    task_state = {
+        **caller_task_state,
+        "thread_id": state.thread_id,
+        "task_id": state.task_id,
+        "memory_persistence_unavailable": True,
+        "memory_persistence_health": dict(memory_health),
+        "memory_context_trace": {"status": "blocked", "reason": "memory_persistence_unavailable"},
+        "memory_context_items": [],
+        "memory_influenced_strategy": False,
+        "memory_strategy_hints": [],
+    }
+    if state.context_pack is not None:
+        return state.context_pack.model_copy(
+            update={
+                "task_state": task_state,
+                "safety_policy": {
+                    **dict(state.context_pack.safety_policy),
+                    "memory_context": "persistence_unavailable",
+                },
+                "output_contract": {
+                    **dict(state.context_pack.output_contract),
+                    "memory_status": "persistence_unavailable",
+                },
+            }
+        )
+    return ContextPack(
+        context_pack_id=f"context:{state.run_id}",
+        user_goal=state.goal,
+        task_state=task_state,
+        safety_policy={"memory_context": "persistence_unavailable"},
+        output_contract={"runtime": "unified_graph_memory_context", "memory_status": "persistence_unavailable"},
+        budget=state.limits.model_dump(),
     )
 
 

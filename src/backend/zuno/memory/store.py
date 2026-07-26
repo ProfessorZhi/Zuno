@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+import socket
+from time import monotonic
 from typing import Any
+
+from sqlalchemy.engine import make_url
 from uuid import uuid4
 
 from sqlalchemy import text
@@ -212,6 +216,38 @@ class DatabaseMemoryStore(InMemoryLayerStore):
 
     def __init__(self, *, session_factory: Callable[[], Session] | None = None) -> None:
         self._session_factory = session_factory
+        self._persistence_probe_expires_at = 0.0
+        self._persistence_probe_result: dict[str, Any] | None = None
+
+    def persistence_health(self) -> dict[str, Any]:
+        if self._session_factory is not None:
+            return {"available": True, "ready": True, "source": "custom_session_factory"}
+        now = monotonic()
+        if self._persistence_probe_result is not None and now < self._persistence_probe_expires_at:
+            return dict(self._persistence_probe_result)
+        try:
+            from zuno.platform.database import postgres_runtime
+
+            url = make_url(getattr(postgres_runtime.config, "sync_url", ""))
+            host = url.host or "localhost"
+            port = int(url.port or 5432)
+            with socket.create_connection((host, port), timeout=0.25):
+                result = {
+                    "available": True,
+                    "ready": True,
+                    "source": "postgres_runtime",
+                    "error_code": "",
+                }
+        except Exception as exc:
+            result = {
+                "available": False,
+                "ready": False,
+                "source": "postgres_runtime",
+                "error_code": type(exc).__name__,
+            }
+        self._persistence_probe_result = result
+        self._persistence_probe_expires_at = now + 5.0
+        return dict(result)
 
     def append_raw_event(self, event: RawMemoryEvent) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
