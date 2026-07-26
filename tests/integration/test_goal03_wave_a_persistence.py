@@ -1100,6 +1100,31 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
         assert dispatch["consumer_module"] == "Agent Core"
         assert dispatch["snapshot_id"] == "cap-snapshot:1"
         assert dispatch["ordering_sequence"] == 1
+        consumed = CapabilityService.consume_selection_event(
+            event_id="outbox:selection:1",
+            worker_id="agent-core-selection-worker",
+            engine=conn,
+        )
+        assert consumed.selection_id == "selection:1"
+        assert consumed.snapshot_id == "cap-snapshot:1"
+        assert consumed.inbox_first_seen is True
+        assert consumed.outbox_status == "published"
+        persisted = conn.execute(
+            text(
+                """
+                SELECT i.status AS inbox_status,
+                       o.status AS outbox_status
+                FROM infra_inbox_messages i
+                JOIN infra_outbox_events o ON o.event_id = i.message_id
+                WHERE i.consumer = 'agent-core-capability-selection'
+                  AND i.message_id = 'outbox:selection:1'
+                """
+            )
+        ).mappings().one()
+        assert dict(persisted) == {
+            "inbox_status": "processed",
+            "outbox_status": "published",
+        }
 
 
 def test_phase14_capability_installation_activation_uses_cas_and_revocation_filters_snapshot(engine) -> None:

@@ -15,6 +15,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 - `CapabilityRepository.record_selection` 只在新 `capability_selection_results` 插入成功时写入 `infra_outbox_events`。
 - `infra_outbox_events.topic = capability.selection.committed`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复提交同一 selection 不重复创建 outbox 事件。
+- `CapabilityService.consume_selection_event(...)` 会 claim `capability.selection.committed` outbox，写入 Agent Core consumer inbox，mark processed，并 complete outbox；这证明 selection fact 可以进入 Agent Core inbox，而不是停留在只读 projection。
 - Capability 仍只产生 selection/projection，不执行 Tool，不拥有 Approval、Credential 或 ToolAttempt。
 
 ## 已运行验证
@@ -30,6 +31,7 @@ python -m compileall -q src/backend/zuno/agent src/backend/zuno/platform/databas
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_doc_boundaries.py
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase14_capability_blocks_unverified_skill_and_model_only_active_binding -p no:cacheprovider
 ```
 
 结果：
@@ -43,6 +45,8 @@ Capability / Skill target architecture verification passed.
 3 passed
 Repository structure verification passed.
 Doc boundary verification passed.
+12 passed
+1 passed
 ```
 
 ## 历史失败指纹

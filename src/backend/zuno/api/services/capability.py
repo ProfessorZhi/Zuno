@@ -13,6 +13,8 @@ from zuno.services.capability_registry import CapabilityRegistryService
 
 CAPABILITY_TRANSITION_TOPIC = "capability.transition.committed"
 CAPABILITY_TRANSITION_CONSUMER = "agent-core-capability-transition"
+CAPABILITY_SELECTION_TOPIC = "capability.selection.committed"
+CAPABILITY_SELECTION_CONSUMER = "agent-core-capability-selection"
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +23,15 @@ class CapabilityTransitionConsumeResult:
     transition_id: str
     aggregate_ref: str
     committed_generation: int | None
+    inbox_first_seen: bool
+    outbox_status: str
+
+
+@dataclass(frozen=True, slots=True)
+class CapabilitySelectionConsumeResult:
+    event_id: str
+    snapshot_id: str
+    selection_id: str
     inbox_first_seen: bool
     outbox_status: str
 
@@ -175,5 +186,63 @@ class CapabilityService:
             outbox_status="published",
         )
 
+    @staticmethod
+    def consume_selection_event(
+        *,
+        event_id: str,
+        worker_id: str,
+        engine: Any | None = None,
+    ) -> CapabilitySelectionConsumeResult:
+        if engine is None:
+            from zuno.database import engine as default_engine
 
-__all__ = ["CapabilityService", "CapabilityTransitionConsumeResult"]
+            engine = default_engine
+
+        context = nullcontext(engine) if hasattr(engine, "execute") else engine.begin()
+        with context as conn:
+            infra_repo = InfrastructureRepository(conn)
+            if not infra_repo.claim_outbox_event(event_id=event_id, worker_id=worker_id):
+                return CapabilitySelectionConsumeResult(
+                    event_id=event_id,
+                    snapshot_id="",
+                    selection_id="",
+                    inbox_first_seen=False,
+                    outbox_status="not_claimed",
+                )
+            record = infra_repo.load_claimed_outbox_event(event_id=event_id, worker_id=worker_id)
+            payload = dict(record.payload)
+            if (
+                record.topic != CAPABILITY_SELECTION_TOPIC
+                or payload.get("consumer_module") != "Agent Core"
+            ):
+                raise ValueError("outbox event is not an Agent Core capability selection")
+            tenant_id = str(record.tenant_id)
+            receipt = infra_repo.record_inbox_receipt(
+                consumer=CAPABILITY_SELECTION_CONSUMER,
+                message_id=record.event_id,
+                payload=payload,
+                tenant_id=tenant_id,
+                ordering_key=record.ordering_key,
+                ordering_sequence=record.ordering_sequence,
+            )
+            if receipt.first_seen:
+                infra_repo.mark_inbox_processed(
+                    tenant_id=tenant_id,
+                    consumer=CAPABILITY_SELECTION_CONSUMER,
+                    message_id=record.event_id,
+                )
+            infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
+        return CapabilitySelectionConsumeResult(
+            event_id=event_id,
+            snapshot_id=str(payload.get("snapshot_id") or ""),
+            selection_id=str(payload.get("selection_id") or ""),
+            inbox_first_seen=receipt.first_seen,
+            outbox_status="published",
+        )
+
+
+__all__ = [
+    "CapabilitySelectionConsumeResult",
+    "CapabilityService",
+    "CapabilityTransitionConsumeResult",
+]
