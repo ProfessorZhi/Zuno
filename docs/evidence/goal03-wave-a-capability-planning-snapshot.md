@@ -57,5 +57,5 @@ retry count: 1
 
 ## 未证明
 
-- PHASE14 的 Installation/Activation CAS、revocation propagation、supply-chain crash recovery、progressive loading budget 和 legacy registry full cutover 尚未完成。
+- 本证据不单独证明 PHASE14 的 Installation/Activation CAS、revocation propagation、ordered transition crash recovery、progressive loading budget 或 legacy registry cutover；这些需结合对应 evidence 做 Closure Gate 汇总。
 - PHASE14 仍是 `in_progress`，不能据此关闭 Wave A Gate。

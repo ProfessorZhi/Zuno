@@ -40,5 +40,5 @@ Capability / Skill target architecture verification passed.
 
 ## 未证明
 
-- 这只证明 Planner 可见 exposure 受预算和摘要边界控制，不证明 PHASE14 的 installation / activation CAS、revocation propagation、supply-chain crash recovery 或 legacy registry full cutover 已完成。
+- 这只证明 Planner 可见 exposure 受预算和摘要边界控制，不单独证明 PHASE14 的 installation / activation CAS、revocation propagation、ordered transition crash recovery 或 legacy registry cutover；这些需结合对应 evidence 做 Closure Gate 汇总。
 - PHASE14 仍是 `in_progress`，不能据此关闭 Wave A Gate。

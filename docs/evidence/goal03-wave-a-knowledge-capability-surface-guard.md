@@ -33,4 +33,4 @@ git diff --check
 ## 未证明
 
 - 本证据不证明 PHASE12 external BM25/Vector/Graph adapter、ACL/Temporal/Conflict、rollback 和 deletion propagation 全部完成。
-- 本证据不证明 PHASE14 Installation/Activation CAS、revocation propagation、supply-chain crash recovery、progressive loading budget 和 full legacy registry cutover 全部完成。
+- 本证据不证明 PHASE14 Installation/Activation CAS、revocation propagation、ordered transition crash recovery、progressive loading budget 和 legacy registry cutover 全部完成；这些需结合对应 PHASE14 evidence 做 Closure Gate 汇总。
