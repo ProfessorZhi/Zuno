@@ -15,7 +15,7 @@ from zuno.platform.database.capability import (
     CapabilitySupplyChainConflict,
 )
 from zuno.platform.database.capability.domain import CapabilityVersionInput
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.database.foundation import FencingRejectedError, InfrastructureRepository, create_foundation_engine
 from zuno.platform.database.knowledge import (
     KnowledgeCutoverConflict,
     KnowledgeEvidenceConflict,
@@ -1131,3 +1131,87 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
                 "status": "pending",
             },
         ]
+
+        infra_repo = InfrastructureRepository(conn)
+        assert infra_repo.claim_outbox(
+            worker_id="capability-crashed-worker",
+            limit=1,
+            topics=("capability.transition.committed",),
+        ) == ["outbox:activation:active-read:1"]
+        activation_record = infra_repo.load_claimed_outbox_event(
+            event_id="outbox:activation:active-read:1",
+            worker_id="capability-crashed-worker",
+        )
+        assert activation_record.idempotency_key == "activation:active-read:1"
+        assert activation_record.ordering_key == "installation:active-read"
+        assert activation_record.ordering_sequence == 1
+        with pytest.raises(FencingRejectedError):
+            infra_repo.complete_outbox(
+                event_id="outbox:activation:active-read:1",
+                worker_id="capability-wrong-worker",
+            )
+        failure = infra_repo.record_outbox_publish_failure(
+            event_id="outbox:activation:active-read:1",
+            worker_id="capability-crashed-worker",
+            error_code="CrashBeforeAck",
+            max_attempts=3,
+            base_backoff_seconds=0,
+            max_backoff_seconds=0,
+        )
+        assert (failure.status, failure.publish_attempts, failure.retry_count) == ("pending", 1, 1)
+        conn.execute(
+            text(
+                """
+                UPDATE infra_outbox_events
+                SET next_attempt_at = now()
+                WHERE event_id = 'outbox:activation:active-read:1'
+                """
+            )
+        )
+        assert (
+            infra_repo.claim_outbox_event(
+                event_id="outbox:revocation:active-read:2",
+                worker_id="capability-out-of-order-worker",
+            )
+            is False
+        )
+
+        assert infra_repo.claim_outbox(
+            worker_id="capability-recovery-worker",
+            limit=1,
+            topics=("capability.transition.committed",),
+        ) == ["outbox:activation:active-read:1"]
+        recovered_record = infra_repo.load_claimed_outbox_event(
+            event_id="outbox:activation:active-read:1",
+            worker_id="capability-recovery-worker",
+        )
+        assert recovered_record.payload_hash == activation_record.payload_hash
+        infra_repo.complete_outbox(
+            event_id="outbox:activation:active-read:1",
+            worker_id="capability-recovery-worker",
+        )
+        first_receipt = infra_repo.record_inbox_receipt(
+            consumer="agent-core-capability-transition",
+            message_id=recovered_record.event_id,
+            payload=recovered_record.payload,
+            tenant_id="tenant-a",
+            ordering_key=recovered_record.ordering_key,
+            ordering_sequence=recovered_record.ordering_sequence,
+        )
+        duplicate_receipt = infra_repo.record_inbox_receipt(
+            consumer="agent-core-capability-transition",
+            message_id=recovered_record.event_id,
+            payload=recovered_record.payload,
+            tenant_id="tenant-a",
+            ordering_key=recovered_record.ordering_key,
+            ordering_sequence=recovered_record.ordering_sequence,
+        )
+        assert first_receipt.first_seen is True
+        assert duplicate_receipt.first_seen is False
+        assert duplicate_receipt.payload_hash == first_receipt.payload_hash
+
+        assert infra_repo.claim_outbox(
+            worker_id="capability-next-worker",
+            limit=1,
+            topics=("capability.transition.committed",),
+        ) == ["outbox:revocation:active-read:2"]

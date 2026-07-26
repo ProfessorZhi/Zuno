@@ -442,15 +442,26 @@ class InfrastructureRepository:
             text(
                 """
                 WITH selected AS (
-                    SELECT event_id
-                    FROM infra_outbox_events
-                    WHERE status = 'pending'
-                      AND next_attempt_at <= now()
+                    SELECT event.event_id
+                    FROM infra_outbox_events AS event
+                    WHERE event.status = 'pending'
+                      AND event.next_attempt_at <= now()
                       AND (
                           :topic_filter_enabled = false
-                          OR topic = ANY(CAST(:topics AS text[]))
+                          OR event.topic = ANY(CAST(:topics AS text[]))
                       )
-                    ORDER BY created_at, event_id
+                      AND (
+                          event.ordering_key IS NULL
+                          OR NOT EXISTS (
+                              SELECT 1
+                              FROM infra_outbox_events AS earlier
+                              WHERE earlier.tenant_id = event.tenant_id
+                                AND earlier.ordering_key = event.ordering_key
+                                AND earlier.ordering_sequence < event.ordering_sequence
+                                AND earlier.status <> 'published'
+                          )
+                      )
+                    ORDER BY event.created_at, event.event_id
                     FOR UPDATE SKIP LOCKED
                     LIMIT :limit
                 )
@@ -479,6 +490,17 @@ class InfrastructureRepository:
                 WHERE event_id = :event_id
                   AND status = 'pending'
                   AND next_attempt_at <= now()
+                  AND (
+                      ordering_key IS NULL
+                      OR NOT EXISTS (
+                          SELECT 1
+                          FROM infra_outbox_events AS earlier
+                          WHERE earlier.tenant_id = infra_outbox_events.tenant_id
+                            AND earlier.ordering_key = infra_outbox_events.ordering_key
+                            AND earlier.ordering_sequence < infra_outbox_events.ordering_sequence
+                            AND earlier.status <> 'published'
+                      )
+                  )
                 RETURNING event_id
                 """
             ),
