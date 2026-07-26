@@ -9,7 +9,6 @@ from zuno.agent.runtime.state import AgentRuntimeState
 
 class RuntimeStrategySelector:
     def select(self, state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
-        del deps
         output = build_default_strategy_selector().select(
             PlanningRequest(
                 task_id=state.task_id,
@@ -18,7 +17,7 @@ class RuntimeStrategySelector:
                 user_goal=state.goal,
                 requested_retrieval_profile=RetrievalProfile.STANDARD,
                 context_pack=state.context_pack.model_dump(mode="json") if state.context_pack else {},
-                pinned_capability_plan=_pinned_capability_plan(state),
+                pinned_capability_plan=_capability_plan(state=state, deps=deps),
                 available_capability_ids=tuple(state.capability_plan.allowed_capabilities),
                 user_roles=("analyst",),
             )
@@ -66,6 +65,43 @@ class RuntimeStrategySelector:
             state.context_pack = state.context_pack.model_copy(update={"task_state": task_state})
         state.trace_event_ids.extend(event.event_id for event in output.trace_events)
         return state
+
+
+def _capability_plan(state: AgentRuntimeState, deps: RuntimeDependencies | None) -> CapabilityPlan | None:
+    pinned = _pinned_capability_plan(state)
+    if pinned is not None:
+        return pinned
+    if deps is None or deps.capability_runtime is None or not state.capability_plan.allowed_capabilities:
+        return None
+    try:
+        selected = deps.capability_runtime.select(
+            {
+                "task_id": state.task_id,
+                "trace_id": state.trace_id,
+                "workspace_id": state.workspace_id,
+                "user_id": state.user_id,
+                "tenant_id": f"user:{state.user_id}",
+                "user_goal": state.goal,
+                "available_capability_ids": tuple(state.capability_plan.allowed_capabilities),
+                "user_roles": ("analyst",),
+            }
+        )
+    except Exception as exc:
+        return CapabilityPlan(
+            selection_validity="blocked_capability_selection",
+            blocked_capability_reasons={
+                capability_id: f"capability_runtime_unavailable:{type(exc).__name__}"
+                for capability_id in state.capability_plan.allowed_capabilities
+            },
+            risk_summary={
+                "blocked": True,
+                "reason": "capability_runtime_unavailable",
+                "failure_type": type(exc).__name__,
+            },
+        )
+    if isinstance(selected, CapabilityPlan):
+        return selected
+    return CapabilityPlan.model_validate(selected)
 
 
 def _pinned_capability_plan(state: AgentRuntimeState) -> CapabilityPlan | None:

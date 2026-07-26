@@ -18,6 +18,7 @@ from zuno.agent.runtime import (
     UnsupportedRuntimeStateVersion,
 )
 from zuno.agent.runtime.planning import RuntimeStrategySelector
+from zuno.agent.runtime.dependencies import RuntimeDependencies
 
 
 def test_runtime_snapshot_round_trips_as_json_with_string_enums() -> None:
@@ -208,3 +209,80 @@ def test_runtime_strategy_selection_reuses_pinned_capability_refs() -> None:
         for step in selected.plan_state.steps
     )
     assert all(step.tool_policy_ref == "capability_selection:pinned" for step in selected.plan_state.steps)
+
+
+def test_runtime_strategy_selection_uses_capability_runtime_port() -> None:
+    class FakeCapabilityRuntime:
+        def __init__(self) -> None:
+            self.requests = []
+
+        def select(self, request):
+            self.requests.append(dict(request))
+            return CapabilityPlan(
+                availability_snapshot_ref="capability_snapshot:runtime",
+                selection_result_ref="capability_selection:runtime",
+                selection_validity="fixed_planning_snapshot",
+                allowed_capabilities=["tool.web.search"],
+                allowed_tools=["tool.web.search"],
+                risk_summary={
+                    "planner_exposure": {
+                        "exposure_ref": "capability_exposure:runtime",
+                        "visibility": "planner_authorized_summary_schema_only",
+                    }
+                },
+            )
+
+    capability_runtime = FakeCapabilityRuntime()
+    state = AgentRuntimeState(
+        run_id="run-runtime-capability",
+        thread_id="thread-runtime-capability",
+        workspace_id="workspace-capability",
+        user_id="user-runtime-capability",
+        task_id="task-runtime-capability",
+        trace_id="trace-runtime-capability",
+        goal="Search the web for sources and summarize the result.",
+        capability_plan=CapabilityPlan(
+            allowed_capabilities=["tool.web.search"],
+        ),
+    )
+
+    selected = RuntimeStrategySelector().select(
+        state,
+        deps=RuntimeDependencies(capability_runtime=capability_runtime),
+    )
+
+    assert capability_runtime.requests[0]["available_capability_ids"] == ("tool.web.search",)
+    assert selected.capability_plan.availability_snapshot_ref == "capability_snapshot:runtime"
+    assert selected.capability_plan.selection_result_ref == "capability_selection:runtime"
+    assert all(step.tool_policy_ref == "capability_selection:runtime" for step in selected.plan_state.steps)
+
+
+def test_runtime_strategy_selection_blocks_when_capability_runtime_fails() -> None:
+    class FailingCapabilityRuntime:
+        def select(self, request):
+            del request
+            raise RuntimeError("capability-db-unavailable")
+
+    state = AgentRuntimeState(
+        run_id="run-capability-fail",
+        thread_id="thread-capability-fail",
+        workspace_id="workspace-capability",
+        user_id="user-capability-fail",
+        task_id="task-capability-fail",
+        trace_id="trace-capability-fail",
+        goal="Search the web for sources and summarize the result.",
+        capability_plan=CapabilityPlan(
+            allowed_capabilities=["tool.web.search"],
+        ),
+    )
+
+    selected = RuntimeStrategySelector().select(
+        state,
+        deps=RuntimeDependencies(capability_runtime=FailingCapabilityRuntime()),
+    )
+
+    assert selected.capability_plan.selection_validity == "blocked_capability_selection"
+    assert selected.capability_plan.allowed_tools == []
+    assert selected.capability_plan.blocked_capability_reasons == {
+        "tool.web.search": "capability_runtime_unavailable:RuntimeError"
+    }

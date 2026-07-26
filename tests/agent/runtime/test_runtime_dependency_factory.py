@@ -12,6 +12,7 @@ from zuno.knowledge.indexing.runtime import KnowledgeIndexRuntime
 from zuno.knowledge.agentic import DurableKnowledgeRetrievalPort
 from zuno.memory.engine import MemoryEngine
 from zuno.memory.store import DatabaseMemoryStore
+from zuno.capability.planning_runtime import CapabilityPlanningRuntime
 
 
 def _state() -> AgentRuntimeState:
@@ -48,6 +49,7 @@ def test_runtime_dependency_factory_builds_completion_dependencies(tmp_path) -> 
     assert assembly.dependencies.tool_control_plane is not None
     assert getattr(assembly.dependencies.tool_control_plane, "_security_approval_sink", None) is not None
     assert isinstance(assembly.dependencies.knowledge_runtime, DurableKnowledgeRetrievalPort)
+    assert isinstance(assembly.dependencies.capability_runtime, CapabilityPlanningRuntime)
 
 
 def test_runtime_dependency_factory_can_disable_knowledge_runtime_for_unit_boundaries(tmp_path) -> None:

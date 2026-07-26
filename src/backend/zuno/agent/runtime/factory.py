@@ -53,6 +53,7 @@ class RuntimeDependencyFactory:
             model_gateway=self._model_gateway(),
             memory_engine=self._memory_engine(),
             knowledge_runtime=self._knowledge_runtime(),
+            capability_runtime=self._capability_runtime(),
             tool_control_plane=self._tool_control_plane(),
         )
 
@@ -89,6 +90,15 @@ class RuntimeDependencyFactory:
         return DurableKnowledgeRetrievalPort(
             runtime=runtime,
             unit_of_work_factory=lambda: KnowledgeUnitOfWork(engine),
+        )
+
+    def _capability_runtime(self) -> object:
+        from zuno.capability.planning_runtime import CapabilityPlanningRuntime
+        from zuno.platform.database.capability import CapabilityUnitOfWork
+        from zuno.platform.database import engine
+
+        return CapabilityPlanningRuntime(
+            unit_of_work_factory=lambda: CapabilityUnitOfWork(engine),
         )
 
     def _tool_control_plane(self) -> object | None:

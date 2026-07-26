@@ -14,6 +14,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 - Planner 生成的每个 `PlanStep` 都把同一组 `availability_snapshot_ref` / `selection_result_ref` 固定进 `input_refs`，并以 `selection_result_ref` 作为 `tool_policy_ref`；`plan_created` trace payload 同步暴露 snapshot / selection / validity，供执行层和 Closure Review 审计每一步来自同一个 capability decision。
 - 默认 `RuntimeStrategySelector` 在 strategy select 后把 `capability_availability_snapshot_ref`、`capability_selection_result_ref`、`capability_selection_validity`、`capability_planner_exposure_ref` 和 exposure visibility 写入 `ContextPack.task_state`；`AgentRuntimeSnapshot` round-trip 后仍保留这些 refs，不只停留在瞬时内存字段。
 - 默认 `RuntimeStrategySelector` 在 ContextPack 已有 `fixed_planning_snapshot` refs 时复用 pinned capability plan，不重新生成新的 selection；resume/replan 后 `PlanStep.input_refs` 和 `tool_policy_ref` 继续指向原 selection。
+- 默认 `RuntimeDependencyFactory` 提供 `CapabilityPlanningRuntime`；`RuntimeStrategySelector` 通过 `deps.capability_runtime.select(...)` 获取 capability plan，不在默认 runtime 内直接遍历 legacy registry。Capability runtime / Repository 不可用时，selection fail closed 为 `blocked_capability_selection`，不会回退到 Planner 本地选择。
 - `CapabilityRepository.record_selection` 只在新 `capability_selection_results` 插入成功时写入 `infra_outbox_events`。
 - `CapabilityRepository.record_selection` 在 Repository 边界规范化 `candidate_summary` 与 `rejection_reason_codes`：同一候选集合即使输入顺序不同，也产生相同 `candidate_summary_hash` / `selection_hash`；selection outbox payload 携带 `candidate_summary.deterministic_candidate_order` 和去重排序后的 reason codes，供 Agent Core 审计多候选排序与拒绝原因。
 - `infra_outbox_events.topic = capability.selection.committed`，payload 明确标记 `consumer_module = Agent Core`。
@@ -91,6 +92,26 @@ python -m compileall -q src/backend/zuno/agent/planning.py src/backend/zuno/agen
 13 passed
 14 passed
 21 passed, 1 warning
+13 passed
+Capability / Skill target architecture verification passed.
+compileall passed
+```
+
+Focused rerun after default capability runtime port:
+
+```powershell
+python -m pytest -q tests/agent/runtime/test_runtime_state_contract.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/agent/runtime/test_runtime_state_contract.py tests/agent/test_planning_control_runtime.py tests/capability/test_capability_skill_layer.py tests/agent/test_capability_layer_surfaces.py -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python tools/scripts/verify_capability_skill_target_protocols.py
+python -m compileall -q src/backend/zuno/capability/planning_runtime.py src/backend/zuno/agent/runtime/factory.py src/backend/zuno/agent/runtime/planning/selector.py tests/agent/runtime/test_runtime_state_contract.py tests/agent/runtime/test_runtime_dependency_factory.py
+```
+
+结果：
+
+```text
+13 passed
+29 passed
 13 passed
 Capability / Skill target architecture verification passed.
 compileall passed
