@@ -73,6 +73,7 @@ class KnowledgeIndexRuntime:
                 acl_scopes=_acl_scopes(document),
                 sensitivity_tags=_sensitivity_tags(document),
                 adapter_status=adapter_status_for_targets(list(targets)),
+                adapter_visibility_receipts={},
                 **_manifest_lineage_fields(lineage),
             )
             self._jobs[job_id] = manifest
@@ -123,6 +124,12 @@ class KnowledgeIndexRuntime:
             acl_scopes=_acl_scopes(document),
             sensitivity_tags=_sensitivity_tags(document),
             adapter_status=adapter_status_for_targets(list(targets)),
+            adapter_visibility_receipts=self._adapter_visibility_receipts(
+                knowledge_space_id=knowledge_space_id,
+                index_version=space.index_version,
+                document=document,
+                target_status=target_status,
+            ),
             **_manifest_lineage_fields(lineage),
         )
         self._jobs[job_id] = manifest
@@ -167,6 +174,7 @@ class KnowledgeIndexRuntime:
             source
             for source in ["bm25", "vector", "graph"]
             if result.manifest.target_status.get(source) == "ready"
+            and result.manifest.adapter_visibility_receipts.get(source, {}).get("visibility") == "visible"
         ]
         return {
             "knowledge_space_id": result.knowledge_space_id,
@@ -174,6 +182,10 @@ class KnowledgeIndexRuntime:
             "query": result.query,
             "retrievers_used": retrievers_used,
             "index_health": {source: result.manifest.target_status[source] for source in retrievers_used},
+            "adapter_visibility_receipts": {
+                source: result.manifest.adapter_visibility_receipts[source]
+                for source in retrievers_used
+            },
             "documents_by_source": result.documents_by_source,
             "manifest": result.manifest.model_dump(),
         }
@@ -201,6 +213,40 @@ class KnowledgeIndexRuntime:
         }
         self._jobs[manifest.job_id] = manifest
         self._latest_job_by_space[manifest.knowledge_space_id] = manifest.job_id
+
+    @staticmethod
+    def _adapter_visibility_receipts(
+        *,
+        knowledge_space_id: str,
+        index_version: str,
+        document: CanonicalDocumentIR,
+        target_status: dict[str, str],
+    ) -> dict[str, dict]:
+        receipts: dict[str, dict] = {}
+        for target in ["bm25", "vector", "graph"]:
+            if target_status.get(target) != "ready":
+                continue
+            payload = {
+                "adapter_target": target,
+                "document_id": document.metadata.document_id,
+                "document_version_id": document.metadata.document_version_id,
+                "index_version": index_version,
+                "knowledge_space_id": knowledge_space_id,
+                "source_block_ids": [block.block_id for block in document.blocks],
+            }
+            receipts[target] = {
+                "receipt_ref": f"index-visibility:{target}:{_stable_hash(payload)[:16]}",
+                "adapter_target": target,
+                "adapter_status": "current",
+                "visibility": "visible",
+                "knowledge_space_id": knowledge_space_id,
+                "index_version": index_version,
+                "document_id": document.metadata.document_id,
+                "document_version_id": document.metadata.document_version_id,
+                "source_block_count": len(document.blocks),
+                "payload_hash": _stable_hash(payload),
+            }
+        return receipts
 
     def _require_space(self, knowledge_space_id: str) -> KnowledgeSpaceManifest:
         try:
@@ -454,6 +500,11 @@ def _public_lineage_fields(lineage: dict) -> dict:
 def _diagnostics_digest(diagnostics: list[dict]) -> str:
     payload = json.dumps(diagnostics, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _stable_hash(payload: object) -> str:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
 def _acl_scopes(document: CanonicalDocumentIR) -> list[str]:

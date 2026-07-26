@@ -118,6 +118,16 @@ def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -
         "vector": "local_vector:current",
         "graph": "local_graph:current",
     }
+    assert set(manifest.adapter_visibility_receipts) == {"bm25", "vector", "graph"}
+    for target, receipt in manifest.adapter_visibility_receipts.items():
+        assert receipt["adapter_target"] == target
+        assert receipt["adapter_status"] == "current"
+        assert receipt["visibility"] == "visible"
+        assert receipt["document_id"] == document.metadata.document_id
+        assert receipt["document_version_id"] == document.metadata.document_version_id
+        assert receipt["source_block_count"] == len(document.blocks)
+        assert receipt["receipt_ref"].startswith(f"index-visibility:{target}:")
+        assert len(receipt["payload_hash"]) == 64
 
 
 def test_index_manifest_tracks_parse_job_lineage_and_diagnostics_digest() -> None:
@@ -326,6 +336,9 @@ def test_index_runtime_exports_retrieval_payload_for_later_retrieval_phase() -> 
     assert payload["index_version"] == manifest.index_version
     assert payload["retrievers_used"] == ["bm25", "vector", "graph"]
     assert payload["index_health"] == {"bm25": "ready", "vector": "ready", "graph": "ready"}
+    assert set(payload["adapter_visibility_receipts"]) == {"bm25", "vector", "graph"}
+    assert payload["adapter_visibility_receipts"]["bm25"]["visibility"] == "visible"
+    assert payload["manifest"]["adapter_visibility_receipts"]["vector"]["adapter_status"] == "current"
     assert payload["documents_by_source"]["bm25"]
     assert payload["documents_by_source"]["vector"]
     assert payload["documents_by_source"]["graph"]

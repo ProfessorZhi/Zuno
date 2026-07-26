@@ -45,6 +45,7 @@ class IndexJobManifest(BaseModel):
     acl_scopes: list[str] = Field(default_factory=list)
     sensitivity_tags: list[str] = Field(default_factory=list)
     adapter_status: dict[str, str] = Field(default_factory=dict)
+    adapter_visibility_receipts: dict[str, dict[str, Any]] = Field(default_factory=dict)
     parse_job_id: str | None = None
     parse_attempt_id: str | None = None
     document_version_id: str = ""

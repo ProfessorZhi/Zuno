@@ -109,4 +109,4 @@ python -m pytest -q tests/knowledge/test_knowledge_runtime_batch.py tests/knowle
 
 本证据证明 PHASE12 的 durable cutover CAS、rollback、strict evidence QueryRun pinned snapshot / tenant ACL / SourceSpan / Authority guard 和 deletion propagation 已进入 PostgreSQL repository 路径。
 
-本证据不单独证明完整 PHASE12 completed；外部 BM25/Vector/Graph adapter 的真实可见性、完整 ACL/Temporal/Conflict 策略和端到端 Standard RAG 默认切流仍需 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE12 completed；外部 BM25/Vector/Graph 服务端 adapter 仍是 `target_blocked`，完整 ACL/Temporal/Conflict 策略和端到端 Standard RAG 默认切流仍需 Closure Gate 汇总证明。
