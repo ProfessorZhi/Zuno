@@ -47,9 +47,14 @@ def test_general_agent_prepares_context_packet_and_selected_capability_trace() -
     assert "search_knowledge_base" in packet.trace.selected_item_ids
     capability_item = next(item for item in packet.items if item.item_id == "search_knowledge_base")
     selection_trace = capability_item.metadata["capability_selection_trace"]
+    capability_view = capability_item.metadata["capability_context_view"]
     assert selection_trace["selected_tool_card_ids"] == ["Knowledge:search_knowledge_base"]
     assert selection_trace["candidate_tool_card_ids"] == ["Knowledge:search_knowledge_base"]
     assert selection_trace["injected_schema_ids"] == []
+    assert capability_view["name"] == "search_knowledge_base"
+    assert capability_view["schema_keys"] == ["query"]
+    assert "permissions" not in capability_item.content
+    assert "owner" not in capability_item.content
 
 
 def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits_memory() -> None:

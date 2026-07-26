@@ -1,3 +1,5 @@
+import hashlib
+import json
 import asyncio
 import copy
 import time
@@ -335,16 +337,18 @@ class GeneralAgent:
 
         capability_items: list[ContextItem] = []
         for capability in selected_capabilities.capabilities:
+            capability_view = self._capability_context_view(capability)
             capability_items.append(
                 ContextItem(
                     item_id=capability.name,
                     source=ContextSource.CAPABILITY_SCHEMA,
-                    content=str(capability.to_dict()),
-                    token_estimate=self._estimate_tokens(str(capability.schema)) + 20,
+                    content=str(capability_view),
+                    token_estimate=self._estimate_tokens(str(capability_view)) + 20,
                     priority=70,
                     reason=ContextSelectionReason.CAPABILITY_SELECTED,
                     metadata={
                         "capability_type": capability.type.value,
+                        "capability_context_view": capability_view,
                         "capability_selection_trace": capability_selection_trace,
                     },
                 )
@@ -517,6 +521,16 @@ class GeneralAgent:
             tags=tuple(part for part in [name.replace("_", " "), description] if part),
         )
 
+    def _capability_context_view(self, capability: CapabilityRecord) -> dict[str, Any]:
+        return {
+            "name": capability.name,
+            "type": capability.type.value,
+            "description": capability.description,
+            "schema_keys": sorted(capability.schema.keys()),
+            "schema_hash": self._hash_payload(capability.schema),
+            "source": capability.source,
+        }
+
     def _memory_scope(self) -> MemoryScope:
         return MemoryScope(
             user_id=self.agent_config.user_id,
@@ -568,6 +582,12 @@ class GeneralAgent:
             state_schema=StreamAgentState,
             system_prompt=runtime_system_prompt,
         )
+
+    @staticmethod
+    def _hash_payload(payload: Any) -> str:
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        ).hexdigest()
 
     async def setup_tools(self) -> List[BaseTool]:
         tools: list[BaseTool] = []

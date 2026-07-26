@@ -641,6 +641,9 @@ def _raw_event_from_table(row: MemoryRawEventTable) -> RawMemoryEvent:
 
 
 def _task_summary_from_table(row: MemoryTaskSummaryTable) -> TaskMemorySummary:
+    source_event_ids = tuple(str(item) for item in row.source_event_ids or ())
+    if not source_event_ids:
+        source_event_ids = (str(row.summary_id),)
     return TaskMemorySummary(
         summary_id=row.summary_id,
         scope=MemoryScope(
@@ -651,7 +654,7 @@ def _task_summary_from_table(row: MemoryTaskSummaryTable) -> TaskMemorySummary:
         ),
         layer=MemoryLayer(row.layer),
         content=row.content,
-        source_event_ids=tuple(str(item) for item in row.source_event_ids or ()),
+        source_event_ids=source_event_ids,
         token_count=row.token_count,
         metadata=dict(row.memory_metadata or {}),
     )
@@ -737,12 +740,15 @@ def _raw_event_from_dict(payload: dict[str, Any]) -> RawMemoryEvent:
 
 
 def _task_summary_from_dict(payload: dict[str, Any]) -> TaskMemorySummary:
+    source_event_ids = tuple(str(item) for item in payload.get("source_event_ids") or ())
+    if not source_event_ids:
+        source_event_ids = (str(payload["summary_id"]),)
     return TaskMemorySummary(
         summary_id=str(payload["summary_id"]),
         scope=_scope_from_dict(dict(payload["scope"])),
         layer=MemoryLayer(str(payload.get("layer") or MemoryLayer.TASK.value)),
         content=str(payload.get("content") or ""),
-        source_event_ids=tuple(str(item) for item in payload.get("source_event_ids") or ()),
+        source_event_ids=source_event_ids,
         token_count=int(payload.get("token_count") or 0),
         metadata=dict(payload.get("metadata") or {}),
     )
