@@ -13,7 +13,8 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - 新增 `DurableKnowledgeRetrievalPort`，包装 `CorrectiveAgenticRetrievalRuntime`。
 - `DurableKnowledgeRetrievalPort` 只提交具备 `chunk_id`、`document_version`、`SourceSpan` 且允许 strict citation 的 evidence。
 - Repository 新增 `commit_citation_lineage`，把 Evidence 绑定到 `knowledge_citation_lineage`。
-- `RuntimeDependencyFactory.for_workspace_task(...)` 默认返回 durable Knowledge port，而不是裸 corrective runtime。
+- `RuntimeDependencyFactory.for_completion(...)` 和 `RuntimeDependencyFactory.for_workspace_task(...)` 默认返回 durable Knowledge port，而不是缺失依赖或裸 corrective runtime。
+- 默认 completion factory 的 retrieval step 已证明进入 `DurableKnowledgeRetrievalPort`；无 knowledge scope 时返回 `durable_knowledge_port.status = skipped / reason = knowledge_scope_empty`，不再产生 `missing_knowledge_runtime`，也不冒充检索成功。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
 - `zuno.knowledge.ingestion` 包入口改为 contracts eager import + legacy symbols lazy export，避免 Agent Core Knowledge surface 导入时连带加载数据库 runtime 模块。
 - `zuno.knowledge.agentic_graphrag` 与 `zuno.knowledge.indexing.runtime` 改为从 contracts/router 子模块读取轻量契约，不再依赖 ingestion 包入口的重导出。
@@ -22,7 +23,7 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 
 ```powershell
 python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py -p no:cacheprovider
-python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_completion_dependencies tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_workspace_knowledge_runtime -p no:cacheprovider
+python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_completion_dependencies tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_workspace_knowledge_runtime tests/agent/runtime/test_runtime_dependency_factory.py::test_completion_factory_knowledge_step_uses_durable_port_not_missing_dependency -p no:cacheprovider
 python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py::test_missing_runtime_dependencies_return_blocked_observations -p no:cacheprovider
 python -m compileall -q src/backend/zuno/knowledge/agentic src/backend/zuno/agent/runtime src/backend/zuno/platform/database/knowledge
 git diff --check
@@ -39,13 +40,13 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 
 ```text
 4 passed
-2 passed
+3 passed
 1 passed
 4 passed
 5 passed
 46 passed
 4 passed
-3 passed
+6 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```

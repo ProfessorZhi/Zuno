@@ -77,13 +77,15 @@ class RuntimeDependencyFactory:
         return MemoryEngine(store=DatabaseMemoryStore())
 
     def _knowledge_runtime(self) -> object | None:
-        if self.config.knowledge_index_runtime is None:
+        if not self.config.enable_knowledge_runtime:
             return None
         from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime, DurableKnowledgeRetrievalPort
+        from zuno.knowledge.indexing import KnowledgeIndexRuntime
         from zuno.platform.database.knowledge import KnowledgeUnitOfWork
         from zuno.platform.database import engine
 
-        runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=self.config.knowledge_index_runtime)
+        index_runtime = self.config.knowledge_index_runtime or KnowledgeIndexRuntime()
+        runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime)
         return DurableKnowledgeRetrievalPort(
             runtime=runtime,
             unit_of_work_factory=lambda: KnowledgeUnitOfWork(engine),
