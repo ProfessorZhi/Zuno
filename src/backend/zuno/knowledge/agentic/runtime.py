@@ -22,7 +22,7 @@ class CorrectiveRetrievalRequest:
     snapshot_id: str | None = None
     agent_core_decision_ref: str = ""
     authorization_ref: str = "authorization:default"
-    retrieval_profile: RetrievalProfile = RetrievalProfile.DEEP
+    retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
     claims: list[str] = field(default_factory=list)
     max_rounds: int = 2
     failure_bucket: str = ""

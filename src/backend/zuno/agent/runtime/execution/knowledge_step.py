@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.agent.contracts import PlanStep
+from zuno.agent.contracts import PlanStep, RetrievalProfile
 from zuno.agent.runtime.contracts import NormalizedObservation, ObservationKind, ObservationStatus
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution.registry import StepExecutionResult
@@ -113,7 +113,7 @@ class KnowledgeStepExecutor:
             return state.retrieval_plan.effective_profile
         if state.strategy is not None and state.strategy.retrieval_profile:
             return state.strategy.retrieval_profile
-        return "deep"
+        return RetrievalProfile.STANDARD
 
 
 __all__ = ["KnowledgeStepExecutor"]

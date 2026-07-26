@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.agent.contracts import ContextPack, PlanStep
+from zuno.agent.contracts import ContextPack, PlanStep, RetrievalProfile
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution import KnowledgeStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
@@ -123,6 +123,47 @@ def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None
     assert result.observation.citation_ids
 
 
+class _CaptureRequestRuntime:
+    def __init__(self) -> None:
+        self.request: CorrectiveRetrievalRequest | None = None
+
+    def retrieve(self, request: CorrectiveRetrievalRequest):
+        self.request = request
+        return _runtime().retrieve(request)
+
+
+def test_knowledge_step_executor_defaults_to_standard_retrieval_profile() -> None:
+    runtime = _CaptureRequestRuntime()
+    state = AgentRuntimeState(
+        run_id="run_standard_default",
+        thread_id="thread_standard_default",
+        workspace_id="workspace_corrective",
+        user_id="user_standard_default",
+        task_id="task_standard_default",
+        trace_id="trace_standard_default",
+        goal="renewal notice 30 days anniversary",
+        context_pack=ContextPack(
+            context_pack_id="context_standard_default",
+            user_goal="renewal notice 30 days anniversary",
+            task_state={"knowledge_space_ids": ["ks_corrective"]},
+        ),
+    )
+
+    result = KnowledgeStepExecutor().execute(
+        state=state,
+        step=PlanStep(
+            step_id="step_retrieve_standard_default",
+            goal="retrieve grounded renewal evidence",
+            action_type="retrieve_evidence",
+        ),
+        deps=RuntimeDependencies(knowledge_runtime=runtime),
+    )
+
+    assert result.observation.status == "completed"
+    assert runtime.request is not None
+    assert runtime.request.retrieval_profile == RetrievalProfile.STANDARD
+
+
 class _FakeKnowledgeRepo:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []
@@ -190,6 +231,8 @@ def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineag
     ]
     evidence_call = dict(repo.calls[3][1])
     citation_call = dict(repo.calls[4][1])
+    query_call = dict(repo.calls[1][1])
+    assert query_call["request_payload"]["retrieval_profile"] == RetrievalProfile.STANDARD.value
     assert evidence_call["chunk_id"].endswith("block_notice::cite1")
     assert evidence_call["source_span_ref"].startswith("source-span:")
     assert citation_call["document_version_id"] == "sha256-corrective"
