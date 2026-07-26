@@ -651,6 +651,103 @@ def test_phase12_knowledge_version_requires_visible_indexes_before_cutover_and_p
         assert status == "ACTIVE"
 
 
+def test_phase12_knowledge_index_visibility_rejects_stale_fencing_and_conflicting_batches(engine) -> None:
+    with engine.begin() as conn:
+        repo = KnowledgeRepository(conn)
+        repo.create_version(_knowledge_draft_for("knowledge-version:index-fencing", 7))
+        repo.append_chunk(
+            chunk_id="chunk:index-fencing",
+            tenant_id="tenant-a",
+            knowledge_version_id="knowledge-version:index-fencing",
+            document_version_id="document-version:index-fencing",
+            source_span_ref="source-span:index-fencing",
+            chunk_payload={"text": "Policy index fencing evidence."},
+            acl_ref="acl:internal",
+            authority_ref="authority:policy",
+        )
+        repo.record_index_visibility(
+            job_id="job:index-fencing:bm25:1",
+            tenant_id="tenant-a",
+            knowledge_version_id="knowledge-version:index-fencing",
+            index_kind="BM25",
+            lease_ref="lease:index-fencing:bm25:1",
+            fencing_token=2,
+            attempt_no=1,
+            write_batch={"chunk": "chunk:index-fencing", "target": "bm25"},
+            visibility_receipt_ref="visible:index-fencing:bm25:1",
+        )
+        repo.record_index_visibility(
+            job_id="job:index-fencing:bm25:1",
+            tenant_id="tenant-a",
+            knowledge_version_id="knowledge-version:index-fencing",
+            index_kind="BM25",
+            lease_ref="lease:index-fencing:bm25:1",
+            fencing_token=2,
+            attempt_no=1,
+            write_batch={"chunk": "chunk:index-fencing", "target": "bm25"},
+            visibility_receipt_ref="visible:index-fencing:bm25:1",
+        )
+        with pytest.raises(KnowledgeCutoverConflict, match="conflicting Knowledge index visibility job"):
+            repo.record_index_visibility(
+                job_id="job:index-fencing:bm25:1",
+                tenant_id="tenant-a",
+                knowledge_version_id="knowledge-version:index-fencing",
+                index_kind="BM25",
+                lease_ref="lease:index-fencing:bm25:1",
+                fencing_token=2,
+                attempt_no=1,
+                write_batch={"chunk": "chunk:index-fencing", "target": "bm25", "conflict": True},
+                visibility_receipt_ref="visible:index-fencing:bm25:1",
+            )
+        with pytest.raises(KnowledgeCutoverConflict, match="stale Knowledge index visibility fencing token"):
+            repo.record_index_visibility(
+                job_id="job:index-fencing:bm25:stale",
+                tenant_id="tenant-a",
+                knowledge_version_id="knowledge-version:index-fencing",
+                index_kind="BM25",
+                lease_ref="lease:index-fencing:bm25:stale",
+                fencing_token=1,
+                attempt_no=2,
+                write_batch={"chunk": "chunk:index-fencing", "target": "bm25", "stale": True},
+                visibility_receipt_ref="visible:index-fencing:bm25:stale",
+            )
+        with pytest.raises(KnowledgeCutoverConflict, match="conflicting Knowledge index visibility write batch"):
+            repo.record_index_visibility(
+                job_id="job:index-fencing:bm25:conflict",
+                tenant_id="tenant-a",
+                knowledge_version_id="knowledge-version:index-fencing",
+                index_kind="BM25",
+                lease_ref="lease:index-fencing:bm25:conflict",
+                fencing_token=2,
+                attempt_no=1,
+                write_batch={"chunk": "chunk:index-fencing", "target": "bm25", "different": True},
+                visibility_receipt_ref="visible:index-fencing:bm25:conflict",
+            )
+        repo.record_index_visibility(
+            job_id="job:index-fencing:bm25:recovered",
+            tenant_id="tenant-a",
+            knowledge_version_id="knowledge-version:index-fencing",
+            index_kind="BM25",
+            lease_ref="lease:index-fencing:bm25:recovered",
+            fencing_token=3,
+            attempt_no=2,
+            write_batch={"chunk": "chunk:index-fencing", "target": "bm25", "recovered": True},
+            visibility_receipt_ref="visible:index-fencing:bm25:recovered",
+        )
+        count = conn.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM knowledge_index_build_jobs
+                WHERE knowledge_version_id = 'knowledge-version:index-fencing'
+                  AND index_kind = 'BM25'
+                  AND status = 'VISIBLE'
+                """
+            )
+        ).scalar_one()
+        assert count == 2
+
+
 def test_phase12_knowledge_cutover_race_rollback_and_deleted_source_taint_strict_evidence(engine) -> None:
     with engine.begin() as conn:
         repo = KnowledgeRepository(conn)

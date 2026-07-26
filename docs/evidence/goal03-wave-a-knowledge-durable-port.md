@@ -17,6 +17,7 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - 默认 completion factory 的 retrieval step 已证明进入 `DurableKnowledgeRetrievalPort`；无 knowledge scope 时返回 `durable_knowledge_port.status = skipped / reason = knowledge_scope_empty`，不再产生 `missing_knowledge_runtime`，也不冒充检索成功。
 - `KnowledgeIndexRuntime` 的 current local BM25 / vector / graph adapter 会在 `IndexJobManifest.adapter_visibility_receipts` 写入 per-target visibility receipt；retrieval payload 只把具备 `visibility = visible` receipt 的 target 纳入 `retrievers_used`。
 - `KnowledgeIndexRuntime.index_document(...)` 现在通过 target 对应的 configured adapter binding 执行 index dispatch，并在 `IndexJobManifest.adapter_dispatch_receipts` 写入 adapter_id、operation、dispatch_ref、payload_hash 与 indexed_document_count；测试覆盖自定义 adapter binding 被真实调用后才产生 visibility receipt。
+- `KnowledgeRepository.record_index_visibility(...)` 现在对 index build job 的 duplicate same batch 做幂等返回，对相同 job 不同 batch、相同 target/fencing/attempt 不同 write batch、低 fencing stale worker visibility commit 做 fail-closed；更高 fencing 的恢复尝试可提交新的 visibility 事实。
 - 外部 Elasticsearch / Milvus / Neo4j adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
 - 默认 `AgenticRetrievalRuntime.answer(...)` 在把检索候选升级为 `EvidenceBundle`、`Citation` 和回答前，会按 allowed ACL、temporal valid_from / valid_until 与 unresolved conflict policy 丢弃证据，并在 task event / trace metadata 写入 `dropped_evidence_reasons`。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
@@ -44,6 +45,8 @@ python -m pytest -q tests/agent/test_agentic_retrieval_runtime.py -p no:cachepro
 python -m pytest -q tests/agent/test_agentic_graphrag_contract.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py::test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status tests/knowledge/test_index_jobs_runtime.py::test_index_runtime_invokes_configured_adapter_bindings -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase12_knowledge_index_visibility_rejects_stale_fencing_and_conflicting_batches -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
 ```
 
 结果：
@@ -63,6 +66,8 @@ python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovid
 7 passed
 2 passed
 13 passed
+1 passed
+12 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```

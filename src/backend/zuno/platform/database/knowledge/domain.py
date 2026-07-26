@@ -209,6 +209,62 @@ class KnowledgeRepository:
         write_batch: dict[str, Any],
         visibility_receipt_ref: str,
     ) -> None:
+        if fencing_token <= 0 or attempt_no <= 0:
+            raise KnowledgeCutoverConflict("Knowledge index visibility requires positive fencing token and attempt")
+        write_batch_hash = canonical_sha256(write_batch)
+        existing_job = self.connection.execute(
+            text(
+                """
+                SELECT write_batch_hash, visibility_receipt_ref, fencing_token,
+                       attempt_no, index_kind
+                FROM knowledge_index_build_jobs
+                WHERE job_id = :job_id
+                """
+            ),
+            {"job_id": job_id},
+        ).mappings().first()
+        if existing_job is not None:
+            if (
+                str(existing_job["write_batch_hash"]) == write_batch_hash
+                and str(existing_job["visibility_receipt_ref"]) == visibility_receipt_ref
+                and int(existing_job["fencing_token"]) == fencing_token
+                and int(existing_job["attempt_no"]) == attempt_no
+                and str(existing_job["index_kind"]) == index_kind
+            ):
+                return
+            raise KnowledgeCutoverConflict("conflicting Knowledge index visibility job")
+
+        current_target = self.connection.execute(
+            text(
+                """
+                SELECT fencing_token, attempt_no, write_batch_hash
+                FROM knowledge_index_build_jobs
+                WHERE tenant_id = :tenant_id
+                  AND knowledge_version_id = :knowledge_version_id
+                  AND index_kind = :index_kind
+                  AND status = 'VISIBLE'
+                ORDER BY fencing_token DESC, attempt_no DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "index_kind": index_kind,
+            },
+        ).mappings().first()
+        if current_target is not None:
+            current_fencing = int(current_target["fencing_token"])
+            current_attempt = int(current_target["attempt_no"])
+            if fencing_token < current_fencing or (
+                fencing_token == current_fencing and attempt_no < current_attempt
+            ):
+                raise KnowledgeCutoverConflict("stale Knowledge index visibility fencing token")
+            if fencing_token == current_fencing and attempt_no == current_attempt:
+                if str(current_target["write_batch_hash"]) == write_batch_hash:
+                    return
+                raise KnowledgeCutoverConflict("conflicting Knowledge index visibility write batch")
+
         self.connection.execute(
             text(
                 """
@@ -232,7 +288,7 @@ class KnowledgeRepository:
                 "lease_ref": lease_ref,
                 "fencing_token": fencing_token,
                 "attempt_no": attempt_no,
-                "write_batch_hash": canonical_sha256(write_batch),
+                "write_batch_hash": write_batch_hash,
                 "visibility_receipt_ref": visibility_receipt_ref,
             },
         )
