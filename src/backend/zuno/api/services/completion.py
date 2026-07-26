@@ -7,6 +7,8 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
+from zuno.api.services.product import ProductService
+from zuno.platform.contracts import canonical_sha256
 from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
 from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
@@ -36,6 +38,10 @@ class CompletionService:
         req: CompletionReq,
         login_user_id: str,
     ) -> AsyncIterator[dict]:
+        yield {
+            "type": "product_runtime_shadow",
+            "data": cls.record_product_runtime_shadow(req=req, login_user_id=login_user_id),
+        }
         task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
         request = RuntimeStartRequest(
             run_id=f"run:{task_id}",
@@ -90,6 +96,56 @@ class CompletionService:
         yield {
             "type": "response_chunk",
             "data": chunk_data,
+        }
+
+    @staticmethod
+    def record_product_runtime_shadow(*, req: CompletionReq, login_user_id: str) -> dict:
+        workspace_id = str(getattr(req, "workspace_id", "") or "completion")
+        request_hash = canonical_sha256(
+            {
+                "legacy_route": "/completion",
+                "dialog_id": req.dialog_id,
+                "workspace_id": workspace_id,
+                "user_input": req.user_input,
+                "product_mode": req.product_mode,
+                "query_method": req.query_method,
+            }
+        )[:24]
+        try:
+            result = ProductService.submit_runtime_request(
+                tenant_id=f"user:{login_user_id}",
+                workspace_id=workspace_id,
+                conversation_id=req.dialog_id,
+                principal_id=login_user_id,
+                active_agent_version_id="completion:unified-runtime",
+                client_request_id=f"completion:{req.dialog_id}:{request_hash}",
+                runtime_request_ref=f"completion-runtime-request:{req.dialog_id}:{request_hash}",
+                raw_intent_ref=f"completion-intent:{req.dialog_id}:{request_hash}",
+                command_kind="SHADOW_COMPLETION_RUNTIME_REQUEST",
+                payload={
+                    "legacy_route": "/completion",
+                    "dialog_id": req.dialog_id,
+                    "user_input_hash": canonical_sha256({"user_input": req.user_input}),
+                    "product_mode": req.product_mode,
+                    "query_method": req.query_method,
+                },
+            )
+        except Exception as exc:
+            return {
+                "status": "blocked",
+                "route": "/completion",
+                "mode": "shadow",
+                "reason": str(exc),
+            }
+        return {
+            "status": result.status,
+            "route": "/completion",
+            "mode": "shadow",
+            "command_id": result.command_id,
+            "receipt_id": result.receipt_id,
+            "projection_event_id": result.projection.projection_event_id,
+            "stream_cursor_id": result.projection.stream_cursor_id,
+            "available_action_tokens": [action.action_token_id for action in result.available_actions],
         }
 
     @staticmethod

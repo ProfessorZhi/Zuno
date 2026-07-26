@@ -13,6 +13,7 @@
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
 - `product_action_tokens` 支持一次性消费和撤销；重复消费或撤销后消费 fail closed。
+- 旧 `/completion` 默认 Unified Runtime 入口会先尝试写入 Product Runtime shadow command / projection / action-token 记录，并以 SSE `product_runtime_shadow` 暴露 `recorded` 或 `blocked` 结果；shadow 写入失败不把主 completion 响应冒充为 Product 成功，也不阻断默认 runtime 输出。
 
 ## 默认调用链
 
@@ -35,14 +36,23 @@ GET /api/v1/product/stream-events
 GET /api/v1/product/stream
 → ProductService.list_stream_events
 → text/event-stream: id / event / data
+
+POST /api/v1/completion
+→ CompletionService.stream_unified_runtime
+→ CompletionService.record_product_runtime_shadow
+→ ProductService.submit_runtime_request(command_kind=SHADOW_COMPLETION_RUNTIME_REQUEST)
+→ SSE product_runtime_shadow event
+→ UnifiedAgentRuntimeService stream
 ```
 
 ## 代码证据
 
 - `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/services/completion.py`
 - `src/backend/zuno/api/v1/product.py`
 - `src/backend/zuno/platform/database/product/domain.py`
 - `tests/api/test_goal03_product_route.py`
+- `tests/api/test_completion_unified_runtime.py`
 - `tests/integration/test_goal03_wave_a_persistence.py`
 
 ## 验证
@@ -67,8 +77,28 @@ python -m pytest -q tests/api/test_product_runtime_batch.py tests/repo/test_prod
 17 passed
 ```
 
+```powershell
+python -m pytest -q tests/api/test_completion_unified_runtime.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+3 passed, 1 warning
+```
+
+```powershell
+python -m pytest -q tests/api/test_goal03_product_route.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+4 passed, 1 warning
+```
+
 ## 边界
 
-本证据只证明 PHASE09 默认入口已经接入 Product projection、stream cursor 和 AvailableAction token 的真实持久化路径。
+本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录与 fail-closed 事件语义。
 
-本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API cutover、跨 Owner Projection rebuild 和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API default-new/canary/rollback 切换、跨 Owner Projection rebuild 和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。
