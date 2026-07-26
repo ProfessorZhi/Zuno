@@ -133,7 +133,10 @@ def test_goal03_product_action_consume_route_uses_login_principal(monkeypatch) -
         captured.update(kwargs)
         return ProductActionConsumeResult(
             action_token_id="action-token:command:client:1:cancel",
-            status="consumed",
+            command_id="command:client:1:cancel",
+            receipt_id="command:client:1:cancel:receipt:1",
+            status="ACCEPTED",
+            target_ref="runtime-request:1",
             used_at="2026-07-26T00:00:00+00:00",
         )
 
@@ -145,6 +148,9 @@ def test_goal03_product_action_consume_route_uses_login_principal(monkeypatch) -
         json={
             "tenant_id": "tenant-a",
             "action_token_id": "action-token:command:client:1:cancel",
+            "client_request_id": "client:1:cancel",
+            "raw_intent_ref": "intent:client:1:cancel",
+            "payload": {"reason": "user_cancel"},
         },
     )
 
@@ -155,10 +161,16 @@ def test_goal03_product_action_consume_route_uses_login_principal(monkeypatch) -
         "tenant_id": "tenant-a",
         "principal_id": "principal-a",
         "action_token_id": "action-token:command:client:1:cancel",
+        "client_request_id": "client:1:cancel",
+        "raw_intent_ref": "intent:client:1:cancel",
+        "payload": {"reason": "user_cancel"},
     }
     assert body["data"] == {
         "action_token_id": "action-token:command:client:1:cancel",
-        "status": "consumed",
+        "command_id": "command:client:1:cancel",
+        "receipt_id": "command:client:1:cancel:receipt:1",
+        "status": "ACCEPTED",
+        "target_ref": "runtime-request:1",
         "used_at": "2026-07-26T00:00:00+00:00",
     }
 
@@ -179,6 +191,8 @@ def test_goal03_product_action_consume_route_fail_closes_replay(monkeypatch) -> 
         json={
             "tenant_id": "tenant-a",
             "action_token_id": "action-token:command:client:1:cancel",
+            "client_request_id": "client:1:cancel",
+            "raw_intent_ref": "intent:client:1:cancel",
         },
     )
 

@@ -1,4 +1,5 @@
 from zuno.platform.database.product.domain import (
+    ProductActionCommandRef,
     ProductActionTokenRef,
     ProductActionTokenStatusRef,
     ProductAgentAssetRef,
@@ -13,6 +14,7 @@ from zuno.platform.database.product.domain import (
 )
 
 __all__ = [
+    "ProductActionCommandRef",
     "ProductActionTokenRef",
     "ProductActionTokenStatusRef",
     "ProductAgentAssetRef",

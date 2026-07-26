@@ -72,6 +72,16 @@ class ProductActionTokenStatusRef:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductActionCommandRef:
+    action_token_id: str
+    command_id: str
+    receipt_id: str
+    status: str
+    target_ref: str
+    used_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProductStreamCursorRef:
     cursor_id: str
     projection_event_id: str
@@ -749,6 +759,94 @@ class ProductRepository:
             revoked_at=row["revoked_at"],
         )
 
+    def consume_action_token_as_command(
+        self,
+        *,
+        action_token_id: str,
+        tenant_id: str,
+        principal_id: str,
+        client_request_id: str,
+        raw_intent_ref: str,
+        payload: dict[str, Any] | None = None,
+        now: datetime | None = None,
+    ) -> ProductActionCommandRef:
+        token = self.connection.execute(
+            text(
+                """
+                SELECT target_ref, command_kind
+                FROM product_action_tokens
+                WHERE action_token_id = :action_token_id
+                  AND tenant_id = :tenant_id
+                  AND principal_id = :principal_id
+                """
+            ),
+            {
+                "action_token_id": action_token_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+            },
+        ).mappings().first()
+        if token is None:
+            raise ProductPersistenceConflict("unknown product action token")
+        target_ref = str(token["target_ref"])
+        source = self.connection.execute(
+            text(
+                """
+                SELECT c.workspace_id, s.conversation_id, t.active_agent_version_id
+                FROM product_commands c
+                JOIN product_submissions s ON s.submission_id = c.submission_id
+                JOIN product_conversation_threads t ON t.conversation_id = s.conversation_id
+                WHERE c.tenant_id = :tenant_id
+                  AND c.runtime_request_ref = :target_ref
+                ORDER BY c.journal_sequence_no
+                LIMIT 1
+                """
+            ),
+            {"tenant_id": tenant_id, "target_ref": target_ref},
+        ).mappings().first()
+        if source is None:
+            raise ProductPersistenceConflict("action token target command unavailable")
+        consumed = self.consume_action_token(
+            action_token_id=action_token_id,
+            tenant_id=tenant_id,
+            principal_id=principal_id,
+            now=now,
+        )
+        if consumed.used_at is None:
+            raise ProductPersistenceConflict("product action token consume did not persist used_at")
+        command_id = f"command:{client_request_id}"
+        receipt = self.submit_command(
+            ProductCommandSubmission(
+                tenant_id=tenant_id,
+                workspace_id=str(source["workspace_id"]),
+                conversation_id=str(source["conversation_id"]),
+                principal_id=principal_id,
+                active_agent_version_id=str(source["active_agent_version_id"]),
+                submission_id=f"submission:{client_request_id}",
+                client_request_id=client_request_id,
+                raw_intent_ref=raw_intent_ref,
+                command_id=command_id,
+                command_kind=str(token["command_kind"]),
+                owner_module="Agent Core",
+                runtime_request_ref=target_ref,
+                payload={
+                    "action_token_id": action_token_id,
+                    "target_ref": target_ref,
+                    **dict(payload or {}),
+                },
+                journal_sequence_no=1,
+                outbox_message_id=f"outbox:{command_id}",
+            )
+        )
+        return ProductActionCommandRef(
+            action_token_id=action_token_id,
+            command_id=receipt.command_id,
+            receipt_id=receipt.receipt_id,
+            status=receipt.status,
+            target_ref=target_ref,
+            used_at=consumed.used_at,
+        )
+
     def revoke_action_token(
         self,
         *,
@@ -1082,6 +1180,7 @@ def stable_json(payload: dict[str, Any]) -> str:
 
 
 __all__ = [
+    "ProductActionCommandRef",
     "ProductActionTokenRef",
     "ProductActionTokenStatusRef",
     "ProductAgentAssetRef",

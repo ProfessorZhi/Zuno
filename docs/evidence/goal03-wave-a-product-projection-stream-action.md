@@ -14,7 +14,8 @@
 - `GET /api/v1/product/stream-events` 提供同一事件源的 JSON 查询面，支持 `Last-Event-ID`，并在未知或过期 cursor 时返回 `RESYNC_REQUIRED` 语义。
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
-- `POST /api/v1/product/actions/consume` 通过登录 principal 调用 Product Service 消费 action token；`product_action_tokens` 支持一次性消费和撤销，重复消费或撤销后消费 fail closed。
+- `POST /api/v1/product/actions/consume` 通过登录 principal 调用 Product Service 消费 action token；消费成功后会基于 token `target_ref` 找回原 RuntimeRequest 上下文，追加新的 Product command / receipt / Agent Core dispatch outbox，不把前端动作降级成只更新 token 状态。
+- `product_action_tokens` 支持一次性消费和撤销；重复消费或撤销后消费 fail closed。
 - Product Projection rebuild 会过期该 workspace 的既有 stream cursor，并追加 gap projection event 作为重建水位线；重复 rebuild idempotent，不重复生成水位线。
 - 旧 `/completion` 默认 Unified Runtime 入口会先尝试写入 Product Runtime shadow command / projection / action-token 记录，并以 SSE `product_runtime_shadow` 暴露 `recorded` 或 `blocked` 结果；该入口可显式识别 `shadow / canary / new_default / rollback`，且 `rollback` 窗口会真实回 legacy GeneralAgent，shadow 写入失败时返回 `request_hash`、`failure_type`、`product_shadow_recorded = false`，不把主 completion 响应冒充为 Product 成功，也不阻断默认 runtime 输出。
 
@@ -33,8 +34,11 @@ POST /api/v1/product/runtime-requests
 POST /api/v1/product/actions/consume
 → ProductService.consume_action_token
 → ProductUnitOfWork
+→ ProductRepository.consume_action_token_as_command
 → ProductRepository.consume_action_token
-→ response: consumed action token receipt
+→ ProductRepository.submit_command(command_kind from token)
+→ infra outbox product.runtime_request.dispatch
+→ response: Product command receipt for consumed action token
 
 GET /api/v1/product/stream-events
 → ProductService.list_stream_events
@@ -128,6 +132,8 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_ph
 1 passed
 ```
 
+该测试现在同时证明 action token 消费会追加 `CANCEL_RUNTIME_REQUEST` Product command、`ACCEPTED` receipt 和 `product.runtime_request.dispatch` outbox，并且同一 token replay fail closed。
+
 ```powershell
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_projection_rebuild_worker_consumes_owner_outbox -p no:cacheprovider
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
@@ -154,6 +160,6 @@ git diff --check passed with LF/CRLF warnings only
 
 ## 边界
 
-本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 签发 / 消费的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析、rollback 和 shadow persistence failure 不阻断 Unified Runtime 的 fail-closed 事件语义。
+本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 签发 / 消费 / command dispatch 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析、rollback 和 shadow persistence failure 不阻断 Unified Runtime 的 fail-closed 事件语义。
 
 本证据不单独证明完整 PHASE09 completed；真实浏览器 E2E client reconnect 和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。

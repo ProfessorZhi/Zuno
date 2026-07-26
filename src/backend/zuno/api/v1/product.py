@@ -26,6 +26,9 @@ class ProductRuntimeRequestBody(BaseModel):
 class ProductActionConsumeBody(BaseModel):
     tenant_id: str = Field(min_length=1)
     action_token_id: str = Field(min_length=1)
+    client_request_id: str = Field(min_length=1)
+    raw_intent_ref: str = Field(min_length=1)
+    payload: dict = Field(default_factory=dict)
 
 
 router = APIRouter(tags=["Product"], prefix="/product")
@@ -87,11 +90,17 @@ async def consume_action_token(
             tenant_id=body.tenant_id,
             principal_id=login_user.user_id,
             action_token_id=body.action_token_id,
+            client_request_id=body.client_request_id,
+            raw_intent_ref=body.raw_intent_ref,
+            payload=body.payload,
         )
         return resp_200(
             data={
                 "action_token_id": result.action_token_id,
+                "command_id": result.command_id,
+                "receipt_id": result.receipt_id,
                 "status": result.status,
+                "target_ref": result.target_ref,
                 "used_at": result.used_at,
             }
         )

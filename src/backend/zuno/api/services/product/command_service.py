@@ -29,7 +29,10 @@ class ProductAvailableActionResult:
 @dataclass(frozen=True, slots=True)
 class ProductActionConsumeResult:
     action_token_id: str
+    command_id: str
+    receipt_id: str
     status: str
+    target_ref: str
     used_at: str
 
 
@@ -183,20 +186,27 @@ class ProductService:
         tenant_id: str,
         principal_id: str,
         action_token_id: str,
+        client_request_id: str,
+        raw_intent_ref: str,
+        payload: dict[str, Any],
     ) -> ProductActionConsumeResult:
         from zuno.database import engine
 
         with ProductUnitOfWork(engine) as repo:
-            consumed = repo.consume_action_token(
+            consumed = repo.consume_action_token_as_command(
                 action_token_id=action_token_id,
                 tenant_id=tenant_id,
                 principal_id=principal_id,
+                client_request_id=client_request_id,
+                raw_intent_ref=raw_intent_ref,
+                payload=payload,
             )
-        if consumed.used_at is None:
-            raise RuntimeError("product action token consume did not persist used_at")
         return ProductActionConsumeResult(
             action_token_id=consumed.action_token_id,
-            status="consumed",
+            command_id=consumed.command_id,
+            receipt_id=consumed.receipt_id,
+            status=consumed.status,
+            target_ref=consumed.target_ref,
             used_at=consumed.used_at.isoformat(),
         )
 

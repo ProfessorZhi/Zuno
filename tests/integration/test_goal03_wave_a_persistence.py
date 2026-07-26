@@ -376,6 +376,59 @@ def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted
                 now=now,
             )
 
+        cancel_token = repo.issue_action_token(
+            action_token_id="action-token:command:projection:cancel-command",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            target_ref="runtime-request:wave-a",
+            command_kind="CANCEL_RUNTIME_REQUEST",
+            effective_security_epoch_ref="security-epoch:wave-a",
+            nonce="nonce:command:projection:cancel-command",
+            expires_at=now + timedelta(minutes=5),
+        )
+        cancel_command = repo.consume_action_token_as_command(
+            action_token_id=cancel_token.action_token_id,
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            client_request_id="client:projection:cancel",
+            raw_intent_ref="object://intent/wave-a/cancel",
+            payload={"reason": "user_cancel"},
+            now=now,
+        )
+        assert cancel_command.status == "ACCEPTED"
+        assert cancel_command.target_ref == "runtime-request:wave-a"
+        cancel_row = conn.execute(
+            text(
+                """
+                SELECT c.command_kind, c.runtime_request_ref,
+                       r.status AS receipt_status,
+                       o.topic,
+                       o.payload ->> 'consumer_module' AS consumer_module
+                FROM product_commands c
+                JOIN product_command_receipts r ON r.command_id = c.command_id
+                JOIN infra_outbox_events o ON o.aggregate_id = c.command_id
+                WHERE c.command_id = :command_id
+                """
+            ),
+            {"command_id": cancel_command.command_id},
+        ).mappings().one()
+        assert dict(cancel_row) == {
+            "command_kind": "CANCEL_RUNTIME_REQUEST",
+            "runtime_request_ref": "runtime-request:wave-a",
+            "receipt_status": "ACCEPTED",
+            "topic": "product.runtime_request.dispatch",
+            "consumer_module": "Agent Core",
+        }
+        with pytest.raises(ProductPersistenceConflict, match="replay detected"):
+            repo.consume_action_token_as_command(
+                action_token_id=cancel_token.action_token_id,
+                tenant_id="tenant-a",
+                principal_id="principal-a",
+                client_request_id="client:projection:cancel:replay",
+                raw_intent_ref="object://intent/wave-a/cancel-replay",
+                now=now,
+            )
+
         replay = repo.record_projection_event(
             projection_event_id="projection:command:projection:duplicate",
             tenant_id="tenant-a",
