@@ -11,6 +11,7 @@ commit_scope: GeneralAgent capability context summary cutover
 - capability item 的 `content` 由摘要视图字符串生成，而不是完整 `CapabilityRecord.to_dict()`。
 - `GeneralAgent.prepare_context()` 不再调用 `DynamicCapabilitySelector(CapabilityRegistry(...))`。
 - 新增静态 guard 测试，禁止默认 GeneralAgent 上下文路径重新实例化 legacy selector / registry。
+- 新增默认 Product / Agent Runtime 旁路 guard，禁止 `agent.planning`、`agent.runtime.service`、`api.services.completion` 和 `api.services.product.command_service` 重新导入 `zuno.agent.tool_bridge`、`DynamicCapabilitySelector` 或直接构造 `CapabilityRegistry(...)`。
 - 摘要视图只包含：
   - `name`
   - `type`
@@ -26,15 +27,17 @@ commit_scope: GeneralAgent capability context summary cutover
 
 ```powershell
 python -m pytest -q tests/agent/test_generalagent_context_memory_runtime.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_capability_layer_surfaces.py tests/agent/test_planning_control_runtime.py tests/capability/test_capability_skill_layer.py -p no:cacheprovider
 ```
 
 结果：
 
 ```text
 8 passed
+22 passed
 ```
 
 ## 未证明
 
 - 本证据不证明 PHASE14 的所有 legacy facade 已删除；`zuno.capability.registry` / `zuno.capability.selector` 仍作为兼容 facade 存在。
-- 该切片只证明默认 GeneralAgent context selection 与 model-visible context 已不再依赖 legacy registry / selector。
+- 该切片证明默认 GeneralAgent context selection、Planner 和 Product / Completion runtime service 文件已有 legacy registry / selector 旁路 guard。
