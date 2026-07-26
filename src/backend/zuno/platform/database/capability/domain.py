@@ -14,6 +14,10 @@ class CapabilitySupplyChainConflict(RuntimeError):
     pass
 
 
+class CapabilityActivationConflict(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class CapabilityVersionInput:
     capability_definition_id: str
@@ -276,6 +280,11 @@ class CapabilityRepository:
         visible_candidates: tuple[str, ...],
         ttl_expires_at: datetime,
     ) -> None:
+        eligible_candidates = self._eligible_snapshot_candidates(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            visible_candidates=visible_candidates,
+        )
         self.connection.execute(
             text(
                 """
@@ -299,7 +308,7 @@ class CapabilityRepository:
                 "principal_id": principal_id,
                 "security_epoch_ref": security_epoch_ref,
                 "source_generation": source_generation,
-                "snapshot_hash": canonical_sha256({"candidates": visible_candidates}),
+                "snapshot_hash": canonical_sha256({"candidates": eligible_candidates}),
                 "ttl_expires_at": ttl_expires_at,
             },
         )
@@ -391,6 +400,14 @@ class CapabilityRepository:
         event_payload: dict[str, Any],
         outbox_message_id: str,
     ) -> None:
+        current_generation = self._current_transition_generation(
+            tenant_id=tenant_id,
+            aggregate_ref=aggregate_ref,
+        )
+        if current_generation != expected_generation:
+            raise CapabilityActivationConflict(
+                f"stale capability transition generation: expected {expected_generation}, current {current_generation}"
+            )
         self.connection.execute(
             text(
                 """
@@ -415,8 +432,150 @@ class CapabilityRepository:
             },
         )
 
+    def activate_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        activation_ref: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        self._transition_installation(
+            installation_id=installation_id,
+            tenant_id=tenant_id,
+            expected_generation=expected_generation,
+            status="ACTIVE",
+            transition_id=activation_ref,
+            policy_epoch_ref=policy_epoch_ref,
+            outbox_message_id=outbox_message_id,
+        )
+
+    def revoke_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        revocation_ref: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        self._transition_installation(
+            installation_id=installation_id,
+            tenant_id=tenant_id,
+            expected_generation=expected_generation,
+            status="REVOKED",
+            transition_id=revocation_ref,
+            policy_epoch_ref=policy_epoch_ref,
+            outbox_message_id=outbox_message_id,
+        )
+
+    def _transition_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        status: str,
+        transition_id: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT installation_id
+                FROM capability_installations
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"installation_id": installation_id, "tenant_id": tenant_id},
+        ).scalar_one_or_none()
+        if existing is None:
+            raise CapabilityActivationConflict("unknown capability installation")
+        self.append_transition_event(
+            transition_id=transition_id,
+            tenant_id=tenant_id,
+            aggregate_ref=installation_id,
+            expected_generation=expected_generation,
+            event_payload={
+                "installation_id": installation_id,
+                "status": status,
+                "policy_epoch_ref": policy_epoch_ref,
+            },
+            outbox_message_id=outbox_message_id,
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE capability_installations
+                SET status = :status,
+                    policy_ref = :policy_epoch_ref
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "status": status,
+                "policy_epoch_ref": policy_epoch_ref,
+                "installation_id": installation_id,
+                "tenant_id": tenant_id,
+            },
+        )
+
+    def _current_transition_generation(self, *, tenant_id: str, aggregate_ref: str) -> int:
+        return int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT coalesce(max(committed_generation), 0)
+                    FROM capability_transition_events
+                    WHERE tenant_id = :tenant_id
+                      AND aggregate_ref = :aggregate_ref
+                    """
+                ),
+                {"tenant_id": tenant_id, "aggregate_ref": aggregate_ref},
+            ).scalar_one()
+        )
+
+    def _eligible_snapshot_candidates(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        visible_candidates: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        if not visible_candidates:
+            return ()
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT b.binding_id
+                FROM capability_provider_bindings b
+                JOIN capability_versions v ON v.capability_version_id = b.capability_version_id
+                JOIN capability_installations i ON i.capability_version_id = v.capability_version_id
+                WHERE i.tenant_id = :tenant_id
+                  AND i.workspace_id = :workspace_id
+                  AND i.status = 'ACTIVE'
+                  AND b.status = 'ACTIVE'
+                  AND b.binding_id = ANY(CAST(:visible_candidates AS text[]))
+                ORDER BY b.binding_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "visible_candidates": list(visible_candidates),
+            },
+        ).scalars().all()
+        return tuple(str(row) for row in rows)
+
 
 __all__ = [
+    "CapabilityActivationConflict",
     "CapabilityRepository",
     "CapabilitySupplyChainConflict",
     "CapabilityUnitOfWork",

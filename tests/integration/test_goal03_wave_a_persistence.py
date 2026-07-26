@@ -8,7 +8,11 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from zuno.platform.database.capability import CapabilityRepository, CapabilitySupplyChainConflict
+from zuno.platform.database.capability import (
+    CapabilityActivationConflict,
+    CapabilityRepository,
+    CapabilitySupplyChainConflict,
+)
 from zuno.platform.database.capability.domain import CapabilityVersionInput
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.knowledge import KnowledgeCutoverConflict, KnowledgeRepository
@@ -491,3 +495,126 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
         assert dispatch["consumer_module"] == "Agent Core"
         assert dispatch["snapshot_id"] == "cap-snapshot:1"
         assert dispatch["ordering_sequence"] == 1
+
+
+def test_phase14_capability_installation_activation_uses_cas_and_revocation_filters_snapshot(engine) -> None:
+    with engine.begin() as conn:
+        repo = CapabilityRepository(conn)
+        repo.publish_capability_version(
+            CapabilityVersionInput(
+                capability_definition_id="capability:def:active-read",
+                capability_version_id="capability:version:active-read:v1",
+                tenant_id="tenant-a",
+                semantic_identity="knowledge.standard.retrieve",
+                owner_module="Knowledge",
+                version_no=1,
+                input_schema={"type": "object"},
+                output_schema={"type": "object"},
+                risk_profile_ref="risk:read-only",
+            )
+        )
+        repo.propose_binding(
+            binding_id="binding:active-read",
+            capability_version_id="capability:version:active-read:v1",
+            provider_instance_ref="provider:tool-runtime",
+            tool_definition_ref="tool-definition:read:v1",
+            mapping_payload={"input": "query"},
+            proposal_source="CURATED",
+        )
+        repo.record_conformance(
+            conformance_id="conformance:active-read",
+            binding_id="binding:active-read",
+            report_payload={"passed": True},
+            covers_input=True,
+            covers_output=True,
+            covers_idempotency=True,
+            covers_reconciliation=True,
+            covers_security=True,
+        )
+        repo.install_capability(
+            installation_id="installation:active-read",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            capability_version_id="capability:version:active-read:v1",
+            policy_ref="policy:install",
+        )
+        repo.activate_installation(
+            installation_id="installation:active-read",
+            tenant_id="tenant-a",
+            expected_generation=0,
+            activation_ref="activation:active-read:1",
+            policy_epoch_ref="policy-epoch:1",
+            outbox_message_id="outbox:activation:active-read:1",
+        )
+        with pytest.raises(CapabilityActivationConflict, match="stale capability transition generation"):
+            repo.activate_installation(
+                installation_id="installation:active-read",
+                tenant_id="tenant-a",
+                expected_generation=0,
+                activation_ref="activation:active-read:stale",
+                policy_epoch_ref="policy-epoch:stale",
+                outbox_message_id="outbox:activation:active-read:stale",
+            )
+
+        repo.create_availability_snapshot(
+            snapshot_id="cap-snapshot:active",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            security_epoch_ref="epoch:1",
+            source_generation=1,
+            visible_candidates=("binding:active-read",),
+            ttl_expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        )
+        active_hash = conn.execute(
+            text(
+                """
+                SELECT snapshot_hash
+                FROM capability_availability_snapshots
+                WHERE snapshot_id = 'cap-snapshot:active'
+                """
+            )
+        ).scalar_one()
+
+        repo.revoke_installation(
+            installation_id="installation:active-read",
+            tenant_id="tenant-a",
+            expected_generation=1,
+            revocation_ref="revocation:active-read:2",
+            policy_epoch_ref="policy-epoch:2",
+            outbox_message_id="outbox:revocation:active-read:2",
+        )
+        repo.create_availability_snapshot(
+            snapshot_id="cap-snapshot:revoked",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            security_epoch_ref="epoch:2",
+            source_generation=2,
+            visible_candidates=("binding:active-read",),
+            ttl_expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        )
+        revoked_hash = conn.execute(
+            text(
+                """
+                SELECT snapshot_hash
+                FROM capability_availability_snapshots
+                WHERE snapshot_id = 'cap-snapshot:revoked'
+                """
+            )
+        ).scalar_one()
+        transition_rows = conn.execute(
+            text(
+                """
+                SELECT status, policy_ref
+                FROM capability_installations
+                WHERE installation_id = 'installation:active-read'
+                """
+            )
+        ).mappings().one()
+        assert dict(transition_rows) == {
+            "status": "REVOKED",
+            "policy_ref": "policy-epoch:2",
+        }
+        assert active_hash != revoked_hash
+        assert conn.execute(text("SELECT count(*) FROM capability_transition_events")).scalar_one() == 2
