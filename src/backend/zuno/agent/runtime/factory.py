@@ -79,9 +79,15 @@ class RuntimeDependencyFactory:
     def _knowledge_runtime(self) -> object | None:
         if self.config.knowledge_index_runtime is None:
             return None
-        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime
+        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime, DurableKnowledgeRetrievalPort
+        from zuno.platform.database.knowledge import KnowledgeUnitOfWork
+        from zuno.platform.database import engine
 
-        return CorrectiveAgenticRetrievalRuntime(index_runtime=self.config.knowledge_index_runtime)
+        runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=self.config.knowledge_index_runtime)
+        return DurableKnowledgeRetrievalPort(
+            runtime=runtime,
+            unit_of_work_factory=lambda: KnowledgeUnitOfWork(engine),
+        )
 
     def _tool_control_plane(self) -> object | None:
         if not self.config.enable_local_tool_runtime:

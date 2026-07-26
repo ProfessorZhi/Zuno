@@ -7,6 +7,7 @@ from zuno.knowledge.agentic.contracts import (
     RetrievalQualityVerdict,
 )
 from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
+from zuno.knowledge.agentic.durable import DurableKnowledgeRetrievalPort
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
 from zuno.knowledge.agentic.quality import RetrievalQualityGate
 from zuno.knowledge.agentic.runtime import CorrectiveAgenticRetrievalRuntime, CorrectiveRetrievalRequest, CorrectiveRetrievalResult
@@ -17,6 +18,7 @@ __all__ = [
     "CorrectiveRetrievalPolicy",
     "CorrectiveRetrievalRequest",
     "CorrectiveRetrievalResult",
+    "DurableKnowledgeRetrievalPort",
     "EvidenceLedger",
     "EvidenceLedgerRecord",
     "QueryStrategy",

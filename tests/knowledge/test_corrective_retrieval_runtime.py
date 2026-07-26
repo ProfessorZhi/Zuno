@@ -4,7 +4,13 @@ from zuno.agent.contracts import ContextPack, PlanStep
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution import KnowledgeStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
-from zuno.knowledge.agentic import CorrectiveAction, CorrectiveAgenticRetrievalRuntime, CorrectiveRetrievalRequest, QueryStrategy
+from zuno.knowledge.agentic import (
+    CorrectiveAction,
+    CorrectiveAgenticRetrievalRuntime,
+    CorrectiveRetrievalRequest,
+    DurableKnowledgeRetrievalPort,
+    QueryStrategy,
+)
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import CanonicalDocumentIR, DocumentBlock, DocumentMetadata, DocumentProvenance, SourceSpan
 
@@ -115,3 +121,78 @@ def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None
     assert result.observation.metadata["ledger"]["record_count"] == 1
     assert result.observation.evidence_ids
     assert result.observation.citation_ids
+
+
+class _FakeKnowledgeRepo:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict]] = []
+
+    def active_snapshot_id(self, *, tenant_id: str, knowledge_space_id: str) -> str | None:
+        self.calls.append(("active_snapshot_id", {"tenant_id": tenant_id, "knowledge_space_id": knowledge_space_id}))
+        return "knowledge-snapshot:fake"
+
+    def start_query_run(self, **kwargs) -> None:
+        self.calls.append(("start_query_run", kwargs))
+
+    def start_retrieval_round(self, **kwargs) -> None:
+        self.calls.append(("start_retrieval_round", kwargs))
+
+    def commit_evidence(self, **kwargs) -> None:
+        self.calls.append(("commit_evidence", kwargs))
+
+    def commit_citation_lineage(self, **kwargs) -> None:
+        self.calls.append(("commit_citation_lineage", kwargs))
+
+    def mark_query_run_status(self, **kwargs) -> None:
+        self.calls.append(("mark_query_run_status", kwargs))
+
+
+class _FakeKnowledgeUow:
+    def __init__(self, repo: _FakeKnowledgeRepo) -> None:
+        self.repo = repo
+
+    def __enter__(self) -> _FakeKnowledgeRepo:
+        return self.repo
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        return None
+
+
+def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineage() -> None:
+    repo = _FakeKnowledgeRepo()
+    runtime = DurableKnowledgeRetrievalPort(
+        runtime=_runtime(),
+        unit_of_work_factory=lambda: _FakeKnowledgeUow(repo),
+    )
+
+    result = runtime.retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_durable_knowledge",
+            task_id="task_durable_knowledge",
+            tenant_id="tenant-durable",
+            agent_core_decision_ref="agent-core:decision:retrieve",
+            authorization_ref="authorization:durable",
+            max_rounds=1,
+        )
+    )
+
+    call_names = [name for name, _ in repo.calls]
+    assert call_names == [
+        "active_snapshot_id",
+        "start_query_run",
+        "start_retrieval_round",
+        "commit_evidence",
+        "commit_citation_lineage",
+        "mark_query_run_status",
+    ]
+    evidence_call = dict(repo.calls[3][1])
+    citation_call = dict(repo.calls[4][1])
+    assert evidence_call["chunk_id"].endswith("block_notice::cite1")
+    assert evidence_call["source_span_ref"].startswith("source-span:")
+    assert citation_call["document_version_id"] == "sha256-corrective"
+    assert citation_call["authorization_ref"] == "authorization:durable"
+    assert result.trace["durable_knowledge_port"]["status"] == "committed"
+    assert result.trace["durable_knowledge_port"]["evidence_committed"] == 1

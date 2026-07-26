@@ -41,6 +41,7 @@ class CorrectiveAction(StrEnum):
 class EvidenceLedgerRecord(BaseModel):
     evidence_id: str
     document_id: str
+    chunk_id: str = ""
     document_version: str = ""
     source_span: dict[str, Any] = Field(default_factory=dict)
     retrieval_round: int

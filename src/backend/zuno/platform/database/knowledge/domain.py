@@ -489,6 +489,40 @@ class KnowledgeRepository:
             },
         )
 
+    def commit_citation_lineage(
+        self,
+        *,
+        citation_lineage_id: str,
+        evidence_id: str,
+        document_version_id: str,
+        source_span_ref: str,
+        span_text: str,
+        authorization_ref: str,
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO knowledge_citation_lineage (
+                    citation_lineage_id, evidence_id, document_version_id,
+                    source_span_ref, span_text_hash, authorization_ref
+                )
+                VALUES (
+                    :citation_lineage_id, :evidence_id, :document_version_id,
+                    :source_span_ref, :span_text_hash, :authorization_ref
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "citation_lineage_id": citation_lineage_id,
+                "evidence_id": evidence_id,
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+                "span_text_hash": canonical_sha256({"text": span_text}),
+                "authorization_ref": authorization_ref,
+            },
+        )
+
 
 __all__ = [
     "KnowledgeCutoverConflict",

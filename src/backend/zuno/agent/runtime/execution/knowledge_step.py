@@ -50,6 +50,10 @@ class KnowledgeStepExecutor:
             knowledge_space_ids=self._knowledge_space_ids(state),
             trace_id=state.trace_id,
             task_id=state.task_id,
+            tenant_id=f"user:{state.user_id}",
+            snapshot_id=self._knowledge_snapshot_id(state),
+            agent_core_decision_ref=f"agent-core:{state.run_id}:{step.step_id}",
+            authorization_ref=self._authorization_ref(state),
             retrieval_profile=self._retrieval_profile(state),
             claims=list(step.required_evidence),
             max_rounds=int(step.budget.get("max_retrieval_rounds", 2)),
@@ -75,6 +79,7 @@ class KnowledgeStepExecutor:
                 "final_verdict": result.final_verdict.value,
                 "rounds": list(result.rounds),
                 "ledger": result.ledger.to_trace(),
+                "durable_knowledge_port": result.trace.get("durable_knowledge_port"),
             },
         )
         return StepExecutionResult(step_id=step.step_id, status=ObservationStatus.COMPLETED, observation=observation)
@@ -92,6 +97,16 @@ class KnowledgeStepExecutor:
         if isinstance(raw, list):
             return [str(item) for item in raw]
         return []
+
+    def _knowledge_snapshot_id(self, state: AgentRuntimeState) -> str | None:
+        task_state = state.context_pack.task_state if state.context_pack else {}
+        value = task_state.get("knowledge_snapshot_id") or task_state.get("knowledge_snapshot_ref")
+        return str(value) if value else None
+
+    def _authorization_ref(self, state: AgentRuntimeState) -> str:
+        task_state = state.context_pack.task_state if state.context_pack else {}
+        value = task_state.get("authorization_ref") or task_state.get("authorized_scope_ref")
+        return str(value) if value else f"authorization:{state.user_id}:current"
 
     def _retrieval_profile(self, state: AgentRuntimeState):
         if state.retrieval_plan is not None:

@@ -8,6 +8,7 @@ from zuno.agent.runtime.execution.model_step import ModelStepExecutor
 from zuno.agent.runtime.execution.tool_step import ToolStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.knowledge.indexing.runtime import KnowledgeIndexRuntime
+from zuno.knowledge.agentic import DurableKnowledgeRetrievalPort
 from zuno.memory.engine import MemoryEngine
 from zuno.memory.store import DatabaseMemoryStore
 
@@ -60,6 +61,7 @@ def test_runtime_dependency_factory_builds_workspace_knowledge_runtime(tmp_path)
     assert assembly.store is store
     assert assembly.dependencies.knowledge_runtime is not None
     assert hasattr(assembly.dependencies.knowledge_runtime, "retrieve")
+    assert isinstance(assembly.dependencies.knowledge_runtime, DurableKnowledgeRetrievalPort)
 
 
 def test_missing_runtime_dependencies_return_blocked_observations() -> None:
