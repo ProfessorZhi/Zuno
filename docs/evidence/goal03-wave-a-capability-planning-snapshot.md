@@ -25,6 +25,7 @@ alembic -c infra/db/alembic.ini heads
 python -m compileall -q src/backend/zuno/agent src/backend/zuno/platform/database/capability
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_doc_boundaries.py
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
 ```
 
 结果：
@@ -33,13 +34,14 @@ python .agent/scripts/verify_doc_boundaries.py
 9 passed
 Capability / Skill target architecture verification passed.
 20260725_37 (head)
+3 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
 
-## 未完成验证
+## 历史失败指纹
 
-`python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider` 未进入业务断言，失败在 PostgreSQL 环境连接：
+以下失败只保留为历史环境指纹，已由 `docs/evidence/goal03-wave-a-postgres-integration-recovery.md` 的当前运行结果覆盖：
 
 ```text
 command: python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
@@ -52,6 +54,5 @@ retry count: 1
 
 ## 未证明
 
-- Planner 默认生产入口尚未被 PostgreSQL integration test 证明真实写入 selection/outbox。
 - PHASE14 的 Installation/Activation CAS、revocation propagation、supply-chain crash recovery、progressive loading budget 和 legacy registry full cutover 尚未完成。
 - PHASE14 仍是 `in_progress`，不能据此关闭 Wave A Gate。

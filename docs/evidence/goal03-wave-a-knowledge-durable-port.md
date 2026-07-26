@@ -31,6 +31,8 @@ python .agent/scripts/verify_doc_boundaries.py
 python -m pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_workspace_knowledge_runtime -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
+python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
 ```
 
 结果：
@@ -42,13 +44,15 @@ python -m pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledg
 4 passed
 5 passed
 46 passed
+4 passed
+3 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
 
-## 未完成验证
+## 历史失败指纹
 
-`python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider` 曾超时。拆分后，新增 Knowledge durable port 和 factory dependency 相关用例均通过；超时点定位为既有完整 runtime start 用例：
+以下 runtime start 超时已由后续 `docs/evidence/goal03-wave-a-runtime-default-completion-fast-fail.md` 的修复与当前 `tests/agent/runtime/test_runtime_dependency_factory.py` 结果覆盖：
 
 ```text
 command: python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py::test_unified_runtime_service_can_start_from_factory_assembly -p no:cacheprovider
@@ -59,12 +63,19 @@ environment signature: local focused test process timed out after 124s; no Postg
 retry count: 1
 ```
 
-`python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider` 仍未重跑，因为本机 PostgreSQL 5432 不可用，且 Docker daemon 不可用。
+以下 PostgreSQL / Docker unavailable 记录只保留为历史环境指纹，已由 `docs/evidence/goal03-wave-a-postgres-integration-recovery.md` 的当前运行结果覆盖：
+
+```text
+command: python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+test name: migrated_postgres fixture
+exception type: sqlalchemy.exc.OperationalError / psycopg.errors.ConnectionTimeout
+environment signature: localhost:5432 unavailable; Docker daemon unavailable
+retry count: 1
+```
 
 旧结论中记录的 Knowledge surface heavy import 失败已在本切片修复。当前 `tests/agent/test_knowledge_layer_surfaces.py` 已通过；该结果只证明导入边界恢复为轻量，不证明 PHASE12 Gate 完成。
 
 ## 未证明
 
-- PostgreSQL integration 尚未证明 durable port 真实写入 `knowledge_query_runs`、`knowledge_retrieval_rounds`、`knowledge_evidence_records` 和 `knowledge_citation_lineage`。
 - BM25/Vector adapter 的真实服务端索引可见性、ACL/Temporal/Conflict、cutover rollback 和 deletion propagation 尚未完成。
 - PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。
