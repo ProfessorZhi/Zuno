@@ -83,6 +83,21 @@ class ProductProjectionEventView:
     created_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class ProductAgentAssetRef:
+    ref_id: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentCatalogEntryView:
+    catalog_entry_id: str
+    agent_definition_id: str
+    latest_version_id: str
+    visibility_scope: str
+    status: str
+
+
 class ProductUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -105,6 +120,188 @@ class ProductUnitOfWork:
 class ProductRepository:
     def __init__(self, connection: Connection) -> None:
         self.connection = connection
+
+    def create_agent_draft(
+        self,
+        *,
+        draft_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+        draft_payload: dict[str, Any],
+        status: str = "DRAFT",
+    ) -> ProductAgentAssetRef:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_drafts (
+                    draft_id, tenant_id, workspace_id, agent_definition_id,
+                    draft_hash, status
+                )
+                VALUES (
+                    :draft_id, :tenant_id, :workspace_id, :agent_definition_id,
+                    :draft_hash, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "draft_id": draft_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+                "draft_hash": canonical_sha256(draft_payload),
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(draft_id, status)
+
+    def publish_agent_version(
+        self,
+        *,
+        publication_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        agent_version_id: str,
+        publication_scope: str,
+        publication_payload: dict[str, Any],
+    ) -> ProductAgentAssetRef:
+        self._ensure_agent_version_status(agent_version_id=agent_version_id, status="PUBLISHED")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_publications (
+                    publication_id, tenant_id, workspace_id, agent_version_id,
+                    publication_scope, publication_hash, status
+                )
+                VALUES (
+                    :publication_id, :tenant_id, :workspace_id, :agent_version_id,
+                    :publication_scope, :publication_hash, 'PUBLISHED'
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "publication_id": publication_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_version_id": agent_version_id,
+                "publication_scope": publication_scope,
+                "publication_hash": canonical_sha256(publication_payload),
+            },
+        )
+        return ProductAgentAssetRef(publication_id, "PUBLISHED")
+
+    def install_agent_version(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        agent_version_id: str,
+        principal_id: str,
+        installation_scope: str,
+        status: str = "ACTIVE",
+    ) -> ProductAgentAssetRef:
+        self._ensure_agent_version_status(agent_version_id=agent_version_id, status="PUBLISHED")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_installations (
+                    installation_id, tenant_id, workspace_id, agent_version_id,
+                    principal_id, installation_scope, status
+                )
+                VALUES (
+                    :installation_id, :tenant_id, :workspace_id, :agent_version_id,
+                    :principal_id, :installation_scope, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "installation_id": installation_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_version_id": agent_version_id,
+                "principal_id": principal_id,
+                "installation_scope": installation_scope,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(installation_id, status)
+
+    def upsert_catalog_entry(
+        self,
+        *,
+        catalog_entry_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+        latest_version_id: str,
+        visibility_scope: str,
+        status: str = "VISIBLE",
+    ) -> ProductAgentAssetRef:
+        self._ensure_agent_version_status(agent_version_id=latest_version_id, status="PUBLISHED")
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_catalog_entries (
+                    catalog_entry_id, tenant_id, workspace_id, agent_definition_id,
+                    latest_version_id, visibility_scope, status
+                )
+                VALUES (
+                    :catalog_entry_id, :tenant_id, :workspace_id, :agent_definition_id,
+                    :latest_version_id, :visibility_scope, :status
+                )
+                ON CONFLICT (tenant_id, workspace_id, agent_definition_id)
+                DO UPDATE SET
+                    latest_version_id = EXCLUDED.latest_version_id,
+                    visibility_scope = EXCLUDED.visibility_scope,
+                    status = EXCLUDED.status
+                """
+            ),
+            {
+                "catalog_entry_id": catalog_entry_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+                "latest_version_id": latest_version_id,
+                "visibility_scope": visibility_scope,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(catalog_entry_id, status)
+
+    def list_catalog_entries(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+    ) -> tuple[ProductAgentCatalogEntryView, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT catalog_entry_id, agent_definition_id, latest_version_id,
+                       visibility_scope, status
+                FROM product_agent_catalog_entries
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND status = 'VISIBLE'
+                ORDER BY catalog_entry_id
+                """
+            ),
+            {"tenant_id": tenant_id, "workspace_id": workspace_id},
+        ).mappings().all()
+        return tuple(
+            ProductAgentCatalogEntryView(
+                catalog_entry_id=str(row["catalog_entry_id"]),
+                agent_definition_id=str(row["agent_definition_id"]),
+                latest_version_id=str(row["latest_version_id"]),
+                visibility_scope=str(row["visibility_scope"]),
+                status=str(row["status"]),
+            )
+            for row in rows
+        )
 
     def submit_command(self, command: ProductCommandSubmission) -> ProductCommandReceiptRef:
         self._ensure_conversation(command)
@@ -633,6 +830,22 @@ class ProductRepository:
             },
         )
 
+    def _ensure_agent_version_status(self, *, agent_version_id: str, status: str) -> None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT status
+                FROM product_agent_versions
+                WHERE agent_version_id = :agent_version_id
+                """
+            ),
+            {"agent_version_id": agent_version_id},
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("unknown Product AgentVersion")
+        if row["status"] != status:
+            raise ProductPersistenceConflict(f"Product AgentVersion must be {status}")
+
     def _append_receipt(
         self,
         command_id: str,
@@ -686,6 +899,8 @@ def stable_json(payload: dict[str, Any]) -> str:
 
 __all__ = [
     "ProductActionTokenRef",
+    "ProductAgentAssetRef",
+    "ProductAgentCatalogEntryView",
     "ProductCommandReceiptRef",
     "ProductCommandSubmission",
     "ProductPersistenceConflict",

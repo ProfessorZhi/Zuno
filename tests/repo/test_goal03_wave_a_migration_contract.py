@@ -6,6 +6,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py"
 REPAIR_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_37_wave_a_product_runtime_dispatch.py"
+PRODUCT_AGENT_ASSET_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_38_goal03_product_agent_publication_installation.py"
 
 
 def test_goal03_wave_a_migration_is_append_only_single_head_successor() -> None:
@@ -57,3 +58,24 @@ def test_goal03_wave_a_repair_migration_adds_product_message_fact() -> None:
     assert "product_messages" in text
     assert "fk_product_messages_submission" in text
     assert "ck_product_messages_publication_boundary" in text
+
+
+def test_goal03_wave_a_product_agent_asset_migration_adds_publication_installation_catalog() -> None:
+    text = PRODUCT_AGENT_ASSET_MIGRATION.read_text(encoding="utf-8")
+
+    assert 'revision = "20260726_38"' in text
+    assert 'down_revision = "20260725_37"' in text
+    assert text.count("op.create_table(") == text.count("op.drop_table(")
+    for fragment in (
+        "product_agent_drafts",
+        "product_agent_publications",
+        "product_agent_installations",
+        "product_agent_catalog_entries",
+        "fk_product_agent_publications_version",
+        "fk_product_agent_installations_version",
+        "fk_product_agent_catalog_version",
+        "ck_product_agent_publications_status",
+        "ck_product_agent_installations_status",
+        "ck_product_agent_catalog_status",
+    ):
+        assert fragment in text

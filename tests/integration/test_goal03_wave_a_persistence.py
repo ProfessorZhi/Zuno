@@ -81,6 +81,10 @@ def engine(migrated_postgres):
                     product_messages,
                     product_submissions,
                     product_conversation_threads,
+                    product_agent_catalog_entries,
+                    product_agent_installations,
+                    product_agent_publications,
+                    product_agent_drafts,
                     product_agent_versions,
                     product_agent_definitions
                 RESTART IDENTITY
@@ -302,6 +306,73 @@ def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted
         assert len(resync) == 1
         assert resync[0].projection_event_id == f"resync:{expired.cursor_id}"
         assert resync[0].gap_detected is True
+
+
+def test_phase09_product_agent_assets_publish_install_and_catalog(engine) -> None:
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+        draft = repo.create_agent_draft(
+            draft_id="agent-draft:wave-a",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_definition_id="agent-def:wave-a",
+            draft_payload={
+                "display_name": "Wave A Agent",
+                "primary_agent_core_profile_ref": "agent-core-profile:default",
+            },
+        )
+        publication = repo.publish_agent_version(
+            publication_id="agent-publication:wave-a",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_version_id="agent-version:wave-a",
+            publication_scope="WORKSPACE",
+            publication_payload={"channel": "workspace_catalog"},
+        )
+        installation = repo.install_agent_version(
+            installation_id="agent-installation:wave-a",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_version_id="agent-version:wave-a",
+            principal_id="principal-a",
+            installation_scope="USER",
+        )
+        catalog = repo.upsert_catalog_entry(
+            catalog_entry_id="agent-catalog:wave-a",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_definition_id="agent-def:wave-a",
+            latest_version_id="agent-version:wave-a",
+            visibility_scope="WORKSPACE",
+        )
+        entries = repo.list_catalog_entries(tenant_id="tenant-a", workspace_id="workspace-a")
+
+        assert draft.status == "DRAFT"
+        assert publication.status == "PUBLISHED"
+        assert installation.status == "ACTIVE"
+        assert catalog.status == "VISIBLE"
+        assert [entry.catalog_entry_id for entry in entries] == ["agent-catalog:wave-a"]
+        assert entries[0].latest_version_id == "agent-version:wave-a"
+
+        conn.execute(
+            text(
+                """
+                UPDATE product_agent_versions
+                SET status = 'REVOKED'
+                WHERE agent_version_id = 'agent-version:wave-a'
+                """
+            )
+        )
+        with pytest.raises(ProductPersistenceConflict, match="Product AgentVersion must be PUBLISHED"):
+            repo.install_agent_version(
+                installation_id="agent-installation:revoked",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                agent_version_id="agent-version:wave-a",
+                principal_id="principal-a",
+                installation_scope="USER",
+            )
 
 
 def _knowledge_draft() -> KnowledgeVersionDraft:
