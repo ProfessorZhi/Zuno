@@ -13,6 +13,7 @@
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
 - `product_action_tokens` 支持一次性消费和撤销；重复消费或撤销后消费 fail closed。
+- Product Projection rebuild 会过期该 workspace 的既有 stream cursor，并追加 gap projection event 作为重建水位线；重复 rebuild idempotent，不重复生成水位线。
 - 旧 `/completion` 默认 Unified Runtime 入口会先尝试写入 Product Runtime shadow command / projection / action-token 记录，并以 SSE `product_runtime_shadow` 暴露 `recorded` 或 `blocked` 结果；shadow 写入失败不把主 completion 响应冒充为 Product 成功，也不阻断默认 runtime 输出。
 
 ## 默认调用链
@@ -36,6 +37,11 @@ GET /api/v1/product/stream-events
 GET /api/v1/product/stream
 → ProductService.list_stream_events
 → text/event-stream: id / event / data
+
+ProductRepository.record_projection_rebuild
+→ expire workspace stream cursors
+→ record gap projection event
+→ client Last-Event-ID receives RESYNC_REQUIRED
 
 POST /api/v1/completion
 → CompletionService.stream_unified_runtime
@@ -97,8 +103,30 @@ python -m pytest -q tests/api/test_goal03_product_route.py -p no:cacheprovider
 4 passed, 1 warning
 ```
 
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_projection_stream_cursor_and_action_token_are_persisted -p no:cacheprovider
+```
+
+结果：
+
+```text
+1 passed
+```
+
+```powershell
+python -m compileall -q src/backend/zuno/platform/database/product
+git diff --check
+```
+
+结果：
+
+```text
+compileall passed
+git diff --check passed with LF/CRLF warnings only
+```
+
 ## 边界
 
-本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录与 fail-closed 事件语义。
+本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录与 fail-closed 事件语义。
 
-本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API default-new/canary/rollback 切换、跨 Owner Projection rebuild 和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API default-new/canary/rollback 切换、跨 Owner Projection rebuild worker 编排和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。

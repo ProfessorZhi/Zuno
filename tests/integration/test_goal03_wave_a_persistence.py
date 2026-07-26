@@ -363,6 +363,44 @@ def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted
         assert wrong_principal_resync[0].redaction_decision_ref == "redaction:unknown-cursor"
         assert wrong_principal_resync[0].gap_detected is True
 
+        rebuild = repo.record_projection_rebuild(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            rebuild_id="rebuild:projection:1",
+            reason="projection_gap_rebuild",
+            now=now,
+        )
+        assert rebuild.projection_event_id == "projection-rebuild:rebuild:projection:1"
+        assert rebuild.gap_detected is True
+        rebuild_replay = repo.record_projection_rebuild(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            rebuild_id="rebuild:projection:1",
+            reason="projection_gap_rebuild",
+            now=now,
+        )
+        assert rebuild_replay.duplicate is True
+        rebuild_events = repo.list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            last_event_id=projection.projection_event_id,
+            now=now,
+        )
+        assert [event.projection_event_id for event in rebuild_events] == [
+            "projection-rebuild:rebuild:projection:1"
+        ]
+        assert rebuild_events[0].gap_detected is True
+        expired_after_rebuild = repo.list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            last_event_id=cursor.cursor_id,
+            now=now,
+        )
+        assert expired_after_rebuild[0].projection_event_id == f"resync:{cursor.cursor_id}"
+        assert expired_after_rebuild[0].gap_detected is True
+
 
 def test_phase09_product_agent_assets_publish_install_and_catalog(engine) -> None:
     with engine.begin() as conn:

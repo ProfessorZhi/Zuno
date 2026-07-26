@@ -568,6 +568,55 @@ class ProductRepository:
             gap_detected=gap_detected,
         )
 
+    def record_projection_rebuild(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        rebuild_id: str,
+        reason: str,
+        now: datetime | None = None,
+    ) -> ProductProjectionEventRef:
+        now = now or datetime.now(timezone.utc)
+        self.connection.execute(
+            text(
+                """
+                UPDATE product_stream_cursors cursor
+                SET expires_at = :now
+                WHERE cursor.tenant_id = :tenant_id
+                  AND EXISTS (
+                      SELECT 1
+                      FROM product_projection_events event
+                      WHERE event.projection_event_id = cursor.projection_event_id
+                        AND event.workspace_id = :workspace_id
+                  )
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "now": now,
+            },
+        )
+        return self.record_projection_event(
+            projection_event_id=f"projection-rebuild:{rebuild_id}",
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            source_module="Product Projection Rebuild",
+            source_event_id=rebuild_id,
+            source_watermark=self.next_projection_watermark(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+            ),
+            projection_payload={
+                "rebuild_id": rebuild_id,
+                "reason": reason,
+                "workspace_id": workspace_id,
+            },
+            redaction_decision_ref=f"redaction:{rebuild_id}:rebuild",
+            gap_detected=True,
+        )
+
     def issue_action_token(
         self,
         *,
