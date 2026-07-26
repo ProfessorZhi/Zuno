@@ -35,6 +35,7 @@ class PlanningRequest:
     requested_retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
     context_pack: dict[str, Any] = field(default_factory=dict)
     pinned_skill_id: str | None = None
+    pinned_capability_plan: CapabilityPlan | None = None
     available_capability_ids: tuple[str, ...] = ()
     user_roles: tuple[str, ...] = ()
     security_summary: dict[str, Any] = field(default_factory=dict)
@@ -142,6 +143,8 @@ class StrategySelector:
         )
 
     def _build_capability_plan(self, request: PlanningRequest) -> CapabilityPlan:
+        if request.pinned_capability_plan is not None:
+            return request.pinned_capability_plan
         if not request.available_capability_ids:
             return CapabilityPlan()
         route = self._capability_router.route(

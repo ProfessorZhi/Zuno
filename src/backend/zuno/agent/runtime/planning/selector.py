@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.agent.contracts import RetrievalProfile
+from zuno.agent.contracts import CapabilityPlan, RetrievalProfile
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
 from zuno.agent.runtime.contracts import StrategyDecision, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
@@ -18,6 +18,7 @@ class RuntimeStrategySelector:
                 user_goal=state.goal,
                 requested_retrieval_profile=RetrievalProfile.STANDARD,
                 context_pack=state.context_pack.model_dump(mode="json") if state.context_pack else {},
+                pinned_capability_plan=_pinned_capability_plan(state),
                 available_capability_ids=tuple(state.capability_plan.allowed_capabilities),
                 user_roles=("analyst",),
             )
@@ -65,6 +66,36 @@ class RuntimeStrategySelector:
             state.context_pack = state.context_pack.model_copy(update={"task_state": task_state})
         state.trace_event_ids.extend(event.event_id for event in output.trace_events)
         return state
+
+
+def _pinned_capability_plan(state: AgentRuntimeState) -> CapabilityPlan | None:
+    if state.context_pack is None:
+        return None
+    task_state = state.context_pack.task_state
+    snapshot_ref = task_state.get("capability_availability_snapshot_ref")
+    selection_ref = task_state.get("capability_selection_result_ref")
+    selection_validity = task_state.get("capability_selection_validity")
+    if not snapshot_ref or not selection_ref or selection_validity != "fixed_planning_snapshot":
+        return None
+    risk_summary = {}
+    exposure_ref = task_state.get("capability_planner_exposure_ref")
+    exposure_visibility = task_state.get("capability_planner_exposure_visibility")
+    if exposure_ref or exposure_visibility:
+        risk_summary["planner_exposure"] = {
+            "exposure_ref": exposure_ref,
+            "visibility": exposure_visibility,
+        }
+    return CapabilityPlan(
+        availability_snapshot_ref=str(snapshot_ref),
+        selection_result_ref=str(selection_ref),
+        selection_validity="fixed_planning_snapshot",
+        allowed_capabilities=list(state.capability_plan.allowed_capabilities),
+        allowed_tools=list(state.capability_plan.allowed_tools),
+        blocked_capability_reasons=dict(state.capability_plan.blocked_capability_reasons),
+        approval_required_tools=list(state.capability_plan.approval_required_tools),
+        executed_tools=[],
+        risk_summary=risk_summary,
+    )
 
 
 __all__ = ["RuntimeStrategySelector"]

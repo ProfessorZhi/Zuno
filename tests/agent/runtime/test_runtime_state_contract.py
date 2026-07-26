@@ -169,3 +169,42 @@ def test_runtime_strategy_selection_pins_capability_snapshot_refs_in_context_pac
     assert task_state["capability_planner_exposure_visibility"] == (
         "planner_authorized_summary_schema_only"
     )
+
+
+def test_runtime_strategy_selection_reuses_pinned_capability_refs() -> None:
+    state = AgentRuntimeState(
+        run_id="run-pinned-capability",
+        thread_id="thread-pinned-capability",
+        workspace_id="workspace-capability",
+        user_id="user-pinned-capability",
+        task_id="task-pinned-capability",
+        trace_id="trace-pinned-capability",
+        goal="Search the web for sources and summarize the result.",
+        context_pack=ContextPack(
+            context_pack_id="context-pinned-capability",
+            user_goal="Search the web for sources and summarize the result.",
+            task_state={
+                "capability_availability_snapshot_ref": "capability_snapshot:pinned",
+                "capability_selection_result_ref": "capability_selection:pinned",
+                "capability_selection_validity": "fixed_planning_snapshot",
+                "capability_planner_exposure_ref": "capability_exposure:pinned",
+                "capability_planner_exposure_visibility": "planner_authorized_summary_schema_only",
+            },
+        ),
+        capability_plan=CapabilityPlan(
+            allowed_capabilities=["tool.web.search"],
+            allowed_tools=["tool.web.search"],
+        ),
+    )
+
+    selected = RuntimeStrategySelector().select(state, deps=None)
+
+    assert selected.capability_plan.availability_snapshot_ref == "capability_snapshot:pinned"
+    assert selected.capability_plan.selection_result_ref == "capability_selection:pinned"
+    assert selected.capability_plan.allowed_tools == ["tool.web.search"]
+    assert selected.capability_plan.executed_tools == []
+    assert all(
+        step.input_refs == ["capability_snapshot:pinned", "capability_selection:pinned"]
+        for step in selected.plan_state.steps
+    )
+    assert all(step.tool_policy_ref == "capability_selection:pinned" for step in selected.plan_state.steps)
