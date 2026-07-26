@@ -95,6 +95,65 @@ def test_tool_task_selects_react_without_executing_tool() -> None:
     assert output.plan_state.steps[0].action_type == "select_capability"
 
 
+def test_strategy_selector_uses_route_decision_without_registry_capability_rewalk() -> None:
+    from types import SimpleNamespace
+
+    from zuno.capability.layer import build_default_capability_layer_registry
+
+    class PlanningRegistry:
+        def __init__(self):
+            self._inner = build_default_capability_layer_registry()
+
+        def require_skill(self, skill_id):
+            return self._inner.require_skill(skill_id)
+
+        def require_capability(self, capability_id):
+            raise AssertionError(f"planner rewalked registry for {capability_id}")
+
+        def list_capabilities(self):
+            return self._inner.list_capabilities()
+
+        def tool_cards(self):
+            return self._inner.tool_cards()
+
+    class SnapshotRouter:
+        def route(self, request):
+            del request
+            return SimpleNamespace(
+                allowed_capability_ids=("knowledge.research_corpus", "tool.web.search"),
+                allowed_tool_ids=("tool.web.search",),
+                approval_required_capability_ids=(),
+                blocked_capability_reasons={},
+                planner_exposure={
+                    "visibility": "planner_authorized_summary_schema_only",
+                    "capabilities": [
+                        {"capability_id": "knowledge.research_corpus"},
+                        {"capability_id": "tool.web.search"},
+                    ],
+                    "exposure_ref": "capability_planner_exposure_snapshot_only",
+                },
+            )
+
+    selector = StrategySelector(registry=PlanningRegistry())
+    selector._capability_router = SnapshotRouter()
+
+    output = selector.select(
+        PlanningRequest(
+            task_id="task_snapshot_only",
+            trace_id="trace_snapshot_only",
+            workspace_id="workspace_alpha",
+            user_goal="Search the web for sources and summarize the result.",
+            requested_retrieval_profile=RetrievalProfile.DEEP,
+            available_capability_ids=("knowledge.research_corpus", "tool.web.search"),
+            user_roles=("analyst",),
+        )
+    )
+
+    assert output.capability_plan.selection_validity == "fixed_planning_snapshot"
+    assert output.capability_plan.allowed_tools == ["tool.web.search"]
+    assert output.capability_plan.approval_required_tools == []
+
+
 def test_formal_report_selects_plan_execute_with_reflection_gate() -> None:
     selector = build_default_strategy_selector()
 

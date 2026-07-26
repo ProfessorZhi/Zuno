@@ -167,11 +167,6 @@ class StrategySelector:
             *route.allowed_capability_ids,
             *route.blocked_capability_reasons.keys(),
         )
-        approval_required = []
-        for capability_id in route.allowed_capability_ids:
-            capability = self._registry.require_capability(capability_id)
-            if capability.policy.approval_required:
-                approval_required.append(capability_id)
         return CapabilityPlan(
             availability_snapshot_ref=snapshot_ref,
             selection_result_ref=selection_ref,
@@ -179,11 +174,11 @@ class StrategySelector:
             allowed_capabilities=list(route.allowed_capability_ids),
             allowed_tools=list(route.allowed_tool_ids),
             blocked_capability_reasons=dict(route.blocked_capability_reasons),
-            approval_required_tools=approval_required,
+            approval_required_tools=list(route.approval_required_capability_ids),
             executed_tools=[],
             risk_summary={
                 "blocked_count": len(route.blocked_capability_reasons),
-                "approval_required_count": len(approval_required),
+                "approval_required_count": len(route.approval_required_capability_ids),
                 "planner_exposure": route.planner_exposure,
             },
         )

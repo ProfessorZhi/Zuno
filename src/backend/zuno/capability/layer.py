@@ -42,6 +42,7 @@ class CapabilityRouteDecision:
     selected_skill: SkillCard
     allowed_capability_ids: tuple[str, ...]
     allowed_tool_ids: tuple[str, ...]
+    approval_required_capability_ids: tuple[str, ...]
     blocked_capability_reasons: dict[str, str]
     audit_events: tuple[CapabilityAuditEvent, ...]
     planner_exposure: dict[str, Any]
@@ -103,6 +104,7 @@ class CapabilityRouter:
 
         allowed_capabilities: list[str] = []
         allowed_tools: list[str] = []
+        approval_required: list[str] = []
         blocked: dict[str, str] = {}
         audit_events: list[CapabilityAuditEvent] = []
 
@@ -122,6 +124,8 @@ class CapabilityRouter:
                 capability = self._registry.require_capability(capability_id)
                 if capability.capability_type == "tool":
                     allowed_tools.append(capability_id)
+                if capability.policy.approval_required:
+                    approval_required.append(capability_id)
             else:
                 blocked[capability_id] = decision.reason
 
@@ -135,6 +139,7 @@ class CapabilityRouter:
             selected_skill=selected_skill,
             allowed_capability_ids=tuple(allowed_capabilities),
             allowed_tool_ids=tuple(allowed_tools),
+            approval_required_capability_ids=tuple(approval_required),
             blocked_capability_reasons=blocked,
             audit_events=tuple(audit_events),
             planner_exposure=planner_exposure,
@@ -144,6 +149,7 @@ class CapabilityRouter:
                 "automatic_candidate_skill_id": automatic_skill_id,
                 "requested_capability_ids": list(request.requested_capability_ids),
                 "allowed_capability_ids": allowed_capabilities,
+                "approval_required_capability_ids": approval_required,
                 "blocked_capability_reasons": dict(blocked),
                 "planner_exposure_ref": planner_exposure["exposure_ref"],
                 "planner_exposure_budget": planner_exposure["budget"],
