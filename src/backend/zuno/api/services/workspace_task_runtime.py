@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from zuno.agent.contracts import PlannerOutput, RetrievalProfile
+from zuno.agent.contracts import CapabilityPlan, PlannerOutput, RetrievalProfile
 from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
 from zuno.agent.harness import ControllerRuntimeState
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
@@ -2946,11 +2946,64 @@ class WorkspaceTaskRuntimeService:
                     if simple_task.agent_skill_ids
                     else None
                 ),
+                pinned_capability_plan=cls._workspace_capability_plan(
+                    task=task,
+                    simple_task=simple_task,
+                    login_user=login_user,
+                ),
                 available_capability_ids=tuple(simple_task.plugins),
                 user_roles=cls._user_roles(login_user),
                 graph_available=True,
             )
         )
+
+    @classmethod
+    def _workspace_capability_plan(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+    ) -> CapabilityPlan | None:
+        if not simple_task.plugins:
+            return None
+        try:
+            from zuno.capability.planning_runtime import CapabilityPlanningRuntime
+            from zuno.platform.database.capability import CapabilityUnitOfWork
+            from zuno.platform.database import engine
+
+            return CapabilityPlanningRuntime(
+                unit_of_work_factory=lambda: CapabilityUnitOfWork(engine)
+            ).select(
+                {
+                    "task_id": task.task_id,
+                    "trace_id": task.trace_id or "",
+                    "workspace_id": task.workspace_id,
+                    "user_id": login_user.user_id,
+                    "tenant_id": f"user:{login_user.user_id}",
+                    "user_goal": task.goal,
+                    "available_capability_ids": tuple(simple_task.plugins),
+                    "pinned_skill_id": (
+                        simple_task.agent_skill_ids[0]
+                        if simple_task.agent_skill_ids
+                        else None
+                    ),
+                    "user_roles": cls._user_roles(login_user),
+                }
+            )
+        except Exception as exc:
+            return CapabilityPlan(
+                selection_validity="blocked_capability_selection",
+                blocked_capability_reasons={
+                    capability_id: f"capability_runtime_unavailable:{type(exc).__name__}"
+                    for capability_id in simple_task.plugins
+                },
+                risk_summary={
+                    "blocked": True,
+                    "reason": "capability_runtime_unavailable",
+                    "failure_type": type(exc).__name__,
+                },
+            )
 
     @staticmethod
     def _user_roles(login_user: UserPayload) -> tuple[str, ...]:

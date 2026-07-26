@@ -10,7 +10,9 @@ import pytest
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
+from zuno.agent.contracts import CapabilityPlan
 from zuno.platform.security import SecurityProductActionDenied
+from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 
 
 def _client() -> TestClient:
@@ -122,6 +124,54 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     events_after_feedback = client.get(f"/api/v1/workspace/task/{task_id}/events").json()["data"]
     assert events_after_feedback[-1]["type"] == "feedback_received"
     assert events_after_feedback[-1]["payload"]["feedback_id"] == feedback["feedback_id"]
+
+
+def test_workspace_planner_uses_capability_runtime_port_for_plugins(monkeypatch) -> None:
+    captured: list[dict] = []
+
+    def fake_select(self, request):
+        del self
+        captured.append(dict(request))
+        return CapabilityPlan(
+            availability_snapshot_ref="capability_snapshot:workspace",
+            selection_result_ref="capability_selection:workspace",
+            selection_validity="fixed_planning_snapshot",
+            allowed_capabilities=["tool.web.search"],
+            allowed_tools=["tool.web.search"],
+            risk_summary={
+                "planner_exposure": {
+                    "exposure_ref": "capability_exposure:workspace",
+                    "visibility": "planner_authorized_summary_schema_only",
+                }
+            },
+        )
+
+    monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
+
+    output = WorkspaceTaskRuntimeService._build_planner_output(
+        task=WorkspaceTaskContract(
+            workspace_id="workspace_phase09",
+            owner="principal-a",
+            task_id="task_phase09_capability",
+            session_id="session_phase09_capability",
+            goal="Search the web for sources and summarize the result.",
+            trace_id="trace_phase09_capability",
+        ),
+        simple_task=WorkSpaceSimpleTask(
+            query="Search the web for sources and summarize the result.",
+            model_id="model-local",
+            session_id="session_phase09_capability",
+            workspace_id="workspace_phase09",
+            plugins=["tool.web.search"],
+        ),
+        login_user=UserPayload(user_id="principal-a", user_name="Principal A", role="admin"),
+    )
+
+    assert captured[0]["available_capability_ids"] == ("tool.web.search",)
+    assert output.capability_plan.availability_snapshot_ref == "capability_snapshot:workspace"
+    assert output.capability_plan.selection_result_ref == "capability_selection:workspace"
+    assert output.capability_plan.allowed_tools == ["tool.web.search"]
+    assert all(step.tool_policy_ref == "capability_selection:workspace" for step in output.plan_state.steps)
 
 
 def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
