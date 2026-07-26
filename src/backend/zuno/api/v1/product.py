@@ -120,6 +120,7 @@ async def stream_projection_events(
     )
 
     async def event_source():
+        yield "retry: 1000\n\n"
         for event in events:
             payload = {
                 "event_id": event.event_id,
@@ -133,6 +134,10 @@ async def stream_projection_events(
                 f"event: {event.event_type}\n"
                 f"data: {json.dumps(payload, ensure_ascii=True, sort_keys=True)}\n\n"
             )
+        yield (
+            "event: HEARTBEAT\n"
+            'data: {"event_type":"HEARTBEAT","resync_required":false}\n\n'
+        )
 
     return StreamingResponse(event_source(), media_type="text/event-stream")
 

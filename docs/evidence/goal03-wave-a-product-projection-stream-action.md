@@ -9,6 +9,7 @@
 - 同一 Product Unit of Work 内提交 `ProductCommand`、`CommandReceipt`、`ProjectionEvent`、`StreamCursor` 和服务端 `ActionToken`。
 - `CommandReceipt` 仍只表示 Product 接受或重复，不冒充 Agent Core 领域成功。
 - `GET /api/v1/product/stream` 使用 `text/event-stream` 输出 Product Projection Delta / Resync 事件。
+- `GET /api/v1/product/stream` 输出 SSE `retry` hint 和 `HEARTBEAT` keepalive；heartbeat 只证明连接存活，不冒充 Projection 成功。
 - `GET /api/v1/product/stream-events` 提供同一事件源的 JSON 查询面，支持 `Last-Event-ID`，并在未知或过期 cursor 时返回 `RESYNC_REQUIRED` 语义。
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
@@ -130,4 +131,4 @@ git diff --check passed with LF/CRLF warnings only
 
 本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析和 fail-closed 事件语义。
 
-本证据不单独证明完整 PHASE09 completed；完整 SSE backpressure、跨 Owner Projection rebuild worker 编排、完整浏览器 E2E client reconnect 和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；真实浏览器 E2E client reconnect、跨 Owner Projection rebuild worker 编排和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。

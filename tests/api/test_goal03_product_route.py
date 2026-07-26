@@ -151,9 +151,12 @@ def test_goal03_product_stream_route_returns_sse_projection_events(monkeypatch) 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     assert captured["last_event_id"] == "cursor:expired"
+    assert "retry: 1000" in response.text
     assert "id: projection:1" in response.text
     assert "event: RESYNC_REQUIRED" in response.text
     assert '"resync_required": true' in response.text
+    assert "event: HEARTBEAT" in response.text
+    assert '"event_type":"HEARTBEAT"' in response.text
 
 
 def test_goal03_product_router_is_registered_in_main_api_router() -> None:
