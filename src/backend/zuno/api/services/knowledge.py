@@ -859,16 +859,24 @@ class KnowledgeService:
             query_method=query_method,
             top_k=top_k,
         )
-        cls.record_search_query_run(
-            user_id=user_id,
-            knowledge_ids=knowledge_ids,
-            query=query,
-            product_mode=product_mode,
-            query_method=query_method,
-            top_k=top_k,
-            result=result,
-        )
-        return cls._knowledge_query_result_to_search_payload(result)
+        payload = cls._knowledge_query_result_to_search_payload(result)
+        try:
+            cls.record_search_query_run(
+                user_id=user_id,
+                knowledge_ids=knowledge_ids,
+                query=query,
+                product_mode=product_mode,
+                query_method=query_method,
+                top_k=top_k,
+                result=result,
+            )
+            payload["query_run_persistence"] = {"status": "recorded"}
+        except ValueError as exc:
+            payload["query_run_persistence"] = {
+                "status": "blocked",
+                "reason": str(exc),
+            }
+        return payload
 
     @staticmethod
     def record_search_query_run(
