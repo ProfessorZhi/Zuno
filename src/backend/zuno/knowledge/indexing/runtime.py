@@ -110,6 +110,7 @@ class KnowledgeIndexRuntime:
         handoff = build_index_handoff_payload(document)
         target_status = {}
         adapter_dispatch_receipts = {}
+        indexed_documents_by_target = {}
         for target in targets:
             adapter = self._adapter_for_target(target)
             indexed_documents = adapter.index(
@@ -120,6 +121,7 @@ class KnowledgeIndexRuntime:
                 graph_project_id=space.graph_project_id,
             )
             self._indexes[knowledge_space_id][target] = indexed_documents
+            indexed_documents_by_target[target] = indexed_documents
             target_status[target] = "ready"
             adapter_dispatch_receipts[target] = _adapter_dispatch_receipt(
                 adapter=adapter,
@@ -149,15 +151,19 @@ class KnowledgeIndexRuntime:
             sensitivity_tags=_sensitivity_tags(document),
             adapter_status=adapter_status_for_targets(list(targets)),
             adapter_dispatch_receipts=adapter_dispatch_receipts,
-            adapter_visibility_receipts=self._adapter_visibility_receipts(
+            adapter_visibility_receipts=self._verified_adapter_visibility_receipts(
                 knowledge_space_id=knowledge_space_id,
                 index_version=space.index_version,
                 document=document,
                 target_status=target_status,
                 adapter_dispatch_receipts=adapter_dispatch_receipts,
+                indexed_documents_by_target=indexed_documents_by_target,
             ),
             **_manifest_lineage_fields(lineage),
         )
+        for target, receipt in manifest.adapter_visibility_receipts.items():
+            if receipt.get("visibility") != "visible":
+                manifest.target_status[target] = "degraded"
         self._jobs[job_id] = manifest
         self._latest_job_by_space[knowledge_space_id] = job_id
         space.status = "ready"
@@ -241,19 +247,24 @@ class KnowledgeIndexRuntime:
         self._latest_job_by_space[manifest.knowledge_space_id] = manifest.job_id
 
     @staticmethod
-    def _adapter_visibility_receipts(
+    def _verified_adapter_visibility_receipts(
         *,
         knowledge_space_id: str,
         index_version: str,
         document: CanonicalDocumentIR,
         target_status: dict[str, str],
         adapter_dispatch_receipts: dict[str, dict],
+        indexed_documents_by_target: dict[str, list[dict]],
     ) -> dict[str, dict]:
         receipts: dict[str, dict] = {}
         for target in ["bm25", "vector", "graph"]:
             if target_status.get(target) != "ready":
                 continue
             dispatch_receipt = adapter_dispatch_receipts.get(target, {})
+            sample_verification = _sample_visibility_verification(
+                document=document,
+                indexed_documents=indexed_documents_by_target.get(target, []),
+            )
             payload = {
                 "adapter_target": target,
                 "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
@@ -262,6 +273,7 @@ class KnowledgeIndexRuntime:
                 "index_version": index_version,
                 "knowledge_space_id": knowledge_space_id,
                 "source_block_ids": [block.block_id for block in document.blocks],
+                "sample_verification": sample_verification,
             }
             receipts[target] = {
                 "receipt_ref": f"index-visibility:{target}:{_stable_hash(payload)[:16]}",
@@ -269,7 +281,10 @@ class KnowledgeIndexRuntime:
                 "adapter_id": dispatch_receipt.get("adapter_id"),
                 "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
                 "adapter_status": "current",
-                "visibility": "visible",
+                "visibility": "visible" if sample_verification["passed"] else "hidden",
+                "visibility_failure_reason": None if sample_verification["passed"] else sample_verification["reason"],
+                "sample_query": sample_verification["sample_query"],
+                "sample_match_count": sample_verification["match_count"],
                 "knowledge_space_id": knowledge_space_id,
                 "index_version": index_version,
                 "document_id": document.metadata.document_id,
@@ -471,6 +486,44 @@ def _adapter_dispatch_receipt(
         "document_version_id": document.metadata.document_version_id,
         "indexed_document_count": len(indexed_documents),
         "payload_hash": payload_hash,
+    }
+
+
+def _sample_visibility_verification(
+    *,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    source_text = " ".join(block.text for block in document.blocks)
+    sample_tokens = tuple(_tokens(source_text)[:8])
+    sample_query = " ".join(sample_tokens)
+    if not indexed_documents:
+        return {
+            "passed": False,
+            "reason": "sample_retrieval_empty",
+            "sample_query": sample_query,
+            "match_count": 0,
+        }
+    query_tokens = set(sample_tokens)
+    match_count = 0
+    for indexed in indexed_documents:
+        if str(indexed.get("document_id") or "") != document.metadata.document_id:
+            continue
+        indexed_tokens = set(_tokens(str(indexed.get("content") or "")))
+        if query_tokens & indexed_tokens:
+            match_count += 1
+    if match_count == 0:
+        return {
+            "passed": False,
+            "reason": "sample_retrieval_no_source_match",
+            "sample_query": sample_query,
+            "match_count": 0,
+        }
+    return {
+        "passed": True,
+        "reason": "sample_retrieval_matched_source",
+        "sample_query": sample_query,
+        "match_count": match_count,
     }
 
 

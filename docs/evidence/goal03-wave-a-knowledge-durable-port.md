@@ -16,7 +16,7 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - `RuntimeDependencyFactory.for_completion(...)` 和 `RuntimeDependencyFactory.for_workspace_task(...)` 默认返回 durable Knowledge port，而不是缺失依赖或裸 corrective runtime。
 - 默认 completion factory 的 retrieval step 已证明进入 `DurableKnowledgeRetrievalPort`；无 knowledge scope 时返回 `durable_knowledge_port.status = skipped / reason = knowledge_scope_empty`，不再产生 `missing_knowledge_runtime`，也不冒充检索成功。
 - `CorrectiveRetrievalRequest` 与 `KnowledgeStepExecutor` 无显式 plan / strategy 时的默认 retrieval profile 已改为 `standard`；测试证明 Agent Core 默认请求和 durable query run payload 都不再回落到 `deep`。
-- `KnowledgeIndexRuntime` 的 current local BM25 / vector / graph adapter 会在 `IndexJobManifest.adapter_visibility_receipts` 写入 per-target visibility receipt；retrieval payload 只把具备 `visibility = visible` receipt 的 target 纳入 `retrievers_used`。
+- `KnowledgeIndexRuntime` 的 current local BM25 / vector / graph adapter 会在 `IndexJobManifest.adapter_visibility_receipts` 写入 per-target visibility receipt；receipt 现在必须通过 sample retrieval verification 才能标记 `visibility = visible`，否则 target 进入 `degraded`，retrieval payload 不把它纳入 `retrievers_used`。
 - `KnowledgeIndexRuntime.index_document(...)` 现在通过 target 对应的 configured adapter binding 执行 index dispatch，并在 `IndexJobManifest.adapter_dispatch_receipts` 写入 adapter_id、operation、dispatch_ref、payload_hash 与 indexed_document_count；测试覆盖自定义 adapter binding 被真实调用后才产生 visibility receipt。
 - `KnowledgeRepository.record_index_visibility(...)` 现在对 index build job 的 duplicate same batch 做幂等返回，对相同 job 不同 batch、相同 target/fencing/attempt 不同 write batch、低 fencing stale worker visibility commit 做 fail-closed；更高 fencing 的恢复尝试可提交新的 visibility 事实。
 - 外部 Elasticsearch / Milvus / Neo4j adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
@@ -49,6 +49,7 @@ python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovid
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase12_knowledge_index_visibility_rejects_stale_fencing_and_conflicting_batches -p no:cacheprovider
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
 ```
 
 结果：
@@ -71,6 +72,7 @@ python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py -p no:c
 1 passed
 12 passed
 5 passed
+14 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -102,6 +104,6 @@ retry count: 1
 
 ## 未证明
 
-- 外部 BM25 / Vector / Graph 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，完整外部服务端切换仍需后续环境和 Gate 证据。
+- 外部 BM25 / Vector / Graph 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，并且 current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功。完整外部服务端切换仍需后续环境和 Gate 证据。
 - 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明；本切片只证明默认本地 Standard RAG 证据候选在 citation 前执行 ACL、temporal 和 unresolved conflict 过滤。
 - PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。

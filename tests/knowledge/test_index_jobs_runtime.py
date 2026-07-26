@@ -193,6 +193,37 @@ def test_index_runtime_invokes_configured_adapter_bindings() -> None:
     assert result.documents_by_source["vector"][0]["source_type"] == "vector"
 
 
+def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    class EmptyAdapter:
+        adapter_id = "empty_vector"
+        target = "vector"
+
+        def index(self, *, runtime, handoff, document, lineage, graph_project_id):
+            return []
+
+    document = _sample_document()
+    runtime = KnowledgeIndexRuntime(adapter_bindings={"vector": EmptyAdapter()})
+    runtime.create_knowledge_space("ks_visibility_sample", "workspace_index")
+
+    manifest = runtime.index_document(
+        knowledge_space_id="ks_visibility_sample",
+        document=document,
+        targets=["vector"],
+    )
+    payload = runtime.to_retrieval_payload("ks_visibility_sample", "supplier renewal risk")
+
+    assert manifest.adapter_dispatch_receipts["vector"]["status"] == "succeeded"
+    assert manifest.adapter_visibility_receipts["vector"]["visibility"] == "hidden"
+    assert manifest.adapter_visibility_receipts["vector"]["visibility_failure_reason"] == "sample_retrieval_empty"
+    assert manifest.adapter_visibility_receipts["vector"]["sample_match_count"] == 0
+    assert manifest.target_status["vector"] == "degraded"
+    assert payload["retrievers_used"] == []
+    assert payload["index_health"] == {}
+    assert payload["documents_by_source"] == {}
+
+
 def test_index_manifest_tracks_parse_job_lineage_and_diagnostics_digest() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
 
