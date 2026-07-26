@@ -74,6 +74,15 @@ class CapabilityService:
                 source_generation=1,
                 visible_candidates=candidate_ids,
                 ttl_expires_at=now + timedelta(minutes=5),
+                runtime_signals={
+                    str(item.get("id") or item.get("name") or ""): {
+                        "status": item.get("status") or "unknown",
+                        "health": item.get("health") or item.get("status") or "unknown",
+                        "quota_remaining": item.get("quota_remaining"),
+                        "capacity_remaining": item.get("capacity_remaining"),
+                    }
+                    for item in results
+                },
             )
             repo.record_selection(
                 selection_id=selection_id,

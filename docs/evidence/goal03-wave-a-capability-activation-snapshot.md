@@ -13,6 +13,7 @@
 - AvailabilitySnapshot 只包含 `ACTIVE` installation 绑定的 `ACTIVE` provider binding。
 - Revocation 后同一候选不再进入 snapshot hash。
 - Activation / Revocation transition 与 PHASE04 统一 `infra_outbox_events` 同事务提交，topic 为 `capability.transition.committed`，供 Agent Core 或外部 worker crash 后按 ordering key 幂等恢复。
+- AvailabilitySnapshot 在同一 workspace 内还会按 runtime health、quota remaining 和 capacity remaining 过滤候选；degraded / quota exhausted / capacity exhausted 不能进入 snapshot hash。
 
 ## 默认调用链
 
@@ -26,6 +27,7 @@ CapabilityRepository.install_capability
 
 CapabilityRepository.create_availability_snapshot
 → filter ACTIVE installation + ACTIVE binding
+→ filter runtime health / quota / capacity signals
 → immutable capability_availability_snapshots row
 
 CapabilityRepository.append_transition_event

@@ -301,11 +301,13 @@ class CapabilityRepository:
         source_generation: int,
         visible_candidates: tuple[str, ...],
         ttl_expires_at: datetime,
+        runtime_signals: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         eligible_candidates = self._eligible_snapshot_candidates(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             visible_candidates=visible_candidates,
+            runtime_signals=runtime_signals or {},
         )
         self.connection.execute(
             text(
@@ -587,6 +589,7 @@ class CapabilityRepository:
         tenant_id: str,
         workspace_id: str,
         visible_candidates: tuple[str, ...],
+        runtime_signals: dict[str, dict[str, Any]],
     ) -> tuple[str, ...]:
         if not visible_candidates:
             return ()
@@ -611,7 +614,26 @@ class CapabilityRepository:
                 "visible_candidates": list(visible_candidates),
             },
         ).scalars().all()
-        return tuple(str(row) for row in rows)
+        return tuple(
+            binding_id
+            for binding_id in (str(row) for row in rows)
+            if _runtime_signal_allows(runtime_signals.get(binding_id))
+        )
+
+
+def _runtime_signal_allows(signal: dict[str, Any] | None) -> bool:
+    if signal is None:
+        return True
+    health = str(signal.get("health") or signal.get("status") or "healthy").lower()
+    if health not in {"healthy", "ready", "ok", "available"}:
+        return False
+    quota_remaining = signal.get("quota_remaining")
+    if quota_remaining is not None and int(quota_remaining) <= 0:
+        return False
+    capacity_remaining = signal.get("capacity_remaining")
+    if capacity_remaining is not None and int(capacity_remaining) <= 0:
+        return False
+    return True
 
 
 __all__ = [

@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
+from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.capability import (
     CapabilityActivationConflict,
     CapabilityRepository,
@@ -927,6 +928,25 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
             covers_reconciliation=True,
             covers_security=True,
         )
+        for suffix in ("unhealthy", "quota", "capacity"):
+            repo.propose_binding(
+                binding_id=f"binding:{suffix}",
+                capability_version_id="capability:version:active-read:v1",
+                provider_instance_ref=f"provider:{suffix}",
+                tool_definition_ref=f"tool-definition:{suffix}:v1",
+                mapping_payload={"input": suffix},
+                proposal_source="CURATED",
+            )
+            repo.record_conformance(
+                conformance_id=f"conformance:{suffix}",
+                binding_id=f"binding:{suffix}",
+                report_payload={"passed": True, "suffix": suffix},
+                covers_input=True,
+                covers_output=True,
+                covers_idempotency=True,
+                covers_reconciliation=True,
+                covers_security=True,
+            )
         repo.install_capability(
             installation_id="installation:active-read",
             tenant_id="tenant-a",
@@ -959,8 +979,14 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
             principal_id="principal-a",
             security_epoch_ref="epoch:1",
             source_generation=1,
-            visible_candidates=("binding:active-read",),
+            visible_candidates=("binding:active-read", "binding:unhealthy", "binding:quota", "binding:capacity"),
             ttl_expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+            runtime_signals={
+                "binding:active-read": {"health": "healthy", "quota_remaining": 1, "capacity_remaining": 1},
+                "binding:unhealthy": {"health": "degraded", "quota_remaining": 1, "capacity_remaining": 1},
+                "binding:quota": {"health": "healthy", "quota_remaining": 0, "capacity_remaining": 1},
+                "binding:capacity": {"health": "healthy", "quota_remaining": 1, "capacity_remaining": 0},
+            },
         )
         active_hash = conn.execute(
             text(
@@ -971,6 +997,8 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
                 """
             )
         ).scalar_one()
+        only_active_hash = canonical_sha256({"candidates": ["binding:active-read"]})
+        assert active_hash == only_active_hash
 
         repo.revoke_installation(
             installation_id="installation:active-read",
