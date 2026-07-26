@@ -44,6 +44,16 @@ class _PartialNoResult(_Result):
     retrievers_used = ["BM25"]
 
 
+class _TimeoutNoResult(_Result):
+    retrievers_used = ["BM25"]
+    trace_metadata = {
+        "retriever_runs": [
+            {"source": "bm25", "status": "completed", "result_count": 0},
+            {"source": "vector", "status": "timeout", "result_count": 0},
+        ]
+    }
+
+
 def test_goal03_knowledge_search_records_query_run(monkeypatch) -> None:
     recorded: list[dict] = []
 
@@ -112,6 +122,8 @@ def test_goal03_knowledge_search_requires_active_snapshot_and_records_run(monkey
                 "vector": "used",
             }
             assert kwargs["request_payload"]["partial_retrieval"] is False
+            assert kwargs["request_payload"]["timeout_retrieval"] is False
+            assert kwargs["request_payload"]["retrievers_timed_out"] == []
             assert kwargs["request_payload"]["no_result"] is True
             assert kwargs["request_payload"]["retrieval_semantics"] == "no_result"
 
@@ -169,6 +181,8 @@ def test_goal03_knowledge_query_run_records_partial_no_result_semantics(monkeypa
                 "vector": "missing",
             }
             assert payload["partial_retrieval"] is True
+            assert payload["timeout_retrieval"] is False
+            assert payload["retrievers_timed_out"] == []
             assert payload["no_result"] is True
             assert payload["retrieval_semantics"] == "partial_no_result"
 
@@ -176,8 +190,72 @@ def test_goal03_knowledge_query_run_records_partial_no_result_semantics(monkeypa
             retriever_set = kwargs["retriever_set"]
             assert retriever_set["retriever_availability"]["vector"] == "missing"
             assert retriever_set["partial_retrieval"] is True
+            assert retriever_set["timeout_retrieval"] is False
+            assert retriever_set["retrievers_timed_out"] == []
             assert retriever_set["no_result"] is True
             assert retriever_set["retrieval_semantics"] == "partial_no_result"
+            assert kwargs["status"] == "COMPLETED"
+
+        def mark_query_run_status(self, **kwargs):
+            assert kwargs["status"] == "PARTIAL_EVIDENCE"
+
+    class _Uow:
+        def __enter__(self):
+            return _Repo()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "zuno.services.application.knowledge.KnowledgeQueryService",
+        _QueryService,
+    )
+    monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
+
+    payload = asyncio.run(
+        KnowledgeService.search_knowledge(
+            user_id="principal-a",
+            knowledge_ids=["knowledge-a"],
+            query="renewal",
+            product_mode="auto",
+            query_method=None,
+            top_k=5,
+        )
+    )
+
+    assert payload["query_run_persistence"] == {"status": "recorded"}
+    assert payload["content"] == "answer"
+
+
+def test_goal03_knowledge_query_run_records_timeout_no_result_semantics(monkeypatch) -> None:
+    class _QueryService:
+        async def query(self, **kwargs):
+            assert kwargs["knowledge_ids"] == ["knowledge-a"]
+            return _TimeoutNoResult()
+
+    class _Repo:
+        def active_snapshot_id(self, **kwargs):
+            return "snapshot-a"
+
+        def start_query_run(self, **kwargs):
+            payload = kwargs["request_payload"]
+            assert payload["retrievers_expected"] == ["bm25", "vector"]
+            assert payload["retriever_availability"] == {
+                "bm25": "used",
+                "vector": "timeout",
+            }
+            assert payload["partial_retrieval"] is True
+            assert payload["timeout_retrieval"] is True
+            assert payload["retrievers_timed_out"] == ["vector"]
+            assert payload["no_result"] is True
+            assert payload["retrieval_semantics"] == "timeout_no_result"
+
+        def start_retrieval_round(self, **kwargs):
+            retriever_set = kwargs["retriever_set"]
+            assert retriever_set["retriever_availability"]["vector"] == "timeout"
+            assert retriever_set["timeout_retrieval"] is True
+            assert retriever_set["retrievers_timed_out"] == ["vector"]
+            assert retriever_set["retrieval_semantics"] == "timeout_no_result"
             assert kwargs["status"] == "COMPLETED"
 
         def mark_query_run_status(self, **kwargs):

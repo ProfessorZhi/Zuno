@@ -4,13 +4,13 @@ status: partial_runtime_evidence
 phase: PHASE12, PHASE14
 commit_scope: Knowledge search persistence guard and Capability runtime public surface repair
 
-本文只证明本次修复切片：Knowledge search API 在受控 QueryService adapter 成功返回后，不再因为当前缺少 ACTIVE Knowledge Snapshot 而把 API 响应降为 500；query run 和 retrieval round 会持久化 retriever expected/used、partial retrieval、no-result 和 retrieval semantics；同时 `zuno.capability.runtime.__all__` 收回到 PHASE14 target surface，不再把 legacy approval adapter 常量和内部 security sink protocol 暴露为公共模块边界。
+本文只证明本次修复切片：Knowledge search API 在受控 QueryService adapter 成功返回后，不再因为当前缺少 ACTIVE Knowledge Snapshot 而把 API 响应降为 500；query run 和 retrieval round 会持久化 retriever expected/used、partial retrieval、timeout、no-result 和 retrieval semantics；同时 `zuno.capability.runtime.__all__` 收回到 PHASE14 target surface，不再把 legacy approval adapter 常量和内部 security sink protocol 暴露为公共模块边界。
 
 ## 已证明
 
 - `KnowledgeService.search_knowledge(...)` 仍先调用 `KnowledgeQueryService().query(...)`，旧 `RagHandler` 不会被 API contract 测试路径使用。
 - Durable query-run persistence 在缺少 ACTIVE snapshot 时以 `query_run_persistence.status = blocked` 暴露，不冒充已记录，也不覆盖已成功的检索 payload。
-- Durable query-run persistence 现在把 `retrievers_expected`、`retrievers_used`、`retriever_availability`、`partial_retrieval`、`no_result` 和 `retrieval_semantics` 写入 `start_query_run.request_payload` 与 `start_retrieval_round.retriever_set`；`basic` 查询缺少 vector 且没有 evidence/citation 时会记录 `partial_no_result`，不再把 partial retriever 和 no-result 混成普通完成。
+- Durable query-run persistence 现在把 `retrievers_expected`、`retrievers_used`、`retriever_availability`、`partial_retrieval`、`timeout_retrieval`、`retrievers_timed_out`、`no_result` 和 `retrieval_semantics` 写入 `start_query_run.request_payload` 与 `start_retrieval_round.retriever_set`；`basic` 查询缺少 vector 且没有 evidence/citation 时会记录 `partial_no_result`，vector timeout 且没有 evidence/citation 时会记录 `timeout_no_result`，不再把 partial retriever、timeout 和 no-result 混成普通完成。
 - `zuno.capability.runtime.__all__` 与 capability target surface 测试一致，只暴露运行时请求、执行上下文、sandbox、credential broker 和默认 control plane builder。
 - Goal03 Wave A / Wave B 当前 PostgreSQL persistence baseline 未被本次修复破坏。
 
@@ -27,7 +27,7 @@ git diff --check
 结果：
 
 ```text
-6 passed
+7 passed
 31 passed
 16 passed
 5 passed

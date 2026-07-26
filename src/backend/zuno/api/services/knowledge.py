@@ -909,6 +909,8 @@ class KnowledgeService:
                 "retrievers_used": retrieval_semantics["retrievers_used"],
                 "retriever_availability": retrieval_semantics["retriever_availability"],
                 "partial_retrieval": retrieval_semantics["partial_retrieval"],
+                "timeout_retrieval": retrieval_semantics["timeout_retrieval"],
+                "retrievers_timed_out": retrieval_semantics["retrievers_timed_out"],
                 "no_result": retrieval_semantics["no_result"],
                 "retrieval_semantics": retrieval_semantics["status"],
             }
@@ -948,6 +950,8 @@ class KnowledgeService:
                     "retrievers_used": retrieval_semantics["retrievers_used"],
                     "retriever_availability": retrieval_semantics["retriever_availability"],
                     "partial_retrieval": retrieval_semantics["partial_retrieval"],
+                    "timeout_retrieval": retrieval_semantics["timeout_retrieval"],
+                    "retrievers_timed_out": retrieval_semantics["retrievers_timed_out"],
                     "no_result": retrieval_semantics["no_result"],
                     "retrieval_semantics": retrieval_semantics["status"],
                     "resolved_query_method": getattr(result, "resolved_query_method", None),
@@ -971,19 +975,27 @@ class KnowledgeService:
                 getattr(result, "resolved_query_method", None)
             )
         )
+        timed_out = KnowledgeService._timed_out_retrievers(trace_metadata)
         availability = {
             retriever: "used" if retriever in used else "missing"
             for retriever in expected
         }
         for retriever in used:
             availability.setdefault(retriever, "used")
+        for retriever in timed_out:
+            availability[retriever] = "timeout"
         documents = list(getattr(result, "documents", []) or [])
         evidence = dict(getattr(result, "evidence", {}) or {})
         citations = list(getattr(result, "citations", []) or [])
         evidence_document_count = int(evidence.get("document_count") or len(documents))
         no_result = evidence_document_count == 0 and not citations
+        timeout_retrieval = bool(timed_out)
         partial_retrieval = any(status != "used" for status in availability.values())
-        if partial_retrieval and no_result:
+        if timeout_retrieval and no_result:
+            status = "timeout_no_result"
+        elif timeout_retrieval:
+            status = "timeout"
+        elif partial_retrieval and no_result:
             status = "partial_no_result"
         elif partial_retrieval:
             status = "partial"
@@ -996,9 +1008,28 @@ class KnowledgeService:
             "retrievers_used": used,
             "retriever_availability": availability,
             "partial_retrieval": partial_retrieval,
+            "timeout_retrieval": timeout_retrieval,
+            "retrievers_timed_out": timed_out,
             "no_result": no_result,
             "status": status,
         }
+
+    @staticmethod
+    def _timed_out_retrievers(trace_metadata: dict[str, Any]) -> list[str]:
+        timed_out: list[str] = []
+        timeout_markers = {"timeout", "timed_out", "deadline_exceeded"}
+        for run in trace_metadata.get("retriever_runs") or []:
+            run_payload = dict(run or {})
+            source = KnowledgeService._normalize_retriever_names([run_payload.get("source")])
+            if not source:
+                continue
+            status = str(run_payload.get("status") or run_payload.get("error") or "").strip().lower()
+            reason = str(run_payload.get("reason") or run_payload.get("failure_reason") or "").strip().lower()
+            if status in timeout_markers or reason in timeout_markers:
+                retriever = source[0]
+                if retriever not in timed_out:
+                    timed_out.append(retriever)
+        return timed_out
 
     @staticmethod
     def _expected_retrievers_for_query_method(query_method: Any) -> list[str]:
