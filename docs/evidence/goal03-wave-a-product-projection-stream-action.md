@@ -10,6 +10,7 @@
 - `CommandReceipt` 仍只表示 Product 接受或重复，不冒充 Agent Core 领域成功。
 - `GET /api/v1/product/stream` 使用 `text/event-stream` 输出 Product Projection Delta / Resync 事件。
 - `GET /api/v1/product/stream` 输出 SSE `retry` hint 和 `HEARTBEAT` keepalive；heartbeat 只证明连接存活，不冒充 Projection 成功。
+- `GET /api/v1/product/stream` 设置 `Cache-Control: no-cache`、`Connection: keep-alive` 和 `X-Accel-Buffering: no`，避免浏览器或反向代理把 Product SSE reconnect/cursor 语义缓冲成普通响应。
 - `GET /api/v1/product/stream-events` 提供同一事件源的 JSON 查询面，支持 `Last-Event-ID`，并在未知或过期 cursor 时返回 `RESYNC_REQUIRED` 语义。
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。

@@ -150,6 +150,9 @@ def test_goal03_product_stream_route_returns_sse_projection_events(monkeypatch) 
 
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
+    assert response.headers["cache-control"] == "no-cache"
+    assert response.headers["connection"] == "keep-alive"
+    assert response.headers["x-accel-buffering"] == "no"
     assert captured["last_event_id"] == "cursor:expired"
     assert "retry: 1000" in response.text
     assert "id: projection:1" in response.text

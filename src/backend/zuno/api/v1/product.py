@@ -139,7 +139,15 @@ async def stream_projection_events(
             'data: {"event_type":"HEARTBEAT","resync_required":false}\n\n'
         )
 
-    return StreamingResponse(event_source(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 __all__ = [
