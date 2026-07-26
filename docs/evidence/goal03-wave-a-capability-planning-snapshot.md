@@ -14,6 +14,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 - Planner 生成的每个 `PlanStep` 都把同一组 `availability_snapshot_ref` / `selection_result_ref` 固定进 `input_refs`，并以 `selection_result_ref` 作为 `tool_policy_ref`；`plan_created` trace payload 同步暴露 snapshot / selection / validity，供执行层和 Closure Review 审计每一步来自同一个 capability decision。
 - 默认 `RuntimeStrategySelector` 在 strategy select 后把 `capability_availability_snapshot_ref`、`capability_selection_result_ref`、`capability_selection_validity`、`capability_planner_exposure_ref` 和 exposure visibility 写入 `ContextPack.task_state`；`AgentRuntimeSnapshot` round-trip 后仍保留这些 refs，不只停留在瞬时内存字段。
 - `CapabilityRepository.record_selection` 只在新 `capability_selection_results` 插入成功时写入 `infra_outbox_events`。
+- `CapabilityRepository.record_selection` 在 Repository 边界规范化 `candidate_summary` 与 `rejection_reason_codes`：同一候选集合即使输入顺序不同，也产生相同 `candidate_summary_hash` / `selection_hash`；selection outbox payload 携带 `candidate_summary.deterministic_candidate_order` 和去重排序后的 reason codes，供 Agent Core 审计多候选排序与拒绝原因。
 - `infra_outbox_events.topic = capability.selection.committed`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复提交同一 selection 不重复创建 outbox 事件。
 - `CapabilityService.consume_selection_event(...)` 会 claim `capability.selection.committed` outbox，写入 Agent Core consumer inbox，mark processed，并 complete outbox；这证明 selection fact 可以进入 Agent Core inbox，而不是停留在只读 projection。
@@ -50,6 +51,26 @@ Repository structure verification passed.
 Doc boundary verification passed.
 12 passed
 1 passed
+```
+
+Focused rerun after deterministic selection normalization:
+
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase14_capability_blocks_unverified_skill_and_model_only_active_binding -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_capability_layer_surfaces.py tests/api/test_goal03_capability_route.py tests/capability/test_capability_skill_layer.py -p no:cacheprovider
+python .agent/scripts/verify_doc_boundaries.py
+git diff --check
+```
+
+结果：
+
+```text
+1 passed
+13 passed
+16 passed, 1 warning
+Doc boundary verification passed.
+git diff --check passed with LF/CRLF warnings only
 ```
 
 ## 历史失败指纹

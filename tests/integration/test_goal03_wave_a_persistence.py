@@ -1148,11 +1148,73 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
             candidate_summary={"rejected": ["binding:model-only"]},
             rejection_reason_codes=["MODEL_PROPOSED_NOT_ACTIVE"],
         )
+        repo.record_selection(
+            selection_id="selection:deterministic:a",
+            snapshot_id="cap-snapshot:1",
+            requirement={"capability": "knowledge.standard.retrieve"},
+            selected_binding_id=None,
+            candidate_summary={
+                "candidates": [
+                    {"binding_id": "binding:b", "reason": "quota_exhausted"},
+                    {"binding_id": "binding:a", "reason": "model_proposed"},
+                ],
+                "rejected": ["binding:b", "binding:a", "binding:a"],
+            },
+            rejection_reason_codes=["QUOTA_EXHAUSTED", "MODEL_PROPOSED_NOT_ACTIVE", "QUOTA_EXHAUSTED"],
+        )
+        repo.record_selection(
+            selection_id="selection:deterministic:b",
+            snapshot_id="cap-snapshot:1",
+            requirement={"capability": "knowledge.standard.retrieve"},
+            selected_binding_id=None,
+            candidate_summary={
+                "rejected": ["binding:a", "binding:b"],
+                "candidates": [
+                    {"reason": "model_proposed", "binding_id": "binding:a"},
+                    {"reason": "quota_exhausted", "binding_id": "binding:b"},
+                ],
+            },
+            rejection_reason_codes=["MODEL_PROPOSED_NOT_ACTIVE", "QUOTA_EXHAUSTED"],
+        )
 
         binding_status = conn.execute(
             text("SELECT status FROM capability_provider_bindings WHERE binding_id = 'binding:model-only'")
         ).scalar_one()
         assert binding_status == "PROPOSED"
+        deterministic_rows = conn.execute(
+            text(
+                """
+                SELECT selection_id, candidate_summary_hash, selection_hash, rejection_reason_codes
+                FROM capability_selection_results
+                WHERE selection_id IN ('selection:deterministic:a', 'selection:deterministic:b')
+                ORDER BY selection_id
+                """
+            )
+        ).mappings().all()
+        assert deterministic_rows[0]["candidate_summary_hash"] == deterministic_rows[1]["candidate_summary_hash"]
+        assert deterministic_rows[0]["selection_hash"] == deterministic_rows[1]["selection_hash"]
+        assert deterministic_rows[0]["rejection_reason_codes"] == [
+            "MODEL_PROPOSED_NOT_ACTIVE",
+            "QUOTA_EXHAUSTED",
+        ]
+        deterministic_payload = conn.execute(
+            text(
+                """
+                SELECT payload
+                FROM infra_outbox_events
+                WHERE event_id = 'outbox:selection:deterministic:a'
+                """
+            )
+        ).scalar_one()
+        assert deterministic_payload["candidate_summary"]["deterministic_candidate_order"] == [
+            "binding:a",
+            "binding:b",
+        ]
+        assert deterministic_payload["candidate_summary"]["rejected"] == ["binding:a", "binding:b"]
+        assert deterministic_payload["rejection_reason_codes"] == [
+            "MODEL_PROPOSED_NOT_ACTIVE",
+            "QUOTA_EXHAUSTED",
+        ]
         dispatch = conn.execute(
             text(
                 """
@@ -1160,6 +1222,7 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
                        payload ->> 'snapshot_id' AS snapshot_id, ordering_sequence
                 FROM infra_outbox_events
                 WHERE topic = 'capability.selection.committed'
+                  AND event_id = 'outbox:selection:1'
                 """
             )
         ).mappings().one()

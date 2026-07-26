@@ -394,6 +394,8 @@ class CapabilityRepository:
         candidate_summary: dict[str, Any],
         rejection_reason_codes: list[str],
     ) -> None:
+        normalized_candidate_summary = _canonical_candidate_summary(candidate_summary)
+        normalized_rejection_reason_codes = tuple(dict.fromkeys(sorted(str(code) for code in rejection_reason_codes)))
         inserted = self.connection.execute(
             text(
                 """
@@ -416,14 +418,14 @@ class CapabilityRepository:
                 "snapshot_id": snapshot_id,
                 "requirement_hash": canonical_sha256(requirement),
                 "selected_binding_id": selected_binding_id,
-                "candidate_summary_hash": canonical_sha256(candidate_summary),
-                "rejection_reason_codes": canonical_json(rejection_reason_codes),
+                "candidate_summary_hash": canonical_sha256(normalized_candidate_summary),
+                "rejection_reason_codes": canonical_json(normalized_rejection_reason_codes),
                 "selection_hash": canonical_sha256(
                     {
                         "requirement": requirement,
                         "selected_binding_id": selected_binding_id,
-                        "candidate_summary": candidate_summary,
-                        "rejection_reason_codes": rejection_reason_codes,
+                        "candidate_summary": normalized_candidate_summary,
+                        "rejection_reason_codes": normalized_rejection_reason_codes,
                     }
                 ),
             },
@@ -456,8 +458,9 @@ class CapabilityRepository:
                 "selection_id": selection_id,
                 "selected_binding_id": selected_binding_id,
                 "requirement_hash": canonical_sha256(requirement),
-                "candidate_summary_hash": canonical_sha256(candidate_summary),
-                "rejection_reason_codes": rejection_reason_codes,
+                "candidate_summary": normalized_candidate_summary,
+                "candidate_summary_hash": canonical_sha256(normalized_candidate_summary),
+                "rejection_reason_codes": list(normalized_rejection_reason_codes),
             },
         )
 
@@ -682,6 +685,68 @@ def _runtime_signal_allows(signal: dict[str, Any] | None) -> bool:
     if capacity_remaining is not None and int(capacity_remaining) <= 0:
         return False
     return True
+
+
+def _canonical_candidate_summary(candidate_summary: dict[str, Any]) -> dict[str, Any]:
+    normalized = {
+        str(key): _normalize_selection_value(str(key), value)
+        for key, value in sorted(candidate_summary.items(), key=lambda item: str(item[0]))
+    }
+    candidate_ids = _candidate_ids_from_summary(normalized)
+    if candidate_ids:
+        normalized["deterministic_candidate_order"] = candidate_ids
+    return normalized
+
+
+def _normalize_selection_value(key: str, value: Any) -> Any:
+    if key in {
+        "candidate_ids",
+        "candidate_refs",
+        "candidates",
+        "hard_filtered_refs",
+        "rejected",
+        "rejected_candidates",
+        "visible_candidates",
+    }:
+        return _sorted_unique_json(value)
+    if key in {"fallback_order", "fallback_refs"}:
+        return _sorted_unique_json(value)
+    return _normalize_json_value(value)
+
+
+def _sorted_unique_json(value: Any) -> list[Any]:
+    values = value if isinstance(value, (list, tuple, set)) else [value]
+    normalized = [_normalize_json_value(item) for item in values if item is not None]
+    unique: dict[str, Any] = {canonical_json(item): item for item in normalized}
+    return [unique[key] for key in sorted(unique)]
+
+
+def _normalize_json_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _normalize_json_value(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_normalize_json_value(item) for item in value]
+    if isinstance(value, set):
+        return [_normalize_json_value(item) for item in sorted(value, key=str)]
+    return value
+
+
+def _candidate_ids_from_summary(candidate_summary: dict[str, Any]) -> list[str]:
+    raw_candidates = (
+        candidate_summary.get("candidate_ids")
+        or candidate_summary.get("candidate_refs")
+        or candidate_summary.get("candidates")
+        or []
+    )
+    candidate_ids: list[str] = []
+    for item in raw_candidates if isinstance(raw_candidates, list) else [raw_candidates]:
+        if isinstance(item, dict):
+            value = item.get("binding_id") or item.get("candidate_id") or item.get("id") or item.get("ref")
+        else:
+            value = item
+        if value is not None:
+            candidate_ids.append(str(value))
+    return sorted(dict.fromkeys(candidate_ids))
 
 
 __all__ = [
