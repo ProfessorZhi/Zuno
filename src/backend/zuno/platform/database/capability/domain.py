@@ -29,6 +29,13 @@ class CapabilityVersionInput:
     input_schema: dict[str, Any]
     output_schema: dict[str, Any]
     risk_profile_ref: str
+    source_ref: str
+    license_ref: str
+    dependency_refs: tuple[str, ...]
+    runtime_requirement_refs: tuple[str, ...]
+    signature_ref: str
+    verification_ref: str
+    verified: bool
 
 
 class CapabilityUnitOfWork:
@@ -55,6 +62,32 @@ class CapabilityRepository:
         self.connection = connection
 
     def publish_capability_version(self, item: CapabilityVersionInput) -> None:
+        if not item.verified:
+            raise CapabilitySupplyChainConflict("unverified CapabilityVersion cannot be published")
+        if not (
+            item.source_ref
+            and item.license_ref
+            and item.dependency_refs
+            and item.runtime_requirement_refs
+            and item.signature_ref
+            and item.verification_ref
+        ):
+            raise CapabilitySupplyChainConflict(
+                "CapabilityVersion supply-chain verification requires source, license, "
+                "dependencies, runtime requirements, signature, and verification refs"
+            )
+        dependency_refs_hash = canonical_sha256(tuple(item.dependency_refs))
+        runtime_requirement_refs_hash = canonical_sha256(tuple(item.runtime_requirement_refs))
+        supply_chain_hash = canonical_sha256(
+            {
+                "source_ref": item.source_ref,
+                "license_ref": item.license_ref,
+                "dependency_refs_hash": dependency_refs_hash,
+                "runtime_requirement_refs_hash": runtime_requirement_refs_hash,
+                "signature_ref": item.signature_ref,
+                "verification_ref": item.verification_ref,
+            }
+        )
         self.connection.execute(
             text(
                 """
@@ -81,11 +114,17 @@ class CapabilityRepository:
                 """
                 INSERT INTO capability_versions (
                     capability_version_id, capability_definition_id, version_no,
-                    input_schema_hash, output_schema_hash, risk_profile_ref, status
+                    input_schema_hash, output_schema_hash, risk_profile_ref,
+                    source_ref, license_ref, dependency_refs_hash,
+                    runtime_requirement_refs_hash, signature_ref, verification_ref,
+                    supply_chain_hash, supply_chain_verified, status
                 )
                 VALUES (
                     :capability_version_id, :capability_definition_id, :version_no,
-                    :input_schema_hash, :output_schema_hash, :risk_profile_ref, 'ACTIVE'
+                    :input_schema_hash, :output_schema_hash, :risk_profile_ref,
+                    :source_ref, :license_ref, :dependency_refs_hash,
+                    :runtime_requirement_refs_hash, :signature_ref, :verification_ref,
+                    :supply_chain_hash, true, 'ACTIVE'
                 )
                 """
             ),
@@ -96,6 +135,13 @@ class CapabilityRepository:
                 "input_schema_hash": canonical_sha256(item.input_schema),
                 "output_schema_hash": canonical_sha256(item.output_schema),
                 "risk_profile_ref": item.risk_profile_ref,
+                "source_ref": item.source_ref,
+                "license_ref": item.license_ref,
+                "dependency_refs_hash": dependency_refs_hash,
+                "runtime_requirement_refs_hash": runtime_requirement_refs_hash,
+                "signature_ref": item.signature_ref,
+                "verification_ref": item.verification_ref,
+                "supply_chain_hash": supply_chain_hash,
             },
         )
 
@@ -256,6 +302,7 @@ class CapabilityRepository:
                 WHERE b.capability_version_id = :capability_version_id
                   AND b.status = 'ACTIVE'
                   AND v.status = 'ACTIVE'
+                  AND v.supply_chain_verified = true
                   AND d.status = 'ACTIVE'
                   AND d.tenant_id = :tenant_id
                 LIMIT 1
@@ -604,6 +651,7 @@ class CapabilityRepository:
                   AND i.workspace_id = :workspace_id
                   AND i.status = 'ACTIVE'
                   AND b.status = 'ACTIVE'
+                  AND v.supply_chain_verified = true
                   AND b.binding_id = ANY(CAST(:visible_candidates AS text[]))
                 ORDER BY b.binding_id
                 """

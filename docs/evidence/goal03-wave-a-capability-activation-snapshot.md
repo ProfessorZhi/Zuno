@@ -10,6 +10,8 @@
 - 当前 generation 从 `capability_transition_events` 推导，stale generation fail closed。
 - Activation / Revocation 更新 installation 状态并写入 transition event。
 - Installation 创建前必须已有同 tenant 的 `ACTIVE` CapabilityDefinition、`ACTIVE` CapabilityVersion 和 `ACTIVE` ProviderBinding；未完成 conformance 的 binding 不能形成 ACTIVE installation 事实。
+- CapabilityVersion 发布前必须携带 source、license、dependency、runtime requirement、signature 和 verification refs，且 `verified=True`；未验证或缺少供应链 refs 的 CapabilityVersion 不能发布为 `ACTIVE`。
+- `capability_versions` 持久化 source/license/signature/verification refs 与 dependency/runtime requirement/supply-chain hash；历史未验证版本默认 `supply_chain_verified=false`，不能通过 installation 和 AvailabilitySnapshot 查询过滤。
 - AvailabilitySnapshot 只包含 `ACTIVE` installation 绑定的 `ACTIVE` provider binding。
 - Revocation 后同一候选不再进入 snapshot hash。
 - Activation / Revocation transition 与 PHASE04 统一 `infra_outbox_events` 同事务提交，topic 为 `capability.transition.committed`，供 Agent Core 或外部 worker crash 后按 ordering key 幂等恢复。
@@ -21,14 +23,14 @@
 
 ```text
 CapabilityRepository.install_capability
-→ active verified binding guard
+→ active verified CapabilityVersion + active verified binding guard
 → CapabilityRepository.activate_installation
 → CapabilityRepository.append_transition_event
 → capability_transition_events CAS generation
 → capability_installations status/policy epoch update
 
 CapabilityRepository.create_availability_snapshot
-→ filter ACTIVE installation + ACTIVE binding
+→ filter supply-chain verified CapabilityVersion + ACTIVE installation + ACTIVE binding
 → filter runtime health / quota / capacity signals
 → immutable capability_availability_snapshots row
 
@@ -48,7 +50,9 @@ CapabilityRepository.append_transition_event
 - `src/backend/zuno/platform/database/capability/domain.py`
 - `src/backend/zuno/api/services/capability.py`
 - `src/backend/zuno/platform/database/capability/__init__.py`
+- `infra/db/alembic/versions/20260726_39_capability_version_supply_chain.py`
 - `tests/integration/test_goal03_wave_a_persistence.py`
+- `tests/repo/test_goal03_wave_a_migration_contract.py`
 
 ## 验证
 
@@ -108,6 +112,32 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 ```text
 1 passed
 12 passed
+```
+
+Focused rerun after CapabilityVersion supply-chain verification guard:
+
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase14_capability_blocks_unverified_skill_and_model_only_active_binding tests/integration/test_goal03_wave_a_persistence.py::test_phase14_capability_installation_activation_uses_cas_and_revocation_filters_snapshot -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python -m pytest -q tests/api/test_goal03_capability_route.py tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
+alembic -c infra/db/alembic.ini heads
+python -m compileall -q src/backend/zuno/platform/database/capability tests/integration/test_goal03_wave_a_persistence.py
+python .agent/scripts/verify_doc_boundaries.py
+python tools/scripts/verify_repo_structure.py
+git diff --check
+```
+
+结果：
+
+```text
+2 passed
+12 passed
+7 passed, 1 warning
+20260726_39 (head)
+compileall passed
+Doc boundary verification passed.
+Repository structure verification passed.
+git diff --check passed with LF/CRLF warnings only
 ```
 
 ## 边界

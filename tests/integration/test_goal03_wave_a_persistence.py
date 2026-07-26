@@ -1011,6 +1011,48 @@ def test_phase12_knowledge_cutover_race_rollback_and_deleted_source_taint_strict
 def test_phase14_capability_blocks_unverified_skill_and_model_only_active_binding(engine) -> None:
     with engine.begin() as conn:
         repo = CapabilityRepository(conn)
+        with pytest.raises(CapabilitySupplyChainConflict, match="unverified CapabilityVersion"):
+            repo.publish_capability_version(
+                CapabilityVersionInput(
+                    capability_definition_id="capability:def:unverified",
+                    capability_version_id="capability:version:unverified:v1",
+                    tenant_id="tenant-a",
+                    semantic_identity="knowledge.unverified.retrieve",
+                    owner_module="Knowledge",
+                    version_no=1,
+                    input_schema={"type": "object"},
+                    output_schema={"type": "object"},
+                    risk_profile_ref="risk:read-only",
+                    source_ref="source:capability:unverified",
+                    license_ref="license:mit",
+                    dependency_refs=("dependency:knowledge-runtime",),
+                    runtime_requirement_refs=("runtime:postgres",),
+                    signature_ref="signature:capability:unverified",
+                    verification_ref="verification:capability:unverified",
+                    verified=False,
+                )
+            )
+        with pytest.raises(CapabilitySupplyChainConflict, match="supply-chain verification"):
+            repo.publish_capability_version(
+                CapabilityVersionInput(
+                    capability_definition_id="capability:def:incomplete",
+                    capability_version_id="capability:version:incomplete:v1",
+                    tenant_id="tenant-a",
+                    semantic_identity="knowledge.incomplete.retrieve",
+                    owner_module="Knowledge",
+                    version_no=1,
+                    input_schema={"type": "object"},
+                    output_schema={"type": "object"},
+                    risk_profile_ref="risk:read-only",
+                    source_ref="source:capability:incomplete",
+                    license_ref="license:mit",
+                    dependency_refs=(),
+                    runtime_requirement_refs=("runtime:postgres",),
+                    signature_ref="signature:capability:incomplete",
+                    verification_ref="verification:capability:incomplete",
+                    verified=True,
+                )
+            )
         repo.publish_capability_version(
             CapabilityVersionInput(
                 capability_definition_id="capability:def:read",
@@ -1022,8 +1064,33 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
                 input_schema={"type": "object"},
                 output_schema={"type": "object"},
                 risk_profile_ref="risk:read-only",
+                source_ref="source:capability:read:v1",
+                license_ref="license:capability:read:mit",
+                dependency_refs=("dependency:knowledge-runtime",),
+                runtime_requirement_refs=("runtime:postgres", "runtime:tool-control-plane"),
+                signature_ref="signature:capability:read:v1",
+                verification_ref="verification:capability:read:v1",
+                verified=True,
             )
         )
+        verified_version = conn.execute(
+            text(
+                """
+                SELECT source_ref, license_ref, signature_ref, verification_ref,
+                       supply_chain_verified, char_length(supply_chain_hash) AS hash_len
+                FROM capability_versions
+                WHERE capability_version_id = 'capability:version:read:v1'
+                """
+            )
+        ).mappings().one()
+        assert dict(verified_version) == {
+            "source_ref": "source:capability:read:v1",
+            "license_ref": "license:capability:read:mit",
+            "signature_ref": "signature:capability:read:v1",
+            "verification_ref": "verification:capability:read:v1",
+            "supply_chain_verified": True,
+            "hash_len": 64,
+        }
         with pytest.raises(CapabilitySupplyChainConflict):
             repo.publish_skill_version(
                 skill_version_id="skill:bad:v1",
@@ -1141,6 +1208,13 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
                 input_schema={"type": "object"},
                 output_schema={"type": "object"},
                 risk_profile_ref="risk:read-only",
+                source_ref="source:capability:active-read:v1",
+                license_ref="license:capability:active-read:mit",
+                dependency_refs=("dependency:knowledge-runtime",),
+                runtime_requirement_refs=("runtime:postgres", "runtime:tool-control-plane"),
+                signature_ref="signature:capability:active-read:v1",
+                verification_ref="verification:capability:active-read:v1",
+                verified=True,
             )
         )
         repo.propose_binding(
