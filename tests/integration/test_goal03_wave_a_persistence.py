@@ -1581,6 +1581,122 @@ def test_phase09_product_runtime_dispatch_creates_agent_run_and_owner_receipt(en
         }
 
 
+def test_phase09_product_runtime_dispatch_owner_unavailable_retries_without_partial_owner_facts(
+    engine, monkeypatch
+) -> None:
+    from zuno.api.services.product import command_service
+
+    submission = ProductCommandSubmission(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        conversation_id="conversation:dispatch-owner-fail:1",
+        principal_id="principal-a",
+        active_agent_version_id="agent-version:wave-a",
+        submission_id="submission:dispatch-owner-fail:1",
+        client_request_id="client-request:dispatch-owner-fail:1",
+        raw_intent_ref="raw-intent:dispatch-owner-fail:1",
+        command_id="command:dispatch-owner-fail:1",
+        command_kind="RUN",
+        owner_module="Agent Core",
+        runtime_request_ref="runtime-request:dispatch-owner-fail:1",
+        payload={
+            "goal": "dispatch product runtime request to unavailable Agent Core",
+            "payload_hash": "e" * 64,
+        },
+        journal_sequence_no=1,
+        outbox_message_id="outbox:dispatch-owner-fail:1",
+    )
+
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        ProductRepository(conn).submit_command(submission)
+
+    original_record_agent_run = command_service.AgentDomainRepository.record_agent_run
+
+    def unavailable_owner(self, run):
+        raise RuntimeError("agent-core-owner-unavailable")
+
+    monkeypatch.setattr(command_service.AgentDomainRepository, "record_agent_run", unavailable_owner)
+
+    failed = ProductService.consume_runtime_request_dispatch(
+        event_id="outbox:dispatch-owner-fail:1",
+        worker_id="product-dispatch-worker",
+        engine=engine,
+    )
+
+    assert failed.agent_run_id == "agent-run:runtime-request:dispatch-owner-fail:1"
+    assert failed.agent_run_status == "owner_unavailable"
+    assert failed.owner_receipt_ref is None
+    assert failed.inbox_first_seen is False
+    assert failed.outbox_status == "pending"
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM agent_domain_runs")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM agent_goal_versions")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM agent_task_contracts")).scalar_one() == 0
+        assert conn.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM product_command_receipts
+                WHERE command_id = 'command:dispatch-owner-fail:1'
+                  AND owner_receipt_ref IS NOT NULL
+                """
+            )
+        ).scalar_one() == 0
+        assert conn.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM infra_inbox_messages
+                WHERE consumer = 'agent-core-product-runtime-dispatch'
+                  AND message_id = 'outbox:dispatch-owner-fail:1'
+                """
+            )
+        ).scalar_one() == 0
+        outbox = conn.execute(
+            text(
+                """
+                SELECT status, retry_count, publish_attempts, last_error_code
+                FROM infra_outbox_events
+                WHERE event_id = 'outbox:dispatch-owner-fail:1'
+                """
+            )
+        ).mappings().one()
+        assert dict(outbox) == {
+            "status": "pending",
+            "retry_count": 1,
+            "publish_attempts": 1,
+            "last_error_code": "AgentCoreOwnerUnavailable:RuntimeError",
+        }
+
+    monkeypatch.setattr(command_service.AgentDomainRepository, "record_agent_run", original_record_agent_run)
+
+    recovered = ProductService.consume_runtime_request_dispatch(
+        event_id="outbox:dispatch-owner-fail:1",
+        worker_id="product-dispatch-recovery-worker",
+        engine=engine,
+    )
+
+    assert recovered.inbox_first_seen is True
+    assert recovered.agent_run_status == "CREATED"
+    assert recovered.owner_receipt_ref == "owner-receipt:outbox:dispatch-owner-fail:1:agent-run-created"
+    assert recovered.outbox_status == "published"
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM agent_domain_runs")).scalar_one() == 1
+        assert conn.execute(
+            text(
+                """
+                SELECT status
+                FROM infra_inbox_messages
+                WHERE consumer = 'agent-core-product-runtime-dispatch'
+                  AND message_id = 'outbox:dispatch-owner-fail:1'
+                """
+            )
+        ).scalar_one() == "processed"
+
+
 def test_phase09_product_projection_rebuild_worker_consumes_owner_outbox(engine) -> None:
     now = datetime.now(timezone.utc)
     with engine.begin() as conn:

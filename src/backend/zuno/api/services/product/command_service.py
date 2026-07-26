@@ -243,83 +243,110 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
-            receipt = infra_repo.record_inbox_receipt(
-                consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
-                message_id=record.event_id,
-                payload=payload,
-                tenant_id=tenant_id,
-                ordering_key=record.ordering_key,
-                ordering_sequence=record.ordering_sequence,
-            )
             agent_run_id = f"agent-run:{runtime_request_ref}"
             owner_receipt_ref: str | None = None
             agent_run_status = "duplicate"
-            if receipt.first_seen:
-                agent_repo = AgentDomainRepository(conn)
-                now = datetime.now(timezone.utc)
-                task_contract_id = f"task-contract:{runtime_request_ref}"
-                goal_version_id = f"goal:{runtime_request_ref}"
-                agent_repo.record_goal_version(
-                    GoalVersion(
-                        goal_version_id=goal_version_id,
+            inbox_first_seen = False
+            try:
+                owner_tx = conn.begin_nested()
+                try:
+                    receipt = infra_repo.record_inbox_receipt(
+                        consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
+                        message_id=record.event_id,
+                        payload=payload,
                         tenant_id=tenant_id,
-                        workspace_id=workspace_id,
-                        principal_id=principal_id,
-                        goal_sequence=int(record.ordering_sequence or 1),
-                        input_classification=GoalInputClassification.NEW_TASK,
-                        objective_hash=str(payload["payload_hash"]),
-                        output_contract_ref=f"output-contract:{runtime_request_ref}",
-                        constraints_hash=canonical_sha256(
-                            {
-                                "active_agent_version_id": payload.get("active_agent_version_id"),
-                                "command_id": command_id,
-                            }
-                        ),
+                        ordering_key=record.ordering_key,
+                        ordering_sequence=record.ordering_sequence,
                     )
+                    inbox_first_seen = receipt.first_seen
+                    if receipt.first_seen:
+                        agent_repo = AgentDomainRepository(conn)
+                        now = datetime.now(timezone.utc)
+                        task_contract_id = f"task-contract:{runtime_request_ref}"
+                        goal_version_id = f"goal:{runtime_request_ref}"
+                        agent_repo.record_goal_version(
+                            GoalVersion(
+                                goal_version_id=goal_version_id,
+                                tenant_id=tenant_id,
+                                workspace_id=workspace_id,
+                                principal_id=principal_id,
+                                goal_sequence=int(record.ordering_sequence or 1),
+                                input_classification=GoalInputClassification.NEW_TASK,
+                                objective_hash=str(payload["payload_hash"]),
+                                output_contract_ref=f"output-contract:{runtime_request_ref}",
+                                constraints_hash=canonical_sha256(
+                                    {
+                                        "active_agent_version_id": payload.get("active_agent_version_id"),
+                                        "command_id": command_id,
+                                    }
+                                ),
+                            )
+                        )
+                        agent_repo.record_task_contract(
+                            TaskContract(
+                                task_contract_id=task_contract_id,
+                                tenant_id=tenant_id,
+                                workspace_id=workspace_id,
+                                principal_id=principal_id,
+                                goal_version_id=goal_version_id,
+                                idempotency_key=record.idempotency_key,
+                                security_context_ref=f"security-context:{runtime_request_ref}",
+                                security_epoch_ref=PRODUCT_DEFAULT_SECURITY_EPOCH_REF,
+                                deadline_at=now + timedelta(hours=1),
+                                budget_ref=f"budget:{runtime_request_ref}",
+                            )
+                        )
+                        run_receipt = agent_repo.record_agent_run(
+                            AgentRun(
+                                run_id=agent_run_id,
+                                tenant_id=tenant_id,
+                                workspace_id=workspace_id,
+                                principal_id=principal_id,
+                                task_contract_id=task_contract_id,
+                                trace_id=f"trace:{runtime_request_ref}",
+                            )
+                        )
+                        owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
+                        ProductRepository(conn).append_owner_receipt(
+                            tenant_id=tenant_id,
+                            command_id=command_id,
+                            status="ACCEPTED",
+                            owner_receipt_ref=owner_receipt_ref,
+                            payload={
+                                "runtime_request_ref": runtime_request_ref,
+                                "agent_run_ref": run_receipt.ref,
+                                "task_contract_ref": task_contract_id,
+                                "outbox_event_id": record.event_id,
+                            },
+                        )
+                        infra_repo.mark_inbox_processed(
+                            tenant_id=tenant_id,
+                            consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
+                            message_id=record.event_id,
+                        )
+                        agent_run_status = run_receipt.status
+                    owner_tx.commit()
+                except Exception:
+                    owner_tx.rollback()
+                    raise
+            except Exception as exc:
+                failure = infra_repo.record_outbox_publish_failure(
+                    event_id=record.event_id,
+                    worker_id=worker_id,
+                    error_code=f"AgentCoreOwnerUnavailable:{type(exc).__name__}",
+                    max_attempts=3,
+                    base_backoff_seconds=0,
+                    max_backoff_seconds=0,
                 )
-                agent_repo.record_task_contract(
-                    TaskContract(
-                        task_contract_id=task_contract_id,
-                        tenant_id=tenant_id,
-                        workspace_id=workspace_id,
-                        principal_id=principal_id,
-                        goal_version_id=goal_version_id,
-                        idempotency_key=record.idempotency_key,
-                        security_context_ref=f"security-context:{runtime_request_ref}",
-                        security_epoch_ref=PRODUCT_DEFAULT_SECURITY_EPOCH_REF,
-                        deadline_at=now + timedelta(hours=1),
-                        budget_ref=f"budget:{runtime_request_ref}",
-                    )
-                )
-                run_receipt = agent_repo.record_agent_run(
-                    AgentRun(
-                        run_id=agent_run_id,
-                        tenant_id=tenant_id,
-                        workspace_id=workspace_id,
-                        principal_id=principal_id,
-                        task_contract_id=task_contract_id,
-                        trace_id=f"trace:{runtime_request_ref}",
-                    )
-                )
-                owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
-                ProductRepository(conn).append_owner_receipt(
-                    tenant_id=tenant_id,
+                return ProductRuntimeDispatchConsumeResult(
+                    event_id=event_id,
                     command_id=command_id,
-                    status="ACCEPTED",
-                    owner_receipt_ref=owner_receipt_ref,
-                    payload={
-                        "runtime_request_ref": runtime_request_ref,
-                        "agent_run_ref": run_receipt.ref,
-                        "task_contract_ref": task_contract_id,
-                        "outbox_event_id": record.event_id,
-                    },
+                    agent_run_id=agent_run_id,
+                    agent_run_status="owner_unavailable",
+                    owner_receipt_ref=None,
+                    inbox_first_seen=False,
+                    outbox_status=failure.status,
                 )
-                infra_repo.mark_inbox_processed(
-                    tenant_id=tenant_id,
-                    consumer=PRODUCT_RUNTIME_DISPATCH_CONSUMER,
-                    message_id=record.event_id,
-                )
-                agent_run_status = run_receipt.status
             infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
         return ProductRuntimeDispatchConsumeResult(
             event_id=event_id,
@@ -327,7 +354,7 @@ class ProductService:
             agent_run_id=agent_run_id,
             agent_run_status=agent_run_status,
             owner_receipt_ref=owner_receipt_ref,
-            inbox_first_seen=receipt.first_seen,
+            inbox_first_seen=inbox_first_seen,
             outbox_status="published",
         )
 

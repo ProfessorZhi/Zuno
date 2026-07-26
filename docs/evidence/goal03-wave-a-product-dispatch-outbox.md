@@ -22,6 +22,8 @@ commit_scope: Product Surface Backend Runtime repair
 - 重复相同 client request 只追加 duplicate receipt，不重复创建 command/message/outbox。
 - 不同 client request 的 Product journal sequence 在 Repository 内递增，不依赖调用方硬编码。
 - `ProductService.consume_runtime_request_dispatch(...)` 可以认领 `product.runtime_request.dispatch` outbox，并把首条未处理消息幂等转换成 Agent Core 的 `GoalVersion`、`TaskContract`、`AgentRun` 和 Product owner receipt，再将 inbox 标记为 processed。
+- `ProductService.consume_runtime_request_dispatch(...)` 对 Agent Core Owner unavailable fail closed：Agent Core owner 写入和 inbox receipt 在同一 savepoint 内提交；owner 写入失败时回滚 savepoint，不留下 `AgentRun`、`GoalVersion`、`TaskContract`、owner receipt 或 inbox 半成品，并通过 PHASE04 `record_outbox_publish_failure(...)` 把 dispatch outbox 恢复为 pending retry。
+- owner 恢复后，同一 dispatch outbox 可以重新 claim 并成功写入 Agent Core owner fact 和 Product owner receipt，证明 cutover retry 不重复创建 AgentRun。
 
 ## 验证
 
@@ -39,6 +41,20 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 Product Surface target architecture verification passed.
 20260725_37 (head)
 10 passed
+```
+
+Focused rerun after Agent Core owner unavailable retry guard:
+
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_runtime_dispatch_creates_agent_run_and_owner_receipt tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_runtime_dispatch_owner_unavailable_retries_without_partial_owner_facts -p no:cacheprovider
+python -m compileall -q src/backend/zuno/api/services/product/command_service.py tests/integration/test_goal03_wave_a_persistence.py
+```
+
+结果：
+
+```text
+2 passed
+compileall passed
 ```
 
 ## 未证明
