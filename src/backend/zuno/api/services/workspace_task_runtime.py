@@ -212,6 +212,7 @@ class WorkspaceTaskRuntimeService:
     _trace_spans: dict[str, list[dict]] = {}
     _release_evals: dict[str, dict] = {}
     _trace_replays: dict[str, dict] = {}
+    _product_runtime_submitter_for_tests: Callable[..., Any] | None = None
     _benchmark_metric_definitions: tuple[dict[str, Any], ...] = (
         {
             "key": "retrieval_recall_at_k",
@@ -310,6 +311,10 @@ class WorkspaceTaskRuntimeService:
         cls._unified_runtime_store = store
 
     @classmethod
+    def configure_product_runtime_submitter_for_tests(cls, submitter: Callable[..., Any] | None) -> None:
+        cls._product_runtime_submitter_for_tests = submitter
+
+    @classmethod
     def configure_phase08_cutover(
         cls,
         *,
@@ -369,6 +374,7 @@ class WorkspaceTaskRuntimeService:
         cls._trace_spans = {}
         cls._release_evals = {}
         cls._trace_replays = {}
+        cls._product_runtime_submitter_for_tests = None
         cls._durable_ingestion_store = None
         cls._source_object_store = None
         cls._package_a_production_runtime = None
@@ -1153,31 +1159,6 @@ class WorkspaceTaskRuntimeService:
         )
         cls._events[task_id] = [
             cls._event(task_id=task_id, trace_id=trace_id, event_type="task_started", status="created", payload={"session_id": task.session_id}),
-            cls._event(
-                task_id=task_id,
-                trace_id=trace_id,
-                event_type="planning",
-                status="planning",
-                payload={
-                    "goal": goal,
-                    "strategy": planner_output.strategy.strategy,
-                    "selected_skill": planner_output.strategy.selected_skill,
-                    "retrieval_plan": planner_output.retrieval_plan.model_dump(mode="json"),
-                },
-            ),
-            cls._event(
-                task_id=task_id,
-                trace_id=trace_id,
-                event_type="retrieval",
-                status="running",
-                payload={
-                    "knowledge_space_ids": list(simple_task.knowledge_space_ids),
-                    "uploaded_file_ids": list(simple_task.uploaded_file_ids),
-                    "uploaded_files": cls._uploaded_file_payloads(simple_task.uploaded_file_ids),
-                    "retrieval_mode": simple_task.retrieval_mode,
-                    "retrieval_profiles": cls._retrieval_profile_map(simple_task),
-                },
-            ),
         ]
         input_gate = cls._input_security_gate.evaluate(
             GateRequest(
@@ -1209,6 +1190,63 @@ class WorkspaceTaskRuntimeService:
                 ],
             )
             return cls.get_task_snapshot(task_id)
+
+        product_runtime_record = cls._record_product_runtime_request(
+            task=task,
+            simple_task=simple_task,
+            login_user=login_user,
+        )
+        cls._events[task_id].append(
+            cls._event(
+                task_id=task_id,
+                trace_id=trace_id,
+                event_type="product_runtime_record",
+                status=str(product_runtime_record["status"]).lower(),
+                payload=product_runtime_record,
+            )
+        )
+        if product_runtime_record["status"] == "blocked":
+            cls._fail_task(
+                task_id=task_id,
+                simple_task=simple_task,
+                reason="product_runtime_record_failed",
+                citation_coverage=0.0,
+                required_citation_coverage=1.0 if simple_task.output_contract and simple_task.output_contract.citation_required else 0.0,
+                security_block_count=0,
+                recoverable=True,
+                failure_examples=[product_runtime_record],
+            )
+            return cls.get_task_snapshot(task_id)
+
+        cls._events[task_id].extend(
+            [
+                cls._event(
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    event_type="planning",
+                    status="planning",
+                    payload={
+                        "goal": goal,
+                        "strategy": planner_output.strategy.strategy,
+                        "selected_skill": planner_output.strategy.selected_skill,
+                        "retrieval_plan": planner_output.retrieval_plan.model_dump(mode="json"),
+                    },
+                ),
+                cls._event(
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    event_type="retrieval",
+                    status="running",
+                    payload={
+                        "knowledge_space_ids": list(simple_task.knowledge_space_ids),
+                        "uploaded_file_ids": list(simple_task.uploaded_file_ids),
+                        "uploaded_files": cls._uploaded_file_payloads(simple_task.uploaded_file_ids),
+                        "retrieval_mode": simple_task.retrieval_mode,
+                        "retrieval_profiles": cls._retrieval_profile_map(simple_task),
+                    },
+                ),
+            ]
+        )
 
         if manual_approval_required:
             cls._durable_runtime.start_task(
@@ -3004,6 +3042,67 @@ class WorkspaceTaskRuntimeService:
                     "failure_type": type(exc).__name__,
                 },
             )
+
+    @classmethod
+    def _record_product_runtime_request(
+        cls,
+        *,
+        task: WorkspaceTaskContract,
+        simple_task: WorkSpaceSimpleTask,
+        login_user: UserPayload,
+    ) -> dict[str, Any]:
+        payload = {
+            "legacy_route": "/workspace/task",
+            "task_id": task.task_id,
+            "session_id": task.session_id,
+            "workspace_id": task.workspace_id,
+            "goal_hash": hashlib.sha256(task.goal.encode("utf-8")).hexdigest(),
+            "product_mode": task.product_mode,
+            "knowledge_space_ids": list(simple_task.knowledge_space_ids),
+            "uploaded_file_ids": list(simple_task.uploaded_file_ids),
+            "plugins": list(simple_task.plugins),
+        }
+        request_hash = hashlib.sha256(
+            json.dumps(payload, ensure_ascii=True, sort_keys=True).encode("utf-8")
+        ).hexdigest()[:24]
+        submitter = cls._product_runtime_submitter_for_tests
+        if submitter is None:
+            from zuno.api.services.product import ProductService
+
+            submitter = ProductService.submit_runtime_request
+        try:
+            result = submitter(
+                tenant_id=f"user:{login_user.user_id}",
+                workspace_id=task.workspace_id,
+                conversation_id=task.session_id,
+                principal_id=login_user.user_id,
+                active_agent_version_id="workspace:unified-runtime",
+                client_request_id=f"workspace:{task.task_id}:{request_hash}",
+                runtime_request_ref=f"workspace-runtime-request:{task.task_id}:{request_hash}",
+                raw_intent_ref=f"workspace-intent:{task.task_id}:{request_hash}",
+                command_kind="WORKSPACE_RUNTIME_REQUEST",
+                payload=payload,
+            )
+        except Exception as exc:
+            return {
+                "status": "blocked",
+                "route": "/workspace/task",
+                "request_hash": request_hash,
+                "product_runtime_recorded": False,
+                "failure_type": type(exc).__name__,
+                "reason": str(exc),
+            }
+        return {
+            "status": result.status,
+            "route": "/workspace/task",
+            "request_hash": request_hash,
+            "product_runtime_recorded": True,
+            "command_id": result.command_id,
+            "receipt_id": result.receipt_id,
+            "projection_event_id": result.projection.projection_event_id,
+            "stream_cursor_id": result.projection.stream_cursor_id,
+            "available_action_tokens": [action.action_token_id for action in result.available_actions],
+        }
 
     @staticmethod
     def _user_roles(login_user: UserPayload) -> tuple[str, ...]:

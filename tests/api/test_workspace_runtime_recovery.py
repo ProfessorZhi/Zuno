@@ -3,9 +3,39 @@ from __future__ import annotations
 import json
 
 from zuno.agent.runtime import SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.schema.workspace import WorkSpaceSimpleTask
+
+
+def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    client_request_id = kwargs["client_request_id"]
+    runtime_request_ref = kwargs["runtime_request_ref"]
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="cancel",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                expires_at="2026-07-26T00:00:00+00:00",
+            ),
+        ),
+    )
 
 
 def _user() -> UserPayload:
@@ -33,6 +63,7 @@ def _task() -> WorkSpaceSimpleTask:
 
 def test_workspace_task_snapshot_and_stream_include_unified_runtime(tmp_path) -> None:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     store = SQLiteAgentRunStore(tmp_path / "workspace_unified_runtime.db")
     WorkspaceTaskRuntimeService.configure_unified_runtime_store_for_tests(store)
 
@@ -69,6 +100,7 @@ def test_workspace_task_snapshot_and_stream_include_unified_runtime(tmp_path) ->
 
 def test_workspace_unified_runtime_snapshot_recovers_from_sqlite_store(tmp_path) -> None:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     store = SQLiteAgentRunStore(tmp_path / "workspace_unified_runtime_recovery.db")
     WorkspaceTaskRuntimeService.configure_unified_runtime_store_for_tests(store)
     WorkspaceTaskRuntimeService.create_task(simple_task=_task(), login_user=_user())

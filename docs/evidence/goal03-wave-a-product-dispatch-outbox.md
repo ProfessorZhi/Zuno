@@ -26,6 +26,8 @@ commit_scope: Product Surface Backend Runtime repair
 - `ProductService.consume_runtime_request_dispatch(...)` 对 Agent Core Owner unavailable fail closed：Agent Core owner 写入和 inbox receipt 在同一 savepoint 内提交；owner 写入失败时回滚 savepoint，不留下 `AgentRun`、`GoalVersion`、`TaskContract`、owner receipt 或 inbox 半成品，并通过 PHASE04 `record_outbox_publish_failure(...)` 把 dispatch outbox 恢复为 pending retry。
 - owner 恢复后，同一 dispatch outbox 可以重新 claim 并成功写入 Agent Core owner fact 和 Product owner receipt，证明 cutover retry 不重复创建 AgentRun。
 - `/completion` 只有 `shadow` 模式允许 Product runtime record 失败后继续旧/新 runtime 对比；`new_default` 和 `canary` 不能在 Product command/receipt/outbox 失败时绕过 Product 继续启动 owner runtime。
+- `/workspace/task` 默认入口在输入安全 Gate 通过后、Workspace 旧 runtime/Unified runtime/Phase08 cutover 前记录 Product RuntimeRequest；记录失败时 fail closed 为 recoverable failure，不继续生成 artifact 或 completed 事件。
+- `/workspace/task` Product RuntimeRequest event 在事件流中位于 `task_started` 之后、`planning`/`retrieval` 之前，用于证明默认 Workspace API 先进入 Product Runtime。
 
 ## 验证
 
@@ -77,6 +79,22 @@ alembic -c infra/db/alembic.ini heads
 compileall passed
 Doc boundary verification passed.
 20260726_40 (head)
+```
+
+Focused rerun after Workspace default Product runtime record:
+
+```powershell
+python -m pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
+python -m pytest -q tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback tests/api/test_workspace_task_runtime.py::test_workspace_task_runtime_fails_closed_when_product_runtime_record_fails tests/api/test_workspace_task_runtime.py::test_workspace_task_event_stream_emits_frontend_trace_payloads tests/api/test_workspace_runtime_recovery.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/api/services/workspace_task_runtime.py tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py
+```
+
+结果：
+
+```text
+18 passed, 1 warning
+5 passed, 1 warning
+compileall passed
 ```
 
 ## 未证明
