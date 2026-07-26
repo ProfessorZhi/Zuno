@@ -85,6 +85,13 @@ def test_tool_task_selects_react_without_executing_tool() -> None:
     assert output.capability_plan.selection_validity == "fixed_planning_snapshot"
     assert output.capability_plan.allowed_tools == ["tool.web.search"]
     assert output.capability_plan.executed_tools == []
+    exposure = output.capability_plan.risk_summary["planner_exposure"]
+    assert exposure["visibility"] == "planner_authorized_summary_schema_only"
+    assert [entry["capability_id"] for entry in exposure["capabilities"]] == [
+        "knowledge.research_corpus",
+        "tool.web.search",
+    ]
+    assert output.trace_events[-1].payload["planner_exposure_ref"] == exposure["exposure_ref"]
     assert output.plan_state.steps[0].action_type == "select_capability"
 
 

@@ -184,6 +184,7 @@ class StrategySelector:
             risk_summary={
                 "blocked_count": len(route.blocked_capability_reasons),
                 "approval_required_count": len(approval_required),
+                "planner_exposure": route.planner_exposure,
             },
         )
 
@@ -407,6 +408,12 @@ class StrategySelector:
                     "allowed_capabilities": list(capability_plan.allowed_capabilities),
                     "allowed_tools": list(capability_plan.allowed_tools),
                     "executed_tools": list(capability_plan.executed_tools),
+                    "planner_exposure_ref": (
+                        capability_plan.risk_summary.get("planner_exposure", {}).get("exposure_ref")
+                    ),
+                    "planner_exposure_visibility": (
+                        capability_plan.risk_summary.get("planner_exposure", {}).get("visibility")
+                    ),
                 },
             ),
         ]

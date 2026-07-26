@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 
 def test_default_registry_loads_skill_and_capability_contracts() -> None:
     from zuno.agent.contracts import CapabilityCard, CapabilityPolicy, RetrievalProfile
@@ -202,3 +204,73 @@ def test_tool_and_mcp_boundaries_include_permission_and_trace_fields() -> None:
         "audit_ref",
         "dependency_probe",
     ]
+
+
+def test_router_exposes_only_authorized_summary_and_schema_to_planner() -> None:
+    from zuno.capability.layer import CapabilityRouteRequest, CapabilityRouter
+    from zuno.capability.layer import build_default_capability_layer_registry
+
+    router = CapabilityRouter(build_default_capability_layer_registry())
+
+    decision = router.route(
+        CapabilityRouteRequest(
+            task_id="task_planner_exposure",
+            workspace_id="workspace_alpha",
+            task_goal="Search the web and write a research report.",
+            requested_capability_ids=(
+                "knowledge.research_corpus",
+                "tool.web.search",
+                "mcp.lark.send_message",
+            ),
+            user_roles=("analyst",),
+        )
+    )
+
+    exposure = decision.planner_exposure
+    serialized = json.dumps(exposure, sort_keys=True)
+
+    assert exposure["visibility"] == "planner_authorized_summary_schema_only"
+    assert exposure["skill"]["skill_id"] == "research_report"
+    assert [entry["capability_id"] for entry in exposure["capabilities"]] == [
+        "knowledge.research_corpus",
+        "tool.web.search",
+    ]
+    assert "mcp.lark.send_message" not in serialized
+    assert "dependency_probe" not in serialized
+    assert "required_roles" not in serialized
+    assert "credential_policy" not in serialized
+    assert decision.trace["planner_exposure_ref"] == exposure["exposure_ref"]
+
+
+def test_router_progressive_loading_budget_omits_late_capabilities_deterministically() -> None:
+    from zuno.capability.layer import CapabilityRouteRequest, CapabilityRouter
+    from zuno.capability.layer import build_default_capability_layer_registry
+
+    router = CapabilityRouter(build_default_capability_layer_registry())
+
+    decision = router.route(
+        CapabilityRouteRequest(
+            task_id="task_planner_budget",
+            workspace_id="workspace_alpha",
+            task_goal="Search the web and write a research report.",
+            requested_capability_ids=(
+                "knowledge.research_corpus",
+                "tool.web.search",
+                "artifact.report",
+            ),
+            user_roles=("analyst",),
+            planner_context_budget_chars=520,
+        )
+    )
+
+    exposure = decision.planner_exposure
+
+    assert decision.allowed_capability_ids == (
+        "knowledge.research_corpus",
+        "tool.web.search",
+        "artifact.report",
+    )
+    assert exposure["budget"]["truncated"] is True
+    assert exposure["omitted_capability_ids"]
+    assert set(exposure["omitted_capability_ids"]).issubset(decision.allowed_capability_ids)
+    assert exposure["budget"]["used_chars"] <= exposure["budget"]["limit_chars"] + 200
