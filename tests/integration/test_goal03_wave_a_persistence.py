@@ -389,6 +389,20 @@ def _knowledge_draft() -> KnowledgeVersionDraft:
     )
 
 
+def _knowledge_draft_for(version_id: str, version_no: int) -> KnowledgeVersionDraft:
+    return KnowledgeVersionDraft(
+        knowledge_version_id=version_id,
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        knowledge_space_id="knowledge-space:wave-a",
+        version_no=version_no,
+        document_set={"documents": [f"document-version:{version_no}"]},
+        source_span_manifest={"spans": [f"source-span:{version_no}"]},
+        index_spec={"bm25": True, "vector": True},
+        security_epoch_ref=f"security-epoch:wave-a:{version_no}",
+    )
+
+
 def test_phase12_knowledge_version_requires_visible_indexes_before_cutover_and_pins_snapshot(engine) -> None:
     with engine.begin() as conn:
         repo = KnowledgeRepository(conn)
@@ -441,7 +455,10 @@ def test_phase12_knowledge_version_requires_visible_indexes_before_cutover_and_p
             tenant_id="tenant-a",
             knowledge_space_id="knowledge-space:wave-a",
             to_version_id="knowledge-version:wave-a",
-            expected_generation=2,
+            expected_generation=repo.next_cutover_expected_generation(
+                tenant_id="tenant-a",
+                knowledge_space_id="knowledge-space:wave-a",
+            ),
             decision_payload={"visibility": "verified"},
         )
         repo.start_query_run(
@@ -472,6 +489,138 @@ def test_phase12_knowledge_version_requires_visible_indexes_before_cutover_and_p
             text("SELECT status FROM knowledge_domain_versions WHERE knowledge_version_id = 'knowledge-version:wave-a'")
         ).scalar_one()
         assert status == "ACTIVE"
+
+
+def test_phase12_knowledge_cutover_race_rollback_and_deleted_source_taint_strict_evidence(engine) -> None:
+    with engine.begin() as conn:
+        repo = KnowledgeRepository(conn)
+        for version_no in (1, 2):
+            version_id = f"knowledge-version:rollback:{version_no}"
+            repo.create_version(_knowledge_draft_for(version_id, version_no))
+            repo.append_chunk(
+                chunk_id=f"chunk:rollback:{version_no}",
+                tenant_id="tenant-a",
+                knowledge_version_id=version_id,
+                document_version_id=f"document-version:{version_no}",
+                source_span_ref=f"source-span:{version_no}",
+                chunk_payload={"text": f"Policy version {version_no}."},
+                acl_ref="acl:internal",
+                authority_ref="authority:policy",
+            )
+            for index_kind in ("BM25", "VECTOR"):
+                repo.record_index_visibility(
+                    job_id=f"job:rollback:{version_no}:{index_kind.lower()}",
+                    tenant_id="tenant-a",
+                    knowledge_version_id=version_id,
+                    index_kind=index_kind,
+                    lease_ref=f"lease:rollback:{version_no}:{index_kind.lower()}",
+                    fencing_token=1,
+                    attempt_no=1,
+                    write_batch={"chunk": f"chunk:rollback:{version_no}", "index_kind": index_kind},
+                    visibility_receipt_ref=f"visible:rollback:{version_no}:{index_kind.lower()}",
+                )
+            repo.mark_ready(knowledge_version_id=version_id)
+            repo.create_snapshot(
+                snapshot_id=f"snapshot:rollback:{version_no}",
+                tenant_id="tenant-a",
+                knowledge_version_id=version_id,
+                snapshot_payload={"version": version_id},
+                serving_watermark_ref=f"watermark:rollback:{version_no}",
+            )
+
+        repo.cutover(
+            cutover_id="cutover:rollback:1",
+            tenant_id="tenant-a",
+            knowledge_space_id="knowledge-space:wave-a",
+            to_version_id="knowledge-version:rollback:1",
+            expected_generation=1,
+            decision_payload={"to": 1},
+        )
+        with pytest.raises(KnowledgeCutoverConflict, match="stale Knowledge cutover generation"):
+            repo.cutover(
+                cutover_id="cutover:rollback:stale",
+                tenant_id="tenant-a",
+                knowledge_space_id="knowledge-space:wave-a",
+                to_version_id="knowledge-version:rollback:2",
+                expected_generation=1,
+                decision_payload={"to": "stale"},
+            )
+        repo.cutover(
+            cutover_id="cutover:rollback:2",
+            tenant_id="tenant-a",
+            knowledge_space_id="knowledge-space:wave-a",
+            to_version_id="knowledge-version:rollback:2",
+            expected_generation=2,
+            decision_payload={"to": 2},
+            from_version_id="knowledge-version:rollback:1",
+        )
+        repo.cutover(
+            cutover_id="cutover:rollback:restore-1",
+            tenant_id="tenant-a",
+            knowledge_space_id="knowledge-space:wave-a",
+            to_version_id="knowledge-version:rollback:1",
+            expected_generation=3,
+            decision_payload={"rollback_to": 1},
+            from_version_id="knowledge-version:rollback:2",
+            rollback_of_cutover_id="cutover:rollback:2",
+        )
+        active = conn.execute(
+            text(
+                """
+                SELECT knowledge_version_id
+                FROM knowledge_domain_versions
+                WHERE knowledge_space_id = 'knowledge-space:wave-a'
+                  AND status = 'ACTIVE'
+                """
+            )
+        ).scalar_one()
+        assert active == "knowledge-version:rollback:1"
+
+        repo.start_query_run(
+            query_run_id="query-run:deleted-source",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_core_decision_ref="agent-core-decision:deleted-source",
+            snapshot_id="snapshot:rollback:1",
+            request_payload={"query": "policy"},
+        )
+        repo.start_retrieval_round(
+            round_id="round:deleted-source:1",
+            query_run_id="query-run:deleted-source",
+            round_no=1,
+            retriever_set={"bm25": True, "vector": True},
+        )
+        repo.commit_evidence(
+            evidence_id="evidence:deleted-source:1",
+            query_run_id="query-run:deleted-source",
+            round_id="round:deleted-source:1",
+            chunk_id="chunk:rollback:1",
+            source_span_ref="source-span:1",
+            evidence_payload={"quote": "Policy version 1."},
+            authority_ref="authority:policy",
+        )
+        repo.commit_citation_lineage(
+            citation_lineage_id="citation:deleted-source:1",
+            evidence_id="evidence:deleted-source:1",
+            document_version_id="document-version:1",
+            source_span_ref="source-span:1",
+            span_text="Policy version 1.",
+            authorization_ref="authorization:source-span:1",
+        )
+        assert repo.strict_evidence_ids(query_run_id="query-run:deleted-source") == ("evidence:deleted-source:1",)
+
+        repo.mark_source_deleted(
+            tenant_id="tenant-a",
+            knowledge_version_id="knowledge-version:rollback:1",
+            document_version_id="document-version:1",
+            source_span_ref="source-span:1",
+            deletion_ref="delete:source-span:1",
+        )
+        assert repo.strict_evidence_ids(query_run_id="query-run:deleted-source") == ()
+        tainted = conn.execute(
+            text("SELECT deleted_or_tainted FROM knowledge_citation_lineage WHERE citation_lineage_id = 'citation:deleted-source:1'")
+        ).scalar_one()
+        assert tainted is True
 
 
 def test_phase14_capability_blocks_unverified_skill_and_model_only_active_binding(engine) -> None:

@@ -303,6 +303,14 @@ class KnowledgeRepository:
         from_version_id: str | None = None,
         rollback_of_cutover_id: str | None = None,
     ) -> None:
+        current_generation = self.next_cutover_expected_generation(
+            tenant_id=tenant_id,
+            knowledge_space_id=knowledge_space_id,
+        )
+        if current_generation != expected_generation:
+            raise KnowledgeCutoverConflict(
+                f"stale Knowledge cutover generation: expected {expected_generation}, current {current_generation}"
+            )
         status = self.connection.execute(
             text(
                 """
@@ -314,7 +322,10 @@ class KnowledgeRepository:
             ),
             {"to_version_id": to_version_id},
         ).scalar_one()
-        if status not in {"READY", "ACTIVE"}:
+        allowed_statuses = {"READY", "ACTIVE"}
+        if rollback_of_cutover_id:
+            allowed_statuses.add("SUPERSEDED")
+        if status not in allowed_statuses:
             raise KnowledgeCutoverConflict("Only READY KnowledgeVersion can cut over")
         self.connection.execute(
             text(
@@ -522,6 +533,85 @@ class KnowledgeRepository:
                 "authorization_ref": authorization_ref,
             },
         )
+
+    def mark_source_deleted(
+        self,
+        *,
+        tenant_id: str,
+        knowledge_version_id: str,
+        document_version_id: str,
+        source_span_ref: str,
+        deletion_ref: str,
+    ) -> None:
+        chunk_ids = self.connection.execute(
+            text(
+                """
+                SELECT chunk_id
+                FROM knowledge_chunks
+                WHERE tenant_id = :tenant_id
+                  AND knowledge_version_id = :knowledge_version_id
+                  AND document_version_id = :document_version_id
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+            },
+        ).scalars().all()
+        if not chunk_ids:
+            return
+        self.connection.execute(
+            text(
+                """
+                UPDATE knowledge_evidence_records
+                SET citation_eligibility = 'REJECTED',
+                    selection_status = :deletion_ref
+                WHERE chunk_id = ANY(CAST(:chunk_ids AS text[]))
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "chunk_ids": list(chunk_ids),
+                "source_span_ref": source_span_ref,
+                "deletion_ref": f"DELETED:{deletion_ref}",
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE knowledge_citation_lineage
+                SET deleted_or_tainted = true
+                WHERE document_version_id = :document_version_id
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+            },
+        )
+
+    def strict_evidence_ids(self, *, query_run_id: str) -> tuple[str, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT e.evidence_id
+                FROM knowledge_evidence_records e
+                LEFT JOIN knowledge_citation_lineage c
+                  ON c.evidence_id = e.evidence_id
+                WHERE e.query_run_id = :query_run_id
+                  AND e.citation_eligibility = 'STRICT'
+                  AND e.selection_status = 'SELECTED'
+                  AND coalesce(c.deleted_or_tainted, false) = false
+                ORDER BY e.evidence_id
+                """
+            ),
+            {"query_run_id": query_run_id},
+        ).scalars().all()
+        return tuple(str(row) for row in rows)
 
 
 __all__ = [
