@@ -1102,6 +1102,55 @@ def test_setup_plugin_tools_registers_tool_creation_helpers(monkeypatch):
     assert "create_cli_tool" in names
 
 
+def test_search_available_capabilities_uses_capability_service(monkeypatch):
+    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+
+    monkeypatch.setattr(
+        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        lambda **_: SimpleNamespace(),
+    )
+
+    async def fake_get_tools_from_id(_ids):
+        return []
+
+    calls = []
+
+    async def fake_search_capabilities(query, *, user_id, kind="", limit=8):
+        calls.append({"query": query, "user_id": user_id, "kind": kind, "limit": limit})
+        return [
+            {
+                "id": "tool:calendar.read",
+                "kind": "tool",
+                "display_name": "Calendar read",
+                "status": "ready",
+            }
+        ]
+
+    monkeypatch.setattr(
+        "zuno.services.workspace.simple_agent.ToolService.get_tools_from_id",
+        fake_get_tools_from_id,
+    )
+    monkeypatch.setattr(
+        "zuno.services.workspace.simple_agent.CapabilityService.search_capabilities",
+        fake_search_capabilities,
+    )
+    monkeypatch.setattr("zuno.services.workspace.simple_agent.WorkSpacePlugins", {})
+
+    agent = WorkSpaceSimpleAgent(
+        model_config={},
+        user_id="u_1",
+        session_id="s_1",
+    )
+
+    asyncio.run(agent.setup_plugin_tools())
+    search_tool = next(tool for tool in agent.plugin_tools if tool.name == "search_available_capabilities")
+
+    result = asyncio.run(search_tool.ainvoke({"query": "calendar", "kind": "tool", "limit": 3}))
+
+    assert calls == [{"query": "calendar", "user_id": "u_1", "kind": "tool", "limit": 3}]
+    assert '"id": "tool:calendar.read"' in result
+
+
 def test_direct_maps_weather_root_forecasts_are_humanized(monkeypatch):
     from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 

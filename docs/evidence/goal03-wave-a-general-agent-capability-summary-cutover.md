@@ -12,6 +12,8 @@ commit_scope: GeneralAgent capability context summary cutover
 - `GeneralAgent.prepare_context()` 不再调用 `DynamicCapabilitySelector(CapabilityRegistry(...))`。
 - 新增静态 guard 测试，禁止默认 GeneralAgent 上下文路径重新实例化 legacy selector / registry。
 - 新增默认 Product / Agent Runtime 旁路 guard，禁止 `agent.planning`、`agent.runtime.service`、`api.services.completion` 和 `api.services.product.command_service` 重新导入 `zuno.agent.tool_bridge`、`DynamicCapabilitySelector` 或直接构造 `CapabilityRegistry(...)`。
+- Workspace `search_available_capabilities` LangChain tool 不再直接调用 `CapabilityRegistryService.search`；它进入 `CapabilityService.search_capabilities(...)`，由 Capability service 记录 `CapabilityAvailabilitySnapshot` / `CapabilitySelectionResult` 后再返回模型可见结果。
+- 默认 Product / Agent / Workspace Runtime 旁路 guard 覆盖 `workspace.simple_agent`，禁止重新直连 legacy `CapabilityRegistryService`。
 - 摘要视图只包含：
   - `name`
   - `type`
@@ -28,6 +30,7 @@ commit_scope: GeneralAgent capability context summary cutover
 ```powershell
 python -m pytest -q tests/agent/test_generalagent_context_memory_runtime.py -p no:cacheprovider
 python -m pytest -q tests/agent/test_capability_layer_surfaces.py tests/agent/test_planning_control_runtime.py tests/capability/test_capability_skill_layer.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_workspace_simple_agent.py::test_search_available_capabilities_uses_capability_service tests/agent/test_workspace_simple_agent.py::test_setup_plugin_tools_registers_tool_creation_helpers -p no:cacheprovider
 ```
 
 结果：
@@ -35,9 +38,10 @@ python -m pytest -q tests/agent/test_capability_layer_surfaces.py tests/agent/te
 ```text
 8 passed
 22 passed
+2 passed
 ```
 
 ## 未证明
 
 - 本证据不证明 PHASE14 的所有 legacy facade 已删除；`zuno.capability.registry` / `zuno.capability.selector` 仍作为兼容 facade 存在。
-- 该切片证明默认 GeneralAgent context selection、Planner 和 Product / Completion runtime service 文件已有 legacy registry / selector 旁路 guard。
+- 该切片证明默认 GeneralAgent context selection、Planner、Product / Completion runtime service 和 Workspace capability search tool 文件已有 legacy registry / selector 旁路 guard。

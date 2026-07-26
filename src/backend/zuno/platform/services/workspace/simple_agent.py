@@ -31,6 +31,7 @@ from zuno.api.services.agent_skill import AgentSkillService
 from zuno.api.services.tool import ToolService
 from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
+from zuno.api.services.capability import CapabilityService
 from zuno.core.callbacks import usage_metadata_callback
 from zuno.core.models.manager import ModelManager
 from zuno.services.graphrag.query_service import KnowledgeQueryResult
@@ -55,7 +56,6 @@ from zuno.services.execution_policy import (
 )
 from zuno.services.mcp.manager import MCPManager
 from zuno.services.cli_tool_discovery import CliToolDiscoveryService
-from zuno.services.capability_registry import CapabilityRegistryService
 from zuno.services.rag.handler import RagHandler
 from zuno.services.simple_api_tool import (
     build_openapi_schema_from_simple_config,
@@ -1353,7 +1353,7 @@ class WorkSpaceSimpleAgent:
                     kind: Optional capability kind filter: tool, skill, mcp_server, or mcp_tool.
                     limit: Maximum number of results to return.
                 """
-                results = await CapabilityRegistryService.search(
+                results = await CapabilityService.search_capabilities(
                     query,
                     user_id=self.user_id,
                     kind=kind,
