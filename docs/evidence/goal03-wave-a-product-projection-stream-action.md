@@ -15,7 +15,7 @@
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
 - `product_action_tokens` 支持一次性消费和撤销；重复消费或撤销后消费 fail closed。
 - Product Projection rebuild 会过期该 workspace 的既有 stream cursor，并追加 gap projection event 作为重建水位线；重复 rebuild idempotent，不重复生成水位线。
-- 旧 `/completion` 默认 Unified Runtime 入口会先尝试写入 Product Runtime shadow command / projection / action-token 记录，并以 SSE `product_runtime_shadow` 暴露 `recorded` 或 `blocked` 结果；该入口可显式识别 `shadow / canary / new_default / rollback`，且 `rollback` 窗口会真实回 legacy GeneralAgent，shadow 写入失败不把主 completion 响应冒充为 Product 成功，也不阻断默认 runtime 输出。
+- 旧 `/completion` 默认 Unified Runtime 入口会先尝试写入 Product Runtime shadow command / projection / action-token 记录，并以 SSE `product_runtime_shadow` 暴露 `recorded` 或 `blocked` 结果；该入口可显式识别 `shadow / canary / new_default / rollback`，且 `rollback` 窗口会真实回 legacy GeneralAgent，shadow 写入失败时返回 `request_hash`、`failure_type`、`product_shadow_recorded = false`，不把主 completion 响应冒充为 Product 成功，也不阻断默认 runtime 输出。
 
 ## 默认调用链
 
@@ -99,7 +99,7 @@ python -m pytest -q tests/api/test_completion_unified_runtime.py -p no:cacheprov
 结果：
 
 ```text
-9 passed, 1 warning
+10 passed, 1 warning
 ```
 
 ```powershell
@@ -148,6 +148,6 @@ git diff --check passed with LF/CRLF warnings only
 
 ## 边界
 
-本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析和 fail-closed 事件语义。
+本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析、rollback 和 shadow persistence failure 不阻断 Unified Runtime 的 fail-closed 事件语义。
 
 本证据不单独证明完整 PHASE09 completed；真实浏览器 E2E client reconnect 和更大范围旧 API cutover fault matrix 仍需要 Closure Gate 汇总证明。

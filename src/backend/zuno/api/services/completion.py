@@ -160,6 +160,9 @@ class CompletionService:
                 "route": "/completion",
                 "mode": "shadow",
                 "cutover_mode": cutover_mode,
+                "request_hash": request_hash,
+                "product_shadow_recorded": False,
+                "failure_type": type(exc).__name__,
                 "reason": str(exc),
             }
         return {
@@ -167,6 +170,8 @@ class CompletionService:
             "route": "/completion",
             "mode": "shadow",
             "cutover_mode": cutover_mode,
+            "request_hash": request_hash,
+            "product_shadow_recorded": True,
             "command_id": result.command_id,
             "receipt_id": result.receipt_id,
             "projection_event_id": result.projection.projection_event_id,

@@ -128,6 +128,8 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     assert result["status"] == "ACCEPTED"
     assert result["mode"] == "shadow"
     assert result["cutover_mode"] == "new_default"
+    assert result["product_shadow_recorded"] is True
+    assert result["request_hash"]
     assert result["projection_event_id"] == "projection:completion-shadow"
     assert result["available_action_tokens"] == ["action-token:completion-shadow:cancel"]
     assert captured["tenant_id"] == "user:principal-a"
@@ -158,13 +160,54 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
         login_user_id="principal-a",
     )
 
-    assert result == {
-        "status": "blocked",
-        "route": "/completion",
-        "mode": "shadow",
-        "cutover_mode": "new_default",
-        "reason": "product persistence unavailable",
-    }
+    assert result["status"] == "blocked"
+    assert result["route"] == "/completion"
+    assert result["mode"] == "shadow"
+    assert result["cutover_mode"] == "new_default"
+    assert result["product_shadow_recorded"] is False
+    assert result["failure_type"] == "RuntimeError"
+    assert result["reason"] == "product persistence unavailable"
+    assert result["request_hash"]
+
+
+def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tmp_path, monkeypatch) -> None:
+    CompletionService.configure_unified_runtime_store_for_tests(
+        SQLiteAgentRunStore(tmp_path / "completion_shadow_fail_runtime.db")
+    )
+
+    def fail_submit(**kwargs):
+        del kwargs
+        raise RuntimeError("product persistence unavailable")
+
+    monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(fail_submit))
+    client = _client()
+
+    with client.stream(
+        "POST",
+        "/api/v1/completion",
+        json={
+            "user_input": "Summarize the workspace evidence with citations.",
+            "dialog_id": "dialog_phase09_shadow_failure",
+            "product_mode": "auto",
+        },
+    ) as response:
+        assert response.status_code == 200
+        lines = list(response.iter_lines())
+
+    streamed = [
+        json.loads(line.removeprefix("data: ").strip())
+        for line in lines
+        if line.startswith("data: ")
+    ]
+    assert streamed[0]["type"] == "product_runtime_shadow"
+    assert streamed[0]["data"]["status"] == "blocked"
+    assert streamed[0]["data"]["product_shadow_recorded"] is False
+    assert streamed[0]["data"]["failure_type"] == "RuntimeError"
+    assert streamed[0]["data"]["request_hash"]
+    assert "user_input" not in streamed[0]["data"]
+    assert "runtime_started" in [event["type"] for event in streamed]
+    assert streamed[-1]["type"] == "response_chunk"
+    assert streamed[-1]["data"]["runtime_topology"] == "unified_agent_runtime"
 
 
 def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch) -> None:
