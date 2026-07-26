@@ -10,6 +10,7 @@
 - `CommandReceipt` 仍只表示 Product 接受或重复，不冒充 Agent Core 领域成功。
 - `GET /api/v1/product/stream` 使用 `text/event-stream` 输出 Product Projection Delta / Resync 事件。
 - `GET /api/v1/product/stream-events` 提供同一事件源的 JSON 查询面，支持 `Last-Event-ID`，并在未知或过期 cursor 时返回 `RESYNC_REQUIRED` 语义。
+- `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
 
 ## 默认调用链
@@ -68,4 +69,4 @@ python -m pytest -q tests/api/test_product_runtime_batch.py tests/repo/test_prod
 
 本证据只证明 PHASE09 默认入口已经接入 Product projection、stream cursor 和 AvailableAction token 的真实持久化路径。
 
-本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API cutover、跨 Owner Projection rebuild 和 E2E client reconnect 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API cutover、跨 Owner Projection rebuild 和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。

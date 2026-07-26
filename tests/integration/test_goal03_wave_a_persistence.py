@@ -307,6 +307,18 @@ def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted
         assert resync[0].projection_event_id == f"resync:{expired.cursor_id}"
         assert resync[0].gap_detected is True
 
+        wrong_principal_resync = repo.list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-b",
+            last_event_id=cursor.cursor_id,
+            now=now,
+        )
+        assert len(wrong_principal_resync) == 1
+        assert wrong_principal_resync[0].projection_event_id == f"resync:{cursor.cursor_id}"
+        assert wrong_principal_resync[0].redaction_decision_ref == "redaction:unknown-cursor"
+        assert wrong_principal_resync[0].gap_detected is True
+
 
 def test_phase09_product_agent_assets_publish_install_and_catalog(engine) -> None:
     with engine.begin() as conn:
