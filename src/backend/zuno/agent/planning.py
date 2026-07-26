@@ -289,6 +289,8 @@ class StrategySelector:
                 action_type=action_type,
                 required_evidence=list(selected_skill.required_evidence),
                 allowed_capabilities=list(capability_plan.allowed_capabilities),
+                input_refs=_capability_policy_input_refs(capability_plan),
+                tool_policy_ref=capability_plan.selection_result_ref,
                 failure_conditions=_failure_conditions_for_step(action_type),
                 budget={"max_steps": len(step_specs)},
             )
@@ -403,6 +405,9 @@ class StrategySelector:
                     "allowed_capabilities": list(capability_plan.allowed_capabilities),
                     "allowed_tools": list(capability_plan.allowed_tools),
                     "executed_tools": list(capability_plan.executed_tools),
+                    "availability_snapshot_ref": capability_plan.availability_snapshot_ref,
+                    "selection_result_ref": capability_plan.selection_result_ref,
+                    "selection_validity": capability_plan.selection_validity,
                     "planner_exposure_ref": (
                         capability_plan.risk_summary.get("planner_exposure", {}).get("exposure_ref")
                     ),
@@ -459,6 +464,14 @@ def _budget_payload(verdict: Any | None) -> dict[str, Any]:
         "allowed": getattr(verdict, "allowed", True),
         "reason": getattr(verdict, "reason", "unknown"),
     }
+
+
+def _capability_policy_input_refs(capability_plan: CapabilityPlan) -> list[str]:
+    refs = [
+        capability_plan.availability_snapshot_ref,
+        capability_plan.selection_result_ref,
+    ]
+    return [ref for ref in refs if ref]
 
 
 def _failure_conditions_for_step(action_type: str) -> list[str]:

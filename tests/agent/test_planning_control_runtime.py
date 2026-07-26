@@ -85,6 +85,8 @@ def test_tool_task_selects_react_without_executing_tool() -> None:
     assert output.capability_plan.selection_validity == "fixed_planning_snapshot"
     assert output.capability_plan.allowed_tools == ["tool.web.search"]
     assert output.capability_plan.executed_tools == []
+    assert output.capability_plan.availability_snapshot_ref is not None
+    assert output.capability_plan.selection_result_ref is not None
     exposure = output.capability_plan.risk_summary["planner_exposure"]
     assert exposure["visibility"] == "planner_authorized_summary_schema_only"
     assert [entry["capability_id"] for entry in exposure["capabilities"]] == [
@@ -92,7 +94,15 @@ def test_tool_task_selects_react_without_executing_tool() -> None:
         "tool.web.search",
     ]
     assert output.trace_events[-1].payload["planner_exposure_ref"] == exposure["exposure_ref"]
+    assert output.trace_events[-1].payload["availability_snapshot_ref"] == output.capability_plan.availability_snapshot_ref
+    assert output.trace_events[-1].payload["selection_result_ref"] == output.capability_plan.selection_result_ref
     assert output.plan_state.steps[0].action_type == "select_capability"
+    for step in output.plan_state.steps:
+        assert step.input_refs == [
+            output.capability_plan.availability_snapshot_ref,
+            output.capability_plan.selection_result_ref,
+        ]
+        assert step.tool_policy_ref == output.capability_plan.selection_result_ref
 
 
 def test_strategy_selector_uses_route_decision_without_registry_capability_rewalk() -> None:
@@ -152,6 +162,13 @@ def test_strategy_selector_uses_route_decision_without_registry_capability_rewal
     assert output.capability_plan.selection_validity == "fixed_planning_snapshot"
     assert output.capability_plan.allowed_tools == ["tool.web.search"]
     assert output.capability_plan.approval_required_tools == []
+    assert all(
+        step.input_refs == [
+            output.capability_plan.availability_snapshot_ref,
+            output.capability_plan.selection_result_ref,
+        ]
+        for step in output.plan_state.steps
+    )
 
 
 def test_formal_report_selects_plan_execute_with_reflection_gate() -> None:

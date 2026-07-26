@@ -11,6 +11,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 - `CapabilityPlan` 增加 `availability_snapshot_ref`、`selection_result_ref` 和 `selection_validity`。
 - `StrategySelector` 在有候选 capability 时生成稳定 snapshot / selection refs，并把它们放入 Planner 输出。
 - `StrategySelector` 的 planner 阶段只消费 `CapabilityRouteDecision` 中的 allowed tools、approval-required 和 planner exposure，不在 route 后二次遍历 legacy registry。
+- Planner 生成的每个 `PlanStep` 都把同一组 `availability_snapshot_ref` / `selection_result_ref` 固定进 `input_refs`，并以 `selection_result_ref` 作为 `tool_policy_ref`；`plan_created` trace payload 同步暴露 snapshot / selection / validity，供执行层和 Closure Review 审计每一步来自同一个 capability decision。
 - `CapabilityRepository.record_selection` 只在新 `capability_selection_results` 插入成功时写入 `infra_outbox_events`。
 - `infra_outbox_events.topic = capability.selection.committed`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复提交同一 selection 不重复创建 outbox 事件。
@@ -21,6 +22,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 ```powershell
 python -m pytest -q tests/agent/test_planning_control_runtime.py tests/capability/test_capability_skill_layer.py -p no:cacheprovider
 python -m pytest -q tests/agent/test_planning_control_runtime.py tests/agent/test_shared_contract_freeze.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_planning_control_runtime.py -p no:cacheprovider
 python tools/scripts/verify_capability_skill_target_protocols.py
 git diff --check
 alembic -c infra/db/alembic.ini heads
@@ -35,6 +37,7 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 ```text
 17 passed
 9 passed
+8 passed
 Capability / Skill target architecture verification passed.
 20260725_37 (head)
 3 passed
