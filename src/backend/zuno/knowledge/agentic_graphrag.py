@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from enum import Enum
 import re
 from typing import Any, Iterable, Literal
@@ -313,6 +314,11 @@ class EvidenceItem(BaseModel):
     trust_label: str
     acl_scope: str = "workspace"
     sensitivity_tags: list[str] = Field(default_factory=list)
+    authority_ref: str = ""
+    temporal_valid_from: str | None = None
+    temporal_valid_until: str | None = None
+    conflict_status: str = ""
+    conflict_refs: list[str] = Field(default_factory=list)
     text: str = ""
     source_uri: str = ""
     provenance: dict[str, Any] = Field(default_factory=dict)
@@ -338,6 +344,7 @@ class EvidenceItem(BaseModel):
 class EvidenceBundle(BaseModel):
     items: list[EvidenceItem] = Field(default_factory=list)
     dropped_evidence_ids: list[str] = Field(default_factory=list)
+    dropped_evidence_reasons: dict[str, str] = Field(default_factory=dict)
     coverage: float = 0.0
 
     @classmethod
@@ -346,13 +353,22 @@ class EvidenceBundle(BaseModel):
     ) -> "EvidenceBundle":
         items: list[EvidenceItem] = []
         dropped: list[str] = []
+        dropped_reasons: dict[str, str] = {}
+        now = datetime.now(tz=UTC)
         for candidate in candidates:
-            if candidate.acl_scope in allowed_acl_scopes:
-                items.append(candidate)
-            else:
+            drop_reason = _evidence_drop_reason(candidate, allowed_acl_scopes, now=now)
+            if drop_reason:
                 dropped.append(candidate.evidence_id)
+                dropped_reasons[candidate.evidence_id] = drop_reason
+            else:
+                items.append(candidate)
         coverage = cls._coverage(items)
-        return cls(items=items, dropped_evidence_ids=dropped, coverage=coverage)
+        return cls(
+            items=items,
+            dropped_evidence_ids=dropped,
+            dropped_evidence_reasons=dropped_reasons,
+            coverage=coverage,
+        )
 
     @staticmethod
     def _coverage(items: list[EvidenceItem]) -> float:
@@ -360,6 +376,59 @@ class EvidenceBundle(BaseModel):
             return 0.0
         covered = sum(1 for item in items if item.citation_label and item.source_span)
         return covered / len(items)
+
+
+def _evidence_drop_reason(
+    item: EvidenceItem,
+    allowed_acl_scopes: set[str],
+    *,
+    now: datetime,
+) -> str | None:
+    if item.acl_scope not in allowed_acl_scopes:
+        return "acl_scope_denied"
+    if _is_temporally_expired(item, now=now):
+        return "temporal_policy_expired"
+    if _is_temporally_not_yet_valid(item, now=now):
+        return "temporal_policy_not_yet_valid"
+    if _has_unresolved_conflict(item):
+        return "conflict_policy_unresolved"
+    return None
+
+
+def _is_temporally_expired(item: EvidenceItem, *, now: datetime) -> bool:
+    valid_until = _parse_iso_datetime(item.temporal_valid_until)
+    return valid_until is not None and now >= valid_until
+
+
+def _is_temporally_not_yet_valid(item: EvidenceItem, *, now: datetime) -> bool:
+    valid_from = _parse_iso_datetime(item.temporal_valid_from)
+    return valid_from is not None and now < valid_from
+
+
+def _has_unresolved_conflict(item: EvidenceItem) -> bool:
+    normalized_status = item.conflict_status.lower().strip()
+    if normalized_status in {"", "none", "clear", "resolved", "authoritative"}:
+        return False
+    if normalized_status in {"conflict", "conflicted", "unresolved", "superseded", "stale"}:
+        return True
+    return bool(item.conflict_refs)
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    if normalized.endswith("Z"):
+        normalized = f"{normalized[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 class Citation(BaseModel):
@@ -569,6 +638,7 @@ class AgenticRetrievalRuntimeResult(BaseModel):
                     self.trace_metadata.get("unsupported_claim_metrics") or {}
                 ),
                 "dropped_evidence_ids": list(self.evidence_bundle.dropped_evidence_ids),
+                "dropped_evidence_reasons": dict(self.evidence_bundle.dropped_evidence_reasons),
                 "evidence_verdict": dict(self.trace_metadata.get("evidence_verdict") or {}),
                 "artifact_manifest": dict(self.trace_metadata.get("artifact_manifest") or {}),
                 "runtime_trace_event_ids": [
@@ -762,6 +832,23 @@ class AgenticRetrievalRuntime:
                                     trust_label=str(metadata.get("trust_label") or "indexed"),
                                     acl_scope=str(metadata.get("acl_scope") or "workspace"),
                                     sensitivity_tags=list(metadata.get("sensitivity_tags") or []),
+                                    authority_ref=str(
+                                        metadata.get("authority_ref")
+                                        or citation_lineage.get("authority_ref")
+                                        or ""
+                                    ),
+                                    temporal_valid_from=_metadata_temporal_ref(metadata, "valid_from"),
+                                    temporal_valid_until=_metadata_temporal_ref(metadata, "valid_until"),
+                                    conflict_status=str(
+                                        metadata.get("conflict_status")
+                                        or metadata.get("evidence_conflict_status")
+                                        or ""
+                                    ),
+                                    conflict_refs=list(
+                                        metadata.get("conflict_refs")
+                                        or metadata.get("evidence_conflict_refs")
+                                        or []
+                                    ),
                                     text=str(document.get("content") or ""),
                                     source_uri=str(
                                         metadata.get("source_uri")
@@ -881,6 +968,7 @@ class AgenticRetrievalRuntime:
                     else 0.0
                 ),
                 "dropped_evidence_ids": list(evidence_bundle.dropped_evidence_ids),
+                "dropped_evidence_reasons": dict(evidence_bundle.dropped_evidence_reasons),
                 "items": evidence_items,
             },
             "citation_contract": {
@@ -1026,6 +1114,17 @@ def _retriever_sources_for_method(method: QueryMethod) -> tuple[str, ...]:
     return ("bm25",)
 
 
+def _metadata_temporal_ref(metadata: dict[str, Any], key: Literal["valid_from", "valid_until"]) -> str | None:
+    temporal_policy = dict(metadata.get("temporal_policy") or {})
+    value = (
+        temporal_policy.get(key)
+        or metadata.get(f"temporal_{key}")
+        or metadata.get(key)
+        or metadata.get("effective_at" if key == "valid_from" else "expires_at")
+    )
+    return str(value) if value else None
+
+
 def _evidence_aware_rerank(candidates: list[EvidenceItem]) -> list[EvidenceItem]:
     scored: list[tuple[float, EvidenceItem]] = []
     document_seen: dict[str, int] = {}
@@ -1156,6 +1255,11 @@ def _evidence_item_payload(item: EvidenceItem) -> dict[str, Any]:
         "trust_label": item.trust_label,
         "acl_scope": item.acl_scope,
         "sensitivity_tags": list(item.sensitivity_tags),
+        "authority_ref": item.authority_ref,
+        "temporal_valid_from": item.temporal_valid_from,
+        "temporal_valid_until": item.temporal_valid_until,
+        "conflict_status": item.conflict_status,
+        "conflict_refs": list(item.conflict_refs),
         "community_ids": list(item.community_ids),
     }
 

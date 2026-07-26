@@ -17,6 +17,7 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - 默认 completion factory 的 retrieval step 已证明进入 `DurableKnowledgeRetrievalPort`；无 knowledge scope 时返回 `durable_knowledge_port.status = skipped / reason = knowledge_scope_empty`，不再产生 `missing_knowledge_runtime`，也不冒充检索成功。
 - `KnowledgeIndexRuntime` 的 current local BM25 / vector / graph adapter 会在 `IndexJobManifest.adapter_visibility_receipts` 写入 per-target visibility receipt；retrieval payload 只把具备 `visibility = visible` receipt 的 target 纳入 `retrievers_used`。
 - 外部 Elasticsearch / Milvus / Neo4j adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
+- 默认 `AgenticRetrievalRuntime.answer(...)` 在把检索候选升级为 `EvidenceBundle`、`Citation` 和回答前，会按 allowed ACL、temporal valid_from / valid_until 与 unresolved conflict policy 丢弃证据，并在 task event / trace metadata 写入 `dropped_evidence_reasons`。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
 - `zuno.knowledge.ingestion` 包入口改为 contracts eager import + legacy symbols lazy export，避免 Agent Core Knowledge surface 导入时连带加载数据库 runtime 模块。
 - `zuno.knowledge.agentic_graphrag` 与 `zuno.knowledge.indexing.runtime` 改为从 contracts/router 子模块读取轻量契约，不再依赖 ingestion 包入口的重导出。
@@ -37,6 +38,9 @@ python -m pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledg
 python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_agentic_retrieval_runtime.py::test_agentic_retrieval_runtime_drops_temporal_and_conflicted_evidence_before_citation -p no:cacheprovider
+python -m pytest -q tests/agent/test_agentic_retrieval_runtime.py -p no:cacheprovider
+python -m pytest -q tests/agent/test_agentic_graphrag_contract.py -p no:cacheprovider
 ```
 
 结果：
@@ -51,6 +55,9 @@ python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/t
 4 passed
 6 passed
 22 passed
+1 passed
+9 passed
+7 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -83,5 +90,5 @@ retry count: 1
 ## 未证明
 
 - 外部 BM25 / Vector / Graph 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；完整外部服务端切换仍需后续环境和 Gate 证据。
-- 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明。
+- 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明；本切片只证明默认本地 Standard RAG 证据候选在 citation 前执行 ACL、temporal 和 unresolved conflict 过滤。
 - PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。

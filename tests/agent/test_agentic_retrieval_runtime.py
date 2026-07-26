@@ -471,6 +471,134 @@ def test_agentic_retrieval_runtime_drops_disallowed_acl_evidence() -> None:
     assert result.trace_metadata["evidence_verdict"]["fallback_reason"] == "evidence_missing"
 
 
+def test_agentic_retrieval_runtime_drops_temporal_and_conflicted_evidence_before_citation() -> None:
+    from zuno.knowledge.agentic_graphrag import (
+        AgenticRetrievalRuntime,
+        AgenticRetrievalRuntimeRequest,
+    )
+    from zuno.agent.contracts import RetrievalProfile
+
+    class _FakeIndexRuntime:
+        def to_retrieval_payload(self, knowledge_space_id: str, query: str) -> dict:
+            return {
+                "knowledge_space_id": knowledge_space_id,
+                "index_version": "index-version:temporal-conflict",
+                "retrievers_used": ["bm25", "vector"],
+                "manifest": {
+                    "source_provenance": {
+                        "source_uri": "memory://policy/current.md",
+                    },
+                    "adapter_status": {
+                        "bm25": {"visibility": "visible"},
+                        "vector": {"visibility": "visible"},
+                    },
+                },
+                "documents_by_source": {
+                    "bm25": [
+                        _retrieved_document(
+                            "doc-policy",
+                            "block-current",
+                            "chunk-current",
+                            "Current renewal notice is 30 days before anniversary.",
+                            {
+                                "valid_until": "2999-01-01T00:00:00Z",
+                                "conflict_status": "clear",
+                            },
+                        ),
+                        _retrieved_document(
+                            "doc-policy-expired",
+                            "block-expired",
+                            "chunk-expired",
+                            "Expired renewal notice was 90 days before anniversary.",
+                            {
+                                "valid_until": "2000-01-01T00:00:00Z",
+                                "conflict_status": "clear",
+                            },
+                        ),
+                        _retrieved_document(
+                            "doc-policy-future",
+                            "block-future",
+                            "chunk-future",
+                            "Future renewal notice will be 45 days before anniversary.",
+                            {
+                                "valid_from": "2999-01-01T00:00:00Z",
+                                "conflict_status": "clear",
+                            },
+                        ),
+                        _retrieved_document(
+                            "doc-policy-conflict",
+                            "block-conflict",
+                            "chunk-conflict",
+                            "Conflicted renewal notice says 10 days before anniversary.",
+                            {
+                                "valid_until": "2999-01-01T00:00:00Z",
+                                "conflict_status": "unresolved",
+                                "conflict_refs": ["conflict:renewal-notice"],
+                            },
+                        ),
+                    ],
+                    "vector": [],
+                },
+            }
+
+    result = AgenticRetrievalRuntime(index_runtime=_FakeIndexRuntime()).answer(
+        AgenticRetrievalRuntimeRequest(
+            query="What is the renewal notice policy?",
+            workspace_id="workspace_retrieval",
+            knowledge_space_ids=["ks_temporal_conflict"],
+            retrieval_profile=RetrievalProfile.STANDARD,
+            allowed_acl_scopes={"workspace"},
+            trace_id="trace_phase12_temporal_conflict",
+            task_id="task_phase12_temporal_conflict",
+        )
+    )
+
+    assert [item.chunk_id for item in result.evidence_bundle.items] == ["chunk-current"]
+    assert [citation.chunk_id for citation in result.citations] == ["chunk-current"]
+    assert result.evidence_bundle.dropped_evidence_reasons == {
+        "ev:basic:chunk-expired": "temporal_policy_expired",
+        "ev:basic:chunk-future": "temporal_policy_not_yet_valid",
+        "ev:basic:chunk-conflict": "conflict_policy_unresolved",
+    }
+    assert "Expired renewal notice" not in result.answer
+    assert "Conflicted renewal notice" not in result.answer
+    assert result.to_task_event()["payload"]["dropped_evidence_reasons"] == result.evidence_bundle.dropped_evidence_reasons
+
+
+def _retrieved_document(
+    document_id: str,
+    block_id: str,
+    chunk_id: str,
+    content: str,
+    metadata: dict,
+) -> dict:
+    return {
+        "document_id": document_id,
+        "chunk_id": chunk_id,
+        "content": content,
+        "score": 0.91,
+        "raw_score": 0.91,
+        "normalized_score": 0.91,
+        "rank": 1,
+        "matched_terms": ["renewal", "notice"],
+        "matched_phrase": "renewal notice",
+        "candidate_reason": "test_fixture",
+        "metadata": {
+            "document_id": document_id,
+            "block_id": block_id,
+            "source_uri": f"memory://policy/{document_id}.md",
+            "source_span": {
+                "chunk_id": chunk_id,
+                "page": 1,
+                "raw_text": content,
+            },
+            "acl_scope": "workspace",
+            "trust_label": "verified",
+            **metadata,
+        },
+    }
+
+
 def test_agentic_retrieval_runtime_records_low_confidence_for_zero_score_fallback() -> None:
     from zuno.knowledge.agentic_graphrag import (
         AgenticRetrievalRuntimeRequest,
