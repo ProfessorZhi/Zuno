@@ -17,6 +17,7 @@ commit_scope: Product Surface Backend Runtime repair
   - `product_command_receipts`
   - `infra_outbox_events`
 - `CommandReceipt` 采用 append-only 版本序列；owner/late terminal receipt 继续追加新版本，不覆盖既有 receipt。
+- unknown command 的 owner receipt 会 fail closed 为 `owner receipt target unavailable`，不会冒充已存在命令的后续回执。
 - `infra_outbox_events.topic = product.runtime_request.dispatch`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复相同 client request 只追加 duplicate receipt，不重复创建 command/message/outbox。
 - 不同 client request 的 Product journal sequence 在 Repository 内递增，不依赖调用方硬编码。

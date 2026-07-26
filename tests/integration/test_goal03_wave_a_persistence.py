@@ -253,6 +253,21 @@ def test_phase09_product_owner_receipts_are_append_only_and_versioned(engine) ->
         assert receipt_rows[1]["receipt_hash"] != receipt_rows[2]["receipt_hash"]
 
 
+def test_phase09_product_owner_receipt_rejects_unknown_command(engine) -> None:
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+
+        with pytest.raises(ProductPersistenceConflict, match="owner receipt target unavailable"):
+            repo.append_owner_receipt(
+                tenant_id="tenant-a",
+                command_id="command:missing",
+                status="REJECTED",
+                owner_receipt_ref="owner:missing",
+                payload={"owner_status": "rejected"},
+            )
+
+
 def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted(engine) -> None:
     now = datetime.now(timezone.utc)
     with engine.begin() as conn:

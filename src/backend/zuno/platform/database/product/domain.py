@@ -1026,6 +1026,19 @@ class ProductRepository:
         *,
         owner_receipt_ref: str | None = None,
     ) -> str:
+        command_exists = self.connection.execute(
+            text(
+                """
+                SELECT 1
+                FROM product_commands
+                WHERE command_id = :command_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"command_id": command_id, "tenant_id": tenant_id},
+        ).scalar_one_or_none()
+        if command_exists is None:
+            raise ProductPersistenceConflict("owner receipt target unavailable")
         latest = self.connection.execute(
             text(
                 """
