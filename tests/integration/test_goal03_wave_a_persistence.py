@@ -197,6 +197,109 @@ def test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain
             )
 
 
+def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted(engine) -> None:
+    now = datetime.now(timezone.utc)
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+        receipt = repo.submit_command(_product_command("client:projection", {"query": "renewal"}, "command:projection"))
+        watermark = repo.next_projection_watermark(tenant_id="tenant-a", workspace_id="workspace-a")
+        projection = repo.record_projection_event(
+            projection_event_id="projection:command:projection:accepted",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_module="Product Surface",
+            source_event_id=receipt.command_id,
+            source_watermark=watermark,
+            projection_payload={
+                "command_id": receipt.command_id,
+                "receipt_id": receipt.receipt_id,
+                "status": receipt.status,
+            },
+            redaction_decision_ref="redaction:projection:server",
+        )
+        action = repo.issue_action_token(
+            action_token_id="action-token:command:projection:cancel",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            target_ref="runtime-request:wave-a",
+            command_kind="CANCEL_RUNTIME_REQUEST",
+            effective_security_epoch_ref="security-epoch:wave-a",
+            nonce="nonce:command:projection:cancel",
+            expires_at=now + timedelta(minutes=5),
+        )
+        cursor = repo.open_stream_cursor(
+            cursor_id="cursor:command:projection:1",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            projection_event_id=projection.projection_event_id,
+            last_sequence_no=projection.source_watermark,
+            effective_security_epoch_ref="security-epoch:wave-a",
+            expires_at=now + timedelta(minutes=15),
+            reauthorized_at=now,
+        )
+
+        rows = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM product_projection_events) AS projection_events,
+                    (SELECT count(*) FROM product_stream_cursors) AS stream_cursors,
+                    (SELECT count(*) FROM product_action_tokens WHERE used_at IS NULL AND revoked_at IS NULL) AS active_tokens
+                """
+            )
+        ).mappings().one()
+        assert dict(rows) == {
+            "projection_events": 1,
+            "stream_cursors": 1,
+            "active_tokens": 1,
+        }
+        assert action.command_kind == "CANCEL_RUNTIME_REQUEST"
+        assert cursor.last_sequence_no == projection.source_watermark
+
+        replay = repo.record_projection_event(
+            projection_event_id="projection:command:projection:duplicate",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            source_module="Product Surface",
+            source_event_id=receipt.command_id,
+            source_watermark=999,
+            projection_payload={"different": "payload"},
+            redaction_decision_ref="redaction:projection:server",
+        )
+        assert replay.duplicate is True
+        assert replay.projection_event_id == projection.projection_event_id
+
+        since_event = repo.list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            last_event_id=projection.projection_event_id,
+        )
+        assert since_event == ()
+
+        expired = repo.open_stream_cursor(
+            cursor_id="cursor:expired",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            projection_event_id=projection.projection_event_id,
+            last_sequence_no=projection.source_watermark,
+            effective_security_epoch_ref="security-epoch:wave-a",
+            expires_at=now - timedelta(seconds=1),
+            reauthorized_at=now - timedelta(minutes=20),
+        )
+        resync = repo.list_projection_events(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            principal_id="principal-a",
+            last_event_id=expired.cursor_id,
+            now=now,
+        )
+        assert len(resync) == 1
+        assert resync[0].projection_event_id == f"resync:{expired.cursor_id}"
+        assert resync[0].gap_detected is True
+
+
 def _knowledge_draft() -> KnowledgeVersionDraft:
     return KnowledgeVersionDraft(
         knowledge_version_id="knowledge-version:wave-a",

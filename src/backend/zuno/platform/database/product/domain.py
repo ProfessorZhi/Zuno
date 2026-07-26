@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from typing import Any
 
@@ -45,6 +45,42 @@ class ProductCommandReceiptRef:
     receipt_id: str
     status: str
     duplicate: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ProductProjectionEventRef:
+    projection_event_id: str
+    source_watermark: int
+    gap_detected: bool = False
+    duplicate: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ProductActionTokenRef:
+    action_token_id: str
+    target_ref: str
+    command_kind: str
+    effective_security_epoch_ref: str
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProductStreamCursorRef:
+    cursor_id: str
+    projection_event_id: str
+    last_sequence_no: int
+    expires_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProductProjectionEventView:
+    projection_event_id: str
+    source_module: str
+    source_event_id: str
+    source_watermark: int
+    redaction_decision_ref: str
+    gap_detected: bool
+    created_at: datetime
 
 
 class ProductUnitOfWork:
@@ -270,7 +306,30 @@ class ProductRepository:
         projection_payload: dict[str, Any],
         redaction_decision_ref: str,
         gap_detected: bool = False,
-    ) -> None:
+    ) -> ProductProjectionEventRef:
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT projection_event_id, source_watermark, gap_detected
+                FROM product_projection_events
+                WHERE tenant_id = :tenant_id
+                  AND source_module = :source_module
+                  AND source_event_id = :source_event_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "source_module": source_module,
+                "source_event_id": source_event_id,
+            },
+        ).mappings().first()
+        if existing is not None:
+            return ProductProjectionEventRef(
+                projection_event_id=str(existing["projection_event_id"]),
+                source_watermark=int(existing["source_watermark"]),
+                gap_detected=bool(existing["gap_detected"]),
+                duplicate=True,
+            )
         self.connection.execute(
             text(
                 """
@@ -299,6 +358,11 @@ class ProductRepository:
                 "gap_detected": gap_detected,
             },
         )
+        return ProductProjectionEventRef(
+            projection_event_id=projection_event_id,
+            source_watermark=source_watermark,
+            gap_detected=gap_detected,
+        )
 
     def issue_action_token(
         self,
@@ -311,7 +375,26 @@ class ProductRepository:
         effective_security_epoch_ref: str,
         nonce: str,
         expires_at: datetime,
-    ) -> None:
+    ) -> ProductActionTokenRef:
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT action_token_id, target_ref, command_kind, effective_security_epoch_ref, expires_at
+                FROM product_action_tokens
+                WHERE tenant_id = :tenant_id
+                  AND nonce = :nonce
+                """
+            ),
+            {"tenant_id": tenant_id, "nonce": nonce},
+        ).mappings().first()
+        if existing is not None:
+            return ProductActionTokenRef(
+                action_token_id=str(existing["action_token_id"]),
+                target_ref=str(existing["target_ref"]),
+                command_kind=str(existing["command_kind"]),
+                effective_security_epoch_ref=str(existing["effective_security_epoch_ref"]),
+                expires_at=existing["expires_at"],
+            )
         token_hash = canonical_sha256(
             {
                 "principal_id": principal_id,
@@ -345,6 +428,185 @@ class ProductRepository:
                 "nonce": nonce,
                 "expires_at": expires_at,
             },
+        )
+        return ProductActionTokenRef(
+            action_token_id=action_token_id,
+            target_ref=target_ref,
+            command_kind=command_kind,
+            effective_security_epoch_ref=effective_security_epoch_ref,
+            expires_at=expires_at,
+        )
+
+    def open_stream_cursor(
+        self,
+        *,
+        cursor_id: str,
+        tenant_id: str,
+        principal_id: str,
+        projection_event_id: str,
+        last_sequence_no: int,
+        effective_security_epoch_ref: str,
+        expires_at: datetime,
+        reauthorized_at: datetime | None = None,
+    ) -> ProductStreamCursorRef:
+        reauthorized_at = reauthorized_at or datetime.now(timezone.utc)
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_stream_cursors (
+                    cursor_id, tenant_id, principal_id, projection_event_id,
+                    last_sequence_no, effective_security_epoch_ref, expires_at, reauthorized_at
+                )
+                VALUES (
+                    :cursor_id, :tenant_id, :principal_id, :projection_event_id,
+                    :last_sequence_no, :effective_security_epoch_ref, :expires_at, :reauthorized_at
+                )
+                ON CONFLICT (cursor_id) DO UPDATE SET
+                    projection_event_id = EXCLUDED.projection_event_id,
+                    last_sequence_no = EXCLUDED.last_sequence_no,
+                    effective_security_epoch_ref = EXCLUDED.effective_security_epoch_ref,
+                    expires_at = EXCLUDED.expires_at,
+                    reauthorized_at = EXCLUDED.reauthorized_at
+                """
+            ),
+            {
+                "cursor_id": cursor_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+                "projection_event_id": projection_event_id,
+                "last_sequence_no": last_sequence_no,
+                "effective_security_epoch_ref": effective_security_epoch_ref,
+                "expires_at": expires_at,
+                "reauthorized_at": reauthorized_at,
+            },
+        )
+        return ProductStreamCursorRef(
+            cursor_id=cursor_id,
+            projection_event_id=projection_event_id,
+            last_sequence_no=last_sequence_no,
+            expires_at=expires_at,
+        )
+
+    def list_projection_events(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        last_event_id: str | None = None,
+        limit: int = 100,
+        now: datetime | None = None,
+    ) -> tuple[ProductProjectionEventView, ...]:
+        now = now or datetime.now(timezone.utc)
+        last_sequence_no = 0
+        if last_event_id:
+            cursor = self.connection.execute(
+                text(
+                    """
+                    SELECT last_sequence_no, expires_at
+                    FROM product_stream_cursors
+                    WHERE cursor_id = :last_event_id
+                      AND tenant_id = :tenant_id
+                      AND principal_id = :principal_id
+                    """
+                ),
+                {
+                    "last_event_id": last_event_id,
+                    "tenant_id": tenant_id,
+                    "principal_id": principal_id,
+                },
+            ).mappings().first()
+            if cursor is not None:
+                if cursor["expires_at"] <= now:
+                    return (
+                        ProductProjectionEventView(
+                            projection_event_id=f"resync:{last_event_id}",
+                            source_module="Product Surface",
+                            source_event_id=last_event_id,
+                            source_watermark=int(cursor["last_sequence_no"]),
+                            redaction_decision_ref="redaction:resync-required",
+                            gap_detected=True,
+                            created_at=now,
+                        ),
+                    )
+                last_sequence_no = int(cursor["last_sequence_no"])
+            else:
+                event = self.connection.execute(
+                    text(
+                        """
+                        SELECT source_watermark
+                        FROM product_projection_events
+                        WHERE projection_event_id = :last_event_id
+                          AND tenant_id = :tenant_id
+                          AND workspace_id = :workspace_id
+                        """
+                    ),
+                    {
+                        "last_event_id": last_event_id,
+                        "tenant_id": tenant_id,
+                        "workspace_id": workspace_id,
+                    },
+                ).mappings().first()
+                if event is None:
+                    return (
+                        ProductProjectionEventView(
+                            projection_event_id=f"resync:{last_event_id}",
+                            source_module="Product Surface",
+                            source_event_id=last_event_id,
+                            source_watermark=0,
+                            redaction_decision_ref="redaction:unknown-cursor",
+                            gap_detected=True,
+                            created_at=now,
+                        ),
+                    )
+                last_sequence_no = int(event["source_watermark"])
+
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT projection_event_id, source_module, source_event_id, source_watermark,
+                       redaction_decision_ref, gap_detected, created_at
+                FROM product_projection_events
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND source_watermark > :last_sequence_no
+                ORDER BY source_watermark, projection_event_id
+                LIMIT :limit
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "last_sequence_no": last_sequence_no,
+                "limit": limit,
+            },
+        ).mappings().all()
+        return tuple(
+            ProductProjectionEventView(
+                projection_event_id=str(row["projection_event_id"]),
+                source_module=str(row["source_module"]),
+                source_event_id=str(row["source_event_id"]),
+                source_watermark=int(row["source_watermark"]),
+                redaction_decision_ref=str(row["redaction_decision_ref"]),
+                gap_detected=bool(row["gap_detected"]),
+                created_at=row["created_at"],
+            )
+            for row in rows
+        )
+
+    def next_projection_watermark(self, *, tenant_id: str, workspace_id: str) -> int:
+        return int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT coalesce(max(source_watermark), 0) + 1
+                    FROM product_projection_events
+                    WHERE tenant_id = :tenant_id
+                      AND workspace_id = :workspace_id
+                    """
+                ),
+                {"tenant_id": tenant_id, "workspace_id": workspace_id},
+            ).scalar_one()
         )
 
     def _ensure_conversation(self, command: ProductCommandSubmission) -> None:
@@ -423,10 +685,14 @@ def stable_json(payload: dict[str, Any]) -> str:
 
 
 __all__ = [
+    "ProductActionTokenRef",
     "ProductCommandReceiptRef",
     "ProductCommandSubmission",
     "ProductPersistenceConflict",
+    "ProductProjectionEventRef",
+    "ProductProjectionEventView",
     "ProductRepository",
+    "ProductStreamCursorRef",
     "ProductUnitOfWork",
     "stable_json",
 ]
