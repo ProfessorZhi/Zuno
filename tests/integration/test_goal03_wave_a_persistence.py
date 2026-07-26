@@ -15,7 +15,11 @@ from zuno.platform.database.capability import (
 )
 from zuno.platform.database.capability.domain import CapabilityVersionInput
 from zuno.platform.database.foundation import create_foundation_engine
-from zuno.platform.database.knowledge import KnowledgeCutoverConflict, KnowledgeRepository
+from zuno.platform.database.knowledge import (
+    KnowledgeCutoverConflict,
+    KnowledgeEvidenceConflict,
+    KnowledgeRepository,
+)
 from zuno.platform.database.knowledge.domain import KnowledgeVersionDraft
 from zuno.platform.database.product import ProductCommandSubmission, ProductPersistenceConflict, ProductRepository
 
@@ -602,6 +606,26 @@ def test_phase12_knowledge_cutover_race_rollback_and_deleted_source_taint_strict
             round_no=1,
             retriever_set={"bm25": True, "vector": True},
         )
+        with pytest.raises(KnowledgeEvidenceConflict, match="authority mismatch"):
+            repo.commit_evidence(
+                evidence_id="evidence:deleted-source:bad-authority",
+                query_run_id="query-run:deleted-source",
+                round_id="round:deleted-source:1",
+                chunk_id="chunk:rollback:1",
+                source_span_ref="source-span:1",
+                evidence_payload={"quote": "Policy version 1."},
+                authority_ref="authority:other",
+            )
+        with pytest.raises(KnowledgeEvidenceConflict, match="SourceSpan mismatch"):
+            repo.commit_evidence(
+                evidence_id="evidence:deleted-source:bad-span",
+                query_run_id="query-run:deleted-source",
+                round_id="round:deleted-source:1",
+                chunk_id="chunk:rollback:1",
+                source_span_ref="source-span:other",
+                evidence_payload={"quote": "Policy version 1."},
+                authority_ref="authority:policy",
+            )
         repo.commit_evidence(
             evidence_id="evidence:deleted-source:1",
             query_run_id="query-run:deleted-source",

@@ -12,6 +12,10 @@ class KnowledgeCutoverConflict(RuntimeError):
     pass
 
 
+class KnowledgeEvidenceConflict(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class KnowledgeVersionDraft:
     knowledge_version_id: str
@@ -476,6 +480,22 @@ class KnowledgeRepository:
         evidence_payload: dict[str, Any],
         authority_ref: str,
     ) -> None:
+        lineage = self.connection.execute(
+            text(
+                """
+                SELECT source_span_ref, authority_ref
+                FROM knowledge_chunks
+                WHERE chunk_id = :chunk_id
+                """
+            ),
+            {"chunk_id": chunk_id},
+        ).mappings().first()
+        if lineage is None:
+            raise KnowledgeEvidenceConflict("strict evidence requires existing KnowledgeChunk lineage")
+        if str(lineage["source_span_ref"]) != source_span_ref:
+            raise KnowledgeEvidenceConflict("strict evidence SourceSpan mismatch")
+        if str(lineage["authority_ref"]) != authority_ref:
+            raise KnowledgeEvidenceConflict("strict evidence authority mismatch")
         self.connection.execute(
             text(
                 """
@@ -616,6 +636,7 @@ class KnowledgeRepository:
 
 __all__ = [
     "KnowledgeCutoverConflict",
+    "KnowledgeEvidenceConflict",
     "KnowledgeRepository",
     "KnowledgeUnitOfWork",
     "KnowledgeVersionDraft",

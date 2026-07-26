@@ -9,6 +9,7 @@
 - `KnowledgeRepository.cutover` 使用 `knowledge_cutover_decisions` 的 committed generation 做 CAS。
 - stale `expected_generation` fail closed，不允许覆盖 active alias。
 - rollback 可以把旧 `SUPERSEDED` KnowledgeVersion 重新切回 `ACTIVE`，并记录 `rollback_of_cutover_id`。
+- strict Evidence 写入前必须存在 KnowledgeChunk lineage，且 SourceSpan 与 Authority 必须继承自 Chunk；SourceSpan 或 Authority mismatch fail closed。
 - deleted SourceSpan 会 taint `knowledge_citation_lineage`，并把关联 evidence 从 `STRICT / SELECTED` 改为 rejected，不再返回 strict evidence。
 
 ## 默认调用链
@@ -24,6 +25,11 @@ KnowledgeRepository.mark_source_deleted
 → knowledge_evidence_records citation_eligibility = REJECTED
 → knowledge_citation_lineage deleted_or_tainted = true
 → strict_evidence_ids excludes tainted evidence
+
+KnowledgeRepository.commit_evidence
+→ knowledge_chunks by chunk_id
+→ SourceSpan / Authority inheritance guard
+→ knowledge_evidence_records STRICT / SELECTED insert
 ```
 
 ## 代码证据
@@ -55,6 +61,6 @@ python -m pytest -q tests/knowledge/test_knowledge_runtime_batch.py tests/knowle
 
 ## 边界
 
-本证据证明 PHASE12 的 durable cutover CAS、rollback 和 deletion propagation 已进入 PostgreSQL repository 路径。
+本证据证明 PHASE12 的 durable cutover CAS、rollback、strict evidence SourceSpan / Authority guard 和 deletion propagation 已进入 PostgreSQL repository 路径。
 
 本证据不单独证明完整 PHASE12 completed；外部 BM25/Vector/Graph adapter 的真实可见性、完整 ACL/Temporal/Conflict 策略和端到端 Standard RAG 默认切流仍需 Closure Gate 汇总证明。
