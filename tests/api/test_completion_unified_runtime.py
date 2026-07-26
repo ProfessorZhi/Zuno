@@ -37,12 +37,12 @@ def test_completion_route_streams_unified_runtime_events(tmp_path, monkeypatch) 
     )
     monkeypatch.setattr(
         CompletionService,
-        "record_product_runtime_shadow",
+        "record_product_runtime_request",
         staticmethod(
             lambda **kwargs: {
                 "status": "ACCEPTED",
                 "route": "/completion",
-                "mode": "shadow",
+                "mode": "new_default",
                 "command_id": "command:completion-shadow",
             }
         ),
@@ -68,7 +68,7 @@ def test_completion_route_streams_unified_runtime_events(tmp_path, monkeypatch) 
         if line.startswith("data: ")
     ]
     event_types = [event["type"] for event in streamed]
-    assert event_types[0] == "product_runtime_shadow"
+    assert event_types[0] == "product_runtime_record"
     assert streamed[0]["data"]["command_id"] == "command:completion-shadow"
     assert "runtime_started" in event_types
     assert "node_started" in event_types
@@ -79,7 +79,7 @@ def test_completion_route_streams_unified_runtime_events(tmp_path, monkeypatch) 
     assert "runtime_completed" in event_types
     assert event_types[-1] == "response_chunk"
     runtime_events = [
-        event for event in streamed if event["type"] != "product_runtime_shadow"
+        event for event in streamed if event["type"] != "product_runtime_record"
     ]
     assert {event["data"]["runtime_topology"] for event in runtime_events} == {"unified_agent_runtime"}
     assert streamed[-1]["data"]["finalization_status"] in {"finalized", "abstained"}
@@ -116,7 +116,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
 
     from zuno.schema.completion import CompletionReq
 
-    result = CompletionService.record_product_runtime_shadow(
+    result = CompletionService.record_product_runtime_request(
         req=CompletionReq(
             user_input="Summarize the workspace evidence with citations.",
             dialog_id="dialog_phase09",
@@ -126,9 +126,10 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     )
 
     assert result["status"] == "ACCEPTED"
-    assert result["mode"] == "shadow"
+    assert result["mode"] == "new_default"
     assert result["cutover_mode"] == "new_default"
-    assert result["product_shadow_recorded"] is True
+    assert result["product_runtime_recorded"] is True
+    assert result["product_shadow_recorded"] is False
     assert result["request_hash"]
     assert result["projection_event_id"] == "projection:completion-shadow"
     assert result["available_action_tokens"] == ["action-token:completion-shadow:cancel"]
@@ -137,7 +138,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     assert captured["conversation_id"] == "dialog_phase09"
     assert captured["principal_id"] == "principal-a"
     assert captured["active_agent_version_id"] == "completion:unified-runtime"
-    assert captured["command_kind"] == "SHADOW_COMPLETION_RUNTIME_REQUEST"
+    assert captured["command_kind"] == "COMPLETION_RUNTIME_REQUEST"
     assert captured["payload"]["legacy_route"] == "/completion"
     assert captured["payload"]["cutover_mode"] == "new_default"
     assert "user_input" not in captured["payload"]
@@ -151,7 +152,7 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
 
     from zuno.schema.completion import CompletionReq
 
-    result = CompletionService.record_product_runtime_shadow(
+    result = CompletionService.record_product_runtime_request(
         req=CompletionReq(
             user_input="hello",
             dialog_id="dialog_phase09",
@@ -162,8 +163,9 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
 
     assert result["status"] == "blocked"
     assert result["route"] == "/completion"
-    assert result["mode"] == "shadow"
+    assert result["mode"] == "new_default"
     assert result["cutover_mode"] == "new_default"
+    assert result["product_runtime_recorded"] is False
     assert result["product_shadow_recorded"] is False
     assert result["failure_type"] == "RuntimeError"
     assert result["reason"] == "product persistence unavailable"
@@ -199,8 +201,9 @@ def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tm
         for line in lines
         if line.startswith("data: ")
     ]
-    assert streamed[0]["type"] == "product_runtime_shadow"
+    assert streamed[0]["type"] == "product_runtime_record"
     assert streamed[0]["data"]["status"] == "blocked"
+    assert streamed[0]["data"]["product_runtime_recorded"] is False
     assert streamed[0]["data"]["product_shadow_recorded"] is False
     assert streamed[0]["data"]["failure_type"] == "RuntimeError"
     assert streamed[0]["data"]["request_hash"]
@@ -233,6 +236,18 @@ def test_completion_cutover_mode_resolution_rejects_unknown_mode(monkeypatch) ->
         CompletionService.resolve_cutover_mode()
 
 
+def test_completion_product_command_kind_tracks_cutover_mode() -> None:
+    assert CompletionService._completion_product_command_kind("shadow") == (
+        "SHADOW_COMPLETION_RUNTIME_REQUEST"
+    )
+    assert CompletionService._completion_product_command_kind("canary") == (
+        "CANARY_COMPLETION_RUNTIME_REQUEST"
+    )
+    assert CompletionService._completion_product_command_kind("new_default") == (
+        "COMPLETION_RUNTIME_REQUEST"
+    )
+
+
 @pytest.mark.parametrize("cutover_mode", ["shadow", "canary", "new_default"])
 def test_completion_route_forwards_explicit_cutover_mode(monkeypatch, cutover_mode) -> None:
     captured = {}
@@ -242,13 +257,13 @@ def test_completion_route_forwards_explicit_cutover_mode(monkeypatch, cutover_mo
         return {
             "status": "ACCEPTED",
             "route": "/completion",
-            "mode": "shadow",
+            "mode": kwargs["cutover_mode"],
             "cutover_mode": kwargs["cutover_mode"],
             "command_id": "command:completion-shadow",
         }
 
     monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", cutover_mode)
-    monkeypatch.setattr(CompletionService, "record_product_runtime_shadow", staticmethod(fake_shadow))
+    monkeypatch.setattr(CompletionService, "record_product_runtime_request", staticmethod(fake_shadow))
 
     client = _client()
     with client.stream(
@@ -305,7 +320,7 @@ def test_completion_route_uses_legacy_runtime_in_rollback_window(monkeypatch) ->
     monkeypatch.setattr("zuno.api.services.history.HistoryService.save_chat_history", fake_save_chat_history)
     monkeypatch.setattr(
         CompletionService,
-        "record_product_runtime_shadow",
+        "record_product_runtime_request",
         staticmethod(lambda **kwargs: {"status": "ACCEPTED", "route": "/completion", "mode": "shadow"}),
     )
 

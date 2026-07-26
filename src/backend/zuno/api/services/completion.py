@@ -42,8 +42,8 @@ class CompletionService:
         cutover_mode: CutoverMode = "new_default",
     ) -> AsyncIterator[dict]:
         yield {
-            "type": "product_runtime_shadow",
-            "data": cls.record_product_runtime_shadow(
+            "type": "product_runtime_record",
+            "data": cls.record_product_runtime_request(
                 req=req,
                 login_user_id=login_user_id,
                 cutover_mode=cutover_mode,
@@ -117,7 +117,28 @@ class CompletionService:
         return "new_default"
 
     @staticmethod
+    def _completion_product_command_kind(cutover_mode: CutoverMode) -> str:
+        if cutover_mode == "shadow":
+            return "SHADOW_COMPLETION_RUNTIME_REQUEST"
+        if cutover_mode == "canary":
+            return "CANARY_COMPLETION_RUNTIME_REQUEST"
+        return "COMPLETION_RUNTIME_REQUEST"
+
+    @staticmethod
     def record_product_runtime_shadow(
+        *,
+        req: CompletionReq,
+        login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
+    ) -> dict:
+        return CompletionService.record_product_runtime_request(
+            req=req,
+            login_user_id=login_user_id,
+            cutover_mode=cutover_mode,
+        )
+
+    @staticmethod
+    def record_product_runtime_request(
         *,
         req: CompletionReq,
         login_user_id: str,
@@ -144,7 +165,7 @@ class CompletionService:
                 client_request_id=f"completion:{req.dialog_id}:{request_hash}",
                 runtime_request_ref=f"completion-runtime-request:{req.dialog_id}:{request_hash}",
                 raw_intent_ref=f"completion-intent:{req.dialog_id}:{request_hash}",
-                command_kind="SHADOW_COMPLETION_RUNTIME_REQUEST",
+                command_kind=CompletionService._completion_product_command_kind(cutover_mode),
                 payload={
                     "legacy_route": "/completion",
                     "dialog_id": req.dialog_id,
@@ -158,9 +179,10 @@ class CompletionService:
             return {
                 "status": "blocked",
                 "route": "/completion",
-                "mode": "shadow",
+                "mode": cutover_mode,
                 "cutover_mode": cutover_mode,
                 "request_hash": request_hash,
+                "product_runtime_recorded": False,
                 "product_shadow_recorded": False,
                 "failure_type": type(exc).__name__,
                 "reason": str(exc),
@@ -168,10 +190,11 @@ class CompletionService:
         return {
             "status": result.status,
             "route": "/completion",
-            "mode": "shadow",
+            "mode": cutover_mode,
             "cutover_mode": cutover_mode,
             "request_hash": request_hash,
-            "product_shadow_recorded": True,
+            "product_runtime_recorded": True,
+            "product_shadow_recorded": cutover_mode == "shadow",
             "command_id": result.command_id,
             "receipt_id": result.receipt_id,
             "projection_event_id": result.projection.projection_event_id,
