@@ -205,6 +205,12 @@ class _FailingKnowledgeRepo(_FakeKnowledgeRepo):
         raise RuntimeError("postgres-write-unavailable")
 
 
+class _MissingSnapshotKnowledgeRepo(_FakeKnowledgeRepo):
+    def active_snapshot_id(self, *, tenant_id: str, knowledge_space_id: str) -> str | None:
+        self.calls.append(("active_snapshot_id", {"tenant_id": tenant_id, "knowledge_space_id": knowledge_space_id}))
+        return None
+
+
 def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineage() -> None:
     repo = _FakeKnowledgeRepo()
     runtime = DurableKnowledgeRetrievalPort(
@@ -286,3 +292,43 @@ def test_knowledge_step_blocks_when_durable_persistence_fails() -> None:
         "failure_type": "RuntimeError",
     }
     assert [name for name, _ in repo.calls] == ["active_snapshot_id", "start_query_run"]
+
+
+def test_knowledge_step_blocks_when_active_snapshot_is_unavailable() -> None:
+    repo = _MissingSnapshotKnowledgeRepo()
+    runtime = DurableKnowledgeRetrievalPort(
+        runtime=_runtime(),
+        unit_of_work_factory=lambda: _FakeKnowledgeUow(repo),
+    )
+    state = AgentRuntimeState(
+        run_id="run_missing_snapshot",
+        thread_id="thread_missing_snapshot",
+        workspace_id="workspace_corrective",
+        user_id="user_missing_snapshot",
+        task_id="task_missing_snapshot",
+        trace_id="trace_missing_snapshot",
+        goal="renewal notice 30 days anniversary",
+        context_pack=ContextPack(
+            context_pack_id="context_missing_snapshot",
+            user_goal="renewal notice 30 days anniversary",
+            task_state={"knowledge_space_ids": ["ks_corrective"]},
+        ),
+    )
+
+    result = KnowledgeStepExecutor().execute(
+        state=state,
+        step=PlanStep(
+            step_id="step_missing_snapshot",
+            goal="retrieve grounded renewal evidence",
+            action_type="retrieve_evidence",
+        ),
+        deps=RuntimeDependencies(knowledge_runtime=runtime),
+    )
+
+    assert result.observation.status == "blocked"
+    assert result.observation.failure_reason == "active_knowledge_snapshot_unavailable"
+    assert result.observation.metadata["durable_knowledge_port"] == {
+        "status": "blocked",
+        "reason": "active_snapshot_unavailable",
+    }
+    assert [name for name, _ in repo.calls] == ["active_snapshot_id"]

@@ -65,6 +65,7 @@ class KnowledgeStepExecutor:
         citation_ids = [f"citation:{record.evidence_id}" for record in ledger_records if record.strict_citation_allowed]
         durable_trace = result.trace.get("durable_knowledge_port")
         durable_blocked = isinstance(durable_trace, dict) and durable_trace.get("status") == "blocked"
+        durable_failure_reason = _durable_failure_reason(durable_trace) if durable_blocked else None
         observation = NormalizedObservation(
             observation_id=f"obs:{state.run_id}:{step.step_id}:{step.attempt + 1}",
             step_id=step.step_id,
@@ -72,7 +73,7 @@ class KnowledgeStepExecutor:
             status=ObservationStatus.BLOCKED if durable_blocked else ObservationStatus.COMPLETED,
             source=type(deps.knowledge_runtime).__name__,
             summary=f"corrective retrieval action={result.final_action.value} verdict={result.final_verdict.value}",
-            failure_reason="durable_knowledge_persistence_failed" if durable_blocked else None,
+            failure_reason=durable_failure_reason,
             evidence_ids=evidence_ids,
             citation_ids=citation_ids,
             metadata={
@@ -117,6 +118,12 @@ class KnowledgeStepExecutor:
         if state.strategy is not None and state.strategy.retrieval_profile:
             return state.strategy.retrieval_profile
         return RetrievalProfile.STANDARD
+
+
+def _durable_failure_reason(durable_trace) -> str:
+    if isinstance(durable_trace, dict) and durable_trace.get("reason") == "active_snapshot_unavailable":
+        return "active_knowledge_snapshot_unavailable"
+    return "durable_knowledge_persistence_failed"
 
 
 __all__ = ["KnowledgeStepExecutor"]

@@ -24,6 +24,7 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
 - `DurableKnowledgeRetrievalPort` 对 Knowledge Repository 写入失败 fail closed：retrieval runtime 的 evidence 不会被冒充为 durable success；trace 写入 `durable_knowledge_port.status = blocked`、failure type 和 reason。
 - `KnowledgeStepExecutor` 看到 durable persistence blocked 时返回 BLOCKED observation，`failure_reason = durable_knowledge_persistence_failed`；无 knowledge scope 的 skipped 语义保持 skipped，不回退成 missing dependency。
+- 有 knowledge scope 但没有 ACTIVE Knowledge Snapshot 时，`DurableKnowledgeRetrievalPort` 返回 `blocked / active_snapshot_unavailable`，`KnowledgeStepExecutor` 返回 `failure_reason = active_knowledge_snapshot_unavailable`；只有无 knowledge scope 才允许 skipped。
 - `zuno.knowledge.ingestion` 包入口改为 contracts eager import + legacy symbols lazy export，避免 Agent Core Knowledge surface 导入时连带加载数据库 runtime 模块。
 - `zuno.knowledge.agentic_graphrag` 与 `zuno.knowledge.indexing.runtime` 改为从 contracts/router 子模块读取轻量契约，不再依赖 ingestion 包入口的重导出。
 
@@ -53,6 +54,11 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py::test_completion_factory_knowledge_step_uses_durable_port_not_missing_dependency tests/agent/runtime/test_runtime_dependency_factory.py::test_missing_runtime_dependencies_return_blocked_observations -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py -p no:cacheprovider
+python -m pytest -q tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/api/test_knowledge_api_contract.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/knowledge/agentic/durable.py src/backend/zuno/agent/runtime/execution/knowledge_step.py tests/knowledge/test_corrective_retrieval_runtime.py
 ```
 
 结果：
@@ -77,6 +83,11 @@ python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py tests/a
 5 passed
 14 passed
 8 passed
+7 passed
+6 passed
+24 passed
+13 passed
+compileall passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```

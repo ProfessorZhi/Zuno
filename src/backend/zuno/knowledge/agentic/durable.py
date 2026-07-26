@@ -101,7 +101,7 @@ class DurableKnowledgeRetrievalPort:
                 knowledge_space_id=request.knowledge_space_ids[0],
             )
             if not snapshot_id:
-                return {"status": "skipped", "reason": "active_snapshot_unavailable"}
+                return {"status": "blocked", "reason": "active_snapshot_unavailable"}
 
             query_run_id = _stable_ref("knowledge-query-run", request.trace_id, request.task_id, snapshot_id)
             repo.start_query_run(
