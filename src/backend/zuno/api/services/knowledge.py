@@ -902,6 +902,17 @@ class KnowledgeService:
             "top_k": top_k,
             "strict_grounding": True,
         }
+        retrieval_semantics = KnowledgeService._search_retrieval_semantics(result)
+        request_payload.update(
+            {
+                "retrievers_expected": retrieval_semantics["retrievers_expected"],
+                "retrievers_used": retrieval_semantics["retrievers_used"],
+                "retriever_availability": retrieval_semantics["retriever_availability"],
+                "partial_retrieval": retrieval_semantics["partial_retrieval"],
+                "no_result": retrieval_semantics["no_result"],
+                "retrieval_semantics": retrieval_semantics["status"],
+            }
+        )
         fingerprint = canonical_sha256(
             {
                 "tenant_id": tenant_id,
@@ -933,7 +944,12 @@ class KnowledgeService:
                 query_run_id=query_run_id,
                 round_no=1,
                 retriever_set={
-                    "retrievers_used": list(getattr(result, "retrievers_used", []) or []),
+                    "retrievers_expected": retrieval_semantics["retrievers_expected"],
+                    "retrievers_used": retrieval_semantics["retrievers_used"],
+                    "retriever_availability": retrieval_semantics["retriever_availability"],
+                    "partial_retrieval": retrieval_semantics["partial_retrieval"],
+                    "no_result": retrieval_semantics["no_result"],
+                    "retrieval_semantics": retrieval_semantics["status"],
                     "resolved_query_method": getattr(result, "resolved_query_method", None),
                     "fallback_reason": getattr(result, "fallback_reason", None),
                 },
@@ -943,6 +959,80 @@ class KnowledgeService:
                 query_run_id=query_run_id,
                 status="PARTIAL_EVIDENCE",
             )
+
+    @staticmethod
+    def _search_retrieval_semantics(result: Any) -> dict[str, Any]:
+        trace_metadata = dict(getattr(result, "trace_metadata", None) or {})
+        used = KnowledgeService._normalize_retriever_names(getattr(result, "retrievers_used", []) or [])
+        expected = KnowledgeService._normalize_retriever_names(
+            trace_metadata.get("enabled_retrievers")
+            or trace_metadata.get("retrievers_expected")
+            or KnowledgeService._expected_retrievers_for_query_method(
+                getattr(result, "resolved_query_method", None)
+            )
+        )
+        availability = {
+            retriever: "used" if retriever in used else "missing"
+            for retriever in expected
+        }
+        for retriever in used:
+            availability.setdefault(retriever, "used")
+        documents = list(getattr(result, "documents", []) or [])
+        evidence = dict(getattr(result, "evidence", {}) or {})
+        citations = list(getattr(result, "citations", []) or [])
+        evidence_document_count = int(evidence.get("document_count") or len(documents))
+        no_result = evidence_document_count == 0 and not citations
+        partial_retrieval = any(status != "used" for status in availability.values())
+        if partial_retrieval and no_result:
+            status = "partial_no_result"
+        elif partial_retrieval:
+            status = "partial"
+        elif no_result:
+            status = "no_result"
+        else:
+            status = "complete"
+        return {
+            "retrievers_expected": expected,
+            "retrievers_used": used,
+            "retriever_availability": availability,
+            "partial_retrieval": partial_retrieval,
+            "no_result": no_result,
+            "status": status,
+        }
+
+    @staticmethod
+    def _expected_retrievers_for_query_method(query_method: Any) -> list[str]:
+        method = str(query_method or "basic").strip().lower()
+        if method in {"local", "rag_graph_local"}:
+            return ["graph", "vector"]
+        if method in {"global", "rag_graph_global"}:
+            return ["graph"]
+        if method in {"drift", "rag_graph_drift"}:
+            return ["bm25", "graph"]
+        return ["bm25", "vector"]
+
+    @staticmethod
+    def _normalize_retriever_names(retrievers: Any) -> list[str]:
+        normalized: list[str] = []
+        aliases = {
+            "keyword": "bm25",
+            "elasticsearch": "bm25",
+            "es": "bm25",
+            "milvus": "vector",
+            "embedding": "vector",
+            "neo4j": "graph",
+            "graphrag": "graph",
+        }
+        for retriever in retrievers or []:
+            value = str(retriever).strip().lower()
+            if not value:
+                continue
+            value = aliases.get(value, value)
+            if value not in normalized:
+                normalized.append(value)
+        ordered = [retriever for retriever in ["bm25", "vector", "graph"] if retriever in normalized]
+        ordered.extend(retriever for retriever in normalized if retriever not in ordered)
+        return ordered
 
     @staticmethod
     def _knowledge_query_result_to_search_payload(result) -> dict[str, Any]:
