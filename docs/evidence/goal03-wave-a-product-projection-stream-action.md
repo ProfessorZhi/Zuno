@@ -130,4 +130,4 @@ git diff --check passed with LF/CRLF warnings only
 
 本证据只证明 PHASE09 Product API 默认入口已经接入 Product projection、stream cursor、projection rebuild waterline 和 AvailableAction token 的真实持久化路径，并且旧 `/completion` 默认入口已有 Product Runtime shadow 记录、显式 cutover mode 解析和 fail-closed 事件语义。
 
-本证据不单独证明完整 PHASE09 completed；Agent Catalog / Publication / Installation 的全量后端、完整 SSE backpressure、全旧 API default-new/canary/rollback 切换、跨 Owner Projection rebuild worker 编排和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE09 completed；完整 SSE backpressure、全旧 API default-new/canary/rollback 切换、跨 Owner Projection rebuild worker 编排和完整浏览器 E2E client reconnect 仍需要 Closure Gate 汇总证明。
