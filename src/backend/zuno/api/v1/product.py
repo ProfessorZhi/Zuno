@@ -23,6 +23,11 @@ class ProductRuntimeRequestBody(BaseModel):
     payload: dict = Field(default_factory=dict)
 
 
+class ProductActionConsumeBody(BaseModel):
+    tenant_id: str = Field(min_length=1)
+    action_token_id: str = Field(min_length=1)
+
+
 router = APIRouter(tags=["Product"], prefix="/product")
 
 
@@ -65,6 +70,29 @@ async def submit_runtime_request(
                     }
                     for action in result.available_actions
                 ],
+            }
+        )
+    except Exception as err:
+        return resp_500(message=str(err))
+
+
+@router.post("/actions/consume", response_model=UnifiedResponseModel)
+async def consume_action_token(
+    *,
+    body: ProductActionConsumeBody = Body(...),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        result = ProductService.consume_action_token(
+            tenant_id=body.tenant_id,
+            principal_id=login_user.user_id,
+            action_token_id=body.action_token_id,
+        )
+        return resp_200(
+            data={
+                "action_token_id": result.action_token_id,
+                "status": result.status,
+                "used_at": result.used_at,
             }
         )
     except Exception as err:
@@ -153,7 +181,9 @@ async def stream_projection_events(
 __all__ = [
     "router",
     "submit_runtime_request",
+    "consume_action_token",
     "list_stream_events",
     "stream_projection_events",
     "ProductRuntimeRequestBody",
+    "ProductActionConsumeBody",
 ]

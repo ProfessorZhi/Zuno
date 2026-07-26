@@ -27,6 +27,13 @@ class ProductAvailableActionResult:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductActionConsumeResult:
+    action_token_id: str
+    status: str
+    used_at: str
+
+
+@dataclass(frozen=True, slots=True)
 class ProductProjectionResult:
     projection_event_id: str
     stream_cursor_id: str
@@ -168,6 +175,29 @@ class ProductService:
                     expires_at=action.expires_at.isoformat(),
                 ),
             ),
+        )
+
+    @staticmethod
+    def consume_action_token(
+        *,
+        tenant_id: str,
+        principal_id: str,
+        action_token_id: str,
+    ) -> ProductActionConsumeResult:
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            consumed = repo.consume_action_token(
+                action_token_id=action_token_id,
+                tenant_id=tenant_id,
+                principal_id=principal_id,
+            )
+        if consumed.used_at is None:
+            raise RuntimeError("product action token consume did not persist used_at")
+        return ProductActionConsumeResult(
+            action_token_id=consumed.action_token_id,
+            status="consumed",
+            used_at=consumed.used_at.isoformat(),
         )
 
     @staticmethod
@@ -389,6 +419,7 @@ class ProductService:
 
 
 __all__ = [
+    "ProductActionConsumeResult",
     "ProductAvailableActionResult",
     "ProductProjectionResult",
     "ProductProjectionRebuildConsumeResult",

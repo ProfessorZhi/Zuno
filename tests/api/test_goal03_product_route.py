@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from zuno.api.router import router as api_router
 from zuno.api.services import user as user_service
 from zuno.api.services.product import (
+    ProductActionConsumeResult,
     ProductAvailableActionResult,
     ProductProjectionResult,
     ProductRuntimeRequestResult,
@@ -119,6 +120,73 @@ def test_goal03_product_stream_events_route_uses_last_event_id(monkeypatch) -> N
     }
     assert body["data"]["events"][0]["event_id"] == "projection:1"
     assert body["data"]["events"][0]["event_type"] == "DELTA"
+
+
+def test_goal03_product_action_consume_route_uses_login_principal(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+
+    captured = {}
+
+    def fake_consume(**kwargs):
+        captured.update(kwargs)
+        return ProductActionConsumeResult(
+            action_token_id="action-token:command:client:1:cancel",
+            status="consumed",
+            used_at="2026-07-26T00:00:00+00:00",
+        )
+
+    monkeypatch.setattr(ProductService, "consume_action_token", staticmethod(fake_consume))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/product/actions/consume",
+        json={
+            "tenant_id": "tenant-a",
+            "action_token_id": "action-token:command:client:1:cancel",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status_code"] == 200
+    assert captured == {
+        "tenant_id": "tenant-a",
+        "principal_id": "principal-a",
+        "action_token_id": "action-token:command:client:1:cancel",
+    }
+    assert body["data"] == {
+        "action_token_id": "action-token:command:client:1:cancel",
+        "status": "consumed",
+        "used_at": "2026-07-26T00:00:00+00:00",
+    }
+
+
+def test_goal03_product_action_consume_route_fail_closes_replay(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+
+    def replay(**kwargs):
+        raise RuntimeError("action token replay detected")
+
+    monkeypatch.setattr(ProductService, "consume_action_token", staticmethod(replay))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/product/actions/consume",
+        json={
+            "tenant_id": "tenant-a",
+            "action_token_id": "action-token:command:client:1:cancel",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status_code"] == 500
+    assert "action token replay detected" in body["status_message"]
+    assert body.get("data") in (None, {})
 
 
 def test_goal03_product_stream_route_returns_sse_projection_events(monkeypatch) -> None:
