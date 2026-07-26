@@ -3,23 +3,48 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from typing import Any
 from uuid import uuid4
 
 from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseJobSnapshot
 from zuno.knowledge.ingestion.router import build_index_handoff_payload
 
-from .adapters import adapter_status_for_targets
+from .adapters import LOCAL_INDEX_ADAPTER_BY_TARGET, adapter_status_for_targets
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
+
+
+class LocalIndexAdapterBinding:
+    def __init__(self, *, adapter_id: str, target: IndexTarget) -> None:
+        self.adapter_id = adapter_id
+        self.target = target
+
+    def index(
+        self,
+        *,
+        runtime: "KnowledgeIndexRuntime",
+        handoff: Any,
+        document: CanonicalDocumentIR,
+        lineage: dict[str, Any],
+        graph_project_id: str | None,
+    ) -> list[dict]:
+        if self.target == "bm25":
+            return runtime._bm25_documents(handoff.bm25_documents, document, lineage)
+        if self.target == "vector":
+            return runtime._vector_documents(handoff.vector_documents, document, lineage)
+        if self.target == "graph":
+            return runtime._graph_documents(handoff.graphrag_documents, document, graph_project_id, lineage)
+        raise ValueError(f"unsupported index target: {self.target}")
 
 
 class KnowledgeIndexRuntime:
     """PHASE05 local index job runtime for Document IR handoff payloads."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, adapter_bindings: dict[IndexTarget, Any] | None = None) -> None:
         self._spaces: dict[str, KnowledgeSpaceManifest] = {}
         self._jobs: dict[str, IndexJobManifest] = {}
         self._latest_job_by_space: dict[str, str] = {}
         self._indexes: dict[str, dict[str, list[dict]]] = {}
+        self._adapter_bindings = adapter_bindings or _default_adapter_bindings()
 
     def create_knowledge_space(
         self,
@@ -73,6 +98,7 @@ class KnowledgeIndexRuntime:
                 acl_scopes=_acl_scopes(document),
                 sensitivity_tags=_sensitivity_tags(document),
                 adapter_status=adapter_status_for_targets(list(targets)),
+                adapter_dispatch_receipts={},
                 adapter_visibility_receipts={},
                 **_manifest_lineage_fields(lineage),
             )
@@ -83,28 +109,26 @@ class KnowledgeIndexRuntime:
 
         handoff = build_index_handoff_payload(document)
         target_status = {}
-        if "bm25" in targets:
-            self._indexes[knowledge_space_id]["bm25"] = self._bm25_documents(
-                handoff.bm25_documents,
-                document,
-                lineage,
+        adapter_dispatch_receipts = {}
+        for target in targets:
+            adapter = self._adapter_for_target(target)
+            indexed_documents = adapter.index(
+                runtime=self,
+                handoff=handoff,
+                document=document,
+                lineage=lineage,
+                graph_project_id=space.graph_project_id,
             )
-            target_status["bm25"] = "ready"
-        if "vector" in targets:
-            self._indexes[knowledge_space_id]["vector"] = self._vector_documents(
-                handoff.vector_documents,
-                document,
-                lineage,
+            self._indexes[knowledge_space_id][target] = indexed_documents
+            target_status[target] = "ready"
+            adapter_dispatch_receipts[target] = _adapter_dispatch_receipt(
+                adapter=adapter,
+                target=target,
+                knowledge_space_id=knowledge_space_id,
+                index_version=space.index_version,
+                document=document,
+                indexed_documents=indexed_documents,
             )
-            target_status["vector"] = "ready"
-        if "graph" in targets:
-            self._indexes[knowledge_space_id]["graph"] = self._graph_documents(
-                handoff.graphrag_documents,
-                document,
-                space.graph_project_id,
-                lineage,
-            )
-            target_status["graph"] = "ready"
 
         manifest = IndexJobManifest(
             job_id=job_id,
@@ -124,11 +148,13 @@ class KnowledgeIndexRuntime:
             acl_scopes=_acl_scopes(document),
             sensitivity_tags=_sensitivity_tags(document),
             adapter_status=adapter_status_for_targets(list(targets)),
+            adapter_dispatch_receipts=adapter_dispatch_receipts,
             adapter_visibility_receipts=self._adapter_visibility_receipts(
                 knowledge_space_id=knowledge_space_id,
                 index_version=space.index_version,
                 document=document,
                 target_status=target_status,
+                adapter_dispatch_receipts=adapter_dispatch_receipts,
             ),
             **_manifest_lineage_fields(lineage),
         )
@@ -221,13 +247,16 @@ class KnowledgeIndexRuntime:
         index_version: str,
         document: CanonicalDocumentIR,
         target_status: dict[str, str],
+        adapter_dispatch_receipts: dict[str, dict],
     ) -> dict[str, dict]:
         receipts: dict[str, dict] = {}
         for target in ["bm25", "vector", "graph"]:
             if target_status.get(target) != "ready":
                 continue
+            dispatch_receipt = adapter_dispatch_receipts.get(target, {})
             payload = {
                 "adapter_target": target,
+                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
                 "document_id": document.metadata.document_id,
                 "document_version_id": document.metadata.document_version_id,
                 "index_version": index_version,
@@ -237,6 +266,8 @@ class KnowledgeIndexRuntime:
             receipts[target] = {
                 "receipt_ref": f"index-visibility:{target}:{_stable_hash(payload)[:16]}",
                 "adapter_target": target,
+                "adapter_id": dispatch_receipt.get("adapter_id"),
+                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
                 "adapter_status": "current",
                 "visibility": "visible",
                 "knowledge_space_id": knowledge_space_id,
@@ -247,6 +278,12 @@ class KnowledgeIndexRuntime:
                 "payload_hash": _stable_hash(payload),
             }
         return receipts
+
+    def _adapter_for_target(self, target: IndexTarget) -> Any:
+        try:
+            return self._adapter_bindings[target]
+        except KeyError as exc:
+            raise ValueError(f"no Knowledge index adapter configured for target: {target}") from exc
 
     def _require_space(self, knowledge_space_id: str) -> KnowledgeSpaceManifest:
         try:
@@ -393,6 +430,47 @@ def _document_payload(
         "content": content,
         "source_type": source_type,
         "metadata": enriched_metadata,
+    }
+
+
+def _default_adapter_bindings() -> dict[IndexTarget, LocalIndexAdapterBinding]:
+    return {
+        target: LocalIndexAdapterBinding(adapter_id=adapter_id, target=target)
+        for target, adapter_id in LOCAL_INDEX_ADAPTER_BY_TARGET.items()
+    }
+
+
+def _adapter_dispatch_receipt(
+    *,
+    adapter: Any,
+    target: IndexTarget,
+    knowledge_space_id: str,
+    index_version: str,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    payload = {
+        "adapter_id": str(getattr(adapter, "adapter_id", "")),
+        "adapter_target": target,
+        "document_id": document.metadata.document_id,
+        "document_version_id": document.metadata.document_version_id,
+        "index_version": index_version,
+        "indexed_document_count": len(indexed_documents),
+        "knowledge_space_id": knowledge_space_id,
+    }
+    payload_hash = _stable_hash(payload)
+    return {
+        "dispatch_ref": f"index-dispatch:{target}:{payload_hash[:16]}",
+        "adapter_id": payload["adapter_id"],
+        "adapter_target": target,
+        "operation": "index",
+        "status": "succeeded",
+        "knowledge_space_id": knowledge_space_id,
+        "index_version": index_version,
+        "document_id": document.metadata.document_id,
+        "document_version_id": document.metadata.document_version_id,
+        "indexed_document_count": len(indexed_documents),
+        "payload_hash": payload_hash,
     }
 
 

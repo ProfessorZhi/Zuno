@@ -118,9 +118,15 @@ def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -
         "vector": "local_vector:current",
         "graph": "local_graph:current",
     }
+    assert set(manifest.adapter_dispatch_receipts) == {"bm25", "vector", "graph"}
+    assert manifest.adapter_dispatch_receipts["bm25"]["adapter_id"] == "local_bm25"
+    assert manifest.adapter_dispatch_receipts["vector"]["operation"] == "index"
+    assert manifest.adapter_dispatch_receipts["graph"]["status"] == "succeeded"
     assert set(manifest.adapter_visibility_receipts) == {"bm25", "vector", "graph"}
     for target, receipt in manifest.adapter_visibility_receipts.items():
         assert receipt["adapter_target"] == target
+        assert receipt["adapter_id"] == f"local_{target}"
+        assert receipt["adapter_dispatch_ref"] == manifest.adapter_dispatch_receipts[target]["dispatch_ref"]
         assert receipt["adapter_status"] == "current"
         assert receipt["visibility"] == "visible"
         assert receipt["document_id"] == document.metadata.document_id
@@ -128,6 +134,63 @@ def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -
         assert receipt["source_block_count"] == len(document.blocks)
         assert receipt["receipt_ref"].startswith(f"index-visibility:{target}:")
         assert len(receipt["payload_hash"]) == 64
+
+
+def test_index_runtime_invokes_configured_adapter_bindings() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime
+
+    class SpyAdapter:
+        def __init__(self, adapter_id: str, target: str) -> None:
+            self.adapter_id = adapter_id
+            self.target = target
+            self.calls: list[dict] = []
+
+        def index(self, *, runtime, handoff, document, lineage, graph_project_id):
+            self.calls.append(
+                {
+                    "document_id": document.metadata.document_id,
+                    "document_version_id": lineage["document_version_id"],
+                    "graph_project_id": graph_project_id,
+                }
+            )
+            return [
+                {
+                    "chunk_id": f"{document.metadata.document_id}::{self.target}",
+                    "document_id": document.metadata.document_id,
+                    "workspace_id": document.metadata.workspace_id,
+                    "content": f"{self.target} adapter indexed renewal evidence.",
+                    "source_type": self.target,
+                    "metadata": {
+                        "block_id": self.target,
+                        "chunk_id": f"{document.metadata.document_id}::{self.target}",
+                        "source_span": {"chunk_id": f"{document.metadata.document_id}::{self.target}"},
+                    },
+                }
+            ]
+
+    bm25 = SpyAdapter("configured_bm25", "bm25")
+    vector = SpyAdapter("configured_vector", "vector")
+    runtime = KnowledgeIndexRuntime(adapter_bindings={"bm25": bm25, "vector": vector})
+    runtime.create_knowledge_space(
+        knowledge_space_id="ks_configured_adapter",
+        workspace_id="workspace_index",
+        graph_project_id="configured_graph_project",
+    )
+
+    manifest = runtime.index_document(
+        knowledge_space_id="ks_configured_adapter",
+        document=_sample_document(),
+        targets=["bm25", "vector"],
+    )
+
+    assert [call["document_id"] for call in bm25.calls] == ["doc_index"]
+    assert [call["document_version_id"] for call in vector.calls] == [manifest.document_version_id]
+    assert manifest.adapter_dispatch_receipts["bm25"]["adapter_id"] == "configured_bm25"
+    assert manifest.adapter_dispatch_receipts["vector"]["adapter_id"] == "configured_vector"
+    assert manifest.adapter_visibility_receipts["bm25"]["adapter_dispatch_ref"] == manifest.adapter_dispatch_receipts["bm25"]["dispatch_ref"]
+    result = runtime.query("ks_configured_adapter", "renewal evidence")
+    assert result.documents_by_source["bm25"][0]["source_type"] == "bm25"
+    assert result.documents_by_source["vector"][0]["source_type"] == "vector"
 
 
 def test_index_manifest_tracks_parse_job_lineage_and_diagnostics_digest() -> None:
