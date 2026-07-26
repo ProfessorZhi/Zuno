@@ -483,15 +483,38 @@ class KnowledgeRepository:
         lineage = self.connection.execute(
             text(
                 """
-                SELECT source_span_ref, authority_ref
-                FROM knowledge_chunks
-                WHERE chunk_id = :chunk_id
+                SELECT c.source_span_ref, c.authority_ref,
+                       c.tenant_id AS chunk_tenant_id,
+                       c.knowledge_version_id AS chunk_version_id,
+                       q.tenant_id AS query_tenant_id,
+                       q.snapshot_id AS query_snapshot_id,
+                       r.query_run_id AS round_query_run_id,
+                       s.tenant_id AS snapshot_tenant_id,
+                       s.knowledge_version_id AS snapshot_version_id
+                FROM knowledge_query_runs q
+                JOIN knowledge_retrieval_rounds r
+                  ON r.round_id = :round_id
+                JOIN knowledge_chunks c
+                  ON c.chunk_id = :chunk_id
+                JOIN knowledge_snapshots s
+                  ON s.snapshot_id = q.snapshot_id
+                WHERE q.query_run_id = :query_run_id
                 """
             ),
-            {"chunk_id": chunk_id},
+            {
+                "query_run_id": query_run_id,
+                "round_id": round_id,
+                "chunk_id": chunk_id,
+            },
         ).mappings().first()
         if lineage is None:
-            raise KnowledgeEvidenceConflict("strict evidence requires existing KnowledgeChunk lineage")
+            raise KnowledgeEvidenceConflict("strict evidence requires existing QueryRun, RetrievalRound, Snapshot and KnowledgeChunk lineage")
+        if str(lineage["round_query_run_id"]) != query_run_id:
+            raise KnowledgeEvidenceConflict("strict evidence RetrievalRound mismatch")
+        if str(lineage["chunk_tenant_id"]) != str(lineage["query_tenant_id"]) or str(lineage["snapshot_tenant_id"]) != str(lineage["query_tenant_id"]):
+            raise KnowledgeEvidenceConflict("strict evidence tenant ACL mismatch")
+        if str(lineage["chunk_version_id"]) != str(lineage["snapshot_version_id"]):
+            raise KnowledgeEvidenceConflict("strict evidence snapshot version mismatch")
         if str(lineage["source_span_ref"]) != source_span_ref:
             raise KnowledgeEvidenceConflict("strict evidence SourceSpan mismatch")
         if str(lineage["authority_ref"]) != authority_ref:

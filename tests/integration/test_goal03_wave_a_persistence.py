@@ -646,6 +646,60 @@ def test_phase12_knowledge_cutover_race_rollback_and_deleted_source_taint_strict
             round_no=1,
             retriever_set={"bm25": True, "vector": True},
         )
+        repo.start_query_run(
+            query_run_id="query-run:other",
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            agent_core_decision_ref="agent-core-decision:other",
+            snapshot_id="snapshot:rollback:1",
+            request_payload={"query": "other"},
+        )
+        repo.start_retrieval_round(
+            round_id="round:other:1",
+            query_run_id="query-run:other",
+            round_no=1,
+            retriever_set={"bm25": True},
+        )
+        with pytest.raises(KnowledgeEvidenceConflict, match="RetrievalRound mismatch"):
+            repo.commit_evidence(
+                evidence_id="evidence:deleted-source:bad-round",
+                query_run_id="query-run:deleted-source",
+                round_id="round:other:1",
+                chunk_id="chunk:rollback:1",
+                source_span_ref="source-span:1",
+                evidence_payload={"quote": "Policy version 1."},
+                authority_ref="authority:policy",
+            )
+        with pytest.raises(KnowledgeEvidenceConflict, match="snapshot version mismatch"):
+            repo.commit_evidence(
+                evidence_id="evidence:deleted-source:bad-version",
+                query_run_id="query-run:deleted-source",
+                round_id="round:deleted-source:1",
+                chunk_id="chunk:rollback:2",
+                source_span_ref="source-span:2",
+                evidence_payload={"quote": "Policy version 2."},
+                authority_ref="authority:policy",
+            )
+        repo.append_chunk(
+            chunk_id="chunk:tenant-b",
+            tenant_id="tenant-b",
+            knowledge_version_id="knowledge-version:rollback:1",
+            document_version_id="document-version:tenant-b",
+            source_span_ref="source-span:tenant-b",
+            chunk_payload={"text": "Cross tenant evidence."},
+            acl_ref="acl:tenant-b",
+            authority_ref="authority:policy",
+        )
+        with pytest.raises(KnowledgeEvidenceConflict, match="tenant ACL mismatch"):
+            repo.commit_evidence(
+                evidence_id="evidence:deleted-source:bad-tenant",
+                query_run_id="query-run:deleted-source",
+                round_id="round:deleted-source:1",
+                chunk_id="chunk:tenant-b",
+                source_span_ref="source-span:tenant-b",
+                evidence_payload={"quote": "Cross tenant evidence."},
+                authority_ref="authority:policy",
+            )
         with pytest.raises(KnowledgeEvidenceConflict, match="authority mismatch"):
             repo.commit_evidence(
                 evidence_id="evidence:deleted-source:bad-authority",
