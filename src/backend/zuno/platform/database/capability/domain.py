@@ -453,6 +453,24 @@ class CapabilityRepository:
                 "outbox_message_id": outbox_message_id,
             },
         )
+        InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=outbox_message_id,
+            tenant_id=tenant_id,
+            aggregate_id=aggregate_ref,
+            topic="capability.transition.committed",
+            idempotency_key=transition_id,
+            ordering_key=aggregate_ref,
+            payload={
+                "contract_name": "CapabilityTransitionEvent",
+                "producer_module": "Capability / Skill",
+                "consumer_module": "Agent Core",
+                "transition_id": transition_id,
+                "aggregate_ref": aggregate_ref,
+                "expected_generation": expected_generation,
+                "committed_generation": expected_generation + 1,
+                "event_hash": canonical_sha256(event_payload),
+            },
+        )
 
     def activate_installation(
         self,

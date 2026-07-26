@@ -922,3 +922,34 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
         }
         assert active_hash != revoked_hash
         assert conn.execute(text("SELECT count(*) FROM capability_transition_events")).scalar_one() == 2
+        outbox_rows = conn.execute(
+            text(
+                """
+                SELECT event_id, aggregate_id, topic, payload ->> 'transition_id' AS transition_id,
+                       payload ->> 'consumer_module' AS consumer_module, ordering_sequence, status
+                FROM infra_outbox_events
+                WHERE topic = 'capability.transition.committed'
+                ORDER BY ordering_sequence
+                """
+            )
+        ).mappings().all()
+        assert [dict(row) for row in outbox_rows] == [
+            {
+                "event_id": "outbox:activation:active-read:1",
+                "aggregate_id": "installation:active-read",
+                "topic": "capability.transition.committed",
+                "transition_id": "activation:active-read:1",
+                "consumer_module": "Agent Core",
+                "ordering_sequence": 1,
+                "status": "pending",
+            },
+            {
+                "event_id": "outbox:revocation:active-read:2",
+                "aggregate_id": "installation:active-read",
+                "topic": "capability.transition.committed",
+                "transition_id": "revocation:active-read:2",
+                "consumer_module": "Agent Core",
+                "ordering_sequence": 2,
+                "status": "pending",
+            },
+        ]
