@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from zuno.agent.contracts import CapabilityPlan, PlanState, PlanStep
+from zuno.agent.contracts import CapabilityPlan, ContextPack, PlanState, PlanStep
 from zuno.agent.runtime import (
     AGENT_RUNTIME_STATE_VERSION,
     AgentRuntimeSnapshot,
@@ -17,6 +17,7 @@ from zuno.agent.runtime import (
     StrategyMode,
     UnsupportedRuntimeStateVersion,
 )
+from zuno.agent.runtime.planning import RuntimeStrategySelector
 
 
 def test_runtime_snapshot_round_trips_as_json_with_string_enums() -> None:
@@ -132,3 +133,39 @@ def test_runtime_state_keeps_payload_refs_instead_of_raw_sensitive_payload() -> 
     assert "object-store://observations/obs-sensitive" in json_payload
     assert "raw_secret" not in json_payload
     assert "api_key" not in json_payload
+
+
+def test_runtime_strategy_selection_pins_capability_snapshot_refs_in_context_pack() -> None:
+    state = AgentRuntimeState(
+        run_id="run-capability",
+        thread_id="thread-capability",
+        workspace_id="workspace-capability",
+        user_id="user-capability",
+        task_id="task-capability",
+        trace_id="trace-capability",
+        goal="Search the web for sources and summarize the result.",
+        context_pack=ContextPack(
+            context_pack_id="context-capability",
+            user_goal="Search the web for sources and summarize the result.",
+            task_state={"caller_ref": "kept"},
+        ),
+        capability_plan=CapabilityPlan(
+            allowed_capabilities=["knowledge.research_corpus", "tool.web.search"]
+        ),
+    )
+
+    selected = RuntimeStrategySelector().select(state, deps=None)
+    snapshot = selected.to_snapshot()
+    task_state = snapshot.context_pack.task_state
+
+    assert selected.capability_plan.selection_validity == "fixed_planning_snapshot"
+    assert task_state["caller_ref"] == "kept"
+    assert task_state["capability_availability_snapshot_ref"] == selected.capability_plan.availability_snapshot_ref
+    assert task_state["capability_selection_result_ref"] == selected.capability_plan.selection_result_ref
+    assert task_state["capability_selection_validity"] == "fixed_planning_snapshot"
+    assert task_state["capability_planner_exposure_ref"] == (
+        selected.capability_plan.risk_summary["planner_exposure"]["exposure_ref"]
+    )
+    assert task_state["capability_planner_exposure_visibility"] == (
+        "planner_authorized_summary_schema_only"
+    )

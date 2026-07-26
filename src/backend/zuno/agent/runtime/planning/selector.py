@@ -49,6 +49,20 @@ class RuntimeStrategySelector:
         state.plan_state = output.plan_state
         state.retrieval_plan = output.retrieval_plan
         state.capability_plan = output.capability_plan
+        if state.context_pack is not None:
+            task_state = dict(state.context_pack.task_state)
+            task_state.update(
+                {
+                    "capability_availability_snapshot_ref": output.capability_plan.availability_snapshot_ref,
+                    "capability_selection_result_ref": output.capability_plan.selection_result_ref,
+                    "capability_selection_validity": output.capability_plan.selection_validity,
+                }
+            )
+            if output.capability_plan.risk_summary.get("planner_exposure"):
+                exposure = dict(output.capability_plan.risk_summary["planner_exposure"])
+                task_state["capability_planner_exposure_ref"] = exposure.get("exposure_ref")
+                task_state["capability_planner_exposure_visibility"] = exposure.get("visibility")
+            state.context_pack = state.context_pack.model_copy(update={"task_state": task_state})
         state.trace_event_ids.extend(event.event_id for event in output.trace_events)
         return state
 

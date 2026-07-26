@@ -4,7 +4,7 @@ status: partial_runtime_evidence
 phase: PHASE14
 commit_scope: Capability planning snapshot and selection outbox repair
 
-本文只证明本次 Wave A 修复切片：Agent Core 的 `CapabilityPlan` 可以携带不可变 `CapabilityAvailabilitySnapshot` 与 `CapabilitySelectionResult` 引用；Capability Repository 在新 selection 事实提交时，同一事务写入 PHASE04 统一 `infra_outbox_events`，供 Agent Core 按 outbox 幂等消费。
+本文只证明本次 Wave A 修复切片：Agent Core 的 `CapabilityPlan` 可以携带不可变 `CapabilityAvailabilitySnapshot` 与 `CapabilitySelectionResult` 引用；默认 Runtime strategy selector 会把同一组 capability decision refs 固定进 `ContextPack.task_state`，供 checkpoint/resume 后继续引用；Capability Repository 在新 selection 事实提交时，同一事务写入 PHASE04 统一 `infra_outbox_events`，供 Agent Core 按 outbox 幂等消费。
 
 ## 已证明
 
@@ -12,6 +12,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 - `StrategySelector` 在有候选 capability 时生成稳定 snapshot / selection refs，并把它们放入 Planner 输出。
 - `StrategySelector` 的 planner 阶段只消费 `CapabilityRouteDecision` 中的 allowed tools、approval-required 和 planner exposure，不在 route 后二次遍历 legacy registry。
 - Planner 生成的每个 `PlanStep` 都把同一组 `availability_snapshot_ref` / `selection_result_ref` 固定进 `input_refs`，并以 `selection_result_ref` 作为 `tool_policy_ref`；`plan_created` trace payload 同步暴露 snapshot / selection / validity，供执行层和 Closure Review 审计每一步来自同一个 capability decision。
+- 默认 `RuntimeStrategySelector` 在 strategy select 后把 `capability_availability_snapshot_ref`、`capability_selection_result_ref`、`capability_selection_validity`、`capability_planner_exposure_ref` 和 exposure visibility 写入 `ContextPack.task_state`；`AgentRuntimeSnapshot` round-trip 后仍保留这些 refs，不只停留在瞬时内存字段。
 - `CapabilityRepository.record_selection` 只在新 `capability_selection_results` 插入成功时写入 `infra_outbox_events`。
 - `infra_outbox_events.topic = capability.selection.committed`，payload 明确标记 `consumer_module = Agent Core`。
 - 重复提交同一 selection 不重复创建 outbox 事件。
@@ -21,6 +22,7 @@ commit_scope: Capability planning snapshot and selection outbox repair
 ## 已运行验证
 
 ```powershell
+python -m pytest -q tests/agent/runtime/test_runtime_state_contract.py tests/agent/test_planning_control_runtime.py -p no:cacheprovider
 python -m pytest -q tests/agent/test_planning_control_runtime.py tests/capability/test_capability_skill_layer.py -p no:cacheprovider
 python -m pytest -q tests/agent/test_planning_control_runtime.py tests/agent/test_shared_contract_freeze.py -p no:cacheprovider
 python -m pytest -q tests/agent/test_planning_control_runtime.py -p no:cacheprovider
@@ -37,6 +39,7 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_ph
 结果：
 
 ```text
+12 passed
 17 passed
 9 passed
 8 passed
