@@ -25,6 +25,7 @@ commit_scope: Product Surface Backend Runtime repair
 - `ProductService.consume_runtime_request_dispatch(...)` 可以认领 `product.runtime_request.dispatch` outbox，并把首条未处理消息幂等转换成 Agent Core 的 `GoalVersion`、`TaskContract`、`AgentRun` 和 Product owner receipt，再将 inbox 标记为 processed。
 - `ProductService.consume_runtime_request_dispatch(...)` 对 Agent Core Owner unavailable fail closed：Agent Core owner 写入和 inbox receipt 在同一 savepoint 内提交；owner 写入失败时回滚 savepoint，不留下 `AgentRun`、`GoalVersion`、`TaskContract`、owner receipt 或 inbox 半成品，并通过 PHASE04 `record_outbox_publish_failure(...)` 把 dispatch outbox 恢复为 pending retry。
 - owner 恢复后，同一 dispatch outbox 可以重新 claim 并成功写入 Agent Core owner fact 和 Product owner receipt，证明 cutover retry 不重复创建 AgentRun。
+- `/completion` 只有 `shadow` 模式允许 Product runtime record 失败后继续旧/新 runtime 对比；`new_default` 和 `canary` 不能在 Product command/receipt/outbox 失败时绕过 Product 继续启动 owner runtime。
 
 ## 验证
 
@@ -62,7 +63,7 @@ Focused rerun after late owner receipt guard:
 
 ```powershell
 python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_owner_receipts_are_append_only_and_versioned tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
-python -m pytest -q tests/api/test_goal03_product_route.py tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
+python -m pytest -q tests/api/test_completion_unified_runtime.py tests/api/test_goal03_product_route.py tests/repo/test_goal03_wave_a_migration_contract.py -p no:cacheprovider
 python -m compileall -q src/backend/zuno/platform/database/product/domain.py tests/integration/test_goal03_wave_a_persistence.py tests/repo/test_goal03_wave_a_migration_contract.py
 python .agent/scripts/verify_doc_boundaries.py
 alembic -c infra/db/alembic.ini heads
@@ -72,7 +73,7 @@ alembic -c infra/db/alembic.ini heads
 
 ```text
 7 passed
-12 passed, 1 warning
+24 passed, 1 warning
 compileall passed
 Doc boundary verification passed.
 20260726_40 (head)

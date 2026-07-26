@@ -41,14 +41,17 @@ class CompletionService:
         login_user_id: str,
         cutover_mode: CutoverMode = "new_default",
     ) -> AsyncIterator[dict]:
+        product_runtime_record = cls.record_product_runtime_request(
+            req=req,
+            login_user_id=login_user_id,
+            cutover_mode=cutover_mode,
+        )
         yield {
             "type": "product_runtime_record",
-            "data": cls.record_product_runtime_request(
-                req=req,
-                login_user_id=login_user_id,
-                cutover_mode=cutover_mode,
-            ),
+            "data": product_runtime_record,
         }
+        if cutover_mode != "shadow" and product_runtime_record.get("status") == "blocked":
+            return
         task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
         request = RuntimeStartRequest(
             run_id=f"run:{task_id}",

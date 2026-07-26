@@ -176,6 +176,7 @@ def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tm
     CompletionService.configure_unified_runtime_store_for_tests(
         SQLiteAgentRunStore(tmp_path / "completion_shadow_fail_runtime.db")
     )
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "shadow")
 
     def fail_submit(**kwargs):
         del kwargs
@@ -211,6 +212,54 @@ def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tm
     assert "runtime_started" in [event["type"] for event in streamed]
     assert streamed[-1]["type"] == "response_chunk"
     assert streamed[-1]["data"]["runtime_topology"] == "unified_agent_runtime"
+
+
+def test_completion_route_blocks_default_runtime_when_product_record_fails(tmp_path, monkeypatch) -> None:
+    CompletionService.configure_unified_runtime_store_for_tests(
+        SQLiteAgentRunStore(tmp_path / "completion_default_product_fail_runtime.db")
+    )
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "new_default")
+
+    def fail_submit(**kwargs):
+        del kwargs
+        raise RuntimeError("product persistence unavailable")
+
+    monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(fail_submit))
+    client = _client()
+
+    with client.stream(
+        "POST",
+        "/api/v1/completion",
+        json={
+            "user_input": "Summarize the workspace evidence with citations.",
+            "dialog_id": "dialog_phase09_default_failure",
+            "product_mode": "auto",
+        },
+    ) as response:
+        assert response.status_code == 200
+        lines = list(response.iter_lines())
+
+    streamed = [
+        json.loads(line.removeprefix("data: ").strip())
+        for line in lines
+        if line.startswith("data: ")
+    ]
+    assert streamed == [
+        {
+            "type": "product_runtime_record",
+            "data": {
+                "status": "blocked",
+                "route": "/completion",
+                "mode": "new_default",
+                "cutover_mode": "new_default",
+                "request_hash": streamed[0]["data"]["request_hash"],
+                "product_runtime_recorded": False,
+                "product_shadow_recorded": False,
+                "failure_type": "RuntimeError",
+                "reason": "product persistence unavailable",
+            },
+        }
+    ]
 
 
 def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch) -> None:
