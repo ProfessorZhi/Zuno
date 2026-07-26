@@ -210,6 +210,49 @@ def test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain
             )
 
 
+def test_phase09_product_owner_receipts_are_append_only_and_versioned(engine) -> None:
+    with engine.begin() as conn:
+        _seed_product_agent_version(conn)
+        repo = ProductRepository(conn)
+        receipt = repo.submit_command(_product_command("client:receipt", {"query": "renewal"}, "command:receipt"))
+
+        first_owner_receipt = repo.append_owner_receipt(
+            tenant_id="tenant-a",
+            command_id=receipt.command_id,
+            status="REJECTED",
+            owner_receipt_ref="owner:receipt:1",
+            payload={"owner_status": "rejected", "owner_port": "Agent Core"},
+        )
+        late_owner_receipt = repo.append_owner_receipt(
+            tenant_id="tenant-a",
+            command_id=receipt.command_id,
+            status="OWNER_TIMEOUT",
+            owner_receipt_ref="owner:receipt:2",
+            payload={"owner_status": "timeout", "owner_port": "Agent Core"},
+        )
+
+        receipt_rows = conn.execute(
+            text(
+                """
+                SELECT receipt_version, receipt_id, status, owner_receipt_ref, receipt_hash
+                FROM product_command_receipts
+                WHERE command_id = :command_id
+                ORDER BY receipt_version
+                """
+            ),
+            {"command_id": receipt.command_id},
+        ).mappings().all()
+        assert [row["receipt_version"] for row in receipt_rows] == [1, 2, 3]
+        assert [row["status"] for row in receipt_rows] == ["ACCEPTED", "REJECTED", "OWNER_TIMEOUT"]
+        assert receipt_rows[1]["owner_receipt_ref"] == "owner:receipt:1"
+        assert receipt_rows[2]["owner_receipt_ref"] == "owner:receipt:2"
+        assert first_owner_receipt == f"{receipt.command_id}:receipt:2"
+        assert late_owner_receipt == f"{receipt.command_id}:receipt:3"
+        assert receipt_rows[0]["receipt_id"] == f"{receipt.command_id}:receipt:1"
+        assert receipt_rows[0]["receipt_hash"] != receipt_rows[1]["receipt_hash"]
+        assert receipt_rows[1]["receipt_hash"] != receipt_rows[2]["receipt_hash"]
+
+
 def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted(engine) -> None:
     now = datetime.now(timezone.utc)
     with engine.begin() as conn:
