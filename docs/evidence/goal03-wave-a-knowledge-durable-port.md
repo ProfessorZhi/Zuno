@@ -15,6 +15,8 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - Repository 新增 `commit_citation_lineage`，把 Evidence 绑定到 `knowledge_citation_lineage`。
 - `RuntimeDependencyFactory.for_workspace_task(...)` 默认返回 durable Knowledge port，而不是裸 corrective runtime。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
+- `zuno.knowledge.ingestion` 包入口改为 contracts eager import + legacy symbols lazy export，避免 Agent Core Knowledge surface 导入时连带加载数据库 runtime 模块。
+- `zuno.knowledge.agentic_graphrag` 与 `zuno.knowledge.indexing.runtime` 改为从 contracts/router 子模块读取轻量契约，不再依赖 ingestion 包入口的重导出。
 
 ## 已运行验证
 
@@ -26,6 +28,9 @@ python -m compileall -q src/backend/zuno/knowledge/agentic src/backend/zuno/agen
 git diff --check
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_doc_boundaries.py
+python -m pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/runtime/test_runtime_dependency_factory.py::test_runtime_dependency_factory_builds_workspace_knowledge_runtime -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_parse_gateway_runtime.py tests/knowledge/test_ingestion_snapshot_handoff.py -p no:cacheprovider
 ```
 
 结果：
@@ -34,6 +39,9 @@ python .agent/scripts/verify_doc_boundaries.py
 4 passed
 2 passed
 1 passed
+4 passed
+5 passed
+46 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -53,16 +61,7 @@ retry count: 1
 
 `python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider` 仍未重跑，因为本机 PostgreSQL 5432 不可用，且 Docker daemon 不可用。
 
-`python -m pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider` 未通过，失败点是既有 `zuno.knowledge.agentic_graphrag` surface 会加载 `zuno.database` 模块族：
-
-```text
-command: python -m pytest -q tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
-test name: test_importing_knowledge_surfaces_does_not_load_heavy_runtime_modules
-exception type: AssertionError
-first relevant assertion: tests/agent/test_knowledge_layer_surfaces.py:229
-environment signature: clean subprocess importing EXPECTED_EXPORTS; zuno.knowledge.agentic_graphrag loads zuno.database.*
-retry count: 1
-```
+旧结论中记录的 Knowledge surface heavy import 失败已在本切片修复。当前 `tests/agent/test_knowledge_layer_surfaces.py` 已通过；该结果只证明导入边界恢复为轻量，不证明 PHASE12 Gate 完成。
 
 ## 未证明
 

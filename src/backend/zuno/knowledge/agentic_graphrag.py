@@ -10,7 +10,7 @@ from zuno.agent.contracts import (
     RetrievalDecision as ProductRetrievalDecision,
     RetrievalProfile,
 )
-from zuno.knowledge.ingestion import CanonicalDocumentIR, build_source_span_provenance
+from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, build_source_span_provenance
 
 
 class ProductMode(str, Enum):

@@ -5,7 +5,8 @@ import json
 import re
 from uuid import uuid4
 
-from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseJobSnapshot, build_index_handoff_payload
+from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseJobSnapshot
+from zuno.knowledge.ingestion.router import build_index_handoff_payload
 
 from .adapters import adapter_status_for_targets
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
