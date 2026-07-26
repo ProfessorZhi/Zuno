@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import tempfile
 from typing import AsyncIterator, List
@@ -8,6 +9,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.api.services.product import ProductService
+from zuno.agent.runtime import CutoverMode
 from zuno.platform.contracts import canonical_sha256
 from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
@@ -37,10 +39,15 @@ class CompletionService:
         *,
         req: CompletionReq,
         login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
     ) -> AsyncIterator[dict]:
         yield {
             "type": "product_runtime_shadow",
-            "data": cls.record_product_runtime_shadow(req=req, login_user_id=login_user_id),
+            "data": cls.record_product_runtime_shadow(
+                req=req,
+                login_user_id=login_user_id,
+                cutover_mode=cutover_mode,
+            ),
         }
         task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
         request = RuntimeStartRequest(
@@ -99,7 +106,23 @@ class CompletionService:
         }
 
     @staticmethod
-    def record_product_runtime_shadow(*, req: CompletionReq, login_user_id: str) -> dict:
+    def resolve_cutover_mode() -> CutoverMode:
+        configured_mode = str(os.getenv("ZUNO_COMPLETION_CUTOVER_MODE", "") or "").strip().lower()
+        if configured_mode in {"shadow", "canary", "new_default", "rollback"}:
+            return configured_mode
+        if configured_mode:
+            raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
+        if os.getenv("ZUNO_AGENT_RUNTIME") == "legacy_general_agent":
+            return "rollback"
+        return "new_default"
+
+    @staticmethod
+    def record_product_runtime_shadow(
+        *,
+        req: CompletionReq,
+        login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
+    ) -> dict:
         workspace_id = str(getattr(req, "workspace_id", "") or "completion")
         request_hash = canonical_sha256(
             {
@@ -128,6 +151,7 @@ class CompletionService:
                     "user_input_hash": canonical_sha256({"user_input": req.user_input}),
                     "product_mode": req.product_mode,
                     "query_method": req.query_method,
+                    "cutover_mode": cutover_mode,
                 },
             )
         except Exception as exc:
@@ -135,12 +159,14 @@ class CompletionService:
                 "status": "blocked",
                 "route": "/completion",
                 "mode": "shadow",
+                "cutover_mode": cutover_mode,
                 "reason": str(exc),
             }
         return {
             "status": result.status,
             "route": "/completion",
             "mode": "shadow",
+            "cutover_mode": cutover_mode,
             "command_id": result.command_id,
             "receipt_id": result.receipt_id,
             "projection_event_id": result.projection.projection_event_id,

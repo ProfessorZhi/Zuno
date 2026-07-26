@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from langchain_core.messages import HumanMessage
 
 from zuno.agent.runtime import SQLiteAgentRunStore
 from zuno.api.services.completion import CompletionService
@@ -124,6 +126,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
 
     assert result["status"] == "ACCEPTED"
     assert result["mode"] == "shadow"
+    assert result["cutover_mode"] == "new_default"
     assert result["projection_event_id"] == "projection:completion-shadow"
     assert result["available_action_tokens"] == ["action-token:completion-shadow:cancel"]
     assert captured["tenant_id"] == "user:principal-a"
@@ -133,6 +136,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     assert captured["active_agent_version_id"] == "completion:unified-runtime"
     assert captured["command_kind"] == "SHADOW_COMPLETION_RUNTIME_REQUEST"
     assert captured["payload"]["legacy_route"] == "/completion"
+    assert captured["payload"]["cutover_mode"] == "new_default"
     assert "user_input" not in captured["payload"]
 
 
@@ -157,5 +161,120 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
         "status": "blocked",
         "route": "/completion",
         "mode": "shadow",
+        "cutover_mode": "new_default",
         "reason": "product persistence unavailable",
     }
+
+
+def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch) -> None:
+    monkeypatch.delenv("ZUNO_AGENT_RUNTIME", raising=False)
+    monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
+    assert CompletionService.resolve_cutover_mode() == "new_default"
+
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "canary")
+    assert CompletionService.resolve_cutover_mode() == "canary"
+
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
+    assert CompletionService.resolve_cutover_mode() == "rollback"
+
+    monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
+    monkeypatch.setenv("ZUNO_AGENT_RUNTIME", "legacy_general_agent")
+    assert CompletionService.resolve_cutover_mode() == "rollback"
+
+
+def test_completion_route_forwards_explicit_cutover_mode(monkeypatch) -> None:
+    captured = {}
+
+    def fake_shadow(**kwargs):
+        captured.update(kwargs)
+        return {
+            "status": "ACCEPTED",
+            "route": "/completion",
+            "mode": "shadow",
+            "cutover_mode": kwargs["cutover_mode"],
+            "command_id": "command:completion-shadow",
+        }
+
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "canary")
+    monkeypatch.setattr(CompletionService, "record_product_runtime_shadow", staticmethod(fake_shadow))
+
+    client = _client()
+    with client.stream(
+        "POST",
+        "/api/v1/completion",
+        json={
+            "user_input": "Summarize the workspace evidence with citations.",
+            "dialog_id": "dialog_phase11_completion",
+            "product_mode": "auto",
+        },
+    ) as response:
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+
+    assert captured["cutover_mode"] == "canary"
+
+
+def test_completion_route_uses_legacy_runtime_in_rollback_window(monkeypatch) -> None:
+    class FakeChatAgent:
+        def __init__(self) -> None:
+            self.stopped = False
+
+        async def astream(self, messages):
+            del messages
+            yield {"type": "planning", "data": {"status": "ok"}}
+            yield {"type": "response_chunk", "data": {"chunk": "legacy answer"}}
+
+        def stop_streaming_callback(self) -> None:
+            self.stopped = True
+
+    fake_agent = FakeChatAgent()
+
+    async def fake_create_chat_agent(req, login_user_id):
+        del req, login_user_id
+        return fake_agent, SimpleNamespace(
+            name="legacy-agent",
+            enable_memory=False,
+            system_prompt="",
+            product_mode="auto",
+            query_method="direct",
+        )
+
+    async def fake_prepare_messages(*, req, agent_config):
+        del agent_config
+        return req.user_input, [HumanMessage(content=req.user_input)]
+
+    async def fake_save_chat_history(**kwargs):
+        del kwargs
+
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
+    monkeypatch.setattr("zuno.api.v1.completion._create_chat_agent", fake_create_chat_agent)
+    monkeypatch.setattr(CompletionService, "prepare_messages", fake_prepare_messages)
+    monkeypatch.setattr(CompletionService, "save_memory_turn", fake_save_chat_history)
+    monkeypatch.setattr("zuno.api.services.history.HistoryService.save_chat_history", fake_save_chat_history)
+    monkeypatch.setattr(
+        CompletionService,
+        "record_product_runtime_shadow",
+        staticmethod(lambda **kwargs: {"status": "ACCEPTED", "route": "/completion", "mode": "shadow"}),
+    )
+
+    client = _client()
+    with client.stream(
+        "POST",
+        "/api/v1/completion",
+        json={
+            "user_input": "Summarize the workspace evidence with citations.",
+            "dialog_id": "dialog_phase11_completion",
+            "product_mode": "auto",
+        },
+    ) as response:
+        assert response.status_code == 200
+        lines = list(response.iter_lines())
+
+    streamed = [
+        json.loads(line.removeprefix("data: ").strip())
+        for line in lines
+        if line.startswith("data: ")
+    ]
+    assert streamed[0]["type"] == "planning"
+    assert streamed[-1]["type"] == "response_chunk"
+    assert streamed[-1]["data"]["chunk"] == "legacy answer"

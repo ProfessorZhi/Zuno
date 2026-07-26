@@ -1,5 +1,4 @@
 import json
-import os
 from typing import Callable
 
 import loguru
@@ -72,9 +71,14 @@ async def _create_chat_agent(req: CompletionReq, login_user_id: str):
 
 @router.post("/completion", description="Completion chat endpoint")
 async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(get_login_user)):
-    if os.getenv("ZUNO_AGENT_RUNTIME") != "legacy_general_agent":
+    cutover_mode = CompletionService.resolve_cutover_mode()
+    if cutover_mode != "rollback":
         async def unified_generate():
-            async for event in CompletionService.stream_unified_runtime(req=req, login_user_id=login_user.user_id):
+            async for event in CompletionService.stream_unified_runtime(
+                req=req,
+                login_user_id=login_user.user_id,
+                cutover_mode=cutover_mode,
+            ):
                 yield f"data: {json.dumps(event)}\n\n"
 
         return WatchedStreamingResponse(
