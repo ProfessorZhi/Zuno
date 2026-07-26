@@ -154,12 +154,28 @@ class StrategySelector:
                 user_roles=request.user_roles,
             )
         )
+        snapshot_ref = _stable_id(
+            "capability_snapshot",
+            request.workspace_id,
+            request.task_id,
+            request.trace_id,
+            *request.available_capability_ids,
+        )
+        selection_ref = _stable_id(
+            "capability_selection",
+            snapshot_ref,
+            *route.allowed_capability_ids,
+            *route.blocked_capability_reasons.keys(),
+        )
         approval_required = []
         for capability_id in route.allowed_capability_ids:
             capability = self._registry.require_capability(capability_id)
             if capability.policy.approval_required:
                 approval_required.append(capability_id)
         return CapabilityPlan(
+            availability_snapshot_ref=snapshot_ref,
+            selection_result_ref=selection_ref,
+            selection_validity="fixed_planning_snapshot",
             allowed_capabilities=list(route.allowed_capability_ids),
             allowed_tools=list(route.allowed_tool_ids),
             blocked_capability_reasons=dict(route.blocked_capability_reasons),

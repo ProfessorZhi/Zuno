@@ -361,8 +361,30 @@ def test_phase14_capability_blocks_unverified_skill_and_model_only_active_bindin
             candidate_summary={"rejected": ["binding:model-only"]},
             rejection_reason_codes=["MODEL_PROPOSED_NOT_ACTIVE"],
         )
+        repo.record_selection(
+            selection_id="selection:1",
+            snapshot_id="cap-snapshot:1",
+            requirement={"capability": "knowledge.standard.retrieve"},
+            selected_binding_id=None,
+            candidate_summary={"rejected": ["binding:model-only"]},
+            rejection_reason_codes=["MODEL_PROPOSED_NOT_ACTIVE"],
+        )
 
         binding_status = conn.execute(
             text("SELECT status FROM capability_provider_bindings WHERE binding_id = 'binding:model-only'")
         ).scalar_one()
         assert binding_status == "PROPOSED"
+        dispatch = conn.execute(
+            text(
+                """
+                SELECT aggregate_id, payload ->> 'consumer_module' AS consumer_module,
+                       payload ->> 'snapshot_id' AS snapshot_id, ordering_sequence
+                FROM infra_outbox_events
+                WHERE topic = 'capability.selection.committed'
+                """
+            )
+        ).mappings().one()
+        assert dispatch["aggregate_id"] == "selection:1"
+        assert dispatch["consumer_module"] == "Agent Core"
+        assert dispatch["snapshot_id"] == "cap-snapshot:1"
+        assert dispatch["ordering_sequence"] == 1

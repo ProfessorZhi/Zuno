@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import Connection, Engine, text
 
 from zuno.platform.contracts import canonical_json, canonical_sha256
+from zuno.platform.database.foundation import InfrastructureRepository
 
 
 class CapabilitySupplyChainConflict(RuntimeError):
@@ -313,7 +314,7 @@ class CapabilityRepository:
         candidate_summary: dict[str, Any],
         rejection_reason_codes: list[str],
     ) -> None:
-        self.connection.execute(
+        inserted = self.connection.execute(
             text(
                 """
                 INSERT INTO capability_selection_results (
@@ -327,6 +328,7 @@ class CapabilityRepository:
                     CAST(:rejection_reason_codes AS jsonb), :selection_hash
                 )
                 ON CONFLICT DO NOTHING
+                RETURNING selection_id
                 """
             ),
             {
@@ -344,6 +346,38 @@ class CapabilityRepository:
                         "rejection_reason_codes": rejection_reason_codes,
                     }
                 ),
+            },
+        ).scalar_one_or_none()
+        if inserted is None:
+            return
+
+        tenant_id = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id
+                FROM capability_availability_snapshots
+                WHERE snapshot_id = :snapshot_id
+                """
+            ),
+            {"snapshot_id": snapshot_id},
+        ).scalar_one()
+        InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=f"outbox:{selection_id}",
+            tenant_id=str(tenant_id),
+            aggregate_id=selection_id,
+            topic="capability.selection.committed",
+            idempotency_key=selection_id,
+            ordering_key=snapshot_id,
+            payload={
+                "contract_name": "CapabilitySelectionResult",
+                "producer_module": "Capability / Skill",
+                "consumer_module": "Agent Core",
+                "snapshot_id": snapshot_id,
+                "selection_id": selection_id,
+                "selected_binding_id": selected_binding_id,
+                "requirement_hash": canonical_sha256(requirement),
+                "candidate_summary_hash": canonical_sha256(candidate_summary),
+                "rejection_reason_codes": rejection_reason_codes,
             },
         )
 

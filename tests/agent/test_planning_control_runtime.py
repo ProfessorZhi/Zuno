@@ -80,6 +80,9 @@ def test_tool_task_selects_react_without_executing_tool() -> None:
 
     assert output.strategy.strategy == "react"
     assert output.selected_skill.skill_id == "research_report"
+    assert output.capability_plan.availability_snapshot_ref.startswith("capability_snapshot_")
+    assert output.capability_plan.selection_result_ref.startswith("capability_selection_")
+    assert output.capability_plan.selection_validity == "fixed_planning_snapshot"
     assert output.capability_plan.allowed_tools == ["tool.web.search"]
     assert output.capability_plan.executed_tools == []
     assert output.plan_state.steps[0].action_type == "select_capability"
