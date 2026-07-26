@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langchain_core.messages import HumanMessage
+import pytest
 
 from zuno.agent.runtime import SQLiteAgentRunStore
 from zuno.api.services.completion import CompletionService
@@ -182,7 +183,15 @@ def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch)
     assert CompletionService.resolve_cutover_mode() == "rollback"
 
 
-def test_completion_route_forwards_explicit_cutover_mode(monkeypatch) -> None:
+def test_completion_cutover_mode_resolution_rejects_unknown_mode(monkeypatch) -> None:
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "surprise")
+
+    with pytest.raises(ValueError, match="unsupported completion cutover mode"):
+        CompletionService.resolve_cutover_mode()
+
+
+@pytest.mark.parametrize("cutover_mode", ["shadow", "canary", "new_default"])
+def test_completion_route_forwards_explicit_cutover_mode(monkeypatch, cutover_mode) -> None:
     captured = {}
 
     def fake_shadow(**kwargs):
@@ -195,7 +204,7 @@ def test_completion_route_forwards_explicit_cutover_mode(monkeypatch) -> None:
             "command_id": "command:completion-shadow",
         }
 
-    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "canary")
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", cutover_mode)
     monkeypatch.setattr(CompletionService, "record_product_runtime_shadow", staticmethod(fake_shadow))
 
     client = _client()
@@ -211,7 +220,7 @@ def test_completion_route_forwards_explicit_cutover_mode(monkeypatch) -> None:
         assert response.status_code == 200
         assert response.headers["content-type"].startswith("text/event-stream")
 
-    assert captured["cutover_mode"] == "canary"
+    assert captured["cutover_mode"] == cutover_mode
 
 
 def test_completion_route_uses_legacy_runtime_in_rollback_window(monkeypatch) -> None:
