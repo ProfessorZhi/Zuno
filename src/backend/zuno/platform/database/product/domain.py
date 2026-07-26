@@ -65,6 +65,13 @@ class ProductActionTokenRef:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductActionTokenStatusRef:
+    action_token_id: str
+    used_at: datetime | None
+    revoked_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
 class ProductStreamCursorRef:
     cursor_id: str
     projection_event_id: str
@@ -634,6 +641,121 @@ class ProductRepository:
             expires_at=expires_at,
         )
 
+    def consume_action_token(
+        self,
+        *,
+        action_token_id: str,
+        tenant_id: str,
+        principal_id: str,
+        now: datetime | None = None,
+    ) -> ProductActionTokenStatusRef:
+        now = now or datetime.now(timezone.utc)
+        row = self.connection.execute(
+            text(
+                """
+                SELECT action_token_id, expires_at, used_at, revoked_at
+                FROM product_action_tokens
+                WHERE action_token_id = :action_token_id
+                  AND tenant_id = :tenant_id
+                  AND principal_id = :principal_id
+                """
+            ),
+            {
+                "action_token_id": action_token_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("unknown product action token")
+        if row["revoked_at"] is not None:
+            raise ProductPersistenceConflict("revoked action token cannot be consumed")
+        if row["used_at"] is not None:
+            raise ProductPersistenceConflict("action token replay detected")
+        if row["expires_at"] <= now:
+            raise ProductPersistenceConflict("expired action token cannot be consumed")
+        self.connection.execute(
+            text(
+                """
+                UPDATE product_action_tokens
+                SET used_at = :used_at
+                WHERE action_token_id = :action_token_id
+                  AND tenant_id = :tenant_id
+                  AND principal_id = :principal_id
+                  AND used_at IS NULL
+                  AND revoked_at IS NULL
+                  AND expires_at > :used_at
+                """
+            ),
+            {
+                "action_token_id": action_token_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+                "used_at": now,
+            },
+        )
+        return ProductActionTokenStatusRef(
+            action_token_id=action_token_id,
+            used_at=now,
+            revoked_at=row["revoked_at"],
+        )
+
+    def revoke_action_token(
+        self,
+        *,
+        action_token_id: str,
+        tenant_id: str,
+        principal_id: str,
+        now: datetime | None = None,
+    ) -> ProductActionTokenStatusRef:
+        now = now or datetime.now(timezone.utc)
+        row = self.connection.execute(
+            text(
+                """
+                SELECT action_token_id, used_at, revoked_at
+                FROM product_action_tokens
+                WHERE action_token_id = :action_token_id
+                  AND tenant_id = :tenant_id
+                  AND principal_id = :principal_id
+                """
+            ),
+            {
+                "action_token_id": action_token_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("unknown product action token")
+        if row["used_at"] is not None:
+            raise ProductPersistenceConflict("consumed action token cannot be revoked")
+        if row["revoked_at"] is not None:
+            raise ProductPersistenceConflict("action token already revoked")
+        self.connection.execute(
+            text(
+                """
+                UPDATE product_action_tokens
+                SET revoked_at = :revoked_at
+                WHERE action_token_id = :action_token_id
+                  AND tenant_id = :tenant_id
+                  AND principal_id = :principal_id
+                  AND used_at IS NULL
+                  AND revoked_at IS NULL
+                """
+            ),
+            {
+                "action_token_id": action_token_id,
+                "tenant_id": tenant_id,
+                "principal_id": principal_id,
+                "revoked_at": now,
+            },
+        )
+        return ProductActionTokenStatusRef(
+            action_token_id=action_token_id,
+            used_at=row["used_at"],
+            revoked_at=now,
+        )
+
     def open_stream_cursor(
         self,
         *,
@@ -899,6 +1021,7 @@ def stable_json(payload: dict[str, Any]) -> str:
 
 __all__ = [
     "ProductActionTokenRef",
+    "ProductActionTokenStatusRef",
     "ProductAgentAssetRef",
     "ProductAgentCatalogEntryView",
     "ProductCommandReceiptRef",

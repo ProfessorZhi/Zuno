@@ -12,6 +12,7 @@
 - `GET /api/v1/product/stream-events` 提供同一事件源的 JSON 查询面，支持 `Last-Event-ID`，并在未知或过期 cursor 时返回 `RESYNC_REQUIRED` 语义。
 - `Last-Event-ID` 绑定 principal；其他 principal 复用 cursor 时按未知 cursor 处理并返回 `RESYNC_REQUIRED`，不泄露增量事件。
 - AvailableAction 由服务端签发 action token，不由前端按状态字符串推断。
+- `product_action_tokens` 支持一次性消费和撤销；重复消费或撤销后消费 fail closed。
 
 ## 默认调用链
 
@@ -22,6 +23,7 @@ POST /api/v1/product/runtime-requests
 → ProductRepository.submit_command
 → ProductRepository.record_projection_event
 → ProductRepository.issue_action_token
+→ ProductRepository.consume_action_token / revoke_action_token
 → ProductRepository.open_stream_cursor
 → response: CommandReceipt + Projection cursor + AvailableAction token
 
@@ -52,7 +54,7 @@ python -m pytest -q tests/api/test_goal03_product_route.py tests/integration/tes
 结果：
 
 ```text
-7 passed
+8 passed
 ```
 
 ```powershell

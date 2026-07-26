@@ -269,6 +269,46 @@ def test_phase09_product_projection_stream_cursor_and_action_token_are_persisted
         assert action.command_kind == "CANCEL_RUNTIME_REQUEST"
         assert cursor.last_sequence_no == projection.source_watermark
 
+        consumed = repo.consume_action_token(
+            action_token_id=action.action_token_id,
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            now=now,
+        )
+        assert consumed.used_at == now
+        with pytest.raises(ProductPersistenceConflict, match="replay detected"):
+            repo.consume_action_token(
+                action_token_id=action.action_token_id,
+                tenant_id="tenant-a",
+                principal_id="principal-a",
+                now=now,
+            )
+
+        revoked = repo.issue_action_token(
+            action_token_id="action-token:command:projection:revoke",
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            target_ref="runtime-request:wave-a",
+            command_kind="CANCEL_RUNTIME_REQUEST",
+            effective_security_epoch_ref="security-epoch:wave-a",
+            nonce="nonce:command:projection:revoke",
+            expires_at=now + timedelta(minutes=5),
+        )
+        revoked_status = repo.revoke_action_token(
+            action_token_id=revoked.action_token_id,
+            tenant_id="tenant-a",
+            principal_id="principal-a",
+            now=now,
+        )
+        assert revoked_status.revoked_at == now
+        with pytest.raises(ProductPersistenceConflict, match="revoked action token"):
+            repo.consume_action_token(
+                action_token_id=revoked.action_token_id,
+                tenant_id="tenant-a",
+                principal_id="principal-a",
+                now=now,
+            )
+
         replay = repo.record_projection_event(
             projection_event_id="projection:command:projection:duplicate",
             tenant_id="tenant-a",
