@@ -23,6 +23,7 @@ from zuno.platform.database.knowledge import (
 )
 from zuno.platform.database.knowledge.domain import KnowledgeVersionDraft
 from zuno.platform.database.product import ProductCommandSubmission, ProductPersistenceConflict, ProductRepository
+from zuno.api.services.capability import CapabilityService
 from zuno.api.services.product import ProductService
 
 
@@ -1314,11 +1315,37 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
         assert duplicate_receipt.first_seen is False
         assert duplicate_receipt.payload_hash == first_receipt.payload_hash
 
-        assert infra_repo.claim_outbox(
+        consumed = CapabilityService.consume_transition_event(
+            event_id="outbox:revocation:active-read:2",
             worker_id="capability-next-worker",
-            limit=1,
-            topics=("capability.transition.committed",),
-        ) == ["outbox:revocation:active-read:2"]
+            engine=conn,
+        )
+        assert consumed.event_id == "outbox:revocation:active-read:2"
+        assert consumed.transition_id == "revocation:active-read:2"
+        assert consumed.aggregate_ref == "installation:active-read"
+        assert consumed.committed_generation == 2
+        assert consumed.inbox_first_seen is True
+        assert consumed.outbox_status == "published"
+        processed = conn.execute(
+            text(
+                """
+                SELECT status
+                FROM infra_inbox_messages
+                WHERE consumer = 'agent-core-capability-transition'
+                  AND message_id = 'outbox:revocation:active-read:2'
+                """
+            )
+        ).scalar_one()
+        published = conn.execute(
+            text(
+                """
+                SELECT status
+                FROM infra_outbox_events
+                WHERE event_id = 'outbox:revocation:active-read:2'
+                """
+            )
+        ).scalar_one()
+        assert (processed, published) == ("processed", "published")
 
 
 def test_phase09_product_runtime_dispatch_creates_agent_run_and_owner_receipt(engine) -> None:

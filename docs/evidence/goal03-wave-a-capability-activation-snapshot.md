@@ -14,7 +14,7 @@
 - Revocation 后同一候选不再进入 snapshot hash。
 - Activation / Revocation transition 与 PHASE04 统一 `infra_outbox_events` 同事务提交，topic 为 `capability.transition.committed`，供 Agent Core 或外部 worker crash 后按 ordering key 幂等恢复。
 - Capability transition outbox claim 会按同 tenant + ordering key 阻塞前序未 `published` 的事件；activation crash 后重新 pending 时，不允许先 claim 后续 revocation。
-- Capability transition 事件已证明可以经历 claim、publish failure、retry claim、complete，并由 Agent Core consumer inbox 用 message id + payload hash 去重。
+- Capability transition 事件已证明可以经历 claim、publish failure、retry claim、complete，并由 Agent Core consumer inbox 用 message id + payload hash 去重；后续 revocation outbox 已通过 `CapabilityService.consume_transition_event(...)` 完成 Agent Core inbox processed 和 outbox published 闭环。
 - AvailabilitySnapshot 在同一 workspace 内还会按 runtime health、quota remaining 和 capacity remaining 过滤候选；degraded / quota exhausted / capacity exhausted 不能进入 snapshot hash。
 
 ## 默认调用链
@@ -39,11 +39,14 @@ CapabilityRepository.append_transition_event
 → InfrastructureRepository.claim_outbox ordered predecessor guard
 → record_outbox_publish_failure / retry claim / complete_outbox
 → record_inbox_receipt(consumer=Agent Core) idempotent redelivery guard
+→ CapabilityService.consume_transition_event
+→ mark_inbox_processed + complete_outbox
 ```
 
 ## 代码证据
 
 - `src/backend/zuno/platform/database/capability/domain.py`
+- `src/backend/zuno/api/services/capability.py`
 - `src/backend/zuno/platform/database/capability/__init__.py`
 - `tests/integration/test_goal03_wave_a_persistence.py`
 
@@ -93,8 +96,22 @@ python -m compileall -q src/backend/zuno/platform/database tests/integration/tes
 compileall passed
 ```
 
+Focused rerun after Agent Core transition consumer closure:
+
+```powershell
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase14_capability_installation_activation_uses_cas_and_revocation_filters_snapshot -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+1 passed
+12 passed
+```
+
 ## 边界
 
-本证据证明 PHASE14 的 durable installation active binding guard、activation CAS、revocation、transition outbox dispatch、ordered retry / Agent Core inbox 去重恢复和 snapshot eligibility 进入 PostgreSQL repository 路径。
+本证据证明 PHASE14 的 durable installation active binding guard、activation CAS、revocation、transition outbox dispatch、ordered retry / Agent Core inbox 去重恢复、Agent Core transition consumer processed 闭环和 snapshot eligibility 进入 PostgreSQL repository 路径。
 
 本证据不单独证明完整 PHASE14 completed；legacy compatibility facade retirement 和所有 Planner 端到端 snapshot-only 路径仍需 Closure Gate 汇总证明。
