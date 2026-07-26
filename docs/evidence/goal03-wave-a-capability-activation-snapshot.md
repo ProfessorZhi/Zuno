@@ -9,6 +9,7 @@
 - Capability Installation 激活和撤销必须带 `expected_generation`。
 - 当前 generation 从 `capability_transition_events` 推导，stale generation fail closed。
 - Activation / Revocation 更新 installation 状态并写入 transition event。
+- Installation 创建前必须已有同 tenant 的 `ACTIVE` CapabilityDefinition、`ACTIVE` CapabilityVersion 和 `ACTIVE` ProviderBinding；未完成 conformance 的 binding 不能形成 ACTIVE installation 事实。
 - AvailabilitySnapshot 只包含 `ACTIVE` installation 绑定的 `ACTIVE` provider binding。
 - Revocation 后同一候选不再进入 snapshot hash。
 
@@ -16,6 +17,7 @@
 
 ```text
 CapabilityRepository.install_capability
+→ active verified binding guard
 → CapabilityRepository.activate_installation
 → CapabilityRepository.append_transition_event
 → capability_transition_events CAS generation
@@ -46,6 +48,6 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 
 ## 边界
 
-本证据证明 PHASE14 的 durable installation activation CAS、revocation 和 snapshot eligibility 进入 PostgreSQL repository 路径。
+本证据证明 PHASE14 的 durable installation active binding guard、activation CAS、revocation 和 snapshot eligibility 进入 PostgreSQL repository 路径。
 
-本证据不单独证明完整 PHASE14 completed；完整 progressive loading budget、supply-chain crash recovery、legacy registry cutover 和 Planner 端到端 snapshot-only 路径仍需 Closure Gate 汇总证明。
+本证据不单独证明完整 PHASE14 completed；完整 cross-worker supply-chain crash recovery、legacy compatibility facade retirement 和所有 Planner 端到端 snapshot-only 路径仍需 Closure Gate 汇总证明。

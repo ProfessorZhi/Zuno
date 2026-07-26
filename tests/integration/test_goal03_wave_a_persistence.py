@@ -753,6 +753,14 @@ def test_phase14_capability_installation_activation_uses_cas_and_revocation_filt
             mapping_payload={"input": "query"},
             proposal_source="CURATED",
         )
+        with pytest.raises(CapabilitySupplyChainConflict, match="active verified binding"):
+            repo.install_capability(
+                installation_id="installation:unverified-active-read",
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                capability_version_id="capability:version:active-read:v1",
+                policy_ref="policy:install",
+            )
         repo.record_conformance(
             conformance_id="conformance:active-read",
             binding_id="binding:active-read",

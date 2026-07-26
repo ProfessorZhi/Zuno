@@ -246,6 +246,28 @@ class CapabilityRepository:
         capability_version_id: str,
         policy_ref: str,
     ) -> None:
+        active_binding = self.connection.execute(
+            text(
+                """
+                SELECT b.binding_id
+                FROM capability_provider_bindings b
+                JOIN capability_versions v ON v.capability_version_id = b.capability_version_id
+                JOIN capability_definitions d ON d.capability_definition_id = v.capability_definition_id
+                WHERE b.capability_version_id = :capability_version_id
+                  AND b.status = 'ACTIVE'
+                  AND v.status = 'ACTIVE'
+                  AND d.status = 'ACTIVE'
+                  AND d.tenant_id = :tenant_id
+                LIMIT 1
+                """
+            ),
+            {
+                "capability_version_id": capability_version_id,
+                "tenant_id": tenant_id,
+            },
+        ).scalar_one_or_none()
+        if active_binding is None:
+            raise CapabilitySupplyChainConflict("capability installation requires active verified binding")
         self.connection.execute(
             text(
                 """
