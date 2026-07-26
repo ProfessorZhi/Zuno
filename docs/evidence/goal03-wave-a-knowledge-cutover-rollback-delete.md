@@ -11,6 +11,7 @@
 - rollback 可以把旧 `SUPERSEDED` KnowledgeVersion 重新切回 `ACTIVE`，并记录 `rollback_of_cutover_id`。
 - strict Evidence 写入前必须存在 KnowledgeChunk lineage，且 SourceSpan 与 Authority 必须继承自 Chunk；SourceSpan 或 Authority mismatch fail closed。
 - deleted SourceSpan 会 taint `knowledge_citation_lineage`，并把关联 evidence 从 `STRICT / SELECTED` 改为 rejected，不再返回 strict evidence。
+- `/knowledge/search` 默认路径会在 runtime 先要求 ACTIVE Knowledge Snapshot，再写入 query run、retrieval round 和 partial-evidence 状态；无 ACTIVE Snapshot 时 fail closed。
 
 ## 默认调用链
 
@@ -30,6 +31,11 @@ KnowledgeRepository.commit_evidence
 → knowledge_chunks by chunk_id
 → SourceSpan / Authority inheritance guard
 → knowledge_evidence_records STRICT / SELECTED insert
+
+KnowledgeService.search_knowledge
+→ KnowledgeQueryService.query
+→ KnowledgeUnitOfWork.active_snapshot_id
+→ start_query_run / start_retrieval_round / mark_query_run_status
 ```
 
 ## 代码证据
@@ -47,6 +53,26 @@ python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:ca
 
 ```text
 7 passed
+```
+
+```powershell
+python -m pytest -q tests/api/test_goal03_knowledge_route.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+5 passed
+```
+
+```powershell
+python -m pytest -q tests/agent/test_general_agent_project_query_runtime.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+5 passed
 ```
 
 ```powershell

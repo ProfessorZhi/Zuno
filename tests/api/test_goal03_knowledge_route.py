@@ -84,6 +84,95 @@ def test_goal03_knowledge_record_requires_active_snapshot() -> None:
     assert "start_retrieval_round" in source
 
 
+def test_goal03_knowledge_search_requires_active_snapshot_and_records_run(monkeypatch) -> None:
+    class _QueryService:
+        async def query(self, **kwargs):
+            assert kwargs["knowledge_ids"] == ["knowledge-a"]
+            return _Result()
+
+    class _Repo:
+        def active_snapshot_id(self, **kwargs):
+            assert kwargs == {
+                "tenant_id": "user:principal-a",
+                "knowledge_space_id": "knowledge-a",
+            }
+            return "snapshot-a"
+
+        def start_query_run(self, **kwargs):
+            assert kwargs["snapshot_id"] == "snapshot-a"
+            assert kwargs["request_payload"]["strict_grounding"] is True
+
+        def start_retrieval_round(self, **kwargs):
+            assert kwargs["status"] == "COMPLETED"
+
+        def mark_query_run_status(self, **kwargs):
+            assert kwargs["status"] == "PARTIAL_EVIDENCE"
+
+    class _Uow:
+        def __enter__(self):
+            return _Repo()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "zuno.services.application.knowledge.KnowledgeQueryService",
+        _QueryService,
+    )
+    monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
+
+    payload = asyncio.run(
+        KnowledgeService.search_knowledge(
+            user_id="principal-a",
+            knowledge_ids=["knowledge-a"],
+            query="renewal",
+            product_mode="auto",
+            query_method=None,
+            top_k=5,
+        )
+    )
+
+    assert payload["query_run_persistence"] == {"status": "recorded"}
+    assert payload["content"] == "answer"
+
+
+def test_goal03_knowledge_search_blocks_without_active_snapshot(monkeypatch) -> None:
+    class _QueryService:
+        async def query(self, **kwargs):
+            return _Result()
+
+    class _Repo:
+        def active_snapshot_id(self, **kwargs):
+            return None
+
+    class _Uow:
+        def __enter__(self):
+            return _Repo()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(
+        "zuno.services.application.knowledge.KnowledgeQueryService",
+        _QueryService,
+    )
+    monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
+
+    payload = asyncio.run(
+        KnowledgeService.search_knowledge(
+            user_id="principal-a",
+            knowledge_ids=["knowledge-a"],
+            query="renewal",
+            product_mode="auto",
+            query_method=None,
+            top_k=5,
+        )
+    )
+
+    assert payload["query_run_persistence"]["status"] == "blocked"
+    assert "requires an ACTIVE Knowledge Snapshot" in payload["query_run_persistence"]["reason"]
+
+
 def test_goal03_knowledge_reindex_publishes_version_and_snapshot(monkeypatch) -> None:
     class _Knowledge:
         def to_dict(self) -> dict:
