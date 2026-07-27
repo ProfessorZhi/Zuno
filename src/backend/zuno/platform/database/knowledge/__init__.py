@@ -1,5 +1,6 @@
 from zuno.platform.database.knowledge.domain import (
     KnowledgeCutoverConflict,
+    KnowledgeEvidenceConflict,
     KnowledgeRepository,
     KnowledgeUnitOfWork,
     KnowledgeVersionDraft,
@@ -7,6 +8,7 @@ from zuno.platform.database.knowledge.domain import (
 
 __all__ = [
     "KnowledgeCutoverConflict",
+    "KnowledgeEvidenceConflict",
     "KnowledgeRepository",
     "KnowledgeUnitOfWork",
     "KnowledgeVersionDraft",

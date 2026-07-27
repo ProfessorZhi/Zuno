@@ -8,12 +8,67 @@ from fastapi.testclient import TestClient
 import pytest
 
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
+from zuno.agent.contracts import CapabilityPlan
 from zuno.platform.security import SecurityProductActionDenied
+from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
+
+
+def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    client_request_id = kwargs["client_request_id"]
+    runtime_request_ref = kwargs["runtime_request_ref"]
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="cancel",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                expires_at="2026-07-26T00:00:00+00:00",
+            ),
+        ),
+    )
+
+
+@pytest.fixture(autouse=True)
+def _workspace_capability_runtime_for_tests(monkeypatch) -> None:
+    def fake_select(self, request):
+        del self
+        allowed = list(request.get("available_capability_ids") or ())
+        return CapabilityPlan(
+            availability_snapshot_ref="capability_snapshot:workspace:test",
+            selection_result_ref="capability_selection:workspace:test",
+            selection_validity="fixed_planning_snapshot",
+            allowed_capabilities=allowed,
+            allowed_tools=allowed,
+            risk_summary={
+                "planner_exposure": {
+                    "exposure_ref": "capability_exposure:workspace:test",
+                    "visibility": "planner_authorized_summary_schema_only",
+                }
+            },
+        )
+
+    monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
 
 
 def _client() -> TestClient:
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     app = FastAPI()
     app.include_router(workspace_router, prefix="/api/v1")
     app.dependency_overrides[get_login_user] = lambda: UserPayload(
@@ -84,6 +139,7 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     ]
     assert product_event_types == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "answer",
@@ -94,6 +150,11 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     assert "runtime_started" in event_types
     assert "runtime_node" in event_types
     assert "runtime_completed" in event_types
+    product_record = next(event for event in events if event["type"] == "product_runtime_record")
+    assert product_record["payload"]["status"] == "ACCEPTED"
+    assert product_record["payload"]["product_runtime_recorded"] is True
+    assert product_record["payload"]["command_id"].startswith("command:workspace:")
+    assert product_record["payload"]["receipt_id"].startswith(product_record["payload"]["command_id"])
     assert {event["task_id"] for event in events} == {task_id}
     assert {event["trace_id"] for event in events} == {trace_id}
 
@@ -122,6 +183,99 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     events_after_feedback = client.get(f"/api/v1/workspace/task/{task_id}/events").json()["data"]
     assert events_after_feedback[-1]["type"] == "feedback_received"
     assert events_after_feedback[-1]["payload"]["feedback_id"] == feedback["feedback_id"]
+
+
+def test_workspace_task_runtime_fails_closed_when_product_runtime_record_fails() -> None:
+    def fail_submitter(**kwargs):
+        del kwargs
+        raise RuntimeError("product repository unavailable")
+
+    client = _client()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(fail_submitter)
+
+    create_response = client.post(
+        "/api/v1/workspace/task",
+        json={
+            "query": "Create a workspace report",
+            "model_id": "model-local",
+            "session_id": "session_product_blocked",
+            "workspace_id": "workspace_product_blocked",
+            "task_id": "task_product_blocked",
+            "trace_id": "trace_product_blocked",
+            "goal": "product runtime must record first",
+            "product_mode": "general_agent",
+            "plugins": [],
+            "mcp_servers": [],
+        },
+    )
+
+    assert create_response.status_code == 200
+    created = create_response.json()["data"]
+    assert created["task"]["status"] == "failed"
+    assert created["artifact_ids"] == []
+
+    events = client.get("/api/v1/workspace/task/task_product_blocked/events").json()["data"]
+    assert [event["type"] for event in events] == [
+        "task_started",
+        "product_runtime_record",
+        "eval_diagnostic",
+        "task_failed",
+    ]
+    product_record = events[1]
+    assert product_record["payload"]["status"] == "blocked"
+    assert product_record["payload"]["product_runtime_recorded"] is False
+    assert product_record["payload"]["failure_type"] == "RuntimeError"
+    assert product_record["payload"]["reason"] == "product repository unavailable"
+    assert events[-1]["payload"]["reason"] == "product_runtime_record_failed"
+    assert events[-1]["payload"]["lifecycle_state"] == "recoverable_failed"
+
+
+def test_workspace_planner_uses_capability_runtime_port_for_plugins(monkeypatch) -> None:
+    captured: list[dict] = []
+
+    def fake_select(self, request):
+        del self
+        captured.append(dict(request))
+        return CapabilityPlan(
+            availability_snapshot_ref="capability_snapshot:workspace",
+            selection_result_ref="capability_selection:workspace",
+            selection_validity="fixed_planning_snapshot",
+            allowed_capabilities=["tool.web.search"],
+            allowed_tools=["tool.web.search"],
+            risk_summary={
+                "planner_exposure": {
+                    "exposure_ref": "capability_exposure:workspace",
+                    "visibility": "planner_authorized_summary_schema_only",
+                }
+            },
+        )
+
+    monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
+
+    output = WorkspaceTaskRuntimeService._build_planner_output(
+        task=WorkspaceTaskContract(
+            workspace_id="workspace_phase09",
+            owner="principal-a",
+            task_id="task_phase09_capability",
+            session_id="session_phase09_capability",
+            goal="Search the web for sources and summarize the result.",
+            trace_id="trace_phase09_capability",
+        ),
+        simple_task=WorkSpaceSimpleTask(
+            query="Search the web for sources and summarize the result.",
+            model_id="model-local",
+            session_id="session_phase09_capability",
+            workspace_id="workspace_phase09",
+            plugins=["tool.web.search"],
+        ),
+        login_user=UserPayload(user_id="principal-a", user_name="Principal A", role="admin"),
+    )
+
+    assert captured[0]["available_capability_ids"] == ("tool.web.search",)
+    assert output.capability_plan.availability_snapshot_ref == "capability_snapshot:workspace"
+    assert output.capability_plan.selection_result_ref == "capability_selection:workspace"
+    assert output.capability_plan.allowed_tools == ["tool.web.search"]
+    assert all(step.tool_policy_ref == "capability_selection:workspace" for step in output.plan_state.steps)
 
 
 def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
@@ -164,6 +318,7 @@ def test_workspace_task_event_stream_emits_frontend_trace_payloads() -> None:
     ]
     assert product_streamed_events == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "answer",
@@ -397,6 +552,7 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
     waiting_events = client.get(f"/api/v1/workspace/task/{task_id}/events").json()["data"]
     assert [event["type"] for event in waiting_events] == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "approval_required",
@@ -424,6 +580,7 @@ def test_workspace_file_ingest_and_approval_runtime_closes_phase03_surface(monke
     approved_event_types = [event["type"] for event in approved_events]
     assert approved_event_types == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "approval_required",
@@ -784,6 +941,7 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     waiting_events = client.get("/api/v1/workspace/task/task_phase08_mail/events").json()["data"]
     assert [event["type"] for event in waiting_events] == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "tool_call",
@@ -810,6 +968,7 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
     approved_types = [event["type"] for event in approved_events]
     assert approved_types == [
         "task_started",
+        "product_runtime_record",
         "planning",
         "retrieval",
         "tool_call",

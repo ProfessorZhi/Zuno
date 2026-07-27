@@ -1,3 +1,5 @@
+import hashlib
+import json
 import asyncio
 import copy
 import time
@@ -38,11 +40,10 @@ from zuno.capability import (
     CapabilityHealth,
     CapabilityPermissions,
     CapabilityRecord,
-    CapabilityRegistry,
     CapabilitySelectionRequest,
     CapabilitySelectionResult,
+    CapabilitySelectionTrace,
     CapabilityType,
-    DynamicCapabilitySelector,
 )
 from zuno.knowledge.query_service import KnowledgeQueryService
 from zuno.knowledge.trace import HookPoint, RuntimeTraceEvent
@@ -322,29 +323,26 @@ class GeneralAgent:
             task=task,
         )
 
-        selected_capabilities = DynamicCapabilitySelector(
-            CapabilityRegistry(self._available_capability_records())
-        ).select(
-            CapabilitySelectionRequest(
-                task=task,
-                max_capabilities=8,
-            )
+        selected_capabilities = self._select_runtime_capabilities(
+            CapabilitySelectionRequest(task=task, max_capabilities=8)
         )
         self.last_capability_selection = selected_capabilities
         capability_selection_trace = selected_capabilities.trace.to_dict()
 
         capability_items: list[ContextItem] = []
         for capability in selected_capabilities.capabilities:
+            capability_view = self._capability_context_view(capability)
             capability_items.append(
                 ContextItem(
                     item_id=capability.name,
                     source=ContextSource.CAPABILITY_SCHEMA,
-                    content=str(capability.to_dict()),
-                    token_estimate=self._estimate_tokens(str(capability.schema)) + 20,
+                    content=str(capability_view),
+                    token_estimate=self._estimate_tokens(str(capability_view)) + 20,
                     priority=70,
                     reason=ContextSelectionReason.CAPABILITY_SELECTED,
                     metadata={
                         "capability_type": capability.type.value,
+                        "capability_context_view": capability_view,
                         "capability_selection_trace": capability_selection_trace,
                     },
                 )
@@ -517,6 +515,98 @@ class GeneralAgent:
             tags=tuple(part for part in [name.replace("_", " "), description] if part),
         )
 
+    def _select_runtime_capabilities(
+        self,
+        request: CapabilitySelectionRequest,
+    ) -> CapabilitySelectionResult:
+        records = tuple(self._available_capability_records())
+        allowed_types = set(request.allowed_types)
+        required_permissions = set(request.required_permissions)
+        candidates: list[tuple[float, CapabilityRecord]] = []
+        dropped: list[str] = []
+        reasons: dict[str, str] = {}
+        scores: dict[str, float] = {}
+        candidate_tool_card_ids: list[str] = []
+        rejected_tool_card_ids: dict[str, str] = {}
+
+        task_tokens = set(self._selection_tokens(request.task))
+        for record in records:
+            tool_card_id = f"{record.type.value}:{record.name}"
+            candidate_tool_card_ids.append(tool_card_id)
+            searchable = " ".join((record.name, record.description, *record.tags))
+            matched = task_tokens.intersection(self._selection_tokens(searchable))
+            score = float(len(matched))
+            scores[record.name] = score
+
+            reason = ""
+            if record.type not in allowed_types:
+                reason = "type_not_allowed"
+            elif record.health is CapabilityHealth.DISABLED:
+                reason = "disabled"
+            elif record.health is CapabilityHealth.NEEDS_CONFIG:
+                reason = "needs_config"
+            elif not required_permissions.issubset(set(record.permissions.scopes)):
+                reason = "permission_not_allowed"
+            elif record.permissions.side_effects and not request.allow_side_effects:
+                reason = "side_effect_not_allowed"
+            elif request.max_token_cost is not None and record.cost.token_estimate > request.max_token_cost:
+                reason = "cost_exceeds_limit"
+
+            if reason:
+                dropped.append(record.name)
+                reasons[record.name] = reason
+                rejected_tool_card_ids[tool_card_id] = reason
+                continue
+
+            candidates.append((score, record))
+
+        candidates.sort(key=lambda item: (-item[0], item[1].name))
+        selected = tuple(record for _score, record in candidates[: max(0, request.max_capabilities)])
+        selected_names = tuple(record.name for record in selected)
+        selected_ids = {record.name for record in selected}
+        for _score, record in candidates:
+            if record.name not in selected_ids:
+                dropped.append(record.name)
+                reasons[record.name] = "outside_max_capabilities"
+
+        return CapabilitySelectionResult(
+            capabilities=selected,
+            trace=CapabilitySelectionTrace(
+                selected_names=selected_names,
+                dropped_names=tuple(dropped),
+                selection_reasons=reasons,
+                scores=scores,
+                candidate_tool_card_ids=tuple(candidate_tool_card_ids),
+                retrieval_scores=scores,
+                filters_applied=(
+                    "type",
+                    "health",
+                    "permission",
+                    "side_effect",
+                    "cost",
+                    "task_relevance",
+                ),
+                selected_tool_card_ids=tuple(f"{record.type.value}:{record.name}" for record in selected),
+                rejected_tool_card_ids=rejected_tool_card_ids,
+                injected_schema_ids=(),
+            ),
+        )
+
+    def _capability_context_view(self, capability: CapabilityRecord) -> dict[str, Any]:
+        return {
+            "name": capability.name,
+            "type": capability.type.value,
+            "description": capability.description,
+            "schema_keys": sorted(capability.schema.keys()),
+            "schema_hash": self._hash_payload(capability.schema),
+            "source": capability.source,
+        }
+
+    @staticmethod
+    def _selection_tokens(text: str) -> tuple[str, ...]:
+        normalized = "".join(character.lower() if character.isalnum() else " " for character in text)
+        return tuple(token for token in normalized.split() if len(token) > 1)
+
     def _memory_scope(self) -> MemoryScope:
         return MemoryScope(
             user_id=self.agent_config.user_id,
@@ -568,6 +658,12 @@ class GeneralAgent:
             state_schema=StreamAgentState,
             system_prompt=runtime_system_prompt,
         )
+
+    @staticmethod
+    def _hash_payload(payload: Any) -> str:
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        ).hexdigest()
 
     async def setup_tools(self) -> List[BaseTool]:
         tools: list[BaseTool] = []

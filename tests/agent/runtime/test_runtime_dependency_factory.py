@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from zuno.agent.contracts import PlanStep
 from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime.configuration import RuntimeFactoryConfig
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution.knowledge_step import KnowledgeStepExecutor
 from zuno.agent.runtime.execution.model_step import ModelStepExecutor
 from zuno.agent.runtime.execution.tool_step import ToolStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.knowledge.indexing.runtime import KnowledgeIndexRuntime
+from zuno.knowledge.agentic import DurableKnowledgeRetrievalPort
 from zuno.memory.engine import MemoryEngine
 from zuno.memory.store import DatabaseMemoryStore
+from zuno.capability.planning_runtime import CapabilityPlanningRuntime
 
 
 def _state() -> AgentRuntimeState:
@@ -45,7 +48,40 @@ def test_runtime_dependency_factory_builds_completion_dependencies(tmp_path) -> 
     assert isinstance(assembly.dependencies.memory_engine.store, DatabaseMemoryStore)
     assert assembly.dependencies.tool_control_plane is not None
     assert getattr(assembly.dependencies.tool_control_plane, "_security_approval_sink", None) is not None
+    assert isinstance(assembly.dependencies.knowledge_runtime, DurableKnowledgeRetrievalPort)
+    assert isinstance(assembly.dependencies.capability_runtime, CapabilityPlanningRuntime)
+
+
+def test_runtime_dependency_factory_can_disable_knowledge_runtime_for_unit_boundaries(tmp_path) -> None:
+    factory = RuntimeDependencyFactory(
+        RuntimeFactoryConfig(
+            sqlite_path=tmp_path / "runtime.db",
+            enable_knowledge_runtime=False,
+        )
+    )
+
+    assembly = factory.build()
+
     assert assembly.dependencies.knowledge_runtime is None
+
+
+def test_completion_factory_knowledge_step_uses_durable_port_not_missing_dependency(tmp_path) -> None:
+    assembly = RuntimeDependencyFactory.for_completion(
+        store=SQLiteAgentRunStore(tmp_path / "runtime.db")
+    )
+    state = _state()
+
+    result = KnowledgeStepExecutor().execute(
+        state=state,
+        step=_step("retrieve_evidence"),
+        deps=assembly.dependencies,
+    )
+
+    assert result.observation.status == "completed"
+    assert result.observation.source == "DurableKnowledgeRetrievalPort"
+    assert result.observation.metadata["durable_knowledge_port"]["status"] == "skipped"
+    assert result.observation.metadata["durable_knowledge_port"]["reason"] == "knowledge_scope_empty"
+    assert result.observation.metadata.get("missing_dependency") is None
 
 
 def test_runtime_dependency_factory_builds_workspace_knowledge_runtime(tmp_path) -> None:
@@ -60,6 +96,7 @@ def test_runtime_dependency_factory_builds_workspace_knowledge_runtime(tmp_path)
     assert assembly.store is store
     assert assembly.dependencies.knowledge_runtime is not None
     assert hasattr(assembly.dependencies.knowledge_runtime, "retrieve")
+    assert isinstance(assembly.dependencies.knowledge_runtime, DurableKnowledgeRetrievalPort)
 
 
 def test_missing_runtime_dependencies_return_blocked_observations() -> None:

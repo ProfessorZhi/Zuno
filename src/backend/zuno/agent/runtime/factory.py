@@ -53,6 +53,7 @@ class RuntimeDependencyFactory:
             model_gateway=self._model_gateway(),
             memory_engine=self._memory_engine(),
             knowledge_runtime=self._knowledge_runtime(),
+            capability_runtime=self._capability_runtime(),
             tool_control_plane=self._tool_control_plane(),
         )
 
@@ -77,11 +78,28 @@ class RuntimeDependencyFactory:
         return MemoryEngine(store=DatabaseMemoryStore())
 
     def _knowledge_runtime(self) -> object | None:
-        if self.config.knowledge_index_runtime is None:
+        if not self.config.enable_knowledge_runtime:
             return None
-        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime
+        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime, DurableKnowledgeRetrievalPort
+        from zuno.knowledge.indexing import KnowledgeIndexRuntime
+        from zuno.platform.database.knowledge import KnowledgeUnitOfWork
+        from zuno.platform.database import engine
 
-        return CorrectiveAgenticRetrievalRuntime(index_runtime=self.config.knowledge_index_runtime)
+        index_runtime = self.config.knowledge_index_runtime or KnowledgeIndexRuntime()
+        runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime)
+        return DurableKnowledgeRetrievalPort(
+            runtime=runtime,
+            unit_of_work_factory=lambda: KnowledgeUnitOfWork(engine),
+        )
+
+    def _capability_runtime(self) -> object:
+        from zuno.capability.planning_runtime import CapabilityPlanningRuntime
+        from zuno.platform.database.capability import CapabilityUnitOfWork
+        from zuno.platform.database import engine
+
+        return CapabilityPlanningRuntime(
+            unit_of_work_factory=lambda: CapabilityUnitOfWork(engine),
+        )
 
     def _tool_control_plane(self) -> object | None:
         if not self.config.enable_local_tool_runtime:

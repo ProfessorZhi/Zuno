@@ -196,6 +196,9 @@ def test_phase02_shared_contracts_serialize_defaults_and_boundaries() -> None:
         retrieval_profile=RetrievalProfile.DEEP,
     )
     capability_plan = CapabilityPlan(
+        availability_snapshot_ref="capability_snapshot_1",
+        selection_result_ref="capability_selection_1",
+        selection_validity="fixed_planning_snapshot",
         allowed_capabilities=["knowledge.contracts"],
         allowed_tools=[],
         executed_tools=[],
@@ -236,6 +239,7 @@ def test_phase02_shared_contracts_serialize_defaults_and_boundaries() -> None:
         ],
     )
     assert _dump(planner_output)["retrieval_plan"]["effective_profile"] == "deep_without_graph"
+    assert _dump(planner_output)["capability_plan"]["availability_snapshot_ref"] == "capability_snapshot_1"
     assert _dump(planner_output)["capability_plan"]["executed_tools"] == []
 
     run = ConversationRunMetrics(

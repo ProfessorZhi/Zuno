@@ -774,7 +774,10 @@ class PackageAProductionIngestionRuntime:
                 status="snapshot_handoff",
             )
         for field_name in ("indexable_snapshot_id", "handoff_idempotency_key", "handoff_envelope_hash"):
-            if str(handoff_replay.get(field_name)) != str(replay.get(field_name)):
+            expected_value = replay.get(field_name)
+            if expected_value is None:
+                continue
+            if str(handoff_replay.get(field_name)) != str(expected_value):
                 raise IngestionPersistenceError(
                     f"Package A snapshot handoff replay mismatch: {field_name}"
                 )

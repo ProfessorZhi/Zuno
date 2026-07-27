@@ -8,6 +8,7 @@ from pathlib import Path
 class RuntimeFactoryConfig:
     sqlite_path: Path | None = None
     enable_memory: bool = True
+    enable_knowledge_runtime: bool = True
     enable_local_tool_runtime: bool = True
     enable_default_model_gateway: bool = True
     knowledge_index_runtime: object | None = None

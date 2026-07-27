@@ -12,6 +12,10 @@ class KnowledgeCutoverConflict(RuntimeError):
     pass
 
 
+class KnowledgeEvidenceConflict(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class KnowledgeVersionDraft:
     knowledge_version_id: str
@@ -205,6 +209,62 @@ class KnowledgeRepository:
         write_batch: dict[str, Any],
         visibility_receipt_ref: str,
     ) -> None:
+        if fencing_token <= 0 or attempt_no <= 0:
+            raise KnowledgeCutoverConflict("Knowledge index visibility requires positive fencing token and attempt")
+        write_batch_hash = canonical_sha256(write_batch)
+        existing_job = self.connection.execute(
+            text(
+                """
+                SELECT write_batch_hash, visibility_receipt_ref, fencing_token,
+                       attempt_no, index_kind
+                FROM knowledge_index_build_jobs
+                WHERE job_id = :job_id
+                """
+            ),
+            {"job_id": job_id},
+        ).mappings().first()
+        if existing_job is not None:
+            if (
+                str(existing_job["write_batch_hash"]) == write_batch_hash
+                and str(existing_job["visibility_receipt_ref"]) == visibility_receipt_ref
+                and int(existing_job["fencing_token"]) == fencing_token
+                and int(existing_job["attempt_no"]) == attempt_no
+                and str(existing_job["index_kind"]) == index_kind
+            ):
+                return
+            raise KnowledgeCutoverConflict("conflicting Knowledge index visibility job")
+
+        current_target = self.connection.execute(
+            text(
+                """
+                SELECT fencing_token, attempt_no, write_batch_hash
+                FROM knowledge_index_build_jobs
+                WHERE tenant_id = :tenant_id
+                  AND knowledge_version_id = :knowledge_version_id
+                  AND index_kind = :index_kind
+                  AND status = 'VISIBLE'
+                ORDER BY fencing_token DESC, attempt_no DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "index_kind": index_kind,
+            },
+        ).mappings().first()
+        if current_target is not None:
+            current_fencing = int(current_target["fencing_token"])
+            current_attempt = int(current_target["attempt_no"])
+            if fencing_token < current_fencing or (
+                fencing_token == current_fencing and attempt_no < current_attempt
+            ):
+                raise KnowledgeCutoverConflict("stale Knowledge index visibility fencing token")
+            if fencing_token == current_fencing and attempt_no == current_attempt:
+                if str(current_target["write_batch_hash"]) == write_batch_hash:
+                    return
+                raise KnowledgeCutoverConflict("conflicting Knowledge index visibility write batch")
+
         self.connection.execute(
             text(
                 """
@@ -228,7 +288,7 @@ class KnowledgeRepository:
                 "lease_ref": lease_ref,
                 "fencing_token": fencing_token,
                 "attempt_no": attempt_no,
-                "write_batch_hash": canonical_sha256(write_batch),
+                "write_batch_hash": write_batch_hash,
                 "visibility_receipt_ref": visibility_receipt_ref,
             },
         )
@@ -303,6 +363,14 @@ class KnowledgeRepository:
         from_version_id: str | None = None,
         rollback_of_cutover_id: str | None = None,
     ) -> None:
+        current_generation = self.next_cutover_expected_generation(
+            tenant_id=tenant_id,
+            knowledge_space_id=knowledge_space_id,
+        )
+        if current_generation != expected_generation:
+            raise KnowledgeCutoverConflict(
+                f"stale Knowledge cutover generation: expected {expected_generation}, current {current_generation}"
+            )
         status = self.connection.execute(
             text(
                 """
@@ -314,7 +382,10 @@ class KnowledgeRepository:
             ),
             {"to_version_id": to_version_id},
         ).scalar_one()
-        if status not in {"READY", "ACTIVE"}:
+        allowed_statuses = {"READY", "ACTIVE"}
+        if rollback_of_cutover_id:
+            allowed_statuses.add("SUPERSEDED")
+        if status not in allowed_statuses:
             raise KnowledgeCutoverConflict("Only READY KnowledgeVersion can cut over")
         self.connection.execute(
             text(
@@ -465,6 +536,45 @@ class KnowledgeRepository:
         evidence_payload: dict[str, Any],
         authority_ref: str,
     ) -> None:
+        lineage = self.connection.execute(
+            text(
+                """
+                SELECT c.source_span_ref, c.authority_ref,
+                       c.tenant_id AS chunk_tenant_id,
+                       c.knowledge_version_id AS chunk_version_id,
+                       q.tenant_id AS query_tenant_id,
+                       q.snapshot_id AS query_snapshot_id,
+                       r.query_run_id AS round_query_run_id,
+                       s.tenant_id AS snapshot_tenant_id,
+                       s.knowledge_version_id AS snapshot_version_id
+                FROM knowledge_query_runs q
+                JOIN knowledge_retrieval_rounds r
+                  ON r.round_id = :round_id
+                JOIN knowledge_chunks c
+                  ON c.chunk_id = :chunk_id
+                JOIN knowledge_snapshots s
+                  ON s.snapshot_id = q.snapshot_id
+                WHERE q.query_run_id = :query_run_id
+                """
+            ),
+            {
+                "query_run_id": query_run_id,
+                "round_id": round_id,
+                "chunk_id": chunk_id,
+            },
+        ).mappings().first()
+        if lineage is None:
+            raise KnowledgeEvidenceConflict("strict evidence requires existing QueryRun, RetrievalRound, Snapshot and KnowledgeChunk lineage")
+        if str(lineage["round_query_run_id"]) != query_run_id:
+            raise KnowledgeEvidenceConflict("strict evidence RetrievalRound mismatch")
+        if str(lineage["chunk_tenant_id"]) != str(lineage["query_tenant_id"]) or str(lineage["snapshot_tenant_id"]) != str(lineage["query_tenant_id"]):
+            raise KnowledgeEvidenceConflict("strict evidence tenant ACL mismatch")
+        if str(lineage["chunk_version_id"]) != str(lineage["snapshot_version_id"]):
+            raise KnowledgeEvidenceConflict("strict evidence snapshot version mismatch")
+        if str(lineage["source_span_ref"]) != source_span_ref:
+            raise KnowledgeEvidenceConflict("strict evidence SourceSpan mismatch")
+        if str(lineage["authority_ref"]) != authority_ref:
+            raise KnowledgeEvidenceConflict("strict evidence authority mismatch")
         self.connection.execute(
             text(
                 """
@@ -489,9 +599,123 @@ class KnowledgeRepository:
             },
         )
 
+    def commit_citation_lineage(
+        self,
+        *,
+        citation_lineage_id: str,
+        evidence_id: str,
+        document_version_id: str,
+        source_span_ref: str,
+        span_text: str,
+        authorization_ref: str,
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO knowledge_citation_lineage (
+                    citation_lineage_id, evidence_id, document_version_id,
+                    source_span_ref, span_text_hash, authorization_ref
+                )
+                VALUES (
+                    :citation_lineage_id, :evidence_id, :document_version_id,
+                    :source_span_ref, :span_text_hash, :authorization_ref
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "citation_lineage_id": citation_lineage_id,
+                "evidence_id": evidence_id,
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+                "span_text_hash": canonical_sha256({"text": span_text}),
+                "authorization_ref": authorization_ref,
+            },
+        )
+
+    def mark_source_deleted(
+        self,
+        *,
+        tenant_id: str,
+        knowledge_version_id: str,
+        document_version_id: str,
+        source_span_ref: str,
+        deletion_ref: str,
+    ) -> None:
+        chunk_ids = self.connection.execute(
+            text(
+                """
+                SELECT chunk_id
+                FROM knowledge_chunks
+                WHERE tenant_id = :tenant_id
+                  AND knowledge_version_id = :knowledge_version_id
+                  AND document_version_id = :document_version_id
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+            },
+        ).scalars().all()
+        if not chunk_ids:
+            return
+        self.connection.execute(
+            text(
+                """
+                UPDATE knowledge_evidence_records
+                SET citation_eligibility = 'REJECTED',
+                    selection_status = :deletion_ref
+                WHERE chunk_id = ANY(CAST(:chunk_ids AS text[]))
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "chunk_ids": list(chunk_ids),
+                "source_span_ref": source_span_ref,
+                "deletion_ref": f"DELETED:{deletion_ref}",
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE knowledge_citation_lineage
+                SET deleted_or_tainted = true
+                WHERE document_version_id = :document_version_id
+                  AND source_span_ref = :source_span_ref
+                """
+            ),
+            {
+                "document_version_id": document_version_id,
+                "source_span_ref": source_span_ref,
+            },
+        )
+
+    def strict_evidence_ids(self, *, query_run_id: str) -> tuple[str, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT e.evidence_id
+                FROM knowledge_evidence_records e
+                LEFT JOIN knowledge_citation_lineage c
+                  ON c.evidence_id = e.evidence_id
+                WHERE e.query_run_id = :query_run_id
+                  AND e.citation_eligibility = 'STRICT'
+                  AND e.selection_status = 'SELECTED'
+                  AND coalesce(c.deleted_or_tainted, false) = false
+                ORDER BY e.evidence_id
+                """
+            ),
+            {"query_run_id": query_run_id},
+        ).scalars().all()
+        return tuple(str(row) for row in rows)
+
 
 __all__ = [
     "KnowledgeCutoverConflict",
+    "KnowledgeEvidenceConflict",
     "KnowledgeRepository",
     "KnowledgeUnitOfWork",
     "KnowledgeVersionDraft",

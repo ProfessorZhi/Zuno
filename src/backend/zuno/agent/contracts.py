@@ -404,6 +404,9 @@ class SelectedSkill(BaseModel):
 
 
 class CapabilityPlan(BaseModel):
+    availability_snapshot_ref: str | None = None
+    selection_result_ref: str | None = None
+    selection_validity: str = "unrecorded"
     allowed_capabilities: list[str] = Field(default_factory=list)
     allowed_tools: list[str] = Field(default_factory=list)
     blocked_capability_reasons: dict[str, str] = Field(default_factory=dict)

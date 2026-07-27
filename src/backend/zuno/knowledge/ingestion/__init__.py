@@ -1,6 +1,8 @@
 """Document Ingestion / Parse Gateway contracts."""
 
-from .adapters import PARSER_ADAPTER_REGISTRY, ParserAdapter, get_parser_adapter
+from importlib import import_module
+from typing import Any
+
 from .contracts import (
     CanonicalDocumentIR,
     DocumentBlock,
@@ -23,96 +25,92 @@ from .contracts import (
     canonical_document_ir_contract_report,
     round_trip_canonical_document_ir,
 )
-from .delete_restore import (
-    AuditPort,
-    AuditReceipt,
-    DeleteLifecycleCommand,
-    DeleteLifecycleReceipt,
-    DeleteRestoreRuntime,
-    DurableObjectDeletePort,
-    DurableObjectVerificationPort,
-    KnowledgeCleanupPort,
-    KnowledgeCleanupReceipt,
-    ObjectDeletePort,
-    ObjectDeletePortReceipt,
-    ObjectVerificationPort,
-    ObjectVerificationReceipt,
-    PersistentDeleteRestoreCoordinator,
-    ReceiptAuditPort,
-    ReceiptKnowledgeCleanupPort,
-    ReceiptVisibilityRevocationPort,
-    RestoreAuthorizationPort,
-    RestoreAuthorizationReceipt,
-    StaticRestoreAuthorizationPort,
-    VisibilityRevocationPort,
-    VisibilityRevocationReceipt,
-)
-from .gateway import ParseGateway
-from .handoff import (
-    IndexableDocumentSnapshotV1,
-    SnapshotHandoffBlockedError,
-    SnapshotHandoffPublishReceipt,
-    SnapshotHandoffRuntime,
-    SnapshotOutboxEvent,
-)
-from .lease import ParseAttemptLeaseReceipt, ParseAttemptLeaseRuntime
-from .legacy_cutover import (
-    LEGACY_ADAPTER_ID,
-    LEGACY_ADAPTER_OWNER,
-    LEGACY_ADAPTER_REMOVAL_PHASE,
-    canonical_ir_to_legacy_chunks,
-    parse_file_into_legacy_chunks,
-    parse_file_to_canonical_ir,
-)
-from .normalizer import normalize_legacy_chunks_to_ir
-from .parse_control import ParseControlReceipt, ParseControlRuntime, ParseControlState
-from .production_runtime import (
-    PACKAGE_A_PARSE_CONSUMER_MODULE,
-    PACKAGE_A_PARSE_CONTRACT_NAME,
-    PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE,
-    PACKAGE_A_PARSE_REQUESTED_TOPIC,
-    PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE,
-    PackageAObjectVerificationError,
-    PackageAParserIdentityError,
-    PackageAProductionIngestionRuntime,
-    PackageARejectDeliveryError,
-    PackageASnapshotHandoffConfirmationReceipt,
-    PackageAUploadCommand,
-    PackageAUploadReceipt,
-    PackageAWorkerReceipt,
-)
-from .review import (
-    HumanReviewRuntime,
-    QualityGateResult,
-    QualityMetric,
-    ReviewDecisionAuthorizationPort,
-    ReviewDecisionAuthorizationReceipt,
-    ReviewDecisionReceipt,
-    ReviewExpirationSweepReceipt,
-    ReviewTask,
-    StaticReviewDecisionAuthorizationPort,
-)
-from .source_object_commit import (
-    SourceObjectCommitError,
-    SourceObjectCommitReceipt,
-    SourceObjectCommitRuntime,
-)
-from .source_object_upload import (
-    SourceObjectConflictError,
-    SourceObjectStagedUpload,
-    SourceObjectUploadError,
-    SourceObjectUploadPlan,
-    SourceObjectUploadReceipt,
-    SourceObjectUploadRuntime,
-)
-from .worker import PackageAProductionQueueWorker, PackageAQueuePumpReceipt, package_a_rabbitmq_topology
-from .router import (
-    PARSER_ADAPTER_CONTRACTS,
-    PARSER_CAPABILITY_MATRIX,
-    adapter_boundary_metadata,
-    build_index_handoff_payload,
-    select_parser_for_format,
-)
+
+
+_LAZY_EXPORT_TO_MODULE = {
+    "AuditPort": "zuno.knowledge.ingestion.delete_restore",
+    "AuditReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "DeleteLifecycleCommand": "zuno.knowledge.ingestion.delete_restore",
+    "DeleteLifecycleReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "DeleteRestoreRuntime": "zuno.knowledge.ingestion.delete_restore",
+    "DurableObjectDeletePort": "zuno.knowledge.ingestion.delete_restore",
+    "DurableObjectVerificationPort": "zuno.knowledge.ingestion.delete_restore",
+    "IndexableDocumentSnapshotV1": "zuno.knowledge.ingestion.handoff",
+    "HumanReviewRuntime": "zuno.knowledge.ingestion.review",
+    "KnowledgeCleanupPort": "zuno.knowledge.ingestion.delete_restore",
+    "KnowledgeCleanupReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "LEGACY_ADAPTER_ID": "zuno.knowledge.ingestion.legacy_cutover",
+    "LEGACY_ADAPTER_OWNER": "zuno.knowledge.ingestion.legacy_cutover",
+    "LEGACY_ADAPTER_REMOVAL_PHASE": "zuno.knowledge.ingestion.legacy_cutover",
+    "ObjectDeletePort": "zuno.knowledge.ingestion.delete_restore",
+    "ObjectDeletePortReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "ObjectVerificationPort": "zuno.knowledge.ingestion.delete_restore",
+    "ObjectVerificationReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "PARSER_ADAPTER_CONTRACTS": "zuno.knowledge.ingestion.router",
+    "PARSER_ADAPTER_REGISTRY": "zuno.knowledge.ingestion.adapters",
+    "PARSER_CAPABILITY_MATRIX": "zuno.knowledge.ingestion.router",
+    "PACKAGE_A_PARSE_CONSUMER_MODULE": "zuno.knowledge.ingestion.production_runtime",
+    "PACKAGE_A_PARSE_CONTRACT_NAME": "zuno.knowledge.ingestion.production_runtime",
+    "PACKAGE_A_PARSE_INITIAL_PRODUCER_MODULE": "zuno.knowledge.ingestion.production_runtime",
+    "PACKAGE_A_PARSE_REQUESTED_TOPIC": "zuno.knowledge.ingestion.production_runtime",
+    "PACKAGE_A_PARSE_RETRY_PRODUCER_MODULE": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAObjectVerificationError": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAParserIdentityError": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAProductionIngestionRuntime": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAProductionQueueWorker": "zuno.knowledge.ingestion.worker",
+    "PackageAQueuePumpReceipt": "zuno.knowledge.ingestion.worker",
+    "PackageARejectDeliveryError": "zuno.knowledge.ingestion.production_runtime",
+    "PackageASnapshotHandoffConfirmationReceipt": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAUploadCommand": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAUploadReceipt": "zuno.knowledge.ingestion.production_runtime",
+    "PackageAWorkerReceipt": "zuno.knowledge.ingestion.production_runtime",
+    "ParseAttemptLeaseReceipt": "zuno.knowledge.ingestion.lease",
+    "ParseAttemptLeaseRuntime": "zuno.knowledge.ingestion.lease",
+    "ParseControlReceipt": "zuno.knowledge.ingestion.parse_control",
+    "ParseControlRuntime": "zuno.knowledge.ingestion.parse_control",
+    "ParseControlState": "zuno.knowledge.ingestion.parse_control",
+    "ParseGateway": "zuno.knowledge.ingestion.gateway",
+    "ParserAdapter": "zuno.knowledge.ingestion.adapters",
+    "PersistentDeleteRestoreCoordinator": "zuno.knowledge.ingestion.delete_restore",
+    "QualityGateResult": "zuno.knowledge.ingestion.review",
+    "QualityMetric": "zuno.knowledge.ingestion.review",
+    "ReceiptAuditPort": "zuno.knowledge.ingestion.delete_restore",
+    "ReceiptKnowledgeCleanupPort": "zuno.knowledge.ingestion.delete_restore",
+    "ReceiptVisibilityRevocationPort": "zuno.knowledge.ingestion.delete_restore",
+    "RestoreAuthorizationPort": "zuno.knowledge.ingestion.delete_restore",
+    "RestoreAuthorizationReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "ReviewDecisionAuthorizationPort": "zuno.knowledge.ingestion.review",
+    "ReviewDecisionAuthorizationReceipt": "zuno.knowledge.ingestion.review",
+    "ReviewDecisionReceipt": "zuno.knowledge.ingestion.review",
+    "ReviewExpirationSweepReceipt": "zuno.knowledge.ingestion.review",
+    "ReviewTask": "zuno.knowledge.ingestion.review",
+    "SnapshotHandoffBlockedError": "zuno.knowledge.ingestion.handoff",
+    "SnapshotHandoffPublishReceipt": "zuno.knowledge.ingestion.handoff",
+    "SnapshotHandoffRuntime": "zuno.knowledge.ingestion.handoff",
+    "SnapshotOutboxEvent": "zuno.knowledge.ingestion.handoff",
+    "SourceObjectCommitError": "zuno.knowledge.ingestion.source_object_commit",
+    "SourceObjectCommitReceipt": "zuno.knowledge.ingestion.source_object_commit",
+    "SourceObjectCommitRuntime": "zuno.knowledge.ingestion.source_object_commit",
+    "SourceObjectConflictError": "zuno.knowledge.ingestion.source_object_upload",
+    "SourceObjectStagedUpload": "zuno.knowledge.ingestion.source_object_upload",
+    "SourceObjectUploadError": "zuno.knowledge.ingestion.source_object_upload",
+    "SourceObjectUploadPlan": "zuno.knowledge.ingestion.source_object_upload",
+    "SourceObjectUploadReceipt": "zuno.knowledge.ingestion.source_object_upload",
+    "SourceObjectUploadRuntime": "zuno.knowledge.ingestion.source_object_upload",
+    "StaticRestoreAuthorizationPort": "zuno.knowledge.ingestion.delete_restore",
+    "StaticReviewDecisionAuthorizationPort": "zuno.knowledge.ingestion.review",
+    "VisibilityRevocationPort": "zuno.knowledge.ingestion.delete_restore",
+    "VisibilityRevocationReceipt": "zuno.knowledge.ingestion.delete_restore",
+    "adapter_boundary_metadata": "zuno.knowledge.ingestion.router",
+    "build_index_handoff_payload": "zuno.knowledge.ingestion.router",
+    "canonical_ir_to_legacy_chunks": "zuno.knowledge.ingestion.legacy_cutover",
+    "get_parser_adapter": "zuno.knowledge.ingestion.adapters",
+    "normalize_legacy_chunks_to_ir": "zuno.knowledge.ingestion.normalizer",
+    "package_a_rabbitmq_topology": "zuno.knowledge.ingestion.worker",
+    "parse_file_into_legacy_chunks": "zuno.knowledge.ingestion.legacy_cutover",
+    "parse_file_to_canonical_ir": "zuno.knowledge.ingestion.legacy_cutover",
+    "select_parser_for_format": "zuno.knowledge.ingestion.router",
+}
 
 __all__ = [
     "CanonicalDocumentIR",
@@ -218,3 +216,12 @@ __all__ = [
     "round_trip_canonical_document_ir",
     "select_parser_for_format",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    module_name = _LAZY_EXPORT_TO_MODULE.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(import_module(module_name), name)
+    globals()[name] = value
+    return value

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import hashlib
+import json
 from typing import Any
 
 from zuno.agent.contracts import (
@@ -22,6 +24,7 @@ class CapabilityRouteRequest:
     requested_capability_ids: tuple[str, ...] = ()
     pinned_skill_id: str | None = None
     user_roles: tuple[str, ...] = ()
+    planner_context_budget_chars: int = 1600
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,8 +42,10 @@ class CapabilityRouteDecision:
     selected_skill: SkillCard
     allowed_capability_ids: tuple[str, ...]
     allowed_tool_ids: tuple[str, ...]
+    approval_required_capability_ids: tuple[str, ...]
     blocked_capability_reasons: dict[str, str]
     audit_events: tuple[CapabilityAuditEvent, ...]
+    planner_exposure: dict[str, Any]
     trace: dict[str, Any]
 
 
@@ -99,6 +104,7 @@ class CapabilityRouter:
 
         allowed_capabilities: list[str] = []
         allowed_tools: list[str] = []
+        approval_required: list[str] = []
         blocked: dict[str, str] = {}
         audit_events: list[CapabilityAuditEvent] = []
 
@@ -118,24 +124,115 @@ class CapabilityRouter:
                 capability = self._registry.require_capability(capability_id)
                 if capability.capability_type == "tool":
                     allowed_tools.append(capability_id)
+                if capability.policy.approval_required:
+                    approval_required.append(capability_id)
             else:
                 blocked[capability_id] = decision.reason
+
+        planner_exposure = self._planner_exposure(
+            selected_skill=selected_skill,
+            allowed_capability_ids=tuple(allowed_capabilities),
+            budget_chars=request.planner_context_budget_chars,
+        )
 
         return CapabilityRouteDecision(
             selected_skill=selected_skill,
             allowed_capability_ids=tuple(allowed_capabilities),
             allowed_tool_ids=tuple(allowed_tools),
+            approval_required_capability_ids=tuple(approval_required),
             blocked_capability_reasons=blocked,
             audit_events=tuple(audit_events),
+            planner_exposure=planner_exposure,
             trace={
                 "skill_selection_mode": "pinned" if request.pinned_skill_id else "automatic",
                 "selected_skill_id": selected_skill.skill_id,
                 "automatic_candidate_skill_id": automatic_skill_id,
                 "requested_capability_ids": list(request.requested_capability_ids),
                 "allowed_capability_ids": allowed_capabilities,
+                "approval_required_capability_ids": approval_required,
                 "blocked_capability_reasons": dict(blocked),
+                "planner_exposure_ref": planner_exposure["exposure_ref"],
+                "planner_exposure_budget": planner_exposure["budget"],
             },
         )
+
+    def _planner_exposure(
+        self,
+        *,
+        selected_skill: SkillCard,
+        allowed_capability_ids: tuple[str, ...],
+        budget_chars: int,
+    ) -> dict[str, Any]:
+        safe_skill = {
+            "skill_id": selected_skill.skill_id,
+            "skill_version": selected_skill.skill_version,
+            "task_type": selected_skill.task_type,
+            "when_to_use": selected_skill.when_to_use,
+            "required_evidence": list(selected_skill.required_evidence),
+            "recommended_retrieval_profile": selected_skill.recommended_retrieval_profile.value,
+            "output_contract": dict(selected_skill.output_contract),
+            "safety_policy": selected_skill.safety_policy,
+            "max_steps": selected_skill.max_steps,
+        }
+        entries: list[dict[str, Any]] = []
+        omitted: list[str] = []
+        budget = max(0, budget_chars)
+        envelope: dict[str, Any] = {
+            "visibility": "planner_authorized_summary_schema_only",
+            "skill": safe_skill,
+            "capabilities": entries,
+            "omitted_capability_ids": omitted,
+            "budget": {
+                "limit_chars": budget,
+                "used_chars": 0,
+                "truncated": False,
+            },
+        }
+
+        for capability_id in allowed_capability_ids:
+            capability = self._registry.require_capability(capability_id)
+            entry = {
+                "capability_id": capability.capability_id,
+                "capability_type": capability.capability_type,
+                "description": capability.description,
+                "side_effect_level": capability.policy.side_effect_level,
+            }
+            tool_card = self._tool_card_for_capability(capability_id)
+            if tool_card is not None:
+                entry["input_schema"] = dict(tool_card.input_schema)
+                entry["output_schema"] = dict(tool_card.output_schema)
+                entry["schema_hash"] = _stable_hash(
+                    {
+                        "input_schema": tool_card.input_schema,
+                        "output_schema": tool_card.output_schema,
+                    }
+                )
+
+            candidate = {**envelope, "capabilities": [*entries, entry]}
+            used_chars = len(_canonical_json(candidate))
+            if used_chars > budget:
+                omitted.append(capability_id)
+                envelope["budget"] = {
+                    "limit_chars": budget,
+                    "used_chars": len(_canonical_json(envelope)),
+                    "truncated": True,
+                }
+                continue
+            entries.append(entry)
+            envelope["budget"] = {
+                "limit_chars": budget,
+                "used_chars": used_chars,
+                "truncated": False,
+            }
+
+        envelope["exposure_ref"] = "capability_planner_exposure_" + _stable_hash(envelope)[:16]
+        return envelope
+
+    def _tool_card_for_capability(self, capability_id: str) -> ToolCard | None:
+        for tool_card in self._registry.tool_cards():
+            if tool_card.capability_id == capability_id:
+                return tool_card
+        return None
 
     def evaluate_capability(
         self,
@@ -561,6 +658,14 @@ def _policy(
         data_access_policy=data_access_policy,
         audit_policy=audit_policy,
     )
+
+
+def _canonical_json(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+
+
+def _stable_hash(payload: dict[str, Any]) -> str:
+    return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
 
 
 __all__ = [

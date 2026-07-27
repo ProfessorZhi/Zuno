@@ -183,6 +183,23 @@ def test_capability_package_facade_points_at_layer_modules() -> None:
     assert capability.ToolRuntimeBatch is ToolRuntimeBatch
 
 
+def test_default_agent_product_runtime_paths_do_not_use_legacy_capability_bridge() -> None:
+    default_runtime_files = [
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "planning.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "service.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "product" / "command_service.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "workspace" / "simple_agent.py",
+    ]
+
+    for path in default_runtime_files:
+        source = path.read_text(encoding="utf-8")
+        assert "zuno.agent.tool_bridge" not in source
+        assert "DynamicCapabilitySelector" not in source
+        assert "CapabilityRegistry(" not in source
+        assert "CapabilityRegistryService" not in source
+
+
 def test_importing_capability_surfaces_does_not_load_heavy_runtime_modules() -> None:
     code = """
 import importlib

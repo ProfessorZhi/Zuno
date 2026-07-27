@@ -18,7 +18,11 @@ class CorrectiveRetrievalRequest:
     knowledge_space_ids: list[str]
     trace_id: str
     task_id: str
-    retrieval_profile: RetrievalProfile = RetrievalProfile.DEEP
+    tenant_id: str = "tenant:default"
+    snapshot_id: str | None = None
+    agent_core_decision_ref: str = ""
+    authorization_ref: str = "authorization:default"
+    retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
     claims: list[str] = field(default_factory=list)
     max_rounds: int = 2
     failure_bucket: str = ""
@@ -125,6 +129,7 @@ def _record_from_item(
     return EvidenceLedgerRecord(
         evidence_id=item.evidence_id,
         document_id=item.document_id,
+        chunk_id=item.chunk_id,
         document_version=document_version,
         source_span=dict(item.source_span),
         retrieval_round=retrieval_round,

@@ -35,6 +35,7 @@ class PlanningRequest:
     requested_retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
     context_pack: dict[str, Any] = field(default_factory=dict)
     pinned_skill_id: str | None = None
+    pinned_capability_plan: CapabilityPlan | None = None
     available_capability_ids: tuple[str, ...] = ()
     user_roles: tuple[str, ...] = ()
     security_summary: dict[str, Any] = field(default_factory=dict)
@@ -142,6 +143,8 @@ class StrategySelector:
         )
 
     def _build_capability_plan(self, request: PlanningRequest) -> CapabilityPlan:
+        if request.pinned_capability_plan is not None:
+            return request.pinned_capability_plan
         if not request.available_capability_ids:
             return CapabilityPlan()
         route = self._capability_router.route(
@@ -154,20 +157,32 @@ class StrategySelector:
                 user_roles=request.user_roles,
             )
         )
-        approval_required = []
-        for capability_id in route.allowed_capability_ids:
-            capability = self._registry.require_capability(capability_id)
-            if capability.policy.approval_required:
-                approval_required.append(capability_id)
+        snapshot_ref = _stable_id(
+            "capability_snapshot",
+            request.workspace_id,
+            request.task_id,
+            request.trace_id,
+            *request.available_capability_ids,
+        )
+        selection_ref = _stable_id(
+            "capability_selection",
+            snapshot_ref,
+            *route.allowed_capability_ids,
+            *route.blocked_capability_reasons.keys(),
+        )
         return CapabilityPlan(
+            availability_snapshot_ref=snapshot_ref,
+            selection_result_ref=selection_ref,
+            selection_validity="fixed_planning_snapshot",
             allowed_capabilities=list(route.allowed_capability_ids),
             allowed_tools=list(route.allowed_tool_ids),
             blocked_capability_reasons=dict(route.blocked_capability_reasons),
-            approval_required_tools=approval_required,
+            approval_required_tools=list(route.approval_required_capability_ids),
             executed_tools=[],
             risk_summary={
                 "blocked_count": len(route.blocked_capability_reasons),
-                "approval_required_count": len(approval_required),
+                "approval_required_count": len(route.approval_required_capability_ids),
+                "planner_exposure": route.planner_exposure,
             },
         )
 
@@ -277,6 +292,8 @@ class StrategySelector:
                 action_type=action_type,
                 required_evidence=list(selected_skill.required_evidence),
                 allowed_capabilities=list(capability_plan.allowed_capabilities),
+                input_refs=_capability_policy_input_refs(capability_plan),
+                tool_policy_ref=capability_plan.selection_result_ref,
                 failure_conditions=_failure_conditions_for_step(action_type),
                 budget={"max_steps": len(step_specs)},
             )
@@ -391,6 +408,15 @@ class StrategySelector:
                     "allowed_capabilities": list(capability_plan.allowed_capabilities),
                     "allowed_tools": list(capability_plan.allowed_tools),
                     "executed_tools": list(capability_plan.executed_tools),
+                    "availability_snapshot_ref": capability_plan.availability_snapshot_ref,
+                    "selection_result_ref": capability_plan.selection_result_ref,
+                    "selection_validity": capability_plan.selection_validity,
+                    "planner_exposure_ref": (
+                        capability_plan.risk_summary.get("planner_exposure", {}).get("exposure_ref")
+                    ),
+                    "planner_exposure_visibility": (
+                        capability_plan.risk_summary.get("planner_exposure", {}).get("visibility")
+                    ),
                 },
             ),
         ]
@@ -441,6 +467,14 @@ def _budget_payload(verdict: Any | None) -> dict[str, Any]:
         "allowed": getattr(verdict, "allowed", True),
         "reason": getattr(verdict, "reason", "unknown"),
     }
+
+
+def _capability_policy_input_refs(capability_plan: CapabilityPlan) -> list[str]:
+    refs = [
+        capability_plan.availability_snapshot_ref,
+        capability_plan.selection_result_ref,
+    ]
+    return [ref for ref in refs if ref]
 
 
 def _failure_conditions_for_step(action_type: str) -> list[str]:

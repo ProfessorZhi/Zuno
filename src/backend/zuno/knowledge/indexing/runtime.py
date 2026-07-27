@@ -3,22 +3,48 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from typing import Any
 from uuid import uuid4
 
-from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseJobSnapshot, build_index_handoff_payload
+from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseJobSnapshot
+from zuno.knowledge.ingestion.router import build_index_handoff_payload
 
-from .adapters import adapter_status_for_targets
+from .adapters import LOCAL_INDEX_ADAPTER_BY_TARGET, adapter_status_for_bindings
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
+
+
+class LocalIndexAdapterBinding:
+    def __init__(self, *, adapter_id: str, target: IndexTarget) -> None:
+        self.adapter_id = adapter_id
+        self.target = target
+
+    def index(
+        self,
+        *,
+        runtime: "KnowledgeIndexRuntime",
+        handoff: Any,
+        document: CanonicalDocumentIR,
+        lineage: dict[str, Any],
+        graph_project_id: str | None,
+    ) -> list[dict]:
+        if self.target == "bm25":
+            return runtime._bm25_documents(handoff.bm25_documents, document, lineage)
+        if self.target == "vector":
+            return runtime._vector_documents(handoff.vector_documents, document, lineage)
+        if self.target == "graph":
+            return runtime._graph_documents(handoff.graphrag_documents, document, graph_project_id, lineage)
+        raise ValueError(f"unsupported index target: {self.target}")
 
 
 class KnowledgeIndexRuntime:
     """PHASE05 local index job runtime for Document IR handoff payloads."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, adapter_bindings: dict[IndexTarget, Any] | None = None) -> None:
         self._spaces: dict[str, KnowledgeSpaceManifest] = {}
         self._jobs: dict[str, IndexJobManifest] = {}
         self._latest_job_by_space: dict[str, str] = {}
         self._indexes: dict[str, dict[str, list[dict]]] = {}
+        self._adapter_bindings = adapter_bindings or _default_adapter_bindings()
 
     def create_knowledge_space(
         self,
@@ -71,7 +97,9 @@ class KnowledgeIndexRuntime:
                 source_provenance=_source_provenance(document, lineage),
                 acl_scopes=_acl_scopes(document),
                 sensitivity_tags=_sensitivity_tags(document),
-                adapter_status=adapter_status_for_targets(list(targets)),
+                adapter_status=adapter_status_for_bindings(list(targets), self._adapter_bindings),
+                adapter_dispatch_receipts={},
+                adapter_visibility_receipts={},
                 **_manifest_lineage_fields(lineage),
             )
             self._jobs[job_id] = manifest
@@ -81,28 +109,28 @@ class KnowledgeIndexRuntime:
 
         handoff = build_index_handoff_payload(document)
         target_status = {}
-        if "bm25" in targets:
-            self._indexes[knowledge_space_id]["bm25"] = self._bm25_documents(
-                handoff.bm25_documents,
-                document,
-                lineage,
+        adapter_dispatch_receipts = {}
+        indexed_documents_by_target = {}
+        for target in targets:
+            adapter = self._adapter_for_target(target)
+            indexed_documents = adapter.index(
+                runtime=self,
+                handoff=handoff,
+                document=document,
+                lineage=lineage,
+                graph_project_id=space.graph_project_id,
             )
-            target_status["bm25"] = "ready"
-        if "vector" in targets:
-            self._indexes[knowledge_space_id]["vector"] = self._vector_documents(
-                handoff.vector_documents,
-                document,
-                lineage,
+            self._indexes[knowledge_space_id][target] = indexed_documents
+            indexed_documents_by_target[target] = indexed_documents
+            target_status[target] = "ready"
+            adapter_dispatch_receipts[target] = _adapter_dispatch_receipt(
+                adapter=adapter,
+                target=target,
+                knowledge_space_id=knowledge_space_id,
+                index_version=space.index_version,
+                document=document,
+                indexed_documents=indexed_documents,
             )
-            target_status["vector"] = "ready"
-        if "graph" in targets:
-            self._indexes[knowledge_space_id]["graph"] = self._graph_documents(
-                handoff.graphrag_documents,
-                document,
-                space.graph_project_id,
-                lineage,
-            )
-            target_status["graph"] = "ready"
 
         manifest = IndexJobManifest(
             job_id=job_id,
@@ -121,9 +149,22 @@ class KnowledgeIndexRuntime:
             source_provenance=_source_provenance(document, lineage),
             acl_scopes=_acl_scopes(document),
             sensitivity_tags=_sensitivity_tags(document),
-            adapter_status=adapter_status_for_targets(list(targets)),
+            adapter_status=adapter_status_for_bindings(list(targets), self._adapter_bindings),
+            adapter_dispatch_receipts=adapter_dispatch_receipts,
+            adapter_visibility_receipts=self._verified_adapter_visibility_receipts(
+                adapter_bindings=self._adapter_bindings,
+                knowledge_space_id=knowledge_space_id,
+                index_version=space.index_version,
+                document=document,
+                target_status=target_status,
+                adapter_dispatch_receipts=adapter_dispatch_receipts,
+                indexed_documents_by_target=indexed_documents_by_target,
+            ),
             **_manifest_lineage_fields(lineage),
         )
+        for target, receipt in manifest.adapter_visibility_receipts.items():
+            if receipt.get("visibility") != "visible":
+                manifest.target_status[target] = "degraded"
         self._jobs[job_id] = manifest
         self._latest_job_by_space[knowledge_space_id] = job_id
         space.status = "ready"
@@ -166,6 +207,8 @@ class KnowledgeIndexRuntime:
             source
             for source in ["bm25", "vector", "graph"]
             if result.manifest.target_status.get(source) == "ready"
+            and _adapter_contract_is_current(result.manifest.adapter_status.get(source, ""))
+            and result.manifest.adapter_visibility_receipts.get(source, {}).get("visibility") == "visible"
         ]
         return {
             "knowledge_space_id": result.knowledge_space_id,
@@ -173,7 +216,15 @@ class KnowledgeIndexRuntime:
             "query": result.query,
             "retrievers_used": retrievers_used,
             "index_health": {source: result.manifest.target_status[source] for source in retrievers_used},
-            "documents_by_source": result.documents_by_source,
+            "adapter_visibility_receipts": {
+                source: result.manifest.adapter_visibility_receipts[source]
+                for source in retrievers_used
+            },
+            "documents_by_source": {
+                source: result.documents_by_source[source]
+                for source in retrievers_used
+                if source in result.documents_by_source
+            },
             "manifest": result.manifest.model_dump(),
         }
 
@@ -200,6 +251,62 @@ class KnowledgeIndexRuntime:
         }
         self._jobs[manifest.job_id] = manifest
         self._latest_job_by_space[manifest.knowledge_space_id] = manifest.job_id
+
+    @staticmethod
+    def _verified_adapter_visibility_receipts(
+        *,
+        adapter_bindings: dict[IndexTarget, Any],
+        knowledge_space_id: str,
+        index_version: str,
+        document: CanonicalDocumentIR,
+        target_status: dict[str, str],
+        adapter_dispatch_receipts: dict[str, dict],
+        indexed_documents_by_target: dict[str, list[dict]],
+    ) -> dict[str, dict]:
+        receipts: dict[str, dict] = {}
+        for target in ["bm25", "vector", "graph"]:
+            if target_status.get(target) != "ready":
+                continue
+            dispatch_receipt = adapter_dispatch_receipts.get(target, {})
+            sample_verification = _adapter_sample_visibility_verification(
+                adapter=adapter_bindings[target],
+                document=document,
+                indexed_documents=indexed_documents_by_target.get(target, []),
+            )
+            payload = {
+                "adapter_target": target,
+                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
+                "document_id": document.metadata.document_id,
+                "document_version_id": document.metadata.document_version_id,
+                "index_version": index_version,
+                "knowledge_space_id": knowledge_space_id,
+                "source_block_ids": [block.block_id for block in document.blocks],
+                "sample_verification": sample_verification,
+            }
+            receipts[target] = {
+                "receipt_ref": f"index-visibility:{target}:{_stable_hash(payload)[:16]}",
+                "adapter_target": target,
+                "adapter_id": dispatch_receipt.get("adapter_id"),
+                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
+                "adapter_status": "current",
+                "visibility": "visible" if sample_verification["passed"] else "hidden",
+                "visibility_failure_reason": None if sample_verification["passed"] else sample_verification["reason"],
+                "sample_query": sample_verification["sample_query"],
+                "sample_match_count": sample_verification["match_count"],
+                "knowledge_space_id": knowledge_space_id,
+                "index_version": index_version,
+                "document_id": document.metadata.document_id,
+                "document_version_id": document.metadata.document_version_id,
+                "source_block_count": len(document.blocks),
+                "payload_hash": _stable_hash(payload),
+            }
+        return receipts
+
+    def _adapter_for_target(self, target: IndexTarget) -> Any:
+        try:
+            return self._adapter_bindings[target]
+        except KeyError as exc:
+            raise ValueError(f"no Knowledge index adapter configured for target: {target}") from exc
 
     def _require_space(self, knowledge_space_id: str) -> KnowledgeSpaceManifest:
         try:
@@ -349,6 +456,117 @@ def _document_payload(
     }
 
 
+def _default_adapter_bindings() -> dict[IndexTarget, LocalIndexAdapterBinding]:
+    return {
+        target: LocalIndexAdapterBinding(adapter_id=adapter_id, target=target)
+        for target, adapter_id in LOCAL_INDEX_ADAPTER_BY_TARGET.items()
+    }
+
+
+def _adapter_dispatch_receipt(
+    *,
+    adapter: Any,
+    target: IndexTarget,
+    knowledge_space_id: str,
+    index_version: str,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    payload = {
+        "adapter_id": str(getattr(adapter, "adapter_id", "")),
+        "adapter_target": target,
+        "document_id": document.metadata.document_id,
+        "document_version_id": document.metadata.document_version_id,
+        "index_version": index_version,
+        "indexed_document_count": len(indexed_documents),
+        "knowledge_space_id": knowledge_space_id,
+    }
+    payload_hash = _stable_hash(payload)
+    return {
+        "dispatch_ref": f"index-dispatch:{target}:{payload_hash[:16]}",
+        "adapter_id": payload["adapter_id"],
+        "adapter_target": target,
+        "operation": "index",
+        "status": "succeeded",
+        "knowledge_space_id": knowledge_space_id,
+        "index_version": index_version,
+        "document_id": document.metadata.document_id,
+        "document_version_id": document.metadata.document_version_id,
+        "indexed_document_count": len(indexed_documents),
+        "payload_hash": payload_hash,
+    }
+
+
+def _adapter_sample_visibility_verification(
+    *,
+    adapter: Any,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    source_text = " ".join(block.text for block in document.blocks)
+    sample_tokens = tuple(_tokens(source_text)[:8])
+    sample_query = " ".join(sample_tokens)
+    verifier = getattr(adapter, "verify_visibility", None)
+    if verifier is None:
+        return _sample_visibility_verification(
+            document=document,
+            indexed_documents=indexed_documents,
+        )
+    result = verifier(
+        document=document,
+        sample_query=sample_query,
+        indexed_documents=indexed_documents,
+    )
+    return {
+        "passed": bool(result.get("passed")),
+        "reason": str(result.get("reason") or "external_sample_retrieval_unknown"),
+        "sample_query": str(result.get("sample_query") or sample_query),
+        "match_count": int(result.get("match_count") or 0),
+    }
+
+
+def _adapter_contract_is_current(adapter_status: str) -> bool:
+    return adapter_status.endswith(":current")
+
+
+def _sample_visibility_verification(
+    *,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    source_text = " ".join(block.text for block in document.blocks)
+    sample_tokens = tuple(_tokens(source_text)[:8])
+    sample_query = " ".join(sample_tokens)
+    if not indexed_documents:
+        return {
+            "passed": False,
+            "reason": "sample_retrieval_empty",
+            "sample_query": sample_query,
+            "match_count": 0,
+        }
+    query_tokens = set(sample_tokens)
+    match_count = 0
+    for indexed in indexed_documents:
+        if str(indexed.get("document_id") or "") != document.metadata.document_id:
+            continue
+        indexed_tokens = set(_tokens(str(indexed.get("content") or "")))
+        if query_tokens & indexed_tokens:
+            match_count += 1
+    if match_count == 0:
+        return {
+            "passed": False,
+            "reason": "sample_retrieval_no_source_match",
+            "sample_query": sample_query,
+            "match_count": 0,
+        }
+    return {
+        "passed": True,
+        "reason": "sample_retrieval_matched_source",
+        "sample_query": sample_query,
+        "match_count": match_count,
+    }
+
+
 def _rehydrated_document_payload(chunk: object) -> dict:
     metadata = dict(getattr(chunk, "metadata", {}) or {})
     citation_lineage = dict(getattr(chunk, "citation_lineage", {}) or {})
@@ -453,6 +671,11 @@ def _public_lineage_fields(lineage: dict) -> dict:
 def _diagnostics_digest(diagnostics: list[dict]) -> str:
     payload = json.dumps(diagnostics, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _stable_hash(payload: object) -> str:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
 def _acl_scopes(document: CanonicalDocumentIR) -> list[str]:

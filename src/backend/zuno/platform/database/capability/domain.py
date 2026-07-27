@@ -7,9 +7,14 @@ from typing import Any
 from sqlalchemy import Connection, Engine, text
 
 from zuno.platform.contracts import canonical_json, canonical_sha256
+from zuno.platform.database.foundation import InfrastructureRepository
 
 
 class CapabilitySupplyChainConflict(RuntimeError):
+    pass
+
+
+class CapabilityActivationConflict(RuntimeError):
     pass
 
 
@@ -24,6 +29,13 @@ class CapabilityVersionInput:
     input_schema: dict[str, Any]
     output_schema: dict[str, Any]
     risk_profile_ref: str
+    source_ref: str
+    license_ref: str
+    dependency_refs: tuple[str, ...]
+    runtime_requirement_refs: tuple[str, ...]
+    signature_ref: str
+    verification_ref: str
+    verified: bool
 
 
 class CapabilityUnitOfWork:
@@ -50,6 +62,32 @@ class CapabilityRepository:
         self.connection = connection
 
     def publish_capability_version(self, item: CapabilityVersionInput) -> None:
+        if not item.verified:
+            raise CapabilitySupplyChainConflict("unverified CapabilityVersion cannot be published")
+        if not (
+            item.source_ref
+            and item.license_ref
+            and item.dependency_refs
+            and item.runtime_requirement_refs
+            and item.signature_ref
+            and item.verification_ref
+        ):
+            raise CapabilitySupplyChainConflict(
+                "CapabilityVersion supply-chain verification requires source, license, "
+                "dependencies, runtime requirements, signature, and verification refs"
+            )
+        dependency_refs_hash = canonical_sha256(tuple(item.dependency_refs))
+        runtime_requirement_refs_hash = canonical_sha256(tuple(item.runtime_requirement_refs))
+        supply_chain_hash = canonical_sha256(
+            {
+                "source_ref": item.source_ref,
+                "license_ref": item.license_ref,
+                "dependency_refs_hash": dependency_refs_hash,
+                "runtime_requirement_refs_hash": runtime_requirement_refs_hash,
+                "signature_ref": item.signature_ref,
+                "verification_ref": item.verification_ref,
+            }
+        )
         self.connection.execute(
             text(
                 """
@@ -76,11 +114,17 @@ class CapabilityRepository:
                 """
                 INSERT INTO capability_versions (
                     capability_version_id, capability_definition_id, version_no,
-                    input_schema_hash, output_schema_hash, risk_profile_ref, status
+                    input_schema_hash, output_schema_hash, risk_profile_ref,
+                    source_ref, license_ref, dependency_refs_hash,
+                    runtime_requirement_refs_hash, signature_ref, verification_ref,
+                    supply_chain_hash, supply_chain_verified, status
                 )
                 VALUES (
                     :capability_version_id, :capability_definition_id, :version_no,
-                    :input_schema_hash, :output_schema_hash, :risk_profile_ref, 'ACTIVE'
+                    :input_schema_hash, :output_schema_hash, :risk_profile_ref,
+                    :source_ref, :license_ref, :dependency_refs_hash,
+                    :runtime_requirement_refs_hash, :signature_ref, :verification_ref,
+                    :supply_chain_hash, true, 'ACTIVE'
                 )
                 """
             ),
@@ -91,6 +135,13 @@ class CapabilityRepository:
                 "input_schema_hash": canonical_sha256(item.input_schema),
                 "output_schema_hash": canonical_sha256(item.output_schema),
                 "risk_profile_ref": item.risk_profile_ref,
+                "source_ref": item.source_ref,
+                "license_ref": item.license_ref,
+                "dependency_refs_hash": dependency_refs_hash,
+                "runtime_requirement_refs_hash": runtime_requirement_refs_hash,
+                "signature_ref": item.signature_ref,
+                "verification_ref": item.verification_ref,
+                "supply_chain_hash": supply_chain_hash,
             },
         )
 
@@ -241,6 +292,29 @@ class CapabilityRepository:
         capability_version_id: str,
         policy_ref: str,
     ) -> None:
+        active_binding = self.connection.execute(
+            text(
+                """
+                SELECT b.binding_id
+                FROM capability_provider_bindings b
+                JOIN capability_versions v ON v.capability_version_id = b.capability_version_id
+                JOIN capability_definitions d ON d.capability_definition_id = v.capability_definition_id
+                WHERE b.capability_version_id = :capability_version_id
+                  AND b.status = 'ACTIVE'
+                  AND v.status = 'ACTIVE'
+                  AND v.supply_chain_verified = true
+                  AND d.status = 'ACTIVE'
+                  AND d.tenant_id = :tenant_id
+                LIMIT 1
+                """
+            ),
+            {
+                "capability_version_id": capability_version_id,
+                "tenant_id": tenant_id,
+            },
+        ).scalar_one_or_none()
+        if active_binding is None:
+            raise CapabilitySupplyChainConflict("capability installation requires active verified binding")
         self.connection.execute(
             text(
                 """
@@ -274,7 +348,14 @@ class CapabilityRepository:
         source_generation: int,
         visible_candidates: tuple[str, ...],
         ttl_expires_at: datetime,
+        runtime_signals: dict[str, dict[str, Any]] | None = None,
     ) -> None:
+        eligible_candidates = self._eligible_snapshot_candidates(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            visible_candidates=visible_candidates,
+            runtime_signals=runtime_signals or {},
+        )
         self.connection.execute(
             text(
                 """
@@ -298,7 +379,7 @@ class CapabilityRepository:
                 "principal_id": principal_id,
                 "security_epoch_ref": security_epoch_ref,
                 "source_generation": source_generation,
-                "snapshot_hash": canonical_sha256({"candidates": visible_candidates}),
+                "snapshot_hash": canonical_sha256({"candidates": eligible_candidates}),
                 "ttl_expires_at": ttl_expires_at,
             },
         )
@@ -313,7 +394,9 @@ class CapabilityRepository:
         candidate_summary: dict[str, Any],
         rejection_reason_codes: list[str],
     ) -> None:
-        self.connection.execute(
+        normalized_candidate_summary = _canonical_candidate_summary(candidate_summary)
+        normalized_rejection_reason_codes = tuple(dict.fromkeys(sorted(str(code) for code in rejection_reason_codes)))
+        inserted = self.connection.execute(
             text(
                 """
                 INSERT INTO capability_selection_results (
@@ -327,6 +410,7 @@ class CapabilityRepository:
                     CAST(:rejection_reason_codes AS jsonb), :selection_hash
                 )
                 ON CONFLICT DO NOTHING
+                RETURNING selection_id
                 """
             ),
             {
@@ -334,16 +418,49 @@ class CapabilityRepository:
                 "snapshot_id": snapshot_id,
                 "requirement_hash": canonical_sha256(requirement),
                 "selected_binding_id": selected_binding_id,
-                "candidate_summary_hash": canonical_sha256(candidate_summary),
-                "rejection_reason_codes": canonical_json(rejection_reason_codes),
+                "candidate_summary_hash": canonical_sha256(normalized_candidate_summary),
+                "rejection_reason_codes": canonical_json(normalized_rejection_reason_codes),
                 "selection_hash": canonical_sha256(
                     {
                         "requirement": requirement,
                         "selected_binding_id": selected_binding_id,
-                        "candidate_summary": candidate_summary,
-                        "rejection_reason_codes": rejection_reason_codes,
+                        "candidate_summary": normalized_candidate_summary,
+                        "rejection_reason_codes": normalized_rejection_reason_codes,
                     }
                 ),
+            },
+        ).scalar_one_or_none()
+        if inserted is None:
+            return
+
+        tenant_id = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id
+                FROM capability_availability_snapshots
+                WHERE snapshot_id = :snapshot_id
+                """
+            ),
+            {"snapshot_id": snapshot_id},
+        ).scalar_one()
+        InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=f"outbox:{selection_id}",
+            tenant_id=str(tenant_id),
+            aggregate_id=selection_id,
+            topic="capability.selection.committed",
+            idempotency_key=selection_id,
+            ordering_key=snapshot_id,
+            payload={
+                "contract_name": "CapabilitySelectionResult",
+                "producer_module": "Capability / Skill",
+                "consumer_module": "Agent Core",
+                "snapshot_id": snapshot_id,
+                "selection_id": selection_id,
+                "selected_binding_id": selected_binding_id,
+                "requirement_hash": canonical_sha256(requirement),
+                "candidate_summary": normalized_candidate_summary,
+                "candidate_summary_hash": canonical_sha256(normalized_candidate_summary),
+                "rejection_reason_codes": list(normalized_rejection_reason_codes),
             },
         )
 
@@ -357,6 +474,14 @@ class CapabilityRepository:
         event_payload: dict[str, Any],
         outbox_message_id: str,
     ) -> None:
+        current_generation = self._current_transition_generation(
+            tenant_id=tenant_id,
+            aggregate_ref=aggregate_ref,
+        )
+        if current_generation != expected_generation:
+            raise CapabilityActivationConflict(
+                f"stale capability transition generation: expected {expected_generation}, current {current_generation}"
+            )
         self.connection.execute(
             text(
                 """
@@ -380,9 +505,252 @@ class CapabilityRepository:
                 "outbox_message_id": outbox_message_id,
             },
         )
+        InfrastructureRepository(self.connection).enqueue_outbox(
+            event_id=outbox_message_id,
+            tenant_id=tenant_id,
+            aggregate_id=aggregate_ref,
+            topic="capability.transition.committed",
+            idempotency_key=transition_id,
+            ordering_key=aggregate_ref,
+            payload={
+                "contract_name": "CapabilityTransitionEvent",
+                "producer_module": "Capability / Skill",
+                "consumer_module": "Agent Core",
+                "transition_id": transition_id,
+                "aggregate_ref": aggregate_ref,
+                "expected_generation": expected_generation,
+                "committed_generation": expected_generation + 1,
+                "event_hash": canonical_sha256(event_payload),
+            },
+        )
+
+    def activate_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        activation_ref: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        self._transition_installation(
+            installation_id=installation_id,
+            tenant_id=tenant_id,
+            expected_generation=expected_generation,
+            status="ACTIVE",
+            transition_id=activation_ref,
+            policy_epoch_ref=policy_epoch_ref,
+            outbox_message_id=outbox_message_id,
+        )
+
+    def revoke_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        revocation_ref: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        self._transition_installation(
+            installation_id=installation_id,
+            tenant_id=tenant_id,
+            expected_generation=expected_generation,
+            status="REVOKED",
+            transition_id=revocation_ref,
+            policy_epoch_ref=policy_epoch_ref,
+            outbox_message_id=outbox_message_id,
+        )
+
+    def _transition_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        expected_generation: int,
+        status: str,
+        transition_id: str,
+        policy_epoch_ref: str,
+        outbox_message_id: str,
+    ) -> None:
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT installation_id
+                FROM capability_installations
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"installation_id": installation_id, "tenant_id": tenant_id},
+        ).scalar_one_or_none()
+        if existing is None:
+            raise CapabilityActivationConflict("unknown capability installation")
+        self.append_transition_event(
+            transition_id=transition_id,
+            tenant_id=tenant_id,
+            aggregate_ref=installation_id,
+            expected_generation=expected_generation,
+            event_payload={
+                "installation_id": installation_id,
+                "status": status,
+                "policy_epoch_ref": policy_epoch_ref,
+            },
+            outbox_message_id=outbox_message_id,
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE capability_installations
+                SET status = :status,
+                    policy_ref = :policy_epoch_ref
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "status": status,
+                "policy_epoch_ref": policy_epoch_ref,
+                "installation_id": installation_id,
+                "tenant_id": tenant_id,
+            },
+        )
+
+    def _current_transition_generation(self, *, tenant_id: str, aggregate_ref: str) -> int:
+        return int(
+            self.connection.execute(
+                text(
+                    """
+                    SELECT coalesce(max(committed_generation), 0)
+                    FROM capability_transition_events
+                    WHERE tenant_id = :tenant_id
+                      AND aggregate_ref = :aggregate_ref
+                    """
+                ),
+                {"tenant_id": tenant_id, "aggregate_ref": aggregate_ref},
+            ).scalar_one()
+        )
+
+    def _eligible_snapshot_candidates(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        visible_candidates: tuple[str, ...],
+        runtime_signals: dict[str, dict[str, Any]],
+    ) -> tuple[str, ...]:
+        if not visible_candidates:
+            return ()
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT b.binding_id
+                FROM capability_provider_bindings b
+                JOIN capability_versions v ON v.capability_version_id = b.capability_version_id
+                JOIN capability_installations i ON i.capability_version_id = v.capability_version_id
+                WHERE i.tenant_id = :tenant_id
+                  AND i.workspace_id = :workspace_id
+                  AND i.status = 'ACTIVE'
+                  AND b.status = 'ACTIVE'
+                  AND v.supply_chain_verified = true
+                  AND b.binding_id = ANY(CAST(:visible_candidates AS text[]))
+                ORDER BY b.binding_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "visible_candidates": list(visible_candidates),
+            },
+        ).scalars().all()
+        return tuple(
+            binding_id
+            for binding_id in (str(row) for row in rows)
+            if _runtime_signal_allows(runtime_signals.get(binding_id))
+        )
+
+
+def _runtime_signal_allows(signal: dict[str, Any] | None) -> bool:
+    if signal is None:
+        return True
+    health = str(signal.get("health") or signal.get("status") or "healthy").lower()
+    if health not in {"healthy", "ready", "ok", "available"}:
+        return False
+    quota_remaining = signal.get("quota_remaining")
+    if quota_remaining is not None and int(quota_remaining) <= 0:
+        return False
+    capacity_remaining = signal.get("capacity_remaining")
+    if capacity_remaining is not None and int(capacity_remaining) <= 0:
+        return False
+    return True
+
+
+def _canonical_candidate_summary(candidate_summary: dict[str, Any]) -> dict[str, Any]:
+    normalized = {
+        str(key): _normalize_selection_value(str(key), value)
+        for key, value in sorted(candidate_summary.items(), key=lambda item: str(item[0]))
+    }
+    candidate_ids = _candidate_ids_from_summary(normalized)
+    if candidate_ids:
+        normalized["deterministic_candidate_order"] = candidate_ids
+    return normalized
+
+
+def _normalize_selection_value(key: str, value: Any) -> Any:
+    if key in {
+        "candidate_ids",
+        "candidate_refs",
+        "candidates",
+        "hard_filtered_refs",
+        "rejected",
+        "rejected_candidates",
+        "visible_candidates",
+    }:
+        return _sorted_unique_json(value)
+    if key in {"fallback_order", "fallback_refs"}:
+        return _sorted_unique_json(value)
+    return _normalize_json_value(value)
+
+
+def _sorted_unique_json(value: Any) -> list[Any]:
+    values = value if isinstance(value, (list, tuple, set)) else [value]
+    normalized = [_normalize_json_value(item) for item in values if item is not None]
+    unique: dict[str, Any] = {canonical_json(item): item for item in normalized}
+    return [unique[key] for key in sorted(unique)]
+
+
+def _normalize_json_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): _normalize_json_value(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_normalize_json_value(item) for item in value]
+    if isinstance(value, set):
+        return [_normalize_json_value(item) for item in sorted(value, key=str)]
+    return value
+
+
+def _candidate_ids_from_summary(candidate_summary: dict[str, Any]) -> list[str]:
+    raw_candidates = (
+        candidate_summary.get("candidate_ids")
+        or candidate_summary.get("candidate_refs")
+        or candidate_summary.get("candidates")
+        or []
+    )
+    candidate_ids: list[str] = []
+    for item in raw_candidates if isinstance(raw_candidates, list) else [raw_candidates]:
+        if isinstance(item, dict):
+            value = item.get("binding_id") or item.get("candidate_id") or item.get("id") or item.get("ref")
+        else:
+            value = item
+        if value is not None:
+            candidate_ids.append(str(value))
+    return sorted(dict.fromkeys(candidate_ids))
 
 
 __all__ = [
+    "CapabilityActivationConflict",
     "CapabilityRepository",
     "CapabilitySupplyChainConflict",
     "CapabilityUnitOfWork",

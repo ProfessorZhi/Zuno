@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import tempfile
 from typing import AsyncIterator, List
@@ -7,6 +8,9 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
+from zuno.api.services.product import ProductService
+from zuno.agent.runtime import CutoverMode
+from zuno.platform.contracts import canonical_sha256
 from zuno.resources.prompts.completion import SYSTEM_PROMPT
 from zuno.schema.completion import CompletionReq
 from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
@@ -35,7 +39,19 @@ class CompletionService:
         *,
         req: CompletionReq,
         login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
     ) -> AsyncIterator[dict]:
+        product_runtime_record = cls.record_product_runtime_request(
+            req=req,
+            login_user_id=login_user_id,
+            cutover_mode=cutover_mode,
+        )
+        yield {
+            "type": "product_runtime_record",
+            "data": product_runtime_record,
+        }
+        if cutover_mode != "shadow" and product_runtime_record.get("status") == "blocked":
+            return
         task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
         request = RuntimeStartRequest(
             run_id=f"run:{task_id}",
@@ -90,6 +106,111 @@ class CompletionService:
         yield {
             "type": "response_chunk",
             "data": chunk_data,
+        }
+
+    @staticmethod
+    def resolve_cutover_mode() -> CutoverMode:
+        configured_mode = str(os.getenv("ZUNO_COMPLETION_CUTOVER_MODE", "") or "").strip().lower()
+        if configured_mode in {"shadow", "canary", "new_default", "rollback"}:
+            return configured_mode
+        if configured_mode:
+            raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
+        if os.getenv("ZUNO_AGENT_RUNTIME") == "legacy_general_agent":
+            return "rollback"
+        return "new_default"
+
+    @staticmethod
+    def _completion_product_command_kind(cutover_mode: CutoverMode) -> str:
+        if cutover_mode == "shadow":
+            return "SHADOW_COMPLETION_RUNTIME_REQUEST"
+        if cutover_mode == "canary":
+            return "CANARY_COMPLETION_RUNTIME_REQUEST"
+        return "COMPLETION_RUNTIME_REQUEST"
+
+    @staticmethod
+    def record_product_runtime_shadow(
+        *,
+        req: CompletionReq,
+        login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
+    ) -> dict:
+        return CompletionService.record_product_runtime_request(
+            req=req,
+            login_user_id=login_user_id,
+            cutover_mode=cutover_mode,
+        )
+
+    @staticmethod
+    def record_product_runtime_request(
+        *,
+        req: CompletionReq,
+        login_user_id: str,
+        cutover_mode: CutoverMode = "new_default",
+    ) -> dict:
+        workspace_id = str(getattr(req, "workspace_id", "") or "completion")
+        request_hash = canonical_sha256(
+            {
+                "legacy_route": "/completion",
+                "dialog_id": req.dialog_id,
+                "workspace_id": workspace_id,
+                "user_input": req.user_input,
+                "product_mode": req.product_mode,
+                "query_method": req.query_method,
+            }
+        )[:24]
+        tenant_id = f"user:{login_user_id}"
+        active_agent_version_id = ProductService.runtime_agent_version_id(
+            surface="completion",
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+        )
+        try:
+            result = ProductService.submit_runtime_request(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                conversation_id=req.dialog_id,
+                principal_id=login_user_id,
+                active_agent_version_id=active_agent_version_id,
+                client_request_id=f"completion:{req.dialog_id}:{request_hash}",
+                runtime_request_ref=f"completion-runtime-request:{req.dialog_id}:{request_hash}",
+                raw_intent_ref=f"completion-intent:{req.dialog_id}:{request_hash}",
+                command_kind=CompletionService._completion_product_command_kind(cutover_mode),
+                payload={
+                    "legacy_route": "/completion",
+                    "dialog_id": req.dialog_id,
+                    "user_input_hash": canonical_sha256({"user_input": req.user_input}),
+                    "product_mode": req.product_mode,
+                    "query_method": req.query_method,
+                    "cutover_mode": cutover_mode,
+                },
+                bootstrap_runtime_agent=True,
+                runtime_surface="completion",
+            )
+        except Exception as exc:
+            return {
+                "status": "blocked",
+                "route": "/completion",
+                "mode": cutover_mode,
+                "cutover_mode": cutover_mode,
+                "request_hash": request_hash,
+                "product_runtime_recorded": False,
+                "product_shadow_recorded": False,
+                "failure_type": type(exc).__name__,
+                "reason": str(exc),
+            }
+        return {
+            "status": result.status,
+            "route": "/completion",
+            "mode": cutover_mode,
+            "cutover_mode": cutover_mode,
+            "request_hash": request_hash,
+            "product_runtime_recorded": True,
+            "product_shadow_recorded": cutover_mode == "shadow",
+            "command_id": result.command_id,
+            "receipt_id": result.receipt_id,
+            "projection_event_id": result.projection.projection_event_id,
+            "stream_cursor_id": result.projection.stream_cursor_id,
+            "available_action_tokens": [action.action_token_id for action in result.available_actions],
         }
 
     @staticmethod
