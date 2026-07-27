@@ -474,6 +474,21 @@ Failure Fingerprint：
 
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails -p no:cacheprovider --tb=short`：1 passed。
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+
+### P16-T22 Async Job Persistence Failure Falls Back to UNKNOWN Reconciliation
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolInvocationGateway` 在 provider 返回 async job handle 后，如果 `tool_async_jobs` 持久化或随后的 claim completion 失败，会将 execution receipt 回落为 `UNKNOWN / DISPATCHED / UNKNOWN_EFFECT`，并写入 `tool_effect_reconciliations`。
+- 该路径让已触发 provider 但未完成 async job 记录的结果进入可恢复 reconciliation，而不会被误记为已完成或遗留半写入状态。
+- 继续复用同一 owner 的 idempotency claim，并将 claim 完成到 reconciliation ref，供后续 replay/reconciliation 读取。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails -p no:cacheprovider --tb=short`：1 passed。
+- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -497,7 +512,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T21 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、durable effect claim repair、pre-held idempotency claim fail-closed、provider exception UNKNOWN reconciliation、effect receipt persistence UNKNOWN reconciliation、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T22 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、durable effect claim repair、pre-held idempotency claim fail-closed、provider exception UNKNOWN reconciliation、effect receipt persistence UNKNOWN reconciliation、async job persistence UNKNOWN reconciliation、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T21 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 和 durable effect claim repair 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，provider exception 会进入 UNKNOWN reconciliation，effect receipt persistence failure 会进入 UNKNOWN reconciliation，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T22 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 和 durable effect claim repair 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，provider exception 会进入 UNKNOWN reconciliation，effect receipt persistence failure 会进入 UNKNOWN reconciliation，async job persistence failure 会进入 UNKNOWN reconciliation，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

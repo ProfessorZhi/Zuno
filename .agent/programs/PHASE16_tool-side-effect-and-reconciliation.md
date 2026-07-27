@@ -58,6 +58,8 @@ workspace approval API/UI contract
 - P16-T18 Pre-held Idempotency Claim Fail-Closed Reason。
 - P16-T19 Provider Exception Converts to UNKNOWN Reconciliation。
 - P16-T20 Durable Effect Repairs Incomplete Idempotency Claim。
+- P16-T21 Effect Receipt Persistence Failure Falls Back to UNKNOWN Reconciliation。
+- P16-T22 Async Job Persistence Failure Falls Back to UNKNOWN Reconciliation。
 
 当前验证状态：
 
@@ -66,6 +68,8 @@ workspace approval API/UI contract
 - P16-T18 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
 - P16-T19 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_provider_exception_as_unknown_reconciliation -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
 - P16-T20 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- P16-T21 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- P16-T22 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
 - PHASE16 仍为 `in_progress`。本节只同步当前实现证据，不构成 Coordinator Closure Approval，不把 Program、Manifest 或 Production Readiness 改为 completed/ready。
 
 ## Allowed Paths

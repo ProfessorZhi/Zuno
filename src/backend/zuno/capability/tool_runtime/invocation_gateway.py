@@ -406,36 +406,123 @@ class ToolInvocationGateway:
                             payload=async_payload,
                         )
                         async_job_id = f"tool-async-job:{call_id}"
-                        with self._unit_of_work_factory() as repo:
-                            repo.record_async_job(
-                                ToolAsyncJobInput(
-                                    async_job_id=async_job_id,
-                                    tenant_id=tenant_id,
-                                    prepared_tool_action_id=prepared_id,
-                                    attempt_id=attempt_id,
-                                    execution_receipt_id=receipt_id,
-                                    provider_job_id=provider_job_id,
-                                    status="WAITING_CALLBACK",
-                                    callback_binding_ref=f"callback-binding:{call_id}",
-                                    callback_order=0,
-                                    deadline_at=datetime.now(tz=UTC) + timedelta(minutes=15),
-                                    idempotency_scope=execute_prerequisites.idempotency_scope,
-                                    idempotency_key=execute_prerequisites.idempotency_key,
-                                    idempotency_generation=execute_prerequisites.idempotency_generation,
-                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
-                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
-                                    fencing_epoch=execute_prerequisites.fencing_epoch,
-                                    secret_lease_id=secret_lease_id,
-                                    job_payload=async_payload,
+                        try:
+                            with self._unit_of_work_factory() as repo:
+                                repo.record_async_job(
+                                    ToolAsyncJobInput(
+                                        async_job_id=async_job_id,
+                                        tenant_id=tenant_id,
+                                        prepared_tool_action_id=prepared_id,
+                                        attempt_id=attempt_id,
+                                        execution_receipt_id=receipt_id,
+                                        provider_job_id=provider_job_id,
+                                        status="WAITING_CALLBACK",
+                                        callback_binding_ref=f"callback-binding:{call_id}",
+                                        callback_order=0,
+                                        deadline_at=datetime.now(tz=UTC) + timedelta(minutes=15),
+                                        idempotency_scope=execute_prerequisites.idempotency_scope,
+                                        idempotency_key=execute_prerequisites.idempotency_key,
+                                        idempotency_generation=execute_prerequisites.idempotency_generation,
+                                        fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                        fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                        fencing_epoch=execute_prerequisites.fencing_epoch,
+                                        secret_lease_id=secret_lease_id,
+                                        job_payload=async_payload,
+                                    )
                                 )
+                            self._complete_execute_prerequisites(
+                                tenant_id=tenant_id,
+                                owner=f"tool-runtime:{call_id}",
+                                prerequisites=execute_prerequisites,
+                                result_ref=async_job_id,
                             )
-                        self._complete_execute_prerequisites(
-                            tenant_id=tenant_id,
-                            owner=f"tool-runtime:{call_id}",
-                            prerequisites=execute_prerequisites,
-                            result_ref=async_job_id,
-                        )
-                        return result, ToolGatewayReceipt("async_waiting", prepared_id, attempt_id, receipt_id)
+                            with self._unit_of_work_factory() as repo:
+                                repo.update_execution_receipt(
+                                    ToolExecutionReceiptInput(
+                                        receipt_id=receipt_id,
+                                        tenant_id=tenant_id,
+                                        prepared_tool_action_id=prepared_id,
+                                        attempt_id=attempt_id,
+                                        status="DISPATCHED",
+                                        dispatch_certainty="DISPATCHED",
+                                        effect_certainty="UNKNOWN_EFFECT",
+                                        append_only_generation=1,
+                                        receipt_payload=async_payload,
+                                    )
+                                )
+                            return result, ToolGatewayReceipt("async_waiting", prepared_id, attempt_id, receipt_id)
+                        except Exception as exc:
+                            recovery_payload = _recovery_unknown_effect_payload_from_result(
+                                result=result,
+                                effect_payload=async_payload,
+                                call_id=call_id,
+                                exc=exc,
+                            )
+                            self._record_terminal(
+                                tenant_id=tenant_id,
+                                prepared_id=prepared_id,
+                                attempt_id=attempt_id,
+                                receipt_id=receipt_id,
+                                status="UNKNOWN",
+                                dispatch_certainty="DISPATCHED",
+                                effect_certainty="UNKNOWN_EFFECT",
+                                adapter_kind=adapter_kind,
+                                payload=recovery_payload,
+                            )
+                            reconciliation_id = f"tool-effect-reconciliation:{call_id}"
+                            with self._unit_of_work_factory() as repo:
+                                repo.record_effect_reconciliation(
+                                    ToolEffectReconciliationInput(
+                                        reconciliation_id=reconciliation_id,
+                                        tenant_id=tenant_id,
+                                        prepared_tool_action_id=prepared_id,
+                                        attempt_id=attempt_id,
+                                        execution_receipt_id=receipt_id,
+                                        provider_effect_id=provider_job_id,
+                                        status="OPEN",
+                                        next_action="RECONCILE",
+                                        reconciliation_query=recovery_payload["reconciliation_query"],
+                                        manual_assessment_required=False,
+                                        age_escalation_after_seconds=900,
+                                        idempotency_scope=execute_prerequisites.idempotency_scope,
+                                        idempotency_key=execute_prerequisites.idempotency_key,
+                                        idempotency_generation=execute_prerequisites.idempotency_generation,
+                                        fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                        fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                        fencing_epoch=execute_prerequisites.fencing_epoch,
+                                        secret_lease_id=secret_lease_id,
+                                        reconciliation_payload=recovery_payload,
+                                    )
+                                )
+                                repo.update_execution_receipt(
+                                    ToolExecutionReceiptInput(
+                                        receipt_id=receipt_id,
+                                        tenant_id=tenant_id,
+                                        prepared_tool_action_id=prepared_id,
+                                        attempt_id=attempt_id,
+                                        status="UNKNOWN",
+                                        dispatch_certainty="DISPATCHED",
+                                        effect_certainty="UNKNOWN_EFFECT",
+                                        append_only_generation=1,
+                                        receipt_payload=recovery_payload,
+                                    )
+                                )
+                            try:
+                                self._complete_execute_prerequisites(
+                                    tenant_id=tenant_id,
+                                    owner=f"tool-runtime:{call_id}",
+                                    prerequisites=execute_prerequisites,
+                                    result_ref=reconciliation_id,
+                                )
+                            except FencingRejectedError:
+                                pass
+                            return None, ToolGatewayReceipt(
+                                "reconcile_required",
+                                prepared_id,
+                                attempt_id,
+                                receipt_id,
+                                "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
+                            )
                     effect_payload = _effect_payload_from_result(result=result, call_id=call_id)
                     provider_effect_id = str(effect_payload["provider_effect_id"])
                     self._record_terminal(
@@ -1119,6 +1206,11 @@ def _recovery_unknown_effect_payload_from_result(
     call_id: str,
     exc: Exception,
 ) -> dict[str, Any]:
+    provider_effect_id = str(
+        effect_payload.get("provider_effect_id")
+        or effect_payload.get("provider_job_id")
+        or f"provider-effect:{call_id}"
+    )
     recovery_query = {
         "reason": "post_dispatch_persistence_failure",
         "error_type": type(exc).__name__,
@@ -1127,7 +1219,7 @@ def _recovery_unknown_effect_payload_from_result(
         "call_id": call_id,
     }
     return {
-        "provider_effect_id": str(effect_payload["provider_effect_id"]),
+        "provider_effect_id": provider_effect_id,
         "effect_status": "UNKNOWN",
         "effect_certainty": "UNKNOWN_EFFECT",
         "reconciliation_id": f"tool-effect-reconciliation:{call_id}",

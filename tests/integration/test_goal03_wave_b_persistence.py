@@ -2115,6 +2115,138 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
     assert claim["result_ref"] == "tool-async-job:call-phase16-async-export"
 
 
+def test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails(engine) -> None:
+    tenant_id = "tenant-phase16-async-persistence-fail"
+    workspace_id = "workspace-phase16-async-persistence-fail"
+    call_id = "call-phase16-async-persistence-fail-export"
+    secret_ref = "security-secret-ref:phase16:async-persistence-fail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-persistence-fail:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    fail_async_job_once = True
+
+    class _AsyncJobFailureProxy:
+        def __init__(self, repo):
+            self._repo = repo
+
+        def __getattr__(self, name: str):
+            return getattr(self._repo, name)
+
+        def record_async_job(self, job) -> None:
+            nonlocal fail_async_job_once
+            if fail_async_job_once:
+                fail_async_job_once = False
+                raise RuntimeError("async job storage outage")
+            self._repo.record_async_job(job)
+
+    class _AsyncJobFailureUnitOfWork:
+        def __init__(self, tenant: str) -> None:
+            self._inner = ToolUnitOfWork(engine)
+
+        def __enter__(self):
+            return _AsyncJobFailureProxy(self._inner.__enter__())
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self._inner.__exit__(exc_type, exc, tb)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: _AsyncJobFailureUnitOfWork(tenant_id),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async-persistence-fail:1", "status_url": "https://provider/jobs/async-persistence-fail"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-persistence-fail",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-async-persistence-fail-export'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_async_jobs WHERE async_job_id = 'tool-async-job:call-phase16-async-persistence-fail-export'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, reconciliation_query_hash, reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-async-persistence-fail-export'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "provider-job:phase16:async-persistence-fail:1"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-async-persistence-fail-export"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(
+        {
+            "reason": "post_dispatch_persistence_failure",
+            "error_type": "RuntimeError",
+            "error": "async job storage outage",
+            "result": {"provider_job_id": "provider-job:phase16:async-persistence-fail:1", "status_url": "https://provider/jobs/async-persistence-fail"},
+            "call_id": call_id,
+        }
+    )
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-async-persistence-fail-export"
+
+
 def test_phase16_async_restart_times_out_due_job_without_callback_replay(engine) -> None:
     tenant_id = "tenant-phase16-async-timeout"
     workspace_id = "workspace-phase16-async-timeout"
