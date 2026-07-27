@@ -310,6 +310,74 @@ class ElasticsearchBm25IndexClient:
         return [dict(hit.get("_source") or {}) for hit in hits]
 
 
+class MilvusVectorIndexClient:
+    def __init__(self, *, host: str = "localhost", port: str = "19530", dim: int = 16) -> None:
+        self.host = host
+        self.port = port
+        self.dim = dim
+
+    def index_documents(self, index_name: str, documents: list[dict]) -> None:
+        collection = self._recreate_collection(index_name)
+        rows = [
+            {
+                "chunk_id": str(document.get("chunk_id") or uuid4().hex),
+                "document_id": str(document.get("document_id") or ""),
+                "workspace_id": str(document.get("workspace_id") or ""),
+                "content": str(document.get("content") or ""),
+                "embedding": _deterministic_vector(str(document.get("content") or ""), self.dim),
+            }
+            for document in documents
+        ]
+        if rows:
+            collection.insert(rows)
+            collection.flush()
+        collection.load()
+
+    def search_documents(self, query: str, index_name: str) -> list[dict]:
+        from pymilvus import Collection
+
+        collection = Collection(index_name)
+        collection.load()
+        results = collection.search(
+            data=[_deterministic_vector(query, self.dim)],
+            anns_field="embedding",
+            param={"metric_type": "L2", "params": {"nprobe": 8}},
+            limit=25,
+            output_fields=["chunk_id", "document_id", "workspace_id", "content"],
+        )
+        documents: list[dict] = []
+        for hit in results[0]:
+            entity = hit.entity
+            documents.append(
+                {
+                    "chunk_id": entity.get("chunk_id"),
+                    "document_id": entity.get("document_id"),
+                    "workspace_id": entity.get("workspace_id"),
+                    "content": entity.get("content"),
+                    "source_type": "vector",
+                }
+            )
+        return documents
+
+    def _recreate_collection(self, index_name: str) -> Any:
+        from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
+
+        connections.connect(alias="default", host=self.host, port=self.port)
+        if utility.has_collection(index_name):
+            Collection(index_name).drop()
+        fields = [
+            FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=256),
+            FieldSchema(name="document_id", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="workspace_id", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=4096),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
+        ]
+        collection = Collection(index_name, CollectionSchema(fields, description=f"Zuno PHASE12 vector index {index_name}"))
+        collection.create_index("embedding", {"index_type": "IVF_FLAT", "metric_type": "L2", "params": {"nlist": 16}})
+        return collection
+
+
 def adapter_status_for_targets(targets: list[IndexTarget]) -> dict[str, str]:
     status: dict[str, str] = {}
     for target in targets:
@@ -423,11 +491,19 @@ def _http_json(method: str, url: str, payload: object | None = None) -> dict:
     return json.loads(data.decode("utf-8"))
 
 
+def _deterministic_vector(text: str, dim: int) -> list[float]:
+    import hashlib
+
+    digest = hashlib.sha256(text.encode("utf-8")).digest()
+    return [float(digest[index % len(digest)]) / 255.0 for index in range(dim)]
+
+
 __all__ = [
     "ExternalServiceIndexAdapterBinding",
     "INDEX_ADAPTER_CONTRACTS",
     "LOCAL_INDEX_ADAPTER_BY_TARGET",
     "ElasticsearchBm25IndexClient",
+    "MilvusVectorIndexClient",
     "Neo4jGraphIndexClient",
     "adapter_status_for_bindings",
     "adapter_status_for_targets",

@@ -104,6 +104,7 @@ EXPECTED_EXPORTS = {
         "LOCAL_INDEX_ADAPTER_BY_TARGET",
         "ElasticsearchBm25IndexClient",
         "ExternalServiceIndexAdapterBinding",
+        "MilvusVectorIndexClient",
         "Neo4jGraphIndexClient",
         "IndexAdapterContract",
         "IndexJobManifest",

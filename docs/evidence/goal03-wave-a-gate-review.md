@@ -38,6 +38,8 @@ docker compose -f infra/docker/docker-compose.yml up -d elasticsearch
 python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py -p no:cacheprovider
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
 docker pull milvusdb/milvus:v2.4.15
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
 ```
 
 结果：
@@ -61,6 +63,9 @@ zuno-elasticsearch healthy
 2 passed
 20 passed
 Milvus direct image pull stalled without progress; the process was stopped and the image is not available.
+Milvus direct image pull stalled again on layer de4351a735f5 without progress; the process was stopped and the image is not available.
+21 passed
+compileall passed
 ```
 
 当前已确认运行的真实依赖：
@@ -102,7 +107,7 @@ PHASE12 Milvus Vector external index adapter cutover is not implemented as Curre
 - 后续 expand 层已新增外部 adapter binding contract，并证明外部 adapter 必须通过自身 readback 才能把 visibility 标为 `visible`；adapter contract 仍需为 `current` 才能进入默认 retrieval payload，readback 无匹配时 target 会降级且不进入 retrieval payload。
 - Elasticsearch BM25 与 Neo4j Graph 外部 adapter 已通过真实容器服务 readback integration，`INDEX_ADAPTER_CONTRACTS` 对应项已标为 `current`。
 - 但 `INDEX_ADAPTER_CONTRACTS` 仍明确把 `milvus` 标为 `target_blocked`。
-- 本轮 Milvus 直接镜像拉取再次长时间停滞并停止；没有 Milvus 镜像或运行服务，因此无法执行真实 Vector Adapter 的 cutover / visibility / sample retrieval 证明。
+- `MilvusVectorIndexClient` 与 runtime 注入 contract 已就位，但本轮 Milvus 直接镜像拉取再次长时间停滞并停止；没有 Milvus 镜像或运行服务，因此无法执行真实 Vector Adapter 的 cutover / visibility / sample retrieval 证明。
 
 因此不能把 PHASE12 写成 completed，也不能把 PHASE09/12/14 Wave A Gate 汇总写成 passed。
 

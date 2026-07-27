@@ -278,6 +278,50 @@ def test_index_runtime_external_adapter_does_not_serve_without_readback_match() 
     assert payload["documents_by_source"] == {}
 
 
+def test_index_runtime_milvus_vector_adapter_contract_stays_blocked_until_service_proof() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime, external_adapter_bindings
+
+    class VectorClient:
+        def __init__(self) -> None:
+            self.index_calls: list[dict] = []
+            self.search_calls: list[dict] = []
+            self.documents: list[dict] = []
+
+        def index_documents(self, index_name: str, documents: list[dict]) -> None:
+            self.index_calls.append({"index_name": index_name, "document_count": len(documents)})
+            self.documents = list(documents)
+
+        def search_documents(self, query: str, index_name: str) -> list[dict]:
+            self.search_calls.append({"index_name": index_name, "query": query})
+            return list(self.documents)
+
+    client = VectorClient()
+    runtime = KnowledgeIndexRuntime(
+        adapter_bindings=external_adapter_bindings(
+            milvus_client=client,
+            index_prefix="goal03",
+        )
+    )
+    runtime.create_knowledge_space("ks_milvus_vector_contract", "workspace_index")
+
+    manifest = runtime.index_document(
+        "ks_milvus_vector_contract",
+        _sample_document(),
+        targets=["vector"],
+    )
+    payload = runtime.to_retrieval_payload("ks_milvus_vector_contract", "supplier renewal")
+
+    assert client.index_calls == [{"index_name": "goal03_vector", "document_count": len(client.documents)}]
+    assert client.search_calls[0]["index_name"] == "goal03_vector"
+    assert manifest.adapter_status == {"vector": "milvus:target_blocked"}
+    assert manifest.adapter_dispatch_receipts["vector"]["adapter_id"] == "milvus"
+    assert manifest.adapter_visibility_receipts["vector"]["visibility"] == "visible"
+    assert manifest.adapter_visibility_receipts["vector"]["sample_match_count"] > 0
+    assert manifest.target_status["vector"] == "ready"
+    assert payload["retrievers_used"] == []
+    assert payload["documents_by_source"] == {}
+
+
 def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
 
