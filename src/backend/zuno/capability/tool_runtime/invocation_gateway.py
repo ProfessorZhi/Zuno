@@ -645,12 +645,14 @@ class ToolInvocationGateway:
             latest_order = repo.latest_async_callback_order(async_job_id=async_job_id)
             if expected_binding_ref != provided_binding_ref:
                 authenticity_status = "FORGED"
+            elif callback_order <= latest_order:
+                authenticity_status = "REPLAY"
             elif callback_order != latest_order + 1:
                 authenticity_status = "OUT_OF_ORDER"
             else:
                 authenticity_status = "VERIFIED"
             accepted = authenticity_status == "VERIFIED"
-            repo.record_async_callback(
+            accepted = repo.record_async_callback(
                 ToolAsyncCallbackInput(
                     callback_id=f"tool-async-callback:{provider_job_id}:{callback_order}",
                     tenant_id=tenant_id,
@@ -662,6 +664,13 @@ class ToolInvocationGateway:
                     callback_payload=callback_payload,
                 )
             )
+            if accepted:
+                state = str(callback_payload.get("state") or callback_payload.get("status") or "").lower()
+                repo.advance_async_job_after_callback(
+                    async_job_id=async_job_id,
+                    callback_order=callback_order,
+                    completed=state in {"done", "completed", "succeeded", "success"},
+                )
 
     def record_cancellation_request(
         self,

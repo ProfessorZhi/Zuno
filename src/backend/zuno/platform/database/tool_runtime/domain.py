@@ -815,8 +815,8 @@ class ToolRepository:
             {"async_job_id": async_job_id},
         ).scalar_one()
         return int(value or 0)
-    def record_async_callback(self, callback: ToolAsyncCallbackInput) -> None:
-        self.connection.execute(
+    def record_async_callback(self, callback: ToolAsyncCallbackInput) -> bool:
+        row = self.connection.execute(
             text(
                 """
                 INSERT INTO tool_async_callbacks (
@@ -827,7 +827,26 @@ class ToolRepository:
                     :callback_id, :tenant_id, :async_job_id, :provider_job_id,
                     :callback_order, :authenticity_status, :accepted, :callback_payload_hash
                 )
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (callback_id) DO UPDATE
+                SET authenticity_status = CASE
+                        WHEN tool_async_callbacks.accepted = false
+                         AND EXCLUDED.authenticity_status = 'VERIFIED'
+                        THEN 'VERIFIED'
+                        ELSE tool_async_callbacks.authenticity_status
+                    END,
+                    accepted = CASE
+                        WHEN tool_async_callbacks.accepted = false
+                         AND EXCLUDED.authenticity_status = 'VERIFIED'
+                        THEN true
+                        ELSE tool_async_callbacks.accepted
+                    END,
+                    callback_payload_hash = CASE
+                        WHEN tool_async_callbacks.accepted = false
+                         AND EXCLUDED.authenticity_status = 'VERIFIED'
+                        THEN EXCLUDED.callback_payload_hash
+                        ELSE tool_async_callbacks.callback_payload_hash
+                    END
+                RETURNING accepted
                 """
             ),
             {
@@ -839,6 +858,33 @@ class ToolRepository:
                 "authenticity_status": callback.authenticity_status,
                 "accepted": callback.accepted,
                 "callback_payload_hash": canonical_sha256(callback.callback_payload),
+            },
+        ).one()
+        return bool(row.accepted)
+
+    def advance_async_job_after_callback(
+        self,
+        *,
+        async_job_id: str,
+        callback_order: int,
+        completed: bool,
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET callback_order = :callback_order,
+                    status = CASE WHEN :completed THEN 'COMPLETED' ELSE status END,
+                    updated_at = now()
+                WHERE async_job_id = :async_job_id
+                  AND status = 'WAITING_CALLBACK'
+                  AND callback_order < :callback_order
+                """
+            ),
+            {
+                "async_job_id": async_job_id,
+                "callback_order": callback_order,
+                "completed": completed,
             },
         )
 

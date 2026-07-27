@@ -1174,6 +1174,24 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
         expected_binding_ref="callback-binding:call-phase16-async-export",
         provided_binding_ref="callback-binding:call-phase16-async-export",
     )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=2,
+        callback_payload={"state": "done", "order": 2},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=3,
+        callback_payload={"state": "done", "order": 3},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:forged",
+    )
     gateway.record_cancellation_request(
         tenant_id=tenant_id,
         prepared_id="prepared-tool-action:call-phase16-async-export",
@@ -1248,9 +1266,9 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
     assert execution["dispatch_certainty"] == "DISPATCHED"
     assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
     assert job["provider_job_id"] == "provider-job:phase16:async:1"
-    assert job["status"] == "WAITING_CALLBACK"
+    assert job["status"] == "COMPLETED"
     assert job["callback_binding_ref"] == "callback-binding:call-phase16-async-export"
-    assert job["callback_order"] == 0
+    assert job["callback_order"] == 2
     assert job["idempotency_scope"] == "tool-side-effect"
     assert job["idempotency_key"] == call_id
     assert job["idempotency_generation"] == 1
@@ -1258,7 +1276,8 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
     assert job["job_payload_hash"] == canonical_sha256(async_payload)
     assert [dict(row) for row in callbacks] == [
         {"callback_order": 1, "authenticity_status": "VERIFIED", "accepted": True},
-        {"callback_order": 2, "authenticity_status": "OUT_OF_ORDER", "accepted": False},
+        {"callback_order": 2, "authenticity_status": "VERIFIED", "accepted": True},
+        {"callback_order": 3, "authenticity_status": "FORGED", "accepted": False},
     ]
     assert cancellation["status"] == "NOT_GUARANTEED"
     assert cancellation["external_effect_revoked"] is False
