@@ -801,6 +801,47 @@ npm run build -w zuno-frontend
 passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
 ```
 
+## P10-T20 Browser Smoke 闭环
+
+已更新：
+
+- `tools/qa/full-e2e/package.json`
+- `tools/qa/full-e2e/qa_echo_api.py`
+- `tools/qa/full-e2e/full_e2e.py`
+- `tools/scripts/run-full-e2e-smoke.ps1`
+- `tests/tools/test_launcher_scripts.py`
+
+当前 Browser E2E smoke 闭环：
+
+- QA echo API 不再依赖 `tmp-qa-playwright` 下的临时缺件，正式 helper 进入仓库可追踪目录 `tools/qa/full-e2e/`；
+- `run-full-e2e-smoke.ps1` 现在显式指向正式 helper，并对含空格和 `&` 的路径做了 quoted `Start-Process` 参数，避免 Python 误拆路径；
+- smoke 运行时通过 `ZUNO_FULL_E2E_*` 环境变量把 backend、frontend、QA API 和 `auth.json` 关联起来，不再依赖隐式当前目录；
+- `full_e2e.py` 用 backend `/health`、QA API `/health`、Playwright storage state 和浏览器上下文里的 Product Catalog 请求做最小闭环验证。
+
+本轮验证：
+
+```text
+python -m pytest tests\\tools\\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
+1 passed
+```
+
+```text
+powershell -ExecutionPolicy Bypass -File .\\tools\\scripts\\run-full-e2e-smoke.ps1
+passed
+```
+
+已消失的 blocker：
+
+- `tmp-qa-playwright/auth.json` 缺失；
+- `tmp-qa-playwright/qa_echo_api.py` 缺失；
+- `tmp-qa-playwright` 临时工程缺失；
+- 未加引号的 `Start-Process` 路径在含 `&` 的仓库根下会被拆坏。
+
+仍未完成：
+
+- Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -814,6 +855,7 @@ npm install
 npm run lint -w zuno-frontend
 npm run build -w zuno-frontend
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
+powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
 python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
@@ -829,13 +871,13 @@ python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend
 
 ```text
 command: powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
-exception: Missing auth state: F:\internship-work\resume&resume project\02_projects\Zuno\tmp-qa-playwright\auth.json
-first relevant stack frame: tools\scripts\run-full-e2e-smoke.ps1:44
-environment signature: Node.js v24.14.0; npm workspace dependencies installed; repo-root path resolved correctly; tmp-qa-playwright/auth.json absent
-retry_count: 1 after script root fix
-唯一恢复动作: 在本机浏览器完成登录并导出 Playwright storage state 到 `tmp-qa-playwright\auth.json` 后，从 browser E2E smoke 命令继续。
+status: resolved
+first relevant stack frame: tools\scripts\run-full-e2e-smoke.ps1:73
+environment signature: Node.js v24.14.0; npm workspace dependencies installed; repo-root path resolved correctly; smoke helper now tracked in tools/qa/full-e2e; auth.json generated locally from backend JWT config
+retry_count: 2 total; first run failed on missing auth state, second run failed on missing QA helper, third run passed
+resolved_by: formal helper package plus quoted Start-Process path plus generated Playwright storage state
 ```
 
 ```text
-Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
+Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
 ```

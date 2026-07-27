@@ -26,10 +26,19 @@ def test_scripts_start_does_not_install_dependencies_by_default():
 
 def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
     content = (REPO_ROOT / "tools" / "scripts" / "run-full-e2e-smoke.ps1").read_text(encoding="utf-8")
+    qa_root = REPO_ROOT / "tools" / "qa" / "full-e2e"
 
     assert "$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)" in content
     assert "$frontendRoot = Join-Path $repoRoot 'apps\\web'" in content
     assert "$authPath = Join-Path $qaRoot 'auth.json'" in content
+    assert "$qaSourceRoot = Join-Path $repoRoot 'tools\\qa\\full-e2e'" in content
+    assert "$qaApiScript = Join-Path $qaSourceRoot 'qa_echo_api.py'" in content
+    assert "$quotedQaApiScript = '\"' + $qaApiScript + '\"'" in content
+    assert "Push-Location $qaSourceRoot" in content
+    assert "$env:ZUNO_FULL_E2E_AUTH = $authPath" in content
+    assert (qa_root / "package.json").exists()
+    assert (qa_root / "qa_echo_api.py").exists()
+    assert (qa_root / "full_e2e.py").exists()
 
 
 def test_desktop_stop_stops_backend_services_too():
