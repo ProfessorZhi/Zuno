@@ -57,6 +57,14 @@ export interface ProductStreamEventList {
   events: ProductStreamEvent[]
 }
 
+export interface ProductFeedbackCommand {
+  task_id: string
+  rating: number | null
+  label: 'helpful' | 'needs_revision' | string
+  comment: string
+  dataset_candidate: boolean
+}
+
 interface UnifiedResponse<T> {
   status_code?: number
   status?: number
@@ -117,6 +125,22 @@ export const consumeProductAction = async (
     client_request_id: command.client_request_id || createProductClientRequestId('action-consume'),
   }
   const response = await request.post<UnifiedResponse<ProductActionConsumeReceipt>>('/api/v1/product/actions/consume', body)
+  return unwrapProductResponse(response.data)
+}
+
+export const getProductArtifact = async (artifactId: string) => {
+  const response = await request.get<UnifiedResponse<Record<string, unknown>>>(`/api/v1/product/artifacts/${artifactId}`)
+  return unwrapProductResponse(response.data)
+}
+
+export const downloadProductArtifact = async (artifactId: string) => {
+  return request.get(`/api/v1/product/artifacts/${artifactId}/download`, {
+    responseType: 'blob',
+  })
+}
+
+export const submitProductFeedback = async (command: ProductFeedbackCommand) => {
+  const response = await request.post<UnifiedResponse<Record<string, unknown>>>('/api/v1/product/feedback', command)
   return unwrapProductResponse(response.data)
 }
 

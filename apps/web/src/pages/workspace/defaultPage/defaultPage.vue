@@ -7,14 +7,11 @@ import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
   approveWorkspaceTaskAPI,
-  createWorkspaceFeedbackAPI,
   createWorkspaceFileAPI,
   createWorkspaceIngestAPI,
   createWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
-  downloadWorkspaceArtifactAPI,
-  getWorkspaceArtifactAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
@@ -42,6 +39,9 @@ import { useUserStore } from '../../../store/user'
 import {
   connectProductRuntimeProjectionStream,
   consumeProductStoreAction,
+  downloadProductArtifact,
+  getProductArtifact,
+  submitProductFeedback,
   submitWorkspacePayloadToProductRuntime,
 } from '../../../product'
 import { useProductProjectionStore } from '../../../product/store'
@@ -1531,9 +1531,6 @@ const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
 const unwrapWorkspaceTaskResponse = (response: any): WorkspaceTaskCreateResponse | null => (
   response?.data?.data || response?.data || response || null
 )
-const unwrapWorkspaceArtifactResponse = (response: any): WorkspaceArtifactResponse | null => (
-  response?.data?.data || response?.data || response || null
-)
 const normalizeRuntimeSlug = (value: string, prefix: string) => {
   const slug = value
     .trim()
@@ -1585,8 +1582,7 @@ const buildRuntimeAssistantMessage = () => {
 }
 const loadWorkspaceArtifact = async (artifactId: string, assistantIndex = -1) => {
   if (!artifactId) return
-  const response = await getWorkspaceArtifactAPI(artifactId)
-  const data = unwrapWorkspaceArtifactResponse(response)
+  const data = await getProductArtifact(artifactId) as WorkspaceArtifactResponse | null
   const artifact = data?.artifact
   const content = String(data?.content || '')
   activeRuntimeArtifact.value = {
@@ -1613,7 +1609,7 @@ const downloadActiveWorkspaceArtifact = async () => {
   const artifact = activeRuntimeArtifact.value
   if (!artifact?.artifactId) return
   try {
-    const response = await downloadWorkspaceArtifactAPI(artifact.artifactId)
+    const response = await downloadProductArtifact(artifact.artifactId)
     const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'text/markdown;charset=utf-8' })
     const downloadUrl = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
@@ -1683,7 +1679,7 @@ const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
   if (!activeRuntimeTaskId.value || feedbackSubmitting.value) return
   feedbackSubmitting.value = true
   try {
-    await createWorkspaceFeedbackAPI({
+    await submitProductFeedback({
       task_id: activeRuntimeTaskId.value,
       rating: label === 'helpful' ? 5 : 2,
       label,

@@ -3,12 +3,13 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Body, Depends, Header, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 from zuno.api.services.product import ProductService
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 
 
 class ProductRuntimeRequestBody(BaseModel):
@@ -29,6 +30,14 @@ class ProductActionConsumeBody(BaseModel):
     client_request_id: str = Field(min_length=1)
     raw_intent_ref: str = Field(min_length=1)
     payload: dict = Field(default_factory=dict)
+
+
+class ProductFeedbackBody(BaseModel):
+    task_id: str = Field(min_length=1)
+    rating: int | None = None
+    label: str | None = None
+    comment: str | None = None
+    dataset_candidate: bool = False
 
 
 router = APIRouter(tags=["Product"], prefix="/product")
@@ -109,6 +118,58 @@ async def consume_action_token(
         )
     except Exception as err:
         return resp_500(message=str(err))
+
+
+@router.get("/artifacts/{artifact_id}", response_model=UnifiedResponseModel)
+async def get_product_artifact(
+    *,
+    artifact_id: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.get_artifact(
+            artifact_id,
+            principal_id=str(login_user.user_id or ""),
+        )
+    )
+
+
+@router.get("/artifacts/{artifact_id}/download")
+async def download_product_artifact(
+    *,
+    artifact_id: str,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    payload = WorkspaceTaskRuntimeService.download_artifact(
+        artifact_id,
+        principal_id=str(login_user.user_id or ""),
+    )
+    return PlainTextResponse(
+        payload["content"],
+        media_type=payload["media_type"],
+        headers={
+            "Content-Disposition": f'attachment; filename="{payload["filename"]}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.post("/feedback", response_model=UnifiedResponseModel)
+async def create_product_feedback(
+    *,
+    payload: ProductFeedbackBody,
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(
+        data=WorkspaceTaskRuntimeService.record_feedback(
+            task_id=payload.task_id,
+            rating=payload.rating,
+            label=payload.label,
+            comment=payload.comment,
+            dataset_candidate=payload.dataset_candidate,
+        )
+    )
 
 
 @router.get("/stream-events", response_model=UnifiedResponseModel)
@@ -199,4 +260,8 @@ __all__ = [
     "stream_projection_events",
     "ProductRuntimeRequestBody",
     "ProductActionConsumeBody",
+    "ProductFeedbackBody",
+    "get_product_artifact",
+    "download_product_artifact",
+    "create_product_feedback",
 ]

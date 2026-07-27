@@ -13,6 +13,7 @@ from zuno.api.services.product import (
     ProductService,
     ProductStreamEventResult,
 )
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 
 
 class _LoginUser:
@@ -207,6 +208,95 @@ def test_goal03_product_action_consume_route_fail_closes_replay(monkeypatch) -> 
     assert body["status_code"] == 500
     assert "action token replay detected" in body["status_message"]
     assert body.get("data") in (None, {})
+
+
+def test_goal03_product_artifact_routes_reauthorize_through_product_surface(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+    captured = {}
+
+    def fake_get(artifact_id: str, *, principal_id: str = ""):
+        captured["get"] = {"artifact_id": artifact_id, "principal_id": principal_id}
+        return {
+            "artifact": {"artifact_id": artifact_id, "download_policy": "AUTHORIZED"},
+            "content": "# artifact",
+            "citation_refs": [{"citation_ref": "citation:1"}],
+            "download": {
+                "url": f"/api/v1/product/artifacts/{artifact_id}/download",
+                "filename": f"{artifact_id}.md",
+                "media_type": "text/markdown; charset=utf-8",
+                "policy": "AUTHORIZED",
+            },
+        }
+
+    def fake_download(artifact_id: str, *, principal_id: str = ""):
+        captured["download"] = {"artifact_id": artifact_id, "principal_id": principal_id}
+        return {
+            "content": "# artifact",
+            "filename": f"{artifact_id}.md",
+            "media_type": "text/markdown; charset=utf-8",
+        }
+
+    monkeypatch.setattr(WorkspaceTaskRuntimeService, "get_artifact", classmethod(lambda cls, *args, **kwargs: fake_get(*args, **kwargs)))
+    monkeypatch.setattr(WorkspaceTaskRuntimeService, "download_artifact", classmethod(lambda cls, *args, **kwargs: fake_download(*args, **kwargs)))
+
+    client = TestClient(app)
+    read_response = client.get("/api/v1/product/artifacts/artifact-1")
+    download_response = client.get("/api/v1/product/artifacts/artifact-1/download")
+
+    assert read_response.status_code == 200
+    assert read_response.json()["data"]["download"]["url"] == "/api/v1/product/artifacts/artifact-1/download"
+    assert download_response.status_code == 200
+    assert download_response.text == "# artifact"
+    assert download_response.headers["cache-control"] == "no-store"
+    assert 'filename="artifact-1.md"' in download_response.headers["content-disposition"]
+    assert captured == {
+        "get": {"artifact_id": "artifact-1", "principal_id": "principal-a"},
+        "download": {"artifact_id": "artifact-1", "principal_id": "principal-a"},
+    }
+
+
+def test_goal03_product_feedback_route_records_delivery_feedback(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+    captured = {}
+
+    def fake_feedback(**kwargs):
+        captured.update(kwargs)
+        return {
+            "feedback_id": "feedback-product-1",
+            "task_id": kwargs["task_id"],
+            "rating": kwargs["rating"],
+            "label": kwargs["label"],
+            "comment": kwargs["comment"],
+            "dataset_candidate": kwargs["dataset_candidate"],
+        }
+
+    monkeypatch.setattr(WorkspaceTaskRuntimeService, "record_feedback", classmethod(lambda cls, **kwargs: fake_feedback(**kwargs)))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/product/feedback",
+        json={
+            "task_id": "task-1",
+            "rating": 5,
+            "label": "helpful",
+            "comment": "useful",
+            "dataset_candidate": False,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["feedback_id"] == "feedback-product-1"
+    assert captured == {
+        "task_id": "task-1",
+        "rating": 5,
+        "label": "helpful",
+        "comment": "useful",
+        "dataset_candidate": False,
+    }
 
 
 def test_goal03_product_stream_route_returns_sse_projection_events(monkeypatch) -> None:

@@ -232,6 +232,45 @@ retry_count: 0
 recovery: 未重复同一大命令，改为按 Product route / service / targeted runtime tests 分组验证。
 ```
 
+## P10-T06 当前进展
+
+已更新：
+
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/client.ts`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+
+当前 Product Artifact / Feedback 前台入口覆盖：
+
+- 新增 `GET /api/v1/product/artifacts/{artifact_id}`，通过 Product v1 入口读取 artifact，并复用现有 `WorkspaceTaskRuntimeService.get_artifact` 的 artifact read 与 citation 授权检查；
+- 新增 `GET /api/v1/product/artifacts/{artifact_id}/download`，通过 Product v1 入口下载 artifact，并复用现有 artifact download 再授权和 `Cache-Control: no-store`；
+- 新增 `POST /api/v1/product/feedback`，通过 Product v1 入口记录用户反馈；
+- `apps/web/src/product/client.ts` 新增 `getProductArtifact`、`downloadProductArtifact`、`submitProductFeedback`；
+- 默认 workspace agent 页面读取 artifact、下载 artifact 和提交反馈时改走 Product API，不再直接调用 `getWorkspaceArtifactAPI`、`downloadWorkspaceArtifactAPI` 或 `createWorkspaceFeedbackAPI`。
+
+仍未完成：
+
+- Product artifact / feedback endpoint 当前底层复用 WorkspaceTaskRuntimeService，尚未完成最终 Publication / Delivery 独立领域模型切流；
+- 旧 `apps/web/src/apis/workspace.ts` 仍保留 workspace artifact / feedback API 定义，等待 shadow/canary/default-new/rollback 后删除；
+- Citation 专门 Product endpoint、Quality disclosure UI、Desktop bridge、Browser E2E、Desktop smoke、Build/Lint 仍未完成。
+
+P10-T06 验证：
+
+```text
+python -m pytest -q tests\api\test_goal03_product_route.py -p no:cacheprovider
+8 passed, 1 warning
+```
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -p no:cacheprovider
+14 passed
+```
+
+```text
+git diff --check
+无 whitespace error；仅 CRLF warning
+```
+
 ## 本轮验证
 
 已通过：
