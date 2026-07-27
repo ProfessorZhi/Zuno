@@ -21,6 +21,7 @@ from zuno.capability.control_plane import (
     ToolSideEffectLevel,
     ToolTrustTier,
 )
+from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
 from zuno.platform.security.governance import (
     SandboxAuditEvent,
     SecurityDecision,
@@ -629,6 +630,12 @@ class ToolControlPlaneRuntime:
         attempt_id = f"tool-attempt:{request.execution_id or request.tool_request_id}"
         receipt_id = f"tool-execution-receipt:{request.execution_id or request.tool_request_id}"
         observation_id = f"tool-observation:{request.execution_id or request.tool_request_id}"
+        effect_policy = classify_tool_effect(
+            tool_name=manifest.tool_id,
+            args=request.arguments,
+            side_effect_level=manifest.side_effect_level.value,
+            adapter_kind=adapter.execution_mode.value,
+        )
         with self._tool_unit_of_work_factory() as repo:
             repo.publish_tool_version(
                 ToolVersionInput(
@@ -639,11 +646,7 @@ class ToolControlPlaneRuntime:
                     input_schema=manifest.input_schema,
                     output_schema=manifest.output_schema,
                     adapter_kind=adapter.execution_mode.value,
-                    effect_level=(
-                        "READ_ONLY"
-                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                        else "PHASE16_REQUIRED"
-                    ),
+                    effect_level=effect_policy.effect_level,
                 )
             )
             repo.record_adapter_binding(
@@ -657,6 +660,8 @@ class ToolControlPlaneRuntime:
                     "timeout_seconds": adapter.timeout_seconds,
                     "network_policy": adapter.network_policy,
                     "sandbox_profile": adapter.sandbox_profile,
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
                 },
             )
             repo.install_tool(
@@ -672,7 +677,12 @@ class ToolControlPlaneRuntime:
                 workspace_id=workspace_id,
                 tool_installation_id=f"tool-installation:{workspace_id}:{manifest.tool_id}",
                 expected_generation=1,
-                activation_payload={"runtime": "ToolInvocationGateway", "phase": "PHASE15"},
+                activation_payload={
+                    "runtime": "ToolInvocationGateway",
+                    "phase": "PHASE16",
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
+                },
             )
             repo.prepare_action(
                 PreparedToolActionInput(
@@ -681,15 +691,16 @@ class ToolControlPlaneRuntime:
                     workspace_id=workspace_id,
                     tool_operation_id=tool_operation_id,
                     canonical_args=redact_sensitive_payload(request.arguments),
-                    target_resources=tuple(_network_targets(request.arguments)) or (f"tool://{manifest.tool_id}",),
-                    effect_level=(
-                        "READ_ONLY"
-                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                        else "PHASE16_REQUIRED"
-                    ),
-                    approval_required=result.approval_required,
+                    target_resources=effect_policy.target_resource_set.resource_refs,
+                    effect_level=effect_policy.effect_level,
+                    approval_required=effect_policy.approval_required or result.approval_required,
                     idempotency_key=request.execution_id or request.tool_request_id,
                     security_epoch_ref=f"security-epoch:{request.trace_id}",
+                    effect_policy_version=effect_policy.policy_version,
+                    effect_policy_hash=effect_policy.policy_hash,
+                    target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                    target_conflict_keys=effect_policy.target_resource_set.conflict_keys,
+                    action_proposal_ref=f"action-proposal:{request.task_id}:{request.tool_request_id}",
                     status="READY" if result.status == "completed" else "OBSOLETE",
                 )
             )

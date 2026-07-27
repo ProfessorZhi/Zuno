@@ -45,6 +45,25 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 
 当前有 cancellation/async callback 的 contract fixture，但缺少真实 async job binding、callback authenticity/order、cancellation receipt、compensation attempt、manual assessment authorization 和对应 persistence/reconciler。
 
+## 实施进展
+
+### P16-T01 Effect Classification 与 TargetResourceSet
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 `src/backend/zuno/capability/tool_runtime/effect_policy.py`，定义 `ToolEffectClass`、`TargetResourceSet`、`ToolEffectPolicy` 和 `classify_tool_effect`。
+- 默认 `ToolInvocationGateway` 在 publish、adapter binding、activation 和 PreparedToolAction 前统一计算 effect policy。
+- PreparedAction Hash 输入新增 `action_proposal_ref`、`target_resource_set_ref`、`target_conflict_keys`、`effect_policy_version` 和 `effect_policy_hash`。
+- 有副作用 Tool 仍保持 fail-closed，不 dispatch provider；阻断 observation/receipt 写入 effect class 与 TargetResourceSet 信息。
+- 默认 capability runtime 的 Tool Runtime facts 同步写入 effect policy 元数据。
+
+验证：
+
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking -p no:cacheprovider`：3 passed。
+- Failure Fingerprint：首次失败为 PreparedAction hash expected 使用未脱敏邮箱，实际 runtime 使用 `redact_sensitive_payload(args)`；修复测试预期后 targeted rerun 通过。
+
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`，但没有任何 Work Package 可以关闭。本文只冻结启动 Gap，不证明 implementation available、quality proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 当前切片已完成并验证，但 P16-G03 至 P16-G07 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

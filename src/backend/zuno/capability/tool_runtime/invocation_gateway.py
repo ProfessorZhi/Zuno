@@ -13,6 +13,7 @@ from zuno.platform.database.tool_runtime import (
     ToolVersionInput,
 )
 from zuno.platform.security import redact_sensitive_payload
+from .effect_policy import classify_tool_effect
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +47,12 @@ class ToolInvocationGateway:
         receipt_id = f"tool-execution-receipt:{call_id}"
         tool_definition_id = f"tool-definition:{tool_name}"
         tool_version_id = f"tool-version:{tool_name}:v1"
-        effect_level = "READ_ONLY" if readonly else "PHASE16_REQUIRED"
+        effect_policy = classify_tool_effect(
+            tool_name=tool_name,
+            args=args,
+            readonly=readonly,
+            adapter_kind=adapter_kind,
+        )
 
         with self._unit_of_work_factory() as repo:
             repo.publish_tool_version(
@@ -58,7 +64,7 @@ class ToolInvocationGateway:
                     input_schema={"type": "object"},
                     output_schema={"type": "object"},
                     adapter_kind=adapter_kind,
-                    effect_level=effect_level,
+                    effect_level=effect_policy.effect_level,
                 )
             )
             repo.record_adapter_binding(
@@ -67,7 +73,12 @@ class ToolInvocationGateway:
                 tool_version_id=tool_version_id,
                 adapter_kind=adapter_kind,
                 adapter_version=f"{adapter_kind}:phase15",
-                conformance_payload={"readonly": readonly, "gateway": "ToolInvocationGateway"},
+                conformance_payload={
+                    "readonly": readonly,
+                    "gateway": "ToolInvocationGateway",
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
+                },
             )
             repo.install_tool(
                 tool_installation_id=f"tool-installation:{workspace_id}:{tool_name}",
@@ -82,7 +93,12 @@ class ToolInvocationGateway:
                 workspace_id=workspace_id,
                 tool_installation_id=f"tool-installation:{workspace_id}:{tool_name}",
                 expected_generation=1,
-                activation_payload={"gateway": "ToolInvocationGateway", "readonly": readonly},
+                activation_payload={
+                    "gateway": "ToolInvocationGateway",
+                    "readonly": readonly,
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
+                },
             )
             repo.prepare_action(
                 PreparedToolActionInput(
@@ -91,17 +107,22 @@ class ToolInvocationGateway:
                     workspace_id=workspace_id,
                     tool_operation_id=f"{tool_version_id}:operation:default",
                     canonical_args=redact_sensitive_payload(args),
-                    target_resources=_target_resources(args, tool_name),
-                    effect_level=effect_level,
-                    approval_required=False,
+                    target_resources=effect_policy.target_resource_set.resource_refs,
+                    effect_level=effect_policy.effect_level,
+                    approval_required=effect_policy.approval_required,
                     idempotency_key=call_id,
                     security_epoch_ref=f"security-epoch:{trace_id}",
-                    status="READY" if readonly else "OBSOLETE",
+                    effect_policy_version=effect_policy.policy_version,
+                    effect_policy_hash=effect_policy.policy_hash,
+                    target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                    target_conflict_keys=effect_policy.target_resource_set.conflict_keys,
+                    action_proposal_ref=f"action-proposal:{call_id}",
+                    status="READY" if effect_policy.provider_dispatch_allowed else "OBSOLETE",
                 )
             )
 
-        if not readonly:
-            blocked_reason = "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+        if not effect_policy.provider_dispatch_allowed:
+            blocked_reason = effect_policy.blocked_reason or "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
             self._record_terminal(
                 tenant_id=tenant_id,
                 prepared_id=prepared_id,
@@ -111,7 +132,13 @@ class ToolInvocationGateway:
                 dispatch_certainty="NOT_DISPATCHED",
                 effect_certainty="NO_EFFECT",
                 adapter_kind=adapter_kind,
-                payload={"blocked": True, "reason": blocked_reason},
+                payload={
+                    "blocked": True,
+                    "reason": blocked_reason,
+                    "effect_class": effect_policy.effect_class.value,
+                    "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+                    "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+                },
             )
             return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
 
@@ -204,15 +231,5 @@ class ToolInvocationGateway:
                 allowlist_count=0,
                 guard_payload={"gateway": "ToolInvocationGateway", "direct_handler_bypass": False},
             )
-
-
-def _target_resources(args: dict[str, Any], tool_name: str) -> tuple[str, ...]:
-    resources = []
-    for key in ("url", "path", "endpoint", "resource", "query"):
-        value = args.get(key)
-        if value:
-            resources.append(str(value))
-    return tuple(resources) or (f"tool://{tool_name}",)
-
 
 __all__ = ["ToolGatewayReceipt", "ToolInvocationGateway"]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 from pathlib import Path
@@ -7,6 +8,11 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
+from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
+from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway
+
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.security import redact_sensitive_payload
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.memory import ContextPackInput, MemoryRepository, MemoryUnitOfWork, MemoryVersionInput
 from zuno.platform.database.tool_runtime import (
@@ -346,3 +352,97 @@ def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_e
             text("SELECT status, effect_certainty FROM tool_execution_receipts ORDER BY receipt_id")
         ).all()
         assert ("FAILED", "NO_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
+
+
+def test_phase16_gateway_records_side_effect_classification_before_blocking(engine) -> None:
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    dispatched = False
+
+    async def executor() -> str:
+        nonlocal dispatched
+        dispatched = True
+        return "sent"
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        tenant_id="tenant-phase16",
+        workspace_id="workspace-phase16",
+        trace_id="trace-phase16",
+        call_id="call-phase16-mail",
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+
+    with engine.connect() as conn:
+        prepared = conn.execute(
+            text(
+                """
+                SELECT effect_level, status, approval_required, prepared_action_hash
+                FROM prepared_tool_actions
+                WHERE prepared_tool_action_id = 'prepared-tool-action:call-phase16-mail'
+                """
+            )
+        ).mappings().one()
+        version = conn.execute(
+            text(
+                """
+                SELECT effect_level
+                FROM tool_versions
+                WHERE tool_version_id = 'tool-version:mail.send:v1'
+                """
+            )
+        ).mappings().one()
+        observation = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-mail'
+                """
+            )
+        ).mappings().one()
+
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        readonly=False,
+        adapter_kind="API",
+    )
+    expected_hash = canonical_sha256(
+        {
+            "action_proposal_ref": "action-proposal:call-phase16-mail",
+            "tool_operation_id": "tool-version:mail.send:v1:operation:default",
+            "canonical_args": redact_sensitive_payload({"to": "review@example.com", "body": "hello"}),
+            "target_resources": list(effect_policy.target_resource_set.resource_refs),
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+            "effect_level": effect_policy.effect_level,
+            "effect_policy_version": effect_policy.policy_version,
+            "effect_policy_hash": effect_policy.policy_hash,
+            "approval_required": effect_policy.approval_required,
+            "security_epoch_ref": "security-epoch:trace-phase16",
+            "idempotency_key": "call-phase16-mail",
+        }
+    )
+
+    assert prepared["effect_level"] == "IRREVERSIBLE_WRITE"
+    assert prepared["status"] == "OBSOLETE"
+    assert prepared["approval_required"] is True
+    assert prepared["prepared_action_hash"] == expected_hash
+    assert version["effect_level"] == "IRREVERSIBLE_WRITE"
+    assert observation["redacted_payload_hash"] == canonical_sha256(
+        {
+            "blocked": True,
+            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "effect_class": "IRREVERSIBLE_WRITE",
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+        }
+    )

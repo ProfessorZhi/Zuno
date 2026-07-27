@@ -36,6 +36,11 @@ class PreparedToolActionInput:
     approval_required: bool
     idempotency_key: str
     security_epoch_ref: str
+    effect_policy_version: str = ""
+    effect_policy_hash: str = ""
+    target_resource_set_ref: str = ""
+    target_conflict_keys: tuple[str, ...] = ()
+    action_proposal_ref: str = ""
     status: str = "PREPARED"
 
 
@@ -353,10 +358,15 @@ class ToolRepository:
         target_resources_hash = canonical_sha256(list(prepared.target_resources))
         prepared_hash = canonical_sha256(
             {
+                "action_proposal_ref": prepared.action_proposal_ref,
                 "tool_operation_id": prepared.tool_operation_id,
                 "canonical_args": prepared.canonical_args,
                 "target_resources": list(prepared.target_resources),
+                "target_resource_set_ref": prepared.target_resource_set_ref,
+                "target_conflict_keys": list(prepared.target_conflict_keys),
                 "effect_level": prepared.effect_level,
+                "effect_policy_version": prepared.effect_policy_version,
+                "effect_policy_hash": prepared.effect_policy_hash,
                 "approval_required": prepared.approval_required,
                 "security_epoch_ref": prepared.security_epoch_ref,
                 "idempotency_key": prepared.idempotency_key,
