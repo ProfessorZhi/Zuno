@@ -904,6 +904,101 @@ def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(eng
     assert assessment["residual_uncertainty"] == "provider outage left delivery unknown"
     assert assessment["evidence_payload_hash"] == canonical_sha256(assessment_payload)
 
+
+def test_phase16_reconciliation_restart_age_escalates_without_retry(engine) -> None:
+    tenant_id = "tenant-phase16-restart-reconcile"
+    workspace_id = "workspace-phase16-restart-reconcile"
+    call_id = "call-phase16-restart-unknown"
+    secret_ref = "security-secret-ref:phase16:restart-unknown"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:restart-unknown:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:restart-unknown:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-restart-unknown-1"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-restart-unknown",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert receipt.status == "reconcile_required"
+    assert calls == 1
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET created_at = now() - interval '20 minutes',
+                    age_escalation_after_seconds = 60
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-restart-unknown'
+                """
+            )
+        )
+
+    restarted_gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    escalated = restarted_gateway.escalate_due_reconciliations(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT status, next_action, manual_assessment_required
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-restart-unknown'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert escalated == 1
+    assert calls == 1
+    assert row["status"] == "ESCALATED"
+    assert row["next_action"] == "MANUAL_ASSESSMENT"
+    assert row["manual_assessment_required"] is True
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-restart-unknown"
+
+
 def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> None:
     tenant_id = "tenant-phase16-async"
     workspace_id = "workspace-phase16-async"
@@ -1067,6 +1162,96 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
     )
     assert claim["status"] == "completed"
     assert claim["result_ref"] == "tool-async-job:call-phase16-async-export"
+
+
+def test_phase16_async_restart_times_out_due_job_without_callback_replay(engine) -> None:
+    tenant_id = "tenant-phase16-async-timeout"
+    workspace_id = "workspace-phase16-async-timeout"
+    call_id = "call-phase16-async-timeout-export"
+    secret_ref = "security-secret-ref:phase16:async-timeout"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-timeout:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async-timeout:1"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/timeout-export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-timeout",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": "provider-job:phase16:async-timeout:1"}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET deadline_at = now() - interval '1 second'
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-timeout-export'
+                """
+            )
+        )
+
+    restarted_gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    timed_out = restarted_gateway.timeout_due_async_jobs(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        job = conn.execute(
+            text(
+                """
+                SELECT status, provider_job_id
+                FROM tool_async_jobs
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-timeout-export'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert timed_out == 1
+    assert calls == 1
+    assert job["provider_job_id"] == "provider-job:phase16:async-timeout:1"
+    assert job["status"] == "TIMEOUT"
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-async-job:call-phase16-async-timeout-export"
+
 
 def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> None:
     tenant_id = "tenant-phase16-compensation"

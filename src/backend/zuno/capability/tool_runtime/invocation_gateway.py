@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -572,6 +572,21 @@ class ToolInvocationGateway:
                 result_ref=result_ref,
             )
 
+
+
+    def escalate_due_reconciliations(self, *, tenant_id: str, now: datetime | None = None) -> int:
+        with self._unit_of_work_factory() as repo:
+            return repo.escalate_due_reconciliations(
+                tenant_id=tenant_id,
+                now=now or datetime.now(tz=UTC),
+            )
+
+    def timeout_due_async_jobs(self, *, tenant_id: str, now: datetime | None = None) -> int:
+        with self._unit_of_work_factory() as repo:
+            return repo.timeout_due_async_jobs(
+                tenant_id=tenant_id,
+                now=now or datetime.now(tz=UTC),
+            )
 
     def record_async_callback(
         self,

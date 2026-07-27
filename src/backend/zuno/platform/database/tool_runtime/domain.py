@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
@@ -722,6 +722,41 @@ class ToolRepository:
                 "reconciliation_payload_hash": canonical_sha256(reconciliation.reconciliation_payload),
             },
         )
+
+
+    def escalate_due_reconciliations(self, *, tenant_id: str, now: Any) -> int:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET status = 'ESCALATED',
+                    next_action = 'MANUAL_ASSESSMENT',
+                    manual_assessment_required = true,
+                    updated_at = :now
+                WHERE tenant_id = :tenant_id
+                  AND status in ('OPEN', 'WAITING_PROVIDER')
+                  AND created_at + make_interval(secs => age_escalation_after_seconds) <= :now
+                """
+            ),
+            {"tenant_id": tenant_id, "now": now},
+        )
+        return int(result.rowcount or 0)
+
+    def timeout_due_async_jobs(self, *, tenant_id: str, now: Any) -> int:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET status = 'TIMEOUT',
+                    updated_at = :now
+                WHERE tenant_id = :tenant_id
+                  AND status = 'WAITING_CALLBACK'
+                  AND deadline_at <= :now
+                """
+            ),
+            {"tenant_id": tenant_id, "now": now},
+        )
+        return int(result.rowcount or 0)
 
     def record_async_job(self, job: ToolAsyncJobInput) -> None:
         self.connection.execute(

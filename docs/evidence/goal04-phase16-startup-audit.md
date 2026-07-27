@@ -223,6 +223,23 @@ Failure Fingerprint：
 - first relevant frame：无 pytest 栈，命令被工具超时终止。
 - environment signature：未显式 `sys.path.insert`，Python 默认导入主 worktree editable install。
 - resolution：不重复同一大命令，改为拆分并显式插入 PHASE16 worktree source path。
+### P16-T09 Restart Recovery、Age Escalation 与 Async Timeout
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.escalate_due_reconciliations(...)` 支持 restart 后扫描 `OPEN/WAITING_PROVIDER` 且超过 `created_at + age_escalation_after_seconds` 的 UNKNOWN reconciliation，并推进为 `status=ESCALATED`、`next_action=MANUAL_ASSESSMENT`、`manual_assessment_required=true`。
+- `ToolRepository.timeout_due_async_jobs(...)` 支持 restart 后扫描过期 `WAITING_CALLBACK` async job，并推进为 `status=TIMEOUT`。
+- `ToolInvocationGateway` 暴露同名 scanner 入口，证明 recovery 可以由新进程重新创建 gateway 后继续执行，不依赖进程内状态。
+- 新增 integration tests 证明 recovery scanner 不会重新执行原 provider executor；UNKNOWN idempotency claim 仍指向 reconciliation，async idempotency claim 仍指向 async job。
+
+验证：
+
+- `python -m py_compile src\backend\zuno\platform\database\tool_runtime\domain.py src\backend\zuno\capability\tool_runtime\invocation_gateway.py tests\integration\test_goal03_wave_b_persistence.py`：通过。
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_reconciliation_restart_age_escalates_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_async_restart_times_out_due_job_without_callback_replay -p no:cacheprovider --tb=short`：2 passed。
+- 使用显式 `sys.path.insert(...)` 运行 PHASE16 focused suite，包含 default ToolControlPlane gateway cutover、Known/UNKNOWN/Reconciliation age escalation、Async/Timeout、Cancellation、Compensation、Manual Assessment 和 bypass guard：14 passed。
+- Failure Fingerprint：首次 focused run 未找到 async timeout test，原因是文本插入 marker 未命中；补入测试后 targeted run 通过，无业务失败栈。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -249,4 +266,4 @@ Closure Reviewer 结论：
 P16-T01 至 P16-T08R 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease 和 IdempotencyClaim。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08R 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool 已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T09 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，restart recovery 已覆盖 UNKNOWN age escalation 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
