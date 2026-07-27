@@ -7,6 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_36_wave_b_memory_tool_runtime.py"
 CUTOVER_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_41_wave_b_runtime_cutover.py"
 PHASE16_EFFECT_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_phase16_tool_effect_receipts.py"
+PHASE16_RECONCILIATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_43_phase16_tool_effect_reconciliations.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -23,6 +24,10 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260727_42"' in phase16_effect
     assert 'down_revision = "20260727_41"' in phase16_effect
     assert phase16_effect.count("op.create_table(") == phase16_effect.count("op.drop_table(")
+    phase16_reconciliation = PHASE16_RECONCILIATION_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260727_43"' in phase16_reconciliation
+    assert 'down_revision = "20260727_42"' in phase16_reconciliation
+    assert phase16_reconciliation.count("op.create_table(") == phase16_reconciliation.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -94,6 +99,27 @@ def test_phase16_effect_receipt_migration_contains_known_effect_fact_table() -> 
         "uq_tool_effect_receipts_provider_effect",
         "uq_tool_effect_receipts_idempotency",
         "ck_tool_effect_receipts_certainty",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+def test_phase16_reconciliation_migration_contains_unknown_effect_fact_table() -> None:
+    text = PHASE16_RECONCILIATION_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "tool_effect_reconciliations",
+        "provider_effect_id",
+        "next_action",
+        "reconciliation_query_hash",
+        "manual_assessment_required",
+        "age_escalation_after_seconds",
+        "idempotency_generation",
+        "fencing_lease_id",
+        "secret_lease_id",
+        "reconciliation_payload_hash",
+        "uq_tool_effect_reconciliations_provider_effect",
+        "uq_tool_effect_reconciliations_idempotency",
+        "ck_tool_effect_reconciliations_next_action",
     )
 
     for fragment in required_fragments:

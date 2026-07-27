@@ -102,6 +102,28 @@ class ToolEffectReceiptInput:
     native_result: dict[str, Any]
     effect_payload: dict[str, Any]
     append_only_generation: int
+
+@dataclass(frozen=True, slots=True)
+class ToolEffectReconciliationInput:
+    reconciliation_id: str
+    tenant_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    execution_receipt_id: str
+    provider_effect_id: str
+    status: str
+    next_action: str
+    reconciliation_query: dict[str, Any]
+    manual_assessment_required: bool
+    age_escalation_after_seconds: int
+    idempotency_scope: str
+    idempotency_key: str
+    idempotency_generation: int
+    fencing_resource_id: str
+    fencing_lease_id: str
+    fencing_epoch: int
+    secret_lease_id: str | None
+    reconciliation_payload: dict[str, Any]
 class ToolUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -561,6 +583,52 @@ class ToolRepository:
             },
         )
 
+
+    def record_effect_reconciliation(self, reconciliation: ToolEffectReconciliationInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_effect_reconciliations (
+                    reconciliation_id, tenant_id, prepared_tool_action_id, attempt_id,
+                    execution_receipt_id, provider_effect_id, status, next_action,
+                    reconciliation_query_hash, manual_assessment_required,
+                    age_escalation_after_seconds, idempotency_scope, idempotency_key,
+                    idempotency_generation, fencing_resource_id, fencing_lease_id,
+                    fencing_epoch, secret_lease_id, reconciliation_payload_hash
+                )
+                VALUES (
+                    :reconciliation_id, :tenant_id, :prepared_tool_action_id, :attempt_id,
+                    :execution_receipt_id, :provider_effect_id, :status, :next_action,
+                    :reconciliation_query_hash, :manual_assessment_required,
+                    :age_escalation_after_seconds, :idempotency_scope, :idempotency_key,
+                    :idempotency_generation, :fencing_resource_id, :fencing_lease_id,
+                    :fencing_epoch, :secret_lease_id, :reconciliation_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "reconciliation_id": reconciliation.reconciliation_id,
+                "tenant_id": reconciliation.tenant_id,
+                "prepared_tool_action_id": reconciliation.prepared_tool_action_id,
+                "attempt_id": reconciliation.attempt_id,
+                "execution_receipt_id": reconciliation.execution_receipt_id,
+                "provider_effect_id": reconciliation.provider_effect_id,
+                "status": reconciliation.status,
+                "next_action": reconciliation.next_action,
+                "reconciliation_query_hash": canonical_sha256(reconciliation.reconciliation_query),
+                "manual_assessment_required": reconciliation.manual_assessment_required,
+                "age_escalation_after_seconds": reconciliation.age_escalation_after_seconds,
+                "idempotency_scope": reconciliation.idempotency_scope,
+                "idempotency_key": reconciliation.idempotency_key,
+                "idempotency_generation": reconciliation.idempotency_generation,
+                "fencing_resource_id": reconciliation.fencing_resource_id,
+                "fencing_lease_id": reconciliation.fencing_lease_id,
+                "fencing_epoch": reconciliation.fencing_epoch,
+                "secret_lease_id": reconciliation.secret_lease_id,
+                "reconciliation_payload_hash": canonical_sha256(reconciliation.reconciliation_payload),
+            },
+        )
     def record_bypass_guard(
         self,
         *,
@@ -596,6 +664,7 @@ __all__ = [
     "PreparedToolActionInput",
     "ToolAttemptInput",
     "ToolEffectReceiptInput",
+    "ToolEffectReconciliationInput",
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
     "ToolRepository",

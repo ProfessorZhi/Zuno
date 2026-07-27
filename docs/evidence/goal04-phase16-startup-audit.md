@@ -114,6 +114,24 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval -p no:cacheprovider`：5 passed。
 - Failure Fingerprint 1：fixture TRUNCATE 未包含新增 FK 子表 `tool_effect_receipts`，PostgreSQL 报 `FeatureNotSupported cannot truncate a table referenced in a foreign key constraint`；补充清理表后通过该 setup gate。
 - Failure Fingerprint 2：旧 `security_approval_requests` 未清理导致 approval deadline expired；补充 PHASE16 Security prepare/approval/audit/epoch 表和 infra claim/lease 表清理后 targeted rerun 通过。
+
+### P16-T05 UNKNOWN Effect 与 Reconciliation
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 append-only Alembic revision `20260727_43_phase16_tool_effect_reconciliations.py`，创建 `tool_effect_reconciliations` 作为 UNKNOWN Effect 的正式持久事实。
+- `ToolInvocationGateway` 新增 `ToolEffectUnknownError`，表达 provider dispatch 可能发生但结果丢失的状态。
+- 已审批且全部前置门禁通过后，若 provider 抛出 `ToolEffectUnknownError`，gateway 记录 `ToolExecutionReceipt(status=UNKNOWN, effect_certainty=UNKNOWN_EFFECT)`，创建 `tool_effect_reconciliations`，并返回受控 `reconcile_required`。
+- UNKNOWN 路径不会重新执行原动作；infra idempotency claim 标记为 `completed`，`result_ref` 指向 reconciliation，阻止重复请求重放 provider。
+- Reconciliation 持久事实绑定 provider effect id、query hash、payload hash、idempotency generation、fencing token 和 SecretLease，并设置 age escalation 窗口。
+
+验证：
+
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry -p no:cacheprovider`：6 passed。
+- `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：5 passed。
+- Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01、P16-T02、P16-T03 与 P16-T04 当前切片已完成并验证，但 UNKNOWN/Reconciliation、Cancellation/Async、Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T05 当前切片已完成并验证，但 Cancellation/Async、Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

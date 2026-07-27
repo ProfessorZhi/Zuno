@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import text
 
 from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
-from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway
+from zuno.capability.tool_runtime.invocation_gateway import ToolEffectUnknownError, ToolInvocationGateway
 
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
@@ -69,6 +69,7 @@ def engine(migrated_postgres):
                     security_effective_epochs,
                     security_secret_leases,
                     security_secret_refs,
+                    tool_effect_reconciliations,
                     tool_effect_receipts,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
@@ -706,3 +707,126 @@ def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> 
     assert lease["owner_id"] == f"tool-runtime:{call_id}"
     assert lease["epoch"] == 1
     assert observation_hash == canonical_sha256(effect_payload)
+
+def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(engine) -> None:
+    tenant_id = "tenant-phase16-unknown"
+    workspace_id = "workspace-phase16-unknown"
+    call_id = "call-phase16-unknown-mail"
+    secret_ref = "security-secret-ref:phase16:unknown-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:unknown-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-unknown-1"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-unknown",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    unknown_payload = {
+        "provider_effect_id": "mail-provider-effect:phase16:unknown:1",
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": "tool-effect-reconciliation:call-phase16-unknown-mail",
+        "next_action": "RECONCILE",
+        "reconciliation_query": {"provider": "mail", "message_id": "message-unknown-1"},
+    }
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE provider_effect_id = 'mail-provider-effect:phase16:unknown:1'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       age_escalation_after_seconds, idempotency_scope, idempotency_key,
+                       idempotency_generation, secret_lease_id, reconciliation_query_hash,
+                       reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-unknown-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "mail-provider-effect:phase16:unknown:1"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["age_escalation_after_seconds"] == 900
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-unknown-mail"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(
+        {"provider": "mail", "message_id": "message-unknown-1"}
+    )
+    assert reconciliation["reconciliation_payload_hash"] == canonical_sha256(unknown_payload)
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
+    assert observation_hash == canonical_sha256(unknown_payload)

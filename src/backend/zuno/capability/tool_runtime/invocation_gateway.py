@@ -14,6 +14,7 @@ from zuno.platform.database.tool_runtime import (
     PreparedToolActionInput,
     ToolAttemptInput,
     ToolEffectReceiptInput,
+    ToolEffectReconciliationInput,
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolUnitOfWork,
@@ -27,6 +28,18 @@ from zuno.platform.security import (
 )
 from .effect_policy import classify_tool_effect
 
+
+class ToolEffectUnknownError(RuntimeError):
+    def __init__(
+        self,
+        *,
+        provider_effect_id: str,
+        reconciliation_query: dict[str, Any],
+        message: str = "tool effect outcome is unknown",
+    ) -> None:
+        super().__init__(message)
+        self.provider_effect_id = provider_effect_id
+        self.reconciliation_query = reconciliation_query
 
 @dataclass(frozen=True, slots=True)
 class ToolGatewayReceipt:
@@ -195,7 +208,59 @@ class ToolInvocationGateway:
                 if execute_prerequisites.blocked_reason:
                     payload["infrastructure_blocked_reason"] = execute_prerequisites.blocked_reason
                 elif approved:
-                    result = await executor()
+                    try:
+                        result = await executor()
+                    except ToolEffectUnknownError as exc:
+                        unknown_payload = _unknown_effect_payload(exc=exc, call_id=call_id)
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="UNKNOWN",
+                            dispatch_certainty="DISPATCHED",
+                            effect_certainty="UNKNOWN_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=unknown_payload,
+                        )
+                        reconciliation_id = f"tool-effect-reconciliation:{call_id}"
+                        with self._unit_of_work_factory() as repo:
+                            repo.record_effect_reconciliation(
+                                ToolEffectReconciliationInput(
+                                    reconciliation_id=reconciliation_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    execution_receipt_id=receipt_id,
+                                    provider_effect_id=exc.provider_effect_id,
+                                    status="OPEN",
+                                    next_action="RECONCILE",
+                                    reconciliation_query=exc.reconciliation_query,
+                                    manual_assessment_required=False,
+                                    age_escalation_after_seconds=900,
+                                    idempotency_scope=execute_prerequisites.idempotency_scope,
+                                    idempotency_key=execute_prerequisites.idempotency_key,
+                                    idempotency_generation=execute_prerequisites.idempotency_generation,
+                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                    fencing_epoch=execute_prerequisites.fencing_epoch,
+                                    secret_lease_id=security_prepare.secret_lease_id,
+                                    reconciliation_payload=unknown_payload,
+                                )
+                            )
+                        self._complete_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                            result_ref=reconciliation_id,
+                        )
+                        return None, ToolGatewayReceipt(
+                            "reconcile_required",
+                            prepared_id,
+                            attempt_id,
+                            receipt_id,
+                            "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
+                        )
                     effect_payload = _effect_payload_from_result(result=result, call_id=call_id)
                     provider_effect_id = str(effect_payload["provider_effect_id"])
                     self._record_terminal(
@@ -528,4 +593,14 @@ def _effect_payload_from_result(*, result: Any, call_id: str) -> dict[str, Any]:
         "native_result": redact_sensitive_payload(native),
     }
 
-__all__ = ["ToolGatewayReceipt", "ToolInvocationGateway"]
+
+def _unknown_effect_payload(*, exc: ToolEffectUnknownError, call_id: str) -> dict[str, Any]:
+    return {
+        "provider_effect_id": exc.provider_effect_id,
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": f"tool-effect-reconciliation:{call_id}",
+        "next_action": "RECONCILE",
+        "reconciliation_query": redact_sensitive_payload(exc.reconciliation_query),
+    }
+__all__ = ["ToolEffectUnknownError", "ToolGatewayReceipt", "ToolInvocationGateway"]
