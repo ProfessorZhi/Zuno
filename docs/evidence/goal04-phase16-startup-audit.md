@@ -169,6 +169,24 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：7 passed。
 - Failure Fingerprint 1：`test_phase16_gateway_records_unknown_effect_reconciliation_without_retry`，`AttributeError`，`ToolInvocationGateway` 缺少 `record_manual_effect_assessment`；原因是插入点换行格式未命中，补入 gateway 方法后 targeted rerun 通过。
 - Failure Fingerprint 2：`test_phase16_gateway_records_compensation_as_new_governed_action`，`TypeError: 'NoneType' object is not subscriptable`，第二个 compensation Tool call 因同一 target resource 的现有 fencing lease 被阻断；测试改为使用独立 target resource，证明 compensation 动作本身走完整治理链后 targeted rerun 通过。
+### P16-T08 Side-effect Cutover 与 Bypass Zero Guard
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 `src/backend/zuno/capability/tool_runtime/bypass_guard.py`，为 legacy direct tool caller 提供统一 fail-closed guard。
+- `ReactAgent`、`PlanExecuteAgent` 和 `MCPManager.call_mcp_tools` 在直接调用 `tool.ainvoke`、`tool.invoke`、`tool.coroutine` 或 `tool.func` 前必须先执行 `ensure_legacy_direct_tool_allowed`。
+- Guard 只允许名称上明确 readonly 的 legacy direct tool；写 Tool 或无法证明 readonly 的 Tool 使用固定原因 `PHASE16_DIRECT_TOOL_BYPASS_BLOCKED` fail-closed，不允许绕过 `ToolInvocationGateway` 直接 dispatch。
+- 既有 user-defined CLI/OpenAPI Tool Runtime 已经通过 `ToolInvocationGateway.invoke_readonly` 包裹 adapter execution；新增 repo test 固定该默认路径。
+- 本切片未新增 migration；它收口的是生产写 Tool direct execution 入口，不改变 `20260727_45` Alembic head。
+
+验证：
+
+- `python -m py_compile src\backend\zuno\capability\tool_runtime\bypass_guard.py src\backend\zuno\agent\core\agents\react_agent.py src\backend\zuno\agent\core\agents\plan_execute_agent.py src\backend\zuno\platform\services\mcp\manager.py tests\capability\test_phase16_tool_bypass_guard.py tests\repo\test_phase16_tool_bypass_zero.py`：通过。
+- `python -m pytest -q tests\capability\test_phase16_tool_bypass_guard.py tests\repo\test_phase16_tool_bypass_zero.py -p no:cacheprovider`：4 passed。
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_compensation_as_new_governed_action -p no:cacheprovider`：8 passed。
+- Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T07 当前切片已完成并验证，但 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08 当前切片已完成并验证；PHASE16 closure 仍需要独立 closure audit、Alembic/head/upgrade gate、fault/security/integration gate、状态文档和 Coordinator Approval。本文不证明 PHASE16 completed、quality fully proven 或 production ready。

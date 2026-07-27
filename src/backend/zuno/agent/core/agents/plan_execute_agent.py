@@ -1,7 +1,8 @@
-import asyncio
+﻿import asyncio
 import json
 from typing import List
 from loguru import logger
+from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 
