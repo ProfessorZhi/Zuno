@@ -38,12 +38,15 @@ def test_goal03_product_runtime_request_route_is_exposed_and_returns_receipt(mon
                     stream_cursor_id="cursor:command:client:1:1",
                     stream_sequence_no=1,
                     freshness="current",
+                    redaction_decision_ref="redaction:command:client:1:server",
                 ),
                 available_actions=(
                     ProductAvailableActionResult(
-                        action="cancel",
+                        action="CANCEL",
                         action_token_id="action-token:command:client:1:cancel",
                         target_ref="runtime-request:1",
+                        effective_security_epoch_ref="security-epoch:product:default",
+                        projection_version=1,
                         expires_at="2026-07-26T00:00:00+00:00",
                     ),
                 ),
@@ -77,9 +80,12 @@ def test_goal03_product_runtime_request_route_is_exposed_and_returns_receipt(mon
         "stream_cursor_id": "cursor:command:client:1:1",
         "stream_sequence_no": 1,
         "freshness": "current",
+        "redaction_decision_ref": "redaction:command:client:1:server",
     }
-    assert body["data"]["available_actions"][0]["action"] == "cancel"
+    assert body["data"]["available_actions"][0]["action"] == "CANCEL"
     assert body["data"]["available_actions"][0]["action_token_id"] == "action-token:command:client:1:cancel"
+    assert body["data"]["available_actions"][0]["effective_security_epoch_ref"] == "security-epoch:product:default"
+    assert body["data"]["available_actions"][0]["projection_version"] == 1
 
 
 def test_goal03_product_stream_events_route_uses_last_event_id(monkeypatch) -> None:
@@ -241,7 +247,10 @@ def test_goal03_product_stream_route_returns_sse_projection_events(monkeypatch) 
     assert "event: RESYNC_REQUIRED" in response.text
     assert '"resync_required": true' in response.text
     assert "event: HEARTBEAT" in response.text
+    assert '"event_id":"heartbeat"' in response.text
     assert '"event_type":"HEARTBEAT"' in response.text
+    assert '"sequence_no":0' in response.text
+    assert '"redaction_decision_ref":"redaction:heartbeat"' in response.text
 
 
 def test_goal03_product_router_is_registered_in_main_api_router() -> None:

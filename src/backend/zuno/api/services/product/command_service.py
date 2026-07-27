@@ -23,6 +23,8 @@ class ProductAvailableActionResult:
     action: str
     action_token_id: str
     target_ref: str
+    effective_security_epoch_ref: str
+    projection_version: int
     expires_at: str
 
 
@@ -42,6 +44,7 @@ class ProductProjectionResult:
     stream_cursor_id: str
     stream_sequence_no: int
     freshness: str
+    redaction_decision_ref: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,12 +194,15 @@ class ProductService:
                 stream_cursor_id=cursor.cursor_id,
                 stream_sequence_no=projection.source_watermark,
                 freshness="gap" if projection.gap_detected else "current",
+                redaction_decision_ref=projection.redaction_decision_ref,
             ),
             available_actions=(
                 ProductAvailableActionResult(
-                    action="cancel",
+                    action="CANCEL",
                     action_token_id=action.action_token_id,
                     target_ref=action.target_ref,
+                    effective_security_epoch_ref=action.effective_security_epoch_ref,
+                    projection_version=projection.source_watermark,
                     expires_at=action.expires_at.isoformat(),
                 ),
             ),

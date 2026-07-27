@@ -247,7 +247,10 @@ def test_phase09_product_service_bootstraps_legacy_runtime_agent_version(engine,
     assert result.command_id == "command:workspace:bootstrap:1"
     assert result.receipt_id == "command:workspace:bootstrap:1:receipt:1"
     assert result.projection.stream_cursor_id.startswith("cursor:command:workspace:bootstrap:1:")
-    assert result.available_actions[0].action == "cancel"
+    assert result.available_actions[0].action == "CANCEL"
+    assert result.available_actions[0].effective_security_epoch_ref == "security-epoch:product:default"
+    assert result.available_actions[0].projection_version == 1
+    assert result.projection.redaction_decision_ref == "redaction:command:workspace:bootstrap:1:server"
 
     with engine.connect() as conn:
         rows = conn.execute(

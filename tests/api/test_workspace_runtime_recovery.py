@@ -26,12 +26,15 @@ def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
             stream_cursor_id=f"cursor:{command_id}:1",
             stream_sequence_no=1,
             freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
         ),
         available_actions=(
             ProductAvailableActionResult(
-                action="cancel",
+                action="CANCEL",
                 action_token_id=f"action-token:{command_id}:cancel",
                 target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
                 expires_at="2026-07-26T00:00:00+00:00",
             ),
         ),

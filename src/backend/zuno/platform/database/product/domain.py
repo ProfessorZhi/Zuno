@@ -51,6 +51,7 @@ class ProductCommandReceiptRef:
 class ProductProjectionEventRef:
     projection_event_id: str
     source_watermark: int
+    redaction_decision_ref: str
     gap_detected: bool = False
     duplicate: bool = False
 
@@ -597,7 +598,7 @@ class ProductRepository:
         existing = self.connection.execute(
             text(
                 """
-                SELECT projection_event_id, source_watermark, gap_detected
+                SELECT projection_event_id, source_watermark, redaction_decision_ref, gap_detected
                 FROM product_projection_events
                 WHERE tenant_id = :tenant_id
                   AND source_module = :source_module
@@ -614,6 +615,7 @@ class ProductRepository:
             return ProductProjectionEventRef(
                 projection_event_id=str(existing["projection_event_id"]),
                 source_watermark=int(existing["source_watermark"]),
+                redaction_decision_ref=str(existing["redaction_decision_ref"]),
                 gap_detected=bool(existing["gap_detected"]),
                 duplicate=True,
             )
@@ -648,6 +650,7 @@ class ProductRepository:
         return ProductProjectionEventRef(
             projection_event_id=projection_event_id,
             source_watermark=source_watermark,
+            redaction_decision_ref=redaction_decision_ref,
             gap_detected=gap_detected,
         )
 

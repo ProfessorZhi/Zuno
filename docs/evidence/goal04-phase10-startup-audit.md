@@ -146,15 +146,91 @@ PHASE10 已正式启动为 `in_progress`。本文冻结启动 Gap，并记录 P1
 - `connectProductRuntimeProjectionStream` 使用 store 中的 `lastEventId` 作为 `Last-Event-ID` resume cursor，并把 stream event 写入 `applyStreamEvent`；
 - 401/403 清空授权视图并进入 `AUTH_REQUIRED`，Projection Gap 标记 `RESYNC_REQUIRED`；
 - `consumeProductStoreAction` 只消费 store 中服务端下发的 `AvailableAction` token；
-- `normalizeAvailableActionsFailClosed` 要求 action token 同时具备 `effective_security_epoch_ref` 和匹配的 `projection_version`，后端 Product v1 当前返回字段不全时不会在前端补假 action。
+- `normalizeAvailableActionsFailClosed` 要求 action token 同时具备 `effective_security_epoch_ref` 和匹配的 `projection_version`，后端字段缺失时前端不会补假 action。
 
 仍未完成：
 
 - 旧 `createWorkspaceTaskAPI` 仍作为后续切流对象保留，当前不是 closure；
 - 旧 `approveWorkspaceTaskAPI` 在 Product action token 缺失时仍作为 fallback，必须在后端 AvailableAction 完整投影后删除；
-- `ProductRuntimeRequestReceipt.projection.redaction_decision_ref` 当前在后端响应中缺失，前端只标记 `redaction:api-contract-missing`，不能作为最终授权/脱敏证据；
 - 普通聊天路径仍使用 `workspaceSimpleChatStreamAPI`；
 - Artifact download、feedback、Desktop bridge、Browser E2E、Desktop smoke、Build/Lint 仍未完成。
+
+## P10-T05 当前进展
+
+已更新：
+
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/v1/product.py`
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/memory/engine.py`
+- `apps/web/src/product/client.ts`
+- `apps/web/src/product/runtime.ts`
+
+当前 Product API projection / action 契约闭环覆盖：
+
+- `ProductProjectionResult` 增加 `redaction_decision_ref`，API runtime request receipt 直接返回服务端 projection 的 redaction decision；
+- `ProductAvailableActionResult` 增加 `effective_security_epoch_ref` 和 `projection_version`，API runtime request receipt 返回完整 AvailableAction；
+- `ProductProjectionEventRef` 增加 `redaction_decision_ref`，重复投影事件也能从数据库原始记录返回 redaction decision；
+- Runtime request 默认 cancel action 从后端返回 `CANCEL`，与前端 `AvailableActionKind` 枚举保持一致；
+- SSE heartbeat 返回完整 `ProductStreamEvent` 字段：`event_id`、`event_type`、`sequence_no`、`redaction_decision_ref`、`resync_required`；
+- 前端 `ProductRuntimeRequestReceipt.projection.redaction_decision_ref` 改为必填，不再使用 `redaction:api-contract-missing` fallback。
+- `MemoryEngine` 声明 `governed_context_runtime` slot，修复 Product / Workspace focused tests 触发 RuntimeDependencyFactory 时无法绑定 governed memory runtime 的根因。
+
+仍未完成：
+
+- 后端 Product v1 仍只提供 runtime request / action consume / stream，不含正式 artifact download、feedback、publication delivery endpoint；
+- 默认页面仍保留旧 workspace task fallback；
+- Browser E2E、Desktop smoke、Build/Lint 仍未完成。
+
+P10-T05 验证：
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py -p no:cacheprovider
+8 passed
+```
+
+```text
+python -m pytest -q tests\api\test_goal03_product_route.py -p no:cacheprovider
+6 passed, 1 warning
+```
+
+```text
+python -m pytest -q tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+first run failure fingerprint:
+command: python -m pytest -q tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+test: test_phase09_product_service_bootstraps_legacy_runtime_agent_version
+exception: AttributeError: 'ProductProjectionEventRef' object has no attribute 'redaction_decision_ref'
+first relevant stack frame: src\backend\zuno\api\services\product\command_service.py:197
+recovery: ProductProjectionEventRef 增加 redaction_decision_ref，并从 duplicate 查询返回该字段
+targeted rerun: 1 passed
+```
+
+```text
+python -m pytest -q tests\api\test_completion_unified_runtime.py -p no:cacheprovider
+first run failure fingerprint:
+test examples: test_completion_route_streams_unified_runtime_events; test_completion_route_forwards_explicit_cutover_mode
+exception: AttributeError: 'MemoryEngine' object has no attribute 'governed_context_runtime'
+first relevant stack frame: src\backend\zuno\agent\runtime\factory.py:82
+recovery: MemoryEngine 声明 governed_context_runtime slot
+targeted rerun: 5 passed
+```
+
+```text
+python -m pytest -q tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_fails_closed_when_product_runtime_record_fails tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_canaries_phase08_cutover_from_product_entry tests\api\test_workspace_runtime_recovery.py::test_workspace_task_snapshot_and_stream_include_unified_runtime -p no:cacheprovider
+first run failure fingerprint:
+exception: AttributeError: 'MemoryEngine' object has no attribute 'governed_context_runtime'
+first relevant stack frame: src\backend\zuno\agent\runtime\factory.py:82
+targeted rerun: 3 passed
+```
+
+```text
+command: python -m pytest -q tests\api\test_goal03_product_route.py tests\api\test_completion_unified_runtime.py tests\api\test_workspace_task_runtime.py tests\api\test_workspace_runtime_recovery.py tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+exception: command timed out
+first relevant stack frame: n/a; no output returned before timeout
+environment signature: Windows PowerShell; pytest mixed API suite exceeded 124 seconds
+retry_count: 0
+recovery: 未重复同一大命令，改为按 Product route / service / targeted runtime tests 分组验证。
+```
 
 ## 本轮验证
 

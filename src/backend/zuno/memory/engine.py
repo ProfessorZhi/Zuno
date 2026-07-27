@@ -186,6 +186,7 @@ class MemoryEngine:
     semantic_adapter: DeterministicSemanticMemoryAdapter = field(
         default_factory=DeterministicSemanticMemoryAdapter
     )
+    governed_context_runtime: Any | None = None
 
     def append_event(
         self,

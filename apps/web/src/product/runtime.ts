@@ -133,7 +133,7 @@ export const productProjectionFromRuntimeReceipt = (receipt: ProductRuntimeReque
   projection_version: receipt.projection.stream_sequence_no,
   freshness: normalizeProjectionFreshness(receipt.projection.freshness),
   display_status: mapRuntimeReceiptStatus(receipt.status),
-  redaction_decision_ref: receipt.projection.redaction_decision_ref || 'redaction:api-contract-missing',
+  redaction_decision_ref: receipt.projection.redaction_decision_ref,
 })
 
 export const normalizeAvailableActionsFailClosed = (

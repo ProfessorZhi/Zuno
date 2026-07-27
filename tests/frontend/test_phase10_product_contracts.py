@@ -207,7 +207,7 @@ def test_phase10_product_runtime_adapter_connects_command_stream_and_action_toke
         "runtime_request_ref: `runtime:${requestId}`",
         "raw_intent_ref: `intent:${context.conversation_id}:${requestId}`",
         "client_request_id: requestId",
-        "redaction:api-contract-missing",
+        "redaction_decision_ref: receipt.projection.redaction_decision_ref",
     ]:
         assert phrase in text
 

@@ -101,12 +101,15 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
                 stream_cursor_id="cursor:completion-shadow",
                 stream_sequence_no=1,
                 freshness="current",
+                redaction_decision_ref="redaction:completion-shadow",
             ),
             available_actions=(
                 ProductAvailableActionResult(
-                    action="cancel",
+                    action="CANCEL",
                     action_token_id="action-token:completion-shadow:cancel",
                     target_ref="completion-runtime-request:dialog_phase09:shadow",
+                    effective_security_epoch_ref="security-epoch:product:default",
+                    projection_version=1,
                     expires_at="2026-07-26T00:00:00+00:00",
                 ),
             ),

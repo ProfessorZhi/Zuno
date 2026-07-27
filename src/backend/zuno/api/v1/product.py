@@ -63,12 +63,15 @@ async def submit_runtime_request(
                     "stream_cursor_id": result.projection.stream_cursor_id,
                     "stream_sequence_no": result.projection.stream_sequence_no,
                     "freshness": result.projection.freshness,
+                    "redaction_decision_ref": result.projection.redaction_decision_ref,
                 },
                 "available_actions": [
                     {
                         "action": action.action,
                         "action_token_id": action.action_token_id,
                         "target_ref": action.target_ref,
+                        "effective_security_epoch_ref": action.effective_security_epoch_ref,
+                        "projection_version": action.projection_version,
                         "expires_at": action.expires_at,
                     }
                     for action in result.available_actions
@@ -173,7 +176,8 @@ async def stream_projection_events(
             )
         yield (
             "event: HEARTBEAT\n"
-            'data: {"event_type":"HEARTBEAT","resync_required":false}\n\n'
+            'data: {"event_id":"heartbeat","event_type":"HEARTBEAT","sequence_no":0,'
+            '"redaction_decision_ref":"redaction:heartbeat","resync_required":false}\n\n'
         )
 
     return StreamingResponse(
