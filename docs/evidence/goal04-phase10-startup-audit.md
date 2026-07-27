@@ -916,6 +916,44 @@ recovery used for runtime smoke only: ALTER TABLE product_agent_definitions ADD 
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T22 Web Product Runtime Cutover Guard
+
+已更新：
+
+- `apps/web/src/product/runtime.ts`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Web Product runtime cutover guard：
+
+- Product Web runtime 显式声明 `ProductRuntimeCutoverMode = shadow | canary | new_default | rollback`；
+- `resolveProductRuntimeCutoverMode()` 从 `localStorage['zuno.productRuntimeCutoverMode']` 或 `VITE_PRODUCT_RUNTIME_CUTOVER_MODE` 解析模式，未知值 fail-safe 到 `new_default`；
+- `shadow` 发送 `SHADOW_SUBMIT_USER_GOAL`，`canary` 发送 `CANARY_SUBMIT_USER_GOAL`，`new_default` 发送 `SUBMIT_USER_GOAL`；
+- 所有 Product runtime payload 带 `cutover_mode`，避免切流状态只存在前端隐式状态；
+- `rollback` 在前端 Product runtime adapter 内 fail-closed，抛出 `ProductRuntimeRollbackError`，不会调用 `submitProductRuntimeRequest()`，也不会回到已删除的 legacy workspace task/simple chat 路径。
+
+本轮验证：
+
+```text
+python -m pytest tests\\frontend\\test_phase10_product_contracts.py::test_phase10_product_runtime_cutover_modes_are_explicit_and_rollback_fail_closed -q
+1 passed
+```
+
+```text
+python -m pytest tests\\frontend\\test_phase10_product_contracts.py tests\\frontend\\test_frontend_workspace_features.py -q
+19 passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
+仍未完成：
+
+- shadow/canary/default-new/rollback 仍缺完整闭环 closure evidence；当前只完成 Web runtime cutover guard；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -936,6 +974,9 @@ python -m pytest tests\repo\test_goal03_wave_a_migration_contract.py::test_goal0
 python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py infra\db\alembic\versions\20260727_43_goal04_product_agent_definition_description.py
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-desktop-smoke.ps1
 python -m pytest tests\tools\test_launcher_scripts.py tests\repo\test_goal03_wave_a_migration_contract.py tests\api\test_goal03_product_route.py -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_product_runtime_cutover_modes_are_explicit_and_rollback_fail_closed -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+npm run build -w zuno-frontend
 python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
@@ -967,5 +1008,5 @@ environment signature: local PostgreSQL alembic_version contains 20260727_45; cu
 ```
 
 ```text
-shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
+shadow/canary/default-new/rollback closure gate 仍未完整完成；PHASE10 仍为 in_progress，不能写 completed。
 ```

@@ -316,7 +316,7 @@ def test_phase10_product_runtime_adapter_connects_command_stream_and_action_toke
         "store.applyProjection(projection, acceptedActions)",
         "consumeProductAction",
         "store.replaceAvailableActions",
-        "command_kind: 'SUBMIT_USER_GOAL'",
+        "command_kind: buildProductCommandKindForCutover(cutoverMode)",
         "runtime_request_ref: `runtime:${requestId}`",
         "raw_intent_ref: `intent:${context.conversation_id}:${requestId}`",
         "client_request_id: requestId",
@@ -336,6 +336,31 @@ def test_phase10_product_runtime_adapter_connects_command_stream_and_action_toke
         assert phrase in text
 
     assert "export * from './runtime'" in index_text
+
+
+def test_phase10_product_runtime_cutover_modes_are_explicit_and_rollback_fail_closed() -> None:
+    assert RUNTIME.exists()
+    text = RUNTIME.read_text(encoding="utf-8")
+
+    for phrase in [
+        "export type ProductRuntimeCutoverMode = 'shadow' | 'canary' | 'new_default' | 'rollback'",
+        "PRODUCT_RUNTIME_CUTOVER_STORAGE_KEY = 'zuno.productRuntimeCutoverMode'",
+        "resolveProductRuntimeCutoverMode",
+        "buildProductCommandKindForCutover",
+        "ProductRuntimeRollbackError",
+        "'SHADOW_SUBMIT_USER_GOAL'",
+        "'CANARY_SUBMIT_USER_GOAL'",
+        "'SUBMIT_USER_GOAL'",
+        "if (cutoverMode === 'rollback')",
+        "throw new ProductRuntimeRollbackError",
+        "cutover_mode: cutoverMode",
+        "rollback_reason: 'product_runtime_cutover_rollback'",
+        "command_kind: buildProductCommandKindForCutover(cutoverMode)",
+    ]:
+        assert phrase in text
+
+    rollback_block = text.split("if (cutoverMode === 'rollback')", 1)[1].split("const command = buildProductRuntimeRequestCommand", 1)[0]
+    assert "submitProductRuntimeRequest" not in rollback_block
 
 
 def test_phase10_default_workspace_page_uses_product_projection_path_without_legacy_task_fallback() -> None:
