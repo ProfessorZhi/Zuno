@@ -3,6 +3,32 @@ type DesktopConfig = {
   bridgeUrl?: string
   bridgeToken?: string
   workspaceRoot?: string
+  productBridgeVersion?: string
+  productBridgeCapabilities?: {
+    runtimeRequest?: boolean
+    actionConsume?: boolean
+    projectionStream?: boolean
+    streamLastEventId?: boolean
+    streamDedup?: boolean
+    streamReauthorization?: boolean
+    artifactRead?: boolean
+    artifactDownload?: boolean
+    feedback?: boolean
+  }
+  productEndpoints?: {
+    runtimeRequests?: string
+    actionConsume?: string
+    streamEvents?: string
+    stream?: string
+    artifactReadTemplate?: string
+    artifactDownloadTemplate?: string
+    feedback?: string
+  }
+  productBridgeHealth?: {
+    bridgeUrlConfigured?: boolean
+    tokenConfigured?: boolean
+    workspaceRootConfigured?: boolean
+  }
   taskLifecycleEndpoint?: string
   artifactDownloadEndpointTemplate?: string
   workspaceTaskLifecycleStates?: string[]
@@ -72,4 +98,8 @@ export const apiUrl = (path: string) => {
 
 export const isDesktopRuntime = () => {
   return Boolean(window.__ZUNO_DESKTOP__)
+}
+
+export const getDesktopProductBridge = () => {
+  return window.__ZUNO_DESKTOP__?.productBridgeVersion ? window.__ZUNO_DESKTOP__ : undefined
 }

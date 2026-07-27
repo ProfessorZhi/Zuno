@@ -271,6 +271,40 @@ git diff --check
 无 whitespace error；仅 CRLF warning
 ```
 
+## P10-T07 当前进展
+
+已更新：
+
+- `apps/desktop/preload.cjs`
+- `apps/desktop/README.md`
+- `apps/web/src/utils/api.ts`
+
+当前 Desktop Versioned Product Bridge 覆盖：
+
+- `window.__ZUNO_DESKTOP__` 新增 `productBridgeVersion = product-desktop-bridge-v1.phase10`；
+- `productBridgeCapabilities` 明确声明 runtime request、action consume、projection stream、Last-Event-ID resume、dedup、reauthorization、artifact read/download 和 feedback；
+- `productEndpoints` 明确声明 Product v1 runtime request、action consume、stream events、stream、artifact read/download 和 feedback endpoint；
+- `productBridgeHealth` 暴露本地 bridge URL、token、workspace root 是否注入；
+- Web 侧 `DesktopConfig` 增加 Product bridge 类型字段，并新增 `getDesktopProductBridge` 读取 versioned bridge。
+
+仍未完成：
+
+- 尚未运行 Electron Desktop smoke；
+- 桌面本地 bridge `/execute` 仍是文件/命令 helper，不是 Product runtime 的独立离线 delivery engine；
+- Desktop artifact/offline/error smoke、Build/Lint、Browser E2E 仍未完成。
+
+P10-T07 验证：
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -p no:cacheprovider
+16 passed
+```
+
+```text
+git diff --check
+无 whitespace error；仅 CRLF warning
+```
+
 ## 本轮验证
 
 已通过：

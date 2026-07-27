@@ -107,3 +107,35 @@ def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():
         "recoverable_failed",
     ]:
         assert phrase in preload or phrase in desktop_readme or phrase in web_api
+
+
+def test_desktop_shell_exposes_versioned_product_bridge_contract():
+    preload = (REPO_ROOT / "apps/desktop/preload.cjs").read_text(encoding="utf-8")
+    desktop_readme = (REPO_ROOT / "apps/desktop/README.md").read_text(encoding="utf-8")
+    web_api = (REPO_ROOT / "apps/web/src/utils/api.ts").read_text(encoding="utf-8")
+
+    for phrase in [
+        "productBridgeVersion",
+        "product-desktop-bridge-v1.phase10",
+        "productBridgeCapabilities",
+        "runtimeRequest: true",
+        "actionConsume: true",
+        "projectionStream: true",
+        "streamLastEventId: true",
+        "streamDedup: true",
+        "streamReauthorization: true",
+        "artifactRead: true",
+        "artifactDownload: true",
+        "feedback: true",
+        "productEndpoints",
+        "runtimeRequests: '/api/v1/product/runtime-requests'",
+        "actionConsume: '/api/v1/product/actions/consume'",
+        "streamEvents: '/api/v1/product/stream-events'",
+        "stream: '/api/v1/product/stream'",
+        "artifactReadTemplate: '/api/v1/product/artifacts/:artifactId'",
+        "artifactDownloadTemplate: '/api/v1/product/artifacts/:artifactId/download'",
+        "feedback: '/api/v1/product/feedback'",
+        "productBridgeHealth",
+        "getDesktopProductBridge",
+    ]:
+        assert phrase in preload or phrase in desktop_readme or phrase in web_api

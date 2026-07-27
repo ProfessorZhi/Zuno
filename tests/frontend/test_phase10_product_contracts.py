@@ -256,3 +256,22 @@ def test_phase10_default_workspace_page_uses_product_projection_path_before_lega
         assert phrase in text
 
     assert text.index("await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>") < text.index("const response = await createWorkspaceTaskAPI(payload)")
+
+
+def test_phase10_desktop_bridge_is_versioned_product_surface() -> None:
+    preload = (REPO_ROOT / "apps/desktop/preload.cjs").read_text(encoding="utf-8")
+    web_api = (REPO_ROOT / "apps/web/src/utils/api.ts").read_text(encoding="utf-8")
+
+    for phrase in [
+        "productBridgeVersion: 'product-desktop-bridge-v1.phase10'",
+        "productBridgeCapabilities",
+        "streamLastEventId: true",
+        "streamDedup: true",
+        "streamReauthorization: true",
+        "artifactReadTemplate: '/api/v1/product/artifacts/:artifactId'",
+        "artifactDownloadTemplate: '/api/v1/product/artifacts/:artifactId/download'",
+        "feedback: '/api/v1/product/feedback'",
+        "productBridgeVersion?: string",
+        "getDesktopProductBridge",
+    ]:
+        assert phrase in preload or phrase in web_api
