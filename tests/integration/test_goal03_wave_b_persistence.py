@@ -765,6 +765,107 @@ def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> 
     assert lease["epoch"] == 1
     assert observation_hash == canonical_sha256(effect_payload)
 
+
+def test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-stale-execute"
+    workspace_id = "workspace-phase16-stale-execute"
+    call_id = "call-phase16-stale-execute-mail"
+    trace_id = "trace-phase16-stale-execute"
+    secret_ref = "security-secret-ref:phase16:stale-execute"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:stale-execute:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    security_factory_calls = 0
+
+    def security_factory() -> SecurityUnitOfWork:
+        nonlocal security_factory_calls
+        security_factory_calls += 1
+        if security_factory_calls == 2:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE security_effective_epochs
+                        SET status = 'revoked'
+                        WHERE epoch_ref = :epoch_ref
+                        """
+                    ),
+                    {"epoch_ref": f"security-epoch:{trace_id}"},
+                )
+        return SecurityUnitOfWork(engine)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=security_factory,
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:stale-execute:1", "message_id": "message-stale-execute"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert "stale security epoch before effect" in receipt.blocked_reason
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-stale-execute-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-stale-execute-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-stale-execute-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+    assert claim["status"] == "in_progress"
+    assert claim["result_ref"] is None
+
 def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch(engine) -> None:
     tenant_id = "tenant-phase16-idempotency"
     workspace_id = "workspace-phase16-idempotency"

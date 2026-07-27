@@ -243,6 +243,27 @@ class ToolInvocationGateway:
                 if execute_prerequisites.blocked_reason:
                     payload["infrastructure_blocked_reason"] = execute_prerequisites.blocked_reason
                 elif approved:
+                    try:
+                        self._reauthorize_execute_epoch(
+                            tenant_id=tenant_id,
+                            call_id=call_id,
+                            prepared_action_hash=prepared_action_hash,
+                            approval_required=effect_policy.approval_required,
+                        )
+                    except SecurityPersistenceError as exc:
+                        payload["security_blocked_reason"] = str(exc)
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="FAILED",
+                            dispatch_certainty="NOT_DISPATCHED",
+                            effect_certainty="NO_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=payload,
+                        )
+                        return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
                     secret_lease_id = self._issue_secret_lease(
                         tenant_id=tenant_id,
                         call_id=call_id,
@@ -552,6 +573,24 @@ class ToolInvocationGateway:
                 audience=f"tool:{tool_name}",
             )
         return lease_id
+
+    def _reauthorize_execute_epoch(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        prepared_action_hash: str,
+        approval_required: bool,
+    ) -> None:
+        assert self._security_unit_of_work_factory is not None
+        decision_id = f"authorization-decision:{call_id}"
+        with self._security_unit_of_work_factory() as repo:
+            repo.validate_pre_effect_authorization(
+                decision_id=decision_id,
+                tenant_id=tenant_id,
+                prepared_action_hash=prepared_action_hash,
+                require_approved_request=approval_required,
+            )
 
     def _record_execute_prerequisites(
         self,
