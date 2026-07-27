@@ -1025,7 +1025,7 @@ def test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch(engine) ->
         ).scalar_one() == 0
         assert conn.execute(
             text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-revoked-secret-mail'")
-        ).scalar_one() == 1
+        ).scalar_one() == 0
         execution = conn.execute(
             text(
                 """

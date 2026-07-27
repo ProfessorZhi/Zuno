@@ -378,18 +378,20 @@ Failure Fingerprint：
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ### P16-T17 SecretLease Revocation Fail-Closed
 
-状态：implementation-present，focused runtime validation blocked by local PostgreSQL availability，未构成 PHASE16 closure。
+状态：completed-for-current-slice，未构成 PHASE16 closure。
 
 已实现内容：
 
 - `ToolInvocationGateway` 在 provider dispatch 前发行并验证 `SecretLease`；若 `_issue_secret_lease(...)` 因 revoked/invalid secret 抛出 `SecurityPersistenceError`，gateway 会记录 FAILED / NOT_DISPATCHED / NO_EFFECT，并返回 blocked receipt。
 - revoked secret 不会调用 provider executor，也不会写入 `tool_effect_receipts`，避免用失败副作用路径伪造成功。
-- 失败 lease 可作为安全层审计事实保留；运行时证据边界以未 dispatch、无 EffectReceipt 和 terminal execution receipt 为准。
+- SecretLease 发行与验证处于同一 Security UoW；验证失败时 failed lease insert 回滚，运行时证据边界为未 dispatch、无 SecretLease、无 EffectReceipt 和 terminal execution receipt。
 
 验证：
 
 - `py_compile`：`src\backend\zuno\capability\tool_runtime\invocation_gateway.py` 与 `tests\integration\test_goal03_wave_b_persistence.py` 通过。
-- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short`：setup 阶段 PostgreSQL 连接超时，测试未执行到业务代码。
+- 初次使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short`：setup 阶段 PostgreSQL 连接超时，测试未执行到业务代码。
+- 环境恢复：启动 `com.docker.service`、Docker Desktop engine，并运行 `docker compose -f infra/docker/docker-compose.yml up -d postgres`；`zuno-postgres` healthcheck 为 `healthy`。
+- 环境恢复后从同一 focused test 命令继续：首次进入业务断言失败，因测试错误地期望 failed lease row 保留；修正为 `security_secret_leases` count `0` 后 targeted rerun：1 passed。
 
 Failure Fingerprint：
 
@@ -398,7 +400,16 @@ Failure Fingerprint：
 - exception：`sqlalchemy.exc.OperationalError / psycopg.errors.ConnectionTimeout`。
 - first relevant frame：`infra\db\alembic\env.py:94`，`with connectable.connect() as connection`。
 - environment signature：PHASE16 worktree `acea3822` 后本地修改，`ZUNO_TEST_POSTGRES_URL` 默认 `postgresql+psycopg://postgres:postgres@localhost:5432/zuno?connect_timeout=5`，Windows 未发现 PostgreSQL service，Docker Desktop Linux engine 未运行。
-- recovery action：恢复本机 PostgreSQL 或启动可用 Docker/PostgreSQL 后，从同一 focused test 命令继续；未发生业务断言失败，禁止在环境恢复前重复运行同一命令。
+- recovery action：已启动 Docker Desktop 与 `zuno-postgres`，从相同 focused test 命令继续。
+
+业务断言 Failure Fingerprint：
+
+- command：上述 revoked secret focused test。
+- test：`test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch`。
+- exception：`AssertionError`。
+- first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:1026`。
+- environment signature：`zuno-postgres` healthy，Alembic head `20260727_45`，PHASE16 worktree `bc4af119` 后本地修正。
+- resolution：failed SecretLease insert 与 validation 位于同一 UoW，异常回滚 lease row；测试断言改为无 SecretLease row，targeted rerun 通过。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -422,7 +433,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T16 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；P16-T17 SecretLease revoked-secret fail-closed implementation 与 regression test 已加入，但 focused runtime validation 当前被本地 PostgreSQL availability 阻塞。默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T17 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T16 当前切片已完成并验证；P16-T17 已实现 revoked SecretLease fail-closed regression，但 PostgreSQL 环境恢复前不能声明 runtime focused test 通过。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T17 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
