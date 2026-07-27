@@ -129,6 +129,10 @@ class ProductAgentCatalogEntryResult:
     catalog_entry_id: str
     agent_version_id: str
     publication_ref: str
+    agent_definition_id: str
+    display_name: str
+    description: str
+    definition_status: str
     authorized: bool
     visibility_scope: str
     effective_permission_preview_ref: str
@@ -502,6 +506,10 @@ class ProductService:
                 catalog_entry_id=entry.catalog_entry_id,
                 agent_version_id=entry.latest_version_id,
                 publication_ref=entry.publication_id,
+                agent_definition_id=entry.agent_definition_id,
+                display_name=entry.display_name,
+                description=entry.description,
+                definition_status=entry.definition_status,
                 authorized=True,
                 visibility_scope=entry.visibility_scope,
                 effective_permission_preview_ref=f"permission-preview:{entry.catalog_entry_id}",

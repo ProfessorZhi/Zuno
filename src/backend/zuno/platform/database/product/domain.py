@@ -115,6 +115,9 @@ class ProductAgentCatalogEntryView:
     publication_id: str
     visibility_scope: str
     status: str
+    display_name: str
+    description: str
+    definition_status: str
 
 
 class ProductUnitOfWork:
@@ -515,8 +518,15 @@ class ProductRepository:
                        catalog.latest_version_id,
                        coalesce(publication.publication_id, '') AS publication_id,
                        catalog.visibility_scope,
-                       catalog.status
+                       catalog.status,
+                       definition.display_name,
+                       coalesce(definition.description, '') AS description,
+                       definition.status AS definition_status
                 FROM product_agent_catalog_entries catalog
+                JOIN product_agent_definitions definition
+                  ON definition.tenant_id = catalog.tenant_id
+                 AND definition.workspace_id = catalog.workspace_id
+                 AND definition.agent_definition_id = catalog.agent_definition_id
                 LEFT JOIN product_agent_publications publication
                   ON publication.tenant_id = catalog.tenant_id
                  AND publication.workspace_id = catalog.workspace_id
@@ -538,6 +548,9 @@ class ProductRepository:
                 publication_id=str(row["publication_id"]),
                 visibility_scope=str(row["visibility_scope"]),
                 status=str(row["status"]),
+                display_name=str(row["display_name"]),
+                description=str(row["description"]),
+                definition_status=str(row["definition_status"]),
             )
             for row in rows
         )

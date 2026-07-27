@@ -137,6 +137,10 @@ export interface AgentCatalogEntry {
   catalog_entry_id: string
   agent_version_id: string
   publication_ref?: string
+  agent_definition_id: string
+  display_name: string
+  description?: string
+  definition_status: AgentDefinition['status']
   authorized: boolean
   visibility_scope: AgentPublication['scope']
   effective_permission_preview_ref: string

@@ -617,6 +617,54 @@ npm run build -w zuno-frontend
 passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
 ```
 
+## P10-T16 当前进展
+
+已更新：
+
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/contracts.ts`
+- `apps/web/src/pages/agent/agent-editor.vue`
+- `tests/api/test_goal03_product_route.py`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Agent Studio default-new / Product Catalog metadata 覆盖：
+
+- Product Catalog repository 读取时 join `product_agent_definitions`，返回 `agent_definition_id`、`display_name`、`description`、`definition_status`；
+- ProductService 和 Product API payload 暴露上述 catalog display metadata，前端不需要再为了展示 catalog 卡片读取旧 Agent 事实；
+- Web Product contract `AgentCatalogEntry` 增加 catalog display metadata 字段；
+- Agent Editor 保存动作不再调用旧 `createAgentAPI` / `updateAgentAPI`，改为直接创建 Product AgentDraft、发布 AgentVersion、安装 AgentInstallation，并写入 Product projection store；
+- 前端静态测试新增负断言，防止 Agent Editor 保存路径回退到旧 Agent create/update API。
+
+仍未完成：
+
+- Agent 列表页仍保留旧 Agent list/search/delete 和编辑加载路径，等待 Product Catalog default-new / rollback 后继续删除；
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T16 验证：
+
+```text
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_catalog_routes_use_product_service tests\frontend\test_phase10_product_contracts.py -q
+11 passed, 1 warning
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
+```text
+python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py src\backend\zuno\api\v1\product.py
+passed
+```
+
 ## 本轮验证
 
 已通过：
@@ -633,6 +681,8 @@ python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_scrip
 python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_catalog_routes_use_product_service tests\frontend\test_phase10_product_contracts.py -q
+python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py src\backend\zuno\api\v1\product.py
 ```
 
 未通过 / 未完成：

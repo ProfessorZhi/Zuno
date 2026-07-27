@@ -25,6 +25,9 @@ def test_phase10_product_contract_surface_exists() -> None:
         "AgentPublication",
         "AgentInstallation",
         "AgentCatalogEntry",
+        "agent_definition_id: string",
+        "display_name: string",
+        "definition_status: AgentDefinition['status']",
         "publication_ref?: string",
         "status: 'DRAFTING' | 'DRAFT' | 'ACTIVE' | 'ARCHIVED' | 'RETIRED' | 'REVOKED'",
         "status: 'OPEN' | 'DRAFT' | 'VALIDATING' | 'READY_TO_PUBLISH' | 'LOCKED' | 'DISCARDED'",
@@ -229,6 +232,16 @@ def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
         "PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'",
     ]:
         assert phrase in agent_editor
+
+    for phrase in [
+        "createAgentAPI",
+        "updateAgentAPI",
+        "AgentCreateRequest",
+        "AgentUpdateRequest",
+        "await updateAgentAPI",
+        "await createAgentAPI",
+    ]:
+        assert phrase not in agent_editor
 
     for phrase in [
         "listProductAgentCatalog",

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Check, PictureFilled } from '@element-plus/icons-vue'
-import { createAgentAPI, getAgentByIdAPI, updateAgentAPI, type AgentCreateRequest, type AgentUpdateRequest } from '../../apis/agent'
+import { getAgentByIdAPI } from '../../apis/agent'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { getVisibleToolsAPI, type ToolResponse } from '../../apis/tool'
 import { getMCPServersAPI, type MCPServer } from '../../apis/mcp-server'
@@ -164,8 +164,8 @@ const buildProductAgentConfiguration = () => ({
   enable_memory: form.enable_memory,
 })
 
-const syncProductAgentStudioSurface = async (legacyAgentId: string) => {
-  const stableAgentRef = normalizeProductRefSegment(legacyAgentId || activeAgentId.value || form.name)
+const syncProductAgentStudioSurface = async (agentRef: string) => {
+  const stableAgentRef = normalizeProductRefSegment(agentRef || activeAgentId.value || form.name)
   const clientRequestId = `agent-studio:${stableAgentRef}`
   const configuration = buildProductAgentConfiguration()
   const draftReceipt = await createProductAgentDraft({
@@ -384,25 +384,6 @@ const saveAgent = async (event?: Event) => {
 
   saving.value = true
   try {
-    const payload: AgentCreateRequest | AgentUpdateRequest = {
-      ...(isEditing.value ? { agent_id: activeAgentId.value } : {}),
-      name: form.name.trim(),
-      description: form.description.trim(),
-      logo_url: form.logo_url,
-      tool_ids: [...form.tool_ids],
-      llm_id: form.llm_id,
-      mcp_ids: [...form.mcp_ids],
-      system_prompt: form.system_prompt.trim(),
-      knowledge_ids: [...form.knowledge_ids],
-      agent_skill_ids: [...form.agent_skill_ids],
-      enable_memory: form.enable_memory,
-    }
-
-    const response = isEditing.value ? await updateAgentAPI(payload as AgentUpdateRequest) : await createAgentAPI(payload as AgentCreateRequest)
-
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || (isEditing.value ? '更新智能体失败' : '创建智能体失败'))
-    }
     await syncProductAgentStudioSurface(activeAgentId.value || normalizeProductRefSegment(form.name))
 
     ElMessage.success(isEditing.value ? '智能体已更新' : '智能体已创建')

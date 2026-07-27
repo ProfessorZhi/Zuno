@@ -256,6 +256,10 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
                 catalog_entry_id="agent-catalog:client-publish",
                 agent_version_id=kwargs["agent_version_id"],
                 publication_ref="agent-publication:client-publish",
+                agent_definition_id=kwargs["agent_definition_id"],
+                display_name="Draft Agent",
+                description="draft desc",
+                definition_status="ACTIVE",
                 authorized=True,
                 visibility_scope=kwargs["publication_scope"],
                 effective_permission_preview_ref="permission-preview:client-publish",
@@ -279,6 +283,10 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
                 catalog_entry_id="agent-catalog:client-publish",
                 agent_version_id="agent-version:client-publish",
                 publication_ref="agent-publication:client-publish",
+                agent_definition_id="agent-definition:client-draft",
+                display_name="Draft Agent",
+                description="draft desc",
+                definition_status="ACTIVE",
                 authorized=True,
                 visibility_scope="WORKSPACE",
                 effective_permission_preview_ref="permission-preview:client-publish",
@@ -335,6 +343,9 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
     assert install_response.json()["data"]["agent_installation"]["principal_ref"] == "principal:principal-a"
     assert catalog_response.json()["data"]["agent_catalog_entries"][0]["catalog_entry_id"] == "agent-catalog:client-publish"
     assert catalog_response.json()["data"]["agent_catalog_entries"][0]["publication_ref"] == "agent-publication:client-publish"
+    assert catalog_response.json()["data"]["agent_catalog_entries"][0]["agent_definition_id"] == "agent-definition:client-draft"
+    assert catalog_response.json()["data"]["agent_catalog_entries"][0]["display_name"] == "Draft Agent"
+    assert catalog_response.json()["data"]["agent_catalog_entries"][0]["description"] == "draft desc"
     assert captured["draft"]["principal_id"] == "principal-a"
     assert captured["install"]["principal_id"] == "principal-a"
     assert captured["catalog"] == {
