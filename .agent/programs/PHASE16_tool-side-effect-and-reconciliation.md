@@ -31,7 +31,7 @@ workspace approval API/UI contract
 
 当前 PR B 分支：`codex/goal04-phase16-tool-side-effect`
 
-当前 PR head：以 GitHub PR #46 / remote branch 为准；本 evidence sync 基线为 `77dec8a0`。
+当前 PR head：以 GitHub PR #46 / remote branch 为准；本 evidence sync 基线为 `87a406bc`。
 
 当前 Evidence：`docs/evidence/goal04-phase16-startup-audit.md`
 
