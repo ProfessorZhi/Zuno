@@ -33,7 +33,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal03_backend_platform_expansion_closure() -> None:
+def test_phase_states_reflect_goal04_phase10_startup() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -42,7 +42,7 @@ def test_phase_states_reflect_goal03_backend_platform_expansion_closure() -> Non
         "PHASE07_model-gateway-runtime.md": "status: completed",
         "PHASE08_deterministic-single-controller-runtime.md": "status: completed",
         "PHASE09_product-surface-backend-runtime.md": "status: completed",
-        "PHASE10_web-desktop-product-adaptation.md": "status: ready",
+        "PHASE10_web-desktop-product-adaptation.md": "status: in_progress",
         "PHASE11_durable-ingestion-and-source-lineage.md": "status: completed",
         "PHASE12_knowledge-version-and-standard-rag.md": "status: completed",
         "PHASE13_memory-context-governance-runtime.md": "status: completed",
@@ -57,7 +57,7 @@ def test_phase_states_reflect_goal03_backend_platform_expansion_closure() -> Non
     manifest = (program_root / "program-manifest.yaml").read_text(encoding="utf-8")
     assert "minimum_vertical_slice_is_phase_completion: false" in manifest
     assert "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: completed" in manifest
-    assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: ready" in manifest
+    assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: in_progress" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: ready" in manifest

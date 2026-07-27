@@ -12,6 +12,8 @@ program_version: 2
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
 
+Goal04 PR A 已启动：PHASE10 Web/Desktop Product Adaptation 在 `codex/goal04-phase10-product-adaptation` 中为 `in_progress`。这不是 completed 证据；PHASE16 仍为 ready，可由独立 PR B / worktree 启动；PHASE17、PHASE18、PHASE19 仍受依赖约束，不得提前标记 in_progress。
+
 入口：
 
 ```text
