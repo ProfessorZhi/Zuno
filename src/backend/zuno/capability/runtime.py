@@ -560,7 +560,7 @@ class ToolControlPlaneRuntime:
                 sandbox_context=sandbox_context,
             )
             used_gateway = True
-            if gateway_status != "completed":
+            if gateway_status not in {"completed", "replayed"}:
                 events = self._events_for_blocked(
                     request=request,
                     manifest=manifest,

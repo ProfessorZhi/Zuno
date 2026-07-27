@@ -354,11 +354,28 @@ def test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_appr
             execution_id="readonly-mail-1",
         )
     )
+    write_replay = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "review@example.com", "body": "hello", "target": "mailto:review@example.com"},
+            workspace_id="workspace-b",
+            user_id="tenant-b",
+            task_id="task-mail",
+            trace_id="trace-mail",
+            model_intent="Send email.",
+            approved=True,
+            execution_id="readonly-mail-1",
+        )
+    )
 
     assert read_result.status == "completed"
     assert write_result.status == "completed"
+    assert write_replay.status == "completed"
     assert write_result.normalized_result is not None
     assert write_result.normalized_result.data["message_id"] == "msg_123"
+    assert write_replay.normalized_result is not None
+    assert write_replay.normalized_result.data["idempotency_replay"] is True
+    assert write_replay.normalized_result.data["result_ref"] == "tool-effect-receipt:readonly-mail-1"
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM prepared_tool_actions")).scalar_one() == 2
@@ -392,6 +409,9 @@ def test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_appr
         ).mappings().one()
         assert conn.execute(
             text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:readonly-mail-1'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:readonly-mail-1'")
         ).scalar_one() == 1
         assert ("SUCCEEDED", "CONFIRMED_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
         assert effect["provider_effect_id"] == "provider-effect:readonly-mail-1"
@@ -743,6 +763,99 @@ def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> 
     assert lease["owner_id"] == f"tool-runtime:{call_id}"
     assert lease["epoch"] == 1
     assert observation_hash == canonical_sha256(effect_payload)
+
+def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-idempotency"
+    workspace_id = "workspace-phase16-idempotency"
+    call_id = "call-phase16-idempotent-mail"
+    secret_ref = "security-secret-ref:phase16:idempotent-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:idempotent-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_effect_id": "mail-provider-effect:phase16:idempotent:1", "message_id": "message-idem-1"}
+
+    first_result, first_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-idempotency",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    async def replay_executor() -> dict[str, str]:
+        raise AssertionError("completed side-effect idempotency replay must not redispatch provider")
+
+    replay_result, replay_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-idempotency",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=replay_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert first_result == {"provider_effect_id": "mail-provider-effect:phase16:idempotent:1", "message_id": "message-idem-1"}
+    assert first_receipt.status == "completed"
+    assert replay_result == {
+        "idempotency_replay": True,
+        "result_ref": "tool-effect-receipt:call-phase16-idempotent-mail",
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": call_id,
+    }
+    assert replay_receipt.status == "replayed"
+    assert replay_receipt.blocked_reason == "IDEMPOTENT_SIDE_EFFECT_REPLAY"
+    assert replay_receipt.result_ref == "tool-effect-receipt:call-phase16-idempotent-mail"
+    assert calls == 1
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-idempotent-mail'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-idempotent-mail'")
+        ).scalar_one() == 1
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, generation, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert claim["status"] == "completed"
+    assert claim["generation"] == 1
+    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-idempotent-mail"
 
 def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(engine) -> None:
     tenant_id = "tenant-phase16-unknown"

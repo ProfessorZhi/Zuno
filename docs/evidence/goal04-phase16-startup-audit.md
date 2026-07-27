@@ -240,6 +240,32 @@ Failure Fingerprint：
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_reconciliation_restart_age_escalates_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_async_restart_times_out_due_job_without_callback_replay -p no:cacheprovider --tb=short`：2 passed。
 - 使用显式 `sys.path.insert(...)` 运行 PHASE16 focused suite，包含 default ToolControlPlane gateway cutover、Known/UNKNOWN/Reconciliation age escalation、Async/Timeout、Cancellation、Compensation、Manual Assessment 和 bypass guard：14 passed。
 - Failure Fingerprint：首次 focused run 未找到 async timeout test，原因是文本插入 marker 未命中；补入测试后 targeted run 通过，无业务失败栈。
+### P16-T10 Side-effect Idempotency Replay
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolInvocationGateway` 对已完成的 side-effect `infra_idempotency_claims` 不再返回含糊 blocked；当 claim 为 `completed` 且存在 `result_ref` 时，返回受控 `replayed` receipt 与原领域结果引用。
+- completed replay 不重新 dispatch provider，不新建第二条 `tool_effect_receipts`，也不重复发行 `security_secret_leases`。
+- SecretLease 发行从 Security Prepare 拆到 idempotency claim acquired 之后，保证 replay 路径仍执行最新 authorization/audit 检查，但不为已完成副作用再次取得 credential lease。
+- 默认 `ToolControlPlaneRuntime` 明确接受 gateway `replayed` 作为 successful product path；产品面仍返回 `completed`，normalized result 暴露 `idempotency_replay=true` 与原 `result_ref`。
+- `security_secret_refs` 登记改为同一 `secret_ref` 的幂等写入，避免默认 runtime 在 replay 前重复登记同一 brokered credential ref 时撞唯一约束。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch -p no:cacheprovider --tb=short`：首次 1 failed / 1 passed；失败指纹见下。
+- 修复后同一 focused command targeted rerun：2 passed。
+- 使用显式 `sys.path.insert(...)` 运行 PHASE16 focused suite，包含 effect policy、bypass guard、default ToolControlPlane cutover/replay、Gateway side-effect/security/known/idempotency replay/UNKNOWN/restart/async/timeout/compensation tests：13 passed。
+
+Failure Fingerprint：
+
+- command：上述两个 idempotency focused tests。
+- test：`test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects`。
+- exception：`sqlalchemy.exc.IntegrityError / psycopg.errors.UniqueViolation`。
+- first relevant frame：`src\backend\zuno\platform\security\persistence.py:747`，`record_secret_ref` 插入重复 `credref://workspace-b/mail.send`。
+- environment signature：PostgreSQL Alembic head `20260727_45`，显式 PHASE16 worktree `sys.path.insert`。
+- resolution：将 `security_secret_refs` 的同一 `secret_ref` 记录改为幂等 `ON CONFLICT DO NOTHING`；targeted rerun 通过。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -263,7 +289,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T08R 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease 和 IdempotencyClaim。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T10 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T09 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，restart recovery 已覆盖 UNKNOWN age escalation 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T10 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

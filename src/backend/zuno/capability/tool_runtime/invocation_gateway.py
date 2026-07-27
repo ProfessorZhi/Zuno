@@ -54,18 +54,19 @@ class ToolGatewayReceipt:
     attempt_id: str
     receipt_id: str
     blocked_reason: str = ""
+    result_ref: str = ""
 
 
 
 @dataclass(frozen=True, slots=True)
 class _SecurityPrepareResult:
     blocked_reason: str = ""
-    secret_lease_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)
 class _ExecutePrerequisiteResult:
     blocked_reason: str = ""
+    replay_result_ref: str = ""
     idempotency_scope: str = ""
     idempotency_key: str = ""
     idempotency_generation: int = 0
@@ -190,7 +191,6 @@ class ToolInvocationGateway:
                 approval_required=effect_policy.approval_required,
                 target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
                 approved=approved,
-                secret_ref=str(args.get("secret_ref") or ""),
             )
 
         if not effect_policy.provider_dispatch_allowed:
@@ -205,15 +205,50 @@ class ToolInvocationGateway:
             if security_prepare.blocked_reason:
                 payload["security_blocked_reason"] = security_prepare.blocked_reason
             elif self._infrastructure_unit_of_work_factory is not None and effect_policy.approval_required:
+                if approved and not str(args.get("secret_ref") or ""):
+                    payload["security_blocked_reason"] = "secret lease missing before effect"
+                    self._record_terminal(
+                        tenant_id=tenant_id,
+                        prepared_id=prepared_id,
+                        attempt_id=attempt_id,
+                        receipt_id=receipt_id,
+                        status="FAILED",
+                        dispatch_certainty="NOT_DISPATCHED",
+                        effect_certainty="NO_EFFECT",
+                        adapter_kind=adapter_kind,
+                        payload=payload,
+                    )
+                    return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
                 execute_prerequisites = self._record_execute_prerequisites(
                     tenant_id=tenant_id,
                     call_id=call_id,
                     prepared_action_hash=prepared_action_hash,
                     target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
                 )
+                if execute_prerequisites.replay_result_ref:
+                    replay_payload = {
+                        "idempotency_replay": True,
+                        "result_ref": execute_prerequisites.replay_result_ref,
+                        "idempotency_scope": "tool-side-effect",
+                        "idempotency_key": call_id,
+                    }
+                    return replay_payload, ToolGatewayReceipt(
+                        "replayed",
+                        prepared_id,
+                        attempt_id,
+                        receipt_id,
+                        "IDEMPOTENT_SIDE_EFFECT_REPLAY",
+                        execute_prerequisites.replay_result_ref,
+                    )
                 if execute_prerequisites.blocked_reason:
                     payload["infrastructure_blocked_reason"] = execute_prerequisites.blocked_reason
                 elif approved:
+                    secret_lease_id = self._issue_secret_lease(
+                        tenant_id=tenant_id,
+                        call_id=call_id,
+                        tool_name=tool_name,
+                        secret_ref=str(args.get("secret_ref") or ""),
+                    )
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
@@ -250,7 +285,7 @@ class ToolInvocationGateway:
                                     fencing_resource_id=execute_prerequisites.fencing_resource_id,
                                     fencing_lease_id=execute_prerequisites.fencing_lease_id,
                                     fencing_epoch=execute_prerequisites.fencing_epoch,
-                                    secret_lease_id=security_prepare.secret_lease_id,
+                                    secret_lease_id=secret_lease_id,
                                     reconciliation_payload=unknown_payload,
                                 )
                             )
@@ -301,7 +336,7 @@ class ToolInvocationGateway:
                                     fencing_resource_id=execute_prerequisites.fencing_resource_id,
                                     fencing_lease_id=execute_prerequisites.fencing_lease_id,
                                     fencing_epoch=execute_prerequisites.fencing_epoch,
-                                    secret_lease_id=security_prepare.secret_lease_id,
+                                    secret_lease_id=secret_lease_id,
                                     job_payload=async_payload,
                                 )
                             )
@@ -343,7 +378,7 @@ class ToolInvocationGateway:
                                 fencing_resource_id=execute_prerequisites.fencing_resource_id,
                                 fencing_lease_id=execute_prerequisites.fencing_lease_id,
                                 fencing_epoch=execute_prerequisites.fencing_epoch,
-                                secret_lease_id=security_prepare.secret_lease_id,
+                                secret_lease_id=secret_lease_id,
                                 native_result={"result": redact_sensitive_payload(result)},
                                 effect_payload=effect_payload,
                                 append_only_generation=1,
@@ -410,7 +445,6 @@ class ToolInvocationGateway:
         approval_required: bool,
         target_resource_set_ref: str,
         approved: bool,
-        secret_ref: str,
     ) -> _SecurityPrepareResult:
         epoch_ref = f"security-epoch:{trace_id}"
         principal_context_id = f"principal-context:{workspace_id}:{call_id}"
@@ -489,29 +523,35 @@ class ToolInvocationGateway:
                 )
             except SecurityPersistenceError as exc:
                 return _SecurityPrepareResult(blocked_reason=str(exc))
-            if approval_required:
-                if not secret_ref:
-                    return _SecurityPrepareResult(blocked_reason="secret lease missing before effect")
-                lease_id = f"security-secret-lease:{call_id}"
-                repo.issue_secret_lease(
-                    lease_id=lease_id,
-                    tenant_id=tenant_id,
-                    secret_ref=secret_ref,
-                    workload_identity_ref=f"tool-runtime:{call_id}",
-                    on_behalf_of_binding_ref=f"approval-request:{call_id}",
-                    audience=f"tool:{tool_name}",
-                    lease_generation=1,
-                    expires_at=datetime.now(tz=UTC) + timedelta(minutes=5),
-                )
-                try:
-                    repo.validate_secret_lease(
-                        lease_id=lease_id,
-                        tenant_id=tenant_id,
-                        audience=f"tool:{tool_name}",
-                    )
-                except SecurityPersistenceError as exc:
-                    return _SecurityPrepareResult(blocked_reason=str(exc))
-        return _SecurityPrepareResult(secret_lease_id=f"security-secret-lease:{call_id}" if approval_required else "")
+        return _SecurityPrepareResult()
+
+    def _issue_secret_lease(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        tool_name: str,
+        secret_ref: str,
+    ) -> str:
+        assert self._security_unit_of_work_factory is not None
+        lease_id = f"security-secret-lease:{call_id}"
+        with self._security_unit_of_work_factory() as repo:
+            repo.issue_secret_lease(
+                lease_id=lease_id,
+                tenant_id=tenant_id,
+                secret_ref=secret_ref,
+                workload_identity_ref=f"tool-runtime:{call_id}",
+                on_behalf_of_binding_ref=f"approval-request:{call_id}",
+                audience=f"tool:{tool_name}",
+                lease_generation=1,
+                expires_at=datetime.now(tz=UTC) + timedelta(minutes=5),
+            )
+            repo.validate_secret_lease(
+                lease_id=lease_id,
+                tenant_id=tenant_id,
+                audience=f"tool:{tool_name}",
+            )
+        return lease_id
 
     def _record_execute_prerequisites(
         self,
@@ -536,6 +576,8 @@ class ToolInvocationGateway:
                     ttl_seconds=60,
                 )
                 if not claim.acquired:
+                    if claim.status == "completed" and claim.result_ref:
+                        return _ExecutePrerequisiteResult(replay_result_ref=claim.result_ref)
                     return _ExecutePrerequisiteResult(blocked_reason="idempotency claim is already held or completed")
                 fence = repo.acquire_lease(
                     resource_id=target_resource_set_ref,

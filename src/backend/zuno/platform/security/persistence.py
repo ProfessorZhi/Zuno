@@ -754,6 +754,7 @@ class SecurityRepository:
                     :secret_ref, :tenant_id, :credential_version_ref, :audience,
                     :owner_principal_id, :scope_hash, :status
                 )
+                ON CONFLICT (secret_ref) DO NOTHING
                 """
             ),
             {
