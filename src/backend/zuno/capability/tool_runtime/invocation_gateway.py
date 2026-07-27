@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from zuno.platform.database.foundation import (
+    FencingRejectedError,
+    InfrastructureConflictError,
+    InfrastructureUnitOfWork,
+)
 from zuno.platform.database.tool_runtime import (
     PreparedToolActionInput,
     ToolAttemptInput,
@@ -36,9 +42,11 @@ class ToolInvocationGateway:
         *,
         unit_of_work_factory: Callable[[], ToolUnitOfWork],
         security_unit_of_work_factory: Callable[[], SecurityUnitOfWork] | None = None,
+        infrastructure_unit_of_work_factory: Callable[[str], InfrastructureUnitOfWork] | None = None,
     ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
         self._security_unit_of_work_factory = security_unit_of_work_factory
+        self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
 
     async def invoke_readonly(
         self,
@@ -52,6 +60,7 @@ class ToolInvocationGateway:
         adapter_kind: str,
         executor: Callable[[], Awaitable[Any]],
         readonly: bool,
+        approved: bool = False,
     ) -> tuple[Any | None, ToolGatewayReceipt]:
         prepared_id = f"prepared-tool-action:{call_id}"
         attempt_id = f"tool-attempt:{call_id}"
@@ -142,6 +151,8 @@ class ToolInvocationGateway:
                 prepared_action_hash=prepared_action_hash,
                 approval_required=effect_policy.approval_required,
                 target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                approved=approved,
+                secret_ref=str(args.get("secret_ref") or ""),
             )
 
         if not effect_policy.provider_dispatch_allowed:
@@ -155,6 +166,15 @@ class ToolInvocationGateway:
             }
             if security_blocked_reason:
                 payload["security_blocked_reason"] = security_blocked_reason
+            elif self._infrastructure_unit_of_work_factory is not None and effect_policy.approval_required:
+                infrastructure_blocked_reason = self._record_execute_prerequisites(
+                    tenant_id=tenant_id,
+                    call_id=call_id,
+                    prepared_action_hash=prepared_action_hash,
+                    target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                )
+                if infrastructure_blocked_reason:
+                    payload["infrastructure_blocked_reason"] = infrastructure_blocked_reason
             self._record_terminal(
                 tenant_id=tenant_id,
                 prepared_id=prepared_id,
@@ -208,6 +228,8 @@ class ToolInvocationGateway:
         prepared_action_hash: str,
         approval_required: bool,
         target_resource_set_ref: str,
+        approved: bool,
+        secret_ref: str,
     ) -> str:
         epoch_ref = f"security-epoch:{trace_id}"
         principal_context_id = f"principal-context:{workspace_id}:{call_id}"
@@ -263,6 +285,20 @@ class ToolInvocationGateway:
                     requested_by_principal_id="agent:zuno-tool-runtime",
                     required_approver_policy_ref="approval-policy:tool-runtime:phase16",
                 )
+                if approved:
+                    repo.ensure_approval_decision(
+                        approval_decision_id=f"approval-decision:{call_id}",
+                        tenant_id=tenant_id,
+                        approval_request_id=f"approval-request:{call_id}",
+                        approver_principal_id="workspace-user:approved",
+                        decision="approved",
+                    )
+            repo.ensure_audit_requirement(
+                audit_requirement_id=f"audit-requirement:{call_id}:tool-execute",
+                tenant_id=tenant_id,
+                decision_id=decision_id,
+                audit_channel_id="audit-channel:tool-runtime:phase16",
+            )
             try:
                 repo.validate_pre_effect_authorization(
                     decision_id=decision_id,
@@ -272,6 +308,62 @@ class ToolInvocationGateway:
                 )
             except SecurityPersistenceError as exc:
                 return str(exc)
+            if approval_required:
+                if not secret_ref:
+                    return "secret lease missing before effect"
+                lease_id = f"security-secret-lease:{call_id}"
+                repo.issue_secret_lease(
+                    lease_id=lease_id,
+                    tenant_id=tenant_id,
+                    secret_ref=secret_ref,
+                    workload_identity_ref=f"tool-runtime:{call_id}",
+                    on_behalf_of_binding_ref=f"approval-request:{call_id}",
+                    audience=f"tool:{tool_name}",
+                    lease_generation=1,
+                    expires_at=datetime.now(tz=UTC) + timedelta(minutes=5),
+                )
+                try:
+                    repo.validate_secret_lease(
+                        lease_id=lease_id,
+                        tenant_id=tenant_id,
+                        audience=f"tool:{tool_name}",
+                    )
+                except SecurityPersistenceError as exc:
+                    return str(exc)
+        return ""
+
+    def _record_execute_prerequisites(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        prepared_action_hash: str,
+        target_resource_set_ref: str,
+    ) -> str:
+        assert self._infrastructure_unit_of_work_factory is not None
+        owner = f"tool-runtime:{call_id}"
+        try:
+            with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+                claim = repo.claim_idempotency_receipt(
+                    scope="tool-side-effect",
+                    key=call_id,
+                    owner=owner,
+                    request={
+                        "prepared_action_hash": prepared_action_hash,
+                        "target_resource_set_ref": target_resource_set_ref,
+                    },
+                    ttl_seconds=60,
+                )
+                if not claim.acquired:
+                    return "idempotency claim is already held or completed"
+                fence = repo.acquire_lease(
+                    resource_id=target_resource_set_ref,
+                    owner_id=owner,
+                    ttl_seconds=60,
+                )
+                repo.assert_fence(fence)
+        except (InfrastructureConflictError, FencingRejectedError) as exc:
+            return str(exc)
         return ""
 
     def _record_terminal(

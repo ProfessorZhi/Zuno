@@ -80,6 +80,23 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash -p no:cacheprovider`：4 passed。
 - Failure Fingerprint：首次失败为测试查询 `tool_observations.payload`，实际表只存 `redacted_payload_hash`；改为断言 hash 后 targeted rerun 通过。
+
+### P16-T03 Execute Gate、Audit、Claim、Lease 与 SecretLease
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolInvocationGateway` 支持注入 `InfrastructureUnitOfWork`，在 Security pre-effect authorization 通过后才获取 infra idempotency claim 与 worker lease/fencing token。
+- Security prepare helper 在 authorization decision 后写入 mandatory `security_audit_requirements`。
+- 已审批有副作用 Tool 必须提供已存在的 `secret_ref`，并通过 `security_secret_leases` 与 `validate_secret_lease` 绑定 workload identity、approval request、audience 和过期时间。
+- 任一 Security、SecretLease、Idempotency 或 Fencing Gate 失败都不会 dispatch provider。
+- 即使全部前置门禁通过，当前切片仍保持 provider dispatch fail-closed，等待 P16-T04 Known EffectReceipt。
+
+验证：
+
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_execute_prerequisites_after_approval -p no:cacheprovider`：5 passed。
+- Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 与 P16-T02 当前切片已完成并验证，但 P16-G03 至 P16-G07 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01、P16-T02 与 P16-T03 当前切片已完成并验证，但 P16-G05 至 P16-G07 仍是 Mandatory Gap；P16-G03/P16-G04 仍需在 P16-T04 默认执行路径中做闭环验证；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

@@ -13,7 +13,7 @@ from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGatewa
 
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
 from zuno.platform.database.memory import ContextPackInput, MemoryRepository, MemoryUnitOfWork, MemoryVersionInput
 from zuno.platform.database.tool_runtime import (
     PreparedToolActionInput,
@@ -554,3 +554,110 @@ def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) 
                 tenant_id="tenant-phase16-security",
                 prepared_action_hash=prepared_hash,
             )
+
+def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) -> None:
+    tenant_id = "tenant-phase16-execute"
+    workspace_id = "workspace-phase16-execute"
+    call_id = "call-phase16-execute-mail"
+    secret_ref = "security-secret-ref:phase16:mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> str:
+        nonlocal dispatched
+        dispatched = True
+        return "sent"
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-execute",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        readonly=False,
+        adapter_kind="API",
+    )
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT status FROM security_approval_requests WHERE approval_request_id = 'approval-request:call-phase16-execute-mail'")
+        ).scalar_one() == "approved"
+        assert conn.execute(
+            text("SELECT count(*) FROM security_audit_requirements WHERE audit_requirement_id = 'audit-requirement:call-phase16-execute-mail:tool-execute'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT audience FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-execute-mail'")
+        ).scalar_one() == "tool:mail.send"
+        claim = conn.execute(
+            text(
+                """
+                SELECT owner, status, generation
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+        lease = conn.execute(
+            text(
+                """
+                SELECT owner_id, epoch
+                FROM infra_worker_leases
+                WHERE resource_id = :resource_id
+                """
+            ),
+            {"resource_id": effect_policy.target_resource_set.resource_set_ref},
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-execute-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert claim["owner"] == f"tool-runtime:{call_id}"
+    assert claim["status"] == "in_progress"
+    assert claim["generation"] == 1
+    assert lease["owner_id"] == f"tool-runtime:{call_id}"
+    assert lease["epoch"] == 1
+    assert observation_hash == canonical_sha256(
+        {
+            "blocked": True,
+            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "effect_class": "IRREVERSIBLE_WRITE",
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+        }
+    )
