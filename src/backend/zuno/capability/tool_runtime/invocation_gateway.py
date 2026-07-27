@@ -241,6 +241,8 @@ class ToolInvocationGateway:
                         execute_prerequisites.replay_result_ref,
                     )
                 if execute_prerequisites.blocked_reason:
+                    blocked_reason = execute_prerequisites.blocked_reason
+                    payload["reason"] = blocked_reason
                     payload["infrastructure_blocked_reason"] = execute_prerequisites.blocked_reason
                 elif approved:
                     try:

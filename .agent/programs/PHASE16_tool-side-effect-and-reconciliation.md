@@ -55,11 +55,13 @@ workspace approval API/UI contract
 - P16-T15 Execute Latest Epoch Reauthorization。
 - P16-T16 Approval Deadline Reauthorization。
 - P16-T17 SecretLease Revocation Fail-Closed。
+- P16-T18 Pre-held Idempotency Claim Fail-Closed Reason。
 
 当前验证状态：
 
 - `zuno-postgres` 已通过 Docker Compose 恢复为 healthy。
 - P16-T17 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- P16-T18 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
 - PHASE16 仍为 `in_progress`。本节只同步当前实现证据，不构成 Coordinator Closure Approval，不把 Program、Manifest 或 Production Readiness 改为 completed/ready。
 
 ## Allowed Paths

@@ -410,6 +410,28 @@ Failure Fingerprint：
 - first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:1026`。
 - environment signature：`zuno-postgres` healthy，Alembic head `20260727_45`，PHASE16 worktree `bc4af119` 后本地修正。
 - resolution：failed SecretLease insert 与 validation 位于同一 UoW，异常回滚 lease row；测试断言改为无 SecretLease row，targeted rerun 通过。
+### P16-T18 Pre-held Idempotency Claim Fail-Closed Reason
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolInvocationGateway` 在 side-effect execute prerequisites 被 infra idempotency claim 阻塞时，把 gateway receipt 的 `blocked_reason` 同步为真实 infra gate reason，而不是继续返回泛化的 `PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL`。
+- pre-held `infra_idempotency_claims` 会在 provider dispatch 前失败关闭：不调用 executor、不发行 SecretLease、不写 EffectReceipt，并记录 FAILED / NOT_DISPATCHED / NO_EFFECT execution receipt。
+- 已持有 claim 的 owner/status/result_ref 不被覆盖，避免把并发执行误判为可重放成功或抢占执行权。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch -p no:cacheprovider --tb=short`：首次进入业务断言失败，因测试错误查询不存在的 `tool_execution_receipts.payload` 列；修正断言后 targeted rerun：1 passed。
+
+Failure Fingerprint：
+
+- command：上述 pre-held idempotency claim focused test。
+- test：`test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch`。
+- exception：`sqlalchemy.exc.ProgrammingError / psycopg.errors.UndefinedColumn`。
+- first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:1146`。
+- environment signature：`zuno-postgres` healthy，Alembic head `20260727_45`，显式 PHASE16 worktree `sys.path.insert`。
+- resolution：`tool_execution_receipts` 只保存 receipt hash 而非 raw payload；测试改为断言 gateway receipt reason 与 durable status/certainty，targeted rerun 通过。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -433,7 +455,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T17 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T18 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、pre-held idempotency claim fail-closed、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T17 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T18 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

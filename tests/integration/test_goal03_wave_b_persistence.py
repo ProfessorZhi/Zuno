@@ -1055,6 +1055,124 @@ def test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch(engine) ->
     assert claim["result_ref"] is None
 
 
+def test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-preheld-claim"
+    workspace_id = "workspace-phase16-preheld-claim"
+    call_id = "call-phase16-preheld-claim-mail"
+    trace_id = "trace-phase16-preheld-claim"
+    secret_ref = "security-secret-ref:phase16:preheld-claim"
+    args = {"to": "review@example.com", "body": "hello", "secret_ref": secret_ref}
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args=args,
+        readonly=False,
+        adapter_kind="API",
+    )
+    prepared_action_hash = canonical_sha256(
+        {
+            "action_proposal_ref": f"action-proposal:{call_id}",
+            "tool_operation_id": "tool-version:mail.send:v1:operation:default",
+            "canonical_args": redact_sensitive_payload(args),
+            "target_resources": list(effect_policy.target_resource_set.resource_refs),
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+            "effect_level": effect_policy.effect_level,
+            "effect_policy_version": effect_policy.policy_version,
+            "effect_policy_hash": effect_policy.policy_hash,
+            "approval_required": effect_policy.approval_required,
+            "security_epoch_ref": f"security-epoch:{trace_id}",
+            "idempotency_key": call_id,
+        }
+    )
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:preheld-claim:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+    with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+        claim = repo.claim_idempotency_receipt(
+            scope="tool-side-effect",
+            key=call_id,
+            owner="tool-runtime:already-running",
+            request={
+                "prepared_action_hash": prepared_action_hash,
+                "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            },
+            ttl_seconds=60,
+        )
+        assert claim.acquired is True
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:preheld-claim:1", "message_id": "message-preheld-claim"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args=args,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "idempotency claim is already held or completed"
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-preheld-claim-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-preheld-claim-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-preheld-claim-mail'
+                """
+            )
+        ).mappings().one()
+        claim_row = conn.execute(
+            text(
+                """
+                SELECT status, owner, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+    assert claim_row["status"] == "in_progress"
+    assert claim_row["owner"] == "tool-runtime:already-running"
+    assert claim_row["result_ref"] is None
+
+
 def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch(engine) -> None:
     tenant_id = "tenant-phase16-idempotency"
     workspace_id = "workspace-phase16-idempotency"
