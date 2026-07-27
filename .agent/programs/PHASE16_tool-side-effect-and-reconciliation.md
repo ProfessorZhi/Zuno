@@ -1,7 +1,7 @@
 # PHASE16 Tool Side Effect and Reconciliation
 
 phase_id: PHASE16
-status: ready
+status: in_progress
 depends_on: PHASE05, PHASE06, PHASE15
 owner: Module 08 Tool Runtime
 

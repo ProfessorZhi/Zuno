@@ -199,7 +199,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[12]: "completed",
         PHASE_FILES[13]: "completed",
         PHASE_FILES[14]: "completed",
-        PHASE_FILES[15]: "ready",
+        PHASE_FILES[15]: "in_progress",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -367,7 +367,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
                 "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
                 "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
-                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: ready",
+                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: in_progress",
             ],
             "program-manifest.yaml",
         )
