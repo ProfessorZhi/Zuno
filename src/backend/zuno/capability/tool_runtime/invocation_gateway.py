@@ -443,43 +443,130 @@ class ToolInvocationGateway:
                         prepared_id=prepared_id,
                         attempt_id=attempt_id,
                         receipt_id=receipt_id,
-                        status="SUCCEEDED",
+                        status="DISPATCHED",
                         dispatch_certainty="DISPATCHED",
-                        effect_certainty="CONFIRMED_EFFECT",
+                        effect_certainty="UNKNOWN_EFFECT",
                         adapter_kind=adapter_kind,
                         payload=effect_payload,
                     )
-                    effect_receipt_id = f"tool-effect-receipt:{call_id}"
-                    with self._unit_of_work_factory() as repo:
-                        repo.record_effect_receipt(
-                            ToolEffectReceiptInput(
-                                effect_receipt_id=effect_receipt_id,
-                                tenant_id=tenant_id,
-                                prepared_tool_action_id=prepared_id,
-                                attempt_id=attempt_id,
-                                execution_receipt_id=receipt_id,
-                                provider_effect_id=provider_effect_id,
-                                effect_status="CONFIRMED",
-                                effect_certainty="CONFIRMED_EFFECT",
-                                idempotency_scope=execute_prerequisites.idempotency_scope,
-                                idempotency_key=execute_prerequisites.idempotency_key,
-                                idempotency_generation=execute_prerequisites.idempotency_generation,
-                                fencing_resource_id=execute_prerequisites.fencing_resource_id,
-                                fencing_lease_id=execute_prerequisites.fencing_lease_id,
-                                fencing_epoch=execute_prerequisites.fencing_epoch,
-                                secret_lease_id=secret_lease_id,
-                                native_result={"result": redact_sensitive_payload(result)},
-                                effect_payload=effect_payload,
-                                append_only_generation=1,
+                    try:
+                        effect_receipt_id = f"tool-effect-receipt:{call_id}"
+                        with self._unit_of_work_factory() as repo:
+                            repo.record_effect_receipt(
+                                ToolEffectReceiptInput(
+                                    effect_receipt_id=effect_receipt_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    execution_receipt_id=receipt_id,
+                                    provider_effect_id=provider_effect_id,
+                                    effect_status="CONFIRMED",
+                                    effect_certainty="CONFIRMED_EFFECT",
+                                    idempotency_scope=execute_prerequisites.idempotency_scope,
+                                    idempotency_key=execute_prerequisites.idempotency_key,
+                                    idempotency_generation=execute_prerequisites.idempotency_generation,
+                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                    fencing_epoch=execute_prerequisites.fencing_epoch,
+                                    secret_lease_id=secret_lease_id,
+                                    native_result={"result": redact_sensitive_payload(result)},
+                                    effect_payload=effect_payload,
+                                    append_only_generation=1,
+                                )
                             )
+                        self._complete_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                            result_ref=effect_receipt_id,
                         )
-                    self._complete_execute_prerequisites(
-                        tenant_id=tenant_id,
-                        owner=f"tool-runtime:{call_id}",
-                        prerequisites=execute_prerequisites,
-                        result_ref=effect_receipt_id,
-                    )
-                    return result, ToolGatewayReceipt("completed", prepared_id, attempt_id, receipt_id)
+                        with self._unit_of_work_factory() as repo:
+                            repo.update_execution_receipt(
+                                ToolExecutionReceiptInput(
+                                    receipt_id=receipt_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    status="SUCCEEDED",
+                                    dispatch_certainty="DISPATCHED",
+                                    effect_certainty="CONFIRMED_EFFECT",
+                                    append_only_generation=1,
+                                    receipt_payload=effect_payload,
+                                )
+                            )
+                        return result, ToolGatewayReceipt("completed", prepared_id, attempt_id, receipt_id)
+                    except Exception as exc:
+                        recovery_payload = _recovery_unknown_effect_payload_from_result(
+                            result=result,
+                            effect_payload=effect_payload,
+                            call_id=call_id,
+                            exc=exc,
+                        )
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="UNKNOWN",
+                            dispatch_certainty="DISPATCHED",
+                            effect_certainty="UNKNOWN_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=recovery_payload,
+                        )
+                        reconciliation_id = f"tool-effect-reconciliation:{call_id}"
+                        with self._unit_of_work_factory() as repo:
+                            repo.record_effect_reconciliation(
+                                ToolEffectReconciliationInput(
+                                    reconciliation_id=reconciliation_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    execution_receipt_id=receipt_id,
+                                    provider_effect_id=provider_effect_id,
+                                    status="OPEN",
+                                    next_action="RECONCILE",
+                                    reconciliation_query=recovery_payload["reconciliation_query"],
+                                    manual_assessment_required=False,
+                                    age_escalation_after_seconds=900,
+                                    idempotency_scope=execute_prerequisites.idempotency_scope,
+                                    idempotency_key=execute_prerequisites.idempotency_key,
+                                    idempotency_generation=execute_prerequisites.idempotency_generation,
+                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                    fencing_epoch=execute_prerequisites.fencing_epoch,
+                                    secret_lease_id=secret_lease_id,
+                                    reconciliation_payload=recovery_payload,
+                                )
+                            )
+                            repo.update_execution_receipt(
+                                ToolExecutionReceiptInput(
+                                    receipt_id=receipt_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    status="UNKNOWN",
+                                    dispatch_certainty="DISPATCHED",
+                                    effect_certainty="UNKNOWN_EFFECT",
+                                    append_only_generation=1,
+                                    receipt_payload=recovery_payload,
+                                )
+                            )
+                        try:
+                            self._complete_execute_prerequisites(
+                                tenant_id=tenant_id,
+                                owner=f"tool-runtime:{call_id}",
+                                prerequisites=execute_prerequisites,
+                                result_ref=reconciliation_id,
+                            )
+                        except FencingRejectedError:
+                            pass
+                        return None, ToolGatewayReceipt(
+                            "reconcile_required",
+                            prepared_id,
+                            attempt_id,
+                            receipt_id,
+                            "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
+                        )
             self._record_terminal(
                 tenant_id=tenant_id,
                 prepared_id=prepared_id,
@@ -1022,6 +1109,30 @@ def _unknown_effect_payload(*, exc: ToolEffectUnknownError, call_id: str) -> dic
         "reconciliation_id": f"tool-effect-reconciliation:{call_id}",
         "next_action": "RECONCILE",
         "reconciliation_query": redact_sensitive_payload(exc.reconciliation_query),
+    }
+
+
+def _recovery_unknown_effect_payload_from_result(
+    *,
+    result: Any,
+    effect_payload: dict[str, Any],
+    call_id: str,
+    exc: Exception,
+) -> dict[str, Any]:
+    recovery_query = {
+        "reason": "post_dispatch_persistence_failure",
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+        "result": redact_sensitive_payload(result if isinstance(result, dict) else {"value": str(result)}),
+        "call_id": call_id,
+    }
+    return {
+        "provider_effect_id": str(effect_payload["provider_effect_id"]),
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": f"tool-effect-reconciliation:{call_id}",
+        "next_action": "RECONCILE",
+        "reconciliation_query": redact_sensitive_payload(recovery_query),
     }
 
 

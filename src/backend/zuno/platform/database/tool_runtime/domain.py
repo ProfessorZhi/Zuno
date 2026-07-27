@@ -631,6 +631,33 @@ class ToolRepository:
             },
         )
 
+    def update_execution_receipt(self, receipt: ToolExecutionReceiptInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                UPDATE tool_execution_receipts
+                SET status = :status,
+                    dispatch_certainty = :dispatch_certainty,
+                    effect_certainty = :effect_certainty,
+                    receipt_hash = :receipt_hash
+                WHERE receipt_id = :receipt_id
+                  AND tenant_id = :tenant_id
+                  AND prepared_tool_action_id = :prepared_tool_action_id
+                  AND attempt_id = :attempt_id
+                """
+            ),
+            {
+                "receipt_id": receipt.receipt_id,
+                "tenant_id": receipt.tenant_id,
+                "prepared_tool_action_id": receipt.prepared_tool_action_id,
+                "attempt_id": receipt.attempt_id,
+                "status": receipt.status,
+                "dispatch_certainty": receipt.dispatch_certainty,
+                "effect_certainty": receipt.effect_certainty,
+                "receipt_hash": canonical_sha256(receipt.receipt_payload),
+            },
+        )
+
     def record_effect_receipt(self, receipt: ToolEffectReceiptInput) -> None:
         self.connection.execute(
             text(
