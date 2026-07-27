@@ -1680,3 +1680,141 @@ def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> 
     assert attempt["attempt_payload_hash"] == canonical_sha256(attempt_payload)
     assert claim["status"] == "completed"
     assert claim["result_ref"] == f"tool-effect-receipt:{compensation_call_id}"
+
+
+def test_phase16_compensation_from_unresolved_reconciliation_requires_escalation(engine) -> None:
+    tenant_id = "tenant-phase16-compensation-reconcile"
+    workspace_id = "workspace-phase16-compensation-reconcile"
+    call_id = "call-phase16-compensation-reconcile"
+    secret_ref = "security-secret-ref:phase16:compensation-reconcile"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:compensation-reconcile:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:compensation-reconcile:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-compensation-reconcile"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "unknown", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-reconcile",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert receipt.status == "reconcile_required"
+    assert calls == 1
+
+    async def compensation_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:compensation-reconcile:2", "message_id": "message-compensation-reconcile"}
+
+    compensation_result, compensation_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "correction@example.com", "body": "correction body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-reconcile-action",
+        call_id="call-phase16-compensation-reconcile-action",
+        adapter_kind="API",
+        executor=compensation_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert compensation_result["provider_effect_id"] == "mail-provider-effect:phase16:compensation-reconcile:2"
+    assert compensation_receipt.status == "completed"
+
+    with pytest.raises(ToolRuntimeConflict, match="compensation requires escalated source reconciliation"):
+        gateway.record_compensation_attempt(
+            tenant_id=tenant_id,
+            compensation_definition_id="tool-compensation-definition:phase16:reconcile",
+            compensation_attempt_id="tool-compensation-attempt:phase16:reconcile:1",
+            source_effect_receipt_id=None,
+            source_reconciliation_id=f"tool-effect-reconciliation:{call_id}",
+            compensation_call_id="call-phase16-compensation-reconcile-action",
+            new_action_proposal_ref="action-proposal:phase16:compensate-reconcile",
+            operation_ref="tool-version:mail.send:v1:operation:default",
+            compensation_capability="MANUAL_COMPENSATION",
+            residual_impact="HIGH",
+            audit_requirement_id="audit-requirement:phase16:compensation-reconcile:tool-execute",
+            idempotency_generation=1,
+        )
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET manual_assessment_required = true,
+                    status = 'ESCALATED',
+                    next_action = 'MANUAL_ASSESSMENT'
+                WHERE reconciliation_id = :reconciliation_id
+                """,
+            ),
+            {"reconciliation_id": f"tool-effect-reconciliation:{call_id}"},
+        )
+
+    gateway.record_compensation_attempt(
+        tenant_id=tenant_id,
+        compensation_definition_id="tool-compensation-definition:phase16:reconcile",
+        compensation_attempt_id="tool-compensation-attempt:phase16:reconcile:1",
+        source_effect_receipt_id=None,
+        source_reconciliation_id=f"tool-effect-reconciliation:{call_id}",
+        compensation_call_id="call-phase16-compensation-reconcile-action",
+        new_action_proposal_ref="action-proposal:phase16:compensate-reconcile",
+        operation_ref="tool-version:mail.send:v1:operation:default",
+        compensation_capability="MANUAL_COMPENSATION",
+        residual_impact="HIGH",
+        audit_requirement_id="audit-requirement:phase16:compensation-reconcile:tool-execute",
+        idempotency_generation=1,
+    )
+
+    with engine.connect() as conn:
+        definition = conn.execute(
+            text(
+                """
+                SELECT source_effect_receipt_id, source_reconciliation_id
+                FROM tool_compensation_definitions
+                WHERE compensation_definition_id = 'tool-compensation-definition:phase16:reconcile'
+                """
+            )
+        ).mappings().one()
+        attempt = conn.execute(
+            text(
+                """
+                SELECT status, hidden_rollback, idempotency_key
+                FROM tool_compensation_attempts
+                WHERE compensation_attempt_id = 'tool-compensation-attempt:phase16:reconcile:1'
+                """
+            )
+        ).mappings().one()
+
+    assert definition["source_effect_receipt_id"] is None
+    assert definition["source_reconciliation_id"] == f"tool-effect-reconciliation:{call_id}"
+    assert attempt["status"] == "CONFIRMED"
+    assert attempt["hidden_rollback"] is False
+    assert attempt["idempotency_key"] == "call-phase16-compensation-reconcile-action"

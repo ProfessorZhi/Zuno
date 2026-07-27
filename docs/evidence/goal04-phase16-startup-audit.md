@@ -323,6 +323,29 @@ Failure Fingerprint：
 - first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:18`。
 - environment signature：显式 PHASE16 worktree `sys.path.insert`，PostgreSQL Alembic head `20260727_45`。
 - resolution：从 `src/backend/zuno/platform/database/tool_runtime/__init__.py` 导出 `ToolRuntimeConflict`；targeted rerun 通过。
+### P16-T14 Compensation from Reconciliation Requires Escalation
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.record_compensation_definition(...)` 当 compensation 绑定 `source_reconciliation_id` 时，要求该 reconciliation 已存在且 `manual_assessment_required=true`。
+- 未升级的 UNKNOWN reconciliation 不能直接作为补偿源；只有升级为 `ESCALATED/MANUAL_ASSESSMENT` 后，compensation definition 才能落库。
+- compensation source_effect_receipt 路径不受该 reconciliation-only 校验影响，仍保持原有 happy path。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_compensation_from_unresolved_reconciliation_requires_escalation -p no:cacheprovider --tb=short`：首次因测试缺少 compensation prepared action 事实失败；补充预热 call 后 targeted rerun 1 passed。
+- 使用显式 `sys.path.insert(...)` 运行 compensation 相邻路径：source-effect happy path 与 source-reconciliation gated path => 2 passed。
+
+Failure Fingerprint：
+
+- command：上述 compensation focused test。
+- test：`test_phase16_compensation_from_unresolved_reconciliation_requires_escalation`。
+- exception：`sqlalchemy.exc.IntegrityError / psycopg.errors.ForeignKeyViolation`。
+- first relevant frame：`src\backend\zuno\platform\database\tool_runtime\domain.py:991`，`fk_tool_comp_attempt_prepared`。
+- environment signature：显式 PHASE16 worktree `sys.path.insert`，PostgreSQL Alembic head `20260727_45`。
+- resolution：补充 compensation call 的实际 prepared action 预热；targeted rerun 通过。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -346,7 +369,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T13 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T14 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T13 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T14 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

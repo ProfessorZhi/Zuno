@@ -934,6 +934,25 @@ class ToolRepository:
             )
 
     def record_compensation_definition(self, definition: ToolCompensationDefinitionInput) -> None:
+        if definition.source_reconciliation_id is not None:
+            row = self.connection.execute(
+                text(
+                    """
+                    SELECT manual_assessment_required
+                    FROM tool_effect_reconciliations
+                    WHERE reconciliation_id = :reconciliation_id
+                      AND tenant_id = :tenant_id
+                    """
+                ),
+                {
+                    "reconciliation_id": definition.source_reconciliation_id,
+                    "tenant_id": definition.tenant_id,
+                },
+            ).mappings().first()
+            if row is None:
+                raise ToolRuntimeConflict("compensation requires existing source reconciliation")
+            if not bool(row["manual_assessment_required"]):
+                raise ToolRuntimeConflict("compensation requires escalated source reconciliation")
         self.connection.execute(
             text(
                 """
