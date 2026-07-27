@@ -85,6 +85,17 @@ class ProductStreamEventResult:
 
 class ProductService:
     @staticmethod
+    def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
+        version_hash = canonical_sha256(
+            {
+                "surface": surface,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+            }
+        )[:24]
+        return f"agent-version:runtime:{surface}:{version_hash}"
+
+    @staticmethod
     def submit_runtime_request(
         *,
         tenant_id: str,
@@ -97,6 +108,8 @@ class ProductService:
         raw_intent_ref: str,
         command_kind: str,
         payload: dict[str, Any],
+        bootstrap_runtime_agent: bool = False,
+        runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
@@ -118,6 +131,15 @@ class ProductService:
         from zuno.database import engine
 
         with ProductUnitOfWork(engine) as repo:
+            if bootstrap_runtime_agent:
+                repo.ensure_runtime_agent_version(
+                    agent_version_id=active_agent_version_id,
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    owner_principal_id=principal_id,
+                    display_name=f"{runtime_surface} unified runtime {active_agent_version_id[-8:]}",
+                    primary_agent_core_profile_ref=f"agent-core-profile:{runtime_surface}:unified-runtime",
+                )
             receipt = repo.submit_command(submission)
             now = datetime.now(timezone.utc)
             source_watermark = repo.next_projection_watermark(

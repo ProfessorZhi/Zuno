@@ -218,6 +218,60 @@ def test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain
             )
 
 
+def test_phase09_product_service_bootstraps_legacy_runtime_agent_version(engine, monkeypatch) -> None:
+    import zuno.database as zuno_database
+
+    monkeypatch.setattr(zuno_database, "engine", engine)
+    active_agent_version_id = ProductService.runtime_agent_version_id(
+        surface="workspace",
+        tenant_id="user:principal-a",
+        workspace_id="workspace-a",
+    )
+
+    result = ProductService.submit_runtime_request(
+        tenant_id="user:principal-a",
+        workspace_id="workspace-a",
+        conversation_id="conversation:bootstrap:1",
+        principal_id="principal-a",
+        active_agent_version_id=active_agent_version_id,
+        client_request_id="workspace:bootstrap:1",
+        runtime_request_ref="workspace-runtime-request:bootstrap:1",
+        raw_intent_ref="workspace-intent:bootstrap:1",
+        command_kind="WORKSPACE_RUNTIME_REQUEST",
+        payload={"legacy_route": "/workspace/task", "goal_hash": "a" * 64},
+        bootstrap_runtime_agent=True,
+        runtime_surface="workspace",
+    )
+
+    assert result.status == "ACCEPTED"
+    assert result.command_id == "command:workspace:bootstrap:1"
+    assert result.receipt_id == "command:workspace:bootstrap:1:receipt:1"
+    assert result.projection.stream_cursor_id.startswith("cursor:command:workspace:bootstrap:1:")
+    assert result.available_actions[0].action == "cancel"
+
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM product_agent_definitions) AS definitions,
+                    (SELECT count(*) FROM product_agent_versions WHERE agent_version_id = :agent_version_id AND status = 'PUBLISHED') AS versions,
+                    (SELECT count(*) FROM product_conversation_threads WHERE active_agent_version_id = :agent_version_id) AS conversations,
+                    (SELECT count(*) FROM product_commands WHERE command_id = 'command:workspace:bootstrap:1') AS commands,
+                    (SELECT count(*) FROM infra_outbox_events WHERE event_id = 'outbox:workspace:bootstrap:1') AS outbox_events
+                """
+            ),
+            {"agent_version_id": active_agent_version_id},
+        ).mappings().one()
+        assert dict(rows) == {
+            "definitions": 1,
+            "versions": 1,
+            "conversations": 1,
+            "commands": 1,
+            "outbox_events": 1,
+        }
+
+
 def test_phase09_product_owner_receipts_are_append_only_and_versioned(engine) -> None:
     with engine.begin() as conn:
         _seed_product_agent_version(conn)

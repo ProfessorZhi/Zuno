@@ -137,7 +137,13 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     assert captured["workspace_id"] == "completion"
     assert captured["conversation_id"] == "dialog_phase09"
     assert captured["principal_id"] == "principal-a"
-    assert captured["active_agent_version_id"] == "completion:unified-runtime"
+    assert captured["active_agent_version_id"] == ProductService.runtime_agent_version_id(
+        surface="completion",
+        tenant_id="user:principal-a",
+        workspace_id="completion",
+    )
+    assert captured["bootstrap_runtime_agent"] is True
+    assert captured["runtime_surface"] == "completion"
     assert captured["command_kind"] == "COMPLETION_RUNTIME_REQUEST"
     assert captured["payload"]["legacy_route"] == "/completion"
     assert captured["payload"]["cutover_mode"] == "new_default"

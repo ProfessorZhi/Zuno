@@ -28,6 +28,7 @@ commit_scope: Product Surface Backend Runtime repair
 - `/completion` 只有 `shadow` 模式允许 Product runtime record 失败后继续旧/新 runtime 对比；`new_default` 和 `canary` 不能在 Product command/receipt/outbox 失败时绕过 Product 继续启动 owner runtime。
 - `/workspace/task` 默认入口在输入安全 Gate 通过后、Workspace 旧 runtime/Unified runtime/Phase08 cutover 前记录 Product RuntimeRequest；记录失败时 fail closed 为 recoverable failure，不继续生成 artifact 或 completed 事件。
 - `/workspace/task` Product RuntimeRequest event 在事件流中位于 `task_started` 之后、`planning`/`retrieval` 之前，用于证明默认 Workspace API 先进入 Product Runtime。
+- Completion/Workspace legacy default Product RuntimeRequest 不再使用跨租户固定字符串冒充 AgentVersion；`ProductService.runtime_agent_version_id(...)` 生成 tenant/workspace 隔离的 Product AgentVersion ref，默认 legacy surface 通过 `bootstrap_runtime_agent=True` 在 Product Repository 内确认 PUBLISHED AgentVersion 后再提交 command。
 
 ## 验证
 
@@ -95,6 +96,41 @@ python -m compileall -q src/backend/zuno/api/services/workspace_task_runtime.py 
 18 passed, 1 warning
 5 passed, 1 warning
 compileall passed
+```
+
+Focused rerun after legacy default runtime AgentVersion bootstrap:
+
+```powershell
+python -m pytest -q tests/api/test_completion_unified_runtime.py -p no:cacheprovider
+python -m pytest -q tests/api/test_goal03_product_route.py -p no:cacheprovider
+python -m pytest -q tests/api/test_workspace_task_runtime.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/api/services/product/command_service.py src/backend/zuno/api/services/completion.py src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/platform/database/product/domain.py tests/api/test_completion_unified_runtime.py tests/integration/test_goal03_wave_a_persistence.py
+python tools/scripts/verify_product_surface_target_protocols.py
+```
+
+结果：
+
+```text
+12 passed, 1 warning
+6 passed, 1 warning
+18 passed, 1 warning
+compileall passed
+Product Surface target architecture verification passed.
+```
+
+PostgreSQL integration attempt:
+
+```powershell
+python -m pytest -q tests/api/test_completion_unified_runtime.py::test_completion_product_runtime_shadow_records_product_command tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+```
+
+结果：
+
+```text
+1 passed, 1 warning, 1 error
+environment_blocked before ProductService bootstrap assertions:
+alembic upgrade head could not connect to PostgreSQL localhost:5432.
+Docker daemon check also failed: dockerDesktopLinuxEngine pipe unavailable.
 ```
 
 ## 未证明

@@ -3066,22 +3066,34 @@ class WorkspaceTaskRuntimeService:
             json.dumps(payload, ensure_ascii=True, sort_keys=True).encode("utf-8")
         ).hexdigest()[:24]
         submitter = cls._product_runtime_submitter_for_tests
+        bootstrap_runtime_agent = False
+        tenant_id = f"user:{login_user.user_id}"
         if submitter is None:
             from zuno.api.services.product import ProductService
 
             submitter = ProductService.submit_runtime_request
+            active_agent_version_id = ProductService.runtime_agent_version_id(
+                surface="workspace",
+                tenant_id=tenant_id,
+                workspace_id=task.workspace_id,
+            )
+            bootstrap_runtime_agent = True
+        else:
+            active_agent_version_id = "workspace:unified-runtime"
         try:
             result = submitter(
-                tenant_id=f"user:{login_user.user_id}",
+                tenant_id=tenant_id,
                 workspace_id=task.workspace_id,
                 conversation_id=task.session_id,
                 principal_id=login_user.user_id,
-                active_agent_version_id="workspace:unified-runtime",
+                active_agent_version_id=active_agent_version_id,
                 client_request_id=f"workspace:{task.task_id}:{request_hash}",
                 runtime_request_ref=f"workspace-runtime-request:{task.task_id}:{request_hash}",
                 raw_intent_ref=f"workspace-intent:{task.task_id}:{request_hash}",
                 command_kind="WORKSPACE_RUNTIME_REQUEST",
                 payload=payload,
+                bootstrap_runtime_agent=bootstrap_runtime_agent,
+                runtime_surface="workspace",
             )
         except Exception as exc:
             return {

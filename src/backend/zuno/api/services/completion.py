@@ -158,13 +158,19 @@ class CompletionService:
                 "query_method": req.query_method,
             }
         )[:24]
+        tenant_id = f"user:{login_user_id}"
+        active_agent_version_id = ProductService.runtime_agent_version_id(
+            surface="completion",
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+        )
         try:
             result = ProductService.submit_runtime_request(
-                tenant_id=f"user:{login_user_id}",
+                tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 conversation_id=req.dialog_id,
                 principal_id=login_user_id,
-                active_agent_version_id="completion:unified-runtime",
+                active_agent_version_id=active_agent_version_id,
                 client_request_id=f"completion:{req.dialog_id}:{request_hash}",
                 runtime_request_ref=f"completion-runtime-request:{req.dialog_id}:{request_hash}",
                 raw_intent_ref=f"completion-intent:{req.dialog_id}:{request_hash}",
@@ -177,6 +183,8 @@ class CompletionService:
                     "query_method": req.query_method,
                     "cutover_mode": cutover_mode,
                 },
+                bootstrap_runtime_agent=True,
+                runtime_surface="completion",
             )
         except Exception as exc:
             return {

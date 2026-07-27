@@ -173,6 +173,70 @@ class ProductRepository:
         )
         return ProductAgentAssetRef(draft_id, status)
 
+    def ensure_runtime_agent_version(
+        self,
+        *,
+        agent_version_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        owner_principal_id: str,
+        display_name: str,
+        primary_agent_core_profile_ref: str,
+    ) -> ProductAgentAssetRef:
+        agent_definition_id = f"agent-definition:{agent_version_id}"
+        config_hash = canonical_sha256(
+            {
+                "agent_version_id": agent_version_id,
+                "display_name": display_name,
+                "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+            }
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_definitions (
+                    agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                    display_name, status, aggregate_version
+                )
+                VALUES (
+                    :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
+                    :display_name, 'ACTIVE', 1
+                )
+                ON CONFLICT (agent_definition_id) DO NOTHING
+                """
+            ),
+            {
+                "agent_definition_id": agent_definition_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "owner_principal_id": owner_principal_id,
+                "display_name": display_name,
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_versions (
+                    agent_version_id, tenant_id, agent_definition_id, version_no,
+                    config_hash, primary_agent_core_profile_ref, status
+                )
+                VALUES (
+                    :agent_version_id, :tenant_id, :agent_definition_id, 1,
+                    :config_hash, :primary_agent_core_profile_ref, 'PUBLISHED'
+                )
+                ON CONFLICT (agent_version_id) DO NOTHING
+                """
+            ),
+            {
+                "agent_version_id": agent_version_id,
+                "tenant_id": tenant_id,
+                "agent_definition_id": agent_definition_id,
+                "config_hash": config_hash,
+                "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+            },
+        )
+        return ProductAgentAssetRef(agent_version_id, "PUBLISHED")
+
     def publish_agent_version(
         self,
         *,

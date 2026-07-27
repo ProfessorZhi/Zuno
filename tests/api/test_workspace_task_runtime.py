@@ -45,6 +45,28 @@ def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
     )
 
 
+@pytest.fixture(autouse=True)
+def _workspace_capability_runtime_for_tests(monkeypatch) -> None:
+    def fake_select(self, request):
+        del self
+        allowed = list(request.get("available_capability_ids") or ())
+        return CapabilityPlan(
+            availability_snapshot_ref="capability_snapshot:workspace:test",
+            selection_result_ref="capability_selection:workspace:test",
+            selection_validity="fixed_planning_snapshot",
+            allowed_capabilities=allowed,
+            allowed_tools=allowed,
+            risk_summary={
+                "planner_exposure": {
+                    "exposure_ref": "capability_exposure:workspace:test",
+                    "visibility": "planner_authorized_summary_schema_only",
+                }
+            },
+        )
+
+    monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
+
+
 def _client() -> TestClient:
     WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     app = FastAPI()
