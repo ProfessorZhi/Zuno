@@ -305,6 +305,45 @@ git diff --check
 无 whitespace error；仅 CRLF warning
 ```
 
+## P10-T08 当前进展
+
+已更新：
+
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/store.ts`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+
+当前 Product Citation / Quality / Blocked disclosure 覆盖：
+
+- `GET /api/v1/product/artifacts/{artifact_id}` 返回 `product_artifact`，包含 artifact ref、publication ref、projection version、downloadable、授权 citation refs、citation count、citation authorization 和 download policy；
+- `GET /api/v1/product/artifacts/{artifact_id}` 返回 `product_quality`，包含 quality ref、projection version、`RUNTIME_OBSERVED` / `UNMEASURED` 状态、blocked reason、metrics 和 disclosure；
+- `ProductArtifactProjection` 增加 citation count、citation authorization 和 download policy；
+- `ProductQualityProjection` 增加 metrics 和 disclosure；
+- 默认 workspace agent 页面读取 Product artifact 时把 `product_artifact` / `product_quality` 写入 Product store，并展示服务端返回的 quality disclosure 和授权 citation refs。
+
+仍未完成：
+
+- Quality disclosure 仍来自 Product artifact endpoint 的 runtime observed wrapper，尚未完成 PHASE19 Final Gate / Publication 独立质量判定；
+- Blocked view 的失败态仍主要来自 runtime failure / security gate，不是最终 Publication blocking model；
+- Browser E2E、Desktop smoke、Build/Lint、旧 workspace task/simple-chat 删除仍未完成。
+
+P10-T08 验证：
+
+```text
+python -m pytest -q tests\api\test_goal03_product_route.py -p no:cacheprovider
+8 passed, 1 warning
+```
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -p no:cacheprovider
+16 passed
+```
+
+```text
+git diff --check
+无 whitespace error；仅 CRLF warning
+```
+
 ## 本轮验证
 
 已通过：

@@ -247,6 +247,18 @@ def test_goal03_product_artifact_routes_reauthorize_through_product_surface(monk
 
     assert read_response.status_code == 200
     assert read_response.json()["data"]["download"]["url"] == "/api/v1/product/artifacts/artifact-1/download"
+    assert read_response.json()["data"]["product_artifact"] == {
+        "artifact_ref": "artifact-1",
+        "publication_ref": "publication:artifact-1",
+        "projection_version": 0,
+        "downloadable": True,
+        "citation_refs": ["citation:1"],
+        "citation_count": 1,
+        "citation_authorized": True,
+        "download_policy": "AUTHORIZED",
+    }
+    assert read_response.json()["data"]["product_quality"]["status"] == "RUNTIME_OBSERVED"
+    assert read_response.json()["data"]["product_quality"]["metrics"] == {"citation_count": 1}
     assert download_response.status_code == 200
     assert download_response.text == "# artifact"
     assert download_response.headers["cache-control"] == "no-store"

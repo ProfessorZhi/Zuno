@@ -126,11 +126,49 @@ async def get_product_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
+    payload = WorkspaceTaskRuntimeService.get_artifact(
+        artifact_id,
+        principal_id=str(login_user.user_id or ""),
+    )
+    artifact = dict(payload.get("artifact") or {})
+    citation_refs = list(payload.get("citation_refs") or artifact.get("citation_refs") or [])
+    citation_ids = [
+        str(ref.get("citation_id") or ref.get("citation_ref") or ref.get("source_ref") or "")
+        for ref in citation_refs
+        if isinstance(ref, dict)
+    ]
+    citation_ids = [value for value in citation_ids if value]
+    download = dict(payload.get("download") or {})
+    quality_status = "RUNTIME_OBSERVED" if citation_refs else "UNMEASURED"
+    enriched_payload = {
+        **payload,
+        "product_artifact": {
+            "artifact_ref": artifact_id,
+            "publication_ref": f"publication:{artifact_id}",
+            "projection_version": 0,
+            "downloadable": bool(download.get("url")),
+            "citation_refs": citation_ids,
+            "citation_count": len(citation_refs),
+            "citation_authorized": bool(citation_refs),
+            "download_policy": str(download.get("policy") or artifact.get("download_policy") or "unknown"),
+        },
+        "product_quality": {
+            "quality_ref": f"quality:{artifact_id}:citation",
+            "projection_version": 0,
+            "status": quality_status,
+            "blocked_reason": None,
+            "metrics": {
+                "citation_count": len(citation_refs),
+            },
+            "disclosure": (
+                "Authorized citation refs returned by Product artifact endpoint."
+                if citation_refs
+                else "No citation refs were returned for this artifact."
+            ),
+        },
+    }
     return resp_200(
-        data=WorkspaceTaskRuntimeService.get_artifact(
-            artifact_id,
-            principal_id=str(login_user.user_id or ""),
-        )
+        data=enriched_payload
     )
 
 

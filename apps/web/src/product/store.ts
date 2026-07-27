@@ -41,6 +41,9 @@ export interface ProductArtifactProjection {
   projection_version: number
   downloadable: boolean
   citation_refs: string[]
+  citation_count?: number
+  citation_authorized?: boolean
+  download_policy?: string
 }
 
 export interface ProductQualityProjection {
@@ -48,6 +51,8 @@ export interface ProductQualityProjection {
   projection_version: number
   status: 'UNMEASURED' | 'RUNTIME_OBSERVED' | 'MEASURED' | 'BLOCKED' | 'INCOMPARABLE'
   blocked_reason?: string
+  metrics?: Record<string, number | string | boolean | null>
+  disclosure?: string
 }
 
 export const useProductProjectionStore = defineStore(

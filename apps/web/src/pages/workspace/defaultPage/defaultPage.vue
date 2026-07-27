@@ -134,9 +134,15 @@ const activeRuntimeArtifact = ref<{
   artifactId: string
   content: string
   citations: string[]
+  citationRefs: Record<string, any>[]
   uri: string
   downloadUrl?: string
   downloadPolicy?: string
+  qualityDisclosure?: {
+    status: string
+    blocked_reason?: string
+    disclosure?: string
+  } | null
 } | null>(null)
 const activeRuntimeCitationIds = ref<string[]>([])
 const activeRuntimeObservability = ref<WorkspaceObservabilitySnapshot | null>(null)
@@ -1302,6 +1308,7 @@ const mergeRuntimeCitationIds = (ids: string[]) => {
     activeRuntimeArtifact.value = {
       ...activeRuntimeArtifact.value,
       citations: Array.from(new Set([...activeRuntimeArtifact.value.citations, ...merged])),
+      citationRefs: activeRuntimeArtifact.value.citationRefs,
     }
   }
 }
@@ -1328,8 +1335,10 @@ const captureRuntimeEventSurface = (event: WorkspaceStreamEvent) => {
       artifactId,
       content: '',
       citations: citationIds,
+      citationRefs: [],
       uri: '',
       downloadUrl: String(event.download_url || data.download_url || ''),
+      qualityDisclosure: null,
     }
   }
   const lifecycleState = String(event.lifecycle_state || data.lifecycle_state || '')
@@ -1584,14 +1593,30 @@ const loadWorkspaceArtifact = async (artifactId: string, assistantIndex = -1) =>
   if (!artifactId) return
   const data = await getProductArtifact(artifactId) as WorkspaceArtifactResponse | null
   const artifact = data?.artifact
+  const productArtifact = (data as any)?.product_artifact
+  const productQuality = (data as any)?.product_quality
+  const citationRefs = Array.isArray((data as any)?.citation_refs) ? (data as any).citation_refs : []
+  if (productArtifact) productProjectionStore.upsertArtifact(productArtifact)
+  if (productQuality) productProjectionStore.upsertQuality(productQuality)
   const content = String(data?.content || '')
   activeRuntimeArtifact.value = {
     artifactId,
     content,
-    citations: activeRuntimeCitationIds.value,
+    citations: Array.from(new Set([
+      ...activeRuntimeCitationIds.value,
+      ...(Array.isArray(productArtifact?.citation_refs) ? productArtifact.citation_refs.map((item: any) => String(item || '')).filter(Boolean) : []),
+    ])),
+    citationRefs,
     uri: String(artifact?.uri || ''),
     downloadUrl: String(data?.download?.url || ''),
     downloadPolicy: String(data?.download?.policy || artifact?.download_policy || ''),
+    qualityDisclosure: productQuality
+      ? {
+          status: String(productQuality.status || 'UNMEASURED'),
+          blocked_reason: productQuality.blocked_reason ? String(productQuality.blocked_reason) : '',
+          disclosure: productQuality.disclosure ? String(productQuality.disclosure) : '',
+        }
+      : null,
   }
   if (content && assistantIndex >= 0 && messages.value[assistantIndex]) {
     messages.value[assistantIndex].content = content
@@ -3033,6 +3058,11 @@ onBeforeUnmount(() => {
                 </button>
               </div>
               <div v-if="activeRuntimeArtifact.uri" class="runtime-panel-copy">{{ activeRuntimeArtifact.uri }}</div>
+              <div v-if="activeRuntimeArtifact.qualityDisclosure" class="runtime-panel-copy">
+                Quality {{ activeRuntimeArtifact.qualityDisclosure.status }}
+                <span v-if="activeRuntimeArtifact.qualityDisclosure.blocked_reason">：{{ activeRuntimeArtifact.qualityDisclosure.blocked_reason }}</span>
+                <span v-else-if="activeRuntimeArtifact.qualityDisclosure.disclosure">：{{ activeRuntimeArtifact.qualityDisclosure.disclosure }}</span>
+              </div>
               <div v-if="activeRuntimeArtifact.citations.length > 0 || activeRuntimeCitationIds.length > 0" class="runtime-citation-row">
                 <span
                   v-for="citationId in (activeRuntimeArtifact.citations.length > 0 ? activeRuntimeArtifact.citations : activeRuntimeCitationIds)"
@@ -3040,6 +3070,15 @@ onBeforeUnmount(() => {
                   class="runtime-citation-chip"
                 >
                   {{ citationId }}
+                </span>
+              </div>
+              <div v-if="activeRuntimeArtifact.citationRefs.length > 0" class="runtime-citation-row">
+                <span
+                  v-for="citationRef in activeRuntimeArtifact.citationRefs"
+                  :key="String(citationRef.citation_id || citationRef.source_ref || citationRef.evidence_id)"
+                  class="runtime-citation-chip"
+                >
+                  {{ citationRef.citation_id || citationRef.source_ref || citationRef.evidence_id }}
                 </span>
               </div>
             </div>

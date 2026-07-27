@@ -130,6 +130,11 @@ def test_phase10_product_projection_store_tracks_server_projection_not_runtime_f
         "artifacts",
         "deliveries",
         "quality",
+        "citation_count",
+        "citation_authorized",
+        "download_policy",
+        "metrics?: Record<string, number | string | boolean | null>",
+        "disclosure?: string",
         "sortedAvailableActions",
         "pendingInterrupts",
         "needsResync",
@@ -251,6 +256,10 @@ def test_phase10_default_workspace_page_uses_product_projection_path_before_lega
         "getProductArtifact",
         "downloadProductArtifact",
         "submitProductFeedback",
+        "productProjectionStore.upsertArtifact(productArtifact)",
+        "productProjectionStore.upsertQuality(productQuality)",
+        "Quality {{ activeRuntimeArtifact.qualityDisclosure.status }}",
+        "activeRuntimeArtifact.citationRefs.length > 0",
         "const response = await createWorkspaceTaskAPI(payload)",
     ]:
         assert phrase in text
