@@ -264,12 +264,27 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
-                    secret_lease_id = self._issue_secret_lease(
-                        tenant_id=tenant_id,
-                        call_id=call_id,
-                        tool_name=tool_name,
-                        secret_ref=str(args.get("secret_ref") or ""),
-                    )
+                    try:
+                        secret_lease_id = self._issue_secret_lease(
+                            tenant_id=tenant_id,
+                            call_id=call_id,
+                            tool_name=tool_name,
+                            secret_ref=str(args.get("secret_ref") or ""),
+                        )
+                    except SecurityPersistenceError as exc:
+                        payload["security_blocked_reason"] = str(exc)
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="FAILED",
+                            dispatch_certainty="NOT_DISPATCHED",
+                            effect_certainty="NO_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=payload,
+                        )
+                        return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
