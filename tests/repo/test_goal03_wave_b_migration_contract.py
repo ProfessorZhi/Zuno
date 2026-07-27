@@ -8,6 +8,7 @@ MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_36_wave_b_memory_too
 CUTOVER_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_41_wave_b_runtime_cutover.py"
 PHASE16_EFFECT_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_phase16_tool_effect_receipts.py"
 PHASE16_RECONCILIATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_43_phase16_tool_effect_reconciliations.py"
+PHASE16_ASYNC_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_44_phase16_tool_async_cancellation.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -28,6 +29,10 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260727_43"' in phase16_reconciliation
     assert 'down_revision = "20260727_42"' in phase16_reconciliation
     assert phase16_reconciliation.count("op.create_table(") == phase16_reconciliation.count("op.drop_table(")
+    phase16_async = PHASE16_ASYNC_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260727_44"' in phase16_async
+    assert 'down_revision = "20260727_43"' in phase16_async
+    assert phase16_async.count("op.create_table(") == phase16_async.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -120,6 +125,26 @@ def test_phase16_reconciliation_migration_contains_unknown_effect_fact_table() -
         "uq_tool_effect_reconciliations_provider_effect",
         "uq_tool_effect_reconciliations_idempotency",
         "ck_tool_effect_reconciliations_next_action",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+def test_phase16_async_migration_contains_async_callback_and_cancel_fact_tables() -> None:
+    text = PHASE16_ASYNC_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "tool_async_jobs",
+        "tool_async_callbacks",
+        "tool_cancellation_receipts",
+        "provider_job_id",
+        "callback_binding_ref",
+        "callback_order",
+        "authenticity_status",
+        "external_effect_revoked",
+        "NOT_GUARANTEED",
+        "uq_tool_async_callbacks_order",
+        "ck_tool_async_callbacks_authenticity",
+        "ck_tool_cancellation_status",
     )
 
     for fragment in required_fragments:

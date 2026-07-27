@@ -1,4 +1,4 @@
-# Goal04 PHASE16 Startup Audit
+﻿# Goal04 PHASE16 Startup Audit
 
 status: frozen-gap-list
 phase: PHASE16 Tool Side Effect and Reconciliation
@@ -132,6 +132,24 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry -p no:cacheprovider`：6 passed。
 - `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：5 passed。
 - Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
+### P16-T06 Async Callback 与 Cancellation Receipt
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 append-only Alembic revision `20260727_44_phase16_tool_async_cancellation.py`，创建 `tool_async_jobs`、`tool_async_callbacks` 和 `tool_cancellation_receipts` 三类正式持久事实。
+- 已审批且 Security/Audit/SecretLease/Idempotency/Fencing 全部通过的 `ASYNC_EXTERNAL` Tool 会记录 `ToolExecutionReceipt(status=DISPATCHED, effect_certainty=UNKNOWN_EFFECT)`，创建 `tool_async_jobs`，并返回 `async_waiting`，不把 provider job dispatch 冒充为 effect success。
+- Async job 持久事实绑定 provider job id、callback binding、deadline、idempotency generation、fencing token、SecretLease 和 job payload hash；infra idempotency claim 标记为 `completed`，`result_ref` 指向 async job。
+- Gateway 新增 callback 记录入口，校验 callback binding 与 callback order；伪造或乱序 callback 写入审计事实但 `accepted=false`。
+- Gateway 新增 cancellation request 记录入口，默认 `status=NOT_GUARANTEED` 且 `external_effect_revoked=false`，明确不声明外部副作用已撤销。
+
+验证：
+
+- `python -m py_compile src\backend\zuno\capability\tool_runtime\invocation_gateway.py src\backend\zuno\platform\database\tool_runtime\domain.py tests\integration\test_goal03_wave_b_persistence.py tests\repo\test_goal03_wave_b_migration_contract.py`：通过。
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation -p no:cacheprovider`：7 passed。
+- `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：6 passed。
+- Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T05 当前切片已完成并验证，但 Cancellation/Async、Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T06 当前切片已完成并验证，但 Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

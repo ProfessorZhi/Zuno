@@ -15,6 +15,9 @@ from zuno.platform.database.tool_runtime import (
     ToolAttemptInput,
     ToolEffectReceiptInput,
     ToolEffectReconciliationInput,
+    ToolAsyncJobInput,
+    ToolAsyncCallbackInput,
+    ToolCancellationReceiptInput,
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolUnitOfWork,
@@ -261,6 +264,51 @@ class ToolInvocationGateway:
                             receipt_id,
                             "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
                         )
+                    if effect_policy.effect_class.value == "ASYNC_EXTERNAL":
+                        async_payload = _async_job_payload_from_result(result=result, call_id=call_id)
+                        provider_job_id = str(async_payload["provider_job_id"])
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="DISPATCHED",
+                            dispatch_certainty="DISPATCHED",
+                            effect_certainty="UNKNOWN_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=async_payload,
+                        )
+                        async_job_id = f"tool-async-job:{call_id}"
+                        with self._unit_of_work_factory() as repo:
+                            repo.record_async_job(
+                                ToolAsyncJobInput(
+                                    async_job_id=async_job_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    execution_receipt_id=receipt_id,
+                                    provider_job_id=provider_job_id,
+                                    status="WAITING_CALLBACK",
+                                    callback_binding_ref=f"callback-binding:{call_id}",
+                                    callback_order=0,
+                                    deadline_at=datetime.now(tz=UTC) + timedelta(minutes=15),
+                                    idempotency_scope=execute_prerequisites.idempotency_scope,
+                                    idempotency_key=execute_prerequisites.idempotency_key,
+                                    idempotency_generation=execute_prerequisites.idempotency_generation,
+                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                    fencing_epoch=execute_prerequisites.fencing_epoch,
+                                    secret_lease_id=security_prepare.secret_lease_id,
+                                    job_payload=async_payload,
+                                )
+                            )
+                        self._complete_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                            result_ref=async_job_id,
+                        )
+                        return result, ToolGatewayReceipt("async_waiting", prepared_id, attempt_id, receipt_id)
                     effect_payload = _effect_payload_from_result(result=result, call_id=call_id)
                     provider_effect_id = str(effect_payload["provider_effect_id"])
                     self._record_terminal(
@@ -521,6 +569,74 @@ class ToolInvocationGateway:
                 result_ref=result_ref,
             )
 
+
+    def record_async_callback(
+        self,
+        *,
+        tenant_id: str,
+        async_job_id: str,
+        provider_job_id: str,
+        callback_order: int,
+        callback_payload: dict[str, Any],
+        expected_binding_ref: str,
+        provided_binding_ref: str,
+    ) -> None:
+        with self._unit_of_work_factory() as repo:
+            latest_order = repo.latest_async_callback_order(async_job_id=async_job_id)
+            if expected_binding_ref != provided_binding_ref:
+                authenticity_status = "FORGED"
+            elif callback_order != latest_order + 1:
+                authenticity_status = "OUT_OF_ORDER"
+            else:
+                authenticity_status = "VERIFIED"
+            accepted = authenticity_status == "VERIFIED"
+            repo.record_async_callback(
+                ToolAsyncCallbackInput(
+                    callback_id=f"tool-async-callback:{provider_job_id}:{callback_order}",
+                    tenant_id=tenant_id,
+                    async_job_id=async_job_id,
+                    provider_job_id=provider_job_id,
+                    callback_order=callback_order,
+                    authenticity_status=authenticity_status,
+                    accepted=accepted,
+                    callback_payload=callback_payload,
+                )
+            )
+
+    def record_cancellation_request(
+        self,
+        *,
+        tenant_id: str,
+        prepared_id: str,
+        attempt_id: str,
+        async_job_id: str | None,
+        provider_job_id: str,
+        requested_by_principal_id: str,
+        audit_requirement_id: str,
+    ) -> None:
+        payload = {
+            "provider_job_id": provider_job_id,
+            "status": "NOT_GUARANTEED",
+            "external_effect_revoked": False,
+            "requested_by_principal_id": requested_by_principal_id,
+            "audit_requirement_id": audit_requirement_id,
+        }
+        with self._unit_of_work_factory() as repo:
+            repo.record_cancellation_receipt(
+                ToolCancellationReceiptInput(
+                    cancellation_receipt_id=f"tool-cancellation-receipt:{provider_job_id}",
+                    tenant_id=tenant_id,
+                    prepared_tool_action_id=prepared_id,
+                    attempt_id=attempt_id,
+                    async_job_id=async_job_id,
+                    provider_job_id=provider_job_id,
+                    status="NOT_GUARANTEED",
+                    external_effect_revoked=False,
+                    requested_by_principal_id=requested_by_principal_id,
+                    audit_requirement_id=audit_requirement_id,
+                    cancellation_payload=payload,
+                )
+            )
     def _record_terminal(
         self,
         *,
@@ -593,6 +709,16 @@ def _effect_payload_from_result(*, result: Any, call_id: str) -> dict[str, Any]:
         "native_result": redact_sensitive_payload(native),
     }
 
+
+def _async_job_payload_from_result(*, result: Any, call_id: str) -> dict[str, Any]:
+    native = result if isinstance(result, dict) else {"value": str(result)}
+    provider_job_id = str(native.get("provider_job_id") or native.get("job_id") or f"provider-job:{call_id}")
+    return {
+        "provider_job_id": provider_job_id,
+        "async_status": "WAITING_CALLBACK",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "native_result": redact_sensitive_payload(native),
+    }
 
 def _unknown_effect_payload(*, exc: ToolEffectUnknownError, call_id: str) -> dict[str, Any]:
     return {

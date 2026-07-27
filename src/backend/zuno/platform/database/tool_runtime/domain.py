@@ -124,6 +124,54 @@ class ToolEffectReconciliationInput:
     fencing_epoch: int
     secret_lease_id: str | None
     reconciliation_payload: dict[str, Any]
+
+@dataclass(frozen=True, slots=True)
+class ToolAsyncJobInput:
+    async_job_id: str
+    tenant_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    execution_receipt_id: str
+    provider_job_id: str
+    status: str
+    callback_binding_ref: str
+    callback_order: int
+    deadline_at: Any
+    idempotency_scope: str
+    idempotency_key: str
+    idempotency_generation: int
+    fencing_resource_id: str
+    fencing_lease_id: str
+    fencing_epoch: int
+    secret_lease_id: str | None
+    job_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolAsyncCallbackInput:
+    callback_id: str
+    tenant_id: str
+    async_job_id: str
+    provider_job_id: str
+    callback_order: int
+    authenticity_status: str
+    accepted: bool
+    callback_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCancellationReceiptInput:
+    cancellation_receipt_id: str
+    tenant_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    async_job_id: str | None
+    provider_job_id: str
+    status: str
+    external_effect_revoked: bool
+    requested_by_principal_id: str
+    audit_requirement_id: str
+    cancellation_payload: dict[str, Any]
 class ToolUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -629,6 +677,122 @@ class ToolRepository:
                 "reconciliation_payload_hash": canonical_sha256(reconciliation.reconciliation_payload),
             },
         )
+
+    def record_async_job(self, job: ToolAsyncJobInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_async_jobs (
+                    async_job_id, tenant_id, prepared_tool_action_id, attempt_id,
+                    execution_receipt_id, provider_job_id, status, callback_binding_ref,
+                    callback_order, deadline_at, idempotency_scope, idempotency_key,
+                    idempotency_generation, fencing_resource_id, fencing_lease_id,
+                    fencing_epoch, secret_lease_id, job_payload_hash
+                )
+                VALUES (
+                    :async_job_id, :tenant_id, :prepared_tool_action_id, :attempt_id,
+                    :execution_receipt_id, :provider_job_id, :status, :callback_binding_ref,
+                    :callback_order, :deadline_at, :idempotency_scope, :idempotency_key,
+                    :idempotency_generation, :fencing_resource_id, :fencing_lease_id,
+                    :fencing_epoch, :secret_lease_id, :job_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "async_job_id": job.async_job_id,
+                "tenant_id": job.tenant_id,
+                "prepared_tool_action_id": job.prepared_tool_action_id,
+                "attempt_id": job.attempt_id,
+                "execution_receipt_id": job.execution_receipt_id,
+                "provider_job_id": job.provider_job_id,
+                "status": job.status,
+                "callback_binding_ref": job.callback_binding_ref,
+                "callback_order": job.callback_order,
+                "deadline_at": job.deadline_at,
+                "idempotency_scope": job.idempotency_scope,
+                "idempotency_key": job.idempotency_key,
+                "idempotency_generation": job.idempotency_generation,
+                "fencing_resource_id": job.fencing_resource_id,
+                "fencing_lease_id": job.fencing_lease_id,
+                "fencing_epoch": job.fencing_epoch,
+                "secret_lease_id": job.secret_lease_id,
+                "job_payload_hash": canonical_sha256(job.job_payload),
+            },
+        )
+
+
+    def latest_async_callback_order(self, *, async_job_id: str) -> int:
+        value = self.connection.execute(
+            text(
+                """
+                SELECT COALESCE(MAX(callback_order), 0)
+                FROM tool_async_callbacks
+                WHERE async_job_id = :async_job_id
+                  AND accepted = true
+                """
+            ),
+            {"async_job_id": async_job_id},
+        ).scalar_one()
+        return int(value or 0)
+    def record_async_callback(self, callback: ToolAsyncCallbackInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_async_callbacks (
+                    callback_id, tenant_id, async_job_id, provider_job_id,
+                    callback_order, authenticity_status, accepted, callback_payload_hash
+                )
+                VALUES (
+                    :callback_id, :tenant_id, :async_job_id, :provider_job_id,
+                    :callback_order, :authenticity_status, :accepted, :callback_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "callback_id": callback.callback_id,
+                "tenant_id": callback.tenant_id,
+                "async_job_id": callback.async_job_id,
+                "provider_job_id": callback.provider_job_id,
+                "callback_order": callback.callback_order,
+                "authenticity_status": callback.authenticity_status,
+                "accepted": callback.accepted,
+                "callback_payload_hash": canonical_sha256(callback.callback_payload),
+            },
+        )
+
+    def record_cancellation_receipt(self, cancellation: ToolCancellationReceiptInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_cancellation_receipts (
+                    cancellation_receipt_id, tenant_id, prepared_tool_action_id, attempt_id,
+                    async_job_id, provider_job_id, status, external_effect_revoked,
+                    requested_by_principal_id, audit_requirement_id, cancellation_payload_hash
+                )
+                VALUES (
+                    :cancellation_receipt_id, :tenant_id, :prepared_tool_action_id, :attempt_id,
+                    :async_job_id, :provider_job_id, :status, :external_effect_revoked,
+                    :requested_by_principal_id, :audit_requirement_id, :cancellation_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "cancellation_receipt_id": cancellation.cancellation_receipt_id,
+                "tenant_id": cancellation.tenant_id,
+                "prepared_tool_action_id": cancellation.prepared_tool_action_id,
+                "attempt_id": cancellation.attempt_id,
+                "async_job_id": cancellation.async_job_id,
+                "provider_job_id": cancellation.provider_job_id,
+                "status": cancellation.status,
+                "external_effect_revoked": cancellation.external_effect_revoked,
+                "requested_by_principal_id": cancellation.requested_by_principal_id,
+                "audit_requirement_id": cancellation.audit_requirement_id,
+                "cancellation_payload_hash": canonical_sha256(cancellation.cancellation_payload),
+            },
+        )
     def record_bypass_guard(
         self,
         *,
@@ -662,6 +826,9 @@ class ToolRepository:
 
 __all__ = [
     "PreparedToolActionInput",
+    "ToolCancellationReceiptInput",
+    "ToolAsyncCallbackInput",
+    "ToolAsyncJobInput",
     "ToolAttemptInput",
     "ToolEffectReceiptInput",
     "ToolEffectReconciliationInput",

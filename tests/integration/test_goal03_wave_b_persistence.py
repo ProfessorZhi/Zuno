@@ -69,6 +69,9 @@ def engine(migrated_postgres):
                     security_effective_epochs,
                     security_secret_leases,
                     security_secret_refs,
+                    tool_cancellation_receipts,
+                    tool_async_callbacks,
+                    tool_async_jobs,
                     tool_effect_reconciliations,
                     tool_effect_receipts,
                     tool_bypass_guard_receipts,
@@ -830,3 +833,167 @@ def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(eng
     assert claim["status"] == "completed"
     assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
     assert observation_hash == canonical_sha256(unknown_payload)
+
+def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> None:
+    tenant_id = "tenant-phase16-async"
+    workspace_id = "workspace-phase16-async"
+    call_id = "call-phase16-async-export"
+    secret_ref = "security-secret-ref:phase16:async-export"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-export:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=2,
+        callback_payload={"state": "done", "order": 2},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=1,
+        callback_payload={"state": "running", "order": 1},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_cancellation_request(
+        tenant_id=tenant_id,
+        prepared_id="prepared-tool-action:call-phase16-async-export",
+        attempt_id="tool-attempt:call-phase16-async-export",
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        requested_by_principal_id="workspace-user:cancel",
+        audit_requirement_id="audit-requirement:call-phase16-async-export:cancel",
+    )
+
+    async_payload = {
+        "provider_job_id": "provider-job:phase16:async:1",
+        "async_status": "WAITING_CALLBACK",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "native_result": {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"},
+    }
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-async-export'
+                """
+            )
+        ).mappings().one()
+        job = conn.execute(
+            text(
+                """
+                SELECT provider_job_id, status, callback_binding_ref, callback_order,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, job_payload_hash
+                FROM tool_async_jobs
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-export'
+                """
+            )
+        ).mappings().one()
+        callbacks = conn.execute(
+            text(
+                """
+                SELECT callback_order, authenticity_status, accepted
+                FROM tool_async_callbacks
+                WHERE provider_job_id = 'provider-job:phase16:async:1'
+                ORDER BY callback_order
+                """
+            )
+        ).mappings().all()
+        cancellation = conn.execute(
+            text(
+                """
+                SELECT status, external_effect_revoked, requested_by_principal_id,
+                       audit_requirement_id, cancellation_payload_hash
+                FROM tool_cancellation_receipts
+                WHERE cancellation_receipt_id = 'tool-cancellation-receipt:provider-job:phase16:async:1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "DISPATCHED"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert job["provider_job_id"] == "provider-job:phase16:async:1"
+    assert job["status"] == "WAITING_CALLBACK"
+    assert job["callback_binding_ref"] == "callback-binding:call-phase16-async-export"
+    assert job["callback_order"] == 0
+    assert job["idempotency_scope"] == "tool-side-effect"
+    assert job["idempotency_key"] == call_id
+    assert job["idempotency_generation"] == 1
+    assert job["secret_lease_id"] == "security-secret-lease:call-phase16-async-export"
+    assert job["job_payload_hash"] == canonical_sha256(async_payload)
+    assert [dict(row) for row in callbacks] == [
+        {"callback_order": 1, "authenticity_status": "VERIFIED", "accepted": True},
+        {"callback_order": 2, "authenticity_status": "OUT_OF_ORDER", "accepted": False},
+    ]
+    assert cancellation["status"] == "NOT_GUARANTEED"
+    assert cancellation["external_effect_revoked"] is False
+    assert cancellation["requested_by_principal_id"] == "workspace-user:cancel"
+    assert cancellation["audit_requirement_id"] == "audit-requirement:call-phase16-async-export:cancel"
+    assert cancellation["cancellation_payload_hash"] == canonical_sha256(
+        {
+            "provider_job_id": "provider-job:phase16:async:1",
+            "status": "NOT_GUARANTEED",
+            "external_effect_revoked": False,
+            "requested_by_principal_id": "workspace-user:cancel",
+            "audit_requirement_id": "audit-requirement:call-phase16-async-export:cancel",
+        }
+    )
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-async-job:call-phase16-async-export"
