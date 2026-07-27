@@ -27,6 +27,41 @@ agent runtime tool bridge
 workspace approval API/UI contract
 ```
 
+## Goal04 PR B Current Evidence
+
+当前 PR B 分支：`codex/goal04-phase16-tool-side-effect`
+
+当前已推送 head：`63e3f03d`
+
+当前 Evidence：`docs/evidence/goal04-phase16-startup-audit.md`
+
+已完成并验证的当前切片：
+
+- P16-T01 Effect Classification 与 TargetResourceSet。
+- P16-T02 Prepare Gate 与 Approval Binding。
+- P16-T03 Execute Gate、Audit、Claim、Lease 与 SecretLease。
+- P16-T04 Effect Attempt 与 Known EffectReceipt。
+- P16-T05 UNKNOWN Effect 与 Reconciliation。
+- P16-T06 Async Callback 与 Cancellation Receipt。
+- P16-T07 Compensation 与 Manual Effect Assessment。
+- P16-T08 Side-effect Cutover 与 Bypass Zero Guard。
+- P16-T08R Default ToolControlPlane Gateway Cutover Repair。
+- P16-T09 Restart Recovery、Age Escalation 与 Async Timeout。
+- P16-T10 Side-effect Idempotency Replay。
+- P16-T11 Async Callback Completion 与 Forged Callback Fencing。
+- P16-T12 Async Cancellation State 与 Timeout Fencing。
+- P16-T13 Manual Effect Assessment Authorization Boundary。
+- P16-T14 Compensation from Reconciliation Requires Escalation。
+- P16-T15 Execute Latest Epoch Reauthorization。
+- P16-T16 Approval Deadline Reauthorization。
+- P16-T17 SecretLease Revocation Fail-Closed。
+
+当前验证状态：
+
+- `zuno-postgres` 已通过 Docker Compose 恢复为 healthy。
+- P16-T17 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16 仍为 `in_progress`。本节只同步当前实现证据，不构成 Coordinator Closure Approval，不把 Program、Manifest 或 Production Readiness 改为 completed/ready。
+
 ## Allowed Paths
 
 ```text
