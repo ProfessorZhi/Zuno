@@ -866,6 +866,93 @@ def test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch(engine
     assert claim["status"] == "in_progress"
     assert claim["result_ref"] is None
 
+
+def test_phase16_gateway_reauthorizes_approval_deadline_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-expired-approval"
+    workspace_id = "workspace-phase16-expired-approval"
+    call_id = "call-phase16-expired-approval-mail"
+    trace_id = "trace-phase16-expired-approval"
+    secret_ref = "security-secret-ref:phase16:expired-approval"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:expired-approval:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    security_factory_calls = 0
+
+    def security_factory() -> SecurityUnitOfWork:
+        nonlocal security_factory_calls
+        security_factory_calls += 1
+        if security_factory_calls == 2:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE security_approval_requests
+                        SET deadline_at = now() - interval '1 second'
+                        WHERE approval_request_id = :approval_request_id
+                        """
+                    ),
+                    {"approval_request_id": f"approval-request:{call_id}"},
+                )
+        return SecurityUnitOfWork(engine)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=security_factory,
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:expired-approval:1", "message_id": "message-expired-approval"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert "approval deadline expired before effect" in receipt.blocked_reason
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-expired-approval-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-expired-approval-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-expired-approval-mail'
+                """
+            )
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+
 def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch(engine) -> None:
     tenant_id = "tenant-phase16-idempotency"
     workspace_id = "workspace-phase16-idempotency"

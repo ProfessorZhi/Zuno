@@ -361,6 +361,21 @@ Failure Fingerprint：
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch -p no:cacheprovider --tb=short`：1 passed。
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch -p no:cacheprovider --tb=short`：2 passed。
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+### P16-T16 Approval Deadline Reauthorization
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolInvocationGateway` 在真正 dispatch provider 之前再次验证 approval deadline。
+- 若 approved request 在准备后、执行前过期，gateway 会在 dispatch 前失败关闭，记录 FAILED / NOT_DISPATCHED / NO_EFFECT，并且不发行 secret lease。
+- 正常 approve 路径仍保持不变：未过期时继续进入 secret lease、provider dispatch 与 effect receipt 流程。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_reauthorizes_approval_deadline_before_effect_dispatch -p no:cacheprovider --tb=short`：1 passed。
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_reauthorizes_approval_deadline_before_effect_dispatch -p no:cacheprovider --tb=short`：2 passed。
+- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -384,7 +399,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T15 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T16 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T15 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T16 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
