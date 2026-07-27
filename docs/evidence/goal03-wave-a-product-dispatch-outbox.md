@@ -133,7 +133,34 @@ alembic upgrade head could not connect to PostgreSQL localhost:5432.
 Docker daemon check also failed: dockerDesktopLinuxEngine pipe unavailable.
 ```
 
+2026-07-27 environment recheck:
+
+```powershell
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+Test-NetConnection -ComputerName localhost -Port 5432
+Get-Service -Name postgresql* -ErrorAction SilentlyContinue
+where.exe postgres
+where.exe pg_ctl
+where.exe initdb
+where.exe psql
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+```
+
+结果：
+
+```text
+docker API unavailable: npipe dockerDesktopLinuxEngine not found.
+localhost:5432 TcpTestSucceeded=False.
+No local postgresql* Windows service found.
+No postgres/pg_ctl/initdb/psql binary found on PATH.
+test_phase09_product_service_bootstraps_legacy_runtime_agent_version:
+ERROR at migrated_postgres fixture before business assertions.
+Failure fingerprint:
+alembic upgrade head -> sqlalchemy.exc.OperationalError -> psycopg.errors.ConnectionTimeout at localhost:5432.
+```
+
 ## 未证明
 
 - 浏览器 E2E reconnect/cutover 和更大范围 legacy API cutover fault tests 尚未完成。
+- ProductService legacy AgentVersion bootstrap 已有代码和单元/API 证据，但真实 PostgreSQL integration 仍在当前本机环境下 environment_blocked，不能计为 Wave A Gate passed。
 - PHASE09 仍是 `in_progress`，不能据此关闭 Goal03 Wave A Gate。
