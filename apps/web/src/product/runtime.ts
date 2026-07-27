@@ -18,6 +18,7 @@ import type {
 import type { useProductProjectionStore } from './store'
 
 export const PRODUCT_WEB_TENANT_ID = 'tenant:web'
+export const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 export const PRODUCT_WEB_AGENT_VERSION_ID = 'agent-version:web-default'
 
 type ProductProjectionStore = ReturnType<typeof useProductProjectionStore>

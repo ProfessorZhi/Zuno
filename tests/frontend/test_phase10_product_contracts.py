@@ -8,8 +8,11 @@ STORE = REPO_ROOT / "apps/web/src/product/store.ts"
 RUNTIME = REPO_ROOT / "apps/web/src/product/runtime.ts"
 INDEX = REPO_ROOT / "apps/web/src/product/index.ts"
 DEFAULT_PAGE = REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue"
+WORKSPACE_PAGE = REPO_ROOT / "apps/web/src/pages/workspace/workspace.vue"
+DASHBOARD_PAGE = REPO_ROOT / "apps/web/src/pages/dashboard/dashboard.vue"
 AGENT_PAGE = REPO_ROOT / "apps/web/src/pages/agent/agent.vue"
 AGENT_EDITOR = REPO_ROOT / "apps/web/src/pages/agent/agent-editor.vue"
+AGENT_API = REPO_ROOT / "apps/web/src/apis/agent.ts"
 
 
 def test_phase10_product_contract_surface_exists() -> None:
@@ -217,6 +220,9 @@ def test_phase10_product_projection_store_keeps_frontend_out_of_agent_core_owner
 def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
     agent_page = AGENT_PAGE.read_text(encoding="utf-8")
     agent_editor = AGENT_EDITOR.read_text(encoding="utf-8")
+    workspace_page = WORKSPACE_PAGE.read_text(encoding="utf-8")
+    default_page = DEFAULT_PAGE.read_text(encoding="utf-8")
+    dashboard_page = DASHBOARD_PAGE.read_text(encoding="utf-8")
 
     for phrase in [
         "createProductAgentDraft",
@@ -278,6 +284,17 @@ def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
         "await fetchAgents",
     ]:
         assert phrase not in agent_page
+
+    for page_text in [workspace_page, default_page, dashboard_page]:
+        for phrase in [
+            "getAgentsAPI",
+            "getAgentByIdAPI",
+            "deleteAgentAPI",
+            "searchAgentsAPI",
+        ]:
+            assert phrase not in page_text
+
+    assert not AGENT_API.exists()
 
 
 def test_phase10_product_runtime_adapter_connects_command_stream_and_action_tokens() -> None:

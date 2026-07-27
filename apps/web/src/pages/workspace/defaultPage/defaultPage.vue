@@ -26,7 +26,6 @@ import {
 } from '../../../apis/workspace'
 import { uploadFile } from '../../../apis/chat'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../../apis/llm'
-import { getAgentsAPI, type AgentResponse } from '../../../apis/agent'
 import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
@@ -35,8 +34,12 @@ import {
   consumeProductStoreAction,
   downloadProductArtifact,
   getProductArtifact,
+  listProductAgentCatalog,
   submitProductFeedback,
   submitWorkspacePayloadToProductRuntime,
+  PRODUCT_AGENT_WORKSPACE_ID,
+  PRODUCT_WEB_TENANT_ID,
+  type AgentCatalogEntry,
   type AvailableAction,
 } from '../../../product'
 import { useProductProjectionStore } from '../../../product/store'
@@ -1179,21 +1182,21 @@ const normalizeAgentAvatar = (avatar?: string) => {
   return withUserAvatarVersion(raw)
 }
 
-const normalizeAgentOption = (agent: AgentResponse): AgentOption => ({
-  id: String(agent.agent_id || agent.id || agent.name || '').trim(),
-  name: String(agent.name || '未命名智能体').trim(),
-  description: String(agent.description || '暂无描述').trim(),
-  avatar: normalizeAgentAvatar(agent.logo_url),
+const normalizeAgentOption = (agent: AgentCatalogEntry): AgentOption => ({
+  id: String(agent.agent_definition_id || agent.catalog_entry_id || agent.display_name || '').trim(),
+  name: String(agent.display_name || '未命名智能体').trim(),
+  description: String(agent.description || 'Product Catalog entry').trim(),
+  avatar: normalizeAgentAvatar(),
 })
 
 const fetchAgentOptions = async () => {
   try {
     agentPickerLoading.value = true
-    const response = await getAgentsAPI()
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '获取 Agent 失败')
-    }
-    agentOptions.value = (response.data.data || [])
+    const response = await listProductAgentCatalog({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    })
+    agentOptions.value = (response.agent_catalog_entries || [])
       .map(normalizeAgentOption)
       .filter((agent) => Boolean(agent.id))
   } catch (error) {

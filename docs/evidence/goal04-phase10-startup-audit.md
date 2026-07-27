@@ -761,6 +761,46 @@ npm run build -w zuno-frontend
 passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
 ```
 
+## P10-T19 当前进展
+
+已更新：
+
+- `apps/web/src/pages/workspace/workspace.vue`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+- `apps/web/src/pages/dashboard/dashboard.vue`
+- `apps/web/src/product/runtime.ts`
+- `apps/web/src/apis/agent.ts`（删除）
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前旧 Agent list surface 删除覆盖：
+
+- `apps/web/src/apis/agent.ts` 已删除，不再保留旧 Agent create/list/delete/update/search API 的前端实现文件；
+- Workspace sidebar、Workspace default agent picker 和 Dashboard 统计筛选改为读取 Product Catalog，不再调用旧 `getAgentsAPI`；
+- `PRODUCT_AGENT_WORKSPACE_ID` 由 Product runtime 正式导出，避免前端页面各自硬编码 Product workspace；
+- 前端合同测试新增对 `apps/web/src/apis/agent.ts` 不存在的断言，并检查工作区、默认页和仪表盘页面不再出现旧 Agent list API 字符串。
+
+仍未完成：
+
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T19 验证：
+
+```text
+python -m pytest tests\\frontend\\test_phase10_product_contracts.py tests\\frontend\\test_frontend_workspace_features.py -q
+18 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
 ## 本轮验证
 
 已通过：
@@ -782,6 +822,7 @@ python -m py_compile src\backend\zuno\platform\database\product\domain.py src\ba
 python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_agent_studio_and_catalog_ui_use_product_surface -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py -q
 python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_snapshot_route_uses_product_service tests\repo\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_editor_payload_migration_adds_json_snapshots -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 ```
 
 未通过 / 未完成：
