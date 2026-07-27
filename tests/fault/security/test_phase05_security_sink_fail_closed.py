@@ -14,7 +14,7 @@ def test_security_sink_outage_blocks_approved_side_effect_before_executor_runs()
         security_approval_sink=FailingSecuritySink()
     )
 
-    with pytest.raises(RuntimeError, match="approved_before_effect"):
+    with pytest.raises(RuntimeError, match="failed_closed_before_effect"):
         runtime.execute(
             ToolRuntimeRequest(
                 tool_id="mail.send",

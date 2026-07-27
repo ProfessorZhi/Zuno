@@ -1,4 +1,4 @@
-﻿# Goal04 PHASE16 Startup Audit
+# Goal04 PHASE16 Startup Audit
 
 status: frozen-gap-list
 phase: PHASE16 Tool Side Effect and Reconciliation
@@ -187,6 +187,30 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_bypass_guard.py tests\repo\test_phase16_tool_bypass_zero.py -p no:cacheprovider`：4 passed。
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_compensation_as_new_governed_action -p no:cacheprovider`：8 passed。
 - Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
+## PHASE16 Closure Gate Audit
+
+状态：closure_not_approved。
+
+已运行 gate：
+
+- `python tools\scripts\verify_tool_runtime_target_protocols.py`：通过，输出 `Tool Runtime target architecture verification passed.`。
+- `python tools\scripts\verify_tool_execution_bypass.py`：通过，输出 `Tool execution bypass verification passed.`。
+- `alembic -c infra\db\alembic.ini heads`：通过，单一 head 为 `20260727_45 (head)`。
+- `alembic -c infra\db\alembic.ini upgrade head`：通过。
+- `python -m pytest -q tests\fault\security\test_phase05_security_pre_effect_faults.py tests\fault\security\test_phase05_security_sink_fail_closed.py -p no:cacheprovider`：修正旧断言后 5 passed。
+
+Failure Fingerprint：
+
+- command：`python -m pytest -q tests\fault\security\test_phase05_security_pre_effect_faults.py tests\fault\security\test_phase05_security_sink_fail_closed.py -p no:cacheprovider`
+- test：`test_security_sink_outage_blocks_approved_side_effect_before_executor_runs`
+- exception：`AssertionError: Regex pattern did not match`
+- first relevant frame：`tests/fault/security/test_phase05_security_sink_fail_closed.py:17`
+- environment signature：PostgreSQL Alembic head `20260727_45`，PHASE16 default readonly cutover active。
+- resolution：默认 ToolControlPlaneRuntime 对写 Tool 先 fail-closed，因此 security sink status 为 `failed_closed_before_effect`，不是旧 PHASE15 断言里的 `approved_before_effect`；更新 fault test 断言后 targeted rerun 通过。
+
+Closure Reviewer 结论：
+
+P16-T01 至 P16-T08 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；但 PHASE16 暂不写 `completed`。原因是当前 closure audit 还没有证明默认 Product/Agent ToolControlPlane 写 Tool 已从 `readonly_cutover_only` 切到真实 approved side-effect provider path；PR B 仍保持 side-effect cutover guard 和 gateway implementation evidence，而不是完整 Coordinator Closure Approval。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08 当前切片已完成并验证；PHASE16 closure 仍需要独立 closure audit、Alembic/head/upgrade gate、fault/security/integration gate、状态文档和 Coordinator Approval。本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08 当前切片已完成并验证，部分 closure gate 已运行通过；但默认 Product/Agent ToolControlPlane 写 Tool 真实切流尚未被证明，因此本文不证明 PHASE16 completed、quality fully proven 或 production ready。
