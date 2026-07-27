@@ -97,6 +97,23 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_execute_prerequisites_after_approval -p no:cacheprovider`：5 passed。
 - Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
+
+### P16-T04 Effect Attempt 与 Known EffectReceipt
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 append-only Alembic revision `20260727_42_phase16_tool_effect_receipts.py`，创建 `tool_effect_receipts` 作为 Tool Runtime 的正式 Known EffectReceipt 持久事实。
+- `ToolRepository` 新增 `ToolEffectReceiptInput` 与 `record_effect_receipt`，绑定 `PreparedToolAction`、`ToolAttempt`、`ToolExecutionReceipt`、provider effect id、idempotency claim、fencing token 和 SecretLease。
+- 已审批且 Security/Audit/SecretLease/Idempotency/Fencing 全部通过的 side-effect Tool 会 dispatch provider，并记录 `ToolExecutionReceipt(effect_certainty=CONFIRMED_EFFECT)` 与 `tool_effect_receipts`。
+- EffectReceipt 写入后将 infra idempotency claim 标记为 `completed`，`result_ref` 指向 effect receipt，不以 HTTP 2xx 或普通 receipt 冒充 effect success。
+
+验证：
+
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval -p no:cacheprovider`：5 passed。
+- Failure Fingerprint 1：fixture TRUNCATE 未包含新增 FK 子表 `tool_effect_receipts`，PostgreSQL 报 `FeatureNotSupported cannot truncate a table referenced in a foreign key constraint`；补充清理表后通过该 setup gate。
+- Failure Fingerprint 2：旧 `security_approval_requests` 未清理导致 approval deadline expired；补充 PHASE16 Security prepare/approval/audit/epoch 表和 infra claim/lease 表清理后 targeted rerun 通过。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01、P16-T02 与 P16-T03 当前切片已完成并验证，但 P16-G05 至 P16-G07 仍是 Mandatory Gap；P16-G03/P16-G04 仍需在 P16-T04 默认执行路径中做闭环验证；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01、P16-T02、P16-T03 与 P16-T04 当前切片已完成并验证，但 UNKNOWN/Reconciliation、Cancellation/Async、Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

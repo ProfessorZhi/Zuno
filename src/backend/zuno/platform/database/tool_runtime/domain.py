@@ -82,7 +82,26 @@ class ToolExecutionReceiptInput:
     append_only_generation: int
     receipt_payload: dict[str, Any]
 
-
+@dataclass(frozen=True, slots=True)
+class ToolEffectReceiptInput:
+    effect_receipt_id: str
+    tenant_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    execution_receipt_id: str
+    provider_effect_id: str
+    effect_status: str
+    effect_certainty: str
+    idempotency_scope: str
+    idempotency_key: str
+    idempotency_generation: int
+    fencing_resource_id: str
+    fencing_lease_id: str
+    fencing_epoch: int
+    secret_lease_id: str | None
+    native_result: dict[str, Any]
+    effect_payload: dict[str, Any]
+    append_only_generation: int
 class ToolUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -497,6 +516,51 @@ class ToolRepository:
             },
         )
 
+    def record_effect_receipt(self, receipt: ToolEffectReceiptInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_effect_receipts (
+                    effect_receipt_id, tenant_id, prepared_tool_action_id, attempt_id,
+                    execution_receipt_id, provider_effect_id, effect_status,
+                    effect_certainty, idempotency_scope, idempotency_key,
+                    idempotency_generation, fencing_resource_id, fencing_lease_id,
+                    fencing_epoch, secret_lease_id, native_result_hash,
+                    effect_payload_hash, append_only_generation
+                )
+                VALUES (
+                    :effect_receipt_id, :tenant_id, :prepared_tool_action_id, :attempt_id,
+                    :execution_receipt_id, :provider_effect_id, :effect_status,
+                    :effect_certainty, :idempotency_scope, :idempotency_key,
+                    :idempotency_generation, :fencing_resource_id, :fencing_lease_id,
+                    :fencing_epoch, :secret_lease_id, :native_result_hash,
+                    :effect_payload_hash, :append_only_generation
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "effect_receipt_id": receipt.effect_receipt_id,
+                "tenant_id": receipt.tenant_id,
+                "prepared_tool_action_id": receipt.prepared_tool_action_id,
+                "attempt_id": receipt.attempt_id,
+                "execution_receipt_id": receipt.execution_receipt_id,
+                "provider_effect_id": receipt.provider_effect_id,
+                "effect_status": receipt.effect_status,
+                "effect_certainty": receipt.effect_certainty,
+                "idempotency_scope": receipt.idempotency_scope,
+                "idempotency_key": receipt.idempotency_key,
+                "idempotency_generation": receipt.idempotency_generation,
+                "fencing_resource_id": receipt.fencing_resource_id,
+                "fencing_lease_id": receipt.fencing_lease_id,
+                "fencing_epoch": receipt.fencing_epoch,
+                "secret_lease_id": receipt.secret_lease_id,
+                "native_result_hash": canonical_sha256(receipt.native_result),
+                "effect_payload_hash": canonical_sha256(receipt.effect_payload),
+                "append_only_generation": receipt.append_only_generation,
+            },
+        )
+
     def record_bypass_guard(
         self,
         *,
@@ -531,6 +595,7 @@ class ToolRepository:
 __all__ = [
     "PreparedToolActionInput",
     "ToolAttemptInput",
+    "ToolEffectReceiptInput",
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
     "ToolRepository",

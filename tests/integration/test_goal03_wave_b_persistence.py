@@ -59,6 +59,17 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    infra_worker_leases,
+                    infra_idempotency_claims,
+                    security_approval_decisions,
+                    security_approval_requests,
+                    security_audit_requirements,
+                    security_authorization_decisions,
+                    security_principal_contexts,
+                    security_effective_epochs,
+                    security_secret_leases,
+                    security_secret_refs,
+                    tool_effect_receipts,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
                     tool_execution_receipts,
@@ -555,7 +566,7 @@ def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) 
                 prepared_action_hash=prepared_hash,
             )
 
-def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) -> None:
+def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> None:
     tenant_id = "tenant-phase16-execute"
     workspace_id = "workspace-phase16-execute"
     call_id = "call-phase16-execute-mail"
@@ -577,10 +588,10 @@ def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) ->
     )
     dispatched = False
 
-    async def executor() -> str:
+    async def executor() -> dict[str, str]:
         nonlocal dispatched
         dispatched = True
-        return "sent"
+        return {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"}
 
     result, receipt = asyncio.run(gateway.invoke_readonly(
         tool_name="mail.send",
@@ -595,9 +606,9 @@ def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) ->
         approved=True,
     ))
 
-    assert result is None
-    assert dispatched is False
-    assert receipt.status == "blocked"
+    assert result == {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"}
+    assert dispatched is True
+    assert receipt.status == "completed"
 
     effect_policy = classify_tool_effect(
         tool_name="mail.send",
@@ -605,6 +616,12 @@ def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) ->
         readonly=False,
         adapter_kind="API",
     )
+    effect_payload = {
+        "provider_effect_id": "mail-provider-effect:phase16:1",
+        "effect_status": "CONFIRMED",
+        "effect_certainty": "CONFIRMED_EFFECT",
+        "native_result": {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"},
+    }
     with engine.connect() as conn:
         assert conn.execute(
             text("SELECT status FROM security_approval_requests WHERE approval_request_id = 'approval-request:call-phase16-execute-mail'")
@@ -615,10 +632,31 @@ def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) ->
         assert conn.execute(
             text("SELECT audience FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-execute-mail'")
         ).scalar_one() == "tool:mail.send"
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-execute-mail'
+                """
+            )
+        ).mappings().one()
+        effect = conn.execute(
+            text(
+                """
+                SELECT provider_effect_id, effect_status, effect_certainty,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       fencing_resource_id, fencing_epoch, secret_lease_id,
+                       native_result_hash, effect_payload_hash
+                FROM tool_effect_receipts
+                WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-execute-mail'
+                """
+            )
+        ).mappings().one()
         claim = conn.execute(
             text(
                 """
-                SELECT owner, status, generation
+                SELECT owner, status, generation, result_ref
                 FROM infra_idempotency_claims
                 WHERE tenant_id = :tenant_id
                   AND scope = 'tool-side-effect'
@@ -647,17 +685,24 @@ def test_phase16_gateway_records_execute_prerequisites_after_approval(engine) ->
             )
         ).scalar_one()
 
+    assert execution["status"] == "SUCCEEDED"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "CONFIRMED_EFFECT"
+    assert effect["provider_effect_id"] == "mail-provider-effect:phase16:1"
+    assert effect["effect_status"] == "CONFIRMED"
+    assert effect["effect_certainty"] == "CONFIRMED_EFFECT"
+    assert effect["idempotency_scope"] == "tool-side-effect"
+    assert effect["idempotency_key"] == call_id
+    assert effect["idempotency_generation"] == 1
+    assert effect["fencing_resource_id"] == effect_policy.target_resource_set.resource_set_ref
+    assert effect["fencing_epoch"] == 1
+    assert effect["secret_lease_id"] == "security-secret-lease:call-phase16-execute-mail"
+    assert effect["native_result_hash"] == canonical_sha256({"result": effect_payload["native_result"]})
+    assert effect["effect_payload_hash"] == canonical_sha256(effect_payload)
     assert claim["owner"] == f"tool-runtime:{call_id}"
-    assert claim["status"] == "in_progress"
+    assert claim["status"] == "completed"
     assert claim["generation"] == 1
+    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-execute-mail"
     assert lease["owner_id"] == f"tool-runtime:{call_id}"
     assert lease["epoch"] == 1
-    assert observation_hash == canonical_sha256(
-        {
-            "blocked": True,
-            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
-            "effect_class": "IRREVERSIBLE_WRITE",
-            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
-            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
-        }
-    )
+    assert observation_hash == canonical_sha256(effect_payload)

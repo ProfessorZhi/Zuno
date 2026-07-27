@@ -13,6 +13,7 @@ from zuno.platform.database.foundation import (
 from zuno.platform.database.tool_runtime import (
     PreparedToolActionInput,
     ToolAttemptInput,
+    ToolEffectReceiptInput,
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolUnitOfWork,
@@ -34,6 +35,24 @@ class ToolGatewayReceipt:
     attempt_id: str
     receipt_id: str
     blocked_reason: str = ""
+
+
+
+@dataclass(frozen=True, slots=True)
+class _SecurityPrepareResult:
+    blocked_reason: str = ""
+    secret_lease_id: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class _ExecutePrerequisiteResult:
+    blocked_reason: str = ""
+    idempotency_scope: str = ""
+    idempotency_key: str = ""
+    idempotency_generation: int = 0
+    fencing_resource_id: str = ""
+    fencing_lease_id: str = ""
+    fencing_epoch: int = 0
 
 
 class ToolInvocationGateway:
@@ -140,9 +159,9 @@ class ToolInvocationGateway:
                     status="READY" if effect_policy.provider_dispatch_allowed else "OBSOLETE",
                 )
             )
-        security_blocked_reason = ""
+        security_prepare = _SecurityPrepareResult()
         if self._security_unit_of_work_factory is not None:
-            security_blocked_reason = self._record_security_prepare(
+            security_prepare = self._record_security_prepare(
                 tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 trace_id=trace_id,
@@ -164,17 +183,63 @@ class ToolInvocationGateway:
                 "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
                 "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
             }
-            if security_blocked_reason:
-                payload["security_blocked_reason"] = security_blocked_reason
+            if security_prepare.blocked_reason:
+                payload["security_blocked_reason"] = security_prepare.blocked_reason
             elif self._infrastructure_unit_of_work_factory is not None and effect_policy.approval_required:
-                infrastructure_blocked_reason = self._record_execute_prerequisites(
+                execute_prerequisites = self._record_execute_prerequisites(
                     tenant_id=tenant_id,
                     call_id=call_id,
                     prepared_action_hash=prepared_action_hash,
                     target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
                 )
-                if infrastructure_blocked_reason:
-                    payload["infrastructure_blocked_reason"] = infrastructure_blocked_reason
+                if execute_prerequisites.blocked_reason:
+                    payload["infrastructure_blocked_reason"] = execute_prerequisites.blocked_reason
+                elif approved:
+                    result = await executor()
+                    effect_payload = _effect_payload_from_result(result=result, call_id=call_id)
+                    provider_effect_id = str(effect_payload["provider_effect_id"])
+                    self._record_terminal(
+                        tenant_id=tenant_id,
+                        prepared_id=prepared_id,
+                        attempt_id=attempt_id,
+                        receipt_id=receipt_id,
+                        status="SUCCEEDED",
+                        dispatch_certainty="DISPATCHED",
+                        effect_certainty="CONFIRMED_EFFECT",
+                        adapter_kind=adapter_kind,
+                        payload=effect_payload,
+                    )
+                    effect_receipt_id = f"tool-effect-receipt:{call_id}"
+                    with self._unit_of_work_factory() as repo:
+                        repo.record_effect_receipt(
+                            ToolEffectReceiptInput(
+                                effect_receipt_id=effect_receipt_id,
+                                tenant_id=tenant_id,
+                                prepared_tool_action_id=prepared_id,
+                                attempt_id=attempt_id,
+                                execution_receipt_id=receipt_id,
+                                provider_effect_id=provider_effect_id,
+                                effect_status="CONFIRMED",
+                                effect_certainty="CONFIRMED_EFFECT",
+                                idempotency_scope=execute_prerequisites.idempotency_scope,
+                                idempotency_key=execute_prerequisites.idempotency_key,
+                                idempotency_generation=execute_prerequisites.idempotency_generation,
+                                fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                fencing_epoch=execute_prerequisites.fencing_epoch,
+                                secret_lease_id=security_prepare.secret_lease_id,
+                                native_result={"result": redact_sensitive_payload(result)},
+                                effect_payload=effect_payload,
+                                append_only_generation=1,
+                            )
+                        )
+                    self._complete_execute_prerequisites(
+                        tenant_id=tenant_id,
+                        owner=f"tool-runtime:{call_id}",
+                        prerequisites=execute_prerequisites,
+                        result_ref=effect_receipt_id,
+                    )
+                    return result, ToolGatewayReceipt("completed", prepared_id, attempt_id, receipt_id)
             self._record_terminal(
                 tenant_id=tenant_id,
                 prepared_id=prepared_id,
@@ -230,7 +295,7 @@ class ToolInvocationGateway:
         target_resource_set_ref: str,
         approved: bool,
         secret_ref: str,
-    ) -> str:
+    ) -> _SecurityPrepareResult:
         epoch_ref = f"security-epoch:{trace_id}"
         principal_context_id = f"principal-context:{workspace_id}:{call_id}"
         decision_id = f"authorization-decision:{call_id}"
@@ -307,10 +372,10 @@ class ToolInvocationGateway:
                     require_approved_request=approval_required,
                 )
             except SecurityPersistenceError as exc:
-                return str(exc)
+                return _SecurityPrepareResult(blocked_reason=str(exc))
             if approval_required:
                 if not secret_ref:
-                    return "secret lease missing before effect"
+                    return _SecurityPrepareResult(blocked_reason="secret lease missing before effect")
                 lease_id = f"security-secret-lease:{call_id}"
                 repo.issue_secret_lease(
                     lease_id=lease_id,
@@ -329,8 +394,8 @@ class ToolInvocationGateway:
                         audience=f"tool:{tool_name}",
                     )
                 except SecurityPersistenceError as exc:
-                    return str(exc)
-        return ""
+                    return _SecurityPrepareResult(blocked_reason=str(exc))
+        return _SecurityPrepareResult(secret_lease_id=f"security-secret-lease:{call_id}" if approval_required else "")
 
     def _record_execute_prerequisites(
         self,
@@ -339,7 +404,7 @@ class ToolInvocationGateway:
         call_id: str,
         prepared_action_hash: str,
         target_resource_set_ref: str,
-    ) -> str:
+    ) -> _ExecutePrerequisiteResult:
         assert self._infrastructure_unit_of_work_factory is not None
         owner = f"tool-runtime:{call_id}"
         try:
@@ -355,7 +420,7 @@ class ToolInvocationGateway:
                     ttl_seconds=60,
                 )
                 if not claim.acquired:
-                    return "idempotency claim is already held or completed"
+                    return _ExecutePrerequisiteResult(blocked_reason="idempotency claim is already held or completed")
                 fence = repo.acquire_lease(
                     resource_id=target_resource_set_ref,
                     owner_id=owner,
@@ -363,8 +428,33 @@ class ToolInvocationGateway:
                 )
                 repo.assert_fence(fence)
         except (InfrastructureConflictError, FencingRejectedError) as exc:
-            return str(exc)
-        return ""
+            return _ExecutePrerequisiteResult(blocked_reason=str(exc))
+        return _ExecutePrerequisiteResult(
+            idempotency_scope="tool-side-effect",
+            idempotency_key=call_id,
+            idempotency_generation=claim.generation,
+            fencing_resource_id=fence.resource_id,
+            fencing_lease_id=fence.lease_id,
+            fencing_epoch=fence.epoch,
+        )
+
+    def _complete_execute_prerequisites(
+        self,
+        *,
+        tenant_id: str,
+        owner: str,
+        prerequisites: _ExecutePrerequisiteResult,
+        result_ref: str,
+    ) -> None:
+        assert self._infrastructure_unit_of_work_factory is not None
+        with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+            repo.complete_idempotency(
+                scope=prerequisites.idempotency_scope,
+                key=prerequisites.idempotency_key,
+                owner=owner,
+                generation=prerequisites.idempotency_generation,
+                result_ref=result_ref,
+            )
 
     def _record_terminal(
         self,
@@ -426,5 +516,16 @@ class ToolInvocationGateway:
                 allowlist_count=0,
                 guard_payload={"gateway": "ToolInvocationGateway", "direct_handler_bypass": False},
             )
+
+
+def _effect_payload_from_result(*, result: Any, call_id: str) -> dict[str, Any]:
+    native = result if isinstance(result, dict) else {"value": str(result)}
+    provider_effect_id = str(native.get("provider_effect_id") or native.get("effect_id") or f"provider-effect:{call_id}")
+    return {
+        "provider_effect_id": provider_effect_id,
+        "effect_status": "CONFIRMED",
+        "effect_certainty": "CONFIRMED_EFFECT",
+        "native_result": redact_sensitive_payload(native),
+    }
 
 __all__ = ["ToolGatewayReceipt", "ToolInvocationGateway"]
