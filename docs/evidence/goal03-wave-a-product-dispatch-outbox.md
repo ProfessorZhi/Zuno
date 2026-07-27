@@ -159,8 +159,28 @@ Failure fingerprint:
 alembic upgrade head -> sqlalchemy.exc.OperationalError -> psycopg.errors.ConnectionTimeout at localhost:5432.
 ```
 
+2026-07-27 environment recovery and PostgreSQL rerun:
+
+```powershell
+Start-Service -Name com.docker.service
+Start-Process -FilePath 'C:\Program Files\Docker\Docker\Docker Desktop.exe' -WindowStyle Hidden
+docker compose -f infra/docker/docker-compose.yml up -d postgres
+Test-NetConnection -ComputerName localhost -Port 5432
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py::test_phase09_product_service_bootstraps_legacy_runtime_agent_version -p no:cacheprovider
+alembic -c infra/db/alembic.ini heads
+python -m pytest -q tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+```
+
+结果：
+
+```text
+zuno-postgres healthy; localhost:5432 TcpTestSucceeded=True.
+1 passed
+20260726_40 (head)
+14 passed
+```
+
 ## 未证明
 
 - 浏览器 E2E reconnect/cutover 和更大范围 legacy API cutover fault tests 尚未完成。
-- ProductService legacy AgentVersion bootstrap 已有代码和单元/API 证据，但真实 PostgreSQL integration 仍在当前本机环境下 environment_blocked，不能计为 Wave A Gate passed。
 - PHASE09 仍是 `in_progress`，不能据此关闭 Goal03 Wave A Gate。
