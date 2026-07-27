@@ -223,6 +223,8 @@ def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
         "publishProductAgentVersion",
         "installProductAgentVersion",
         "syncProductAgentStudioSurface",
+        "getProductAgentStudioSnapshot",
+        "const snapshot = await getProductAgentStudioSnapshot({",
         "productProjectionStore.upsertAgentDefinition(draftReceipt.agent_definition)",
         "productProjectionStore.upsertAgentDraft(draftReceipt.agent_draft)",
         "productProjectionStore.upsertPublication(publicationReceipt.agent_publication)",
@@ -240,6 +242,7 @@ def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
         "AgentUpdateRequest",
         "await updateAgentAPI",
         "await createAgentAPI",
+        "getAgentByIdAPI",
     ]:
         assert phrase not in agent_editor
 

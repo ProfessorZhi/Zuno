@@ -708,6 +708,59 @@ npm run build -w zuno-frontend
 passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
 ```
 
+## P10-T18 当前进展
+
+已更新：
+
+- `infra/db/alembic/versions/20260727_42_goal04_product_agent_editor_payloads.py`
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/platform/database/product/__init__.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/services/product/__init__.py`
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/client.ts`
+- `apps/web/src/pages/agent/agent-editor.vue`
+- `tests/api/test_goal03_product_route.py`
+- `tests/frontend/test_phase10_product_contracts.py`
+- `tests/repo/test_goal03_wave_a_migration_contract.py`
+
+当前 Agent Studio 编辑加载闭环覆盖：
+
+- Product AgentDraft 和 AgentVersion 现在把可恢复的 JSON payload 一并落库，不再只有 hash；
+- Product repository 提供 `get_agent_definition`、`get_latest_agent_draft`、`get_latest_agent_version` 读取能力；
+- Product Service 新增 `load_agent_studio_snapshot`，返回 definition / draft / version / catalog / configuration 快照；
+- Product API 新增 `GET /api/v1/product/agent-studio/{agent_definition_id}`，前端编辑页用它恢复表单；
+- Agent Editor 删除旧 `getAgentByIdAPI`，改为只读 Product snapshot 后填充表单；
+- 迁移合同测试新增对 20260727_42 migration 的校验，避免配置 payload 列被后续改掉。
+
+仍未完成：
+
+- Product AgentEditor 对旧无 payload 记录的兼容回填仍是弱的，现阶段只能靠新写入的数据恢复；
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T18 验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_agent_studio_snapshot_route_uses_product_service tests\\repo\\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_editor_payload_migration_adds_json_snapshots -q
+2 passed
+```
+
+```text
+python -m pytest tests\\frontend\\test_phase10_product_contracts.py::test_phase10_agent_studio_and_catalog_ui_use_product_surface -q
+1 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
 ## 本轮验证
 
 已通过：
@@ -728,6 +781,7 @@ python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_age
 python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py src\backend\zuno\api\v1\product.py
 python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_agent_studio_and_catalog_ui_use_product_surface -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py -q
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_snapshot_route_uses_product_service tests\repo\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_editor_payload_migration_adds_json_snapshots -q
 ```
 
 未通过 / 未完成：

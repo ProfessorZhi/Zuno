@@ -10,8 +10,10 @@ from zuno.api.services.product import (
     ProductAgentCatalogEntryResult,
     ProductAgentDefinitionResult,
     ProductAgentDraftResult,
+    ProductAgentEditorSnapshotResult,
     ProductAgentInstallationResult,
     ProductAgentPublicationResult,
+    ProductAgentVersionResult,
     ProductAvailableActionResult,
     ProductProjectionResult,
     ProductRuntimeRequestResult,
@@ -352,6 +354,89 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
         "tenant_id": "tenant-a",
         "workspace_id": "workspace-a",
         "principal_id": "principal-a",
+    }
+
+
+def test_goal03_product_agent_studio_snapshot_route_uses_product_service(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+
+    captured = {}
+
+    def fake_snapshot(**kwargs):
+        captured.update(kwargs)
+        return ProductAgentEditorSnapshotResult(
+            agent_definition=ProductAgentDefinitionResult(
+                agent_definition_id=kwargs["agent_definition_id"],
+                tenant_id=kwargs["tenant_id"],
+                workspace_id=kwargs["workspace_id"],
+                owner_principal_ref="principal:principal-a",
+                display_name="Draft Agent",
+                description="draft desc",
+                status="ACTIVE",
+            ),
+            agent_draft=ProductAgentDraftResult(
+                agent_draft_id="agent-draft:snapshot",
+                agent_definition_id=kwargs["agent_definition_id"],
+                draft_version=1,
+                editor_principal_ref="principal:principal-a",
+                configuration_hash="a" * 64,
+                status="DRAFT",
+            ),
+            agent_version=ProductAgentVersionResult(
+                agent_version_id="agent-version:snapshot",
+                agent_definition_id=kwargs["agent_definition_id"],
+                version_no=1,
+                configuration_hash="b" * 64,
+                primary_agent_core_profile_ref="agent-core-profile:product:default",
+                status="PUBLISHED",
+            ),
+            agent_catalog_entry=ProductAgentCatalogEntryResult(
+                catalog_entry_id="agent-catalog:snapshot",
+                agent_version_id="agent-version:snapshot",
+                publication_ref="agent-publication:snapshot",
+                agent_definition_id=kwargs["agent_definition_id"],
+                display_name="Draft Agent",
+                description="draft desc",
+                definition_status="ACTIVE",
+                authorized=True,
+                visibility_scope="WORKSPACE",
+                effective_permission_preview_ref="permission-preview:snapshot",
+            ),
+            configuration={
+                "name": "Draft Agent",
+                "description": "draft desc",
+                "tool_ids": ["tool-1"],
+                "llm_id": "llm-1",
+                "mcp_ids": ["mcp-1"],
+                "system_prompt": "Be helpful",
+                "knowledge_ids": ["knowledge-1"],
+                "agent_skill_ids": ["skill-1"],
+                "enable_memory": True,
+            },
+        )
+
+    monkeypatch.setattr(ProductService, "load_agent_studio_snapshot", staticmethod(fake_snapshot))
+
+    client = TestClient(app)
+    response = client.get(
+        "/api/v1/product/agent-studio/agent-definition:snapshot?tenant_id=tenant-a&workspace_id=workspace-a"
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status_code"] == 200
+    assert body["data"]["agent_definition"]["agent_definition_id"] == "agent-definition:snapshot"
+    assert body["data"]["agent_draft"]["agent_draft_id"] == "agent-draft:snapshot"
+    assert body["data"]["agent_version"]["agent_version_id"] == "agent-version:snapshot"
+    assert body["data"]["agent_catalog_entry"]["catalog_entry_id"] == "agent-catalog:snapshot"
+    assert body["data"]["configuration"]["llm_id"] == "llm-1"
+    assert captured == {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "principal_id": "principal-a",
+        "agent_definition_id": "agent-definition:snapshot",
     }
 
 

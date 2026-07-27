@@ -7,6 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py"
 REPAIR_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_37_wave_a_product_runtime_dispatch.py"
 PRODUCT_AGENT_ASSET_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_38_goal03_product_agent_publication_installation.py"
+PRODUCT_AGENT_EDITOR_PAYLOAD_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_goal04_product_agent_editor_payloads.py"
 CAPABILITY_SUPPLY_CHAIN_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_39_capability_version_supply_chain.py"
 PRODUCT_LATE_OWNER_RECEIPT_MIGRATION = (
     REPO_ROOT / "infra/db/alembic/versions/20260726_40_product_late_owner_receipt.py"
@@ -83,6 +84,15 @@ def test_goal03_wave_a_product_agent_asset_migration_adds_publication_installati
         "ck_product_agent_catalog_status",
     ):
         assert fragment in text
+
+
+def test_goal04_product_agent_editor_payload_migration_adds_json_snapshots() -> None:
+    text = PRODUCT_AGENT_EDITOR_PAYLOAD_MIGRATION.read_text(encoding="utf-8")
+
+    assert 'revision = "20260727_42"' in text
+    assert 'down_revision = "20260727_41"' in text
+    assert "draft_payload_json" in text
+    assert "configuration_json" in text
 
 
 def test_goal03_wave_a_capability_version_supply_chain_migration_adds_verified_refs() -> None:

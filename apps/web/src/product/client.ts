@@ -117,6 +117,21 @@ export interface ProductAgentCatalogList {
   agent_catalog_entries: AgentCatalogEntry[]
 }
 
+export interface ProductAgentStudioSnapshot {
+  agent_definition: AgentDefinition
+  agent_draft: ProductAgentDraftReceipt['agent_draft'] | null
+  agent_version: {
+    agent_version_id: string
+    agent_definition_id: string
+    version_no: number
+    configuration_hash: string
+    primary_agent_core_profile_ref: string
+    status: string
+  } | null
+  agent_catalog_entry: AgentCatalogEntry | null
+  configuration: Record<string, unknown>
+}
+
 interface UnifiedResponse<T> {
   status_code?: number
   status?: number
@@ -255,6 +270,23 @@ export const listProductAgentCatalog = async (params: {
   const response = await request.get<UnifiedResponse<ProductAgentCatalogList>>('/api/v1/product/agent-catalog', {
     params,
   })
+  return unwrapProductResponse(response.data)
+}
+
+export const getProductAgentStudioSnapshot = async (params: {
+  tenant_id: string
+  workspace_id: string
+  agent_definition_id: string
+}): Promise<ProductAgentStudioSnapshot> => {
+  const response = await request.get<UnifiedResponse<ProductAgentStudioSnapshot>>(
+    `/api/v1/product/agent-studio/${params.agent_definition_id}`,
+    {
+      params: {
+        tenant_id: params.tenant_id,
+        workspace_id: params.workspace_id,
+      },
+    },
+  )
   return unwrapProductResponse(response.data)
 }
 

@@ -138,6 +138,25 @@ class ProductAgentCatalogEntryResult:
     effective_permission_preview_ref: str
 
 
+@dataclass(frozen=True, slots=True)
+class ProductAgentVersionResult:
+    agent_version_id: str
+    agent_definition_id: str
+    version_no: int
+    configuration_hash: str
+    primary_agent_core_profile_ref: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentEditorSnapshotResult:
+    agent_definition: ProductAgentDefinitionResult
+    agent_draft: ProductAgentDraftResult | None
+    agent_version: ProductAgentVersionResult | None
+    agent_catalog_entry: ProductAgentCatalogEntryResult | None
+    configuration: dict[str, Any]
+
+
 class ProductService:
     @staticmethod
     def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
@@ -515,6 +534,107 @@ class ProductService:
                 effective_permission_preview_ref=f"permission-preview:{entry.catalog_entry_id}",
             )
             for entry in entries
+        )
+
+    @staticmethod
+    def load_agent_studio_snapshot(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentEditorSnapshotResult:
+        _ = principal_id
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            definition = repo.get_agent_definition(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            if definition is None:
+                raise ValueError("Product AgentDefinition not found")
+            draft = repo.get_latest_agent_draft(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            version = repo.get_latest_agent_version(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            catalog_entry = next(
+                (
+                    entry
+                    for entry in repo.list_catalog_entries(tenant_id=tenant_id, workspace_id=workspace_id)
+                    if entry.agent_definition_id == agent_definition_id
+                ),
+                None,
+            )
+
+        configuration: dict[str, Any] = {}
+        if draft is not None:
+            configuration = dict(draft.draft_payload_json.get("configuration") or draft.draft_payload_json)
+        elif version is not None:
+            configuration = dict(version.configuration_json)
+
+        agent_definition_result = ProductAgentDefinitionResult(
+            agent_definition_id=definition.agent_definition_id,
+            tenant_id=definition.tenant_id,
+            workspace_id=definition.workspace_id,
+            owner_principal_ref=f"principal:{definition.owner_principal_id}",
+            display_name=definition.display_name,
+            description=definition.description,
+            status=definition.status,
+        )
+        draft_result = (
+            ProductAgentDraftResult(
+                agent_draft_id=draft.draft_id,
+                agent_definition_id=draft.agent_definition_id,
+                draft_version=1,
+                editor_principal_ref=f"principal:{definition.owner_principal_id}",
+                configuration_hash=draft.draft_hash,
+                status=draft.status,
+            )
+            if draft is not None
+            else None
+        )
+        version_result = (
+            ProductAgentVersionResult(
+                agent_version_id=version.agent_version_id,
+                agent_definition_id=version.agent_definition_id,
+                version_no=version.version_no,
+                configuration_hash=version.config_hash,
+                primary_agent_core_profile_ref=version.primary_agent_core_profile_ref,
+                status=version.status,
+            )
+            if version is not None
+            else None
+        )
+        catalog_result = (
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id=catalog_entry.catalog_entry_id,
+                agent_version_id=catalog_entry.latest_version_id,
+                publication_ref=catalog_entry.publication_id,
+                agent_definition_id=catalog_entry.agent_definition_id,
+                display_name=catalog_entry.display_name,
+                description=catalog_entry.description,
+                definition_status=catalog_entry.definition_status,
+                authorized=True,
+                visibility_scope=catalog_entry.visibility_scope,
+                effective_permission_preview_ref=f"permission-preview:{catalog_entry.catalog_entry_id}",
+            )
+            if catalog_entry is not None
+            else None
+        )
+        return ProductAgentEditorSnapshotResult(
+            agent_definition=agent_definition_result,
+            agent_draft=draft_result,
+            agent_version=version_result,
+            agent_catalog_entry=catalog_result,
+            configuration=configuration,
         )
 
     @staticmethod

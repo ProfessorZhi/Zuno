@@ -120,6 +120,39 @@ class ProductAgentCatalogEntryView:
     definition_status: str
 
 
+@dataclass(frozen=True, slots=True)
+class ProductAgentDefinitionView:
+    agent_definition_id: str
+    tenant_id: str
+    workspace_id: str
+    owner_principal_id: str
+    display_name: str
+    description: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentDraftView:
+    draft_id: str
+    agent_definition_id: str
+    draft_hash: str
+    draft_payload_json: dict[str, Any]
+    status: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentVersionView:
+    agent_version_id: str
+    agent_definition_id: str
+    version_no: int
+    config_hash: str
+    configuration_json: dict[str, Any]
+    primary_agent_core_profile_ref: str
+    status: str
+    created_at: datetime
+
+
 class ProductUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -193,11 +226,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_drafts (
                     draft_id, tenant_id, workspace_id, agent_definition_id,
-                    draft_hash, status
+                    draft_hash, draft_payload_json, status
                 )
                 VALUES (
                     :draft_id, :tenant_id, :workspace_id, :agent_definition_id,
-                    :draft_hash, :status
+                    :draft_hash, :draft_payload_json, :status
                 )
                 ON CONFLICT DO NOTHING
                 """
@@ -208,6 +241,7 @@ class ProductRepository:
                 "workspace_id": workspace_id,
                 "agent_definition_id": agent_definition_id,
                 "draft_hash": canonical_sha256(draft_payload),
+                "draft_payload_json": draft_payload,
                 "status": status,
             },
         )
@@ -229,11 +263,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_versions (
                     agent_version_id, tenant_id, agent_definition_id, version_no,
-                    config_hash, primary_agent_core_profile_ref, status
+                    config_hash, configuration_json, primary_agent_core_profile_ref, status
                 )
                 VALUES (
                     :agent_version_id, :tenant_id, :agent_definition_id, :version_no,
-                    :config_hash, :primary_agent_core_profile_ref, :status
+                    :config_hash, :configuration_json, :primary_agent_core_profile_ref, :status
                 )
                 ON CONFLICT DO NOTHING
                 """
@@ -244,6 +278,7 @@ class ProductRepository:
                 "agent_definition_id": agent_definition_id,
                 "version_no": version_no,
                 "config_hash": canonical_sha256(configuration_payload),
+                "configuration_json": configuration_payload,
                 "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
                 "status": status,
             },
@@ -295,11 +330,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_versions (
                     agent_version_id, tenant_id, agent_definition_id, version_no,
-                    config_hash, primary_agent_core_profile_ref, status
+                    config_hash, configuration_json, primary_agent_core_profile_ref, status
                 )
                 VALUES (
                     :agent_version_id, :tenant_id, :agent_definition_id, 1,
-                    :config_hash, :primary_agent_core_profile_ref, 'PUBLISHED'
+                    :config_hash, :configuration_json, :primary_agent_core_profile_ref, 'PUBLISHED'
                 )
                 ON CONFLICT (agent_version_id) DO NOTHING
                 """
@@ -309,6 +344,11 @@ class ProductRepository:
                 "tenant_id": tenant_id,
                 "agent_definition_id": agent_definition_id,
                 "config_hash": config_hash,
+                "configuration_json": {
+                    "agent_version_id": agent_version_id,
+                    "display_name": display_name,
+                    "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+                },
                 "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
             },
         )
@@ -553,6 +593,120 @@ class ProductRepository:
                 definition_status=str(row["definition_status"]),
             )
             for row in rows
+        )
+
+    def get_agent_definition(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentDefinitionView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                       display_name, coalesce(description, '') AS description, status
+                FROM product_agent_definitions
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND agent_definition_id = :agent_definition_id
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        return ProductAgentDefinitionView(
+            agent_definition_id=str(row["agent_definition_id"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            owner_principal_id=str(row["owner_principal_id"]),
+            display_name=str(row["display_name"]),
+            description=str(row["description"]),
+            status=str(row["status"]),
+        )
+
+    def get_latest_agent_draft(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentDraftView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT draft_id, agent_definition_id, draft_hash,
+                       coalesce(draft_payload_json, '{}'::json) AS draft_payload_json,
+                       status, created_at
+                FROM product_agent_drafts
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND agent_definition_id = :agent_definition_id
+                ORDER BY created_at DESC, draft_id DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        return ProductAgentDraftView(
+            draft_id=str(row["draft_id"]),
+            agent_definition_id=str(row["agent_definition_id"]),
+            draft_hash=str(row["draft_hash"]),
+            draft_payload_json=dict(row["draft_payload_json"] or {}),
+            status=str(row["status"]),
+            created_at=row["created_at"],
+        )
+
+    def get_latest_agent_version(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentVersionView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT agent_version_id, agent_definition_id, version_no, config_hash,
+                       coalesce(configuration_json, '{}'::json) AS configuration_json,
+                       primary_agent_core_profile_ref, status, created_at
+                FROM product_agent_versions
+                WHERE tenant_id = :tenant_id
+                  AND agent_definition_id = :agent_definition_id
+                ORDER BY version_no DESC, created_at DESC, agent_version_id DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        _ = workspace_id
+        return ProductAgentVersionView(
+            agent_version_id=str(row["agent_version_id"]),
+            agent_definition_id=str(row["agent_definition_id"]),
+            version_no=int(row["version_no"]),
+            config_hash=str(row["config_hash"]),
+            configuration_json=dict(row["configuration_json"] or {}),
+            primary_agent_core_profile_ref=str(row["primary_agent_core_profile_ref"]),
+            status=str(row["status"]),
+            created_at=row["created_at"],
         )
 
     def submit_command(self, command: ProductCommandSubmission) -> ProductCommandReceiptRef:

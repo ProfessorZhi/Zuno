@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Check, PictureFilled } from '@element-plus/icons-vue'
-import { getAgentByIdAPI } from '../../apis/agent'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { getVisibleToolsAPI, type ToolResponse } from '../../apis/tool'
 import { getMCPServersAPI, type MCPServer } from '../../apis/mcp-server'
@@ -14,6 +13,7 @@ import { uploadFileAPI } from '../../apis/file'
 import {
   PRODUCT_WEB_TENANT_ID,
   createProductAgentDraft,
+  getProductAgentStudioSnapshot,
   installProductAgentVersion,
   publishProductAgentVersion,
 } from '../../product'
@@ -124,6 +124,9 @@ const navigateInWorkspaceSettings = (location: any, event?: Event) => {
 
 const namesFromIds = (ids: string[], options: SelectOption[]) =>
   ids.map((id) => options.find((item) => item.id === id)?.name).filter(Boolean) as string[]
+
+const toStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : []
 
 const selectedLLMName = computed(() => llmOptions.value.find((item) => item.id === form.llm_id)?.name || '未选择')
 const selectedToolNames = computed(() => namesFromIds(form.tool_ids, toolOptions.value))
@@ -285,29 +288,31 @@ const loadOptions = async () => {
 const loadAgent = async (agentId: string) => {
   pageLoading.value = true
   try {
-    const response = await getAgentByIdAPI(agentId)
-    if (response.data.status_code !== 200 || !response.data.data) {
-      throw new Error(response.data.status_message || '智能体不存在')
-    }
+    const snapshot = await getProductAgentStudioSnapshot({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      agent_definition_id: agentId,
+    })
 
-    const agent = response.data.data
-    if (agent.is_custom === false && !isAdmin.value) {
+    const agent = snapshot.agent_definition
+    if (agent.owner_principal_ref !== `principal:${userStore.userInfo?.id || ''}` && !isAdmin.value) {
       ElMessage.warning('只有管理员可以编辑官方智能体')
       navigateInWorkspaceSettings(agentListRoute.value)
       return
     }
 
+    const configuration = snapshot.configuration || {}
     Object.assign(form, {
-      name: agent.name || '',
-      description: agent.description || '',
-      logo_url: withUserAvatarVersion(agent.logo_url || ''),
-      tool_ids: agent.tool_ids || [],
-      llm_id: agent.llm_id || '',
-      mcp_ids: agent.mcp_ids || [],
-      system_prompt: agent.system_prompt || '',
-      knowledge_ids: agent.knowledge_ids || [],
-      agent_skill_ids: agent.agent_skill_ids || [],
-      enable_memory: Boolean(agent.enable_memory),
+      name: String(configuration.name || agent.display_name || ''),
+      description: String(configuration.description || agent.description || ''),
+      logo_url: withUserAvatarVersion(String(configuration.logo_url || '')),
+      tool_ids: toStringArray(configuration.tool_ids),
+      llm_id: String(configuration.llm_id || ''),
+      mcp_ids: toStringArray(configuration.mcp_ids),
+      system_prompt: String(configuration.system_prompt || ''),
+      knowledge_ids: toStringArray(configuration.knowledge_ids),
+      agent_skill_ids: toStringArray(configuration.agent_skill_ids),
+      enable_memory: Boolean(configuration.enable_memory ?? true),
     })
   } catch (error: any) {
     console.error('loadAgent failed', error)

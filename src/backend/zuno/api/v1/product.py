@@ -95,6 +95,17 @@ def _agent_draft_payload(draft) -> dict:
     }
 
 
+def _agent_version_payload(version) -> dict:
+    return {
+        "agent_version_id": version.agent_version_id,
+        "agent_definition_id": version.agent_definition_id,
+        "version_no": version.version_no,
+        "configuration_hash": version.configuration_hash,
+        "primary_agent_core_profile_ref": version.primary_agent_core_profile_ref,
+        "status": version.status,
+    }
+
+
 def _agent_publication_payload(publication) -> dict:
     return {
         "publication_id": publication.publication_id,
@@ -335,6 +346,35 @@ async def list_agent_catalog(
             principal_id=login_user.user_id,
         )
         return resp_200(data={"agent_catalog_entries": [_agent_catalog_entry_payload(entry) for entry in entries]})
+    except Exception as err:
+        return resp_500(message=str(err))
+
+
+@router.get("/agent-studio/{agent_definition_id}", response_model=UnifiedResponseModel)
+async def load_agent_studio_snapshot(
+    *,
+    agent_definition_id: str,
+    tenant_id: str = Query(min_length=1),
+    workspace_id: str = Query(min_length=1),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        snapshot = ProductService.load_agent_studio_snapshot(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            principal_id=login_user.user_id,
+            agent_definition_id=agent_definition_id,
+        )
+        payload = {
+            "agent_definition": _agent_definition_payload(snapshot.agent_definition),
+            "agent_draft": _agent_draft_payload(snapshot.agent_draft) if snapshot.agent_draft else None,
+            "agent_version": _agent_version_payload(snapshot.agent_version) if snapshot.agent_version else None,
+            "agent_catalog_entry": _agent_catalog_entry_payload(snapshot.agent_catalog_entry)
+            if snapshot.agent_catalog_entry
+            else None,
+            "configuration": snapshot.configuration,
+        }
+        return resp_200(data=payload)
     except Exception as err:
         return resp_500(message=str(err))
 
