@@ -24,6 +24,14 @@ def test_scripts_start_does_not_install_dependencies_by_default():
     assert "if args.install_deps:" in content
 
 
+def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
+    content = (REPO_ROOT / "tools" / "scripts" / "run-full-e2e-smoke.ps1").read_text(encoding="utf-8")
+
+    assert "$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)" in content
+    assert "$frontendRoot = Join-Path $repoRoot 'apps\\web'" in content
+    assert "$authPath = Join-Path $qaRoot 'auth.json'" in content
+
+
 def test_desktop_stop_stops_backend_services_too():
     content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
     stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)

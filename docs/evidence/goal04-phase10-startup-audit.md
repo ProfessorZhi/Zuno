@@ -481,6 +481,60 @@ python -m pytest -q tests\api\test_goal03_product_route.py tests\frontend\test_p
 21 passed, 1 warning
 ```
 
+## P10-T13 当前进展
+
+已更新：
+
+- `tools/scripts/run-full-e2e-smoke.ps1`
+- `tests/tools/test_launcher_scripts.py`
+- `package-lock.json`
+
+当前验证环境恢复与 Browser E2E smoke helper 覆盖：
+
+- 通过 `npm install` 恢复 root workspace dependencies，使 Web `vue-tsc` 和 Vite build 能从 workspace `node_modules` 正常解析；
+- `npm run lint -w zuno-frontend` 通过；
+- `npm run build -w zuno-frontend` 通过；
+- 修正 `run-full-e2e-smoke.ps1` 的 repo root 解析：`$PSScriptRoot` 位于 `tools/scripts`，repo root 必须上溯两级，否则 auth、frontend、tmp log 和 QA API 路径都会错误落到 `tools/**`；
+- 新增 `tests/tools/test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root`，防止 Browser E2E smoke helper 再把 `tools/` 当仓库根。
+
+仍未完成：
+
+- Browser E2E smoke 现在能定位正确 repo root，但当前环境缺少 `tmp-qa-playwright/auth.json`，无法继续到 backend/frontend/QA API/E2E 流程；
+- Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成。
+
+P10-T13 验证：
+
+```text
+npm install
+added 310 packages, audited 313 packages; 8 npm audit vulnerabilities reported by npm dependency audit,未作为 PHASE10 功能 Gate 处理。
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures.
+```
+
+```text
+python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
+1 passed
+```
+
+Browser E2E smoke failure fingerprint after helper fix：
+
+```text
+command: powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
+exception: Missing auth state: F:\internship-work\resume&resume project\02_projects\Zuno\tmp-qa-playwright\auth.json
+first relevant stack frame: tools\scripts\run-full-e2e-smoke.ps1:44
+environment signature: Node.js v24.14.0; npm workspace dependencies installed; repo-root path resolved correctly; tmp-qa-playwright/auth.json absent
+retry_count: 1 after script root fix
+唯一恢复动作: 在本机浏览器完成登录并导出 Playwright storage state 到 `tmp-qa-playwright\auth.json` 后，从 browser E2E smoke 命令继续。
+```
+
 ## 本轮验证
 
 已通过：
@@ -490,24 +544,23 @@ git diff --check
 python tools\scripts\verify_current_program.py
 python -m pytest -q tests\repo\test_current_program_contract.py -p no:cacheprovider
 python -m pytest -q tests\frontend\test_phase10_product_contracts.py -p no:cacheprovider
+npm install
+npm run lint -w zuno-frontend
+npm run build -w zuno-frontend
+python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
 ```
 
 未通过 / 未完成：
 
 ```text
-command: npm run lint
-exception: Error: Cannot find module 'F:\internship-work\resume&resume project\02_projects\Zuno\node_modules\vue-tsc\bin\vue-tsc.js'
-first relevant stack frame: node:internal/modules/cjs/loader:1456
-environment signature: Node.js v24.14.0; root node_modules absent; apps/web node_modules absent
-retry_count: 0
-唯一恢复动作: 安装 npm workspace 依赖后从 `npm run lint -w zuno-frontend` 继续。
+command: powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
+exception: Missing auth state: F:\internship-work\resume&resume project\02_projects\Zuno\tmp-qa-playwright\auth.json
+first relevant stack frame: tools\scripts\run-full-e2e-smoke.ps1:44
+environment signature: Node.js v24.14.0; npm workspace dependencies installed; repo-root path resolved correctly; tmp-qa-playwright/auth.json absent
+retry_count: 1 after script root fix
+唯一恢复动作: 在本机浏览器完成登录并导出 Playwright storage state 到 `tmp-qa-playwright\auth.json` 后，从 browser E2E smoke 命令继续。
 ```
 
 ```text
-command: npx --yes vue-tsc --noEmit -p apps/web/tsconfig.app.json
-exception: command timed out
-first relevant stack frame: n/a; no compiler output returned before timeout
-environment signature: Node.js v24.14.0; root node_modules absent; apps/web node_modules absent; npx transient package resolution exceeded 124 seconds
-retry_count: 0
-唯一恢复动作: 安装 npm workspace 依赖后从 `npm run lint -w zuno-frontend` 继续，不在无环境变化时重复 npx。
+Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
 ```

@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $qaRoot = Join-Path $repoRoot 'tmp-qa-playwright'
 $frontendRoot = Join-Path $repoRoot 'apps\web'
 $authPath = Join-Path $qaRoot 'auth.json'
