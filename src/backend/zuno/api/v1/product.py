@@ -147,7 +147,7 @@ async def submit_runtime_request(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        ProductService.reject_runtime_rollback(body.payload)
+        ProductService.validate_runtime_cutover_contract(command_kind=body.command_kind, payload=body.payload)
         result = ProductService.submit_runtime_request(
             tenant_id=body.tenant_id,
             workspace_id=body.workspace_id,

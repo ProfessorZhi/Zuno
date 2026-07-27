@@ -16,6 +16,11 @@ PRODUCT_RUNTIME_DISPATCH_TOPIC = "product.runtime_request.dispatch"
 PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
+PRODUCT_RUNTIME_CUTOVER_COMMANDS = {
+    "shadow": "SHADOW_SUBMIT_USER_GOAL",
+    "canary": "CANARY_SUBMIT_USER_GOAL",
+    "new_default": "SUBMIT_USER_GOAL",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,11 +164,21 @@ class ProductAgentEditorSnapshotResult:
 
 class ProductService:
     @staticmethod
-    def reject_runtime_rollback(payload: dict[str, Any]) -> None:
-        if str(payload.get("cutover_mode") or "").strip().lower() == "rollback":
+    def validate_runtime_cutover_contract(*, command_kind: str, payload: dict[str, Any]) -> str:
+        cutover_mode = str(payload.get("cutover_mode") or "new_default").strip().lower()
+        if cutover_mode == "rollback":
             raise ValueError(
                 "Product runtime rollback mode is active; Product command submission is blocked fail-closed."
             )
+        expected_command_kind = PRODUCT_RUNTIME_CUTOVER_COMMANDS.get(cutover_mode)
+        if expected_command_kind is None:
+            raise ValueError(f"unsupported Product runtime cutover mode: {cutover_mode}")
+        if command_kind != expected_command_kind:
+            raise ValueError(
+                "Product runtime cutover command mismatch: "
+                f"cutover_mode={cutover_mode} requires command_kind={expected_command_kind}."
+            )
+        return cutover_mode
 
     @staticmethod
     def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
@@ -192,7 +207,7 @@ class ProductService:
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
-        ProductService.reject_runtime_rollback(payload)
+        ProductService.validate_runtime_cutover_contract(command_kind=command_kind, payload=payload)
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
             workspace_id=workspace_id,

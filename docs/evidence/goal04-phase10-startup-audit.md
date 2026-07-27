@@ -1004,6 +1004,57 @@ python -m pytest tests\\api\\test_goal03_product_route.py -q
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T24 Product API Cutover Command Contract
+
+已更新：
+
+- `src/backend/zuno/api/v1/product.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `tests/api/test_goal03_product_route.py`
+
+当前 Product runtime cutover command contract：
+
+- Product Service 定义服务端 cutover command 映射：`shadow -> SHADOW_SUBMIT_USER_GOAL`、`canary -> CANARY_SUBMIT_USER_GOAL`、`new_default -> SUBMIT_USER_GOAL`；
+- `/api/v1/product/runtime-requests` 在调用 `ProductService.submit_runtime_request()` 前验证 `payload.cutover_mode` 与 `command_kind` 一致；
+- `ProductService.submit_runtime_request()` 在构造 `ProductCommandSubmission` 和打开数据库 UoW 前重复验证；
+- 未知 `cutover_mode` fail-closed；`rollback` 继续 fail-closed；mismatch 不会进入 Product command journal、projection 或 runtime dispatch outbox；
+- 旧测试 fixture 中的 `CREATE_RUNTIME_REQUEST` 已改为 default-new `SUBMIT_USER_GOAL`，避免继续把旧 command kind 作为 Product runtime 入口。
+
+RED 验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_cutover_command_mismatch_before_service tests\\api\\test_goal03_product_route.py::test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before_database_write -q
+failed
+route assertion: expected "Product runtime cutover command mismatch"
+actual: cutover mismatch reached ProductService.submit_runtime_request
+service exception: sqlalchemy.exc.IntegrityError / psycopg.errors.ForeignKeyViolation
+first relevant stack frame: src\\backend\\zuno\\platform\\database\\product\\domain.py:1481 in _ensure_conversation
+meaning: shadow/canary/new_default mismatch reached the database write path before ProductService had a cutover command contract
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_cutover_command_mismatch_before_service tests\\api\\test_goal03_product_route.py::test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before_database_write -q
+2 passed, 1 warning
+```
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py -q
+15 passed, 1 warning
+```
+
+```text
+python -m py_compile src\\backend\\zuno\\api\\v1\\product.py src\\backend\\zuno\\api\\services\\product\\command_service.py
+passed
+```
+
+仍未完成：
+
+- shadow/canary/default-new/rollback 仍缺完整闭环 runtime closure evidence；当前已完成 Web runtime guard、Product API rollback fail-closed boundary、Product API cutover command contract；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1038,6 +1089,9 @@ python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_age
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_rollback_before_service tests\api\test_goal03_product_route.py::test_goal03_product_service_rejects_rollback_before_database_write -q
 python -m pytest tests\api\test_goal03_product_route.py -q
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_cutover_command_mismatch_before_service tests\api\test_goal03_product_route.py::test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before_database_write -q
+python -m pytest tests\api\test_goal03_product_route.py -q
+python -m py_compile src\backend\zuno\api\v1\product.py src\backend\zuno\api\services\product\command_service.py
 ```
 
 未通过 / 未完成：

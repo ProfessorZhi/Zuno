@@ -72,9 +72,9 @@ def test_goal03_product_runtime_request_route_is_exposed_and_returns_receipt(mon
             "client_request_id": "client:1",
             "runtime_request_ref": "runtime-request:1",
             "raw_intent_ref": "intent:1",
-            "command_kind": "CREATE_RUNTIME_REQUEST",
+            "command_kind": "SUBMIT_USER_GOAL",
             "active_agent_version_id": "agent-version:1",
-            "payload": {"query": "renewal"},
+            "payload": {"query": "renewal", "cutover_mode": "new_default"},
         },
     )
 
@@ -155,6 +155,73 @@ def test_goal03_product_service_rejects_rollback_before_database_write() -> None
         assert "Product runtime rollback mode is active" in str(exc)
     else:
         raise AssertionError("rollback request was accepted by ProductService")
+
+
+def test_goal03_product_runtime_request_route_rejects_cutover_command_mismatch_before_service(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+
+    def should_not_submit(**kwargs):
+        raise AssertionError("cutover mismatch reached ProductService.submit_runtime_request")
+
+    monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(should_not_submit))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/product/runtime-requests",
+        json={
+            "tenant_id": "tenant-a",
+            "workspace_id": "workspace-a",
+            "conversation_id": "conversation-a",
+            "client_request_id": "client:canary:mismatch",
+            "runtime_request_ref": "runtime-request:canary:mismatch",
+            "raw_intent_ref": "intent:canary:mismatch",
+            "command_kind": "SUBMIT_USER_GOAL",
+            "active_agent_version_id": "agent-version:1",
+            "payload": {
+                "goal": "canary must use canary command kind",
+                "cutover_mode": "canary",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status_code"] == 500
+    assert "Product runtime cutover command mismatch" in body["status_message"]
+    assert "ProductService.submit_runtime_request" not in body["status_message"]
+
+
+def test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before_database_write() -> None:
+    cases = [
+        ("shadow", "SUBMIT_USER_GOAL", "Product runtime cutover command mismatch"),
+        ("canary", "SUBMIT_USER_GOAL", "Product runtime cutover command mismatch"),
+        ("new_default", "CANARY_SUBMIT_USER_GOAL", "Product runtime cutover command mismatch"),
+        ("sidecar", "SUBMIT_USER_GOAL", "unsupported Product runtime cutover mode"),
+    ]
+
+    for cutover_mode, command_kind, expected_message in cases:
+        try:
+            ProductService.submit_runtime_request(
+                tenant_id="tenant-a",
+                workspace_id="workspace-a",
+                conversation_id="conversation-a",
+                principal_id="principal-a",
+                active_agent_version_id="agent-version:1",
+                client_request_id=f"client:{cutover_mode}:mismatch",
+                runtime_request_ref=f"runtime-request:{cutover_mode}:mismatch",
+                raw_intent_ref=f"intent:{cutover_mode}:mismatch",
+                command_kind=command_kind,
+                payload={
+                    "goal": "cutover mode must match command kind",
+                    "cutover_mode": cutover_mode,
+                },
+            )
+        except ValueError as exc:
+            assert expected_message in str(exc)
+        else:
+            raise AssertionError(f"{cutover_mode}:{command_kind} was accepted by ProductService")
 
 
 def test_goal03_product_stream_events_route_uses_last_event_id(monkeypatch) -> None:
