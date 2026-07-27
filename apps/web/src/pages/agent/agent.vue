@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus } from '@element-plus/icons-vue'
 import AgentEditor from './agent-editor.vue'
-import { deleteAgentAPI, getAgentsAPI, searchAgentsAPI, type AgentResponse } from '../../apis/agent'
 import {
   PRODUCT_WEB_TENANT_ID,
   installProductAgentVersion,
@@ -24,6 +23,9 @@ import ZunoSearchInput from '../../components/zuno-settings/ZunoSearchInput.vue'
 
 interface AgentCardItem {
   agent_id: string
+  publication_ref: string
+  catalog_entry_id: string
+  agent_version_id: string
   name: string
   description: string
   logo_url: string
@@ -43,10 +45,8 @@ const route = useRoute()
 const userStore = useUserStore()
 const productProjectionStore = useProductProjectionStore()
 const loading = ref(false)
-const searchLoading = ref(false)
 const productCatalogLoading = ref(false)
 const searchKeyword = ref('')
-const agents = ref<AgentCardItem[]>([])
 const productCatalogEntries = ref<AgentCatalogEntry[]>([])
 const installedProductCatalog = ref<Record<string, string>>({})
 const editorVisible = ref(false)
@@ -55,29 +55,40 @@ const LIST_PAGE_SIZE = 6
 const listPage = ref(1)
 const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 
-const normalizeAgent = (item: AgentResponse): AgentCardItem => ({
-  agent_id: item.agent_id || item.id || '',
-  name: item.name || '未命名智能体',
-  description: item.description || '暂无描述',
-  logo_url: item.logo_url || zunoAgentAvatar,
-  tool_ids: item.tool_ids || [],
-  llm_id: item.llm_id || '',
-  mcp_ids: item.mcp_ids || [],
-  system_prompt: item.system_prompt || '',
-  knowledge_ids: item.knowledge_ids || [],
-  agent_skill_ids: item.agent_skill_ids || [],
-  enable_memory: Boolean(item.enable_memory),
-  created_time: item.create_time || item.created_time,
-  is_custom: item.is_custom,
+const normalizeProductCatalogAgent = (entry: AgentCatalogEntry): AgentCardItem => ({
+  agent_id: entry.agent_definition_id,
+  publication_ref: entry.publication_ref || '',
+  catalog_entry_id: entry.catalog_entry_id,
+  agent_version_id: entry.agent_version_id,
+  name: entry.display_name || entry.agent_version_id || '未命名智能体',
+  description: entry.description || 'Product Catalog entry',
+  logo_url: zunoAgentAvatar,
+  tool_ids: [],
+  llm_id: '',
+  mcp_ids: [],
+  system_prompt: '',
+  knowledge_ids: [],
+  agent_skill_ids: [],
+  enable_memory: true,
+  created_time: entry.agent_version_id,
+  is_custom: entry.definition_status !== 'ACTIVE' ? true : undefined,
 })
 
+const catalogAgents = computed(() => productCatalogEntries.value.map(normalizeProductCatalogAgent))
 const sortedAgents = computed(() =>
-  [...agents.value].sort((left, right) => {
-    const leftOfficial = left.is_custom === false
-    const rightOfficial = right.is_custom === false
-    if (leftOfficial !== rightOfficial) return leftOfficial ? -1 : 1
-    return (right.created_time || '').localeCompare(left.created_time || '')
-  }),
+  catalogAgents.value
+    .filter((agent) => {
+      const keyword = searchKeyword.value.trim().toLowerCase()
+      if (!keyword) return true
+      return [agent.name, agent.description, agent.agent_version_id, agent.catalog_entry_id]
+        .some((value) => String(value || '').toLowerCase().includes(keyword))
+    })
+    .sort((left, right) => {
+      const leftOfficial = left.is_custom === false
+      const rightOfficial = right.is_custom === false
+      if (leftOfficial !== rightOfficial) return leftOfficial ? -1 : 1
+      return (right.created_time || '').localeCompare(left.created_time || '')
+    }),
 )
 const paginatedAgents = computed(() => sortedAgents.value.slice(
   (listPage.value - 1) * LIST_PAGE_SIZE,
@@ -107,24 +118,8 @@ const navigateInWorkspaceSettings = (location: any, event?: Event) => {
   return true
 }
 
-const fetchAgents = async () => {
-  loading.value = true
-  try {
-    const response = await getAgentsAPI()
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '获取智能体列表失败')
-    }
-    agents.value = (response.data.data || []).map(normalizeAgent)
-  } catch (error: any) {
-    console.error('fetchAgents failed', error)
-    ElMessage.error(error.message || '获取智能体列表失败')
-    agents.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
 const fetchProductAgentCatalog = async () => {
+  loading.value = true
   productCatalogLoading.value = true
   try {
     const response = await listProductAgentCatalog({
@@ -135,37 +130,21 @@ const fetchProductAgentCatalog = async () => {
     productCatalogEntries.value.forEach((entry) => productProjectionStore.upsertCatalogEntry(entry))
   } catch (error: any) {
     console.error('fetchProductAgentCatalog failed', error)
+    ElMessage.error(error.message || '获取 Product Catalog 智能体失败')
     productCatalogEntries.value = []
   } finally {
+    loading.value = false
     productCatalogLoading.value = false
   }
 }
 
-const handleSearch = async () => {
-  const keyword = searchKeyword.value.trim()
-  if (!keyword) {
-    await fetchAgents()
-    return
-  }
-
-  searchLoading.value = true
-  try {
-    const response = await searchAgentsAPI({ name: keyword })
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '搜索智能体失败')
-    }
-    agents.value = (response.data.data || []).map(normalizeAgent)
-  } catch (error: any) {
-    console.error('searchAgents failed', error)
-    ElMessage.error(error.message || '搜索智能体失败')
-  } finally {
-    searchLoading.value = false
-  }
+const handleSearch = () => {
+  listPage.value = 1
 }
 
-const clearSearch = async () => {
+const clearSearch = () => {
   searchKeyword.value = ''
-  await fetchAgents()
+  listPage.value = 1
 }
 
 const goCreate = (event?: Event) => {
@@ -208,7 +187,6 @@ const closeEditor = () => {
 }
 
 const handleEditorSaved = async () => {
-  await fetchAgents()
   await fetchProductAgentCatalog()
 }
 
@@ -275,29 +253,34 @@ const handleProductPublicationRevoke = async (entry: AgentCatalogEntry) => {
 
 const handleDelete = async (agent: AgentCardItem) => {
   if (agent.is_custom === false && !isAdmin.value) {
-    ElMessage.warning('只有管理员可以删除官方智能体')
+    ElMessage.warning('只有管理员可以下架官方智能体')
+    return
+  }
+  if (!agent.publication_ref) {
+    ElMessage.warning('当前 catalog entry 缺少 Product publication ref')
     return
   }
 
   try {
-    await ElMessageBox.confirm(`确认删除智能体“${agent.name}”吗？`, '删除智能体', {
+    await ElMessageBox.confirm(`确认下架智能体“${agent.name}”吗？`, '下架智能体', {
       type: 'warning',
-      confirmButtonText: '删除',
+      confirmButtonText: '下架',
       cancelButtonText: '取消',
       confirmButtonClass: 'el-button--danger',
     })
 
-    const response = await deleteAgentAPI({ agent_id: agent.agent_id })
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '删除智能体失败')
-    }
-
-    ElMessage.success('智能体已删除')
-    await fetchAgents()
+    const receipt = await revokeProductAgentPublication({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      publication_id: agent.publication_ref,
+    })
+    productProjectionStore.upsertPublication(receipt.agent_publication)
+    ElMessage.success('Product Catalog 发布已撤销')
+    await fetchProductAgentCatalog()
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
-    console.error('deleteAgent failed', error)
-    ElMessage.error(error.message || '删除智能体失败')
+    console.error('revokeAgentPublication failed', error)
+    ElMessage.error(error.message || 'Product Catalog 发布撤销失败')
   }
 }
 
@@ -307,7 +290,6 @@ const handleImageError = (event: Event) => {
 }
 
 onMounted(() => {
-  void fetchAgents()
   void fetchProductAgentCatalog()
 })
 </script>
@@ -411,7 +393,7 @@ onMounted(() => {
           <span class="scope-text">{{ agent.is_custom === false ? '平台内置' : '我的智能体' }}</span>
           <div class="card-actions">
             <el-button class="agent-icon-button" type="primary" :icon="Edit" circle :title="agent.is_custom === false ? '查看' : '编辑'" :aria-label="agent.is_custom === false ? '查看' : '编辑'" @click="goEdit(agent, $event)" />
-            <el-button class="agent-icon-button danger" type="danger" :icon="Delete" circle title="删除" aria-label="删除" @click="handleDelete(agent)" />
+            <el-button class="agent-icon-button danger" type="danger" :icon="Delete" circle title="下架" aria-label="下架" @click="handleDelete(agent)" />
           </div>
         </div>
       </article>

@@ -665,6 +665,49 @@ python -m py_compile src\backend\zuno\platform\database\product\domain.py src\ba
 passed
 ```
 
+## P10-T17 当前进展
+
+已更新：
+
+- `apps/web/src/pages/agent/agent.vue`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Agent Catalog default-new 列表页覆盖：
+
+- Agent 列表页展示事实源改为 `listProductAgentCatalog` 返回的 Product Catalog projection，不再读取旧 Agent list API；
+- 搜索改为基于当前 Product Catalog projection 的本地过滤，不再调用旧 Agent search API；
+- 列表卡片下架动作改为 `revokeProductAgentPublication`，以 `publication_ref` 作为 Product publication 事实引用，不再调用旧 Agent delete API；
+- Product projection store 继续接收 catalog entry、installation、publication receipt，前端不成为 Publication 事实源；
+- 前端静态测试新增负断言，防止 Agent 列表页回退到旧 `getAgentsAPI`、`searchAgentsAPI`、`deleteAgentAPI`。
+
+仍未完成：
+
+- Agent Editor 编辑加载路径仍保留旧只读迁移入口，等待 Product draft/version configuration query 后切流；
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T17 验证：
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_agent_studio_and_catalog_ui_use_product_surface -q
+1 passed
+```
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py -q
+10 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
 ## 本轮验证
 
 已通过：
@@ -683,6 +726,8 @@ python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
 python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_catalog_routes_use_product_service tests\frontend\test_phase10_product_contracts.py -q
 python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py src\backend\zuno\api\v1\product.py
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_agent_studio_and_catalog_ui_use_product_surface -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py -q
 ```
 
 未通过 / 未完成：

@@ -256,10 +256,25 @@ def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
         "handleProductCatalogInstall(entry)",
         "handleProductCatalogRevoke(entry)",
         "handleProductPublicationRevoke(entry)",
+        "const catalogAgents = computed(() => productCatalogEntries.value.map(normalizeProductCatalogAgent))",
+        "return [agent.name, agent.description, agent.agent_version_id, agent.catalog_entry_id]",
+        "const handleSearch = () =>",
+        "publication_id: agent.publication_ref",
         "下架",
         "PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'",
     ]:
         assert phrase in agent_page
+
+    for phrase in [
+        "getAgentsAPI",
+        "searchAgentsAPI",
+        "deleteAgentAPI",
+        "normalizeAgent",
+        "searchLoading",
+        "agents.value",
+        "await fetchAgents",
+    ]:
+        assert phrase not in agent_page
 
 
 def test_phase10_product_runtime_adapter_connects_command_stream_and_action_tokens() -> None:
