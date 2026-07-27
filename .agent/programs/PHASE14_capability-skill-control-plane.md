@@ -1,7 +1,7 @@
 # PHASE14 Capability and Skill Control Plane
 
 phase_id: PHASE14
-status: in_progress
+status: completed
 depends_on: PHASE05, PHASE08
 owner: Module 07 Capability / Skill
 

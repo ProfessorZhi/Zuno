@@ -264,6 +264,42 @@ class ToolRepository:
             },
         )
 
+    def record_adapter_binding(
+        self,
+        *,
+        adapter_binding_id: str,
+        tenant_id: str,
+        tool_version_id: str,
+        adapter_kind: str,
+        adapter_version: str,
+        conformance_payload: dict[str, Any],
+        status: str = "ACTIVE",
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_adapter_bindings (
+                    adapter_binding_id, tenant_id, tool_version_id, adapter_kind,
+                    adapter_version, conformance_hash, status
+                )
+                VALUES (
+                    :adapter_binding_id, :tenant_id, :tool_version_id, :adapter_kind,
+                    :adapter_version, :conformance_hash, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "adapter_binding_id": adapter_binding_id,
+                "tenant_id": tenant_id,
+                "tool_version_id": tool_version_id,
+                "adapter_kind": adapter_kind,
+                "adapter_version": adapter_version,
+                "conformance_hash": canonical_sha256(conformance_payload),
+                "status": status,
+            },
+        )
+
     def activate_tool(
         self,
         *,
@@ -447,6 +483,36 @@ class ToolRepository:
                 "effect_certainty": receipt.effect_certainty,
                 "append_only_generation": receipt.append_only_generation,
                 "receipt_hash": canonical_sha256(receipt.receipt_payload),
+            },
+        )
+
+    def record_bypass_guard(
+        self,
+        *,
+        receipt_id: str,
+        tenant_id: str,
+        scope: str,
+        allowlist_count: int,
+        guard_payload: dict[str, Any],
+    ) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_bypass_guard_receipts (
+                    receipt_id, tenant_id, scope, allowlist_count, guard_hash
+                )
+                VALUES (
+                    :receipt_id, :tenant_id, :scope, :allowlist_count, :guard_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "receipt_id": receipt_id,
+                "tenant_id": tenant_id,
+                "scope": scope,
+                "allowlist_count": allowlist_count,
+                "guard_hash": canonical_sha256(guard_payload),
             },
         )
 

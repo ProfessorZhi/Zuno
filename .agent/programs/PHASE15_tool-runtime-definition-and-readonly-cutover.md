@@ -1,7 +1,7 @@
 # PHASE15 Tool Runtime Definition and Read-only Cutover
 
 phase_id: PHASE15
-status: blocked
+status: completed
 depends_on: PHASE08, PHASE14
 owner: Module 08 Tool Runtime
 
@@ -94,6 +94,14 @@ docs/evidence/**
 - Tool 领域基础和只读执行面可用。
 - Read-only Adapter Conformance/Security/Fault Test 通过。
 - Side-effect Tool 仍被明确阻止或路由 PHASE16。
+
+## Goal03 Wave B Closure
+
+status: completed
+coordinator_approval: approved
+evidence_ref: docs/evidence/goal03-wave-b-gate-review.md
+
+默认 Tool Control Plane、GeneralAgent LangChain middleware、user-defined CLI/OpenAPI runtime 已收口到唯一 `ToolInvocationGateway`，并通过 `ToolUnitOfWork` / `ToolRepository` 写入 Definition、Version、Operation、Installation、Activation、AdapterBinding、PreparedToolAction、Attempt、Observation、ExecutionReceipt 和 Bypass Guard Receipt。有副作用 Tool 在 PHASE15 fail-closed，等待 PHASE16。
 
 ## Validation
 

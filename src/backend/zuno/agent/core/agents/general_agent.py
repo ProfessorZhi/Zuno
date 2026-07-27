@@ -45,6 +45,7 @@ from zuno.capability import (
     CapabilitySelectionTrace,
     CapabilityType,
 )
+from zuno.capability.tool_runtime import ToolInvocationGateway
 from zuno.knowledge.query_service import KnowledgeQueryService
 from zuno.knowledge.trace import HookPoint, RuntimeTraceEvent
 from zuno.memory import (
@@ -219,7 +220,30 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                 )
 
         try:
-            tool_result = await handler(request)
+            tenant_id = self.user_id or "tenant:agent"
+            workspace_id = str(request.runtime.context.get("workspace_id", "") or tenant_id) if hasattr(request.runtime, "context") else tenant_id
+            call_id = str(request.tool_call.get("id") or f"{tool_name}:{int(time.time() * 1000)}")
+            from zuno.platform.database import engine
+            from zuno.platform.database.tool_runtime import ToolUnitOfWork
+
+            gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+            tool_result, gateway_receipt = await gateway.invoke_readonly(
+                tool_name=tool_name,
+                args=dict(request.tool_call.get("args") or {}),
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id=f"general-agent:{call_id}",
+                call_id=call_id,
+                adapter_kind="MCP" if self.mcp_checker(tool_name) else "LANGCHAIN",
+                executor=lambda: handler(request),
+                readonly=self._is_readonly_tool(tool_name=tool_name, tool_type=tool_type),
+            )
+            if gateway_receipt.status == "blocked":
+                tool_result = ToolMessage(
+                    content=gateway_receipt.blocked_reason,
+                    name=tool_name,
+                    tool_call_id=request.tool_call["id"],
+                )
             post_tool_event = self._tool_trace_event(
                 tool_call_id=str(request.tool_call.get("id") or ""),
                 tool_name=tool_name,
@@ -264,6 +288,16 @@ class EmitEventAgentMiddleware(AgentMiddleware):
                 name=tool_name,
                 tool_call_id=request.tool_call["id"],
             )
+
+    @staticmethod
+    def _is_readonly_tool(*, tool_name: str, tool_type: str) -> bool:
+        lowered = tool_name.lower()
+        if lowered in {"search_knowledge_base", "web_search", "read_webpage"}:
+            return True
+        readonly_prefixes = ("get_", "list_", "read_", "search_", "query_", "fetch_", "lookup_", "arxiv", "weather")
+        if lowered.startswith(readonly_prefixes):
+            return True
+        return tool_type.lower() in {"skill"} or "read" in lowered or "search" in lowered
 
 
 class GeneralAgent:

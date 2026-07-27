@@ -5,14 +5,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_36_wave_b_memory_tool_runtime.py"
+CUTOVER_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_41_wave_b_runtime_cutover.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     text = MIGRATION.read_text(encoding="utf-8")
+    cutover = CUTOVER_MIGRATION.read_text(encoding="utf-8")
 
     assert 'revision = "20260725_36"' in text
     assert 'down_revision = "20260725_35"' in text
     assert text.count("op.create_table(") == text.count("op.drop_table(")
+    assert 'revision = "20260727_41"' in cutover
+    assert 'down_revision = "20260726_40"' in cutover
+    assert cutover.count("op.create_table(") == cutover.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -39,6 +44,29 @@ def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() ->
         "tool_execution_receipts",
         "ck_tool_activations_cas",
         "uq_prepared_actions_idempotency",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+
+def test_goal03_wave_b_cutover_migration_contains_default_runtime_fact_tables() -> None:
+    text = CUTOVER_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "memory_capture_intents",
+        "memory_candidates_v2",
+        "memory_governance_decisions_v2",
+        "memory_records",
+        "memory_commit_receipts",
+        "context_selection_decisions",
+        "context_compression_traces",
+        "memory_use_traces",
+        "tool_adapter_bindings",
+        "tool_bypass_guard_receipts",
+        "uq_memory_capture_intents_idempotency",
+        "uq_memory_records_conflict_key",
+        "ck_memory_candidates_v2_status",
+        "ck_tool_bypass_guard_receipts_hash",
     )
 
     for fragment in required_fragments:

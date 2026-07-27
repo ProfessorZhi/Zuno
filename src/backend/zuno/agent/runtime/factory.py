@@ -73,9 +73,16 @@ class RuntimeDependencyFactory:
         if not self.config.enable_memory:
             return None
         from zuno.memory.engine import MemoryEngine
+        from zuno.memory.governed_runtime import GovernedMemoryContextRuntime
         from zuno.memory.store import DatabaseMemoryStore
+        from zuno.platform.database import engine
+        from zuno.platform.database.memory import MemoryUnitOfWork
 
-        return MemoryEngine(store=DatabaseMemoryStore())
+        memory_engine = MemoryEngine(store=DatabaseMemoryStore())
+        memory_engine.governed_context_runtime = GovernedMemoryContextRuntime(
+            unit_of_work_factory=lambda: MemoryUnitOfWork(engine)
+        )
+        return memory_engine
 
     def _knowledge_runtime(self) -> object | None:
         if not self.config.enable_knowledge_runtime:

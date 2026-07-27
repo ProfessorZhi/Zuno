@@ -53,6 +53,8 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    tool_bypass_guard_receipts,
+                    tool_adapter_bindings,
                     tool_execution_receipts,
                     tool_observations,
                     tool_attempts,
@@ -64,6 +66,14 @@ def engine(migrated_postgres):
                     tool_definitions,
                     tool_providers,
                     memory_reconciliation_decisions,
+                    memory_use_traces,
+                    context_compression_traces,
+                    context_selection_decisions,
+                    memory_commit_receipts,
+                    memory_records,
+                    memory_governance_decisions_v2,
+                    memory_candidates_v2,
+                    memory_capture_intents,
                     memory_deletion_receipts,
                     memory_deletion_requests,
                     context_pack_versions,
@@ -149,6 +159,43 @@ def test_phase13_memory_repository_activates_immutable_context_pack_and_delete_r
         assert row["current_snapshot_ref"] == "memory-snapshot:memory-version:wave-b:1"
         assert conn.execute(text("SELECT count(*) FROM context_pack_versions")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM memory_deletion_receipts")).scalar_one() == 1
+
+
+def test_phase13_governed_memory_runtime_commits_default_agent_outcome_context_and_use_trace(engine) -> None:
+    from zuno.memory.contracts import MemoryScope
+    from zuno.memory.governed_runtime import GovernedMemoryContextRuntime
+
+    runtime = GovernedMemoryContextRuntime(unit_of_work_factory=lambda: MemoryUnitOfWork(engine))
+    receipt = runtime.commit_turn_outcome(
+        scope=MemoryScope(
+            user_id="tenant-b",
+            agent_id="agent-b",
+            project_id="workspace-b",
+            thread_id="thread-b",
+        ),
+        event_id="event:wave-b:post-turn",
+        run_id="run:wave-b:governed",
+        step_run_id="step:post-turn",
+        task="Remember the governed runtime boundary.",
+        response="Governed memory committed.",
+        context_trace={"selected_item_ids": ["message_0"], "security_epoch": "security-epoch:memory-default"},
+    )
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM memory_capture_intents")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM memory_candidates_v2")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM memory_governance_decisions_v2")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM memory_records")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM memory_commit_receipts")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM context_selection_decisions")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM context_compression_traces")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM memory_use_traces")).scalar_one() == 1
+        active = conn.execute(
+            text("SELECT status, current_snapshot_ref FROM memory_versions WHERE memory_version_id = :version_id"),
+            {"version_id": receipt.memory_version_id},
+        ).mappings().one()
+        assert active["status"] == "ACTIVE"
+        assert active["current_snapshot_ref"].startswith("memory-snapshot:")
 
 
 def test_phase15_tool_repository_records_readonly_prepared_action_attempt_and_receipt(engine) -> None:
@@ -250,3 +297,52 @@ def test_phase15_tool_repository_records_readonly_prepared_action_attempt_and_re
         ).mappings().one()
         assert receipt["effect_certainty"] == "NO_EFFECT"
         assert receipt["append_only_generation"] == 1
+
+
+def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects(engine) -> None:
+    from zuno.capability.runtime import ToolRuntimeRequest, build_default_tool_control_plane_runtime
+
+    runtime = build_default_tool_control_plane_runtime()
+    runtime._tool_unit_of_work_factory = lambda: ToolUnitOfWork(engine)
+
+    read_result = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="filesystem.read",
+            arguments={"path": "docs/architecture/README.md"},
+            workspace_id="workspace-b",
+            user_id="tenant-b",
+            task_id="task-readonly",
+            trace_id="trace-readonly",
+            model_intent="Read a workspace document.",
+            execution_id="readonly-read-1",
+        )
+    )
+    write_result = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "review@example.com", "body": "hello", "target": "mailto:review@example.com"},
+            workspace_id="workspace-b",
+            user_id="tenant-b",
+            task_id="task-mail",
+            trace_id="trace-mail",
+            model_intent="Send email.",
+            approved=True,
+            execution_id="readonly-mail-1",
+        )
+    )
+
+    assert read_result.status == "completed"
+    assert write_result.status == "blocked"
+    assert "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL" in repr(write_result.to_dict())
+
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM prepared_tool_actions")).scalar_one() == 2
+        assert conn.execute(text("SELECT count(*) FROM tool_attempts")).scalar_one() == 2
+        assert conn.execute(text("SELECT count(*) FROM tool_observations")).scalar_one() == 2
+        assert conn.execute(text("SELECT count(*) FROM tool_execution_receipts")).scalar_one() == 2
+        assert conn.execute(text("SELECT count(*) FROM tool_adapter_bindings")).scalar_one() >= 1
+        assert conn.execute(text("SELECT count(*) FROM tool_bypass_guard_receipts")).scalar_one() == 2
+        statuses = conn.execute(
+            text("SELECT status, effect_certainty FROM tool_execution_receipts ORDER BY receipt_id")
+        ).all()
+        assert ("FAILED", "NO_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]

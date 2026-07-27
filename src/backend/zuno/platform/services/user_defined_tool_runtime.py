@@ -5,9 +5,15 @@ from langchain_core.tools import BaseTool, StructuredTool
 from pydantic import BaseModel, Field, create_model
 
 from zuno.database import ToolTable
+from zuno.capability.tool_runtime import ToolInvocationGateway
+from zuno.platform.database import engine
+from zuno.platform.database.tool_runtime import ToolUnitOfWork
 from zuno.services.simple_api_tool import normalize_remote_api_auth_config
 from zuno.tools.cli_tool.adapter import CLIToolAdapter
 from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter
+
+
+PHASE15_SIDE_EFFECT_BLOCK_REASON = "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
 
 
 def get_user_defined_runtime_type(db_tool: ToolTable) -> str:
@@ -92,10 +98,27 @@ def build_user_defined_langchain_tools(
             cli_config=get_cli_config_from_auth_config(db_tool.auth_config),
         )
         cli_schema = cli_adapter.tool_schema["function"]
+        async def _cli_gateway_execute(input: str):
+            gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+            result, receipt = await gateway.invoke_readonly(
+                tool_name=cli_adapter.tool_name,
+                args={"input": input},
+                tenant_id=str(getattr(db_tool, "user_id", "") or "tenant:tool"),
+                workspace_id=str(getattr(db_tool, "user_id", "") or "workspace:tool"),
+                trace_id=f"user-tool:{db_tool.tool_id}",
+                call_id=f"user-tool:{db_tool.tool_id}:{cli_adapter.tool_name}",
+                adapter_kind="CLI",
+                executor=lambda: cli_adapter.execute(input),
+                readonly=bool((db_tool.auth_config or {}).get("readonly", False)),
+            )
+            if receipt.status == "blocked":
+                return receipt.blocked_reason
+            return result
+
         cli_tool = StructuredTool(
             name=cli_schema["name"],
             description=cli_schema["description"],
-            coroutine=cli_adapter.execute,
+            coroutine=_cli_gateway_execute,
             args_schema=_build_args_model(cli_schema["name"], cli_schema["parameters"]),
         )
         if tool_metadata_map is not None:
@@ -118,7 +141,12 @@ def build_user_defined_langchain_tools(
             StructuredTool(
                 name=tool_name,
                 description=function_schema.get("description", ""),
-                coroutine=_create_openapi_executor(tool_adapter, tool_name),
+                coroutine=_create_openapi_executor(
+                    tool_adapter,
+                    tool_name,
+                    tenant_id=str(getattr(db_tool, "user_id", "") or "tenant:tool"),
+                    workspace_id=str(getattr(db_tool, "user_id", "") or "workspace:tool"),
+                ),
                 args_schema=_build_args_model(tool_name, function_schema.get("parameters", {})),
             )
         )
@@ -141,7 +169,24 @@ def build_user_defined_openai_tools(
             description=db_tool.description,
             cli_config=get_cli_config_from_auth_config(db_tool.auth_config),
         )
-        return [cli_adapter.tool_schema], {cli_adapter.tool_name: cli_adapter.execute}
+        async def _cli_gateway_execute(input: str):
+            gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+            result, receipt = await gateway.invoke_readonly(
+                tool_name=cli_adapter.tool_name,
+                args={"input": input},
+                tenant_id=str(getattr(db_tool, "user_id", "") or "tenant:tool"),
+                workspace_id=str(getattr(db_tool, "user_id", "") or "workspace:tool"),
+                trace_id=f"user-tool:{db_tool.tool_id}",
+                call_id=f"user-tool:{db_tool.tool_id}:{cli_adapter.tool_name}",
+                adapter_kind="CLI",
+                executor=lambda: cli_adapter.execute(input),
+                readonly=bool((db_tool.auth_config or {}).get("readonly", False)),
+            )
+            if receipt.status == "blocked":
+                return receipt.blocked_reason
+            return result
+
+        return [cli_adapter.tool_schema], {cli_adapter.tool_name: _cli_gateway_execute}
 
     tool_adapter = OpenAPIToolAdapter(
         auth_config=normalize_remote_api_auth_config(db_tool.auth_config),
@@ -151,6 +196,8 @@ def build_user_defined_openai_tools(
         tool_schema["function"]["name"]: _create_openapi_executor(
             tool_adapter,
             tool_schema["function"]["name"],
+            tenant_id=str(getattr(db_tool, "user_id", "") or "tenant:tool"),
+            workspace_id=str(getattr(db_tool, "user_id", "") or "workspace:tool"),
         )
         for tool_schema in tool_adapter.tools
     }
@@ -160,11 +207,33 @@ def build_user_defined_openai_tools(
 def _create_openapi_executor(
     tool_adapter: OpenAPIToolAdapter,
     tool_name: str,
+    *,
+    tenant_id: str = "tenant:tool",
+    workspace_id: str = "workspace:tool",
 ) -> Callable[..., Awaitable[Any]]:
     async def _execute_wrapper(**kwargs):
-        return await tool_adapter.execute(_tool_name=tool_name, **kwargs)
+        gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+        result, receipt = await gateway.invoke_readonly(
+            tool_name=tool_name,
+            args=dict(kwargs),
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            trace_id=f"user-openapi:{tool_name}",
+            call_id=f"user-openapi:{tool_name}:{abs(hash(tuple(sorted(kwargs.items()))))}",
+            adapter_kind="OPENAPI",
+            executor=lambda: tool_adapter.execute(_tool_name=tool_name, **kwargs),
+            readonly=_is_openapi_readonly(tool_adapter, tool_name),
+        )
+        if receipt.status == "blocked":
+            return receipt.blocked_reason
+        return result
 
     return _execute_wrapper
+
+
+def _is_openapi_readonly(tool_adapter: OpenAPIToolAdapter, tool_name: str) -> bool:
+    meta = getattr(tool_adapter, "_tool_meta", {}).get(tool_name) or {}
+    return str(meta.get("method") or "").upper() in {"GET", "HEAD", "OPTIONS"}
 
 
 def _build_args_model(tool_name: str, parameters_schema: dict) -> type[BaseModel]:
