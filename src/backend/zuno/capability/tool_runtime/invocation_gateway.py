@@ -685,6 +685,20 @@ class ToolInvocationGateway:
                 if not claim.acquired:
                     if claim.status == "completed" and claim.result_ref:
                         return _ExecutePrerequisiteResult(replay_result_ref=claim.result_ref)
+                    recovered_result_ref = self._existing_side_effect_result_ref(tenant_id=tenant_id, call_id=call_id)
+                    if recovered_result_ref:
+                        if claim.status == "in_progress" and claim.owner == owner:
+                            try:
+                                repo.complete_idempotency(
+                                    scope="tool-side-effect",
+                                    key=call_id,
+                                    owner=owner,
+                                    generation=claim.generation,
+                                    result_ref=recovered_result_ref,
+                                )
+                            except FencingRejectedError:
+                                pass
+                        return _ExecutePrerequisiteResult(replay_result_ref=recovered_result_ref)
                     return _ExecutePrerequisiteResult(blocked_reason="idempotency claim is already held or completed")
                 fence = repo.acquire_lease(
                     resource_id=target_resource_set_ref,
@@ -702,6 +716,10 @@ class ToolInvocationGateway:
             fencing_lease_id=fence.lease_id,
             fencing_epoch=fence.epoch,
         )
+
+    def _existing_side_effect_result_ref(self, *, tenant_id: str, call_id: str) -> str:
+        with self._unit_of_work_factory() as repo:
+            return repo.existing_side_effect_result_ref(tenant_id=tenant_id, call_id=call_id)
 
     def _complete_execute_prerequisites(
         self,

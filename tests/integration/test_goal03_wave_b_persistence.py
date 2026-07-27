@@ -1267,6 +1267,124 @@ def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispa
     assert claim["result_ref"] == "tool-effect-receipt:call-phase16-idempotent-mail"
 
 
+def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(engine) -> None:
+    tenant_id = "tenant-phase16-claim-repair"
+    workspace_id = "workspace-phase16-claim-repair"
+    call_id = "call-phase16-claim-repair-mail"
+    secret_ref = "security-secret-ref:phase16:claim-repair-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:claim-repair-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    fail_complete_once = True
+
+    class _CompletionFailureProxy:
+        def __init__(self, repo):
+            self._repo = repo
+
+        def __getattr__(self, name: str):
+            return getattr(self._repo, name)
+
+        def complete_idempotency(self, **kwargs) -> None:
+            nonlocal fail_complete_once
+            if fail_complete_once:
+                fail_complete_once = False
+                raise RuntimeError("infra completion outage after effect receipt")
+            self._repo.complete_idempotency(**kwargs)
+
+    class _CompletionFailureUnitOfWork:
+        def __init__(self, tenant: str) -> None:
+            self._inner = InfrastructureUnitOfWork(engine, tenant_id=tenant)
+
+        def __enter__(self):
+            return _CompletionFailureProxy(self._inner.__enter__())
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self._inner.__exit__(exc_type, exc, tb)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: _CompletionFailureUnitOfWork(tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_effect_id": "mail-provider-effect:phase16:claim-repair:1", "message_id": "message-claim-repair"}
+
+    with pytest.raises(RuntimeError, match="infra completion outage after effect receipt"):
+        asyncio.run(gateway.invoke_readonly(
+            tool_name="mail.send",
+            args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            trace_id="trace-phase16-claim-repair",
+            call_id=call_id,
+            adapter_kind="API",
+            executor=executor,
+            readonly=False,
+            approved=True,
+        ))
+
+    async def replay_executor() -> dict[str, str]:
+        raise AssertionError("durable side-effect repair replay must not redispatch provider")
+
+    replay_result, replay_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-claim-repair",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=replay_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert calls == 1
+    assert replay_result == {
+        "idempotency_replay": True,
+        "result_ref": "tool-effect-receipt:call-phase16-claim-repair-mail",
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": call_id,
+    }
+    assert replay_receipt.status == "replayed"
+    assert replay_receipt.result_ref == "tool-effect-receipt:call-phase16-claim-repair-mail"
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-claim-repair-mail'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-claim-repair-mail'")
+        ).scalar_one() == 1
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, owner, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert claim["status"] == "completed"
+    assert claim["owner"] == f"tool-runtime:{call_id}"
+    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-claim-repair-mail"
+
+
 def test_phase16_gateway_records_provider_exception_as_unknown_reconciliation(engine) -> None:
     tenant_id = "tenant-phase16-provider-exception"
     workspace_id = "workspace-phase16-provider-exception"

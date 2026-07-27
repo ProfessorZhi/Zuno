@@ -22,7 +22,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE14 completed：Goal03 Wave A 已完成 Capability/Skill Definition、Version、Installation、Selection、Availability、Supply-chain guard、Planner Snapshot、progressive loading 和旁路 guard focused suites 与 Capability verifier；不代表 PHASE15。
 - PHASE15 completed：Goal03 Wave B 已完成唯一 ToolInvocationGateway、ToolRepository/UoW 默认路径、只读 CLI/OpenAPI/LangChain gateway cutover 和旁路 guard；有副作用 Tool fail-closed 到 PHASE16，不返回虚构外部 Effect 成功。
 - PHASE10 ready：PHASE09 Wave A 已完成，可启动 Web/Desktop Product Adaptation；尚未实现。
-- PHASE16 in_progress：Goal04 PR B 已在独立分支实现 P16-T01 至 P16-T19 当前切片，并保留 evidence；尚未完成 Coordinator Closure、Program/Manifest completed 同步或 PR merge，不代表 PHASE16 completed。
+- PHASE16 in_progress：Goal04 PR B 已在独立分支实现 P16-T01 至 P16-T20 当前切片，并保留 evidence；尚未完成 Coordinator Closure、Program/Manifest completed 同步或 PR merge，不代表 PHASE16 completed。
 - current_phase = PHASE10；PHASE17–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
@@ -37,7 +37,7 @@ Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；P
 
 ## Goal04 PR B Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 当前只在 PR B 分支 `codex/goal04-phase16-tool-side-effect` 中为 `in_progress`。当前 evidence 证明 P16-T01 至 P16-T19 focused slices 已实现并验证；这不等于 PHASE16 completed，不解除 PHASE17 依赖，不改变 `current_phase = PHASE10`，也不建立 production readiness。
+PHASE16 Tool Side Effect and Reconciliation 当前只在 PR B 分支 `codex/goal04-phase16-tool-side-effect` 中为 `in_progress`。当前 evidence 证明 P16-T01 至 P16-T20 focused slices 已实现并验证；这不等于 PHASE16 completed，不解除 PHASE17 依赖，不改变 `current_phase = PHASE10`，也不建立 production readiness。
 
 PHASE08 当前保留的部分证据：
 

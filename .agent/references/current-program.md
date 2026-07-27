@@ -12,7 +12,7 @@ program_version: 2
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
 
-Goal04 PR B 已启动：PHASE16 Tool Side Effect and Reconciliation 在 `codex/goal04-phase16-tool-side-effect` 中为 `in_progress`，当前 evidence 覆盖 P16-T01 至 P16-T19 focused slices。这不是 completed 证据；PHASE17、PHASE18、PHASE19 仍受依赖约束，不得提前标记 in_progress。
+Goal04 PR B 已启动：PHASE16 Tool Side Effect and Reconciliation 在 `codex/goal04-phase16-tool-side-effect` 中为 `in_progress`，当前 evidence 覆盖 P16-T01 至 P16-T20 focused slices。这不是 completed 证据；PHASE17、PHASE18、PHASE19 仍受依赖约束，不得提前标记 in_progress。
 
 入口：
 

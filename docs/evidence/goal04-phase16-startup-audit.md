@@ -446,6 +446,20 @@ Failure Fingerprint：
 
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_provider_exception_as_unknown_reconciliation -p no:cacheprovider --tb=short`：1 passed。
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+### P16-T20 Durable Effect Repairs Incomplete Idempotency Claim
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.existing_side_effect_result_ref(...)` 可按 call id 查找已持久化的 EffectReceipt / EffectReconciliation / AsyncJob result ref。
+- `ToolInvocationGateway` 在 infra idempotency claim 未 acquired 且仍为 in-progress 时，若 Tool Runtime 已存在 durable side-effect result，会修复同 owner claim 到 completed 并返回 replay，而不是阻塞或重新 dispatch provider。
+- 该恢复路径覆盖 EffectReceipt 已落库但 `_complete_execute_prerequisites(...)` 失败的危险窗口，避免外部副作用已经确认但 infra claim 永久卡住。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short`：1 passed。
+- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -469,7 +483,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T19 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、pre-held idempotency claim fail-closed、provider exception UNKNOWN reconciliation、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T20 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、durable effect claim repair、pre-held idempotency claim fail-closed、provider exception UNKNOWN reconciliation、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T19 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，provider exception 会进入 UNKNOWN reconciliation，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T20 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 和 durable effect claim repair 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，provider exception 会进入 UNKNOWN reconciliation，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

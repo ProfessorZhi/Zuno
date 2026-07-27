@@ -723,6 +723,40 @@ class ToolRepository:
             },
         )
 
+    def existing_side_effect_result_ref(self, *, tenant_id: str, call_id: str) -> str:
+        effect_receipt_id = f"tool-effect-receipt:{call_id}"
+        reconciliation_id = f"tool-effect-reconciliation:{call_id}"
+        async_job_id = f"tool-async-job:{call_id}"
+        row = self.connection.execute(
+            text(
+                """
+                SELECT result_ref
+                FROM (
+                    SELECT effect_receipt_id AS result_ref, 1 AS priority
+                    FROM tool_effect_receipts
+                    WHERE tenant_id = :tenant_id AND effect_receipt_id = :effect_receipt_id
+                    UNION ALL
+                    SELECT reconciliation_id AS result_ref, 2 AS priority
+                    FROM tool_effect_reconciliations
+                    WHERE tenant_id = :tenant_id AND reconciliation_id = :reconciliation_id
+                    UNION ALL
+                    SELECT async_job_id AS result_ref, 3 AS priority
+                    FROM tool_async_jobs
+                    WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id
+                ) existing_results
+                ORDER BY priority
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "effect_receipt_id": effect_receipt_id,
+                "reconciliation_id": reconciliation_id,
+                "async_job_id": async_job_id,
+            },
+        ).first()
+        return "" if row is None else str(row.result_ref)
+
 
     def escalate_due_reconciliations(self, *, tenant_id: str, now: Any) -> int:
         result = self.connection.execute(
