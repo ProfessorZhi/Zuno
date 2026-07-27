@@ -21,6 +21,7 @@ from zuno.platform.database.tool_runtime import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolRepository,
+    ToolRuntimeConflict,
     ToolUnitOfWork,
     ToolVersionInput,
 )
@@ -983,6 +984,42 @@ def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(eng
         "provider_console_status": "message id not found after provider outage",
         "operator_note": "manual review could not prove delivery",
     }
+    with pytest.raises(ToolRuntimeConflict, match="manual effect assessment requires escalated reconciliation"):
+        gateway.record_manual_effect_assessment(
+            tenant_id=tenant_id,
+            manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail:too-early",
+            reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            conclusion="UNRESOLVED",
+            confidence=0.55,
+            assessor_principal_id="workspace-user:manual-reviewer",
+            residual_uncertainty="provider outage left delivery unknown",
+            evidence_payload=assessment_payload,
+        )
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET manual_assessment_required = true,
+                    status = 'ESCALATED',
+                    next_action = 'MANUAL_ASSESSMENT'
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-unknown-mail'
+                """
+            )
+        )
+    with pytest.raises(ToolRuntimeConflict, match="manual effect assessment requires authorized manual reviewer"):
+        gateway.record_manual_effect_assessment(
+            tenant_id=tenant_id,
+            manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail:unauthorized",
+            reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            conclusion="UNRESOLVED",
+            confidence=0.55,
+            assessor_principal_id="workspace-user:ordinary",
+            residual_uncertainty="provider outage left delivery unknown",
+            evidence_payload=assessment_payload,
+        )
     gateway.record_manual_effect_assessment(
         tenant_id=tenant_id,
         manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail",

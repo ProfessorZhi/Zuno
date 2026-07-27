@@ -1005,6 +1005,26 @@ class ToolRepository:
         )
 
     def record_manual_effect_assessment(self, assessment: ToolManualEffectAssessmentInput) -> None:
+        if not assessment.assessor_principal_id.startswith("workspace-user:manual-reviewer"):
+            raise ToolRuntimeConflict("manual effect assessment requires authorized manual reviewer")
+        row = self.connection.execute(
+            text(
+                """
+                SELECT manual_assessment_required
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = :reconciliation_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "reconciliation_id": assessment.reconciliation_id,
+                "tenant_id": assessment.tenant_id,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ToolRuntimeConflict("manual effect assessment requires existing reconciliation")
+        if not bool(row["manual_assessment_required"]):
+            raise ToolRuntimeConflict("manual effect assessment requires escalated reconciliation")
         self.connection.execute(
             text(
                 """

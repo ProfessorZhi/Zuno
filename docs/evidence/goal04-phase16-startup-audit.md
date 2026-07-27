@@ -299,6 +299,30 @@ Failure Fingerprint：
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_async_cancellation_moves_waiting_job_without_timeout_overwrite -p no:cacheprovider --tb=short`：1 passed。
 - 使用显式 `sys.path.insert(...)` 运行 async 相邻路径：callback completion/forged fencing、async timeout、async cancellation timeout fencing：3 passed。
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+### P16-T13 Manual Effect Assessment Authorization Boundary
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.record_manual_effect_assessment(...)` 在写入 `tool_manual_effect_assessments` 前强制校验 reconciliation 存在且属于同 tenant。
+- Manual assessment 只能在 reconciliation 已进入 `manual_assessment_required=true` 后写入；OPEN/未升级 UNKNOWN 不能被提前人工裁决。
+- Assessor principal 必须是明确的 manual reviewer，当前本地边界为 `workspace-user:manual-reviewer*`；普通 workspace user 不能写入 manual effect assessment。
+- `ToolRuntimeConflict` 从 `zuno.platform.database.tool_runtime` package 导出，便于 gateway/integration/fault tests 固定该领域冲突语义。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry -p no:cacheprovider --tb=short`：首次 collection error；补导出后 targeted rerun 1 passed。
+- 使用显式 `sys.path.insert(...)` 运行 UNKNOWN/manual 相邻路径：unknown reconciliation/manual assessment boundary、restart age escalation：2 passed。
+
+Failure Fingerprint：
+
+- command：上述 manual assessment focused test。
+- test：collection `tests/integration/test_goal03_wave_b_persistence.py`。
+- exception：`ImportError: cannot import name 'ToolRuntimeConflict' from 'zuno.platform.database.tool_runtime'`。
+- first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:18`。
+- environment signature：显式 PHASE16 worktree `sys.path.insert`，PostgreSQL Alembic head `20260727_45`。
+- resolution：从 `src/backend/zuno/platform/database/tool_runtime/__init__.py` 导出 `ToolRuntimeConflict`；targeted rerun 通过。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -322,7 +346,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T12 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T13 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、manual assessment authorization boundary、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T12 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T13 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

@@ -14,6 +14,7 @@ from .domain import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolRepository,
+    ToolRuntimeConflict,
     ToolUnitOfWork,
     ToolVersionInput,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
     "ToolRepository",
+    "ToolRuntimeConflict",
     "ToolUnitOfWork",
     "ToolVersionInput",
 ]
