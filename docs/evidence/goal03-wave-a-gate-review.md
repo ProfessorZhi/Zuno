@@ -11,7 +11,7 @@ head_at_review: 74dfbd3af9b9a257134e48b352f7801e6053e774
 
 - PR A 当前 head 为 `74dfbd3af9b9a257134e48b352f7801e6053e774`，GitHub `validate` 为 `SUCCESS`，merge state 为 `CLEAN`。
 - Docker Desktop 与 `zuno-postgres` 已恢复，真实 PostgreSQL integration 不再被 `localhost:5432` 阻塞。
-- 当前可用容器镜像只覆盖 PostgreSQL、RabbitMQ、MinIO；Elasticsearch、Milvus、Neo4j、etcd 镜像尚未完成拉取，外部索引服务无法启动。
+- 当前可用并 healthy 的容器依赖覆盖 PostgreSQL、RabbitMQ、MinIO、Elasticsearch、Neo4j、etcd；Milvus 镜像尚未完成拉取，Vector 外部索引服务无法启动。
 - Alembic head 为 `20260726_40`。
 - PHASE09 Product backend 当前 API / persistence / projection / action token / completion / workspace default runtime focused suites 通过。
 - PHASE12 Knowledge 当前 local BM25 / vector / graph adapter dispatch、visibility receipt、durable Knowledge port、active snapshot unavailable fail-closed、cutover / rollback / deletion propagation focused suites 通过。
@@ -33,6 +33,11 @@ docker pull quay.io/coreos/etcd:v3.5.5
 docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}"
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
 python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
+docker compose -f infra/docker/docker-compose.yml up -d neo4j etcd
+docker compose -f infra/docker/docker-compose.yml up -d elasticsearch
+python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+docker pull milvusdb/milvus:v2.4.15
 ```
 
 结果：
@@ -50,6 +55,12 @@ Direct Neo4j and etcd image pulls downloaded layers but stalled; the processes w
 Milvus was requested through compose, but no Milvus image or running service is available.
 16 passed
 compileall passed
+zuno-neo4j healthy
+zuno-etcd healthy
+zuno-elasticsearch healthy
+2 passed
+20 passed
+Milvus direct image pull stalled without progress; the process was stopped and the image is not available.
 ```
 
 当前已确认运行的真实依赖：
@@ -58,6 +69,9 @@ compileall passed
 zuno-postgres: healthy
 zuno-rabbitmq: healthy
 zuno-minio: healthy
+zuno-elasticsearch: healthy
+zuno-neo4j: healthy
+zuno-etcd: healthy
 ```
 
 当前已确认缓存镜像：
@@ -66,6 +80,9 @@ zuno-minio: healthy
 postgres:16
 rabbitmq:3.13-management-alpine
 minio/minio:RELEASE.2023-03-20T20-16-18Z
+docker.elastic.co/elasticsearch/elasticsearch:7.17.24
+neo4j:5-community
+quay.io/coreos/etcd:v3.5.5
 ```
 
 ## Gate 结论
@@ -75,7 +92,7 @@ Wave A Gate 当前不能通过，PR A 当前不能合并。
 最小 mandatory blocker：
 
 ```text
-PHASE12 external index adapter cutover is not implemented as Current.
+PHASE12 Milvus Vector external index adapter cutover is not implemented as Current.
 ```
 
 根因：
@@ -83,9 +100,9 @@ PHASE12 external index adapter cutover is not implemented as Current.
 - 原始目标要求 PHASE12 调用仓库配置的真实索引 Adapter，并覆盖 BM25、Vector、Graph Build Job、Write Batch、Lease、Fencing、Attempt、Count、Hash、Visibility、Sample Retrieval 验证。
 - 当前 `KnowledgeIndexRuntime` 已证明 local BM25 / vector / graph adapter dispatch SPI 和 sample retrieval visibility，不再用 dispatch receipt 冒充可见。
 - 后续 expand 层已新增外部 adapter binding contract，并证明外部 adapter 必须通过自身 readback 才能把 visibility 标为 `visible`；adapter contract 仍需为 `current` 才能进入默认 retrieval payload，readback 无匹配时 target 会降级且不进入 retrieval payload。
-- 但 `INDEX_ADAPTER_CONTRACTS` 仍明确把 `elasticsearch`、`milvus`、`neo4j` 标为 `target_blocked`。
-- 现有 evidence 也明确写明外部 BM25 / Vector / Graph 服务端 adapter 仍不是 current runtime 事实。
-- 本轮尝试启动 Elasticsearch、Milvus、Neo4j、etcd 真实容器依赖未成功；镜像拉取在 Docker registry EOF 或长时间停滞后停止，因此无法执行真实外部 Adapter 的 cutover / visibility / sample retrieval 证明。
+- Elasticsearch BM25 与 Neo4j Graph 外部 adapter 已通过真实容器服务 readback integration，`INDEX_ADAPTER_CONTRACTS` 对应项已标为 `current`。
+- 但 `INDEX_ADAPTER_CONTRACTS` 仍明确把 `milvus` 标为 `target_blocked`。
+- 本轮 Milvus 直接镜像拉取再次长时间停滞并停止；没有 Milvus 镜像或运行服务，因此无法执行真实 Vector Adapter 的 cutover / visibility / sample retrieval 证明。
 
 因此不能把 PHASE12 写成 completed，也不能把 PHASE09/12/14 Wave A Gate 汇总写成 passed。
 

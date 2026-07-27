@@ -1,7 +1,9 @@
 from .adapters import (
     INDEX_ADAPTER_CONTRACTS,
     LOCAL_INDEX_ADAPTER_BY_TARGET,
+    ElasticsearchBm25IndexClient,
     ExternalServiceIndexAdapterBinding,
+    Neo4jGraphIndexClient,
     adapter_status_for_bindings,
     adapter_status_for_targets,
     external_adapter_bindings,
@@ -12,7 +14,9 @@ from .runtime import KnowledgeIndexRuntime
 __all__ = [
     "INDEX_ADAPTER_CONTRACTS",
     "LOCAL_INDEX_ADAPTER_BY_TARGET",
+    "ElasticsearchBm25IndexClient",
     "ExternalServiceIndexAdapterBinding",
+    "Neo4jGraphIndexClient",
     "IndexAdapterContract",
     "IndexJobManifest",
     "IndexQueryResult",

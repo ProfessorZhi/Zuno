@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 from typing import Any
+from uuid import uuid4
 
 from .contracts import IndexAdapterContract, IndexTarget
 
@@ -33,10 +34,9 @@ INDEX_ADAPTER_CONTRACTS = {
         adapter_id="elasticsearch",
         target="bm25",
         engine="Elasticsearch",
-        runtime_status="target_blocked",
+        runtime_status="current",
         external_service=True,
         operations=["index", "query", "delete"],
-        blocked_reason="external Elasticsearch cluster is not provisioned in the local runtime",
     ),
     "milvus": IndexAdapterContract(
         adapter_id="milvus",
@@ -51,10 +51,9 @@ INDEX_ADAPTER_CONTRACTS = {
         adapter_id="neo4j",
         target="graph",
         engine="Neo4j",
-        runtime_status="target_blocked",
+        runtime_status="current",
         external_service=True,
         operations=["index", "query", "delete"],
-        blocked_reason="external Neo4j graph service is not provisioned in the local runtime",
     ),
 }
 
@@ -180,6 +179,137 @@ def external_adapter_bindings(
     return bindings
 
 
+class Neo4jGraphIndexClient:
+    def __init__(
+        self,
+        *,
+        uri: str,
+        username: str,
+        password: str,
+        database: str = "neo4j",
+    ) -> None:
+        self.uri = uri
+        self.username = username
+        self.password = password
+        self.database = database
+
+    def index_documents(self, index_name: str, documents: list[dict]) -> None:
+        driver = self._driver()
+        try:
+            with driver.session(database=self.database) as session:
+                session.run(
+                    "MATCH (c:ZunoIndexChunk {index_name: $index_name}) DETACH DELETE c",
+                    {"index_name": index_name},
+                )
+                for document in documents:
+                    metadata = dict(document.get("metadata") or {})
+                    chunk_id = str(document.get("chunk_id") or metadata.get("chunk_id") or uuid4().hex)
+                    session.run(
+                        """
+                        MERGE (c:ZunoIndexChunk {index_name: $index_name, chunk_id: $chunk_id})
+                        SET c.document_id = $document_id,
+                            c.workspace_id = $workspace_id,
+                            c.content = $content,
+                            c.source_type = $source_type,
+                            c.metadata_json = $metadata_json
+                        """,
+                        {
+                            "index_name": index_name,
+                            "chunk_id": chunk_id,
+                            "document_id": str(document.get("document_id") or metadata.get("document_id") or ""),
+                            "workspace_id": str(document.get("workspace_id") or metadata.get("workspace_id") or ""),
+                            "content": str(document.get("content") or ""),
+                            "source_type": str(document.get("source_type") or "graph"),
+                            "metadata_json": _json_dumps(metadata),
+                        },
+                    )
+        finally:
+            driver.close()
+
+    def search_documents(self, query: str, index_name: str) -> list[dict]:
+        tokens = _tokens(query)
+        driver = self._driver()
+        try:
+            with driver.session(database=self.database) as session:
+                result = session.run(
+                    """
+                    MATCH (c:ZunoIndexChunk {index_name: $index_name})
+                    WHERE any(token IN $tokens WHERE toLower(c.content) CONTAINS token)
+                    RETURN c.chunk_id AS chunk_id,
+                           c.document_id AS document_id,
+                           c.workspace_id AS workspace_id,
+                           c.content AS content,
+                           c.source_type AS source_type
+                    ORDER BY c.chunk_id
+                    LIMIT 25
+                    """,
+                    {"index_name": index_name, "tokens": tokens},
+                )
+                return [record.data() for record in result]
+        finally:
+            driver.close()
+
+    def _driver(self) -> Any:
+        from neo4j import GraphDatabase
+
+        return GraphDatabase.driver(self.uri, auth=(self.username, self.password))
+
+
+class ElasticsearchBm25IndexClient:
+    def __init__(self, *, base_url: str = "http://localhost:9200") -> None:
+        self.base_url = base_url.rstrip("/")
+
+    def index_documents(self, index_name: str, documents: list[dict]) -> None:
+        import urllib.error
+
+        try:
+            _http_json("DELETE", f"{self.base_url}/{index_name}")
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise
+        _http_json(
+            "PUT",
+            f"{self.base_url}/{index_name}",
+            {
+                "mappings": {
+                    "properties": {
+                        "chunk_id": {"type": "keyword"},
+                        "document_id": {"type": "keyword"},
+                        "workspace_id": {"type": "keyword"},
+                        "content": {"type": "text"},
+                        "source_type": {"type": "keyword"},
+                    }
+                }
+            },
+        )
+        for document in documents:
+            chunk_id = str(document.get("chunk_id") or uuid4().hex)
+            _http_json(
+                "PUT",
+                f"{self.base_url}/{index_name}/_doc/{chunk_id}",
+                {
+                    "chunk_id": chunk_id,
+                    "document_id": str(document.get("document_id") or ""),
+                    "workspace_id": str(document.get("workspace_id") or ""),
+                    "content": str(document.get("content") or ""),
+                    "source_type": str(document.get("source_type") or "bm25"),
+                },
+            )
+        _http_json("POST", f"{self.base_url}/{index_name}/_refresh")
+
+    def search_documents(self, query: str, index_name: str) -> list[dict]:
+        response = _http_json(
+            "POST",
+            f"{self.base_url}/{index_name}/_search",
+            {
+                "query": {"match": {"content": query}},
+                "size": 25,
+            },
+        )
+        hits = response.get("hits", {}).get("hits", [])
+        return [dict(hit.get("_source") or {}) for hit in hits]
+
+
 def adapter_status_for_targets(targets: list[IndexTarget]) -> dict[str, str]:
     status: dict[str, str] = {}
     for target in targets:
@@ -269,10 +399,36 @@ def _tokens(text: str) -> list[str]:
     return re.findall(r"[a-zA-Z0-9_]+", text.lower())
 
 
+def _json_dumps(payload: object) -> str:
+    import json
+
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+
+def _http_json(method: str, url: str, payload: object | None = None) -> dict:
+    import json
+    import urllib.request
+
+    body = None if payload is None else json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method=method,
+        headers={"content-type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=10) as response:
+        data = response.read()
+    if not data:
+        return {}
+    return json.loads(data.decode("utf-8"))
+
+
 __all__ = [
     "ExternalServiceIndexAdapterBinding",
     "INDEX_ADAPTER_CONTRACTS",
     "LOCAL_INDEX_ADAPTER_BY_TARGET",
+    "ElasticsearchBm25IndexClient",
+    "Neo4jGraphIndexClient",
     "adapter_status_for_bindings",
     "adapter_status_for_targets",
     "external_adapter_bindings",

@@ -80,17 +80,21 @@ def test_index_runtime_builds_queryable_bm25_vector_and_graph_indexes() -> None:
     assert result.manifest.document_id == "doc_index"
 
 
-def test_index_runtime_exposes_adapter_contracts_with_external_targets_blocked() -> None:
+def test_index_runtime_exposes_adapter_contracts_with_current_external_bm25_graph_and_blocked_vector() -> None:
     from zuno.knowledge.indexing import INDEX_ADAPTER_CONTRACTS
 
     assert INDEX_ADAPTER_CONTRACTS["local_bm25"].runtime_status == "current"
     assert INDEX_ADAPTER_CONTRACTS["local_vector"].runtime_status == "current"
     assert INDEX_ADAPTER_CONTRACTS["local_graph"].runtime_status == "current"
-    for adapter_id in ["elasticsearch", "milvus", "neo4j"]:
+    for adapter_id in ["elasticsearch", "neo4j"]:
         adapter = INDEX_ADAPTER_CONTRACTS[adapter_id]
-        assert adapter.runtime_status == "target_blocked"
+        assert adapter.runtime_status == "current"
         assert adapter.external_service is True
-        assert adapter.blocked_reason
+        assert adapter.blocked_reason is None
+    adapter = INDEX_ADAPTER_CONTRACTS["milvus"]
+    assert adapter.runtime_status == "target_blocked"
+    assert adapter.external_service is True
+    assert adapter.blocked_reason
 
 
 def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -> None:
@@ -228,13 +232,13 @@ def test_index_runtime_external_adapter_requires_service_readback_visibility() -
 
     assert client.index_calls == [{"index_name": "goal03_bm25", "document_count": len(client.documents)}]
     assert client.search_calls[0]["index_name"] == "goal03_bm25"
-    assert manifest.adapter_status == {"bm25": "elasticsearch:target_blocked"}
+    assert manifest.adapter_status == {"bm25": "elasticsearch:current"}
     assert manifest.adapter_dispatch_receipts["bm25"]["adapter_id"] == "elasticsearch"
     assert manifest.adapter_visibility_receipts["bm25"]["visibility"] == "visible"
     assert manifest.adapter_visibility_receipts["bm25"]["visibility_failure_reason"] is None
     assert manifest.adapter_visibility_receipts["bm25"]["sample_match_count"] > 0
-    assert payload["retrievers_used"] == []
-    assert payload["documents_by_source"] == {}
+    assert payload["retrievers_used"] == ["bm25"]
+    assert payload["documents_by_source"]["bm25"]
 
 
 def test_index_runtime_external_adapter_does_not_serve_without_readback_match() -> None:

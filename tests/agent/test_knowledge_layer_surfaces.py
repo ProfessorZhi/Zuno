@@ -102,7 +102,9 @@ EXPECTED_EXPORTS = {
     "zuno.knowledge.indexing": [
         "INDEX_ADAPTER_CONTRACTS",
         "LOCAL_INDEX_ADAPTER_BY_TARGET",
+        "ElasticsearchBm25IndexClient",
         "ExternalServiceIndexAdapterBinding",
+        "Neo4jGraphIndexClient",
         "IndexAdapterContract",
         "IndexJobManifest",
         "IndexQueryResult",

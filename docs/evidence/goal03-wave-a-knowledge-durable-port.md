@@ -18,9 +18,10 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - `CorrectiveRetrievalRequest` 与 `KnowledgeStepExecutor` 无显式 plan / strategy 时的默认 retrieval profile 已改为 `standard`；测试证明 Agent Core 默认请求和 durable query run payload 都不再回落到 `deep`。
 - `KnowledgeIndexRuntime` 的 current local BM25 / vector / graph adapter 会在 `IndexJobManifest.adapter_visibility_receipts` 写入 per-target visibility receipt；receipt 现在必须通过 sample retrieval verification 才能标记 `visibility = visible`，否则 target 进入 `degraded`，retrieval payload 不把它纳入 `retrievers_used`。
 - `KnowledgeIndexRuntime.index_document(...)` 现在通过 target 对应的 configured adapter binding 执行 index dispatch，并在 `IndexJobManifest.adapter_dispatch_receipts` 写入 adapter_id、operation、dispatch_ref、payload_hash 与 indexed_document_count；测试覆盖自定义 adapter binding 被真实调用后才产生 visibility receipt。
-- 新增 `ExternalServiceIndexAdapterBinding` 与 `external_adapter_bindings(...)` expand 层；外部 adapter dispatch 后必须通过 adapter 自身 `search_documents` / `search` / `query` readback 才能写入 `visible`，但 adapter contract 仍需为 `current` 才能进入默认 retrieval payload。readback 无匹配时 target 降级且不进入 retrieval payload。
+- 新增 `ExternalServiceIndexAdapterBinding` 与 `external_adapter_bindings(...)` expand 层；外部 adapter dispatch 后必须通过 adapter 自身 `search_documents` / `search` / `query` readback 才能写入 `visible`，且 adapter contract 需为 `current` 才能进入默认 retrieval payload。readback 无匹配时 target 降级且不进入 retrieval payload。
+- Elasticsearch BM25 与 Neo4j Graph 外部 adapter 已通过容器化服务 readback integration，`INDEX_ADAPTER_CONTRACTS` 中对应 contract 为 `current`。
 - `KnowledgeRepository.record_index_visibility(...)` 现在对 index build job 的 duplicate same batch 做幂等返回，对相同 job 不同 batch、相同 target/fencing/attempt 不同 write batch、低 fencing stale worker visibility commit 做 fail-closed；更高 fencing 的恢复尝试可提交新的 visibility 事实。
-- 外部 Elasticsearch / Milvus / Neo4j adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
+- 外部 Milvus Vector adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
 - 默认 `AgenticRetrievalRuntime.answer(...)` 在把检索候选升级为 `EvidenceBundle`、`Citation` 和回答前，会按 allowed ACL、temporal valid_from / valid_until 与 unresolved conflict policy 丢弃证据，并在 task event / trace metadata 写入 `dropped_evidence_reasons`。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
 - `DurableKnowledgeRetrievalPort` 对 Knowledge Repository 写入失败 fail closed：retrieval runtime 的 evidence 不会被冒充为 durable success；trace 写入 `durable_knowledge_port.status = blocked`、failure type 和 reason。
@@ -63,6 +64,13 @@ python -m compileall -q src/backend/zuno/knowledge/agentic/durable.py src/backen
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
 python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml up -d neo4j etcd
+docker compose -f infra/docker/docker-compose.yml up -d elasticsearch
+python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/knowledge/indexing tests/integration/test_goal03_wave_a_external_index_adapters.py
+python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
 ```
 
 结果：
@@ -95,6 +103,14 @@ compileall passed
 16 passed
 compileall passed
 49 passed
+zuno-neo4j healthy
+zuno-etcd healthy
+zuno-elasticsearch healthy
+2 passed
+20 passed
+compileall passed
+22 passed
+49 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -126,6 +142,6 @@ retry count: 1
 
 ## 未证明
 
-- 外部 BM25 / Vector / Graph 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功，且新增外部 adapter expand 层要求真实 readback 才能 visible。`target_blocked` 外部 adapter 即使 readback 成功也不会进入默认 retrieval payload；完整外部服务端切换仍需容器化 Elasticsearch / Milvus / Neo4j 可用后的 integration、contract current 更新和 Gate 证据。
+- 外部 Milvus Vector 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功，Elasticsearch BM25 与 Neo4j Graph adapter 具备真实 readback evidence 并已标为 `current`。完整 PHASE12 外部服务端切换仍需容器化 Milvus 可用后的 Vector integration、contract current 更新和 Gate 证据。
 - 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明；本切片只证明默认本地 Standard RAG 证据候选在 citation 前执行 ACL、temporal 和 unresolved conflict 过滤。
 - PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。
