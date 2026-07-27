@@ -432,6 +432,20 @@ Failure Fingerprint：
 - first relevant frame：`tests\integration\test_goal03_wave_b_persistence.py:1146`。
 - environment signature：`zuno-postgres` healthy，Alembic head `20260727_45`，显式 PHASE16 worktree `sys.path.insert`。
 - resolution：`tool_execution_receipts` 只保存 receipt hash 而非 raw payload；测试改为断言 gateway receipt reason 与 durable status/certainty，targeted rerun 通过。
+### P16-T19 Provider Exception Converts to UNKNOWN Reconciliation
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- approved side-effect executor 被调用后，如 provider adapter 抛出普通异常，`ToolInvocationGateway` 不再让异常逃逸并遗留 in-progress claim。
+- 该路径记录 UNKNOWN / DISPATCHED / UNKNOWN_EFFECT execution receipt，创建 `tool_effect_reconciliations`，并将 infra idempotency claim completed 到 reconciliation ref。
+- 不写 `tool_effect_receipts`，不把 provider timeout/exception 冒充为 `NO_EFFECT` 或成功；后续由 reconciliation/manual assessment 判定外部效果。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_provider_exception_as_unknown_reconciliation -p no:cacheprovider --tb=short`：1 passed。
+- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -455,7 +469,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T18 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、pre-held idempotency claim fail-closed、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T19 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、pre-held idempotency claim fail-closed、provider exception UNKNOWN reconciliation、UNKNOWN recovery、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T18 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T19 当前切片已完成并验证。默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，pre-held idempotency claim 不会 dispatch provider，provider exception 会进入 UNKNOWN reconciliation，restart recovery 已覆盖 UNKNOWN age escalation、manual assessment authorization boundary、compensation source reconciliation gating、latest epoch reauthorization、approval deadline reauthorization、revoked SecretLease fail-closed、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
