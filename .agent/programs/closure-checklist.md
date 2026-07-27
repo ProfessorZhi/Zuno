@@ -6,7 +6,7 @@ current_phase: PHASE09
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 in_progress / PHASE12 in_progress / PHASE14 in_progress / PHASE13 blocked / PHASE15 blocked / PHASE10 planned / PHASE16 planned
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 completed / PHASE12 completed / PHASE14 completed / PHASE13 ready / PHASE15 ready / PHASE10 planned / PHASE16 planned
 
 ## PHASE01–04 订正状态
 
@@ -34,12 +34,12 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE06 Observability Minimum Black Box
 - [x] PHASE07 Model Gateway Runtime
 - [x] PHASE08 Deterministic Single Controller Runtime
-- [ ] PHASE09 Product Surface Backend Runtime
+- [x] PHASE09 Product Surface Backend Runtime
 - [ ] PHASE10 Web and Desktop Product Adaptation
 - [x] PHASE11 Durable Ingestion and Source Lineage
-- [ ] PHASE12 Knowledge Version and Standard RAG
+- [x] PHASE12 Knowledge Version and Standard RAG
 - [ ] PHASE13 Memory and Context Governance Runtime
-- [ ] PHASE14 Capability and Skill Control Plane
+- [x] PHASE14 Capability and Skill Control Plane
 - [ ] PHASE15 Tool Definition and Read-only Cutover
 - [ ] PHASE16 Tool Side Effect and Reconciliation
 - [ ] PHASE17 Dynamic Plan DAG and Parallel Control

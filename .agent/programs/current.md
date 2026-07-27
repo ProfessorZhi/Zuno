@@ -43,7 +43,7 @@ Current 审计
 
 这些已有产物保留并作为后续实现输入。PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE08 completed；PHASE11 completed；Goal02 completed。
 
-Goal03 Backend Platform Expansion 需要重新审计：PHASE09 in_progress，PHASE12 in_progress，PHASE14 in_progress；PHASE13 blocked，等待 PHASE12 完成；PHASE15 blocked，等待 PHASE14 完成；PHASE10 planned；PHASE16 planned；current_phase PHASE09；production ready not established。
+Goal03 Backend Platform Expansion Wave A 已通过 Gate：PHASE09 completed，PHASE12 completed，PHASE14 completed；PHASE13 ready；PHASE15 ready；PHASE10 planned；PHASE16 planned；current_phase PHASE09；production ready not established。
 
 ## 当前阶段
 
@@ -138,4 +138,4 @@ production readiness not established
 已有 PHASE03/04 代码是可复用的部分实现，不代表完整阶段完成。PHASE22 之前不得声明 Agentic GraphRAG 稳定优于 Baseline，不得把文档完成、最小闭环或局部 CI 绿灯写成系统完成。
 
 
-Goal03 closure status: PHASE09 in_progress; PHASE12 in_progress; PHASE13 blocked; PHASE14 in_progress; PHASE15 blocked; PHASE10 planned; PHASE16 planned; current_phase PHASE09; production readiness not established.
+Goal03 closure status: PHASE09 completed; PHASE12 completed; PHASE13 ready; PHASE14 completed; PHASE15 ready; PHASE10 planned; PHASE16 planned; current_phase PHASE09; production readiness not established.

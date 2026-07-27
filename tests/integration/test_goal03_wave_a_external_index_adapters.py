@@ -40,6 +40,14 @@ def _elasticsearch_available() -> bool:
         return False
 
 
+def _milvus_available() -> bool:
+    try:
+        with urllib.request.urlopen("http://localhost:9091/healthz", timeout=3) as response:
+            return response.status == 200
+    except OSError:
+        return False
+
+
 @pytest.mark.skipif(
     not _elasticsearch_available(),
     reason="Elasticsearch integration service is not available on localhost:9200",
@@ -70,6 +78,38 @@ def test_phase12_elasticsearch_bm25_adapter_requires_real_service_readback() -> 
     assert manifest.target_status["bm25"] == "ready"
     assert payload["retrievers_used"] == ["bm25"]
     assert payload["documents_by_source"]["bm25"]
+
+
+@pytest.mark.skipif(
+    not _milvus_available(),
+    reason="Milvus integration service is not available on localhost:9091",
+)
+def test_phase12_milvus_vector_adapter_requires_real_service_readback() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime, MilvusVectorIndexClient, external_adapter_bindings
+
+    document = _sample_document()
+    runtime = KnowledgeIndexRuntime(
+        adapter_bindings=external_adapter_bindings(
+            milvus_client=MilvusVectorIndexClient(host="localhost", port="19530"),
+            index_prefix=f"goal03_{uuid4().hex[:8]}",
+        )
+    )
+    runtime.create_knowledge_space("ks_milvus_external", "workspace_external_index")
+
+    manifest = runtime.index_document(
+        "ks_milvus_external",
+        document,
+        targets=["vector"],
+    )
+    payload = runtime.to_retrieval_payload("ks_milvus_external", "supplier renewal graph visibility")
+
+    assert manifest.adapter_status == {"vector": "milvus:current"}
+    assert manifest.adapter_dispatch_receipts["vector"]["adapter_id"] == "milvus"
+    assert manifest.adapter_visibility_receipts["vector"]["visibility"] == "visible"
+    assert manifest.adapter_visibility_receipts["vector"]["sample_match_count"] > 0
+    assert manifest.target_status["vector"] == "ready"
+    assert payload["retrievers_used"] == ["vector"]
+    assert payload["documents_by_source"]["vector"]
 
 
 @pytest.mark.skipif(not _neo4j_available(), reason="Neo4j integration service is not available on localhost:7687")

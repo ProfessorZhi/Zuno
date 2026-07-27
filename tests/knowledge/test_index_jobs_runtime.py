@@ -80,21 +80,17 @@ def test_index_runtime_builds_queryable_bm25_vector_and_graph_indexes() -> None:
     assert result.manifest.document_id == "doc_index"
 
 
-def test_index_runtime_exposes_adapter_contracts_with_current_external_bm25_graph_and_blocked_vector() -> None:
+def test_index_runtime_exposes_adapter_contracts_with_current_external_targets() -> None:
     from zuno.knowledge.indexing import INDEX_ADAPTER_CONTRACTS
 
     assert INDEX_ADAPTER_CONTRACTS["local_bm25"].runtime_status == "current"
     assert INDEX_ADAPTER_CONTRACTS["local_vector"].runtime_status == "current"
     assert INDEX_ADAPTER_CONTRACTS["local_graph"].runtime_status == "current"
-    for adapter_id in ["elasticsearch", "neo4j"]:
+    for adapter_id in ["elasticsearch", "milvus", "neo4j"]:
         adapter = INDEX_ADAPTER_CONTRACTS[adapter_id]
         assert adapter.runtime_status == "current"
         assert adapter.external_service is True
         assert adapter.blocked_reason is None
-    adapter = INDEX_ADAPTER_CONTRACTS["milvus"]
-    assert adapter.runtime_status == "target_blocked"
-    assert adapter.external_service is True
-    assert adapter.blocked_reason
 
 
 def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -> None:
@@ -278,7 +274,7 @@ def test_index_runtime_external_adapter_does_not_serve_without_readback_match() 
     assert payload["documents_by_source"] == {}
 
 
-def test_index_runtime_milvus_vector_adapter_contract_stays_blocked_until_service_proof() -> None:
+def test_index_runtime_milvus_vector_adapter_serves_after_readback() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime, external_adapter_bindings
 
     class VectorClient:
@@ -313,13 +309,13 @@ def test_index_runtime_milvus_vector_adapter_contract_stays_blocked_until_servic
 
     assert client.index_calls == [{"index_name": "goal03_vector", "document_count": len(client.documents)}]
     assert client.search_calls[0]["index_name"] == "goal03_vector"
-    assert manifest.adapter_status == {"vector": "milvus:target_blocked"}
+    assert manifest.adapter_status == {"vector": "milvus:current"}
     assert manifest.adapter_dispatch_receipts["vector"]["adapter_id"] == "milvus"
     assert manifest.adapter_visibility_receipts["vector"]["visibility"] == "visible"
     assert manifest.adapter_visibility_receipts["vector"]["sample_match_count"] > 0
     assert manifest.target_status["vector"] == "ready"
-    assert payload["retrievers_used"] == []
-    assert payload["documents_by_source"] == {}
+    assert payload["retrievers_used"] == ["vector"]
+    assert payload["documents_by_source"]["vector"]
 
 
 def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:

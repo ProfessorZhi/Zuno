@@ -42,10 +42,9 @@ INDEX_ADAPTER_CONTRACTS = {
         adapter_id="milvus",
         target="vector",
         engine="Milvus",
-        runtime_status="target_blocked",
+        runtime_status="current",
         external_service=True,
         operations=["index", "query", "delete"],
-        blocked_reason="external Milvus cluster and embedding operations are not provisioned in the local runtime",
     ),
     "neo4j": IndexAdapterContract(
         adapter_id="neo4j",

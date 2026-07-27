@@ -20,9 +20,9 @@ commit_scope: Agent Core Knowledge Port durable persistence repair
 - `KnowledgeIndexRuntime.index_document(...)` 现在通过 target 对应的 configured adapter binding 执行 index dispatch，并在 `IndexJobManifest.adapter_dispatch_receipts` 写入 adapter_id、operation、dispatch_ref、payload_hash 与 indexed_document_count；测试覆盖自定义 adapter binding 被真实调用后才产生 visibility receipt。
 - 新增 `ExternalServiceIndexAdapterBinding` 与 `external_adapter_bindings(...)` expand 层；外部 adapter dispatch 后必须通过 adapter 自身 `search_documents` / `search` / `query` readback 才能写入 `visible`，且 adapter contract 需为 `current` 才能进入默认 retrieval payload。readback 无匹配时 target 降级且不进入 retrieval payload。
 - Elasticsearch BM25 与 Neo4j Graph 外部 adapter 已通过容器化服务 readback integration，`INDEX_ADAPTER_CONTRACTS` 中对应 contract 为 `current`。
-- 新增 `MilvusVectorIndexClient`，具备惰性 `pymilvus` 连接、确定性 vector 写入、collection index 和 search readback contract；当前只由注入式 contract test 证明 runtime 行为，未标为 Current。
+- 新增 `MilvusVectorIndexClient`，具备惰性 `pymilvus` 连接、确定性 vector 写入、collection index 和 search readback contract；已通过容器化 Milvus service readback integration，并在 `INDEX_ADAPTER_CONTRACTS` 中标为 `current`。
 - `KnowledgeRepository.record_index_visibility(...)` 现在对 index build job 的 duplicate same batch 做幂等返回，对相同 job 不同 batch、相同 target/fencing/attempt 不同 write batch、低 fencing stale worker visibility commit 做 fail-closed；更高 fencing 的恢复尝试可提交新的 visibility 事实。
-- 外部 Milvus Vector adapter contract 仍显式为 `target_blocked`，不冒充已上线外部服务端。
+- 外部 Elasticsearch BM25、Milvus Vector、Neo4j Graph adapter contract 均已有容器化 service readback 证据并标为 `current`。
 - 默认 `AgenticRetrievalRuntime.answer(...)` 在把检索候选升级为 `EvidenceBundle`、`Citation` 和回答前，会按 allowed ACL、temporal valid_from / valid_until 与 unresolved conflict policy 丢弃证据，并在 task event / trace metadata 写入 `dropped_evidence_reasons`。
 - `KnowledgeStepExecutor` 把 snapshot、Agent Core decision 和 authorization ref 传入 Knowledge port，并在 observation metadata 暴露 durable persistence trace。
 - `DurableKnowledgeRetrievalPort` 对 Knowledge Repository 写入失败 fail closed：retrieval runtime 的 evidence 不会被冒充为 durable success；trace 写入 `durable_knowledge_port.status = blocked`、failure type 和 reason。
@@ -77,6 +77,12 @@ python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_
 python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
 docker pull mirror.gcr.io/milvusdb/milvus:v2.4.15
+docker compose -f infra/docker/docker-compose.yml up -d milvus
+python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py::test_phase12_milvus_vector_adapter_requires_real_service_readback -p no:cacheprovider
+python -m pytest -q tests/integration/test_goal03_wave_a_external_index_adapters.py -p no:cacheprovider
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/knowledge/indexing tests/integration/test_goal03_wave_a_external_index_adapters.py
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py tests/integration/test_goal03_wave_a_external_index_adapters.py -p no:cacheprovider
 ```
 
 结果：
@@ -122,6 +128,12 @@ Milvus direct image pull stalled on layer de4351a735f5 without progress; the pro
 compileall passed
 50 passed
 Milvus mirror.gcr.io image pull also stalled on layer de4351a735f5 without progress; the process was stopped and the image is not available.
+zuno-milvus healthy
+1 passed
+3 passed
+21 passed
+compileall passed
+53 passed
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -153,6 +165,5 @@ retry count: 1
 
 ## 未证明
 
-- 外部 Milvus Vector 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功，Elasticsearch BM25 与 Neo4j Graph adapter 具备真实 readback evidence 并已标为 `current`，Milvus client contract 已就位但直接与 mirror.gcr.io 镜像拉取都未取得可运行服务。完整 PHASE12 外部服务端切换仍需容器化 Milvus 可用后的 Vector integration、contract current 更新和 Gate 证据。
-- 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明；本切片只证明默认本地 Standard RAG 证据候选在 citation 前执行 ACL、temporal 和 unresolved conflict 过滤。
-- PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。
+- 完整 PHASE12 是否 completed 由 `docs/evidence/goal03-wave-a-gate-review.md` 汇总判定；本证据提供 Knowledge durable port、configured adapter dispatch、service readback、visibility 和 default Knowledge port 相关证明。
+- Production readiness 仍未建立；本证据不证明 PHASE20/22 fixed benchmark、quality gate 或生产运维就绪。
