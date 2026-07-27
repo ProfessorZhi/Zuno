@@ -104,6 +104,30 @@ PHASE10 已正式启动为 `in_progress`。本文冻结启动 Gap，并记录 P1
 - 未完成 401/403/409/410/429/5xx 真实后端 fixture round-trip；
 - 未完成 Browser E2E。
 
+## P10-T03 当前进展
+
+已新增：
+
+- `apps/web/src/product/store.ts`
+
+当前 Projection-first Pinia store 覆盖：
+
+- `useProductProjectionStore`：以 ProductProjection / ProductStreamEvent / AvailableAction 为输入，不读取 AgentRun、Approval、Effect 或 WorkspaceTask 状态；
+- Projection metadata：`projectionVersion`、`sourceWatermark`、`freshness`、`gapDetected`、`resyncRequired`；
+- SSE resume metadata：`lastEventId`、`lastSequenceNo`，仅持久化 cursor / watermark / projection version，不持久化授权视图；
+- Connection 状态：`connectionStatus` 与 `ProjectionFreshness` 分离；
+- Authorized view：AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、AvailableAction、Interrupt、Artifact、Delivery、Quality；
+- 多 Interrupt：支持 User Input、Approval、External Job、Security Review、Manual Reconciliation、Resource Available、Ingestion Completion；
+- Gap / Resync / Revoke：gap 和 resync 标记驱动 `needsResync`，撤权事件清空授权视图；
+- AvailableAction：Approve / Deny / Cancel / Input / Reconcile / Download / Resync 继续由服务端 action token 驱动。
+
+仍未完成：
+
+- 未替换旧 workspace store 和页面默认数据流；
+- 未把 SSE client 与 store 连接为默认订阅；
+- 未覆盖浏览器真实 E2E、Desktop smoke、shadow/canary/default-new/rollback；
+- 未删除旧 DTO、旧状态字符串推断和永久兼容目录。
+
 ## 本轮验证
 
 已通过：

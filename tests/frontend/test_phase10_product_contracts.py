@@ -4,6 +4,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = REPO_ROOT / "apps/web/src/product/contracts.ts"
 CLIENT = REPO_ROOT / "apps/web/src/product/client.ts"
+STORE = REPO_ROOT / "apps/web/src/product/store.ts"
 INDEX = REPO_ROOT / "apps/web/src/product/index.ts"
 
 
@@ -92,3 +93,90 @@ def test_phase10_product_api_client_does_not_replay_side_effect_commands() -> No
     assert "problem.retryable && problem.status >= 500" in text
     assert "COMMAND_RETRY_BLOCKED.has(key)" in text
     assert "domain_success_ref" not in text
+
+
+def test_phase10_product_projection_store_tracks_server_projection_not_runtime_facts() -> None:
+    assert STORE.exists()
+    text = STORE.read_text(encoding="utf-8")
+    index_text = INDEX.read_text(encoding="utf-8")
+
+    for phrase in [
+        "useProductProjectionStore",
+        "ProductProjection",
+        "AvailableAction",
+        "ProjectionFreshness",
+        "ConnectionStatus",
+        "lastEventId",
+        "lastSequenceNo",
+        "sourceWatermark",
+        "projectionVersion",
+        "gapDetected",
+        "resyncRequired",
+        "agentDefinitions",
+        "catalogEntries",
+        "agentVersions",
+        "agentDrafts",
+        "publications",
+        "installations",
+        "interrupts",
+        "artifacts",
+        "deliveries",
+        "quality",
+        "sortedAvailableActions",
+        "pendingInterrupts",
+        "needsResync",
+        "applyProjection",
+        "applyStreamEvent",
+        "replaceAvailableActions",
+        "upsertAgentDefinition",
+        "upsertCatalogEntry",
+        "upsertAgentDraft",
+        "upsertAgentVersion",
+        "upsertPublication",
+        "upsertInstallation",
+        "upsertInterrupt",
+        "upsertArtifact",
+        "upsertDelivery",
+        "upsertQuality",
+        "markResyncRequired",
+        "completeResync",
+        "purgeAuthorizedView",
+        "paths: ['lastEventId', 'lastSequenceNo', 'sourceWatermark', 'projectionVersion']",
+    ]:
+        assert phrase in text
+
+    for phrase in [
+        "applyProjection",
+        "projection.projection_version < projectionVersion.value",
+        "projection.source_watermark",
+        "projection.freshness === 'GAP'",
+        "projection.freshness === 'RESYNC_REQUIRED'",
+        "event.event_type === 'REVOKED'",
+        "purgeAuthorizedView()",
+        "event.sequence_no <= lastSequenceNo.value",
+        "event.event_id === lastEventId.value",
+        "INGESTION_COMPLETION",
+    ]:
+        assert phrase in text
+
+    assert "export * from './store'" in index_text
+
+
+def test_phase10_product_projection_store_keeps_frontend_out_of_agent_core_ownership() -> None:
+    text = STORE.read_text(encoding="utf-8")
+
+    forbidden = [
+        "AgentRun",
+        "ApprovalDecision",
+        "EffectReceipt",
+        "RunOutcome",
+        "WorkspaceTaskStatus",
+        "WorkspaceTaskLifecycleState",
+        "approval_required",
+        "pendingToolApproval",
+        "domain_success_ref",
+        "status === 'completed'",
+        "status === 'COMPLETED'",
+    ]
+    for phrase in forbidden:
+        assert phrase not in text
