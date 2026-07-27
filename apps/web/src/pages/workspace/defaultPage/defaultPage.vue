@@ -39,6 +39,12 @@ import { getAgentsAPI, type AgentResponse } from '../../../apis/agent'
 import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
+import {
+  connectProductRuntimeProjectionStream,
+  consumeProductStoreAction,
+  submitWorkspacePayloadToProductRuntime,
+} from '../../../product'
+import { useProductProjectionStore } from '../../../product/store'
 import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../../utils/retrieval'
 import { describeKnowledgeConfig, normalizeKnowledgeConfig, toWorkspaceRetrievalProfile } from '../../../utils/knowledge-config'
 import { safeDisplayText } from '../../../utils/display-text'
@@ -105,6 +111,7 @@ import type {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const productProjectionStore = useProductProjectionStore()
 
 const selectedMode = ref<WorkspaceMode>('normal')
 const activeAgentName = ref('')
@@ -1708,6 +1715,21 @@ const submitToolApproval = async (decision: 'approved' | 'rejected') => {
   if (!pending || toolApprovalSubmitting.value) return
   toolApprovalSubmitting.value = true
   try {
+    const availableAction = Object.values(productProjectionStore.availableActions).find(
+      (action) => action.action === (decision === 'approved' ? 'APPROVE' : 'DENY') && action.target_ref === pending.approvalId
+    )
+    if (availableAction) {
+      await consumeProductStoreAction(availableAction, {
+        workspace_id: currentSessionId.value || pending.taskId,
+        conversation_id: currentSessionId.value || pending.taskId,
+        query: pending.requiredApproval,
+        active_agent_version_id: activeAgentId.value || undefined,
+      }, {
+        decision,
+        approval_id: pending.approvalId,
+        tool_call_id: pending.toolCallId,
+      }, productProjectionStore)
+    }
     const response = await approveWorkspaceTaskAPI(pending.taskId, {
       decision,
       comment: decision === 'approved' ? 'Approved from workspace approval panel.' : 'Rejected from workspace approval panel.',
@@ -2252,6 +2274,36 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       timeout_seconds: 180,
     }
     payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
+    await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
+      workspace_id: workspaceId,
+      conversation_id: currentSessionId.value || workspaceId,
+      query,
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, productProjectionStore)
+    void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore, {
+      onEvent: (event) => {
+        executionEvents.value.push({
+          id: event.event_id,
+          title: 'Product 投影已同步',
+          detail: `sequence=${event.sequence_no}; freshness=${productProjectionStore.freshness}`,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: event.event_type,
+          accent: event.resync_required ? 'error' : 'default',
+        })
+      },
+      onProblem: (problem) => {
+        executionEvents.value.push({
+          id: crypto.randomUUID(),
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: problem.type,
+          accent: 'error',
+        })
+      },
+    })
     if (registered.length > 0) {
       executionEvents.value.push({
         id: crypto.randomUUID(),

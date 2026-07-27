@@ -39,6 +39,7 @@ export interface ProductRuntimeRequestReceipt {
     stream_cursor_id: string
     stream_sequence_no: number
     freshness: Lowercase<ProjectionFreshness> | string
+    redaction_decision_ref?: string
   }
   available_actions: AvailableAction[]
 }

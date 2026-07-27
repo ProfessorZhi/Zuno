@@ -5,7 +5,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = REPO_ROOT / "apps/web/src/product/contracts.ts"
 CLIENT = REPO_ROOT / "apps/web/src/product/client.ts"
 STORE = REPO_ROOT / "apps/web/src/product/store.ts"
+RUNTIME = REPO_ROOT / "apps/web/src/product/runtime.ts"
 INDEX = REPO_ROOT / "apps/web/src/product/index.ts"
+DEFAULT_PAGE = REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue"
 
 
 def test_phase10_product_contract_surface_exists() -> None:
@@ -180,3 +182,68 @@ def test_phase10_product_projection_store_keeps_frontend_out_of_agent_core_owner
     ]
     for phrase in forbidden:
         assert phrase not in text
+
+
+def test_phase10_product_runtime_adapter_connects_command_stream_and_action_tokens() -> None:
+    assert RUNTIME.exists()
+    text = RUNTIME.read_text(encoding="utf-8")
+    index_text = INDEX.read_text(encoding="utf-8")
+
+    for phrase in [
+        "submitWorkspacePayloadToProductRuntime",
+        "connectProductRuntimeProjectionStream",
+        "consumeProductStoreAction",
+        "buildProductRuntimeRequestCommand",
+        "productProjectionFromRuntimeReceipt",
+        "normalizeAvailableActionsFailClosed",
+        "submitProductRuntimeRequest(command)",
+        "openProductProjectionStream",
+        "last_event_id: store.lastEventId || undefined",
+        "store.applyStreamEvent(event)",
+        "store.applyProjection(projection, acceptedActions)",
+        "consumeProductAction",
+        "store.replaceAvailableActions",
+        "command_kind: 'SUBMIT_USER_GOAL'",
+        "runtime_request_ref: `runtime:${requestId}`",
+        "raw_intent_ref: `intent:${context.conversation_id}:${requestId}`",
+        "client_request_id: requestId",
+        "redaction:api-contract-missing",
+    ]:
+        assert phrase in text
+
+    for phrase in [
+        "Boolean(action.effective_security_epoch_ref)",
+        "Number(action.projection_version) === projectionVersion",
+        "return 'RESYNC_REQUIRED'",
+        "problem.type === 'AUTHENTICATION_REQUIRED'",
+        "store.purgeAuthorizedView()",
+        "problem.type === 'PROJECTION_GAP'",
+        "store.markResyncRequired()",
+    ]:
+        assert phrase in text
+
+    assert "export * from './runtime'" in index_text
+
+
+def test_phase10_default_workspace_page_uses_product_projection_path_before_legacy_task_fallback() -> None:
+    assert DEFAULT_PAGE.exists()
+    text = DEFAULT_PAGE.read_text(encoding="utf-8")
+
+    for phrase in [
+        "useProductProjectionStore",
+        "const productProjectionStore = useProductProjectionStore()",
+        "submitWorkspacePayloadToProductRuntime",
+        "connectProductRuntimeProjectionStream",
+        "consumeProductStoreAction",
+        "await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>",
+        "void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore",
+        "Object.values(productProjectionStore.availableActions).find",
+        "action.action === (decision === 'approved' ? 'APPROVE' : 'DENY')",
+        "await consumeProductStoreAction(availableAction",
+        "title: 'Product 投影已同步'",
+        "title: 'Product 投影同步受阻'",
+        "const response = await createWorkspaceTaskAPI(payload)",
+    ]:
+        assert phrase in text
+
+    assert text.index("await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>") < text.index("const response = await createWorkspaceTaskAPI(payload)")

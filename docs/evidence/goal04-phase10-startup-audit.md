@@ -128,6 +128,34 @@ PHASE10 已正式启动为 `in_progress`。本文冻结启动 Gap，并记录 P1
 - 未覆盖浏览器真实 E2E、Desktop smoke、shadow/canary/default-new/rollback；
 - 未删除旧 DTO、旧状态字符串推断和永久兼容目录。
 
+## P10-T04 当前进展
+
+已新增：
+
+- `apps/web/src/product/runtime.ts`
+
+已接入：
+
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+
+当前 Product runtime adapter 覆盖：
+
+- 页面 Agent runtime 提交前先调用 `submitWorkspacePayloadToProductRuntime`，把当前 workspace payload 转换为 Product `SUBMIT_USER_GOAL` command；
+- Product command 明确携带 `client_request_id`、`runtime_request_ref`、`raw_intent_ref`、`tenant_id`、`workspace_id`、`conversation_id`、`active_agent_version_id`；
+- Product receipt 转为前端投影并写入 `useProductProjectionStore`，页面不从 HTTP 2xx 或 receipt 推断领域成功；
+- `connectProductRuntimeProjectionStream` 使用 store 中的 `lastEventId` 作为 `Last-Event-ID` resume cursor，并把 stream event 写入 `applyStreamEvent`；
+- 401/403 清空授权视图并进入 `AUTH_REQUIRED`，Projection Gap 标记 `RESYNC_REQUIRED`；
+- `consumeProductStoreAction` 只消费 store 中服务端下发的 `AvailableAction` token；
+- `normalizeAvailableActionsFailClosed` 要求 action token 同时具备 `effective_security_epoch_ref` 和匹配的 `projection_version`，后端 Product v1 当前返回字段不全时不会在前端补假 action。
+
+仍未完成：
+
+- 旧 `createWorkspaceTaskAPI` 仍作为后续切流对象保留，当前不是 closure；
+- 旧 `approveWorkspaceTaskAPI` 在 Product action token 缺失时仍作为 fallback，必须在后端 AvailableAction 完整投影后删除；
+- `ProductRuntimeRequestReceipt.projection.redaction_decision_ref` 当前在后端响应中缺失，前端只标记 `redaction:api-contract-missing`，不能作为最终授权/脱敏证据；
+- 普通聊天路径仍使用 `workspaceSimpleChatStreamAPI`；
+- Artifact download、feedback、Desktop bridge、Browser E2E、Desktop smoke、Build/Lint 仍未完成。
+
 ## 本轮验证
 
 已通过：
