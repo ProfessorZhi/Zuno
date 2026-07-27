@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import asyncio
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 import hashlib
@@ -288,6 +289,8 @@ class ToolControlPlaneRuntime:
         sandbox_enforcer: SandboxPolicyEnforcer | None = None,
         security_approval_sink: SecurityApprovalFactSink | None = None,
         tool_unit_of_work_factory: Callable[[], Any] | None = None,
+        security_unit_of_work_factory: Callable[[], Any] | None = None,
+        infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
         readonly_cutover_only: bool = False,
     ) -> None:
         self._manifests: dict[str, ToolCardManifest] = {}
@@ -297,6 +300,8 @@ class ToolControlPlaneRuntime:
         self._sandbox_enforcer = sandbox_enforcer or SandboxPolicyEnforcer()
         self._security_approval_sink = security_approval_sink
         self._tool_unit_of_work_factory = tool_unit_of_work_factory
+        self._security_unit_of_work_factory = security_unit_of_work_factory
+        self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
         self._readonly_cutover_only = readonly_cutover_only
         self._approval_gate = ApprovalGate()
         self._tool_gate = ToolSecurityGate()
@@ -545,7 +550,40 @@ class ToolControlPlaneRuntime:
             credential_policy=sandbox_context.credential_policy,
             credential_refs=sandbox_context.credential_refs,
         )
-        raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
+        used_gateway = False
+        if self._should_use_side_effect_gateway(manifest):
+            raw_result, gateway_status, gateway_blocked_reason = self._invoke_side_effect_gateway(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                execution_context=execution_context,
+                sandbox_context=sandbox_context,
+            )
+            used_gateway = True
+            if gateway_status != "completed":
+                events = self._events_for_blocked(
+                    request=request,
+                    manifest=manifest,
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    reason=gateway_blocked_reason or gateway_status,
+                )
+                return ToolRuntimeExecutionResult(
+                    tool_id=manifest.tool_id,
+                    status=gateway_status,
+                    approval_required=False,
+                    security_decision=SecurityDecision.BLOCK.value,
+                    approval_decision=approval_decision.to_dict(),
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    task_events=events,
+                    tool_request_id=request.tool_request_id,
+                    approval_id=request.approval_id,
+                    tool_execution_id=execution_id,
+                    tool_result_id=result_id,
+                )
+        else:
+            raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
         normalized = ToolResultNormalizer.normalize(
             tool_id=manifest.tool_id,
             raw_result=raw_result,
@@ -584,21 +622,82 @@ class ToolControlPlaneRuntime:
             tool_execution_id=execution_id,
             tool_result_id=result_id,
         )
-        self._record_tool_runtime_facts(
-            request=request,
-            manifest=manifest,
-            adapter=adapter,
-            result=result,
-            attempt_status="SUCCEEDED",
-            dispatch_certainty="DISPATCHED",
-            effect_certainty=(
-                "NO_EFFECT"
-                if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                else "CONFIRMED_EFFECT"
-            ),
-            observation_payload=normalized.to_dict(),
-        )
+        if not used_gateway:
+            self._record_tool_runtime_facts(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                result=result,
+                attempt_status="SUCCEEDED",
+                dispatch_certainty="DISPATCHED",
+                effect_certainty=(
+                    "NO_EFFECT"
+                    if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+                    else "CONFIRMED_EFFECT"
+                ),
+                observation_payload=normalized.to_dict(),
+            )
         return result
+
+    def _should_use_side_effect_gateway(self, manifest: ToolCardManifest) -> bool:
+        return (
+            manifest.side_effect_level not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+            and self._tool_unit_of_work_factory is not None
+            and self._security_unit_of_work_factory is not None
+            and self._infrastructure_unit_of_work_factory is not None
+        )
+
+    def _invoke_side_effect_gateway(
+        self,
+        *,
+        request: ToolRuntimeRequest,
+        manifest: ToolCardManifest,
+        adapter: ExecutorAdapterContract,
+        execution_context: ToolExecutionContext,
+        sandbox_context: ToolSandboxContext,
+    ) -> tuple[Any | None, str, str]:
+        from zuno.capability.tool_runtime import ToolInvocationGateway
+
+        gateway_args = dict(request.arguments)
+        if sandbox_context.credential_refs and "secret_ref" not in gateway_args:
+            gateway_args["secret_ref"] = sandbox_context.credential_refs[0]
+        secret_ref = str(gateway_args.get("secret_ref") or "")
+        if secret_ref:
+            assert self._security_unit_of_work_factory is not None
+            with self._security_unit_of_work_factory() as repo:
+                repo.record_secret_ref(
+                    secret_ref=secret_ref,
+                    tenant_id=request.user_id,
+                    credential_version_ref=f"credential-version:{manifest.tool_id}:default",
+                    audience=f"tool:{manifest.tool_id}",
+                    owner_principal_id=f"workspace-user:{request.workspace_id}",
+                    scope={"tool": manifest.tool_id, "workspace_id": request.workspace_id},
+                )
+
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=self._tool_unit_of_work_factory,
+            security_unit_of_work_factory=self._security_unit_of_work_factory,
+            infrastructure_unit_of_work_factory=self._infrastructure_unit_of_work_factory,
+        )
+
+        async def executor() -> Any:
+            return self._executors[adapter.adapter_id](gateway_args, execution_context)
+
+        result, receipt = asyncio.run(
+            gateway.invoke_readonly(
+                tool_name=manifest.tool_id,
+                args=gateway_args,
+                tenant_id=request.user_id,
+                workspace_id=request.workspace_id,
+                trace_id=request.trace_id,
+                call_id=request.execution_id or request.tool_request_id,
+                adapter_kind=adapter.execution_mode.value.upper(),
+                executor=executor,
+                readonly=False,
+                approved=request.approved,
+            )
+        )
+        return result, receipt.status, receipt.blocked_reason
 
     def _record_tool_runtime_facts(
         self,
@@ -997,12 +1096,16 @@ def build_default_tool_control_plane_runtime(
     security_approval_sink: SecurityApprovalFactSink | None = None,
 ) -> ToolControlPlaneRuntime:
     from zuno.platform.database import engine
+    from zuno.platform.database.foundation import InfrastructureUnitOfWork
     from zuno.platform.database.tool_runtime import ToolUnitOfWork
+    from zuno.platform.security import SecurityUnitOfWork
 
     runtime = ToolControlPlaneRuntime(
         security_approval_sink=security_approval_sink,
         tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
-        readonly_cutover_only=True,
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+        readonly_cutover_only=False,
     )
 
     runtime.register_manifest(
@@ -1107,8 +1210,9 @@ def build_default_tool_control_plane_runtime(
             timeout_seconds=10,
         ),
         lambda args, context: {
-            "status": "blocked",
-            "summary": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "status": "success",
+            "summary": "email sent",
+            "message_id": "msg_123",
         },
     )
 

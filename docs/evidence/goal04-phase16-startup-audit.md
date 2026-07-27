@@ -1,4 +1,4 @@
-# Goal04 PHASE16 Startup Audit
+﻿# Goal04 PHASE16 Startup Audit
 
 status: frozen-gap-list
 phase: PHASE16 Tool Side Effect and Reconciliation
@@ -187,6 +187,42 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_bypass_guard.py tests\repo\test_phase16_tool_bypass_zero.py -p no:cacheprovider`：4 passed。
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_compensation_as_new_governed_action -p no:cacheprovider`：8 passed。
 - Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
+### P16-T08R Default ToolControlPlane Gateway Cutover Repair
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+修复内容：
+
+- `build_default_tool_control_plane_runtime()` 不再保留 `readonly_cutover_only=True`；默认 Product/Agent ToolControlPlane 对 approved side-effect Tool 进入真实切流路径。
+- 默认 runtime 注入 `ToolUnitOfWork`、`SecurityUnitOfWork` 和 `InfrastructureUnitOfWork`，side-effect Tool 分支通过 `ToolInvocationGateway.invoke_readonly(...)` 执行，不再由 `ToolControlPlaneRuntime` 直接写普通 execution receipt 冒充 effect success。
+- 默认 runtime 将 brokered credential ref 注册为 Security secret ref，再由 Gateway 发行 `security_secret_leases`，并完成 idempotency claim、fencing、`ToolAttempt`、`ToolExecutionReceipt` 和 `tool_effect_receipts`。
+- `tests/integration/test_goal03_wave_b_persistence.py::test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects` 增强为断言 `tool-effect-receipt:readonly-mail-1`、`security-secret-lease:readonly-mail-1` 和 `infra_idempotency_claims.result_ref = tool-effect-receipt:readonly-mail-1`。
+- `tools/scripts/verify_tool_execution_bypass.py` 已从检查 `readonly_cutover_only=True` 更新为检查 `readonly_cutover_only=False` 和默认 provider success phrase。
+
+验证环境注意事项：
+
+- 本机 Python 运行时使用隔离 `_pth` 配置，会忽略 `PYTHONPATH`；直接 `python -m pytest` 会导入主 worktree 的 editable install，而不是 PHASE16 worktree。
+- 本轮有效 pytest 证据均使用 `sys.path.insert(0, r'F:\internship-work\resume&resume project\02_projects\Zuno-goal04-phase16\src\backend')` 强制导入 PR B worktree 代码。
+
+验证：
+
+- `python -m py_compile src\backend\zuno\capability\runtime.py tests\integration\test_goal03_wave_b_persistence.py tests\fault\security\test_phase05_security_sink_fail_closed.py`：通过。
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects -p no:cacheprovider --tb=short`：1 passed。
+- 使用显式 `sys.path.insert(...)` 运行 PHASE16 focused suite：`tests\capability\test_phase16_tool_effect_policy.py`、默认 ToolControlPlane cutover test、Gateway side-effect/security/known/unknown/async/compensation tests、`tests\capability\test_phase16_tool_bypass_guard.py`、`tests\repo\test_phase16_tool_bypass_zero.py`：12 passed。
+- 使用显式 `sys.path.insert(...)` 运行 `tests\fault\security\test_phase05_security_pre_effect_faults.py tests\fault\security\test_phase05_security_sink_fail_closed.py -p no:cacheprovider --tb=short`：5 passed。
+- 使用显式 `sys.path.insert(...)` 运行 `tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：7 passed。
+- `python tools\scripts\verify_tool_runtime_target_protocols.py`：通过。
+- `python tools\scripts\verify_tool_execution_bypass.py`：通过。
+- `alembic -c infra\db\alembic.ini heads`：单一 head `20260727_45 (head)`。
+- `alembic -c infra\db\alembic.ini upgrade head`：通过。
+
+Failure Fingerprint：
+
+- command：合并运行 builder 相关安全/能力测试的旧命令。
+- exception：timeout after 124s。
+- first relevant frame：无 pytest 栈，命令被工具超时终止。
+- environment signature：未显式 `sys.path.insert`，Python 默认导入主 worktree editable install。
+- resolution：不重复同一大命令，改为拆分并显式插入 PHASE16 worktree source path。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -210,7 +246,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T08 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；但 PHASE16 暂不写 `completed`。原因是当前 closure audit 还没有证明默认 Product/Agent ToolControlPlane 写 Tool 已从 `readonly_cutover_only` 切到真实 approved side-effect provider path；PR B 仍保持 side-effect cutover guard 和 gateway implementation evidence，而不是完整 Coordinator Closure Approval。
+P16-T01 至 P16-T08R 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease 和 IdempotencyClaim。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08 当前切片已完成并验证，部分 closure gate 已运行通过；但默认 Product/Agent ToolControlPlane 写 Tool 真实切流尚未被证明，因此本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T08R 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool 已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

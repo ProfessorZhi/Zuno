@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 import os
@@ -323,7 +323,7 @@ def test_phase15_tool_repository_records_readonly_prepared_action_attempt_and_re
         assert receipt["append_only_generation"] == 1
 
 
-def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects(engine) -> None:
+def test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects(engine) -> None:
     from zuno.capability.runtime import ToolRuntimeRequest, build_default_tool_control_plane_runtime
 
     runtime = build_default_tool_control_plane_runtime()
@@ -356,8 +356,9 @@ def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_e
     )
 
     assert read_result.status == "completed"
-    assert write_result.status == "blocked"
-    assert "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL" in repr(write_result.to_dict())
+    assert write_result.status == "completed"
+    assert write_result.normalized_result is not None
+    assert write_result.normalized_result.data["message_id"] == "msg_123"
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM prepared_tool_actions")).scalar_one() == 2
@@ -369,7 +370,36 @@ def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_e
         statuses = conn.execute(
             text("SELECT status, effect_certainty FROM tool_execution_receipts ORDER BY receipt_id")
         ).all()
-        assert ("FAILED", "NO_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
+        effect = conn.execute(
+            text(
+                """
+                SELECT provider_effect_id, effect_status, effect_certainty, secret_lease_id
+                FROM tool_effect_receipts
+                WHERE effect_receipt_id = 'tool-effect-receipt:readonly-mail-1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = 'tenant-b'
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = 'readonly-mail-1'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:readonly-mail-1'")
+        ).scalar_one() == 1
+        assert ("SUCCEEDED", "CONFIRMED_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
+        assert effect["provider_effect_id"] == "provider-effect:readonly-mail-1"
+        assert effect["effect_status"] == "CONFIRMED"
+        assert effect["effect_certainty"] == "CONFIRMED_EFFECT"
+        assert effect["secret_lease_id"] == "security-secret-lease:readonly-mail-1"
+        assert claim["status"] == "completed"
+        assert claim["result_ref"] == "tool-effect-receipt:readonly-mail-1"
 
 
 def test_phase16_gateway_records_side_effect_classification_before_blocking(engine) -> None:
