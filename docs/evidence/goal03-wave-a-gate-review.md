@@ -1,0 +1,65 @@
+# Goal03 Wave A Gate Review
+
+status: gate_blocked
+phase: PHASE09, PHASE12, PHASE14
+pr: goal03-repair/wave-a-product-knowledge-capability
+head: 51c998135cfd41642c96926f91c7a4992a3008fb
+
+本文记录 2026-07-27 对 PR A 的当前 Gate 复核。结论只用于阻止误合并，不把任何 Phase 写成 completed。
+
+## 当前已验证
+
+- PR A 当前 head 为 `51c998135cfd41642c96926f91c7a4992a3008fb`，GitHub `validate` 为 `SUCCESS`，merge state 为 `CLEAN`。
+- Docker Desktop 与 `zuno-postgres` 已恢复，真实 PostgreSQL integration 不再被 `localhost:5432` 阻塞。
+- Alembic head 为 `20260726_40`。
+- PHASE09 Product backend 当前 API / persistence / projection / action token / completion / workspace default runtime focused suites 通过。
+- PHASE12 Knowledge 当前 local BM25 / vector / graph adapter dispatch、visibility receipt、durable Knowledge port、active snapshot unavailable fail-closed、cutover / rollback / deletion propagation focused suites 通过。
+- PHASE14 Capability 当前 supply-chain guard、installation / activation CAS、revocation、ordered transition outbox、progressive loading budget、Agent Core / Workspace planner capability runtime port focused suites 通过。
+
+## 当前运行命令
+
+```powershell
+python -m pytest -q tests/api/test_product_runtime_batch.py tests/repo/test_product_surface_target_protocols.py tests/api/test_goal03_product_route.py tests/integration/test_goal03_wave_a_persistence.py -p no:cacheprovider
+python -m pytest -q tests/repo/test_goal03_wave_a_migration_contract.py tests/api/test_completion_unified_runtime.py tests/api/test_workspace_task_runtime.py -p no:cacheprovider
+python tools/scripts/verify_product_surface_target_protocols.py
+python -m pytest -q tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_evidence_ledger.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+python -m pytest -q tests/capability/test_capability_skill_layer.py tests/capability/test_capability_runtime_batch.py tests/api/test_goal03_capability_route.py tests/agent/runtime/test_runtime_state_contract.py::test_runtime_strategy_selection_uses_capability_runtime_port tests/agent/runtime/test_runtime_state_contract.py::test_runtime_strategy_selection_blocks_when_capability_runtime_fails tests/api/test_workspace_task_runtime.py::test_workspace_planner_uses_capability_runtime_port_for_plugins -p no:cacheprovider
+python tools/scripts/verify_capability_skill_target_protocols.py
+```
+
+结果：
+
+```text
+37 passed, 1 warning
+36 passed, 1 warning
+Product Surface target architecture verification passed.
+50 passed
+16 passed, 1 warning
+Capability / Skill target architecture verification passed.
+```
+
+## Gate 结论
+
+Wave A Gate 当前不能通过，PR A 当前不能合并。
+
+最小 mandatory blocker：
+
+```text
+PHASE12 external index adapter cutover is not implemented as Current.
+```
+
+根因：
+
+- 原始目标要求 PHASE12 调用仓库配置的真实索引 Adapter，并覆盖 BM25、Vector、Graph Build Job、Write Batch、Lease、Fencing、Attempt、Count、Hash、Visibility、Sample Retrieval 验证。
+- 当前 `KnowledgeIndexRuntime` 已证明 local BM25 / vector / graph adapter dispatch SPI 和 sample retrieval visibility，不再用 dispatch receipt 冒充可见。
+- 但 `INDEX_ADAPTER_CONTRACTS` 仍明确把 `elasticsearch`、`milvus`、`neo4j` 标为 `target_blocked`。
+- 现有 evidence 也明确写明外部 BM25 / Vector / Graph 服务端 adapter 仍不是 current runtime 事实。
+
+因此不能把 PHASE12 写成 completed，也不能把 PHASE09/12/14 Wave A Gate 汇总写成 passed。
+
+## 边界
+
+- 本 review 不回滚 PR A 已完成修复。
+- 本 review 不启动 Wave B。
+- 本 review 不修改 `.agent/programs/current.md`、`.agent/programs/closure-checklist.md` 或 `docs/status/production-readiness.md` 的 phase 状态。
+- 浏览器 E2E、UI reconnect 和更大范围旧 API cutover fault matrix 仍需后续 Gate 汇总处理；但当前第一个阻止 Wave A 合并的 mandatory blocker 是 PHASE12 外部索引 Adapter 未成为 Current。
