@@ -12,7 +12,12 @@ from zuno.platform.database.tool_runtime import (
     ToolUnitOfWork,
     ToolVersionInput,
 )
-from zuno.platform.security import redact_sensitive_payload
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.security import (
+    SecurityPersistenceError,
+    SecurityUnitOfWork,
+    redact_sensitive_payload,
+)
 from .effect_policy import classify_tool_effect
 
 
@@ -26,8 +31,14 @@ class ToolGatewayReceipt:
 
 
 class ToolInvocationGateway:
-    def __init__(self, *, unit_of_work_factory: Callable[[], ToolUnitOfWork]) -> None:
+    def __init__(
+        self,
+        *,
+        unit_of_work_factory: Callable[[], ToolUnitOfWork],
+        security_unit_of_work_factory: Callable[[], SecurityUnitOfWork] | None = None,
+    ) -> None:
         self._unit_of_work_factory = unit_of_work_factory
+        self._security_unit_of_work_factory = security_unit_of_work_factory
 
     async def invoke_readonly(
         self,
@@ -100,7 +111,7 @@ class ToolInvocationGateway:
                     "effect_policy_hash": effect_policy.policy_hash,
                 },
             )
-            repo.prepare_action(
+            prepared_action_hash = repo.prepare_action(
                 PreparedToolActionInput(
                     prepared_tool_action_id=prepared_id,
                     tenant_id=tenant_id,
@@ -120,9 +131,30 @@ class ToolInvocationGateway:
                     status="READY" if effect_policy.provider_dispatch_allowed else "OBSOLETE",
                 )
             )
+        security_blocked_reason = ""
+        if self._security_unit_of_work_factory is not None:
+            security_blocked_reason = self._record_security_prepare(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id=trace_id,
+                call_id=call_id,
+                tool_name=tool_name,
+                prepared_action_hash=prepared_action_hash,
+                approval_required=effect_policy.approval_required,
+                target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+            )
 
         if not effect_policy.provider_dispatch_allowed:
             blocked_reason = effect_policy.blocked_reason or "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+            payload = {
+                "blocked": True,
+                "reason": blocked_reason,
+                "effect_class": effect_policy.effect_class.value,
+                "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+                "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+            }
+            if security_blocked_reason:
+                payload["security_blocked_reason"] = security_blocked_reason
             self._record_terminal(
                 tenant_id=tenant_id,
                 prepared_id=prepared_id,
@@ -132,13 +164,7 @@ class ToolInvocationGateway:
                 dispatch_certainty="NOT_DISPATCHED",
                 effect_certainty="NO_EFFECT",
                 adapter_kind=adapter_kind,
-                payload={
-                    "blocked": True,
-                    "reason": blocked_reason,
-                    "effect_class": effect_policy.effect_class.value,
-                    "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
-                    "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
-                },
+                payload=payload,
             )
             return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
 
@@ -170,6 +196,83 @@ class ToolInvocationGateway:
             payload={"result": str(result)[:2000]},
         )
         return result, ToolGatewayReceipt("completed", prepared_id, attempt_id, receipt_id)
+
+    def _record_security_prepare(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        trace_id: str,
+        call_id: str,
+        tool_name: str,
+        prepared_action_hash: str,
+        approval_required: bool,
+        target_resource_set_ref: str,
+    ) -> str:
+        epoch_ref = f"security-epoch:{trace_id}"
+        principal_context_id = f"principal-context:{workspace_id}:{call_id}"
+        decision_id = f"authorization-decision:{call_id}"
+        policy_bundle = {
+            "phase": "PHASE16",
+            "tool_name": tool_name,
+            "target_resource_set_ref": target_resource_set_ref,
+            "actions": ["tool.prepare", "tool.execute"],
+        }
+        decision = "REQUIRES_APPROVAL" if approval_required else "ALLOW"
+        reason_code = "side_effect_requires_approval" if approval_required else "readonly_prepare_allowed"
+        assert self._security_unit_of_work_factory is not None
+        with self._security_unit_of_work_factory() as repo:
+            repo.ensure_effective_epoch(
+                epoch_ref=epoch_ref,
+                tenant_id=tenant_id,
+                policy_bundle_ref=f"security-policy-bundle:{tool_name}:phase16",
+                policy_bundle=policy_bundle,
+                action_set_version="tool-side-effect-actions:v1.phase16",
+                principal_context_hash=canonical_sha256(
+                    {"workspace_id": workspace_id, "trace_id": trace_id, "call_id": call_id}
+                ),
+                generation=1,
+            )
+            repo.ensure_principal_context(
+                principal_context_id=principal_context_id,
+                tenant_id=tenant_id,
+                user_principal_id=f"workspace-user:{workspace_id}",
+                agent_principal_id="agent:zuno-tool-runtime",
+                task_principal_id=f"tool-call:{call_id}",
+                session_principal_id=f"trace:{trace_id}",
+                run_id=call_id,
+                epoch_ref=epoch_ref,
+            )
+            repo.ensure_authorization_decision(
+                decision_id=decision_id,
+                tenant_id=tenant_id,
+                principal_context_id=principal_context_id,
+                epoch_ref=epoch_ref,
+                resource_ref=target_resource_set_ref,
+                action="tool.execute",
+                decision=decision,
+                reason_code=reason_code,
+                prepared_action_hash=prepared_action_hash,
+            )
+            if approval_required:
+                repo.ensure_approval_request(
+                    approval_request_id=f"approval-request:{call_id}",
+                    tenant_id=tenant_id,
+                    decision_id=decision_id,
+                    prepared_action_hash=prepared_action_hash,
+                    requested_by_principal_id="agent:zuno-tool-runtime",
+                    required_approver_policy_ref="approval-policy:tool-runtime:phase16",
+                )
+            try:
+                repo.validate_pre_effect_authorization(
+                    decision_id=decision_id,
+                    tenant_id=tenant_id,
+                    prepared_action_hash=prepared_action_hash,
+                    require_approved_request=approval_required,
+                )
+            except SecurityPersistenceError as exc:
+                return str(exc)
+        return ""
 
     def _record_terminal(
         self,

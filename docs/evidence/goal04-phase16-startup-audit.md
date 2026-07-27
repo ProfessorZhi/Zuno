@@ -64,6 +64,22 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking -p no:cacheprovider`：3 passed。
 - Failure Fingerprint：首次失败为 PreparedAction hash expected 使用未脱敏邮箱，实际 runtime 使用 `redact_sensitive_payload(args)`；修复测试预期后 targeted rerun 通过。
 
+
+### P16-T02 Prepare Gate 与 Approval Binding
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.prepare_action` 返回唯一 `prepared_action_hash`，作为 Tool Runtime 与 Security 的共同绑定事实。
+- `ToolInvocationGateway` 支持注入 `SecurityUnitOfWork`，在 PreparedToolAction 之后写入 `security_effective_epochs`、`security_principal_contexts`、`security_authorization_decisions` 和 pending `security_approval_requests`。
+- 有副作用 Tool 的 authorization decision 为 `REQUIRES_APPROVAL`，`prepared_action_hash` 必须与 PreparedToolAction 完全一致。
+- provider dispatch 仍 fail-closed；pending approval 的 `validate_pre_effect_authorization` 失败原因进入 Tool observation/receipt hash 输入。
+
+验证：
+
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash -p no:cacheprovider`：4 passed。
+- Failure Fingerprint：首次失败为测试查询 `tool_observations.payload`，实际表只存 `redacted_payload_hash`；改为断言 hash 后 targeted rerun 通过。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 当前切片已完成并验证，但 P16-G03 至 P16-G07 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 与 P16-T02 当前切片已完成并验证，但 P16-G03 至 P16-G07 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

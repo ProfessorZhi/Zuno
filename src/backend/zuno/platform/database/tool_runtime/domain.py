@@ -353,7 +353,7 @@ class ToolRepository:
             },
         )
 
-    def prepare_action(self, prepared: PreparedToolActionInput) -> None:
+    def prepare_action(self, prepared: PreparedToolActionInput) -> str:
         canonical_args_hash = canonical_sha256(prepared.canonical_args)
         target_resources_hash = canonical_sha256(list(prepared.target_resources))
         prepared_hash = canonical_sha256(
@@ -405,6 +405,7 @@ class ToolRepository:
                 "security_epoch_ref": prepared.security_epoch_ref,
             },
         )
+        return prepared_hash
 
     def record_attempt(self, attempt: ToolAttemptInput) -> None:
         self.connection.execute(

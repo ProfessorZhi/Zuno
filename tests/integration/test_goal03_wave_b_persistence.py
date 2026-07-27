@@ -12,7 +12,7 @@ from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
 from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway
 
 from zuno.platform.contracts import canonical_sha256
-from zuno.platform.security import redact_sensitive_payload
+from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.memory import ContextPackInput, MemoryRepository, MemoryUnitOfWork, MemoryVersionInput
 from zuno.platform.database.tool_runtime import (
@@ -446,3 +446,111 @@ def test_phase16_gateway_records_side_effect_classification_before_blocking(engi
             "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
         }
     )
+
+def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+    )
+    dispatched = False
+
+    async def executor() -> str:
+        nonlocal dispatched
+        dispatched = True
+        return "sent"
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        tenant_id="tenant-phase16-security",
+        workspace_id="workspace-phase16-security",
+        trace_id="trace-phase16-security",
+        call_id="call-phase16-security-mail",
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+
+    with engine.connect() as conn:
+        prepared_hash = conn.execute(
+            text(
+                """
+                SELECT prepared_action_hash
+                FROM prepared_tool_actions
+                WHERE prepared_tool_action_id = 'prepared-tool-action:call-phase16-security-mail'
+                """
+            )
+        ).scalar_one()
+        auth = conn.execute(
+            text(
+                """
+                SELECT decision, reason_code, prepared_action_hash
+                FROM security_authorization_decisions
+                WHERE decision_id = 'authorization-decision:call-phase16-security-mail'
+                """
+            )
+        ).mappings().one()
+        approval = conn.execute(
+            text(
+                """
+                SELECT status, prepared_action_hash
+                FROM security_approval_requests
+                WHERE approval_request_id = 'approval-request:call-phase16-security-mail'
+                """
+            )
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-security-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert auth["decision"] == "REQUIRES_APPROVAL"
+    assert auth["reason_code"] == "side_effect_requires_approval"
+    assert auth["prepared_action_hash"] == prepared_hash
+    assert approval["status"] == "pending"
+    assert approval["prepared_action_hash"] == prepared_hash
+    assert observation_hash == canonical_sha256(
+        {
+            "blocked": True,
+            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "effect_class": "IRREVERSIBLE_WRITE",
+            "target_resource_set_ref": classify_tool_effect(
+                tool_name="mail.send",
+                args={"to": "review@example.com", "body": "hello"},
+                readonly=False,
+                adapter_kind="API",
+            ).target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(
+                classify_tool_effect(
+                    tool_name="mail.send",
+                    args={"to": "review@example.com", "body": "hello"},
+                    readonly=False,
+                    adapter_kind="API",
+                ).target_resource_set.conflict_keys
+            ),
+            "security_blocked_reason": "approval required before effect",
+        }
+    )
+
+    with SecurityUnitOfWork(engine) as repo:
+        with pytest.raises(SecurityPersistenceError, match="prepared action hash changed before effect"):
+            repo.validate_pre_effect_authorization(
+                decision_id="authorization-decision:call-phase16-security-mail",
+                tenant_id="tenant-phase16-security",
+                prepared_action_hash="0" * 64,
+            )
+        with pytest.raises(SecurityPersistenceError, match="approval required before effect"):
+            repo.validate_pre_effect_authorization(
+                decision_id="authorization-decision:call-phase16-security-mail",
+                tenant_id="tenant-phase16-security",
+                prepared_action_hash=prepared_hash,
+            )
