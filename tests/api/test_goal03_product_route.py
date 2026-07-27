@@ -96,6 +96,67 @@ def test_goal03_product_runtime_request_route_is_exposed_and_returns_receipt(mon
     assert body["data"]["available_actions"][0]["projection_version"] == 1
 
 
+def test_goal03_product_runtime_request_route_rejects_rollback_before_service(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+
+    def should_not_submit(**kwargs):
+        raise AssertionError("rollback request reached ProductService.submit_runtime_request")
+
+    monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(should_not_submit))
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/product/runtime-requests",
+        json={
+            "tenant_id": "tenant-a",
+            "workspace_id": "workspace-a",
+            "conversation_id": "conversation-a",
+            "client_request_id": "client:rollback",
+            "runtime_request_ref": "runtime-request:rollback",
+            "raw_intent_ref": "intent:rollback",
+            "command_kind": "SUBMIT_USER_GOAL",
+            "active_agent_version_id": "agent-version:1",
+            "payload": {
+                "query": "rollback must not submit",
+                "cutover_mode": "rollback",
+                "rollback_reason": "product_runtime_cutover_rollback",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status_code"] == 500
+    assert "Product runtime rollback mode is active" in body["status_message"]
+    assert "ProductService.submit_runtime_request" not in body["status_message"]
+
+
+def test_goal03_product_service_rejects_rollback_before_database_write() -> None:
+    try:
+        ProductService.submit_runtime_request(
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+            conversation_id="conversation-a",
+            principal_id="principal-a",
+            active_agent_version_id="agent-version:1",
+            client_request_id="client:rollback:service",
+            runtime_request_ref="runtime-request:rollback:service",
+            raw_intent_ref="intent:rollback:service",
+            command_kind="SUBMIT_USER_GOAL",
+            payload={
+                "goal": "rollback must not write",
+                "cutover_mode": "rollback",
+                "rollback_reason": "product_runtime_cutover_rollback",
+            },
+        )
+    except ValueError as exc:
+        assert "Product runtime rollback mode is active" in str(exc)
+    else:
+        raise AssertionError("rollback request was accepted by ProductService")
+
+
 def test_goal03_product_stream_events_route_uses_last_event_id(monkeypatch) -> None:
     app = FastAPI()
     app.include_router(api_router)

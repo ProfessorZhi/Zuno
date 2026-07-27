@@ -954,6 +954,56 @@ passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings 
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T23 Product API Rollback Fail-Closed Boundary
+
+已更新：
+
+- `src/backend/zuno/api/v1/product.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `tests/api/test_goal03_product_route.py`
+
+当前 Product runtime rollback boundary：
+
+- `/api/v1/product/runtime-requests` 在调用 `ProductService.submit_runtime_request()` 前检查 payload `cutover_mode`；
+- `ProductService.submit_runtime_request()` 在构造 `ProductCommandSubmission` 和打开数据库 UoW 前重复执行同一 Product 边界检查；
+- `cutover_mode=rollback` 抛出 `ValueError("Product runtime rollback mode is active...")`，不会写 `product_commands`、不会写 projection、不会发出 runtime dispatch outbox；
+- 该边界防止外部调用方绕过 Web adapter 的 rollback fail-closed 行为。
+
+RED 验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_rollback_before_service -q
+failed
+assertion: expected "Product runtime rollback mode is active"
+actual: rollback request reached ProductService.submit_runtime_request
+```
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_service_rejects_rollback_before_database_write -q
+failed
+exception: sqlalchemy.exc.IntegrityError / psycopg.errors.ForeignKeyViolation
+first relevant stack frame: src\\backend\\zuno\\platform\\database\\product\\domain.py:1481 in _ensure_conversation
+meaning: rollback reached the database write path before ProductService had a cutover boundary
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_rollback_before_service tests\\api\\test_goal03_product_route.py::test_goal03_product_service_rejects_rollback_before_database_write -q
+2 passed, 1 warning
+```
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py -q
+13 passed, 1 warning
+```
+
+仍未完成：
+
+- shadow/canary/default-new/rollback 仍缺完整闭环 closure evidence；当前只完成 Web runtime guard 和 Product API rollback fail-closed boundary；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -986,6 +1036,8 @@ python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_
 python -m pytest tests\frontend\test_phase10_product_contracts.py -q
 python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_agent_studio_snapshot_route_uses_product_service tests\repo\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_editor_payload_migration_adds_json_snapshots -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_rollback_before_service tests\api\test_goal03_product_route.py::test_goal03_product_service_rejects_rollback_before_database_write -q
+python -m pytest tests\api\test_goal03_product_route.py -q
 ```
 
 未通过 / 未完成：

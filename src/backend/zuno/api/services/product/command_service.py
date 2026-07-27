@@ -159,6 +159,13 @@ class ProductAgentEditorSnapshotResult:
 
 class ProductService:
     @staticmethod
+    def reject_runtime_rollback(payload: dict[str, Any]) -> None:
+        if str(payload.get("cutover_mode") or "").strip().lower() == "rollback":
+            raise ValueError(
+                "Product runtime rollback mode is active; Product command submission is blocked fail-closed."
+            )
+
+    @staticmethod
     def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
         version_hash = canonical_sha256(
             {
@@ -185,6 +192,7 @@ class ProductService:
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
+        ProductService.reject_runtime_rollback(payload)
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
             workspace_id=workspace_id,

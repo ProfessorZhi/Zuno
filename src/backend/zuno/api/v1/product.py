@@ -147,6 +147,7 @@ async def submit_runtime_request(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
+        ProductService.reject_runtime_rollback(body.payload)
         result = ProductService.submit_runtime_request(
             tenant_id=body.tenant_id,
             workspace_id=body.workspace_id,
