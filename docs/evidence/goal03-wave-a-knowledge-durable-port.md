@@ -76,6 +76,7 @@ docker pull milvusdb/milvus:v2.4.15
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/agent/test_knowledge_layer_surfaces.py -p no:cacheprovider
 python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
 python -m pytest -q tests/knowledge/test_index_jobs_runtime.py tests/knowledge/test_knowledge_runtime_batch.py tests/knowledge/test_corrective_retrieval_runtime.py tests/agent/test_knowledge_layer_surfaces.py tests/api/test_knowledge_api_contract.py tests/api/test_knowledge_reindex.py tests/agent/runtime/test_runtime_dependency_factory.py -p no:cacheprovider
+docker pull mirror.gcr.io/milvusdb/milvus:v2.4.15
 ```
 
 结果：
@@ -120,6 +121,7 @@ Milvus direct image pull stalled on layer de4351a735f5 without progress; the pro
 21 passed
 compileall passed
 50 passed
+Milvus mirror.gcr.io image pull also stalled on layer de4351a735f5 without progress; the process was stopped and the image is not available.
 Repository structure verification passed.
 Doc boundary verification passed.
 ```
@@ -151,6 +153,6 @@ retry count: 1
 
 ## 未证明
 
-- 外部 Milvus Vector 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功，Elasticsearch BM25 与 Neo4j Graph adapter 具备真实 readback evidence 并已标为 `current`，Milvus client contract 已就位但未通过容器化 service readback。完整 PHASE12 外部服务端切换仍需容器化 Milvus 可用后的 Vector integration、contract current 更新和 Gate 证据。
+- 外部 Milvus Vector 服务端 adapter 仍是 `target_blocked`，不属于本地 current runtime 事实；本切片只证明 index runtime 已经改为 configured adapter dispatch SPI，current local adapter visibility 不再用 dispatch receipt 冒充 sample retrieval 成功，Elasticsearch BM25 与 Neo4j Graph adapter 具备真实 readback evidence 并已标为 `current`，Milvus client contract 已就位但直接与 mirror.gcr.io 镜像拉取都未取得可运行服务。完整 PHASE12 外部服务端切换仍需容器化 Milvus 可用后的 Vector integration、contract current 更新和 Gate 证据。
 - 完整 ACL/Temporal/Conflict 策略仍需 Closure Gate 汇总证明；本切片只证明默认本地 Standard RAG 证据候选在 citation 前执行 ACL、temporal 和 unresolved conflict 过滤。
 - PHASE12 仍是 `in_progress`，不能据此关闭 Wave A Gate。
