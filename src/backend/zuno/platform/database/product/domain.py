@@ -184,6 +184,7 @@ class ProductRepository:
         workspace_id: str,
         owner_principal_id: str,
         display_name: str,
+        description: str = "",
         status: str = "DRAFT",
     ) -> ProductAgentAssetRef:
         self.connection.execute(
@@ -191,11 +192,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_definitions (
                     agent_definition_id, tenant_id, workspace_id, owner_principal_id,
-                    display_name, status, aggregate_version
+                    display_name, description, status, aggregate_version
                 )
                 VALUES (
                     :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
-                    :display_name, :status, 1
+                    :display_name, :description, :status, 1
                 )
                 ON CONFLICT DO NOTHING
                 """
@@ -206,6 +207,7 @@ class ProductRepository:
                 "workspace_id": workspace_id,
                 "owner_principal_id": owner_principal_id,
                 "display_name": display_name,
+                "description": description,
                 "status": status,
             },
         )
@@ -308,11 +310,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_definitions (
                     agent_definition_id, tenant_id, workspace_id, owner_principal_id,
-                    display_name, status, aggregate_version
+                    display_name, description, status, aggregate_version
                 )
                 VALUES (
                     :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
-                    :display_name, 'ACTIVE', 1
+                    :display_name, '', 'ACTIVE', 1
                 )
                 ON CONFLICT (agent_definition_id) DO NOTHING
                 """

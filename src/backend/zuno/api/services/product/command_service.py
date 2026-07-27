@@ -338,6 +338,7 @@ class ProductService:
                 workspace_id=workspace_id,
                 owner_principal_id=principal_id,
                 display_name=display_name,
+                description=description,
             )
             draft = repo.create_agent_draft(
                 draft_id=draft_id,

@@ -4,6 +4,8 @@ const fs = require('node:fs')
 const { startDesktopBridgeServer } = require('./bridge.cjs')
 
 const DEFAULT_DEV_FRONTEND_URL = 'http://localhost:8090'
+const DESKTOP_SMOKE_RESULT = getEnv('DESKTOP_SMOKE_RESULT', '')
+const DESKTOP_SMOKE_TOKEN = getEnv('DESKTOP_SMOKE_TOKEN', '')
 let desktopBridgeState = null
 
 app.commandLine.appendSwitch('disable-http-cache')
@@ -69,12 +71,14 @@ async function resetDesktopSessionCache() {
 async function createWindow() {
   const runtimeTarget = resolveFrontendTarget()
   const icon = resolveDesktopIcon()
+  const smokeMode = Boolean(DESKTOP_SMOKE_RESULT)
 
   const mainWindow = new BrowserWindow({
     width: 1440,
     height: 960,
     minWidth: 1200,
     minHeight: 800,
+    show: !smokeMode,
     title: 'Zuno',
     icon,
     backgroundColor: '#f7f3ee',
@@ -101,6 +105,16 @@ async function createWindow() {
 
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('[desktop] Renderer finished load:', mainWindow.webContents.getURL())
+    if (smokeMode) {
+      runDesktopSmokeCheck(mainWindow).catch((error) => {
+        writeDesktopSmokeResult({
+          ok: false,
+          failures: [String(error && error.message ? error.message : error)],
+          url: mainWindow.webContents.getURL(),
+        })
+        app.quit()
+      })
+    }
   })
 
   await resetDesktopSessionCache()
@@ -173,6 +187,70 @@ async function createWindow() {
   })
 
   await mainWindow.loadURL(targetUrl)
+}
+
+function writeDesktopSmokeResult(result) {
+  if (!DESKTOP_SMOKE_RESULT) return
+  fs.mkdirSync(path.dirname(DESKTOP_SMOKE_RESULT), { recursive: true })
+  fs.writeFileSync(DESKTOP_SMOKE_RESULT, JSON.stringify(result, null, 2), 'utf8')
+}
+
+async function runDesktopSmokeCheck(mainWindow) {
+  const tokenLiteral = JSON.stringify(DESKTOP_SMOKE_TOKEN)
+  const result = await mainWindow.webContents.executeJavaScript(`
+    (async () => {
+      const desktop = window.__ZUNO_DESKTOP__
+      const failures = []
+      if (!desktop) {
+        failures.push('window.__ZUNO_DESKTOP__ missing')
+      }
+      if (desktop?.productBridgeVersion !== 'product-desktop-bridge-v1.phase10') {
+        failures.push('Product bridge version mismatch')
+      }
+      for (const capability of ['runtimeRequest', 'actionConsume', 'projectionStream', 'streamLastEventId', 'streamDedup', 'streamReauthorization', 'artifactRead', 'artifactDownload', 'feedback']) {
+        if (desktop?.productBridgeCapabilities?.[capability] !== true) {
+          failures.push('Product bridge capability missing: ' + capability)
+        }
+      }
+      if (!desktop?.productEndpoints?.runtimeRequests || !desktop?.productEndpoints?.actionConsume || !desktop?.productEndpoints?.stream) {
+        failures.push('Product endpoints missing')
+      }
+      if (!desktop?.productBridgeHealth?.bridgeUrlConfigured || !desktop?.productBridgeHealth?.tokenConfigured || !desktop?.productBridgeHealth?.workspaceRootConfigured) {
+        failures.push('Product bridge health not configured')
+      }
+
+      let catalogStatus = null
+      let catalogEntryCount = null
+      const token = ${tokenLiteral}
+      if (!token) {
+        failures.push('Desktop smoke token missing')
+      } else if (desktop?.apiBaseUrl) {
+        const catalogUrl = desktop.apiBaseUrl.replace(/\\/$/, '') + '/api/v1/product/agent-catalog?tenant_id=tenant%3Aweb&workspace_id=workspace%3Aagent-studio%3Aweb'
+        const response = await fetch(catalogUrl, { headers: { Authorization: 'Bearer ' + token } })
+        catalogStatus = response.status
+        const payload = await response.json()
+        const entries = payload?.data?.agent_catalog_entries
+        catalogEntryCount = Array.isArray(entries) ? entries.length : null
+        if (response.status !== 200 || !Array.isArray(entries)) {
+          failures.push('Product catalog request failed from desktop renderer')
+        }
+      }
+
+      return {
+        ok: failures.length === 0,
+        failures,
+        url: window.location.href,
+        productBridgeVersion: desktop?.productBridgeVersion || null,
+        apiBaseUrl: desktop?.apiBaseUrl || null,
+        bridgeHealth: desktop?.productBridgeHealth || null,
+        productEndpoints: desktop?.productEndpoints || null,
+        catalogStatus,
+        catalogEntryCount,
+      }
+    })()
+  `, true)
+  writeDesktopSmokeResult(result)
+  app.quit()
 }
 
 app.whenReady().then(() => {

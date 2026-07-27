@@ -842,6 +842,80 @@ passed
 - Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T21 Desktop Smoke 与 Catalog Schema 修复
+
+已更新：
+
+- `apps/desktop/main.cjs`
+- `tools/scripts/run-desktop-smoke.ps1`
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `infra/db/alembic/versions/20260727_43_goal04_product_agent_definition_description.py`
+- `tests/tools/test_launcher_scripts.py`
+- `tests/repo/test_goal03_wave_a_migration_contract.py`
+
+当前 Desktop smoke 闭环：
+
+- Electron 主进程新增只在 `DESKTOP_SMOKE_RESULT` 存在时启用的 smoke 模式，隐藏窗口启动真实 Electron；
+- smoke 模式通过 preload 后的 renderer 读取 `window.__ZUNO_DESKTOP__`，验证 `product-desktop-bridge-v1.phase10`、Product bridge capabilities、Product endpoint contract 和 bridge health；
+- renderer 使用 `DESKTOP_SMOKE_TOKEN` 访问真实 backend Product Catalog：`/api/v1/product/agent-catalog?tenant_id=tenant:web&workspace_id=workspace:agent-studio:web`；
+- `tools/scripts/run-desktop-smoke.ps1` 负责确认 backend、启动 8091 desktop frontend、生成本地 JWT token、启动 Electron，并读取 `tmp/desktop-smoke-result.json` 作为可复核结果。
+
+Desktop smoke 暴露的真实后端缺口：
+
+- Product Catalog API 初次从桌面 renderer 请求时返回 HTTP 200 包裹的 `status_code=500`，根因是 repository 查询 `product_agent_definitions.description`，但当前 tracked Alembic schema 未创建该列；
+- 已追加 append-only migration `20260727_43_goal04_product_agent_definition_description.py`，并让 Product repository / ProductService 在 AgentDefinition 创建时写入 description，避免 Catalog projection 丢字段。
+
+本轮验证：
+
+```text
+python -m pytest tests\\tools\\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check tests\\tools\\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode -q
+2 passed
+```
+
+```text
+node --check apps\\desktop\\main.cjs
+passed
+```
+
+```text
+python -m pytest tests\\repo\\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_definition_description_migration_repairs_catalog_projection -q
+1 passed
+```
+
+```text
+python -m py_compile src\\backend\\zuno\\platform\\database\\product\\domain.py src\\backend\\zuno\\api\\services\\product\\command_service.py infra\\db\\alembic\\versions\\20260727_43_goal04_product_agent_definition_description.py
+passed
+```
+
+```text
+powershell -ExecutionPolicy Bypass -File .\\tools\\scripts\\run-desktop-smoke.ps1
+Desktop smoke passed.
+tmp\\desktop-smoke-result.json: ok=true, productBridgeVersion=product-desktop-bridge-v1.phase10, catalogStatus=200, catalogEntryCount=0
+```
+
+Alembic 状态：
+
+```text
+python -m alembic -c infra\\db\\alembic.ini heads
+20260727_43 (head)
+```
+
+```text
+python -m alembic -c infra\\db\\alembic.ini upgrade head
+failed
+exception: Can't locate revision identified by '20260727_45'
+first relevant stack frame: Alembic version resolution before upgrade execution
+environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260727_43
+recovery used for runtime smoke only: ALTER TABLE product_agent_definitions ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT ''; ALTER COLUMN description DROP DEFAULT
+```
+
+仍未完成：
+
+- shadow/canary/default-new/rollback closure gate 仍未完成；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -856,6 +930,12 @@ npm run lint -w zuno-frontend
 npm run build -w zuno-frontend
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
+python -m pytest tests\tools\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check tests\tools\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode -q
+node --check apps\desktop\main.cjs
+python -m pytest tests\repo\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_definition_description_migration_repairs_catalog_projection -q
+python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py infra\db\alembic\versions\20260727_43_goal04_product_agent_definition_description.py
+powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-desktop-smoke.ps1
+python -m pytest tests\tools\test_launcher_scripts.py tests\repo\test_goal03_wave_a_migration_contract.py tests\api\test_goal03_product_route.py -q
 python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
@@ -879,5 +959,13 @@ resolved_by: formal helper package plus quoted Start-Process path plus generated
 ```
 
 ```text
-Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
+command: python -m alembic -c infra\db\alembic.ini upgrade head
+exception: Can't locate revision identified by '20260727_45'
+first relevant stack frame: Alembic version resolution before upgrade execution
+environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260727_43
+唯一恢复动作: 将本机数据库 stamp 恢复到当前分支 revision graph 后，从 Alembic upgrade head 命令继续。
+```
+
+```text
+shadow/canary/default-new/rollback closure gate 仍未完成；PHASE10 仍为 in_progress，不能写 completed。
 ```

@@ -8,6 +8,9 @@ MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_kn
 REPAIR_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_37_wave_a_product_runtime_dispatch.py"
 PRODUCT_AGENT_ASSET_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_38_goal03_product_agent_publication_installation.py"
 PRODUCT_AGENT_EDITOR_PAYLOAD_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_goal04_product_agent_editor_payloads.py"
+PRODUCT_AGENT_DEFINITION_DESCRIPTION_MIGRATION = (
+    REPO_ROOT / "infra/db/alembic/versions/20260727_43_goal04_product_agent_definition_description.py"
+)
 CAPABILITY_SUPPLY_CHAIN_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260726_39_capability_version_supply_chain.py"
 PRODUCT_LATE_OWNER_RECEIPT_MIGRATION = (
     REPO_ROOT / "infra/db/alembic/versions/20260726_40_product_late_owner_receipt.py"
@@ -93,6 +96,22 @@ def test_goal04_product_agent_editor_payload_migration_adds_json_snapshots() -> 
     assert 'down_revision = "20260727_41"' in text
     assert "draft_payload_json" in text
     assert "configuration_json" in text
+
+
+def test_goal04_product_agent_definition_description_migration_repairs_catalog_projection() -> None:
+    text = PRODUCT_AGENT_DEFINITION_DESCRIPTION_MIGRATION.read_text(encoding="utf-8")
+    repository = (REPO_ROOT / "src/backend/zuno/platform/database/product/domain.py").read_text(encoding="utf-8")
+    service = (REPO_ROOT / "src/backend/zuno/api/services/product/command_service.py").read_text(encoding="utf-8")
+
+    assert 'revision = "20260727_43"' in text
+    assert 'down_revision = "20260727_42"' in text
+    assert '"product_agent_definitions"' in text
+    assert '"description"' in text
+    assert "sa.Text()" in text
+    assert "server_default=\"\"" in text
+    assert "description: str = \"\"" in repository
+    assert "display_name, description, status, aggregate_version" in repository
+    assert "description=description" in service
 
 
 def test_goal03_wave_a_capability_version_supply_chain_migration_adds_verified_refs() -> None:

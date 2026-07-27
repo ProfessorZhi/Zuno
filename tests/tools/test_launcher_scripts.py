@@ -41,6 +41,30 @@ def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
     assert (qa_root / "full_e2e.py").exists()
 
 
+def test_desktop_smoke_script_runs_real_electron_bridge_check():
+    content = (REPO_ROOT / "tools" / "scripts" / "run-desktop-smoke.ps1").read_text(encoding="utf-8")
+
+    assert "$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)" in content
+    assert "$resultPath = Join-Path $tmpRoot 'desktop-smoke-result.json'" in content
+    assert "$env:DESKTOP_SMOKE_RESULT = $resultPath" in content
+    assert "$env:DESKTOP_SMOKE_TOKEN = New-SmokeToken" in content
+    assert "$env:DESKTOP_FRONTEND_URL = 'http://127.0.0.1:8091'" in content
+    assert "$env:DESKTOP_API_BASE_URL = 'http://127.0.0.1:7860'" in content
+    assert "-WindowStyle Hidden" in content
+
+
+def test_desktop_main_supports_product_bridge_smoke_mode():
+    content = (REPO_ROOT / "apps" / "desktop" / "main.cjs").read_text(encoding="utf-8")
+
+    assert "const DESKTOP_SMOKE_RESULT = getEnv('DESKTOP_SMOKE_RESULT', '')" in content
+    assert "show: !smokeMode" in content
+    assert "runDesktopSmokeCheck(mainWindow)" in content
+    assert "window.__ZUNO_DESKTOP__ missing" in content
+    assert "product-desktop-bridge-v1.phase10" in content
+    assert "Product catalog request failed from desktop renderer" in content
+    assert "writeDesktopSmokeResult(result)" in content
+
+
 def test_desktop_stop_stops_backend_services_too():
     content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
     stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)
