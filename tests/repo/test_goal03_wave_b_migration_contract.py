@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -9,6 +9,7 @@ CUTOVER_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_41_wave_b_ru
 PHASE16_EFFECT_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_phase16_tool_effect_receipts.py"
 PHASE16_RECONCILIATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_43_phase16_tool_effect_reconciliations.py"
 PHASE16_ASYNC_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_44_phase16_tool_async_cancellation.py"
+PHASE16_COMPENSATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -33,6 +34,10 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260727_44"' in phase16_async
     assert 'down_revision = "20260727_43"' in phase16_async
     assert phase16_async.count("op.create_table(") == phase16_async.count("op.drop_table(")
+    phase16_compensation = PHASE16_COMPENSATION_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260727_45"' in phase16_compensation
+    assert 'down_revision = "20260727_44"' in phase16_compensation
+    assert phase16_compensation.count("op.create_table(") == phase16_compensation.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -145,6 +150,29 @@ def test_phase16_async_migration_contains_async_callback_and_cancel_fact_tables(
         "uq_tool_async_callbacks_order",
         "ck_tool_async_callbacks_authenticity",
         "ck_tool_cancellation_status",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+def test_phase16_compensation_migration_contains_manual_assessment_and_compensation_fact_tables() -> None:
+    text = PHASE16_COMPENSATION_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "tool_compensation_definitions",
+        "tool_compensation_attempts",
+        "tool_manual_effect_assessments",
+        "source_effect_receipt_id",
+        "source_reconciliation_id",
+        "new_action_proposal_ref",
+        "hidden_rollback",
+        "MANUAL_COMPENSATION",
+        "BEST_EFFORT_COMPENSATION",
+        "AUTOMATIC_COMPENSATION",
+        "CONFIRMED_NOT_EXECUTED",
+        "UNRESOLVED",
+        "uq_tool_comp_def_action_proposal",
+        "ck_tool_comp_attempt_no_hidden_rollback",
+        "ck_tool_manual_assessment_conclusion",
     )
 
     for fragment in required_fragments:

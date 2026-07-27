@@ -1,8 +1,11 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from .domain import (
     PreparedToolActionInput,
     ToolCancellationReceiptInput,
+    ToolManualEffectAssessmentInput,
+    ToolCompensationAttemptInput,
+    ToolCompensationDefinitionInput,
     ToolAsyncCallbackInput,
     ToolAsyncJobInput,
     ToolAttemptInput,
@@ -18,6 +21,9 @@ from .domain import (
 __all__ = [
     "PreparedToolActionInput",
     "ToolCancellationReceiptInput",
+    "ToolManualEffectAssessmentInput",
+    "ToolCompensationAttemptInput",
+    "ToolCompensationDefinitionInput",
     "ToolAsyncCallbackInput",
     "ToolAsyncJobInput",
     "ToolAttemptInput",

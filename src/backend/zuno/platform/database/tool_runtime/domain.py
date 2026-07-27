@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
@@ -172,6 +172,51 @@ class ToolCancellationReceiptInput:
     requested_by_principal_id: str
     audit_requirement_id: str
     cancellation_payload: dict[str, Any]
+
+@dataclass(frozen=True, slots=True)
+class ToolCompensationDefinitionInput:
+    compensation_definition_id: str
+    tenant_id: str
+    source_effect_receipt_id: str | None
+    source_reconciliation_id: str | None
+    compensation_capability: str
+    operation_ref: str
+    new_action_proposal_ref: str
+    requires_approval: bool
+    window_deadline_at: Any
+    residual_impact: str
+    policy_ref: str
+    definition_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCompensationAttemptInput:
+    compensation_attempt_id: str
+    tenant_id: str
+    compensation_definition_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    execution_receipt_id: str
+    status: str
+    hidden_rollback: bool
+    idempotency_scope: str
+    idempotency_key: str
+    idempotency_generation: int
+    audit_requirement_id: str
+    attempt_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolManualEffectAssessmentInput:
+    manual_assessment_id: str
+    tenant_id: str
+    reconciliation_id: str
+    provider_effect_id: str
+    conclusion: str
+    confidence: float
+    assessor_principal_id: str
+    residual_uncertainty: str
+    evidence_payload: dict[str, Any]
 class ToolUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -793,6 +838,107 @@ class ToolRepository:
                 "cancellation_payload_hash": canonical_sha256(cancellation.cancellation_payload),
             },
         )
+
+    def record_compensation_definition(self, definition: ToolCompensationDefinitionInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_compensation_definitions (
+                    compensation_definition_id, tenant_id, source_effect_receipt_id,
+                    source_reconciliation_id, compensation_capability, operation_ref,
+                    new_action_proposal_ref, requires_approval, window_deadline_at,
+                    residual_impact, policy_ref, definition_payload_hash
+                )
+                VALUES (
+                    :compensation_definition_id, :tenant_id, :source_effect_receipt_id,
+                    :source_reconciliation_id, :compensation_capability, :operation_ref,
+                    :new_action_proposal_ref, :requires_approval, :window_deadline_at,
+                    :residual_impact, :policy_ref, :definition_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "compensation_definition_id": definition.compensation_definition_id,
+                "tenant_id": definition.tenant_id,
+                "source_effect_receipt_id": definition.source_effect_receipt_id,
+                "source_reconciliation_id": definition.source_reconciliation_id,
+                "compensation_capability": definition.compensation_capability,
+                "operation_ref": definition.operation_ref,
+                "new_action_proposal_ref": definition.new_action_proposal_ref,
+                "requires_approval": definition.requires_approval,
+                "window_deadline_at": definition.window_deadline_at,
+                "residual_impact": definition.residual_impact,
+                "policy_ref": definition.policy_ref,
+                "definition_payload_hash": canonical_sha256(definition.definition_payload),
+            },
+        )
+
+    def record_compensation_attempt(self, attempt: ToolCompensationAttemptInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_compensation_attempts (
+                    compensation_attempt_id, tenant_id, compensation_definition_id,
+                    prepared_tool_action_id, attempt_id, execution_receipt_id, status,
+                    hidden_rollback, idempotency_scope, idempotency_key,
+                    idempotency_generation, audit_requirement_id, attempt_payload_hash
+                )
+                VALUES (
+                    :compensation_attempt_id, :tenant_id, :compensation_definition_id,
+                    :prepared_tool_action_id, :attempt_id, :execution_receipt_id, :status,
+                    :hidden_rollback, :idempotency_scope, :idempotency_key,
+                    :idempotency_generation, :audit_requirement_id, :attempt_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "compensation_attempt_id": attempt.compensation_attempt_id,
+                "tenant_id": attempt.tenant_id,
+                "compensation_definition_id": attempt.compensation_definition_id,
+                "prepared_tool_action_id": attempt.prepared_tool_action_id,
+                "attempt_id": attempt.attempt_id,
+                "execution_receipt_id": attempt.execution_receipt_id,
+                "status": attempt.status,
+                "hidden_rollback": attempt.hidden_rollback,
+                "idempotency_scope": attempt.idempotency_scope,
+                "idempotency_key": attempt.idempotency_key,
+                "idempotency_generation": attempt.idempotency_generation,
+                "audit_requirement_id": attempt.audit_requirement_id,
+                "attempt_payload_hash": canonical_sha256(attempt.attempt_payload),
+            },
+        )
+
+    def record_manual_effect_assessment(self, assessment: ToolManualEffectAssessmentInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_manual_effect_assessments (
+                    manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
+                    conclusion, confidence, assessor_principal_id, residual_uncertainty,
+                    evidence_payload_hash
+                )
+                VALUES (
+                    :manual_assessment_id, :tenant_id, :reconciliation_id, :provider_effect_id,
+                    :conclusion, :confidence, :assessor_principal_id, :residual_uncertainty,
+                    :evidence_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "manual_assessment_id": assessment.manual_assessment_id,
+                "tenant_id": assessment.tenant_id,
+                "reconciliation_id": assessment.reconciliation_id,
+                "provider_effect_id": assessment.provider_effect_id,
+                "conclusion": assessment.conclusion,
+                "confidence": assessment.confidence,
+                "assessor_principal_id": assessment.assessor_principal_id,
+                "residual_uncertainty": assessment.residual_uncertainty,
+                "evidence_payload_hash": canonical_sha256(assessment.evidence_payload),
+            },
+        )
     def record_bypass_guard(
         self,
         *,
@@ -827,6 +973,9 @@ class ToolRepository:
 __all__ = [
     "PreparedToolActionInput",
     "ToolCancellationReceiptInput",
+    "ToolManualEffectAssessmentInput",
+    "ToolCompensationAttemptInput",
+    "ToolCompensationDefinitionInput",
     "ToolAsyncCallbackInput",
     "ToolAsyncJobInput",
     "ToolAttemptInput",

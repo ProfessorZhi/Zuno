@@ -150,6 +150,25 @@ ToolInvocationGateway 当前没有在 provider dispatch 前取得 mandatory audi
 - `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation -p no:cacheprovider`：7 passed。
 - `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：6 passed。
 - Failure Fingerprint：本切片 focused suite 首次通过，无失败重试。
+### P16-T07 Compensation 与 Manual Effect Assessment
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- 新增 append-only Alembic revision `20260727_45_phase16_tool_compensation_manual_assessment.py`，创建 `tool_compensation_definitions`、`tool_compensation_attempts` 和 `tool_manual_effect_assessments` 三类正式持久事实。
+- Compensation 不走隐藏回滚：补偿动作必须先通过新的 `PreparedToolAction`、Security Prepare、Approval、Audit、Idempotency Claim、Fencing、SecretLease、ToolAttempt 和 `EffectReceipt`，随后 `tool_compensation_attempts` 以 FK 绑定该新动作。
+- `tool_compensation_definitions` 记录 source effect 或 source reconciliation、compensation capability、operation ref、new action proposal ref、approval requirement、window deadline、residual impact 和 payload hash。
+- `tool_compensation_attempts` 强制 `hidden_rollback=false`，绑定新 compensation call 的 prepared/attempt/execution receipt、audit requirement、idempotency generation 和 payload hash。
+- `tool_manual_effect_assessments` 记录人工判断、证据 hash、置信度和剩余不确定性；它不伪造 Provider EffectReceipt，也不删除 UNKNOWN/Reconciliation 历史。
+
+验证：
+
+- `python -m py_compile src\backend\zuno\capability\tool_runtime\invocation_gateway.py src\backend\zuno\platform\database\tool_runtime\domain.py src\backend\zuno\platform\database\tool_runtime\__init__.py tests\integration\test_goal03_wave_b_persistence.py tests\repo\test_goal03_wave_b_migration_contract.py`：通过。
+- `python -m pytest -q tests\capability\test_phase16_tool_effect_policy.py tests\integration\test_goal03_wave_b_persistence.py::test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_side_effect_classification_before_blocking tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_binds_security_prepare_to_prepared_action_hash tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_known_effect_receipt_after_approval tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_unknown_effect_reconciliation_without_retry tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_compensation_as_new_governed_action -p no:cacheprovider`：8 passed。
+- `python -m pytest -q tests\repo\test_goal03_wave_b_migration_contract.py -p no:cacheprovider`：7 passed。
+- Failure Fingerprint 1：`test_phase16_gateway_records_unknown_effect_reconciliation_without_retry`，`AttributeError`，`ToolInvocationGateway` 缺少 `record_manual_effect_assessment`；原因是插入点换行格式未命中，补入 gateway 方法后 targeted rerun 通过。
+- Failure Fingerprint 2：`test_phase16_gateway_records_compensation_as_new_governed_action`，`TypeError: 'NoneType' object is not subscriptable`，第二个 compensation Tool call 因同一 target resource 的现有 fencing lease 被阻断；测试改为使用独立 target resource，证明 compensation 动作本身走完整治理链后 targeted rerun 通过。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T06 当前切片已完成并验证，但 Compensation/Manual Assessment 和 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T07 当前切片已完成并验证，但 Side-effect Cutover/Bypass Zero 仍是 Mandatory Gap；本文不证明 PHASE16 completed、quality fully proven 或 production ready。

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import os
@@ -69,6 +69,9 @@ def engine(migrated_postgres):
                     security_effective_epochs,
                     security_secret_leases,
                     security_secret_refs,
+                    tool_compensation_attempts,
+                    tool_compensation_definitions,
+                    tool_manual_effect_assessments,
                     tool_cancellation_receipts,
                     tool_async_callbacks,
                     tool_async_jobs,
@@ -833,6 +836,43 @@ def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(eng
     assert claim["status"] == "completed"
     assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
     assert observation_hash == canonical_sha256(unknown_payload)
+    assessment_payload = {
+        "provider_console_status": "message id not found after provider outage",
+        "operator_note": "manual review could not prove delivery",
+    }
+    gateway.record_manual_effect_assessment(
+        tenant_id=tenant_id,
+        manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail",
+        reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+        provider_effect_id="mail-provider-effect:phase16:unknown:1",
+        conclusion="UNRESOLVED",
+        confidence=0.55,
+        assessor_principal_id="workspace-user:manual-reviewer",
+        residual_uncertainty="provider outage left delivery unknown",
+        evidence_payload=assessment_payload,
+    )
+    with engine.connect() as conn:
+        assessment = conn.execute(
+            text(
+                """
+                SELECT reconciliation_id, provider_effect_id, conclusion, confidence,
+                       assessor_principal_id, residual_uncertainty, evidence_payload_hash
+                FROM tool_manual_effect_assessments
+                WHERE manual_assessment_id = 'tool-manual-assessment:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE provider_effect_id = 'mail-provider-effect:phase16:unknown:1'")
+        ).scalar_one() == 0
+
+    assert assessment["reconciliation_id"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
+    assert assessment["provider_effect_id"] == "mail-provider-effect:phase16:unknown:1"
+    assert assessment["conclusion"] == "UNRESOLVED"
+    assert float(assessment["confidence"]) == 0.55
+    assert assessment["assessor_principal_id"] == "workspace-user:manual-reviewer"
+    assert assessment["residual_uncertainty"] == "provider outage left delivery unknown"
+    assert assessment["evidence_payload_hash"] == canonical_sha256(assessment_payload)
 
 def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> None:
     tenant_id = "tenant-phase16-async"
@@ -997,3 +1037,158 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
     )
     assert claim["status"] == "completed"
     assert claim["result_ref"] == "tool-async-job:call-phase16-async-export"
+
+def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> None:
+    tenant_id = "tenant-phase16-compensation"
+    workspace_id = "workspace-phase16-compensation"
+    source_call_id = "call-phase16-source-mail"
+    compensation_call_id = "call-phase16-compensation-mail"
+    secret_ref = "security-secret-ref:phase16:compensation-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:compensation-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+
+    async def source_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:source:1", "message_id": "message-source-1"}
+
+    async def compensation_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:compensation:1", "message_id": "message-compensation-1"}
+
+    source_result, source_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "incorrect body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-source",
+        call_id=source_call_id,
+        adapter_kind="API",
+        executor=source_executor,
+        readonly=False,
+        approved=True,
+    ))
+    compensation_result, compensation_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "correction@example.com", "body": "correction body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-action",
+        call_id=compensation_call_id,
+        adapter_kind="API",
+        executor=compensation_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert source_result["provider_effect_id"] == "mail-provider-effect:phase16:source:1"
+    assert compensation_result["provider_effect_id"] == "mail-provider-effect:phase16:compensation:1"
+    assert source_receipt.status == "completed"
+    assert compensation_receipt.status == "completed"
+
+    gateway.record_compensation_attempt(
+        tenant_id=tenant_id,
+        compensation_definition_id="tool-compensation-definition:phase16:source-mail",
+        compensation_attempt_id="tool-compensation-attempt:phase16:source-mail:1",
+        source_effect_receipt_id=f"tool-effect-receipt:{source_call_id}",
+        source_reconciliation_id=None,
+        compensation_call_id=compensation_call_id,
+        new_action_proposal_ref="action-proposal:phase16:compensate-source-mail",
+        operation_ref="tool-version:mail.send:v1:operation:default",
+        compensation_capability="BEST_EFFORT_COMPENSATION",
+        residual_impact="PARTIAL",
+        audit_requirement_id=f"audit-requirement:{compensation_call_id}:tool-execute",
+        idempotency_generation=1,
+    )
+
+    definition_payload = {
+        "source_effect_receipt_id": f"tool-effect-receipt:{source_call_id}",
+        "source_reconciliation_id": None,
+        "compensation_capability": "BEST_EFFORT_COMPENSATION",
+        "operation_ref": "tool-version:mail.send:v1:operation:default",
+        "new_action_proposal_ref": "action-proposal:phase16:compensate-source-mail",
+        "requires_approval": True,
+        "residual_impact": "PARTIAL",
+        "hidden_rollback": False,
+    }
+    attempt_payload = {
+        "compensation_definition_id": "tool-compensation-definition:phase16:source-mail",
+        "prepared_tool_action_id": f"prepared-tool-action:{compensation_call_id}",
+        "attempt_id": f"tool-attempt:{compensation_call_id}",
+        "execution_receipt_id": f"tool-execution-receipt:{compensation_call_id}",
+        "status": "CONFIRMED",
+        "hidden_rollback": False,
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": compensation_call_id,
+        "idempotency_generation": 1,
+        "audit_requirement_id": f"audit-requirement:{compensation_call_id}:tool-execute",
+    }
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM tool_effect_receipts")).scalar_one() == 2
+        definition = conn.execute(
+            text(
+                """
+                SELECT source_effect_receipt_id, source_reconciliation_id, compensation_capability,
+                       operation_ref, new_action_proposal_ref, requires_approval,
+                       residual_impact, definition_payload_hash
+                FROM tool_compensation_definitions
+                WHERE compensation_definition_id = 'tool-compensation-definition:phase16:source-mail'
+                """
+            )
+        ).mappings().one()
+        attempt = conn.execute(
+            text(
+                """
+                SELECT compensation_definition_id, prepared_tool_action_id, attempt_id,
+                       execution_receipt_id, status, hidden_rollback, idempotency_scope,
+                       idempotency_key, idempotency_generation, audit_requirement_id,
+                       attempt_payload_hash
+                FROM tool_compensation_attempts
+                WHERE compensation_attempt_id = 'tool-compensation-attempt:phase16:source-mail:1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :compensation_call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "compensation_call_id": compensation_call_id},
+        ).mappings().one()
+
+    assert definition["source_effect_receipt_id"] == f"tool-effect-receipt:{source_call_id}"
+    assert definition["source_reconciliation_id"] is None
+    assert definition["compensation_capability"] == "BEST_EFFORT_COMPENSATION"
+    assert definition["operation_ref"] == "tool-version:mail.send:v1:operation:default"
+    assert definition["new_action_proposal_ref"] == "action-proposal:phase16:compensate-source-mail"
+    assert definition["requires_approval"] is True
+    assert definition["residual_impact"] == "PARTIAL"
+    assert definition["definition_payload_hash"] == canonical_sha256(definition_payload)
+    assert attempt["compensation_definition_id"] == "tool-compensation-definition:phase16:source-mail"
+    assert attempt["prepared_tool_action_id"] == f"prepared-tool-action:{compensation_call_id}"
+    assert attempt["attempt_id"] == f"tool-attempt:{compensation_call_id}"
+    assert attempt["execution_receipt_id"] == f"tool-execution-receipt:{compensation_call_id}"
+    assert attempt["status"] == "CONFIRMED"
+    assert attempt["hidden_rollback"] is False
+    assert attempt["idempotency_scope"] == "tool-side-effect"
+    assert attempt["idempotency_key"] == compensation_call_id
+    assert attempt["idempotency_generation"] == 1
+    assert attempt["audit_requirement_id"] == f"audit-requirement:{compensation_call_id}:tool-execute"
+    assert attempt["attempt_payload_hash"] == canonical_sha256(attempt_payload)
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == f"tool-effect-receipt:{compensation_call_id}"

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -18,6 +18,9 @@ from zuno.platform.database.tool_runtime import (
     ToolAsyncJobInput,
     ToolAsyncCallbackInput,
     ToolCancellationReceiptInput,
+    ToolManualEffectAssessmentInput,
+    ToolCompensationAttemptInput,
+    ToolCompensationDefinitionInput,
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolUnitOfWork,
@@ -635,6 +638,106 @@ class ToolInvocationGateway:
                     requested_by_principal_id=requested_by_principal_id,
                     audit_requirement_id=audit_requirement_id,
                     cancellation_payload=payload,
+                )
+            )
+    def record_compensation_attempt(
+        self,
+        *,
+        tenant_id: str,
+        compensation_definition_id: str,
+        compensation_attempt_id: str,
+        source_effect_receipt_id: str | None,
+        source_reconciliation_id: str | None,
+        compensation_call_id: str,
+        new_action_proposal_ref: str,
+        operation_ref: str,
+        compensation_capability: str,
+        residual_impact: str,
+        audit_requirement_id: str,
+        idempotency_generation: int = 1,
+    ) -> None:
+        definition_payload = {
+            "source_effect_receipt_id": source_effect_receipt_id,
+            "source_reconciliation_id": source_reconciliation_id,
+            "compensation_capability": compensation_capability,
+            "operation_ref": operation_ref,
+            "new_action_proposal_ref": new_action_proposal_ref,
+            "requires_approval": True,
+            "residual_impact": residual_impact,
+            "hidden_rollback": False,
+        }
+        attempt_payload = {
+            "compensation_definition_id": compensation_definition_id,
+            "prepared_tool_action_id": f"prepared-tool-action:{compensation_call_id}",
+            "attempt_id": f"tool-attempt:{compensation_call_id}",
+            "execution_receipt_id": f"tool-execution-receipt:{compensation_call_id}",
+            "status": "CONFIRMED",
+            "hidden_rollback": False,
+            "idempotency_scope": "tool-side-effect",
+            "idempotency_key": compensation_call_id,
+            "idempotency_generation": idempotency_generation,
+            "audit_requirement_id": audit_requirement_id,
+        }
+        with self._unit_of_work_factory() as repo:
+            repo.record_compensation_definition(
+                ToolCompensationDefinitionInput(
+                    compensation_definition_id=compensation_definition_id,
+                    tenant_id=tenant_id,
+                    source_effect_receipt_id=source_effect_receipt_id,
+                    source_reconciliation_id=source_reconciliation_id,
+                    compensation_capability=compensation_capability,
+                    operation_ref=operation_ref,
+                    new_action_proposal_ref=new_action_proposal_ref,
+                    requires_approval=True,
+                    window_deadline_at=datetime.now(tz=UTC) + timedelta(hours=24),
+                    residual_impact=residual_impact,
+                    policy_ref="compensation-policy:tool-runtime:phase16",
+                    definition_payload=definition_payload,
+                )
+            )
+            repo.record_compensation_attempt(
+                ToolCompensationAttemptInput(
+                    compensation_attempt_id=compensation_attempt_id,
+                    tenant_id=tenant_id,
+                    compensation_definition_id=compensation_definition_id,
+                    prepared_tool_action_id=f"prepared-tool-action:{compensation_call_id}",
+                    attempt_id=f"tool-attempt:{compensation_call_id}",
+                    execution_receipt_id=f"tool-execution-receipt:{compensation_call_id}",
+                    status="CONFIRMED",
+                    hidden_rollback=False,
+                    idempotency_scope="tool-side-effect",
+                    idempotency_key=compensation_call_id,
+                    idempotency_generation=idempotency_generation,
+                    audit_requirement_id=audit_requirement_id,
+                    attempt_payload=attempt_payload,
+                )
+            )
+
+    def record_manual_effect_assessment(
+        self,
+        *,
+        tenant_id: str,
+        manual_assessment_id: str,
+        reconciliation_id: str,
+        provider_effect_id: str,
+        conclusion: str,
+        confidence: float,
+        assessor_principal_id: str,
+        residual_uncertainty: str,
+        evidence_payload: dict[str, Any],
+    ) -> None:
+        with self._unit_of_work_factory() as repo:
+            repo.record_manual_effect_assessment(
+                ToolManualEffectAssessmentInput(
+                    manual_assessment_id=manual_assessment_id,
+                    tenant_id=tenant_id,
+                    reconciliation_id=reconciliation_id,
+                    provider_effect_id=provider_effect_id,
+                    conclusion=conclusion,
+                    confidence=confidence,
+                    assessor_principal_id=assessor_principal_id,
+                    residual_uncertainty=residual_uncertainty,
+                    evidence_payload=evidence_payload,
                 )
             )
     def _record_terminal(
