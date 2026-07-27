@@ -14,7 +14,6 @@ import {
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
   getWorkspaceTaskLifecycleAPI,
-  workspaceSimpleChatStreamAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
   type WorkspaceArtifactResponse,
@@ -518,7 +517,6 @@ const normalizeSessionAgentName = (session: any) => {
   return raw
 }
 
-const sanitizeAssistantChunk = (chunk: string) => isAgentMode.value ? chunk : chunk.replace(/ReAct\s*Agent[^\n]*\n?/gi, '').replace(/^\s+/, '')
 const normalizeMessageMarkdown = (content: string) => {
   const lines = content.replace(/\r\n/g, '\n').split('\n')
   let insideFence = false
@@ -2424,86 +2422,81 @@ const submitMessage = async () => {
   await syncRouteState({ preserveConversation: true })
   if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`, at: new Date().toLocaleTimeString(), phase: 'start', status: 'START', accent: 'default' })
   if (isAgentMode.value) return await submitAgentRuntimeTask(query, attachmentsForRequest, assistantIndex)
-  let assistantHasRealContent = false
-  let generationFailed = false
-  const renderAgentProgress = async () => {
-    if (!isAgentMode.value || assistantHasRealContent || !messages.value[assistantIndex]) return
-    messages.value[assistantIndex].content = buildLiveAssistantProgress()
-    await scrollToBottom()
-  }
-  const applyFallback = () => {
-    if (messages.value[assistantIndex] && !assistantHasRealContent) messages.value[assistantIndex].content = buildFallbackAssistantMessage()
-  }
   try {
+    const workspaceId = currentSessionId.value || normalizeRuntimeSlug('workspace', 'workspace')
     const payload = buildPayload(query)
+    payload.workspace_id = workspaceId
+    payload.goal = query
+    payload.product_mode = 'simple_chat'
+    payload.approval_mode = 'runtime'
     payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
-    await workspaceSimpleChatStreamAPI(payload, {
-      onMessage: async (chunk) => {
-        const safeChunk = sanitizeAssistantChunk(chunk)
-        if (!safeChunk) return
-        if (!assistantHasRealContent) {
-          messages.value[assistantIndex].content = ''
-          assistantHasRealContent = true
-        }
-        assistantTextStreaming.value = true
-        setMessageMotion(messages.value[assistantIndex], 'streaming')
-        messages.value[assistantIndex].content += safeChunk
-        await scrollToBottom()
-      },
-      onFinalMessage: async (message) => {
-        const safeMessage = sanitizeAssistantChunk(message)
-        if (!safeMessage || !messages.value[assistantIndex]) return
-        messages.value[assistantIndex].content = safeMessage
-        assistantHasRealContent = true
-        assistantTextStreaming.value = true
-        setMessageMotion(messages.value[assistantIndex], 'streaming')
-        await scrollToBottom()
-      },
+    const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
+      workspace_id: workspaceId,
+      conversation_id: currentSessionId.value || workspaceId,
+      query,
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, productProjectionStore)
+    activeRuntimeTaskId.value = productSubmission.receipt.command_id
+    executionEvents.value.push({
+      id: productSubmission.receipt.receipt_id || crypto.randomUUID(),
+      title: 'Product Command 已接收',
+      detail: `command_id=${productSubmission.receipt.command_id}; projection=${productSubmission.projection.projection_event_id}; status=${productSubmission.receipt.status}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_command',
+      status: productSubmission.projection.display_status,
+      accent: productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'default',
+    })
+    void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore, {
       onEvent: async (event) => {
-        if (String(event.data?.status || '').toUpperCase() === 'ERROR') {
-          if (messages.value[assistantIndex]) {
-            messages.value[assistantIndex].content = buildChatErrorMessage(event.detail || event.title)
-            assistantHasRealContent = true
-            assistantTextStreaming.value = false
-            generationFailed = true
-            setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-            pulsePetMood('error', 1600)
-            await scrollToBottom()
-          }
-          return
+        executionEvents.value.push({
+          id: event.event_id,
+          title: 'Product 投影已同步',
+          detail: `sequence=${event.sequence_no}; freshness=${productProjectionStore.freshness}`,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: event.event_type,
+          accent: event.resync_required ? 'error' : 'default',
+        })
+        if (messages.value[assistantIndex]) {
+          messages.value[assistantIndex].content = buildFallbackAssistantMessage()
+          setMessageMotion(messages.value[assistantIndex], event.resync_required ? 'error' : 'complete', event.resync_required ? 1800 : 1100)
+          await scrollToBottom()
         }
-        if (!isAgentMode.value) return
-        pushTraceEvent(event)
-        capturePendingToolApproval(event)
-        await refreshToolSelectionsAfterCreation(event)
-        await renderAgentProgress()
       },
-      onError: (error) => {
-        console.error('对话失败', error)
-        generationFailed = true
-        pendingAttachments.value = attachmentsForRequest
-        applyFallback()
-        assistantTextStreaming.value = false
-        setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-        pulsePetMood('error', 1800)
-        ElMessage.error('对话失败，请稍后重试')
-        isGenerating.value = false
-      },
-      onClose: () => {
-        attachmentsForRequest.forEach(revokeAttachmentPreview)
-        applyFallback()
-        isGenerating.value = false
-        assistantTextStreaming.value = false
-        setMessageMotion(messages.value[assistantIndex], generationFailed ? 'error' : 'complete', generationFailed ? 1800 : 1100)
-        pulsePetMood(generationFailed ? 'error' : 'success', generationFailed ? 1800 : 1300)
-        emitSessionUpdated()
+      onProblem: (problem) => {
+        runtimeFailure.value = {
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+        }
+        executionEvents.value.push({
+          id: crypto.randomUUID(),
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: problem.type,
+          accent: 'error',
+        })
+        if (messages.value[assistantIndex]) {
+          messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+          setMessageMotion(messages.value[assistantIndex], 'error', 1800)
+        }
       },
     })
+    if (messages.value[assistantIndex]) {
+      messages.value[assistantIndex].content = buildFallbackAssistantMessage()
+      setMessageMotion(messages.value[assistantIndex], productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'complete', productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 1800 : 1100)
+    }
+    attachmentsForRequest.forEach(revokeAttachmentPreview)
+    assistantTextStreaming.value = false
+    isGenerating.value = false
+    pulsePetMood(productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'success', 1300)
+    emitSessionUpdated()
     return true
   } catch (error) {
     console.error('对话异常', error)
     pendingAttachments.value = attachmentsForRequest
-    applyFallback()
+    if (messages.value[assistantIndex]) messages.value[assistantIndex].content = buildFallbackAssistantMessage()
     assistantTextStreaming.value = false
     setMessageMotion(messages.value[assistantIndex], 'error', 1800)
     pulsePetMood('error', 1800)

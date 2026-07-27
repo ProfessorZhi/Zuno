@@ -535,6 +535,49 @@ retry_count: 1 after script root fix
 唯一恢复动作: 在本机浏览器完成登录并导出 Playwright storage state 到 `tmp-qa-playwright\auth.json` 后，从 browser E2E smoke 命令继续。
 ```
 
+## P10-T14 当前进展
+
+已更新：
+
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+- `tests/frontend/test_frontend_workspace_features.py`
+
+当前非 Agent 普通聊天默认路径切流覆盖：
+
+- 默认 workspace 页面不再导入或调用 `workspaceSimpleChatStreamAPI`；
+- 非 Agent 普通聊天现在同样调用 `submitWorkspacePayloadToProductRuntime`，提交 Product `SUBMIT_USER_GOAL` command；
+- 非 Agent 普通聊天打开 Product projection SSE，复用 `connectProductRuntimeProjectionStream`、Projection Version、Watermark、Gap / Resync 和重新授权问题处理；
+- 前端只显示 Product command / projection 受控状态，不把旧 `/api/v1/workspace/simple/chat` SSE chunk 冒充为正式 Publication；
+- 新增静态回归 `test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream`，防止默认 workspace 页面回退到旧 simple-chat stream。
+
+仍未完成：
+
+- `/api/v1/workspace/simple/chat` API 定义仍在 `apps/web/src/apis/workspace.ts` 保留，等待 shadow/canary/default-new/rollback 和最终删除门；
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T14 验证：
+
+```text
+python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
+2 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+18 passed
+```
+
 ## 本轮验证
 
 已通过：
@@ -548,6 +591,8 @@ npm install
 npm run lint -w zuno-frontend
 npm run build -w zuno-frontend
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
+python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 ```
 
 未通过 / 未完成：

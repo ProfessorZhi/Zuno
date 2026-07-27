@@ -103,6 +103,16 @@ def test_workspace_agent_mode_uses_product_runtime_projection_loop():
     assert "approveWorkspaceTaskAPI" not in workspace_page
 
 
+def test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream():
+    workspace_page = (REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
+
+    assert "submitWorkspacePayloadToProductRuntime" in workspace_page
+    assert "connectProductRuntimeProjectionStream" in workspace_page
+    assert "Product Command 已接收" in workspace_page
+    assert "workspaceSimpleChatStreamAPI" not in workspace_page
+    assert "/api/v1/workspace/simple/chat" not in workspace_page
+
+
 def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():
     preload = (REPO_ROOT / "apps/desktop/preload.cjs").read_text(encoding="utf-8")
     desktop_readme = (REPO_ROOT / "apps/desktop/README.md").read_text(encoding="utf-8")
