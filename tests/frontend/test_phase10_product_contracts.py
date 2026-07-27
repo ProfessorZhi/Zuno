@@ -8,6 +8,8 @@ STORE = REPO_ROOT / "apps/web/src/product/store.ts"
 RUNTIME = REPO_ROOT / "apps/web/src/product/runtime.ts"
 INDEX = REPO_ROOT / "apps/web/src/product/index.ts"
 DEFAULT_PAGE = REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue"
+AGENT_PAGE = REPO_ROOT / "apps/web/src/pages/agent/agent.vue"
+AGENT_EDITOR = REPO_ROOT / "apps/web/src/pages/agent/agent-editor.vue"
 
 
 def test_phase10_product_contract_surface_exists() -> None:
@@ -206,6 +208,40 @@ def test_phase10_product_projection_store_keeps_frontend_out_of_agent_core_owner
     ]
     for phrase in forbidden:
         assert phrase not in text
+
+
+def test_phase10_agent_studio_and_catalog_ui_use_product_surface() -> None:
+    agent_page = AGENT_PAGE.read_text(encoding="utf-8")
+    agent_editor = AGENT_EDITOR.read_text(encoding="utf-8")
+
+    for phrase in [
+        "createProductAgentDraft",
+        "publishProductAgentVersion",
+        "installProductAgentVersion",
+        "syncProductAgentStudioSurface",
+        "productProjectionStore.upsertAgentDefinition(draftReceipt.agent_definition)",
+        "productProjectionStore.upsertAgentDraft(draftReceipt.agent_draft)",
+        "productProjectionStore.upsertPublication(publicationReceipt.agent_publication)",
+        "productProjectionStore.upsertCatalogEntry(publicationReceipt.agent_catalog_entry)",
+        "productProjectionStore.upsertInstallation(installationReceipt.agent_installation)",
+        "await syncProductAgentStudioSurface",
+        "PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'",
+    ]:
+        assert phrase in agent_editor
+
+    for phrase in [
+        "listProductAgentCatalog",
+        "installProductAgentVersion",
+        "revokeProductAgentInstallation",
+        "fetchProductAgentCatalog",
+        "productProjectionStore.upsertCatalogEntry(entry)",
+        "productProjectionStore.upsertInstallation(receipt.agent_installation)",
+        "Product Catalog",
+        "handleProductCatalogInstall(entry)",
+        "handleProductCatalogRevoke(entry)",
+        "PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'",
+    ]:
+        assert phrase in agent_page
 
 
 def test_phase10_product_runtime_adapter_connects_command_stream_and_action_tokens() -> None:

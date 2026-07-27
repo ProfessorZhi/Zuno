@@ -418,6 +418,36 @@ python -m pytest -q tests\integration\test_goal03_wave_a_persistence.py::test_ph
 1 passed
 ```
 
+## P10-T11 当前进展
+
+已更新：
+
+- `apps/web/src/pages/agent/agent-editor.vue`
+- `apps/web/src/pages/agent/agent.vue`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Agent Studio / Catalog UI 接线覆盖：
+
+- Agent Editor 在旧 Agent API 保存成功后，同步调用 Product `createProductAgentDraft`、`publishProductAgentVersion`、`installProductAgentVersion`；
+- Product draft、publication、catalog entry、installation 返回值写入 `useProductProjectionStore`，前端仍不成为 AgentDefinition、Publication 或 Installation 的事实源；
+- Agent 列表页调用 `listProductAgentCatalog` 读取服务器 Product Catalog；
+- Agent 列表页展示 Product Catalog entries，并通过 `installProductAgentVersion` / `revokeProductAgentInstallation` 提供安装和撤销入口；
+- 本轮 UI 接线复用 `workspace:agent-studio:web` 作为 Web Agent Studio Product workspace，不新增后端表或临时本地 catalog。
+
+仍未完成：
+
+- Agent Editor 仍保留旧 Agent API 保存路径作为迁移期双路径，尚未完成 default-new / rollback / 删除门；
+- Product Agent Studio / Catalog 尚未完成 Browser E2E；
+- Catalog UI 目前覆盖安装和撤销安装，发布撤销 route/client 已存在但未接入可视化撤销发布入口；
+- 非 Agent simple-chat、旧 workspace API/DTO 删除、Build/Lint、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成。
+
+P10-T11 验证：
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py -p no:cacheprovider
+10 passed
+```
+
 ## 本轮验证
 
 已通过：

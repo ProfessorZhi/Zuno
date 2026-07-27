@@ -11,6 +11,13 @@ import { getMCPServersAPI, type MCPServer } from '../../apis/mcp-server'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../apis/knowledge'
 import { getAgentSkillsAPI, type AgentSkill } from '../../apis/agent-skill'
 import { uploadFileAPI } from '../../apis/file'
+import {
+  PRODUCT_WEB_TENANT_ID,
+  createProductAgentDraft,
+  installProductAgentVersion,
+  publishProductAgentVersion,
+} from '../../product'
+import { useProductProjectionStore } from '../../product/store'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
 import { USER_AVATAR_PRESETS, withUserAvatarVersion } from '../../utils/user-avatars'
@@ -40,6 +47,7 @@ interface AgentFormData {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const productProjectionStore = useProductProjectionStore()
 const props = defineProps<{ embedded?: boolean; embeddedAgentId?: string }>()
 const emit = defineEmits<{
   (event: 'close'): void
@@ -86,6 +94,7 @@ const pageTitle = computed(() => (isEditing.value ? '编辑智能体' : '创建�
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const agentListRoute = computed(() => route.name === 'workspaceSettingsAgentEditor' ? { name: 'workspaceSettingsAgent' } : '/agent')
 const isWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
+const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 
 const getSettingsThreadId = (event?: Event) => {
   const target = event?.currentTarget as HTMLElement | null
@@ -132,6 +141,68 @@ const summaryItems = computed(() => [
 
 const isAgentDraftComplete = () =>
   Boolean(form.name.trim() && form.description.trim() && form.llm_id && form.system_prompt.trim())
+
+const normalizeProductRefSegment = (value: string) => (
+  value
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+    || 'agent'
+)
+
+const buildProductAgentConfiguration = () => ({
+  name: form.name.trim(),
+  description: form.description.trim(),
+  logo_url: form.logo_url,
+  tool_ids: [...form.tool_ids],
+  llm_id: form.llm_id,
+  mcp_ids: [...form.mcp_ids],
+  system_prompt: form.system_prompt.trim(),
+  knowledge_ids: [...form.knowledge_ids],
+  agent_skill_ids: [...form.agent_skill_ids],
+  enable_memory: form.enable_memory,
+})
+
+const syncProductAgentStudioSurface = async (legacyAgentId: string) => {
+  const stableAgentRef = normalizeProductRefSegment(legacyAgentId || activeAgentId.value || form.name)
+  const clientRequestId = `agent-studio:${stableAgentRef}`
+  const configuration = buildProductAgentConfiguration()
+  const draftReceipt = await createProductAgentDraft({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: clientRequestId,
+    display_name: form.name.trim(),
+    description: form.description.trim(),
+    primary_agent_core_profile_ref: 'agent-core-profile:product:web-agent-studio',
+    configuration,
+  })
+  productProjectionStore.upsertAgentDefinition(draftReceipt.agent_definition)
+  productProjectionStore.upsertAgentDraft(draftReceipt.agent_draft)
+
+  const agentVersionId = `agent-version:${clientRequestId}`
+  const publicationReceipt = await publishProductAgentVersion({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: `${clientRequestId}:publish`,
+    agent_definition_id: draftReceipt.agent_definition.agent_definition_id,
+    agent_version_id: agentVersionId,
+    publication_scope: 'WORKSPACE',
+    primary_agent_core_profile_ref: 'agent-core-profile:product:web-agent-studio',
+    configuration,
+  })
+  productProjectionStore.upsertPublication(publicationReceipt.agent_publication)
+  productProjectionStore.upsertCatalogEntry(publicationReceipt.agent_catalog_entry)
+
+  const installationReceipt = await installProductAgentVersion({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: `${clientRequestId}:install`,
+    agent_version_id: agentVersionId,
+    installation_scope: 'USER',
+  })
+  productProjectionStore.upsertInstallation(installationReceipt.agent_installation)
+}
 
 const resetForm = () => {
   Object.assign(form, {
@@ -332,6 +403,7 @@ const saveAgent = async (event?: Event) => {
     if (response.data.status_code !== 200) {
       throw new Error(response.data.status_message || (isEditing.value ? '更新智能体失败' : '创建智能体失败'))
     }
+    await syncProductAgentStudioSurface(activeAgentId.value || normalizeProductRefSegment(form.name))
 
     ElMessage.success(isEditing.value ? '智能体已更新' : '智能体已创建')
     if (isEmbedded.value) {

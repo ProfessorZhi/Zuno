@@ -5,6 +5,14 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus } from '@element-plus/icons-vue'
 import AgentEditor from './agent-editor.vue'
 import { deleteAgentAPI, getAgentsAPI, searchAgentsAPI, type AgentResponse } from '../../apis/agent'
+import {
+  PRODUCT_WEB_TENANT_ID,
+  installProductAgentVersion,
+  listProductAgentCatalog,
+  revokeProductAgentInstallation,
+  type AgentCatalogEntry,
+} from '../../product'
+import { useProductProjectionStore } from '../../product/store'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
 import { getSettingsIcon } from '../../utils/settings-icons'
@@ -32,14 +40,19 @@ interface AgentCardItem {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const productProjectionStore = useProductProjectionStore()
 const loading = ref(false)
 const searchLoading = ref(false)
+const productCatalogLoading = ref(false)
 const searchKeyword = ref('')
 const agents = ref<AgentCardItem[]>([])
+const productCatalogEntries = ref<AgentCatalogEntry[]>([])
+const installedProductCatalog = ref<Record<string, string>>({})
 const editorVisible = ref(false)
 const editingAgentId = ref<string | undefined>()
 const LIST_PAGE_SIZE = 6
 const listPage = ref(1)
+const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 
 const normalizeAgent = (item: AgentResponse): AgentCardItem => ({
   agent_id: item.agent_id || item.id || '',
@@ -69,6 +82,7 @@ const paginatedAgents = computed(() => sortedAgents.value.slice(
   (listPage.value - 1) * LIST_PAGE_SIZE,
   listPage.value * LIST_PAGE_SIZE,
 ))
+const visibleProductCatalogEntries = computed(() => productCatalogEntries.value.slice(0, 4))
 
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const isWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
@@ -106,6 +120,23 @@ const fetchAgents = async () => {
     agents.value = []
   } finally {
     loading.value = false
+  }
+}
+
+const fetchProductAgentCatalog = async () => {
+  productCatalogLoading.value = true
+  try {
+    const response = await listProductAgentCatalog({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    })
+    productCatalogEntries.value = response.agent_catalog_entries || []
+    productCatalogEntries.value.forEach((entry) => productProjectionStore.upsertCatalogEntry(entry))
+  } catch (error: any) {
+    console.error('fetchProductAgentCatalog failed', error)
+    productCatalogEntries.value = []
+  } finally {
+    productCatalogLoading.value = false
   }
 }
 
@@ -177,6 +208,48 @@ const closeEditor = () => {
 
 const handleEditorSaved = async () => {
   await fetchAgents()
+  await fetchProductAgentCatalog()
+}
+
+const handleProductCatalogInstall = async (entry: AgentCatalogEntry) => {
+  try {
+    const receipt = await installProductAgentVersion({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      client_request_id: `agent-catalog:${entry.catalog_entry_id}:install`,
+      agent_version_id: entry.agent_version_id,
+      installation_scope: 'USER',
+    })
+    productProjectionStore.upsertInstallation(receipt.agent_installation)
+    installedProductCatalog.value = {
+      ...installedProductCatalog.value,
+      [entry.catalog_entry_id]: receipt.agent_installation.installation_id,
+    }
+    ElMessage.success('Product Catalog 智能体已安装')
+  } catch (error: any) {
+    console.error('installProductCatalog failed', error)
+    ElMessage.error(error.message || 'Product Catalog 安装失败')
+  }
+}
+
+const handleProductCatalogRevoke = async (entry: AgentCatalogEntry) => {
+  const installationId = installedProductCatalog.value[entry.catalog_entry_id]
+  if (!installationId) return
+  try {
+    const receipt = await revokeProductAgentInstallation({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      installation_id: installationId,
+    })
+    productProjectionStore.upsertInstallation(receipt.agent_installation)
+    const nextInstalled = { ...installedProductCatalog.value }
+    delete nextInstalled[entry.catalog_entry_id]
+    installedProductCatalog.value = nextInstalled
+    ElMessage.success('Product Catalog 安装已撤销')
+  } catch (error: any) {
+    console.error('revokeProductCatalog failed', error)
+    ElMessage.error(error.message || 'Product Catalog 撤销失败')
+  }
 }
 
 const handleDelete = async (agent: AgentCardItem) => {
@@ -212,7 +285,10 @@ const handleImageError = (event: Event) => {
   if (target) target.src = zunoAgentAvatar
 }
 
-onMounted(fetchAgents)
+onMounted(() => {
+  void fetchAgents()
+  void fetchProductAgentCatalog()
+})
 </script>
 
 <template>
@@ -237,6 +313,38 @@ onMounted(fetchAgents)
           @clear="clearSearch"
           @enter="handleSearch"
         />
+      </div>
+    </section>
+
+    <section v-if="productCatalogLoading || visibleProductCatalogEntries.length > 0" class="product-catalog-strip" v-loading="productCatalogLoading" aria-label="Product Agent Catalog">
+      <div class="product-catalog-head">
+        <strong>Product Catalog</strong>
+        <span>{{ productCatalogEntries.length }} entries</span>
+      </div>
+      <div class="product-catalog-list">
+        <article v-for="entry in visibleProductCatalogEntries" :key="entry.catalog_entry_id" class="product-catalog-item">
+          <div>
+            <strong>{{ entry.agent_version_id }}</strong>
+            <span>{{ entry.visibility_scope }} / {{ entry.authorized ? 'authorized' : 'blocked' }}</span>
+          </div>
+          <button
+            v-if="!installedProductCatalog[entry.catalog_entry_id]"
+            type="button"
+            class="product-catalog-action"
+            :disabled="!entry.authorized"
+            @click="handleProductCatalogInstall(entry)"
+          >
+            安装
+          </button>
+          <button
+            v-else
+            type="button"
+            class="product-catalog-action danger"
+            @click="handleProductCatalogRevoke(entry)"
+          >
+            撤销
+          </button>
+        </article>
       </div>
     </section>
 
@@ -326,6 +434,87 @@ onMounted(fetchAgents)
   max-width: 720px;
   line-height: 1.8;
   color: #6e5d4e;
+}
+
+.product-catalog-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 4px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.product-catalog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #0f172a;
+}
+
+.product-catalog-head span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.product-catalog-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.product-catalog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.product-catalog-item div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.product-catalog-item strong,
+.product-catalog-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-catalog-item strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.product-catalog-item span {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.product-catalog-action {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #0f172a;
+  color: #fff;
+  cursor: pointer;
+}
+
+.product-catalog-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.product-catalog-action.danger {
+  background: #b91c1c;
 }
 
 .hero-actions {
