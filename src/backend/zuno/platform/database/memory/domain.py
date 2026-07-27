@@ -28,6 +28,30 @@ class MemoryVersionInput:
 
 
 @dataclass(frozen=True, slots=True)
+class MemoryCaptureInput:
+    capture_intent_id: str
+    candidate_id: str
+    memory_record_id: str
+    memory_version_id: str
+    tenant_id: str
+    workspace_id: str
+    source_module: str
+    source_ref: str
+    trigger_type: str
+    memory_kind: str
+    content_ref: str
+    source_refs: tuple[str, ...]
+    confidence: float
+    evidence_strength: float
+    conflict_key: str
+    dedupe_key: str
+    policy_ref: str
+    security_epoch_ref: str
+    idempotency_key: str
+    payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
 class ContextPackInput:
     context_pack_id: str
     tenant_id: str
@@ -40,6 +64,20 @@ class ContextPackInput:
     compression_payload: dict[str, Any]
     trace_payload: dict[str, Any]
     state: str = "PREPARED"
+
+
+@dataclass(frozen=True, slots=True)
+class MemoryUseTraceInput:
+    memory_use_trace_id: str
+    memory_version_id: str
+    context_pack_id: str
+    tenant_id: str
+    workspace_id: str
+    run_id: str
+    trace_payload: dict[str, Any]
+    adopted_by_agent_core: bool = True
+    influenced_plan: bool = False
+    influenced_action: bool = False
 
 
 class MemoryUnitOfWork:
@@ -94,6 +132,169 @@ class MemoryRepository:
                 "confidence": version.confidence,
                 "status": version.status,
                 "content_hash": canonical_sha256(version.content_payload),
+            },
+        )
+
+    def commit_governed_memory(self, capture: MemoryCaptureInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_capture_intents (
+                    capture_intent_id, tenant_id, workspace_id, source_module,
+                    source_ref, trigger_type, policy_ref, security_epoch_ref,
+                    idempotency_key, payload_hash
+                )
+                VALUES (
+                    :capture_intent_id, :tenant_id, :workspace_id, :source_module,
+                    :source_ref, :trigger_type, :policy_ref, :security_epoch_ref,
+                    :idempotency_key, :payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "capture_intent_id": capture.capture_intent_id,
+                "tenant_id": capture.tenant_id,
+                "workspace_id": capture.workspace_id,
+                "source_module": capture.source_module,
+                "source_ref": capture.source_ref,
+                "trigger_type": capture.trigger_type,
+                "policy_ref": capture.policy_ref,
+                "security_epoch_ref": capture.security_epoch_ref,
+                "idempotency_key": capture.idempotency_key,
+                "payload_hash": canonical_sha256(capture.payload),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_candidates_v2 (
+                    candidate_id, capture_intent_id, tenant_id, workspace_id,
+                    memory_kind, origin, status, confidence, evidence_strength,
+                    conflict_key, dedupe_key, payload_hash, source_refs, hidden_cot
+                )
+                VALUES (
+                    :candidate_id, :capture_intent_id, :tenant_id, :workspace_id,
+                    :memory_kind, 'SYSTEM_OBSERVED', 'APPROVED', :confidence,
+                    :evidence_strength, :conflict_key, :dedupe_key, :payload_hash,
+                    CAST(:source_refs AS jsonb), false
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "candidate_id": capture.candidate_id,
+                "capture_intent_id": capture.capture_intent_id,
+                "tenant_id": capture.tenant_id,
+                "workspace_id": capture.workspace_id,
+                "memory_kind": capture.memory_kind,
+                "confidence": capture.confidence,
+                "evidence_strength": capture.evidence_strength,
+                "conflict_key": capture.conflict_key,
+                "dedupe_key": capture.dedupe_key,
+                "payload_hash": canonical_sha256(capture.payload),
+                "source_refs": canonical_json(list(capture.source_refs)),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_governance_decisions_v2 (
+                    decision_id, candidate_id, tenant_id, workspace_id,
+                    decision, reviewer_type, reviewer_ref, policy_ref,
+                    security_decision_ref, decision_hash
+                )
+                VALUES (
+                    :decision_id, :candidate_id, :tenant_id, :workspace_id,
+                    'APPROVE', 'SYSTEM', 'memory-application-service',
+                    :policy_ref, :security_decision_ref, :decision_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "decision_id": f"governance:{capture.candidate_id}",
+                "candidate_id": capture.candidate_id,
+                "tenant_id": capture.tenant_id,
+                "workspace_id": capture.workspace_id,
+                "policy_ref": capture.policy_ref,
+                "security_decision_ref": capture.security_epoch_ref,
+                "decision_hash": canonical_sha256(
+                    {
+                        "candidate_id": capture.candidate_id,
+                        "decision": "APPROVE",
+                        "policy_ref": capture.policy_ref,
+                    }
+                ),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_records (
+                    memory_record_id, tenant_id, workspace_id, memory_kind,
+                    conflict_key, active_version_id, aggregate_generation
+                )
+                VALUES (
+                    :memory_record_id, :tenant_id, :workspace_id, :memory_kind,
+                    :conflict_key, NULL, 1
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "memory_record_id": capture.memory_record_id,
+                "tenant_id": capture.tenant_id,
+                "workspace_id": capture.workspace_id,
+                "memory_kind": capture.memory_kind,
+                "conflict_key": capture.conflict_key,
+            },
+        )
+        self.publish_memory_version(
+            MemoryVersionInput(
+                memory_version_id=capture.memory_version_id,
+                tenant_id=capture.tenant_id,
+                workspace_id=capture.workspace_id,
+                memory_scope_ref=capture.conflict_key,
+                memory_kind=capture.memory_kind,
+                version_no=1,
+                content_ref=capture.content_ref,
+                source_refs=capture.source_refs,
+                confidence=capture.confidence,
+                content_payload=capture.payload,
+                status="APPROVED",
+            )
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_commit_receipts (
+                    receipt_id, capture_intent_id, candidate_id, memory_record_id,
+                    memory_version_id, commit_state, idempotency_key,
+                    domain_generation, receipt_hash
+                )
+                VALUES (
+                    :receipt_id, :capture_intent_id, :candidate_id, :memory_record_id,
+                    :memory_version_id, 'VERSION_COMMITTED', :idempotency_key,
+                    1, :receipt_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "receipt_id": f"memory-commit:{capture.memory_version_id}",
+                "capture_intent_id": capture.capture_intent_id,
+                "candidate_id": capture.candidate_id,
+                "memory_record_id": capture.memory_record_id,
+                "memory_version_id": capture.memory_version_id,
+                "idempotency_key": capture.idempotency_key,
+                "receipt_hash": canonical_sha256(
+                    {
+                        "capture_intent_id": capture.capture_intent_id,
+                        "candidate_id": capture.candidate_id,
+                        "memory_version_id": capture.memory_version_id,
+                    }
+                ),
             },
         )
 
@@ -229,6 +430,85 @@ class MemoryRepository:
                 "snapshot_payload": canonical_json(manifest_payload),
             },
         )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO context_selection_decisions (
+                    decision_id, context_pack_id, tenant_id, workspace_id,
+                    source_ref, selected, fidelity, reason_code, decision_hash
+                )
+                VALUES (
+                    :decision_id, :context_pack_id, :tenant_id, :workspace_id,
+                    :source_ref, true, 'F2', 'RELEVANT_MEMORY', :decision_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "decision_id": f"context-selection:{pack.context_pack_id}",
+                "context_pack_id": pack.context_pack_id,
+                "tenant_id": pack.tenant_id,
+                "workspace_id": pack.workspace_id,
+                "source_ref": pack.memory_version_id,
+                "decision_hash": canonical_sha256(pack.selection_payload),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO context_compression_traces (
+                    compression_trace_id, context_pack_id, tenant_id, workspace_id,
+                    strategy, pre_tokens, post_tokens, trace_hash
+                )
+                VALUES (
+                    :compression_trace_id, :context_pack_id, :tenant_id, :workspace_id,
+                    :strategy, :pre_tokens, :post_tokens, :trace_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "compression_trace_id": f"context-compression:{pack.context_pack_id}",
+                "context_pack_id": pack.context_pack_id,
+                "tenant_id": pack.tenant_id,
+                "workspace_id": pack.workspace_id,
+                "strategy": str(pack.compression_payload.get("strategy") or "F2"),
+                "pre_tokens": int(pack.compression_payload.get("pre_tokens") or pack.budget_tokens),
+                "post_tokens": int(pack.compression_payload.get("post_tokens") or pack.budget_tokens),
+                "trace_hash": canonical_sha256(pack.compression_payload),
+            },
+        )
+
+    def record_memory_use(self, trace: MemoryUseTraceInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO memory_use_traces (
+                    memory_use_trace_id, memory_version_id, context_pack_id,
+                    tenant_id, workspace_id, run_id, adopted_by_agent_core,
+                    influenced_plan, influenced_action, trace_hash
+                )
+                VALUES (
+                    :memory_use_trace_id, :memory_version_id, :context_pack_id,
+                    :tenant_id, :workspace_id, :run_id, :adopted_by_agent_core,
+                    :influenced_plan, :influenced_action, :trace_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "memory_use_trace_id": trace.memory_use_trace_id,
+                "memory_version_id": trace.memory_version_id,
+                "context_pack_id": trace.context_pack_id,
+                "tenant_id": trace.tenant_id,
+                "workspace_id": trace.workspace_id,
+                "run_id": trace.run_id,
+                "adopted_by_agent_core": trace.adopted_by_agent_core,
+                "influenced_plan": trace.influenced_plan,
+                "influenced_action": trace.influenced_action,
+                "trace_hash": canonical_sha256(trace.trace_payload),
+            },
+        )
 
     def request_delete(
         self,
@@ -301,8 +581,10 @@ class MemoryRepository:
 
 __all__ = [
     "ContextPackInput",
+    "MemoryCaptureInput",
     "MemoryGovernanceConflict",
     "MemoryRepository",
     "MemoryUnitOfWork",
+    "MemoryUseTraceInput",
     "MemoryVersionInput",
 ]

@@ -10,6 +10,7 @@ from .runtime_batch import (
     ToolAttemptStatus,
     ToolRuntimeBatch,
 )
+from .invocation_gateway import ToolGatewayReceipt, ToolInvocationGateway
 
 __all__ = [
     "AdapterFamily",
@@ -19,5 +20,7 @@ __all__ = [
     "PreparedActionStatus",
     "ReconciliationConclusion",
     "ToolAttemptStatus",
+    "ToolGatewayReceipt",
+    "ToolInvocationGateway",
     "ToolRuntimeBatch",
 ]

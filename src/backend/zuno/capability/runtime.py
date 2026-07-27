@@ -286,6 +286,8 @@ class ToolControlPlaneRuntime:
         credential_broker: InMemoryCredentialBroker | None = None,
         sandbox_enforcer: SandboxPolicyEnforcer | None = None,
         security_approval_sink: SecurityApprovalFactSink | None = None,
+        tool_unit_of_work_factory: Callable[[], Any] | None = None,
+        readonly_cutover_only: bool = False,
     ) -> None:
         self._manifests: dict[str, ToolCardManifest] = {}
         self._executor_registry = ExecutorRegistry()
@@ -293,6 +295,8 @@ class ToolControlPlaneRuntime:
         self._credential_broker = credential_broker or InMemoryCredentialBroker()
         self._sandbox_enforcer = sandbox_enforcer or SandboxPolicyEnforcer()
         self._security_approval_sink = security_approval_sink
+        self._tool_unit_of_work_factory = tool_unit_of_work_factory
+        self._readonly_cutover_only = readonly_cutover_only
         self._approval_gate = ApprovalGate()
         self._tool_gate = ToolSecurityGate()
         self._approval_ledger: list[dict[str, Any]] = []
@@ -419,6 +423,59 @@ class ToolControlPlaneRuntime:
                 approval_id=request.approval_id,
             )
 
+        if self._readonly_cutover_only and manifest.side_effect_level not in {
+            ToolSideEffectLevel.NONE,
+            ToolSideEffectLevel.READ,
+        }:
+            audit_event = replace(
+                gate_result.audit_event,
+                policy_decision=SecurityDecision.BLOCK,
+                final_decision="blocked",
+                risk_reasons=[
+                    *gate_result.audit_event.risk_reasons,
+                    "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+                ],
+            )
+            events = self._events_for_blocked(
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                reason="PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+            )
+            result = ToolRuntimeExecutionResult(
+                tool_id=manifest.tool_id,
+                status="blocked",
+                approval_required=False,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                task_events=events,
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
+            )
+            self._record_tool_runtime_facts(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                result=result,
+                attempt_status="FAILED",
+                dispatch_certainty="NOT_DISPATCHED",
+                effect_certainty="NO_EFFECT",
+                observation_payload={"blocked": True, "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"},
+            )
+            return result
+
         requires_approval = (
             gate_result.decision is SecurityDecision.REQUIRE_APPROVAL
             or approval_decision.approval_required
@@ -511,7 +568,7 @@ class ToolControlPlaneRuntime:
                 audit_event=audit_event,
                 sandbox_context=sandbox_context,
             )
-        return ToolRuntimeExecutionResult(
+        result = ToolRuntimeExecutionResult(
             tool_id=manifest.tool_id,
             status="completed",
             approval_required=False,
@@ -526,6 +583,167 @@ class ToolControlPlaneRuntime:
             tool_execution_id=execution_id,
             tool_result_id=result_id,
         )
+        self._record_tool_runtime_facts(
+            request=request,
+            manifest=manifest,
+            adapter=adapter,
+            result=result,
+            attempt_status="SUCCEEDED",
+            dispatch_certainty="DISPATCHED",
+            effect_certainty=(
+                "NO_EFFECT"
+                if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+                else "CONFIRMED_EFFECT"
+            ),
+            observation_payload=normalized.to_dict(),
+        )
+        return result
+
+    def _record_tool_runtime_facts(
+        self,
+        *,
+        request: ToolRuntimeRequest,
+        manifest: ToolCardManifest,
+        adapter: ExecutorAdapterContract,
+        result: ToolRuntimeExecutionResult,
+        attempt_status: str,
+        dispatch_certainty: str,
+        effect_certainty: str,
+        observation_payload: dict[str, Any],
+    ) -> None:
+        if self._tool_unit_of_work_factory is None:
+            return
+        from zuno.platform.database.tool_runtime import (
+            PreparedToolActionInput,
+            ToolAttemptInput,
+            ToolExecutionReceiptInput,
+            ToolObservationInput,
+            ToolVersionInput,
+        )
+
+        tenant_id = request.user_id or "tenant:default"
+        workspace_id = request.workspace_id or "workspace:default"
+        tool_version_id = f"tool-version:{manifest.tool_id}:v1"
+        tool_operation_id = f"{tool_version_id}:operation:default"
+        prepared_id = f"prepared-tool-action:{request.execution_id or request.tool_request_id}"
+        attempt_id = f"tool-attempt:{request.execution_id or request.tool_request_id}"
+        receipt_id = f"tool-execution-receipt:{request.execution_id or request.tool_request_id}"
+        observation_id = f"tool-observation:{request.execution_id or request.tool_request_id}"
+        with self._tool_unit_of_work_factory() as repo:
+            repo.publish_tool_version(
+                ToolVersionInput(
+                    tool_definition_id=f"tool-definition:{manifest.tool_id}",
+                    tool_version_id=tool_version_id,
+                    tenant_id=tenant_id,
+                    version_no=1,
+                    input_schema=manifest.input_schema,
+                    output_schema=manifest.output_schema,
+                    adapter_kind=adapter.execution_mode.value,
+                    effect_level=(
+                        "READ_ONLY"
+                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+                        else "PHASE16_REQUIRED"
+                    ),
+                )
+            )
+            repo.record_adapter_binding(
+                adapter_binding_id=f"tool-adapter-binding:{adapter.adapter_id}:{tool_version_id}",
+                tenant_id=tenant_id,
+                tool_version_id=tool_version_id,
+                adapter_kind=adapter.execution_mode.value,
+                adapter_version=f"{adapter.adapter_id}:v1",
+                conformance_payload={
+                    "adapter_id": adapter.adapter_id,
+                    "timeout_seconds": adapter.timeout_seconds,
+                    "network_policy": adapter.network_policy,
+                    "sandbox_profile": adapter.sandbox_profile,
+                },
+            )
+            repo.install_tool(
+                tool_installation_id=f"tool-installation:{workspace_id}:{manifest.tool_id}",
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                tool_version_id=tool_version_id,
+                policy_ref=f"tool-policy:{manifest.tool_id}:phase15",
+            )
+            repo.activate_tool(
+                tool_activation_id=f"tool-activation:{workspace_id}:{manifest.tool_id}",
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                tool_installation_id=f"tool-installation:{workspace_id}:{manifest.tool_id}",
+                expected_generation=1,
+                activation_payload={"runtime": "ToolInvocationGateway", "phase": "PHASE15"},
+            )
+            repo.prepare_action(
+                PreparedToolActionInput(
+                    prepared_tool_action_id=prepared_id,
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    tool_operation_id=tool_operation_id,
+                    canonical_args=redact_sensitive_payload(request.arguments),
+                    target_resources=tuple(_network_targets(request.arguments)) or (f"tool://{manifest.tool_id}",),
+                    effect_level=(
+                        "READ_ONLY"
+                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+                        else "PHASE16_REQUIRED"
+                    ),
+                    approval_required=result.approval_required,
+                    idempotency_key=request.execution_id or request.tool_request_id,
+                    security_epoch_ref=f"security-epoch:{request.trace_id}",
+                    status="READY" if result.status == "completed" else "OBSOLETE",
+                )
+            )
+            repo.record_attempt(
+                ToolAttemptInput(
+                    attempt_id=attempt_id,
+                    tenant_id=tenant_id,
+                    prepared_tool_action_id=prepared_id,
+                    status=attempt_status,
+                    dispatch_certainty=dispatch_certainty,
+                    adapter_family=adapter.execution_mode.value.upper(),
+                    hidden_retry_count=0,
+                    state_history=("STARTED", attempt_status),
+                )
+            )
+            repo.record_observation(
+                ToolObservationInput(
+                    observation_id=observation_id,
+                    tenant_id=tenant_id,
+                    attempt_id=attempt_id,
+                    owner_module="08 Tool Runtime",
+                    normalized_projection_owner="06 Agent Core / Planning & Control",
+                    output_trusted=False,
+                    schema_valid=result.status == "completed",
+                    memory_write_allowed=False,
+                    evidence_write_allowed=False,
+                    payload=observation_payload,
+                )
+            )
+            repo.record_execution_receipt(
+                ToolExecutionReceiptInput(
+                    receipt_id=receipt_id,
+                    tenant_id=tenant_id,
+                    prepared_tool_action_id=prepared_id,
+                    attempt_id=attempt_id,
+                    status=attempt_status,
+                    dispatch_certainty=dispatch_certainty,
+                    effect_certainty=effect_certainty,
+                    append_only_generation=1,
+                    receipt_payload={
+                        "status": result.status,
+                        "tool_request_id": result.tool_request_id,
+                        "tool_execution_id": result.tool_execution_id,
+                        "tool_result_id": result.tool_result_id,
+                    },
+                )
+            )
+            repo.record_bypass_guard(
+                receipt_id=f"tool-bypass-guard:{request.execution_id or request.tool_request_id}",
+                tenant_id=tenant_id,
+                scope="default_readonly_tool_runtime",
+                allowlist_count=0,
+                guard_payload={"default_path": "ToolInvocationGateway", "direct_execution": False},
+            )
 
     def _require_manifest(self, tool_id: str) -> ToolCardManifest:
         manifest = self._manifests.get(tool_id)
@@ -767,7 +985,14 @@ def build_default_tool_control_plane_runtime(
     *,
     security_approval_sink: SecurityApprovalFactSink | None = None,
 ) -> ToolControlPlaneRuntime:
-    runtime = ToolControlPlaneRuntime(security_approval_sink=security_approval_sink)
+    from zuno.platform.database import engine
+    from zuno.platform.database.tool_runtime import ToolUnitOfWork
+
+    runtime = ToolControlPlaneRuntime(
+        security_approval_sink=security_approval_sink,
+        tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        readonly_cutover_only=True,
+    )
 
     runtime.register_manifest(
         ToolCardManifest(
@@ -871,9 +1096,8 @@ def build_default_tool_control_plane_runtime(
             timeout_seconds=10,
         ),
         lambda args, context: {
-            "status": "success",
-            "summary": "email send accepted by sandboxed adapter",
-            "message_id": f"msg_{uuid4().hex[:12]}",
+            "status": "blocked",
+            "summary": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
         },
     )
 

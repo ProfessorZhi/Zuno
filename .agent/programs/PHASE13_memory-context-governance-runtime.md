@@ -1,7 +1,7 @@
 # PHASE13 Memory and Context Governance Runtime
 
 phase_id: PHASE13
-status: blocked
+status: completed
 depends_on: PHASE08, PHASE12
 owner: Module 05 Memory & Context
 
@@ -91,6 +91,14 @@ docs/evidence/**
 - Candidate→Governance→Activation→ContextPack 全链路可运行。
 - Privacy Delete、Revocation、Compression/Fidelity、Negative Transfer 测试通过。
 - Memory 与 Knowledge/Checkpoint 边界保持。
+
+## Goal03 Wave B Closure
+
+status: completed
+coordinator_approval: approved
+evidence_ref: docs/evidence/goal03-wave-b-gate-review.md
+
+默认 Agent post-turn 路径已接入 `GovernedMemoryContextRuntime`，并通过 `MemoryUnitOfWork` / `MemoryRepository` 写入 Capture Intent、Candidate、Governance Decision、Memory Record、Memory Version、ContextPack、Compression Trace 和 Memory Use Trace。旧 `MemoryEngine` 只保留期限 adapter，不再作为 PHASE13 完成事实的唯一来源。
 
 ## Validation
 

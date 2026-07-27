@@ -18,12 +18,12 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE11 completed：Goal02 final closure 已恢复传输并完成有限 Closure Review；不代表 production ready。
 - PHASE09 completed：Goal03 Wave A 已完成 Product Surface Backend Runtime 默认 Product Runtime、Owner dispatch、Projection/SSE/AvailableAction/Cutover focused suites 与 Product verifier；不代表 PHASE10 或 production readiness。
 - PHASE12 completed：Goal03 Wave A 已完成 KnowledgeVersion / Snapshot / Index Visibility / Cutover / Standard RAG durable port；Elasticsearch BM25、Milvus Vector、Neo4j Graph 均有容器化 service readback integration；不代表 PHASE18/20 quality gate 或 production readiness。
-- PHASE13 ready：PHASE12 Wave A 上游已完成，可启动 Memory and Context Governance Runtime；尚未实现。
+- PHASE13 completed：Goal03 Wave B 已完成 Memory and Context Governance Runtime 默认 Agent post-turn 接线，Capture Intent、Candidate、Governance Decision、Memory Record/Version、ContextPack、Compression Trace 和 Memory Use Trace 均由 PostgreSQL Repository/UoW 持久化；不代表 PHASE19 Reflexion 或 production readiness。
 - PHASE14 completed：Goal03 Wave A 已完成 Capability/Skill Definition、Version、Installation、Selection、Availability、Supply-chain guard、Planner Snapshot、progressive loading 和旁路 guard focused suites 与 Capability verifier；不代表 PHASE15。
-- PHASE15 ready：PHASE14 Wave A 上游已完成，可启动 Tool Runtime Definition and Read-only Cutover；尚未实现。
-- PHASE10 planned：等待 PHASE09 完成后启动 Web/Desktop Product Adaptation。
-- PHASE16 planned：等待 PHASE15 完成后启动 Tool Side Effect and Reconciliation。
-- current_phase = PHASE09；PHASE17–22 不得提前冒充 Current。
+- PHASE15 completed：Goal03 Wave B 已完成唯一 ToolInvocationGateway、ToolRepository/UoW 默认路径、只读 CLI/OpenAPI/LangChain gateway cutover 和旁路 guard；有副作用 Tool fail-closed 到 PHASE16，不返回虚构外部 Effect 成功。
+- PHASE10 ready：PHASE09 Wave A 已完成，可启动 Web/Desktop Product Adaptation；尚未实现。
+- PHASE16 ready：PHASE15 Wave B 已完成，可启动 Tool Side Effect and Reconciliation；尚未实现。
+- current_phase = PHASE10；PHASE17–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
@@ -33,7 +33,7 @@ Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE
 
 ## Goal03 Closure Boundary
 
-Goal03 in_progress：PHASE09 completed；PHASE12 completed；PHASE14 completed；PHASE13 ready；PHASE15 ready；PHASE10 planned；PHASE16 planned；current_phase PHASE09；production readiness not established。
+Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；PHASE14 completed；PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production readiness not established。
 
 PHASE08 当前保留的部分证据：
 

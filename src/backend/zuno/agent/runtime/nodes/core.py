@@ -382,6 +382,29 @@ def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> Age
                 metadata={"trace_id": state.trace_id, "task_id": state.task_id},
             )
             refs = [f"summary:{state.run_id}"]
+            governed_runtime = getattr(deps.memory_engine, "governed_context_runtime", None)
+            if governed_runtime is not None:
+                governed_receipt = governed_runtime.commit_turn_outcome(
+                    scope=scope,
+                    event_id=event.event_id,
+                    run_id=state.run_id,
+                    step_run_id=state.current_step_id or "post_turn",
+                    task=state.goal,
+                    response=f"{state.goal} -> {_enum_value(state.finalization_status)}",
+                    context_trace={
+                        "trace_event_ids": list(state.trace_event_ids),
+                        "evidence_refs": list(state.evidence_refs),
+                        "artifact_refs": list(state.artifact_refs),
+                        "memory_candidate_refs": list(state.memory_candidate_refs),
+                    },
+                )
+                refs.extend(
+                    [
+                        governed_receipt.candidate_id,
+                        governed_receipt.memory_version_id,
+                        governed_receipt.context_pack_id,
+                    ]
+                )
             lesson = _REFLEXION_BUILDER.build(state)
             if lesson is not None:
                 candidate = deps.memory_engine.submit_reflexion_lesson_candidate(
