@@ -919,6 +919,19 @@ class ToolRepository:
                 "cancellation_payload_hash": canonical_sha256(cancellation.cancellation_payload),
             },
         )
+        if cancellation.async_job_id:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE tool_async_jobs
+                    SET status = 'CANCEL_REQUESTED',
+                        updated_at = now()
+                    WHERE async_job_id = :async_job_id
+                      AND status = 'WAITING_CALLBACK'
+                    """
+                ),
+                {"async_job_id": cancellation.async_job_id},
+            )
 
     def record_compensation_definition(self, definition: ToolCompensationDefinitionInput) -> None:
         self.connection.execute(

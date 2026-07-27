@@ -283,6 +283,22 @@ Failure Fingerprint：
 - 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_async_job_callback_and_cancellation -p no:cacheprovider --tb=short`：1 passed。
 - 使用显式 `sys.path.insert(...)` 运行 PHASE16 focused subset，包含 effect policy、bypass guard、default ToolControlPlane cutover/replay、Known/UNKNOWN/restart、Async completion/forged callback、Async timeout 和 Compensation：11 passed。
 - Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+### P16-T12 Async Cancellation State 与 Timeout Fencing
+
+状态：completed-for-current-slice，未构成 PHASE16 closure。
+
+已实现内容：
+
+- `ToolRepository.record_cancellation_receipt(...)` 在写入 `tool_cancellation_receipts` 后，会将仍处于 `WAITING_CALLBACK` 的 `tool_async_jobs` 推进为 `CANCEL_REQUESTED`。
+- 已经进入 `COMPLETED` 的 async job 不会被 cancellation 覆盖；timeout scanner 仍只处理 `WAITING_CALLBACK`，不会把 `CANCEL_REQUESTED` job 改写成 `TIMEOUT`。
+- Cancellation receipt 继续保持 `status=NOT_GUARANTEED`、`external_effect_revoked=false`，明确不声明 provider 外部副作用已经撤销。
+- 本切片未新增 migration；既有 `20260727_44` 的 `tool_async_jobs.status` 枚举已经包含 `CANCEL_REQUESTED`。
+
+验证：
+
+- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_async_cancellation_moves_waiting_job_without_timeout_overwrite -p no:cacheprovider --tb=short`：1 passed。
+- 使用显式 `sys.path.insert(...)` 运行 async 相邻路径：callback completion/forged fencing、async timeout、async cancellation timeout fencing：3 passed。
+- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
 ## PHASE16 Closure Gate Audit
 
 状态：closure_not_approved。
@@ -306,7 +322,7 @@ Failure Fingerprint：
 
 Closure Reviewer 结论：
 
-P16-T01 至 P16-T11 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、async completion/forged callback fencing 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
+P16-T01 至 P16-T12 的 focused implementation slices 已具备代码、migration、PostgreSQL integration、fault/security 和 verifier 证据；默认 Product/Agent ToolControlPlane 写 Tool 已由 `readonly_cutover_only=False` 切入 `ToolInvocationGateway`，并验证 EffectReceipt、SecretLease、IdempotencyClaim、completed side-effect replay、UNKNOWN recovery、async completion/forged callback fencing、async cancellation state 和 async timeout。后续 closure commit 必须同步 Program/Manifest、Production Readiness 和 Coordinator Approval，且不得声明 production ready。
 ## 当前结论
 
-PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T11 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、async callback completion/forged fencing 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。
+PHASE16 已在独立 PR B worktree 启动为 `in_progress`。P16-T01 至 P16-T12 当前切片已完成并验证，默认 Product/Agent ToolControlPlane 写 Tool已通过 Gateway 切流并产生 EffectReceipt/SecretLease/Claim 证据，completed side-effect replay 不会重复 dispatch provider，restart recovery 已覆盖 UNKNOWN age escalation、async callback completion/forged fencing、async cancellation state 与 async timeout；PHASE16 closure 状态尚未在 Program/Manifest 中写入 completed，本文不证明 Goal04 completed、quality fully proven 或 production ready。

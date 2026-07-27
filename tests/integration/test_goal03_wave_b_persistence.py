@@ -1385,6 +1385,110 @@ def test_phase16_async_restart_times_out_due_job_without_callback_replay(engine)
     assert claim["result_ref"] == "tool-async-job:call-phase16-async-timeout-export"
 
 
+def test_phase16_async_cancellation_moves_waiting_job_without_timeout_overwrite(engine) -> None:
+    tenant_id = "tenant-phase16-async-cancel"
+    workspace_id = "workspace-phase16-async-cancel"
+    call_id = "call-phase16-async-cancel-export"
+    secret_ref = "security-secret-ref:phase16:async-cancel"
+    async_job_id = "tool-async-job:call-phase16-async-cancel-export"
+    provider_job_id = "provider-job:phase16:async-cancel:1"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-cancel:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": provider_job_id}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/cancel-export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-cancel",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": provider_job_id}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    gateway.record_cancellation_request(
+        tenant_id=tenant_id,
+        prepared_id=f"prepared-tool-action:{call_id}",
+        attempt_id=f"tool-attempt:{call_id}",
+        async_job_id=async_job_id,
+        provider_job_id=provider_job_id,
+        requested_by_principal_id="workspace-user:cancel",
+        audit_requirement_id=f"audit-requirement:{call_id}:cancel",
+    )
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET deadline_at = now() - interval '1 second'
+                WHERE async_job_id = :async_job_id
+                """
+            ),
+            {"async_job_id": async_job_id},
+        )
+
+    timed_out = gateway.timeout_due_async_jobs(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        job = conn.execute(
+            text(
+                """
+                SELECT status, provider_job_id, callback_order
+                FROM tool_async_jobs
+                WHERE async_job_id = :async_job_id
+                """
+            ),
+            {"async_job_id": async_job_id},
+        ).mappings().one()
+        cancellation = conn.execute(
+            text(
+                """
+                SELECT status, external_effect_revoked, requested_by_principal_id,
+                       audit_requirement_id
+                FROM tool_cancellation_receipts
+                WHERE cancellation_receipt_id = :receipt_id
+                """
+            ),
+            {"receipt_id": f"tool-cancellation-receipt:{provider_job_id}"},
+        ).mappings().one()
+
+    assert timed_out == 0
+    assert calls == 1
+    assert job["provider_job_id"] == provider_job_id
+    assert job["status"] == "CANCEL_REQUESTED"
+    assert job["callback_order"] == 0
+    assert cancellation["status"] == "NOT_GUARANTEED"
+    assert cancellation["external_effect_revoked"] is False
+    assert cancellation["requested_by_principal_id"] == "workspace-user:cancel"
+    assert cancellation["audit_requirement_id"] == f"audit-requirement:{call_id}:cancel"
+
+
 def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> None:
     tenant_id = "tenant-phase16-compensation"
     workspace_id = "workspace-phase16-compensation"
