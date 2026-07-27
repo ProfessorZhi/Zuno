@@ -236,7 +236,7 @@ def test_phase10_product_runtime_adapter_connects_command_stream_and_action_toke
     assert "export * from './runtime'" in index_text
 
 
-def test_phase10_default_workspace_page_uses_product_projection_path_before_legacy_task_fallback() -> None:
+def test_phase10_default_workspace_page_uses_product_projection_path_without_legacy_task_fallback() -> None:
     assert DEFAULT_PAGE.exists()
     text = DEFAULT_PAGE.read_text(encoding="utf-8")
 
@@ -247,10 +247,18 @@ def test_phase10_default_workspace_page_uses_product_projection_path_before_lega
         "connectProductRuntimeProjectionStream",
         "consumeProductStoreAction",
         "await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>",
+        "const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>",
+        "activeRuntimeTaskId.value = productSubmission.receipt.command_id",
         "void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore",
         "Object.values(productProjectionStore.availableActions).find",
         "action.action === (decision === 'approved' ? 'APPROVE' : 'DENY')",
-        "await consumeProductStoreAction(availableAction",
+        "if (!availableAction) throw new Error('Product AvailableAction token is required before approval can be consumed.')",
+        "await submitProductAvailableAction(availableAction",
+        "await consumeProductStoreAction(action",
+        "productProjectionStore.sortedAvailableActions.length > 0",
+        "submitProductAvailableAction(action)",
+        "Product Actions",
+        "title: 'Product Command 已接收'",
         "title: 'Product 投影已同步'",
         "title: 'Product 投影同步受阻'",
         "getProductArtifact",
@@ -260,11 +268,13 @@ def test_phase10_default_workspace_page_uses_product_projection_path_before_lega
         "productProjectionStore.upsertQuality(productQuality)",
         "Quality {{ activeRuntimeArtifact.qualityDisclosure.status }}",
         "activeRuntimeArtifact.citationRefs.length > 0",
-        "const response = await createWorkspaceTaskAPI(payload)",
     ]:
         assert phrase in text
 
-    assert text.index("await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>") < text.index("const response = await createWorkspaceTaskAPI(payload)")
+    assert "createWorkspaceTaskAPI" not in text
+    assert "workspaceTaskEventsStreamAPI" not in text
+    assert "streamWorkspaceTaskEvents" not in text
+    assert "approveWorkspaceTaskAPI" not in text
 
 
 def test_phase10_desktop_bridge_is_versioned_product_surface() -> None:

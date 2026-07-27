@@ -344,6 +344,37 @@ git diff --check
 无 whitespace error；仅 CRLF warning
 ```
 
+## P10-T09 当前进展
+
+已更新：
+
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`
+- `tests/frontend/test_phase10_product_contracts.py`
+- `tests/frontend/test_frontend_workspace_features.py`
+
+当前 Product 默认路径切流覆盖：
+
+- 默认 workspace Agent 模式不再调用 `createWorkspaceTaskAPI(payload)` 创建旧 workspace task；
+- 默认 workspace Agent 模式不再调用 `workspaceTaskEventsStreamAPI` 读取旧 task SSE；
+- 默认 workspace Agent 模式不再通过 `approveWorkspaceTaskAPI` 作为审批 fallback；
+- Product runtime command receipt 现在直接写入页面执行事件，默认后续同步由 Product projection SSE 驱动；
+- 多个服务器 `AvailableAction` 通过 `productProjectionStore.sortedAvailableActions` 渲染为 Product Actions 列表，由 `submitProductAvailableAction` 消费；
+- 旧 tool approval panel 缺少匹配 Product `AvailableAction` token 时 fail closed，不再绕回旧 approval endpoint。
+
+仍未完成：
+
+- 非 Agent 普通聊天仍使用 `/api/v1/workspace/simple/chat`，尚未完成 Product runtime 默认化；
+- `apps/web/src/apis/workspace.ts` 中旧 task、approval、artifact DTO/API 定义仍作为迁移期文件存在，尚未完成最终删除；
+- Product stream event 当前仍只暴露投影 cursor/freshness，不足以证明 artifact、citation、failure、multi interrupt 的 Browser E2E；
+- Browser E2E、Desktop smoke、Build/Lint、shadow/canary/default-new/rollback closure gate 仍未完成。
+
+P10-T09 验证：
+
+```text
+python -m pytest -q tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -p no:cacheprovider
+16 passed
+```
+
 ## 本轮验证
 
 已通过：

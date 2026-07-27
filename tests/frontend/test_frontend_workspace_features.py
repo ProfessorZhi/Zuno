@@ -57,22 +57,23 @@ def test_workspace_page_exposes_tool_approval_runtime_surface():
         assert phrase in workspace_page or phrase in workspace_api
 
 
-def test_workspace_agent_mode_uses_task_runtime_product_loop():
+def test_workspace_agent_mode_uses_product_runtime_projection_loop():
     workspace_page = (REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
 
     for phrase in [
         "createWorkspaceFileAPI",
         "createWorkspaceIngestAPI",
-        "createWorkspaceTaskAPI",
-        "workspaceTaskEventsStreamAPI",
-        "getWorkspaceTaskAPI",
         "getProductArtifact",
         "downloadProductArtifact",
         "getWorkspaceTaskLifecycleAPI",
         "submitProductFeedback",
         "submitAgentRuntimeTask",
         "registerRuntimeAttachments",
-        "streamWorkspaceTaskEvents",
+        "submitWorkspacePayloadToProductRuntime",
+        "connectProductRuntimeProjectionStream",
+        "Product Command 已接收",
+        "Product Actions",
+        "submitProductAvailableAction",
         "loadWorkspaceArtifact",
         "downloadActiveWorkspaceArtifact",
         "submitWorkspaceFeedback",
@@ -95,6 +96,11 @@ def test_workspace_agent_mode_uses_task_runtime_product_loop():
         "if (isAgentMode.value) return await submitAgentRuntimeTask",
     ]:
         assert phrase in workspace_page
+
+    assert "createWorkspaceTaskAPI" not in workspace_page
+    assert "workspaceTaskEventsStreamAPI" not in workspace_page
+    assert "streamWorkspaceTaskEvents" not in workspace_page
+    assert "approveWorkspaceTaskAPI" not in workspace_page
 
 
 def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():

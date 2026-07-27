@@ -6,19 +6,15 @@ import { ArrowDown, ArrowLeft, ArrowUp, CopyDocument, Download, Plus } from '@el
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
-  approveWorkspaceTaskAPI,
   createWorkspaceFileAPI,
   createWorkspaceIngestAPI,
-  createWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
   getWorkspaceTaskLifecycleAPI,
-  getWorkspaceTaskAPI,
   workspaceSimpleChatStreamAPI,
-  workspaceTaskEventsStreamAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
   type WorkspaceArtifactResponse,
@@ -26,7 +22,6 @@ import {
   type WorkspaceObservabilitySnapshot,
   type WorkspaceRetrievalProfile,
   type WorkspaceStreamEvent,
-  type WorkspaceTaskCreateResponse,
   type KnowledgeSpaceRetrievalSelection,
   type WorkSpaceSimpleTask,
 } from '../../../apis/workspace'
@@ -43,6 +38,7 @@ import {
   getProductArtifact,
   submitProductFeedback,
   submitWorkspacePayloadToProductRuntime,
+  type AvailableAction,
 } from '../../../product'
 import { useProductProjectionStore } from '../../../product/store'
 import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../../utils/retrieval'
@@ -1537,9 +1533,6 @@ const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
   assistantTextStreaming.value = false
 }
 
-const unwrapWorkspaceTaskResponse = (response: any): WorkspaceTaskCreateResponse | null => (
-  response?.data?.data || response?.data || response || null
-)
 const normalizeRuntimeSlug = (value: string, prefix: string) => {
   const slug = value
     .trim()
@@ -1650,56 +1643,6 @@ const downloadActiveWorkspaceArtifact = async () => {
     ElMessage.error('Artifact 下载失败')
   }
 }
-const applyWorkspaceTaskSnapshot = async (snapshot: WorkspaceTaskCreateResponse | null, assistantIndex = -1) => {
-  if (!snapshot?.task) return
-  activeRuntimeTaskId.value = snapshot.task.task_id
-  if (snapshot.observability) activeRuntimeObservability.value = snapshot.observability
-  const runtimeEvents = Array.isArray(snapshot.runtime?.events) ? snapshot.runtime?.events || [] : []
-  const runtimeCitationIds = runtimeEvents.flatMap((event: any) => normalizeStringList(event?.citation_ids || event?.payload?.citation_ids))
-  if (runtimeCitationIds.length > 0) mergeRuntimeCitationIds(runtimeCitationIds)
-  const artifactIds = [
-    ...normalizeStringList(snapshot.artifact_ids),
-    ...(snapshot.artifacts || []).map((artifact) => artifact.artifact_id).filter(Boolean),
-  ]
-  if (artifactIds[0]) await loadWorkspaceArtifact(artifactIds[0], assistantIndex)
-  const status = String(snapshot.task.status || snapshot.runtime?.status || '').toLowerCase()
-  const lifecycleState = String(snapshot.lifecycle?.state || '').toLowerCase()
-  const recoveryActions = normalizeStringList(
-    snapshot.lifecycle?.recovery_actions
-    || workspaceTaskRecoveryActions.value[lifecycleState]
-    || []
-  )
-  const failure = snapshot.runtime?.failure || snapshot.runtime?.state?.failure
-  if (lifecycleState === 'recoverable_failed' || status === 'failed' || status === 'cancelled' || failure) {
-    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
-    runtimeFailure.value = {
-      title: status === 'cancelled' ? '任务已取消' : lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
-      detail: `${String(failure?.message || failure?.reason || failure?.error || '任务未能完成。')}${recoveryCopy}`,
-    }
-    if (assistantIndex >= 0 && messages.value[assistantIndex] && !activeRuntimeArtifact.value?.content) {
-      messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
-      setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-      await scrollToBottom()
-    }
-  }
-}
-const streamWorkspaceTaskEvents = async (taskId: string, assistantIndex: number, renderAgentProgress: () => Promise<void>) => {
-  let streamError: any = null
-  await workspaceTaskEventsStreamAPI(taskId, {
-    onEvent: (event) => {
-      pushTraceEvent(event)
-      capturePendingToolApproval(event)
-      void refreshToolSelectionsAfterCreation(event)
-      void renderAgentProgress()
-    },
-    onError: (error) => {
-      streamError = error
-    },
-  })
-  if (streamError) throw streamError
-  const response = await getWorkspaceTaskAPI(taskId)
-  await applyWorkspaceTaskSnapshot(unwrapWorkspaceTaskResponse(response), assistantIndex)
-}
 const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
   if (!activeRuntimeTaskId.value || feedbackSubmitting.value) return
   feedbackSubmitting.value = true
@@ -1734,49 +1677,65 @@ const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
 const submitToolApproval = async (decision: 'approved' | 'rejected') => {
   const pending = pendingToolApproval.value
   if (!pending || toolApprovalSubmitting.value) return
-  toolApprovalSubmitting.value = true
   try {
     const availableAction = Object.values(productProjectionStore.availableActions).find(
       (action) => action.action === (decision === 'approved' ? 'APPROVE' : 'DENY') && action.target_ref === pending.approvalId
     )
-    if (availableAction) {
-      await consumeProductStoreAction(availableAction, {
-        workspace_id: currentSessionId.value || pending.taskId,
-        conversation_id: currentSessionId.value || pending.taskId,
-        query: pending.requiredApproval,
-        active_agent_version_id: activeAgentId.value || undefined,
-      }, {
-        decision,
-        approval_id: pending.approvalId,
-        tool_call_id: pending.toolCallId,
-      }, productProjectionStore)
-    }
-    const response = await approveWorkspaceTaskAPI(pending.taskId, {
+    if (!availableAction) throw new Error('Product AvailableAction token is required before approval can be consumed.')
+    await submitProductAvailableAction(availableAction, {
       decision,
-      comment: decision === 'approved' ? 'Approved from workspace approval panel.' : 'Rejected from workspace approval panel.',
       approval_id: pending.approvalId,
       tool_call_id: pending.toolCallId,
       required_approval: pending.requiredApproval,
     })
     pendingToolApproval.value = null
-    ElMessage.success(decision === 'approved' ? '工具调用已批准。' : '工具调用已拒绝。')
-    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
-    await applyWorkspaceTaskSnapshot(taskSnapshot, activeAssistantMessageIndex.value)
-    const task = taskSnapshot?.task
-    if (task?.status === 'completed') {
-      executionEvents.value.push({
-        id: crypto.randomUUID(),
-        title: '工具审批已处理',
-        detail: `${pending.toolId} 已继续执行。`,
-        at: new Date().toLocaleTimeString(),
-        phase: 'approval',
-        status: 'completed',
-        accent: 'tool',
-      })
-    }
   } catch (error) {
     console.error('工具审批失败', error)
     ElMessage.error('工具审批失败，请稍后重试')
+  }
+}
+
+const productActionLabel = (action: AvailableAction) => {
+  switch (action.action) {
+    case 'APPROVE': return '批准'
+    case 'DENY': return '拒绝'
+    case 'CANCEL': return '取消'
+    case 'INPUT': return '补充'
+    case 'RECONCILE': return '对账'
+    case 'DOWNLOAD': return '下载授权'
+    case 'RESYNC': return '重同步'
+    default: return '处理'
+  }
+}
+
+const submitProductAvailableAction = async (action: AvailableAction, payload: Record<string, unknown> = {}) => {
+  if (toolApprovalSubmitting.value) return
+  toolApprovalSubmitting.value = true
+  try {
+    await consumeProductStoreAction(action, {
+      workspace_id: currentSessionId.value || activeRuntimeTaskId.value || action.target_ref,
+      conversation_id: currentSessionId.value || activeRuntimeTaskId.value || action.target_ref,
+      query: String(payload.required_approval || action.target_ref),
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, {
+      action: action.action,
+      target_ref: action.target_ref,
+      ...payload,
+    }, productProjectionStore)
+    executionEvents.value.push({
+      id: crypto.randomUUID(),
+      title: 'Product Action 已消费',
+      detail: `${action.action} -> ${action.target_ref}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_action',
+      status: action.action,
+      accent: action.action === 'DENY' || action.action === 'CANCEL' ? 'error' : 'tool',
+    })
+    ElMessage.success(`${productActionLabel(action)}已提交。`)
+  } catch (error) {
+    console.error('Product action consume failed', error)
+    ElMessage.error('Product action 提交失败')
+    throw error
   } finally {
     toolApprovalSubmitting.value = false
   }
@@ -2295,12 +2254,22 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       timeout_seconds: 180,
     }
     payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
-    await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
+    const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
       workspace_id: workspaceId,
       conversation_id: currentSessionId.value || workspaceId,
       query,
       active_agent_version_id: activeAgentId.value || undefined,
     }, productProjectionStore)
+    activeRuntimeTaskId.value = productSubmission.receipt.command_id
+    executionEvents.value.push({
+      id: productSubmission.receipt.receipt_id || crypto.randomUUID(),
+      title: 'Product Command 已接收',
+      detail: `command_id=${productSubmission.receipt.command_id}; projection=${productSubmission.projection.projection_event_id}; status=${productSubmission.receipt.status}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_command',
+      status: productSubmission.projection.display_status,
+      accent: productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'default',
+    })
     void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore, {
       onEvent: (event) => {
         executionEvents.value.push({
@@ -2337,23 +2306,7 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       })
       await renderAgentProgress()
     }
-    const response = await createWorkspaceTaskAPI(payload)
-    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
-    await applyWorkspaceTaskSnapshot(taskSnapshot, assistantIndex)
-    const taskId = taskSnapshot?.task?.task_id || ''
-    const traceId = taskSnapshot?.task?.trace_id || taskSnapshot?.runtime?.trace_id || ''
-    if (!taskId) throw new Error('Workspace task runtime did not return task_id.')
-    executionEvents.value.push({
-      id: crypto.randomUUID(),
-      title: 'Task 已创建',
-      detail: `task_id=${taskId}${traceId ? ` / trace_id=${traceId}` : ''}`,
-      at: new Date().toLocaleTimeString(),
-      phase: 'task',
-      status: taskSnapshot?.task?.status || 'created',
-      accent: 'default',
-    })
     await renderAgentProgress()
-    await streamWorkspaceTaskEvents(taskId, assistantIndex, renderAgentProgress)
     const hasPendingApproval = Boolean(pendingToolApproval.value)
     if (runtimeFailure.value) {
       generationFailed = true
@@ -3040,6 +2993,26 @@ onBeforeUnmount(() => {
               <div class="tool-approval-actions">
                 <button type="button" class="tool-approval-button reject" :disabled="toolApprovalSubmitting" @click="submitToolApproval('rejected')">拒绝</button>
                 <button type="button" class="tool-approval-button approve" :disabled="toolApprovalSubmitting" @click="submitToolApproval('approved')">批准</button>
+              </div>
+            </div>
+            <div v-if="productProjectionStore.sortedAvailableActions.length > 0" class="tool-approval-card" aria-label="Product Available Actions">
+              <div class="tool-approval-copy">
+                <strong>Product Actions</strong>
+                <small>{{ productProjectionStore.sortedAvailableActions.length }} 个服务器授权动作</small>
+              </div>
+              <div class="tool-approval-actions">
+                <button
+                  v-for="action in productProjectionStore.sortedAvailableActions"
+                  :key="action.action_token_id"
+                  type="button"
+                  class="tool-approval-button"
+                  :class="action.action === 'DENY' || action.action === 'CANCEL' ? 'reject' : 'approve'"
+                  :disabled="toolApprovalSubmitting || Boolean(action.disabled_reason)"
+                  :title="action.disabled_reason || action.target_ref"
+                  @click="submitProductAvailableAction(action)"
+                >
+                  {{ productActionLabel(action) }}
+                </button>
               </div>
             </div>
             <div v-if="runtimeFailure" class="runtime-failure-panel" aria-label="任务失败">
