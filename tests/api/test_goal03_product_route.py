@@ -224,6 +224,32 @@ def test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before
             raise AssertionError(f"{cutover_mode}:{command_kind} was accepted by ProductService")
 
 
+def test_goal03_product_service_builds_cutover_owner_context_for_agent_core_handoff() -> None:
+    context = ProductService.build_runtime_cutover_owner_context(
+        active_agent_version_id="agent-version:1",
+        command_id="command:canary:1",
+        command_kind="CANARY_SUBMIT_USER_GOAL",
+        payload={"cutover_mode": "canary", "goal": "preserve cutover into Agent Core"},
+    )
+
+    assert context["active_agent_version_id"] == "agent-version:1"
+    assert context["command_id"] == "command:canary:1"
+    assert context["command_kind"] == "CANARY_SUBMIT_USER_GOAL"
+    assert context["cutover_mode"] == "canary"
+    assert context["constraints_hash"] == ProductService.build_runtime_cutover_owner_context(
+        active_agent_version_id="agent-version:1",
+        command_id="command:canary:1",
+        command_kind="CANARY_SUBMIT_USER_GOAL",
+        payload={"cutover_mode": "canary", "goal": "different hash-irrelevant value"},
+    )["constraints_hash"]
+    assert context["constraints_hash"] != ProductService.build_runtime_cutover_owner_context(
+        active_agent_version_id="agent-version:1",
+        command_id="command:shadow:1",
+        command_kind="SHADOW_SUBMIT_USER_GOAL",
+        payload={"cutover_mode": "shadow", "goal": "preserve cutover into Agent Core"},
+    )["constraints_hash"]
+
+
 def test_goal03_product_stream_events_route_uses_last_event_id(monkeypatch) -> None:
     app = FastAPI()
     app.include_router(api_router)

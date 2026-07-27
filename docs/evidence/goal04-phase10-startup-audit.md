@@ -1055,6 +1055,76 @@ passed
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T25 Product Runtime Cutover Handoff Context
+
+已更新：
+
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/api/services/workspace_task_runtime.py`
+- `tests/api/test_goal03_product_route.py`
+- `tests/api/test_workspace_task_runtime.py`
+- `tests/integration/test_goal03_wave_a_persistence.py`
+
+当前 Product runtime cutover handoff context：
+
+- Product outbox `product.runtime_request.dispatch` envelope now carries `command_kind` and `cutover_mode`;
+- Agent Core dispatch consumer validates the cutover command contract before owner writes;
+- Agent Core `GoalVersion.constraints_hash` now includes `active_agent_version_id`、`command_id`、`command_kind` 和 `cutover_mode`，so canary/shadow/default-new cannot collapse into the same owner constraints;
+- Product owner receipt payload now records `command_kind`、`cutover_mode` and the derived `constraints_hash`;
+- legacy workspace runtime bridge now submits `SUBMIT_USER_GOAL` with `cutover_mode=new_default` instead of `WORKSPACE_RUNTIME_REQUEST`.
+
+RED 验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_service_builds_cutover_owner_context_for_agent_core_handoff -q
+failed
+exception: AttributeError
+reason: ProductService.build_runtime_cutover_owner_context did not exist
+```
+
+```text
+python -m pytest tests\\api\\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
+failed
+assertion: expected SUBMIT_USER_GOAL
+actual: WORKSPACE_RUNTIME_REQUEST
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py::test_goal03_product_service_builds_cutover_owner_context_for_agent_core_handoff -q
+1 passed, 1 warning
+```
+
+```text
+python -m pytest tests\\api\\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
+1 passed, 1 warning
+```
+
+```text
+python -m pytest tests\\api\\test_goal03_product_route.py tests\\api\\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
+17 passed, 1 warning
+```
+
+```text
+python -m py_compile src\\backend\\zuno\\api\\services\\product\\command_service.py src\\backend\\zuno\\platform\\database\\product\\domain.py src\\backend\\zuno\\api\\services\\workspace_task_runtime.py
+passed
+```
+
+未运行：
+
+```text
+python -m pytest tests\\integration\\test_goal03_wave_a_persistence.py ...
+reason: 当前本地 PostgreSQL alembic_version=20260727_45，不在本分支 revision graph；该文件 fixture 会先执行 alembic upgrade head，命中已记录 blocker。
+```
+
+仍未完成：
+
+- shadow/canary/default-new/rollback 仍缺完整闭环 runtime closure evidence；当前已完成 Web runtime guard、Product API rollback fail-closed boundary、Product API cutover command contract、Product runtime cutover handoff context；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1092,6 +1162,10 @@ python -m pytest tests\api\test_goal03_product_route.py -q
 python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_runtime_request_route_rejects_cutover_command_mismatch_before_service tests\api\test_goal03_product_route.py::test_goal03_product_service_rejects_cutover_mismatch_and_unknown_mode_before_database_write -q
 python -m pytest tests\api\test_goal03_product_route.py -q
 python -m py_compile src\backend\zuno\api\v1\product.py src\backend\zuno\api\services\product\command_service.py
+python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_service_builds_cutover_owner_context_for_agent_core_handoff -q
+python -m pytest tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
+python -m pytest tests\api\test_goal03_product_route.py tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
+python -m py_compile src\backend\zuno\api\services\product\command_service.py src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\workspace_task_runtime.py
 ```
 
 未通过 / 未完成：

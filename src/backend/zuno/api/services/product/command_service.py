@@ -181,6 +181,29 @@ class ProductService:
         return cutover_mode
 
     @staticmethod
+    def build_runtime_cutover_owner_context(
+        *,
+        active_agent_version_id: str | None,
+        command_id: str,
+        command_kind: str,
+        payload: dict[str, Any],
+    ) -> dict[str, str]:
+        cutover_mode = ProductService.validate_runtime_cutover_contract(
+            command_kind=command_kind,
+            payload=payload,
+        )
+        context = {
+            "active_agent_version_id": str(active_agent_version_id or ""),
+            "command_id": command_id,
+            "command_kind": command_kind,
+            "cutover_mode": cutover_mode,
+        }
+        return {
+            **context,
+            "constraints_hash": canonical_sha256(context),
+        }
+
+    @staticmethod
     def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
         version_hash = canonical_sha256(
             {
@@ -694,6 +717,12 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
+            cutover_context = ProductService.build_runtime_cutover_owner_context(
+                active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
+                command_id=command_id,
+                command_kind=str(payload.get("command_kind") or "SUBMIT_USER_GOAL"),
+                payload=payload,
+            )
             agent_run_id = f"agent-run:{runtime_request_ref}"
             owner_receipt_ref: str | None = None
             agent_run_status = "duplicate"
@@ -725,12 +754,7 @@ class ProductService:
                                 input_classification=GoalInputClassification.NEW_TASK,
                                 objective_hash=str(payload["payload_hash"]),
                                 output_contract_ref=f"output-contract:{runtime_request_ref}",
-                                constraints_hash=canonical_sha256(
-                                    {
-                                        "active_agent_version_id": payload.get("active_agent_version_id"),
-                                        "command_id": command_id,
-                                    }
-                                ),
+                                constraints_hash=cutover_context["constraints_hash"],
                             )
                         )
                         agent_repo.record_task_contract(
@@ -768,6 +792,9 @@ class ProductService:
                                 "agent_run_ref": run_receipt.ref,
                                 "task_contract_ref": task_contract_id,
                                 "outbox_event_id": record.event_id,
+                                "command_kind": cutover_context["command_kind"],
+                                "cutover_mode": cutover_context["cutover_mode"],
+                                "constraints_hash": cutover_context["constraints_hash"],
                             },
                         )
                         infra_repo.mark_inbox_processed(

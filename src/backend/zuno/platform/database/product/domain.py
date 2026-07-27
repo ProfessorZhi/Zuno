@@ -872,9 +872,11 @@ class ProductRepository:
                 "submission_id": command.submission_id,
                 "message_id": message_id,
                 "command_id": command.command_id,
+                "command_kind": command.command_kind,
                 "runtime_request_ref": command.runtime_request_ref,
                 "active_agent_version_id": command.active_agent_version_id,
                 "principal_id": command.principal_id,
+                "cutover_mode": str(command.payload_json.get("cutover_mode") or "new_default"),
                 "payload_hash": command.request_hash,
             },
         )
