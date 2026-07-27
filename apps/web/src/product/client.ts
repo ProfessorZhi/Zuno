@@ -3,6 +3,11 @@ import type { AxiosError } from 'axios'
 import { apiUrl } from '../utils/api'
 import { request } from '../utils/request'
 import type {
+  AgentCatalogEntry,
+  AgentDefinition,
+  AgentDraft,
+  AgentInstallation,
+  AgentPublication,
   AvailableAction,
   ProductProblemDetail,
   ProductProblemType,
@@ -63,6 +68,53 @@ export interface ProductFeedbackCommand {
   label: 'helpful' | 'needs_revision' | string
   comment: string
   dataset_candidate: boolean
+}
+
+export interface ProductAgentDraftCommand {
+  tenant_id: string
+  workspace_id: string
+  client_request_id?: string
+  display_name: string
+  description?: string
+  primary_agent_core_profile_ref?: string
+  configuration: Record<string, unknown>
+}
+
+export interface ProductAgentPublicationCommand {
+  tenant_id: string
+  workspace_id: string
+  client_request_id?: string
+  agent_definition_id: string
+  agent_version_id: string
+  publication_scope: AgentPublication['scope']
+  primary_agent_core_profile_ref?: string
+  configuration: Record<string, unknown>
+}
+
+export interface ProductAgentInstallationCommand {
+  tenant_id: string
+  workspace_id: string
+  client_request_id?: string
+  agent_version_id: string
+  installation_scope?: 'USER' | 'WORKSPACE' | 'TENANT'
+}
+
+export interface ProductAgentDraftReceipt {
+  agent_definition: AgentDefinition
+  agent_draft: AgentDraft
+}
+
+export interface ProductAgentPublicationReceipt {
+  agent_publication: AgentPublication
+  agent_catalog_entry: AgentCatalogEntry
+}
+
+export interface ProductAgentInstallationReceipt {
+  agent_installation: AgentInstallation
+}
+
+export interface ProductAgentCatalogList {
+  agent_catalog_entries: AgentCatalogEntry[]
 }
 
 interface UnifiedResponse<T> {
@@ -141,6 +193,68 @@ export const downloadProductArtifact = async (artifactId: string) => {
 
 export const submitProductFeedback = async (command: ProductFeedbackCommand) => {
   const response = await request.post<UnifiedResponse<Record<string, unknown>>>('/api/v1/product/feedback', command)
+  return unwrapProductResponse(response.data)
+}
+
+export const createProductAgentDraft = async (command: ProductAgentDraftCommand): Promise<ProductAgentDraftReceipt> => {
+  const response = await request.post<UnifiedResponse<ProductAgentDraftReceipt>>('/api/v1/product/agent-drafts', {
+    ...command,
+    client_request_id: command.client_request_id || createProductClientRequestId('agent-draft'),
+  })
+  return unwrapProductResponse(response.data)
+}
+
+export const publishProductAgentVersion = async (command: ProductAgentPublicationCommand): Promise<ProductAgentPublicationReceipt> => {
+  const response = await request.post<UnifiedResponse<ProductAgentPublicationReceipt>>('/api/v1/product/agent-publications', {
+    ...command,
+    client_request_id: command.client_request_id || createProductClientRequestId('agent-publication'),
+  })
+  return unwrapProductResponse(response.data)
+}
+
+export const installProductAgentVersion = async (command: ProductAgentInstallationCommand): Promise<ProductAgentInstallationReceipt> => {
+  const response = await request.post<UnifiedResponse<ProductAgentInstallationReceipt>>('/api/v1/product/agent-installations', {
+    ...command,
+    client_request_id: command.client_request_id || createProductClientRequestId('agent-installation'),
+  })
+  return unwrapProductResponse(response.data)
+}
+
+export const revokeProductAgentInstallation = async (params: {
+  tenant_id: string
+  workspace_id: string
+  installation_id: string
+}): Promise<ProductAgentInstallationReceipt> => {
+  const response = await request.delete<UnifiedResponse<ProductAgentInstallationReceipt>>(`/api/v1/product/agent-installations/${params.installation_id}`, {
+    params: {
+      tenant_id: params.tenant_id,
+      workspace_id: params.workspace_id,
+    },
+  })
+  return unwrapProductResponse(response.data)
+}
+
+export const revokeProductAgentPublication = async (params: {
+  tenant_id: string
+  workspace_id: string
+  publication_id: string
+}): Promise<{ agent_publication: AgentPublication }> => {
+  const response = await request.delete<UnifiedResponse<{ agent_publication: AgentPublication }>>(`/api/v1/product/agent-publications/${params.publication_id}`, {
+    params: {
+      tenant_id: params.tenant_id,
+      workspace_id: params.workspace_id,
+    },
+  })
+  return unwrapProductResponse(response.data)
+}
+
+export const listProductAgentCatalog = async (params: {
+  tenant_id: string
+  workspace_id: string
+}): Promise<ProductAgentCatalogList> => {
+  const response = await request.get<UnifiedResponse<ProductAgentCatalogList>>('/api/v1/product/agent-catalog', {
+    params,
+  })
   return unwrapProductResponse(response.data)
 }
 

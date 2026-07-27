@@ -96,7 +96,7 @@ export interface AgentDefinition {
   owner_principal_ref: string
   display_name: string
   description?: string
-  status: 'DRAFTING' | 'ACTIVE' | 'RETIRED'
+  status: 'DRAFTING' | 'DRAFT' | 'ACTIVE' | 'ARCHIVED' | 'RETIRED' | 'REVOKED'
 }
 
 export interface AgentDraft {
@@ -105,7 +105,7 @@ export interface AgentDraft {
   draft_version: number
   editor_principal_ref: string
   configuration_hash: string
-  status: 'OPEN' | 'VALIDATING' | 'READY_TO_PUBLISH' | 'DISCARDED'
+  status: 'OPEN' | 'DRAFT' | 'VALIDATING' | 'READY_TO_PUBLISH' | 'LOCKED' | 'DISCARDED'
 }
 
 export interface AgentVersion {
@@ -121,8 +121,8 @@ export interface AgentPublication {
   publication_id: string
   agent_version_id: string
   scope: 'PRIVATE' | 'WORKSPACE' | 'TENANT'
-  status: 'PUBLISHED' | 'WITHDRAWN'
-  published_at: string
+  status: 'PUBLISHED' | 'WITHDRAWN' | 'REVOKED' | 'SUPERSEDED'
+  published_at?: string
 }
 
 export interface AgentInstallation {

@@ -375,6 +375,49 @@ python -m pytest -q tests\frontend\test_phase10_product_contracts.py tests\front
 16 passed
 ```
 
+## P10-T10 当前进展
+
+已更新：
+
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/services/product/__init__.py`
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/contracts.ts`
+- `apps/web/src/product/client.ts`
+- `tests/api/test_goal03_product_route.py`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Agent Studio / Catalog / 发布 / 安装 / 撤销 Product surface 覆盖：
+
+- Product repository 复用已迁移的 `product_agent_definitions`、`product_agent_versions`、`product_agent_drafts`、`product_agent_publications`、`product_agent_installations`、`product_agent_catalog_entries` 表，不新增临时表；
+- `ProductService.create_agent_draft` 通过 Product UoW 创建 AgentDefinition 和 AgentDraft；
+- `ProductService.publish_agent_version` 通过 Product UoW 创建 AgentVersion、AgentPublication，并 upsert AgentCatalogEntry；
+- `ProductService.install_agent_version` 通过 Product UoW 创建 AgentInstallation；
+- `ProductService.revoke_agent_installation` / `revoke_agent_publication` 通过 Product UoW 把安装、发布和对应 catalog entry 转为 REVOKED；
+- `/api/v1/product/agent-drafts`、`/agent-publications`、`/agent-installations`、`/agent-catalog` 暴露 Product API surface；
+- Web Product client 增加 `createProductAgentDraft`、`publishProductAgentVersion`、`installProductAgentVersion`、`revokeProductAgentInstallation`、`revokeProductAgentPublication`、`listProductAgentCatalog`；
+- Web Product contract 扩展 AgentDefinition / AgentDraft / AgentPublication 状态，使前端可以表达数据库迁移允许的 DRAFT、LOCKED、REVOKED、SUPERSEDED 状态。
+
+仍未完成：
+
+- 尚未完成 Agent Studio 可视化编辑 UI、Catalog 管理 UI 和 Browser E2E；
+- Agent publish/install/revoke 目前是 Product API/client surface，尚未接默认设置页或 Agent 管理页；
+- Publication/Delivery 独立模型仍未完成，PHASE19 Final Gate 前不得把 AgentPublication 当最终回答 Publication；
+- Build/Lint、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成。
+
+P10-T10 验证：
+
+```text
+python -m pytest -q tests\api\test_goal03_product_route.py tests\frontend\test_phase10_product_contracts.py -p no:cacheprovider
+19 passed, 1 warning
+```
+
+```text
+python -m pytest -q tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_agent_assets_publish_install_and_catalog -p no:cacheprovider
+1 passed
+```
+
 ## 本轮验证
 
 已通过：

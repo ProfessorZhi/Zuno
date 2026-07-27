@@ -1,5 +1,10 @@
 from zuno.api.services.product.command_service import (
     ProductActionConsumeResult,
+    ProductAgentCatalogEntryResult,
+    ProductAgentDefinitionResult,
+    ProductAgentDraftResult,
+    ProductAgentInstallationResult,
+    ProductAgentPublicationResult,
     ProductAvailableActionResult,
     ProductProjectionResult,
     ProductRuntimeRequestResult,
@@ -15,6 +20,11 @@ from zuno.api.services.product.projection_service import (
 __all__ = [
     "ProductRuntimeRequestResult",
     "ProductActionConsumeResult",
+    "ProductAgentCatalogEntryResult",
+    "ProductAgentDefinitionResult",
+    "ProductAgentDraftResult",
+    "ProductAgentInstallationResult",
+    "ProductAgentPublicationResult",
     "ProductAvailableActionResult",
     "ProductProjectionResult",
     "ProductService",

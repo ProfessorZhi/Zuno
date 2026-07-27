@@ -7,6 +7,11 @@ from zuno.api.router import router as api_router
 from zuno.api.services import user as user_service
 from zuno.api.services.product import (
     ProductActionConsumeResult,
+    ProductAgentCatalogEntryResult,
+    ProductAgentDefinitionResult,
+    ProductAgentDraftResult,
+    ProductAgentInstallationResult,
+    ProductAgentPublicationResult,
     ProductAvailableActionResult,
     ProductProjectionResult,
     ProductRuntimeRequestResult,
@@ -208,6 +213,175 @@ def test_goal03_product_action_consume_route_fail_closes_replay(monkeypatch) -> 
     assert body["status_code"] == 500
     assert "action token replay detected" in body["status_message"]
     assert body.get("data") in (None, {})
+
+
+def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+    captured = {}
+
+    def fake_draft(**kwargs):
+        captured["draft"] = kwargs
+        return (
+            ProductAgentDefinitionResult(
+                agent_definition_id="agent-definition:client-draft",
+                tenant_id=kwargs["tenant_id"],
+                workspace_id=kwargs["workspace_id"],
+                owner_principal_ref=f"principal:{kwargs['principal_id']}",
+                display_name=kwargs["display_name"],
+                description=kwargs["description"],
+                status="DRAFT",
+            ),
+            ProductAgentDraftResult(
+                agent_draft_id="agent-draft:client-draft",
+                agent_definition_id="agent-definition:client-draft",
+                draft_version=1,
+                editor_principal_ref=f"principal:{kwargs['principal_id']}",
+                configuration_hash="a" * 64,
+                status="DRAFT",
+            ),
+        )
+
+    def fake_publish(**kwargs):
+        captured["publish"] = kwargs
+        return (
+            ProductAgentPublicationResult(
+                publication_id="agent-publication:client-publish",
+                agent_version_id=kwargs["agent_version_id"],
+                scope=kwargs["publication_scope"],
+                status="PUBLISHED",
+            ),
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id="agent-catalog:client-publish",
+                agent_version_id=kwargs["agent_version_id"],
+                authorized=True,
+                visibility_scope=kwargs["publication_scope"],
+                effective_permission_preview_ref="permission-preview:client-publish",
+            ),
+        )
+
+    def fake_install(**kwargs):
+        captured["install"] = kwargs
+        return ProductAgentInstallationResult(
+            installation_id="agent-installation:client-install",
+            agent_version_id=kwargs["agent_version_id"],
+            workspace_id=kwargs["workspace_id"],
+            principal_ref=f"principal:{kwargs['principal_id']}",
+            status="INSTALLED",
+        )
+
+    def fake_catalog(**kwargs):
+        captured["catalog"] = kwargs
+        return (
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id="agent-catalog:client-publish",
+                agent_version_id="agent-version:client-publish",
+                authorized=True,
+                visibility_scope="WORKSPACE",
+                effective_permission_preview_ref="permission-preview:client-publish",
+            ),
+        )
+
+    monkeypatch.setattr(ProductService, "create_agent_draft", staticmethod(fake_draft))
+    monkeypatch.setattr(ProductService, "publish_agent_version", staticmethod(fake_publish))
+    monkeypatch.setattr(ProductService, "install_agent_version", staticmethod(fake_install))
+    monkeypatch.setattr(ProductService, "list_agent_catalog", staticmethod(fake_catalog))
+
+    client = TestClient(app)
+    draft_response = client.post(
+        "/api/v1/product/agent-drafts",
+        json={
+            "tenant_id": "tenant-a",
+            "workspace_id": "workspace-a",
+            "client_request_id": "client-draft",
+            "display_name": "Draft Agent",
+            "description": "draft desc",
+            "configuration": {"tools": []},
+        },
+    )
+    publish_response = client.post(
+        "/api/v1/product/agent-publications",
+        json={
+            "tenant_id": "tenant-a",
+            "workspace_id": "workspace-a",
+            "client_request_id": "client-publish",
+            "agent_definition_id": "agent-definition:client-draft",
+            "agent_version_id": "agent-version:client-publish",
+            "publication_scope": "WORKSPACE",
+            "configuration": {"tools": []},
+        },
+    )
+    install_response = client.post(
+        "/api/v1/product/agent-installations",
+        json={
+            "tenant_id": "tenant-a",
+            "workspace_id": "workspace-a",
+            "client_request_id": "client-install",
+            "agent_version_id": "agent-version:client-publish",
+            "installation_scope": "USER",
+        },
+    )
+    catalog_response = client.get("/api/v1/product/agent-catalog?tenant_id=tenant-a&workspace_id=workspace-a")
+
+    assert draft_response.status_code == 200
+    assert draft_response.json()["data"]["agent_definition"]["agent_definition_id"] == "agent-definition:client-draft"
+    assert draft_response.json()["data"]["agent_draft"]["configuration_hash"] == "a" * 64
+    assert publish_response.json()["data"]["agent_publication"]["status"] == "PUBLISHED"
+    assert publish_response.json()["data"]["agent_catalog_entry"]["authorized"] is True
+    assert install_response.json()["data"]["agent_installation"]["principal_ref"] == "principal:principal-a"
+    assert catalog_response.json()["data"]["agent_catalog_entries"][0]["catalog_entry_id"] == "agent-catalog:client-publish"
+    assert captured["draft"]["principal_id"] == "principal-a"
+    assert captured["install"]["principal_id"] == "principal-a"
+    assert captured["catalog"] == {
+        "tenant_id": "tenant-a",
+        "workspace_id": "workspace-a",
+        "principal_id": "principal-a",
+    }
+
+
+def test_goal03_product_agent_revoke_routes_use_product_service(monkeypatch) -> None:
+    app = FastAPI()
+    app.include_router(api_router)
+    app.dependency_overrides[user_service.get_login_user] = lambda: _LoginUser("principal-a")
+    captured = {}
+
+    def fake_revoke_install(**kwargs):
+        captured["installation"] = kwargs
+        return ProductAgentInstallationResult(
+            installation_id=kwargs["installation_id"],
+            agent_version_id="",
+            workspace_id=kwargs["workspace_id"],
+            principal_ref=f"principal:{kwargs['principal_id']}",
+            status="REVOKED",
+        )
+
+    def fake_revoke_publication(**kwargs):
+        captured["publication"] = kwargs
+        return ProductAgentPublicationResult(
+            publication_id=kwargs["publication_id"],
+            agent_version_id="",
+            scope="",
+            status="REVOKED",
+        )
+
+    monkeypatch.setattr(ProductService, "revoke_agent_installation", staticmethod(fake_revoke_install))
+    monkeypatch.setattr(ProductService, "revoke_agent_publication", staticmethod(fake_revoke_publication))
+
+    client = TestClient(app)
+    install_response = client.delete(
+        "/api/v1/product/agent-installations/agent-installation-1?tenant_id=tenant-a&workspace_id=workspace-a"
+    )
+    publication_response = client.delete(
+        "/api/v1/product/agent-publications/agent-publication-1?tenant_id=tenant-a&workspace_id=workspace-a"
+    )
+
+    assert install_response.status_code == 200
+    assert install_response.json()["data"]["agent_installation"]["status"] == "REVOKED"
+    assert publication_response.status_code == 200
+    assert publication_response.json()["data"]["agent_publication"]["status"] == "REVOKED"
+    assert captured["installation"]["principal_id"] == "principal-a"
+    assert captured["publication"]["publication_id"] == "agent-publication-1"
 
 
 def test_goal03_product_artifact_routes_reauthorize_through_product_surface(monkeypatch) -> None:

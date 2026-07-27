@@ -139,6 +139,41 @@ class ProductRepository:
     def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
+    def create_agent_definition(
+        self,
+        *,
+        agent_definition_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        owner_principal_id: str,
+        display_name: str,
+        status: str = "DRAFT",
+    ) -> ProductAgentAssetRef:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_definitions (
+                    agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                    display_name, status, aggregate_version
+                )
+                VALUES (
+                    :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
+                    :display_name, :status, 1
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "agent_definition_id": agent_definition_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "owner_principal_id": owner_principal_id,
+                "display_name": display_name,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(agent_definition_id, status)
+
     def create_agent_draft(
         self,
         *,
@@ -173,6 +208,43 @@ class ProductRepository:
             },
         )
         return ProductAgentAssetRef(draft_id, status)
+
+    def create_agent_version(
+        self,
+        *,
+        agent_version_id: str,
+        tenant_id: str,
+        agent_definition_id: str,
+        version_no: int,
+        configuration_payload: dict[str, Any],
+        primary_agent_core_profile_ref: str,
+        status: str = "PUBLISHED",
+    ) -> ProductAgentAssetRef:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_versions (
+                    agent_version_id, tenant_id, agent_definition_id, version_no,
+                    config_hash, primary_agent_core_profile_ref, status
+                )
+                VALUES (
+                    :agent_version_id, :tenant_id, :agent_definition_id, :version_no,
+                    :config_hash, :primary_agent_core_profile_ref, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "agent_version_id": agent_version_id,
+                "tenant_id": tenant_id,
+                "agent_definition_id": agent_definition_id,
+                "version_no": version_no,
+                "config_hash": canonical_sha256(configuration_payload),
+                "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(agent_version_id, status)
 
     def ensure_runtime_agent_version(
         self,
@@ -311,6 +383,80 @@ class ProductRepository:
             },
         )
         return ProductAgentAssetRef(installation_id, status)
+
+    def revoke_agent_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+    ) -> ProductAgentAssetRef:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_installations
+                SET status = 'REVOKED'
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND principal_id = :principal_id
+                """
+            ),
+            {
+                "installation_id": installation_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "principal_id": principal_id,
+            },
+        )
+        if result.rowcount != 1:
+            raise ProductPersistenceConflict("Product AgentInstallation revoke target not found")
+        return ProductAgentAssetRef(installation_id, "REVOKED")
+
+    def revoke_agent_publication(
+        self,
+        *,
+        publication_id: str,
+        tenant_id: str,
+        workspace_id: str,
+    ) -> ProductAgentAssetRef:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_publications
+                SET status = 'REVOKED'
+                WHERE publication_id = :publication_id
+                  AND tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                RETURNING agent_version_id
+                """
+            ),
+            {
+                "publication_id": publication_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("Product AgentPublication revoke target not found")
+        self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_catalog_entries
+                SET status = 'REVOKED'
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND latest_version_id = :agent_version_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_version_id": row["agent_version_id"],
+            },
+        )
+        return ProductAgentAssetRef(publication_id, "REVOKED")
 
     def upsert_catalog_entry(
         self,
