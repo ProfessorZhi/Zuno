@@ -31,6 +31,8 @@ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.17.24
 docker pull neo4j:5-community
 docker pull quay.io/coreos/etcd:v3.5.5
 docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}"
+python -m pytest -q tests/knowledge/test_index_jobs_runtime.py -p no:cacheprovider
+python -m compileall -q src/backend/zuno/knowledge/indexing tests/knowledge/test_index_jobs_runtime.py
 ```
 
 结果：
@@ -46,6 +48,8 @@ Elasticsearch compose image resolution failed with Docker registry EOF.
 Direct Elasticsearch image pull downloaded layers but stalled; the process was stopped and the image is not available.
 Direct Neo4j and etcd image pulls downloaded layers but stalled; the processes were stopped and the images are not available.
 Milvus was requested through compose, but no Milvus image or running service is available.
+16 passed
+compileall passed
 ```
 
 当前已确认运行的真实依赖：
@@ -78,6 +82,7 @@ PHASE12 external index adapter cutover is not implemented as Current.
 
 - 原始目标要求 PHASE12 调用仓库配置的真实索引 Adapter，并覆盖 BM25、Vector、Graph Build Job、Write Batch、Lease、Fencing、Attempt、Count、Hash、Visibility、Sample Retrieval 验证。
 - 当前 `KnowledgeIndexRuntime` 已证明 local BM25 / vector / graph adapter dispatch SPI 和 sample retrieval visibility，不再用 dispatch receipt 冒充可见。
+- 后续 expand 层已新增外部 adapter binding contract，并证明外部 adapter 必须通过自身 readback 才能把 visibility 标为 `visible`；adapter contract 仍需为 `current` 才能进入默认 retrieval payload，readback 无匹配时 target 会降级且不进入 retrieval payload。
 - 但 `INDEX_ADAPTER_CONTRACTS` 仍明确把 `elasticsearch`、`milvus`、`neo4j` 标为 `target_blocked`。
 - 现有 evidence 也明确写明外部 BM25 / Vector / Graph 服务端 adapter 仍不是 current runtime 事实。
 - 本轮尝试启动 Elasticsearch、Milvus、Neo4j、etcd 真实容器依赖未成功；镜像拉取在 Docker registry EOF 或长时间停滞后停止，因此无法执行真实外部 Adapter 的 cutover / visibility / sample retrieval 证明。

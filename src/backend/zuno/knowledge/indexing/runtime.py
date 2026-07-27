@@ -9,7 +9,7 @@ from uuid import uuid4
 from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseJobSnapshot
 from zuno.knowledge.ingestion.router import build_index_handoff_payload
 
-from .adapters import LOCAL_INDEX_ADAPTER_BY_TARGET, adapter_status_for_targets
+from .adapters import LOCAL_INDEX_ADAPTER_BY_TARGET, adapter_status_for_bindings
 from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
 
 
@@ -97,7 +97,7 @@ class KnowledgeIndexRuntime:
                 source_provenance=_source_provenance(document, lineage),
                 acl_scopes=_acl_scopes(document),
                 sensitivity_tags=_sensitivity_tags(document),
-                adapter_status=adapter_status_for_targets(list(targets)),
+                adapter_status=adapter_status_for_bindings(list(targets), self._adapter_bindings),
                 adapter_dispatch_receipts={},
                 adapter_visibility_receipts={},
                 **_manifest_lineage_fields(lineage),
@@ -149,9 +149,10 @@ class KnowledgeIndexRuntime:
             source_provenance=_source_provenance(document, lineage),
             acl_scopes=_acl_scopes(document),
             sensitivity_tags=_sensitivity_tags(document),
-            adapter_status=adapter_status_for_targets(list(targets)),
+            adapter_status=adapter_status_for_bindings(list(targets), self._adapter_bindings),
             adapter_dispatch_receipts=adapter_dispatch_receipts,
             adapter_visibility_receipts=self._verified_adapter_visibility_receipts(
+                adapter_bindings=self._adapter_bindings,
                 knowledge_space_id=knowledge_space_id,
                 index_version=space.index_version,
                 document=document,
@@ -206,6 +207,7 @@ class KnowledgeIndexRuntime:
             source
             for source in ["bm25", "vector", "graph"]
             if result.manifest.target_status.get(source) == "ready"
+            and _adapter_contract_is_current(result.manifest.adapter_status.get(source, ""))
             and result.manifest.adapter_visibility_receipts.get(source, {}).get("visibility") == "visible"
         ]
         return {
@@ -218,7 +220,11 @@ class KnowledgeIndexRuntime:
                 source: result.manifest.adapter_visibility_receipts[source]
                 for source in retrievers_used
             },
-            "documents_by_source": result.documents_by_source,
+            "documents_by_source": {
+                source: result.documents_by_source[source]
+                for source in retrievers_used
+                if source in result.documents_by_source
+            },
             "manifest": result.manifest.model_dump(),
         }
 
@@ -249,6 +255,7 @@ class KnowledgeIndexRuntime:
     @staticmethod
     def _verified_adapter_visibility_receipts(
         *,
+        adapter_bindings: dict[IndexTarget, Any],
         knowledge_space_id: str,
         index_version: str,
         document: CanonicalDocumentIR,
@@ -261,7 +268,8 @@ class KnowledgeIndexRuntime:
             if target_status.get(target) != "ready":
                 continue
             dispatch_receipt = adapter_dispatch_receipts.get(target, {})
-            sample_verification = _sample_visibility_verification(
+            sample_verification = _adapter_sample_visibility_verification(
+                adapter=adapter_bindings[target],
                 document=document,
                 indexed_documents=indexed_documents_by_target.get(target, []),
             )
@@ -487,6 +495,38 @@ def _adapter_dispatch_receipt(
         "indexed_document_count": len(indexed_documents),
         "payload_hash": payload_hash,
     }
+
+
+def _adapter_sample_visibility_verification(
+    *,
+    adapter: Any,
+    document: CanonicalDocumentIR,
+    indexed_documents: list[dict],
+) -> dict[str, Any]:
+    source_text = " ".join(block.text for block in document.blocks)
+    sample_tokens = tuple(_tokens(source_text)[:8])
+    sample_query = " ".join(sample_tokens)
+    verifier = getattr(adapter, "verify_visibility", None)
+    if verifier is None:
+        return _sample_visibility_verification(
+            document=document,
+            indexed_documents=indexed_documents,
+        )
+    result = verifier(
+        document=document,
+        sample_query=sample_query,
+        indexed_documents=indexed_documents,
+    )
+    return {
+        "passed": bool(result.get("passed")),
+        "reason": str(result.get("reason") or "external_sample_retrieval_unknown"),
+        "sample_query": str(result.get("sample_query") or sample_query),
+        "match_count": int(result.get("match_count") or 0),
+    }
+
+
+def _adapter_contract_is_current(adapter_status: str) -> bool:
+    return adapter_status.endswith(":current")
 
 
 def _sample_visibility_verification(

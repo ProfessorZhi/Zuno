@@ -193,6 +193,87 @@ def test_index_runtime_invokes_configured_adapter_bindings() -> None:
     assert result.documents_by_source["vector"][0]["source_type"] == "vector"
 
 
+def test_index_runtime_external_adapter_requires_service_readback_visibility() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime, external_adapter_bindings
+
+    class ServiceClient:
+        def __init__(self) -> None:
+            self.index_calls: list[dict] = []
+            self.search_calls: list[dict] = []
+            self.documents: list[dict] = []
+
+        def index_documents(self, index_name: str, documents: list[dict]) -> None:
+            self.index_calls.append({"index_name": index_name, "document_count": len(documents)})
+            self.documents = list(documents)
+
+        def search_documents(self, query: str, index_name: str) -> list[dict]:
+            self.search_calls.append({"index_name": index_name, "query": query})
+            return list(self.documents)
+
+    client = ServiceClient()
+    runtime = KnowledgeIndexRuntime(
+        adapter_bindings=external_adapter_bindings(
+            elasticsearch_client=client,
+            index_prefix="goal03",
+        )
+    )
+    runtime.create_knowledge_space("ks_external_bm25", "workspace_index")
+
+    manifest = runtime.index_document(
+        "ks_external_bm25",
+        _sample_document(),
+        targets=["bm25"],
+    )
+    payload = runtime.to_retrieval_payload("ks_external_bm25", "supplier renewal")
+
+    assert client.index_calls == [{"index_name": "goal03_bm25", "document_count": len(client.documents)}]
+    assert client.search_calls[0]["index_name"] == "goal03_bm25"
+    assert manifest.adapter_status == {"bm25": "elasticsearch:target_blocked"}
+    assert manifest.adapter_dispatch_receipts["bm25"]["adapter_id"] == "elasticsearch"
+    assert manifest.adapter_visibility_receipts["bm25"]["visibility"] == "visible"
+    assert manifest.adapter_visibility_receipts["bm25"]["visibility_failure_reason"] is None
+    assert manifest.adapter_visibility_receipts["bm25"]["sample_match_count"] > 0
+    assert payload["retrievers_used"] == []
+    assert payload["documents_by_source"] == {}
+
+
+def test_index_runtime_external_adapter_does_not_serve_without_readback_match() -> None:
+    from zuno.knowledge.indexing import KnowledgeIndexRuntime, external_adapter_bindings
+
+    class EmptyReadbackClient:
+        def index_documents(self, index_name: str, documents: list[dict]) -> None:
+            self.index_name = index_name
+            self.document_count = len(documents)
+
+        def search_documents(self, query: str, index_name: str) -> list[dict]:
+            return []
+
+    runtime = KnowledgeIndexRuntime(
+        adapter_bindings=external_adapter_bindings(
+            elasticsearch_client=EmptyReadbackClient(),
+            index_prefix="goal03",
+        )
+    )
+    runtime.create_knowledge_space("ks_external_hidden", "workspace_index")
+
+    manifest = runtime.index_document(
+        "ks_external_hidden",
+        _sample_document(),
+        targets=["bm25"],
+    )
+    payload = runtime.to_retrieval_payload("ks_external_hidden", "supplier renewal")
+
+    assert manifest.adapter_dispatch_receipts["bm25"]["status"] == "succeeded"
+    assert manifest.adapter_visibility_receipts["bm25"]["visibility"] == "hidden"
+    assert (
+        manifest.adapter_visibility_receipts["bm25"]["visibility_failure_reason"]
+        == "external_sample_retrieval_no_source_match"
+    )
+    assert manifest.target_status["bm25"] == "degraded"
+    assert payload["retrievers_used"] == []
+    assert payload["documents_by_source"] == {}
+
+
 def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
 

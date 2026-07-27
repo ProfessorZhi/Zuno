@@ -102,13 +102,16 @@ EXPECTED_EXPORTS = {
     "zuno.knowledge.indexing": [
         "INDEX_ADAPTER_CONTRACTS",
         "LOCAL_INDEX_ADAPTER_BY_TARGET",
+        "ExternalServiceIndexAdapterBinding",
         "IndexAdapterContract",
         "IndexJobManifest",
         "IndexQueryResult",
         "IndexTarget",
         "KnowledgeIndexRuntime",
         "KnowledgeSpaceManifest",
+        "adapter_status_for_bindings",
         "adapter_status_for_targets",
+        "external_adapter_bindings",
     ],
     "zuno.knowledge.runtime_batch": [
         "ConfigSeparationRecord",
