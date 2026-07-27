@@ -118,6 +118,7 @@ def _agent_catalog_entry_payload(entry) -> dict:
     return {
         "catalog_entry_id": entry.catalog_entry_id,
         "agent_version_id": entry.agent_version_id,
+        "publication_ref": entry.publication_ref,
         "authorized": entry.authorized,
         "visibility_scope": entry.visibility_scope,
         "effective_permission_preview_ref": entry.effective_permission_preview_ref,

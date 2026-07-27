@@ -112,6 +112,7 @@ class ProductAgentCatalogEntryView:
     catalog_entry_id: str
     agent_definition_id: str
     latest_version_id: str
+    publication_id: str
     visibility_scope: str
     status: str
 
@@ -509,13 +510,22 @@ class ProductRepository:
         rows = self.connection.execute(
             text(
                 """
-                SELECT catalog_entry_id, agent_definition_id, latest_version_id,
-                       visibility_scope, status
-                FROM product_agent_catalog_entries
-                WHERE tenant_id = :tenant_id
-                  AND workspace_id = :workspace_id
-                  AND status = 'VISIBLE'
-                ORDER BY catalog_entry_id
+                SELECT catalog.catalog_entry_id,
+                       catalog.agent_definition_id,
+                       catalog.latest_version_id,
+                       coalesce(publication.publication_id, '') AS publication_id,
+                       catalog.visibility_scope,
+                       catalog.status
+                FROM product_agent_catalog_entries catalog
+                LEFT JOIN product_agent_publications publication
+                  ON publication.tenant_id = catalog.tenant_id
+                 AND publication.workspace_id = catalog.workspace_id
+                 AND publication.agent_version_id = catalog.latest_version_id
+                 AND publication.status = 'PUBLISHED'
+                WHERE catalog.tenant_id = :tenant_id
+                  AND catalog.workspace_id = :workspace_id
+                  AND catalog.status = 'VISIBLE'
+                ORDER BY catalog.catalog_entry_id
                 """
             ),
             {"tenant_id": tenant_id, "workspace_id": workspace_id},
@@ -525,6 +535,7 @@ class ProductRepository:
                 catalog_entry_id=str(row["catalog_entry_id"]),
                 agent_definition_id=str(row["agent_definition_id"]),
                 latest_version_id=str(row["latest_version_id"]),
+                publication_id=str(row["publication_id"]),
                 visibility_scope=str(row["visibility_scope"]),
                 status=str(row["status"]),
             )

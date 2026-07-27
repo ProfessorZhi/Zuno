@@ -10,6 +10,7 @@ import {
   installProductAgentVersion,
   listProductAgentCatalog,
   revokeProductAgentInstallation,
+  revokeProductAgentPublication,
   type AgentCatalogEntry,
 } from '../../product'
 import { useProductProjectionStore } from '../../product/store'
@@ -252,6 +253,26 @@ const handleProductCatalogRevoke = async (entry: AgentCatalogEntry) => {
   }
 }
 
+const handleProductPublicationRevoke = async (entry: AgentCatalogEntry) => {
+  if (!entry.publication_ref) {
+    ElMessage.warning('当前 catalog entry 缺少 Product publication ref')
+    return
+  }
+  try {
+    const receipt = await revokeProductAgentPublication({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      publication_id: entry.publication_ref,
+    })
+    productProjectionStore.upsertPublication(receipt.agent_publication)
+    await fetchProductAgentCatalog()
+    ElMessage.success('Product Catalog 发布已撤销')
+  } catch (error: any) {
+    console.error('revokeProductPublication failed', error)
+    ElMessage.error(error.message || 'Product Catalog 发布撤销失败')
+  }
+}
+
 const handleDelete = async (agent: AgentCardItem) => {
   if (agent.is_custom === false && !isAdmin.value) {
     ElMessage.warning('只有管理员可以删除官方智能体')
@@ -343,6 +364,14 @@ onMounted(() => {
             @click="handleProductCatalogRevoke(entry)"
           >
             撤销
+          </button>
+          <button
+            type="button"
+            class="product-catalog-action danger"
+            :disabled="!entry.publication_ref"
+            @click="handleProductPublicationRevoke(entry)"
+          >
+            下架
           </button>
         </article>
       </div>

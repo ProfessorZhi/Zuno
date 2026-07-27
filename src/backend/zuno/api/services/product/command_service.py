@@ -128,6 +128,7 @@ class ProductAgentInstallationResult:
 class ProductAgentCatalogEntryResult:
     catalog_entry_id: str
     agent_version_id: str
+    publication_ref: str
     authorized: bool
     visibility_scope: str
     effective_permission_preview_ref: str
@@ -399,6 +400,7 @@ class ProductService:
             ProductAgentCatalogEntryResult(
                 catalog_entry_id=catalog.ref_id,
                 agent_version_id=agent_version_id,
+                publication_ref=publication.ref_id,
                 authorized=True,
                 visibility_scope=publication_scope,
                 effective_permission_preview_ref=f"permission-preview:{catalog.ref_id}",
@@ -499,6 +501,7 @@ class ProductService:
             ProductAgentCatalogEntryResult(
                 catalog_entry_id=entry.catalog_entry_id,
                 agent_version_id=entry.latest_version_id,
+                publication_ref=entry.publication_id,
                 authorized=True,
                 visibility_scope=entry.visibility_scope,
                 effective_permission_preview_ref=f"permission-preview:{entry.catalog_entry_id}",

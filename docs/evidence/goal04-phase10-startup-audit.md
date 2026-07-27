@@ -448,6 +448,39 @@ python -m pytest -q tests\frontend\test_phase10_product_contracts.py -p no:cache
 10 passed
 ```
 
+## P10-T12 当前进展
+
+已更新：
+
+- `src/backend/zuno/platform/database/product/domain.py`
+- `src/backend/zuno/api/services/product/command_service.py`
+- `src/backend/zuno/api/v1/product.py`
+- `apps/web/src/product/contracts.ts`
+- `apps/web/src/pages/agent/agent.vue`
+- `tests/api/test_goal03_product_route.py`
+- `tests/frontend/test_phase10_product_contracts.py`
+
+当前 Product Catalog 发布撤销接线覆盖：
+
+- Product repository 的 `list_catalog_entries` 通过 catalog latest version 关联 `product_agent_publications`，返回 `publication_id`；
+- Product service / route / frontend contract 将 catalog projection 扩展为 `publication_ref`；
+- Agent Catalog UI 在 Product Catalog entry 上显示“下架”动作，调用 `revokeProductAgentPublication`；
+- 撤销发布返回的 `agent_publication` 写入 Product projection store，随后刷新 Product Catalog；
+- route tests 覆盖 catalog entry 的 `publication_ref`，frontend static tests 覆盖下架 UI、client 调用和 store upsert。
+
+仍未完成：
+
+- Product Catalog 发布撤销尚未由 Browser E2E 证明；
+- Agent Studio 仍保留旧 Agent API 双路径；
+- 非 Agent simple-chat、旧 workspace API/DTO 删除、Build/Lint、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成。
+
+P10-T12 验证：
+
+```text
+python -m pytest -q tests\api\test_goal03_product_route.py tests\frontend\test_phase10_product_contracts.py tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_agent_assets_publish_install_and_catalog -p no:cacheprovider
+21 passed, 1 warning
+```
+
 ## 本轮验证
 
 已通过：

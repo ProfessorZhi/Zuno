@@ -136,6 +136,7 @@ export interface AgentInstallation {
 export interface AgentCatalogEntry {
   catalog_entry_id: string
   agent_version_id: string
+  publication_ref?: string
   authorized: boolean
   visibility_scope: AgentPublication['scope']
   effective_permission_preview_ref: string

@@ -255,6 +255,7 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
             ProductAgentCatalogEntryResult(
                 catalog_entry_id="agent-catalog:client-publish",
                 agent_version_id=kwargs["agent_version_id"],
+                publication_ref="agent-publication:client-publish",
                 authorized=True,
                 visibility_scope=kwargs["publication_scope"],
                 effective_permission_preview_ref="permission-preview:client-publish",
@@ -277,6 +278,7 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
             ProductAgentCatalogEntryResult(
                 catalog_entry_id="agent-catalog:client-publish",
                 agent_version_id="agent-version:client-publish",
+                publication_ref="agent-publication:client-publish",
                 authorized=True,
                 visibility_scope="WORKSPACE",
                 effective_permission_preview_ref="permission-preview:client-publish",
@@ -329,8 +331,10 @@ def test_goal03_product_agent_studio_catalog_routes_use_product_service(monkeypa
     assert draft_response.json()["data"]["agent_draft"]["configuration_hash"] == "a" * 64
     assert publish_response.json()["data"]["agent_publication"]["status"] == "PUBLISHED"
     assert publish_response.json()["data"]["agent_catalog_entry"]["authorized"] is True
+    assert publish_response.json()["data"]["agent_catalog_entry"]["publication_ref"] == "agent-publication:client-publish"
     assert install_response.json()["data"]["agent_installation"]["principal_ref"] == "principal:principal-a"
     assert catalog_response.json()["data"]["agent_catalog_entries"][0]["catalog_entry_id"] == "agent-catalog:client-publish"
+    assert catalog_response.json()["data"]["agent_catalog_entries"][0]["publication_ref"] == "agent-publication:client-publish"
     assert captured["draft"]["principal_id"] == "principal-a"
     assert captured["install"]["principal_id"] == "principal-a"
     assert captured["catalog"] == {
