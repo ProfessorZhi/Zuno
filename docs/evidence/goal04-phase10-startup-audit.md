@@ -81,6 +81,29 @@ PHASE10 已正式启动为 `in_progress`。本文冻结启动 Gap，并记录 P1
 - 未替换旧 Workspace DTO；
 - 未覆盖 Desktop contract。
 
+## P10-T02 当前进展
+
+已新增：
+
+- `apps/web/src/product/client.ts`
+
+当前 Product API client 覆盖：
+
+- `submitProductRuntimeRequest`：调用 `/api/v1/product/runtime-requests`，默认生成 `client_request_id`；
+- `consumeProductAction`：调用 `/api/v1/product/actions/consume`，默认生成 `client_request_id`；
+- `listProductStreamEvents`：查询 `/api/v1/product/stream-events`，支持 `Last-Event-ID`；
+- `openProductProjectionStream`：消费 `/api/v1/product/stream`，发送 `Last-Event-ID`；
+- `normalizeProductProblem`：把 transport / API 错误映射为 `ProductProblemDetail`；
+- `shouldRetryProductTransportFailure`：显式禁止 Product command / action consume 自动重放，只允许非命令安全路径按 ProblemDetail retryable 策略处理。
+
+仍未完成：
+
+- 未替换旧 workspace API 默认页面调用；
+- 未接入 Pinia projection store；
+- 未覆盖下载和 feedback Product endpoint，因为后端 Product v1 当前尚未提供对应正式 endpoint；
+- 未完成 401/403/409/410/429/5xx 真实后端 fixture round-trip；
+- 未完成 Browser E2E。
+
 ## 本轮验证
 
 已通过：
@@ -101,4 +124,13 @@ first relevant stack frame: node:internal/modules/cjs/loader:1456
 environment signature: Node.js v24.14.0; root node_modules absent; apps/web node_modules absent
 retry_count: 0
 唯一恢复动作: 安装 npm workspace 依赖后从 `npm run lint -w zuno-frontend` 继续。
+```
+
+```text
+command: npx --yes vue-tsc --noEmit -p apps/web/tsconfig.app.json
+exception: command timed out
+first relevant stack frame: n/a; no compiler output returned before timeout
+environment signature: Node.js v24.14.0; root node_modules absent; apps/web node_modules absent; npx transient package resolution exceeded 124 seconds
+retry_count: 0
+唯一恢复动作: 安装 npm workspace 依赖后从 `npm run lint -w zuno-frontend` 继续，不在无环境变化时重复 npx。
 ```
