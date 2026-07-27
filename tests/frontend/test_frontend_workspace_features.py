@@ -43,18 +43,20 @@ def test_workspace_initial_route_message_waits_for_success_before_consuming():
 
 def test_workspace_page_exposes_tool_approval_runtime_surface():
     workspace_page = (REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
-    workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(encoding="utf-8")
 
     for phrase in [
-        "approveWorkspaceTaskAPI",
         "pendingToolApproval",
         "capturePendingToolApproval",
         "submitToolApproval",
+        "submitProductAvailableAction",
+        "consumeProductStoreAction",
         "tool-approval-card",
         "required_approval",
         "audit_ref",
     ]:
-        assert phrase in workspace_page or phrase in workspace_api
+        assert phrase in workspace_page
+
+    assert "approveWorkspaceTaskAPI" not in workspace_page
 
 
 def test_workspace_agent_mode_uses_product_runtime_projection_loop():

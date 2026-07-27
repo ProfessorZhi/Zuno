@@ -40,7 +40,7 @@ def test_workspace_api_types_expose_phase03_product_loop_contract() -> None:
         assert phrase in workspace_api
 
 
-def test_workspace_stream_normalizer_preserves_product_trace_ids() -> None:
+def test_workspace_api_removes_legacy_stream_normalizer_trace_mapping() -> None:
     workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(
         encoding="utf-8"
     )
@@ -51,7 +51,7 @@ def test_workspace_stream_normalizer_preserves_product_trace_ids() -> None:
         "artifact_id: parsed?.data?.artifact_id",
         "citation_ids: parsed?.data?.citation_ids",
     ]:
-        assert phrase in workspace_api
+        assert phrase not in workspace_api
 
 
 def test_workspace_api_exposes_phase03_task_runtime_calls() -> None:
@@ -74,32 +74,37 @@ def test_workspace_api_exposes_phase03_task_runtime_calls() -> None:
         "observability?: WorkspaceObservabilitySnapshot",
         "release_eval?: Record<string, any> | null",
         "source_refs: string[]",
-        "export interface WorkspaceCancelRequest",
         "export interface WorkspaceTaskLifecycleResponse",
-        "export const createWorkspaceTaskAPI",
-        "url: '/api/v1/workspace/task'",
         "export const getWorkspaceTaskLifecycleAPI",
         "url: '/api/v1/workspace/task-lifecycle'",
         "export const createWorkspaceFileAPI",
         "url: '/api/v1/workspace/file'",
         "export const createWorkspaceIngestAPI",
         "url: '/api/v1/workspace/ingest'",
-        "export const getWorkspaceTaskAPI",
-        "url: `/api/v1/workspace/task/${taskId}`",
-        "export const getWorkspaceTaskEventsAPI",
-        "url: `/api/v1/workspace/task/${taskId}/events`",
-        "export const workspaceTaskEventsStreamAPI",
-        "apiUrl(`/api/v1/workspace/task/${taskId}/events/stream`)",
-        "export const approveWorkspaceTaskAPI",
-        "url: `/api/v1/workspace/task/${taskId}/approve`",
-        "export const cancelWorkspaceTaskAPI",
-        "url: `/api/v1/workspace/task/${taskId}/cancel`",
-        "export const getWorkspaceArtifactAPI",
-        "url: `/api/v1/workspace/artifact/${artifactId}`",
-        "export const downloadWorkspaceArtifactAPI",
-        "url: `/api/v1/workspace/artifact/${artifactId}/download`",
-        "responseType: 'blob'",
-        "export const createWorkspaceFeedbackAPI",
-        "url: '/api/v1/workspace/feedback'",
     ]:
         assert phrase in workspace_api
+
+
+def test_workspace_api_no_longer_exposes_legacy_task_chat_artifact_or_feedback_calls() -> None:
+    workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "workspaceSimpleChatStreamAPI",
+        "createWorkspaceTaskAPI",
+        "workspaceTaskEventsStreamAPI",
+        "approveWorkspaceTaskAPI",
+        "cancelWorkspaceTaskAPI",
+        "getWorkspaceTaskAPI",
+        "getWorkspaceTaskEventsAPI",
+        "getWorkspaceArtifactAPI",
+        "downloadWorkspaceArtifactAPI",
+        "createWorkspaceFeedbackAPI",
+        "/api/v1/workspace/simple/chat",
+        "apiUrl(`/api/v1/workspace/task/${taskId}/events/stream`)",
+        "url: `/api/v1/workspace/task/${taskId}`",
+        "url: `/api/v1/workspace/artifact/${artifactId}`",
+        "url: '/api/v1/workspace/feedback'",
+    ]:
+        assert phrase not in workspace_api

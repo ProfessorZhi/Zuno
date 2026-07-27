@@ -578,6 +578,45 @@ python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend
 18 passed
 ```
 
+## P10-T15 当前进展
+
+已更新：
+
+- `apps/web/src/apis/workspace.ts`
+- `tests/frontend/test_workspace_product_loop_types.py`
+- `tests/frontend/test_frontend_workspace_features.py`
+
+当前旧 Workspace API / DTO 前端边界删除覆盖：
+
+- `apps/web/src/apis/workspace.ts` 不再导出 `workspaceSimpleChatStreamAPI`；
+- `apps/web/src/apis/workspace.ts` 不再导出旧 workspace task command/query/stream/approval/cancel API：`createWorkspaceTaskAPI`、`getWorkspaceTaskAPI`、`getWorkspaceTaskEventsAPI`、`workspaceTaskEventsStreamAPI`、`approveWorkspaceTaskAPI`、`cancelWorkspaceTaskAPI`；
+- `apps/web/src/apis/workspace.ts` 不再导出旧 artifact / feedback API：`getWorkspaceArtifactAPI`、`downloadWorkspaceArtifactAPI`、`createWorkspaceFeedbackAPI`；
+- 移除这些旧 stream 函数后，`workspace.ts` 不再依赖 `fetchEventSource` 或 `apiUrl`；
+- 前端测试从“旧 API 必须存在”改为“旧 API 不得暴露”，同时保留当前仍使用的 Product runtime、Workspace file/ingest 和 task lifecycle contract。
+
+仍未完成：
+
+- 后端旧 workspace route 仍存在，等待 shadow/canary/default-new/rollback 和后端删除门；
+- Browser E2E、Desktop smoke、shadow/canary/default-new/rollback closure gate 仍未完成；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+P10-T15 验证：
+
+```text
+python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
+22 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings retained as build warnings, not compile failures。
+```
+
 ## 本轮验证
 
 已通过：
@@ -593,6 +632,7 @@ npm run build -w zuno-frontend
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_script_resolves_repository_root_not_tools_root -q
 python -m pytest tests\frontend\test_frontend_workspace_features.py::test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream tests\frontend\test_frontend_workspace_features.py::test_workspace_agent_mode_uses_product_runtime_projection_loop -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_frontend_workspace_features.py tests\frontend\test_phase10_product_contracts.py -q
 ```
 
 未通过 / 未完成：
