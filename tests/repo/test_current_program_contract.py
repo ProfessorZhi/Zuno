@@ -108,6 +108,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     admission = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/admission.py"
     ).read_text(encoding="utf-8")
+    dispatch = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dispatch.py"
+    ).read_text(encoding="utf-8")
     domain = (
         REPO_ROOT / "src/backend/zuno/agent/domain/task_contracts.py"
     ).read_text(encoding="utf-8")
@@ -119,6 +122,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     admission_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_readyset_admission.py"
+    ).read_text(encoding="utf-8")
+    dispatch_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dispatch_commit.py"
     ).read_text(encoding="utf-8")
 
     assert "P17-T01 Dynamic DAG Proposal and Validator Slice" in evidence
@@ -141,3 +147,13 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "CAPABILITY_NOT_AUTHORIZED" in admission
     assert "test_phase17_readyset_finds_dependency_satisfied_steps" in admission_tests
     assert "test_phase17_admission_defers_budget_quota_capacity_and_resource_conflicts" in admission_tests
+    assert "P17-T04 Dispatch Commit-before-Send Domain Slice" in evidence
+    assert "class DispatchCommitBuilder" in dispatch
+    assert "class DispatchGroup" in dispatch
+    assert "class DispatchItem" in dispatch
+    assert "class StepRun" in dispatch
+    assert "class DispatchOutboxMessage" in dispatch
+    assert "commit_required_before_send" in dispatch
+    assert "agent.dynamic_step.dispatch.requested" in dispatch
+    assert "test_phase17_dispatch_commit_binds_group_items_step_runs_and_outbox_before_send" in dispatch_tests
+    assert "test_phase17_dispatch_commit_is_deterministic_for_same_admission" in dispatch_tests

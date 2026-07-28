@@ -304,6 +304,7 @@ def verify_current_program() -> list[str]:
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
+    dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
     dynamic_plan_version_tests = _read(
@@ -311,6 +312,9 @@ def verify_current_program() -> list[str]:
     )
     readyset_admission_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_readyset_admission.py"
+    )
+    dispatch_commit_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dispatch_commit.py"
     )
 
     errors.extend(
@@ -396,6 +400,8 @@ def verify_current_program() -> list[str]:
                 + dynamic_plan_version_tests
                 + dynamic_admission
                 + readyset_admission_tests
+                + dynamic_dispatch
+                + dispatch_commit_tests
             ),
             [
                 "P17-T01 Dynamic DAG Proposal and Validator Slice",
@@ -423,6 +429,16 @@ def verify_current_program() -> list[str]:
                 "CAPABILITY_NOT_AUTHORIZED",
                 "test_phase17_readyset_finds_dependency_satisfied_steps",
                 "test_phase17_admission_defers_budget_quota_capacity_and_resource_conflicts",
+                "P17-T04 Dispatch Commit-before-Send Domain Slice",
+                "DispatchCommitBuilder",
+                "DispatchGroup",
+                "DispatchItem",
+                "StepRun",
+                "DispatchOutboxMessage",
+                "commit_required_before_send",
+                "agent.dynamic_step.dispatch.requested",
+                "test_phase17_dispatch_commit_binds_group_items_step_runs_and_outbox_before_send",
+                "test_phase17_dispatch_commit_is_deterministic_for_same_admission",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

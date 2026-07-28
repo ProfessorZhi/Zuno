@@ -183,3 +183,34 @@ passed
 - 该切片只完成 ReadySet 和 Admission 的 runtime planning gate；
 - 尚未实现 DispatchGroup、DispatchItem、StepRun、Commit-before-Send、LangGraph Send、BranchResultRef、Reducer、JoinEvaluation 或 Replan Barrier；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T04 Dispatch Commit-before-Send Domain Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/dispatch.py`，把 Admission 结果转成可持久化的并行 dispatch 领域事实：
+
+- `DispatchGroup` 绑定 run、plan、PlanVersion、execution epoch、admitted step ids，并带 `committed_before_send` 标记；
+- `DispatchItem` 绑定 DispatchGroup、StepRun、dynamic step、send idempotency key 和 outbox event id；
+- `StepRun` 以 `QUEUED` 状态创建，绑定 PlanVersion、dynamic step、execution epoch、attempt 和 step hash；
+- `DispatchOutboxMessage` 只表达待发送请求，topic 固定为 `agent.dynamic_step.dispatch.requested`；
+- `DispatchCommitBuilder` 只消费 admitted steps，确定性生成 DispatchGroup / DispatchItem / StepRun / OutboxMessage，并要求所有 outbox payload 都引用已提交 StepRun；
+- 该切片证明 commit-before-send 的领域 payload，不发送 LangGraph worker，不创建 BranchResultRef，不把 queued StepRun 冒充执行成功。
+
+验证：
+
+```text
+python -m pytest tests\agent\dag\test_phase17_dispatch_commit.py -q -p no:cacheprovider --tb=short
+3 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\dispatch.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_dispatch_commit.py
+passed
+```
+
+边界：
+
+- 该切片只完成 DispatchGroup / DispatchItem / StepRun / OutboxMessage 的领域提交 payload；
+- 尚未完成 PostgreSQL append-only migration、Repository/UoW 同事务提交、真实 LangGraph Send、BranchResultRef、Reducer、JoinEvaluation 或 Replan Barrier；
+- PHASE17 仍为 `in_progress`，不能写 completed。
