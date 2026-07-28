@@ -303,7 +303,11 @@ def verify_current_program() -> list[str]:
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
+    agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
+    dynamic_plan_version_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_plan_version_domain.py"
+    )
 
     errors.extend(
         _require_phrases(
@@ -380,7 +384,7 @@ def verify_current_program() -> list[str]:
     )
     errors.extend(
         _require_phrases(
-            phase17_evidence + dynamic_dag + dynamic_dag_tests,
+            phase17_evidence + dynamic_dag + dynamic_dag_tests + agent_domain + dynamic_plan_version_tests,
             [
                 "P17-T01 Dynamic DAG Proposal and Validator Slice",
                 "DynamicPlanProposal",
@@ -390,6 +394,14 @@ def verify_current_program() -> list[str]:
                 "DynamicPlanResourceClaim",
                 "test_phase17_dynamic_plan_validator_rejects_unsafe_parallel_writes",
                 "test_phase17_dynamic_plan_repairer_adds_deterministic_acceptance_and_output_contract",
+                "P17-T02 Dynamic PlanVersion Domain and Supersession Slice",
+                "PlanKind",
+                "DYNAMIC_DAG",
+                "DynamicStepDefinition",
+                "create_dynamic_dag",
+                "supersede",
+                "test_phase17_dynamic_plan_version_supersession_requires_active_cas",
+                "test_phase17_dynamic_plan_version_rejects_unknown_dependency_and_cycles",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

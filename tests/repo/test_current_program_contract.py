@@ -105,8 +105,14 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     runtime = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_dag.py"
     ).read_text(encoding="utf-8")
+    domain = (
+        REPO_ROOT / "src/backend/zuno/agent/domain/task_contracts.py"
+    ).read_text(encoding="utf-8")
     tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_dag_validator.py"
+    ).read_text(encoding="utf-8")
+    domain_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_plan_version_domain.py"
     ).read_text(encoding="utf-8")
 
     assert "P17-T01 Dynamic DAG Proposal and Validator Slice" in evidence
@@ -114,3 +120,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "DynamicPlanValidator" in runtime
     assert "DynamicPlanRepairer" in runtime
     assert "test_phase17_dynamic_plan_validator_rejects_unsafe_parallel_writes" in tests
+    assert "P17-T02 Dynamic PlanVersion Domain and Supersession Slice" in evidence
+    assert "class PlanKind" in domain
+    assert "class DynamicStepDefinition" in domain
+    assert "def create_dynamic_dag" in domain
+    assert "def supersede" in domain
+    assert "test_phase17_dynamic_plan_version_supersession_requires_active_cas" in domain_tests

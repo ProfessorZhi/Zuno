@@ -121,3 +121,34 @@ passed
 - 该切片只完成 P17-T01 的 proposal / normalize / validate / deterministic repair 起点；
 - 尚未实现 ReadySet、Admission、DispatchGroup、Commit-before-Send、LangGraph Send、Reducer、JoinEvaluation 或 Replan Barrier；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T02 Dynamic PlanVersion Domain and Supersession Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮扩展 `src/backend/zuno/agent/domain/task_contracts.py`，把 PHASE08 只支持 `DETERMINISTIC_SINGLE_STEP` 的 `PlanVersion` 领域边界打开为可同时表达：
+
+- `PlanKind.DETERMINISTIC_SINGLE_STEP`：保留原单步计划不变量；
+- `PlanKind.DYNAMIC_DAG`：新增 `DynamicStepDefinition`，显式保存 dynamic step id、dependency ids、dependency rule、activation condition、resource claim refs、join policy ref、executor、acceptance、evidence、budget 和 deadline；
+- 动态 PlanVersion 创建时执行 step id 唯一、step_no 唯一、依赖存在和 DAG cycle fail-closed；
+- `PlanVersion.activate(...)` 继续使用 optimistic CAS，只允许 `DRAFT -> ACTIVE`；
+- `PlanVersion.supersede(...)` 只允许 `ACTIVE -> SUPERSEDED`，并通过 expected aggregate version 防止 stale supersession；
+- active PlanVersion 仍通过 `reject_mutation()` 明确禁止原地修改，Replan 必须创建新 PlanVersion。
+
+验证：
+
+```text
+python -m pytest tests\agent\test_phase08_plan_version_domain.py tests\agent\dag\test_phase17_dynamic_plan_version_domain.py -q -p no:cacheprovider --tb=short
+10 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\domain\task_contracts.py src\backend\zuno\agent\domain\__init__.py tests\agent\dag\test_phase17_dynamic_plan_version_domain.py
+passed
+```
+
+边界：
+
+- 该切片只完成动态 PlanVersion 领域模型、激活 CAS 和 supersession 领域入口；
+- 尚未把动态 PlanVersion 持久化 schema 扩展为完整 DAG step metadata，尚未实现 ReadySet / Admission / DispatchGroup / Commit-before-Send；
+- PHASE17 仍为 `in_progress`，不能写 completed。
