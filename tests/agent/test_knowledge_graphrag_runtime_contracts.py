@@ -197,6 +197,66 @@ def test_query_result_trace_exposes_method_citation_and_fusion_contracts() -> No
     }
 
 
+def test_application_knowledge_query_service_emits_phase18_graph_metadata() -> None:
+    from zuno.services.application.knowledge import KnowledgeQueryService
+    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+
+    async def fake_config_loader(_knowledge_id: str) -> dict:
+        return {
+            "index_capability": "rag_graph",
+            "graphrag_project_id": "contract_review",
+            "graphrag_project": {"query_method": "local"},
+        }
+
+    class NoopProjectLoader:
+        def load(self, _project_id):
+            return None
+
+    class FakeQueryService:
+        async def query(self, *, query, knowledge_ids, snapshot, product_mode=None, query_method=None, top_k=None):
+            del query, knowledge_ids, snapshot, product_mode, query_method, top_k
+            return KnowledgeQueryResult(
+                graphrag_project_id="contract_review",
+                answer="Renewal notice is 30 days.",
+                requested_query_method="local",
+                resolved_query_method="local",
+                fallback_reason=None,
+                documents=[{"chunk_id": "chunk-1"}],
+                evidence={"document_count": 1, "citation_coverage": 1.0},
+                citations=["chunk-1"],
+                retrievers_used=["bm25", "vector", "graph"],
+                graph_paths=[],
+                communities=[],
+                prompt_version=None,
+                query_prompt_version=None,
+                index_version={},
+                community_version=None,
+                trace_metadata={"retrieval_fusion_contract": {"retrievers_used": ["bm25", "vector", "graph"]}},
+            )
+
+    service = KnowledgeQueryService(
+        config_loader=fake_config_loader,
+        project_loader=NoopProjectLoader(),
+        query_service=FakeQueryService(),
+    )
+    result = asyncio.run(
+        service.query(
+            user_id="u_1",
+            knowledge_ids=["kb_contract"],
+            query="What is the renewal notice period?",
+            product_mode="enhanced",
+            query_method="local",
+        )
+    )
+    graph = result.trace_metadata["knowledge_retrieval_graph"]
+
+    assert result.trace_metadata["phase18_application_query_path"] is True
+    assert graph["node_events"][0]["node"] == "validate"
+    assert graph["node_events"][-1]["node"] == "corrective_decision"
+    assert graph["profile"] == "local"
+    assert result.trace_metadata["knowledge_control_proposal"]["proposal_type"] == "accept_evidence"
+
+
 def test_standard_retrieval_profile_maps_to_basic_evidence_without_exposing_internal_modes() -> None:
     from zuno.agent.contracts import RetrievalProfile
     from zuno.knowledge.agentic_graphrag import AgenticRetrievalRuntimeRequest, QueryMethod

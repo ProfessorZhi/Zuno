@@ -11,6 +11,17 @@ from zuno.services.graphrag.query_service import (
     GraphRAGQueryService,
     KnowledgeQueryResult,
 )
+from zuno.knowledge.agentic.contracts import (
+    CorrectiveAction,
+    EvidenceCoverageSummary,
+    EvidenceFrontier,
+    KnowledgeControlProposal,
+    KnowledgeControlProposalType,
+    KnowledgeRetrievalGraphNode,
+    KnowledgeRetrievalGraphTrace,
+    KnowledgeRetrievalProfile,
+    RetrieverKind,
+)
 
 
 ConfigLoader = Callable[[str], Awaitable[dict[str, Any]]]
@@ -50,13 +61,22 @@ class KnowledgeQueryService:
             user_id=user_id,
             knowledge_id=knowledge_ids[0],
         )
-        return await self.query_service.query(
+        result = await self.query_service.query(
             query=query,
             knowledge_ids=knowledge_ids,
             snapshot=snapshot,
             product_mode=product_mode,
             query_method=query_method,
             top_k=top_k,
+        )
+        return _with_phase18_application_trace(
+            result=result,
+            snapshot=snapshot,
+            user_id=user_id,
+            knowledge_ids=knowledge_ids,
+            query=query,
+            product_mode=product_mode,
+            query_method=query_method,
         )
 
     async def build_project_snapshot(
@@ -140,6 +160,173 @@ class KnowledgeQueryService:
             query_policy=query_policy,
             settings=settings,
         )
+
+
+def _with_phase18_application_trace(
+    *,
+    result: KnowledgeQueryResult,
+    snapshot: GraphRAGProjectSnapshot,
+    user_id: str,
+    knowledge_ids: list[str],
+    query: str,
+    product_mode: str | None,
+    query_method: str | None,
+) -> KnowledgeQueryResult:
+    metadata = dict(result.trace_metadata)
+    if metadata.get("phase18_application_query_path"):
+        return result
+    frontier = _phase18_frontier(result)
+    final_action = CorrectiveAction.CONTINUE if not frontier.stop_reasons else CorrectiveAction.ABSTAIN
+    proposal_type = (
+        KnowledgeControlProposalType.ACCEPT_EVIDENCE
+        if final_action is CorrectiveAction.CONTINUE
+        else KnowledgeControlProposalType.ABSTAIN
+    )
+    graph_trace = KnowledgeRetrievalGraphTrace(
+        profile=_phase18_profile(result),
+        requested_profile=str(query_method or result.requested_query_method or snapshot.default_query_method()),
+        snapshot_id=snapshot.graphrag_project_id,
+    )
+    retrievers = _phase18_retrievers(result)
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.VALIDATE,
+        status="completed" if query.strip() and knowledge_ids else "blocked",
+        payload={"query_present": bool(query.strip()), "knowledge_scope_present": bool(knowledge_ids)},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.PIN_SNAPSHOT,
+        status="pinned" if snapshot.graphrag_project_id else "deferred_to_repository",
+        payload={"graphrag_project_id": snapshot.graphrag_project_id},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.SCOPE,
+        payload={
+            "user_id": user_id,
+            "knowledge_space_ids": list(knowledge_ids),
+            "product_mode": product_mode,
+        },
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.INTERPRET,
+        payload={"query_method_contract": dict(metadata.get("query_method_contract") or {})},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.SELECT_PROFILE,
+        payload={"resolved_query_method": result.resolved_query_method, "selected_profile": graph_trace.profile.value},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.PLAN_ROUND,
+        round=1,
+        payload={"retrievers": retrievers, "top_k": snapshot.retrieval_settings.get("top_k")},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.ADMIT,
+        round=1,
+        status="admitted" if knowledge_ids else "blocked",
+        payload={"admitted": bool(knowledge_ids), "admission_reason": "admitted" if knowledge_ids else "knowledge_scope_empty"},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.DISPATCH,
+        round=1,
+        payload={"retrievers": retrievers, "parallel_group": f"application-query:{snapshot.graphrag_project_id or 'default'}"},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.NORMALIZE,
+        round=1,
+        payload={"document_count": len(result.documents), "citation_count": len(result.citations)},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.FUSE_RERANK,
+        round=1,
+        payload=dict(metadata.get("retrieval_fusion_contract") or {}),
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.EVIDENCE_LEDGER,
+        round=1,
+        payload={"frontier": frontier.model_dump(mode="json"), "evidence": dict(result.evidence)},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.EVALUATE,
+        round=1,
+        payload={
+            "verdict": "relevant" if result.documents else "irrelevant",
+            "frontier_stop_reasons": list(frontier.stop_reasons),
+        },
+    )
+    graph_trace.proposal = KnowledgeControlProposal(
+        proposal_type=proposal_type,
+        final_action=final_action,
+        reason="application knowledge query produced PHASE18 trace metadata",
+        payload={"frontier": frontier.model_dump(mode="json")},
+    )
+    graph_trace.add(
+        KnowledgeRetrievalGraphNode.CORRECTIVE_DECISION,
+        round=1,
+        payload={
+            "corrective_action": final_action.value,
+            "proposal_type": proposal_type.value,
+            "frontier_stop_reasons": list(frontier.stop_reasons),
+        },
+    )
+    metadata.update(
+        {
+            "phase18_application_query_path": True,
+            "knowledge_retrieval_graph": graph_trace.model_dump(mode="json"),
+            "knowledge_control_proposal": graph_trace.proposal.model_dump(mode="json"),
+            "evidence_frontier": frontier.model_dump(mode="json"),
+        }
+    )
+    result.trace_metadata = metadata
+    return result
+
+
+def _phase18_profile(result: KnowledgeQueryResult) -> KnowledgeRetrievalProfile:
+    resolved = result.resolved_query_method.lower().strip()
+    if resolved == "local":
+        return KnowledgeRetrievalProfile.LOCAL
+    if resolved == "global":
+        return KnowledgeRetrievalProfile.GLOBAL
+    if resolved == "drift":
+        return KnowledgeRetrievalProfile.DRIFT
+    if "community" in result.retrievers_used:
+        return KnowledgeRetrievalProfile.GLOBAL
+    return KnowledgeRetrievalProfile.STANDARD
+
+
+def _phase18_retrievers(result: KnowledgeQueryResult) -> list[str]:
+    mapped: list[str] = []
+    for retriever in result.retrievers_used:
+        normalized = str(retriever).lower().strip()
+        if normalized == "graph":
+            normalized = RetrieverKind.RELATION.value
+        if normalized in {kind.value for kind in RetrieverKind} and normalized not in mapped:
+            mapped.append(normalized)
+    return mapped or [RetrieverKind.BM25.value, RetrieverKind.VECTOR.value]
+
+
+def _phase18_frontier(result: KnowledgeQueryResult) -> EvidenceFrontier:
+    document_count = len(result.documents)
+    citation_count = len(result.citations)
+    stop_reasons: list[str] = []
+    if document_count <= 0:
+        stop_reasons.append("no_evidence")
+    elif citation_count <= 0:
+        stop_reasons.append("strict_citation_missing")
+    coverage_ratio = 1.0 if document_count and citation_count else 0.0
+    return EvidenceFrontier(
+        total_records=document_count,
+        newest_round=1 if document_count else 0,
+        novelty=1.0 if document_count else 0.0,
+        missing_strict_citation_ids=[] if citation_count else [str(item.get("chunk_id") or idx) for idx, item in enumerate(result.documents, start=1)],
+        stop_reasons=stop_reasons,
+        coverage=EvidenceCoverageSummary(
+            claim_count=0,
+            covered_claim_count=0,
+            strict_citation_count=citation_count,
+            coverage_ratio=coverage_ratio,
+            strict_citation_ratio=coverage_ratio,
+        ),
+    )
 
 
 __all__ = ["KnowledgeQueryService"]
