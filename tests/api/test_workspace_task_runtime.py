@@ -16,6 +16,7 @@ from zuno.api.services.product import (
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
 from zuno.agent.contracts import CapabilityPlan
+from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
 from zuno.platform.security import SecurityProductActionDenied
 from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 
@@ -85,6 +86,15 @@ def _client() -> TestClient:
         role="admin",
     )
     return TestClient(app)
+
+
+def test_workspace_task_runtime_resets_to_phase18_agentic_graphrag_default_path() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+    assert isinstance(
+        WorkspaceTaskRuntimeService._agentic_retrieval_runtime,
+        CorrectiveAgenticGraphRAGRuntime,
+    )
 
 
 def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> None:

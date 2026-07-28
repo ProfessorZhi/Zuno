@@ -42,11 +42,18 @@ class PlanVersionStatus(StrEnum):
     SUPERSEDED = "SUPERSEDED"
 
 
+class PlanKind(StrEnum):
+    DETERMINISTIC_SINGLE_STEP = "DETERMINISTIC_SINGLE_STEP"
+    DYNAMIC_DAG = "DYNAMIC_DAG"
+
+
 class StepExecutorType(StrEnum):
     MODEL = "MODEL"
     KNOWLEDGE = "KNOWLEDGE"
     CAPABILITY = "CAPABILITY"
     TOOL = "TOOL"
+    DETERMINISTIC = "DETERMINISTIC"
+    JOIN = "JOIN"
     INGESTION_WAIT = "INGESTION_WAIT"
     FINAL_GATE = "FINAL_GATE"
 
@@ -256,6 +263,85 @@ class DeterministicStepDefinition:
 
 
 @dataclass(frozen=True, slots=True)
+class DynamicStepDefinition:
+    step_definition_id: str
+    plan_version_id: str
+    tenant_id: str
+    step_no: int
+    dynamic_step_id: str
+    objective_ref: str
+    input_contract_ref: str
+    output_contract_ref: str
+    acceptance_refs: tuple[str, ...]
+    executor_type: StepExecutorType
+    required_evidence_refs: tuple[str, ...]
+    dependency_step_ids: tuple[str, ...]
+    dependency_rule: str
+    activation_condition_ref: str
+    resource_claim_refs: tuple[str, ...]
+    join_policy_ref: str
+    budget_ref: str
+    deadline_at: datetime
+    step_hash: str = ""
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "step_definition_id",
+            "plan_version_id",
+            "tenant_id",
+            "dynamic_step_id",
+            "objective_ref",
+            "input_contract_ref",
+            "output_contract_ref",
+            "dependency_rule",
+            "activation_condition_ref",
+            "join_policy_ref",
+            "budget_ref",
+        ):
+            _require_ref(getattr(self, field_name), field_name)
+        if self.step_no < 1:
+            raise AgentDomainError("DynamicStepDefinition step_no must be positive")
+        if not self.acceptance_refs:
+            raise AgentDomainError("DynamicStepDefinition requires acceptance_refs")
+        if len(set(self.dependency_step_ids)) != len(self.dependency_step_ids):
+            raise AgentDomainError("DynamicStepDefinition dependencies must be unique")
+        if self.dynamic_step_id in self.dependency_step_ids:
+            raise AgentDomainError("DynamicStepDefinition cannot depend on itself")
+        if self.deadline_at.tzinfo is None:
+            raise AgentDomainError("deadline_at must be timezone-aware")
+        expected_hash = self.compute_hash()
+        if not self.step_hash:
+            object.__setattr__(self, "step_hash", expected_hash)
+        elif self.step_hash != expected_hash:
+            raise AgentDomainError("DynamicStepDefinition hash mismatch")
+
+    def compute_hash(self) -> str:
+        return _canonical_hash(
+            {
+                "tenant_id": self.tenant_id,
+                "step_no": self.step_no,
+                "dynamic_step_id": self.dynamic_step_id,
+                "objective_ref": self.objective_ref,
+                "input_contract_ref": self.input_contract_ref,
+                "output_contract_ref": self.output_contract_ref,
+                "acceptance_refs": list(self.acceptance_refs),
+                "executor_type": self.executor_type.value,
+                "required_evidence_refs": list(self.required_evidence_refs),
+                "dependency_step_ids": list(self.dependency_step_ids),
+                "dependency_rule": self.dependency_rule,
+                "activation_condition_ref": self.activation_condition_ref,
+                "resource_claim_refs": list(self.resource_claim_refs),
+                "join_policy_ref": self.join_policy_ref,
+                "budget_ref": self.budget_ref,
+                "deadline_at": _canonical_datetime(self.deadline_at),
+            }
+        )
+
+
+PlanStepDefinition = DeterministicStepDefinition | DynamicStepDefinition
+
+
+@dataclass(frozen=True, slots=True)
 class PlanVersion:
     plan_version_id: str
     tenant_id: str
@@ -263,7 +349,7 @@ class PlanVersion:
     goal_version_id: str
     plan_kind: str
     status: PlanVersionStatus
-    steps: tuple[DeterministicStepDefinition, ...]
+    steps: tuple[PlanStepDefinition, ...]
     plan_hash: str = ""
     aggregate_version: int = 1
     activated_at: datetime | None = None
@@ -271,12 +357,11 @@ class PlanVersion:
     def __post_init__(self) -> None:
         for field_name in ("plan_version_id", "tenant_id", "workspace_id", "goal_version_id", "plan_kind"):
             _require_ref(getattr(self, field_name), field_name)
-        if self.plan_kind != "DETERMINISTIC_SINGLE_STEP":
-            raise AgentDomainError("PHASE08-T02 only supports DETERMINISTIC_SINGLE_STEP")
-        if len(self.steps) != 1:
-            raise AgentDomainError("Deterministic PlanVersion must contain exactly one step")
-        if self.steps[0].plan_version_id != self.plan_version_id:
-            raise AgentDomainError("StepDefinition must bind PlanVersion")
+        plan_kind = PlanKind(self.plan_kind)
+        if plan_kind is PlanKind.DETERMINISTIC_SINGLE_STEP:
+            self._validate_single_step()
+        elif plan_kind is PlanKind.DYNAMIC_DAG:
+            self._validate_dynamic_dag()
         if self.aggregate_version < 1:
             raise AgentDomainError("aggregate_version must be positive")
         expected_hash = self.compute_hash()
@@ -300,10 +385,82 @@ class PlanVersion:
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             goal_version_id=goal_version_id,
-            plan_kind="DETERMINISTIC_SINGLE_STEP",
+            plan_kind=PlanKind.DETERMINISTIC_SINGLE_STEP.value,
             status=PlanVersionStatus.DRAFT,
             steps=(step,),
         )
+
+    @classmethod
+    def create_dynamic_dag(
+        cls,
+        *,
+        plan_version_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        goal_version_id: str,
+        steps: tuple[DynamicStepDefinition, ...],
+    ) -> "PlanVersion":
+        return cls(
+            plan_version_id=plan_version_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            goal_version_id=goal_version_id,
+            plan_kind=PlanKind.DYNAMIC_DAG.value,
+            status=PlanVersionStatus.DRAFT,
+            steps=steps,
+        )
+
+    def _validate_single_step(self) -> None:
+        if len(self.steps) != 1:
+            raise AgentDomainError("Deterministic PlanVersion must contain exactly one step")
+        step = self.steps[0]
+        if not isinstance(step, DeterministicStepDefinition):
+            raise AgentDomainError("Deterministic PlanVersion must use DeterministicStepDefinition")
+        if step.plan_version_id != self.plan_version_id:
+            raise AgentDomainError("StepDefinition must bind PlanVersion")
+
+    def _validate_dynamic_dag(self) -> None:
+        if not self.steps:
+            raise AgentDomainError("Dynamic DAG PlanVersion must contain at least one step")
+        dynamic_steps: list[DynamicStepDefinition] = []
+        for step in self.steps:
+            if not isinstance(step, DynamicStepDefinition):
+                raise AgentDomainError("Dynamic DAG PlanVersion must use DynamicStepDefinition")
+            if step.plan_version_id != self.plan_version_id:
+                raise AgentDomainError("StepDefinition must bind PlanVersion")
+            dynamic_steps.append(step)
+        step_ids = [step.dynamic_step_id for step in dynamic_steps]
+        step_numbers = [step.step_no for step in dynamic_steps]
+        if len(set(step_ids)) != len(step_ids):
+            raise AgentDomainError("Dynamic DAG PlanVersion step ids must be unique")
+        if len(set(step_numbers)) != len(step_numbers):
+            raise AgentDomainError("Dynamic DAG PlanVersion step numbers must be unique")
+        known = set(step_ids)
+        for step in dynamic_steps:
+            missing = set(step.dependency_step_ids) - known
+            if missing:
+                raise AgentDomainError("Dynamic DAG PlanVersion dependency references unknown step")
+        self._reject_dynamic_cycles(dynamic_steps)
+
+    @staticmethod
+    def _reject_dynamic_cycles(steps: list[DynamicStepDefinition]) -> None:
+        deps = {step.dynamic_step_id: set(step.dependency_step_ids) for step in steps}
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit(step_id: str) -> None:
+            if step_id in visited:
+                return
+            if step_id in visiting:
+                raise AgentDomainError("Dynamic DAG PlanVersion dependency cycle detected")
+            visiting.add(step_id)
+            for dependency in deps.get(step_id, set()):
+                visit(dependency)
+            visiting.remove(step_id)
+            visited.add(step_id)
+
+        for step_id in deps:
+            visit(step_id)
 
     def compute_hash(self) -> str:
         return _canonical_hash(
@@ -330,6 +487,19 @@ class PlanVersion:
             status=PlanVersionStatus.ACTIVE,
             aggregate_version=self.aggregate_version + 1,
             activated_at=activated_at,
+        )
+
+    def supersede(self, *, expected_version: int) -> "PlanVersion":
+        if expected_version != self.aggregate_version:
+            raise AgentDomainConflict(
+                f"expected aggregate_version {expected_version}, observed {self.aggregate_version}"
+            )
+        if self.status is not PlanVersionStatus.ACTIVE:
+            raise AgentDomainError("only ACTIVE PlanVersion can be superseded")
+        return replace(
+            self,
+            status=PlanVersionStatus.SUPERSEDED,
+            aggregate_version=self.aggregate_version + 1,
         )
 
     def reject_mutation(self) -> None:

@@ -45,7 +45,7 @@ Current 审计
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09 completed，PHASE12 completed，PHASE13 completed，PHASE14 completed，PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production ready not established。
 
-Goal04 已在 `codex/goal04-phase10-product-adaptation` 启动 PR A：PHASE10 Web/Desktop Product Adaptation 进入 `in_progress`。该状态只表示实施启动，不表示 PHASE10 completed、quality proven 或 production ready。PHASE16 仍为 ready，可在独立 PR B / worktree 启动；PHASE17–19 仍不得提前进入 in_progress。
+Goal04 PR A 已在 `codex/goal04-phase10-product-adaptation` 启动：PHASE10 Web/Desktop Product Adaptation 为 `in_progress`，当前分支已有 Product Contract、Web/Desktop adaptation、browser/desktop smoke 和 build/lint 证据，仍需在 PHASE18 合并后的最新 `main` 上完成 Coordinator Closure。Goal04 PR B 已合并：PHASE16 Tool Side Effect and Reconciliation 通过 `d78426171df0591643af12549a36214a24734f7c` 进入 `main`。Goal04 PR C 已合并：PHASE17 Dynamic Plan DAG and Parallel Control 通过 `4d14ae9e8cd953359c82e51d55279cc123ab47ae` 进入 `main`，closure evidence 为 `docs/evidence/goal04-phase17-coordinator-closure.md`。Goal04 PR D 已合并：PHASE18 Agentic GraphRAG Inner Loop 通过 `cbc04cb0be16c3915537b82a4f3f743cb7add963` 进入 `main`。该状态不表示 Goal04 completed、PHASE19 已启动、quality proven 或 production ready；PHASE19 仍必须等待 PHASE10 与 PHASE18 都完成并合并后才能启动。
 
 ## 当前阶段
 
@@ -140,4 +140,4 @@ production readiness not established
 已有 PHASE03/04 代码是可复用的部分实现，不代表完整阶段完成。PHASE22 之前不得声明 Agentic GraphRAG 稳定优于 Baseline，不得把文档完成、最小闭环或局部 CI 绿灯写成系统完成。
 
 
-Goal03 closure status: PHASE09 completed; PHASE12 completed; PHASE13 completed; PHASE14 completed; PHASE15 completed; PHASE10 ready; PHASE16 ready; current_phase PHASE10; production readiness not established.
+Goal04 PR D closure status: PHASE16 completed and merged at d78426171df0591643af12549a36214a24734f7c; PHASE17 completed and merged at 4d14ae9e8cd953359c82e51d55279cc123ab47ae; PHASE18 completed on codex/goal04-phase18-agentic-graphrag with closure evidence in docs/evidence/goal04-phase18-coordinator-closure.md; PHASE10 still requires post-PHASE18 main rebase and closure; PHASE19 not started; current_phase PHASE10; production readiness not established.

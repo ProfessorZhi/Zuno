@@ -16,6 +16,7 @@ from zuno.agent.domain import (
     BudgetReservationStatus,
     BudgetSettlement,
     DeterministicStepDefinition,
+    DynamicStepDefinition,
     ExecutionContextSnapshot,
     GoalInputClassification,
     GoalVersion,
@@ -24,6 +25,15 @@ from zuno.agent.domain import (
     StepExecutorType,
     TaskContract,
 )
+from zuno.agent.runtime.planning.dispatch import DispatchCommit
+from zuno.agent.runtime.planning.branch_result import BranchResultRef
+from zuno.platform.database.foundation import InfrastructureRepository
+from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
+from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierExecutionResult, ReplanBarrierRequest
+from zuno.agent.runtime.planning.send import DynamicStepSendEnvelope
+from zuno.agent.runtime.planning.recovery import PersistedStepRunSnapshot
+from zuno.agent.runtime.planning.dispatch import DispatchItemStatus, StepRunStatus
+from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierStatus
 
 
 class AgentDomainPersistenceError(RuntimeError):
@@ -328,7 +338,7 @@ class AgentDomainRepository:
             self.record_step_definition(step)
         return AgentDomainReceipt(plan.plan_version_id, plan.status.value, plan.aggregate_version)
 
-    def record_step_definition(self, step: DeterministicStepDefinition) -> AgentDomainReceipt:
+    def record_step_definition(self, step: DeterministicStepDefinition | DynamicStepDefinition) -> AgentDomainReceipt:
         params = _step_params(step)
         result = self.connection.execute(
             text(
@@ -337,13 +347,17 @@ class AgentDomainRepository:
                     step_definition_id, plan_version_id, tenant_id, step_no,
                     objective_ref, input_contract_ref, output_contract_ref,
                     acceptance_refs, executor_type, required_evidence_refs,
-                    budget_ref, deadline_at, step_hash
+                    budget_ref, deadline_at, step_hash, dynamic_step_id,
+                    dependency_step_ids, dependency_rule, activation_condition_ref,
+                    resource_claim_refs, join_policy_ref
                 )
                 VALUES (
                     :step_definition_id, :plan_version_id, :tenant_id, :step_no,
                     :objective_ref, :input_contract_ref, :output_contract_ref,
                     CAST(:acceptance_refs AS JSON), :executor_type, CAST(:required_evidence_refs AS JSON),
-                    :budget_ref, :deadline_at, :step_hash
+                    :budget_ref, :deadline_at, :step_hash, :dynamic_step_id,
+                    CAST(:dependency_step_ids AS JSON), :dependency_rule, :activation_condition_ref,
+                    CAST(:resource_claim_refs AS JSON), :join_policy_ref
                 )
                 ON CONFLICT DO NOTHING
                 """
@@ -354,7 +368,7 @@ class AgentDomainRepository:
             existing = self.connection.execute(
                 text(
                     """
-                    SELECT step_definition_id, plan_version_id, tenant_id, step_no, step_hash
+                    SELECT step_definition_id, plan_version_id, tenant_id, step_no, step_hash, dynamic_step_id
                     FROM agent_plan_step_definitions
                     WHERE step_definition_id = :step_definition_id
                        OR (plan_version_id = :plan_version_id AND step_no = :step_no)
@@ -370,7 +384,7 @@ class AgentDomainRepository:
             ).mappings().all()
             if len(existing) == 1 and all(
                 existing[0][key] == params[key]
-                for key in ("plan_version_id", "tenant_id", "step_no", "step_hash")
+                for key in ("plan_version_id", "tenant_id", "step_no", "step_hash", "dynamic_step_id")
             ):
                 return AgentDomainReceipt(str(existing[0]["step_definition_id"]), "duplicate:RECORDED", 1)
             raise AgentDomainConflict(f"conflicting StepDefinition for {step.step_definition_id}")
@@ -422,6 +436,558 @@ class AgentDomainRepository:
         if result.rowcount != 1:
             raise AgentDomainConflict(f"stale PlanVersion activation for {next_plan.plan_version_id}")
         return AgentDomainReceipt(next_plan.plan_version_id, next_plan.status.value, next_plan.aggregate_version)
+
+    def record_dispatch_commit(self, *, tenant_id: str, commit: DispatchCommit) -> AgentDomainReceipt:
+        commit.assert_committed_before_send()
+        group = commit.dispatch_group
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_dispatch_groups(
+                    dispatch_group_id, tenant_id, run_id, plan_id, plan_version_id,
+                    execution_epoch, admitted_step_ids, status, committed_before_send, group_hash
+                ) VALUES (
+                    :dispatch_group_id, :tenant_id, :run_id, :plan_id, :plan_version_id,
+                    :execution_epoch, CAST(:admitted_step_ids AS JSON), :status, :committed_before_send, :group_hash
+                )
+                ON CONFLICT (dispatch_group_id) DO NOTHING
+                """
+            ),
+            {
+                "dispatch_group_id": group.dispatch_group_id,
+                "tenant_id": tenant_id,
+                "run_id": group.run_id,
+                "plan_id": group.plan_id,
+                "plan_version_id": group.plan_version_id,
+                "execution_epoch": group.execution_epoch,
+                "admitted_step_ids": json.dumps(list(group.admitted_step_ids), sort_keys=True, separators=(",", ":")),
+                "status": group.status.value,
+                "committed_before_send": group.committed_before_send,
+                "group_hash": group.group_hash,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT tenant_id, run_id, plan_id, plan_version_id, execution_epoch,
+                           admitted_step_ids, status, committed_before_send, group_hash
+                    FROM agent_dispatch_groups
+                    WHERE dispatch_group_id = :dispatch_group_id
+                    """
+                ),
+                {"dispatch_group_id": group.dispatch_group_id},
+            ).mappings().first()
+            if not existing or str(existing["group_hash"]) != group.group_hash:
+                raise AgentDomainConflict(f"conflicting DispatchGroup for {group.dispatch_group_id}")
+            return AgentDomainReceipt(group.dispatch_group_id, f"duplicate:{existing['status']}", 1)
+
+        for step_run in commit.step_runs:
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO agent_step_runs(
+                        step_run_id, tenant_id, run_id, plan_version_id, dynamic_step_id,
+                        execution_epoch, attempt_no, status, step_hash
+                    ) VALUES (
+                        :step_run_id, :tenant_id, :run_id, :plan_version_id, :dynamic_step_id,
+                        :execution_epoch, :attempt_no, :status, :step_hash
+                    )
+                    ON CONFLICT (step_run_id) DO NOTHING
+                    """
+                ),
+                {
+                    "step_run_id": step_run.step_run_id,
+                    "tenant_id": tenant_id,
+                    "run_id": step_run.run_id,
+                    "plan_version_id": step_run.plan_version_id,
+                    "dynamic_step_id": step_run.dynamic_step_id,
+                    "execution_epoch": step_run.execution_epoch,
+                    "attempt_no": step_run.attempt_no,
+                    "status": step_run.status.value,
+                    "step_hash": step_run.step_hash,
+                },
+            )
+        outbox = InfrastructureRepository(self.connection)
+        for message in commit.outbox_messages:
+            outbox.enqueue_outbox(
+                event_id=message.event_id,
+                aggregate_id=message.aggregate_id,
+                topic=message.topic,
+                payload=message.payload,
+                idempotency_key=message.idempotency_key,
+                tenant_id=tenant_id,
+                ordering_key=group.dispatch_group_id,
+            )
+        for item in commit.items:
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO agent_dispatch_items(
+                        dispatch_item_id, tenant_id, dispatch_group_id, step_run_id,
+                        dynamic_step_id, send_idempotency_key, outbox_event_id, status
+                    ) VALUES (
+                        :dispatch_item_id, :tenant_id, :dispatch_group_id, :step_run_id,
+                        :dynamic_step_id, :send_idempotency_key, :outbox_event_id, :status
+                    )
+                    ON CONFLICT (dispatch_item_id) DO NOTHING
+                    """
+                ),
+                {
+                    "dispatch_item_id": item.dispatch_item_id,
+                    "tenant_id": tenant_id,
+                    "dispatch_group_id": item.dispatch_group_id,
+                    "step_run_id": item.step_run_id,
+                    "dynamic_step_id": item.dynamic_step_id,
+                    "send_idempotency_key": item.send_idempotency_key,
+                    "outbox_event_id": item.outbox_event_id,
+                    "status": item.status.value,
+                },
+            )
+        return AgentDomainReceipt(group.dispatch_group_id, group.status.value, 1)
+
+    def record_branch_result_ref(self, *, tenant_id: str, branch_result: BranchResultRef) -> AgentDomainReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_branch_result_refs(
+                    branch_result_id, tenant_id, step_run_id, run_id, plan_version_id,
+                    dynamic_step_id, execution_epoch, attempt_no, result_ref,
+                    result_hash, producer_ref, ref_hash
+                ) VALUES (
+                    :branch_result_id, :tenant_id, :step_run_id, :run_id, :plan_version_id,
+                    :dynamic_step_id, :execution_epoch, :attempt_no, :result_ref,
+                    :result_hash, :producer_ref, :ref_hash
+                )
+                ON CONFLICT (branch_result_id) DO NOTHING
+                """
+            ),
+            {
+                "branch_result_id": branch_result.branch_result_id,
+                "tenant_id": tenant_id,
+                "step_run_id": branch_result.step_run_id,
+                "run_id": branch_result.run_id,
+                "plan_version_id": branch_result.plan_version_id,
+                "dynamic_step_id": branch_result.dynamic_step_id,
+                "execution_epoch": branch_result.execution_epoch,
+                "attempt_no": branch_result.attempt_no,
+                "result_ref": branch_result.result_ref,
+                "result_hash": branch_result.result_hash,
+                "producer_ref": branch_result.producer_ref,
+                "ref_hash": branch_result.ref_hash,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT branch_result_id, ref_hash
+                    FROM agent_branch_result_refs
+                    WHERE branch_result_id = :branch_result_id
+                    """
+                ),
+                {"branch_result_id": branch_result.branch_result_id},
+            ).mappings().first()
+            if existing and existing["ref_hash"] == branch_result.ref_hash:
+                return AgentDomainReceipt(branch_result.branch_result_id, "duplicate:ACCEPTED", 1)
+            raise AgentDomainConflict(f"conflicting BranchResultRef for {branch_result.branch_result_id}")
+        return AgentDomainReceipt(branch_result.branch_result_id, "ACCEPTED", 1)
+
+    def record_join_outcome(
+        self,
+        *,
+        tenant_id: str,
+        join_outcome_id: str,
+        outcome: ReducedJoinOutcome,
+    ) -> AgentDomainReceipt:
+        params = {
+            "join_outcome_id": join_outcome_id,
+            "tenant_id": tenant_id,
+            "plan_id": outcome.plan_id,
+            "plan_version_id": outcome.plan_version_id,
+            "join_policy": outcome.join_policy.value,
+            "expected_branch_count": outcome.expected_branch_count,
+            "reduced_results": json.dumps(
+                [result.model_dump(mode="json") for result in outcome.reduced_results],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "duplicate_result_ids": json.dumps(
+                list(outcome.duplicate_result_ids),
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "decision": outcome.decision.value,
+            "outcome_hash": outcome.outcome_hash,
+        }
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_join_outcomes(
+                    join_outcome_id, tenant_id, plan_id, plan_version_id, join_policy,
+                    expected_branch_count, reduced_results, duplicate_result_ids,
+                    decision, outcome_hash
+                ) VALUES (
+                    :join_outcome_id, :tenant_id, :plan_id, :plan_version_id, :join_policy,
+                    :expected_branch_count, CAST(:reduced_results AS JSON), CAST(:duplicate_result_ids AS JSON),
+                    :decision, :outcome_hash
+                )
+                ON CONFLICT (join_outcome_id) DO NOTHING
+                """
+            ),
+            params,
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT join_outcome_id, outcome_hash, decision
+                    FROM agent_join_outcomes
+                    WHERE join_outcome_id = :join_outcome_id
+                    """
+                ),
+                {"join_outcome_id": join_outcome_id},
+            ).mappings().first()
+            if existing and existing["outcome_hash"] == outcome.outcome_hash:
+                return AgentDomainReceipt(join_outcome_id, f"duplicate:{existing['decision']}", 1)
+            raise AgentDomainConflict(f"conflicting JoinOutcome for {join_outcome_id}")
+        return AgentDomainReceipt(join_outcome_id, outcome.decision.value, 1)
+
+    def record_replan_barrier_request(
+        self,
+        *,
+        tenant_id: str,
+        barrier: ReplanBarrierRequest,
+    ) -> AgentDomainReceipt:
+        params = {
+            "barrier_id": barrier.barrier_id,
+            "tenant_id": tenant_id,
+            "run_id": barrier.run_id,
+            "plan_id": barrier.plan_id,
+            "plan_version_id": barrier.plan_version_id,
+            "execution_epoch": barrier.execution_epoch,
+            "source_control_decision_id": barrier.source_control_decision_id,
+            "source_control_decision_hash": barrier.source_control_decision_hash,
+            "status": barrier.status.value,
+            "freeze_new_dispatch": barrier.freeze_new_dispatch,
+            "new_plan_version_required": barrier.new_plan_version_required,
+            "retry_permitted": barrier.retry_permitted,
+            "next_execution_epoch": barrier.next_execution_epoch,
+            "step_decisions": json.dumps(
+                [decision.model_dump(mode="json") for decision in barrier.step_decisions],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "barrier_hash": barrier.barrier_hash,
+        }
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_replan_barriers(
+                    barrier_id, tenant_id, run_id, plan_id, plan_version_id,
+                    execution_epoch, source_control_decision_id, source_control_decision_hash,
+                    status, freeze_new_dispatch, new_plan_version_required,
+                    retry_permitted, next_execution_epoch, step_decisions, barrier_hash
+                ) VALUES (
+                    :barrier_id, :tenant_id, :run_id, :plan_id, :plan_version_id,
+                    :execution_epoch, :source_control_decision_id, :source_control_decision_hash,
+                    :status, :freeze_new_dispatch, :new_plan_version_required,
+                    :retry_permitted, :next_execution_epoch, CAST(:step_decisions AS JSON), :barrier_hash
+                )
+                ON CONFLICT (barrier_id) DO NOTHING
+                """
+            ),
+            params,
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT barrier_id, barrier_hash, status
+                    FROM agent_replan_barriers
+                    WHERE barrier_id = :barrier_id
+                    """
+                ),
+                {"barrier_id": barrier.barrier_id},
+            ).mappings().first()
+            if existing and existing["barrier_hash"] == barrier.barrier_hash:
+                return AgentDomainReceipt(barrier.barrier_id, f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting ReplanBarrier for {barrier.barrier_id}")
+        return AgentDomainReceipt(barrier.barrier_id, barrier.status.value, 1)
+
+    def record_dynamic_step_send_claim(
+        self,
+        *,
+        tenant_id: str,
+        envelope: DynamicStepSendEnvelope,
+    ) -> AgentDomainReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                WITH claimed_outbox AS (
+                    SELECT event_id
+                    FROM infra_outbox_events
+                    WHERE event_id = :outbox_event_id
+                      AND tenant_id = :tenant_id
+                      AND status = 'claimed'
+                      AND claim_owner = :worker_id
+                      AND idempotency_key = :send_idempotency_key
+                ),
+                updated_step AS (
+                    UPDATE agent_step_runs AS step_run
+                    SET status = 'CLAIMED'
+                    WHERE step_run.step_run_id = :step_run_id
+                      AND step_run.tenant_id = :tenant_id
+                      AND step_run.status = 'QUEUED'
+                      AND step_run.step_hash = :step_hash
+                      AND EXISTS (SELECT 1 FROM claimed_outbox)
+                    RETURNING step_run.step_run_id
+                )
+                UPDATE agent_dispatch_items AS item
+                SET status = 'SENT'
+                WHERE item.dispatch_item_id = :dispatch_item_id
+                  AND item.tenant_id = :tenant_id
+                  AND item.step_run_id = :step_run_id
+                  AND item.outbox_event_id = :outbox_event_id
+                  AND item.status = 'PENDING_SEND'
+                  AND EXISTS (SELECT 1 FROM updated_step)
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "outbox_event_id": envelope.outbox_event_id,
+                "worker_id": envelope.worker_id,
+                "send_idempotency_key": envelope.send_idempotency_key,
+                "step_run_id": envelope.step_run_id,
+                "step_hash": envelope.step_hash,
+                "dispatch_item_id": envelope.dispatch_item_id,
+            },
+        )
+        if result.rowcount == 1:
+            return AgentDomainReceipt(envelope.step_run_id, "CLAIMED_FOR_SEND", 1)
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT step_run.status AS step_status, item.status AS item_status
+                FROM agent_step_runs AS step_run
+                JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                WHERE step_run.step_run_id = :step_run_id
+                  AND item.dispatch_item_id = :dispatch_item_id
+                  AND step_run.tenant_id = :tenant_id
+                  AND item.tenant_id = :tenant_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "step_run_id": envelope.step_run_id,
+                "dispatch_item_id": envelope.dispatch_item_id,
+            },
+        ).mappings().first()
+        if existing and existing["step_status"] == "CLAIMED" and existing["item_status"] == "SENT":
+            return AgentDomainReceipt(envelope.step_run_id, "duplicate:CLAIMED_FOR_SEND", 1)
+        raise AgentDomainConflict(f"dynamic step send claim rejected for {envelope.step_run_id}")
+
+    def record_replan_barrier_execution(
+        self,
+        *,
+        tenant_id: str,
+        execution: ReplanBarrierExecutionResult,
+    ) -> AgentDomainReceipt:
+        barrier = self.connection.execute(
+            text(
+                """
+                SELECT barrier_id, status, step_decisions
+                FROM agent_replan_barriers
+                WHERE barrier_id = :barrier_id AND tenant_id = :tenant_id
+                FOR UPDATE
+                """
+            ),
+            {"tenant_id": tenant_id, "barrier_id": execution.barrier_id},
+        ).mappings().first()
+        if barrier is None:
+            raise AgentDomainConflict(f"missing ReplanBarrier for {execution.barrier_id}")
+        if barrier["status"] == execution.status.value:
+            return AgentDomainReceipt(execution.barrier_id, f"duplicate:{barrier['status']}", 1)
+        if barrier["status"] not in {"REQUESTED", "DRAINING"}:
+            raise AgentDomainConflict(f"ReplanBarrier is not executable: {execution.barrier_id}")
+
+        cancelled = list(execution.cancelled_before_send_step_run_ids)
+        cancel_requested = list(execution.cancel_requested_step_run_ids)
+        draining = list(execution.draining_step_run_ids)
+        obsolete = list(execution.obsolete_step_run_ids)
+
+        if cancelled:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status = 'QUEUED'
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_dispatch_items
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status = 'PENDING_SEND'
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE infra_outbox_events AS event
+                    SET status = 'published',
+                        published_at = now(),
+                        claim_owner = NULL,
+                        claimed_at = NULL
+                    FROM agent_dispatch_items AS item
+                    WHERE item.outbox_event_id = event.event_id
+                      AND item.tenant_id = :tenant_id
+                      AND item.step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND event.status IN ('pending','claimed')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+        if cancel_requested:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status IN ('CLAIMED','RUNNING')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancel_requested},
+            )
+        if draining:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'RUNNING'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status IN ('CLAIMED','RUNNING')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": draining},
+            )
+        if obsolete:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'OBSOLETE'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": obsolete},
+            )
+        self.connection.execute(
+            text(
+                """
+                UPDATE agent_replan_barriers
+                SET status = :status
+                WHERE barrier_id = :barrier_id AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "barrier_id": execution.barrier_id,
+                "status": execution.status.value,
+            },
+        )
+        return AgentDomainReceipt(execution.barrier_id, execution.status.value, 1)
+
+    def load_parallel_recovery_snapshot(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        plan_version_id: str,
+        execution_epoch: int,
+    ) -> tuple[PersistedStepRunSnapshot, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT
+                    step_run.step_run_id,
+                    step_run.dynamic_step_id,
+                    step_run.execution_epoch,
+                    step_run.status AS step_status,
+                    item.status AS dispatch_item_status,
+                    item.outbox_event_id,
+                    outbox.status AS outbox_status,
+                    branch.branch_result_id,
+                    barrier.barrier_id,
+                    barrier.status AS barrier_status
+                FROM agent_step_runs AS step_run
+                LEFT JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                 AND item.tenant_id = step_run.tenant_id
+                LEFT JOIN infra_outbox_events AS outbox
+                  ON outbox.event_id = item.outbox_event_id
+                 AND outbox.tenant_id = step_run.tenant_id
+                LEFT JOIN agent_branch_result_refs AS branch
+                  ON branch.step_run_id = step_run.step_run_id
+                 AND branch.tenant_id = step_run.tenant_id
+                LEFT JOIN agent_replan_barriers AS barrier
+                  ON barrier.run_id = step_run.run_id
+                 AND barrier.plan_version_id = step_run.plan_version_id
+                 AND barrier.execution_epoch = step_run.execution_epoch
+                 AND barrier.tenant_id = step_run.tenant_id
+                 AND barrier.status IN ('REQUESTED','DRAINING','READY_FOR_REPLAN')
+                WHERE step_run.tenant_id = :tenant_id
+                  AND step_run.run_id = :run_id
+                  AND step_run.plan_version_id = :plan_version_id
+                  AND step_run.execution_epoch = :execution_epoch
+                ORDER BY step_run.dynamic_step_id, step_run.step_run_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "plan_version_id": plan_version_id,
+                "execution_epoch": execution_epoch,
+            },
+        ).mappings().all()
+        return tuple(
+            PersistedStepRunSnapshot(
+                step_run_id=str(row["step_run_id"]),
+                dynamic_step_id=str(row["dynamic_step_id"]),
+                execution_epoch=int(row["execution_epoch"]),
+                status=StepRunStatus(str(row["step_status"])),
+                dispatch_item_status=(
+                    None
+                    if row["dispatch_item_status"] is None
+                    else DispatchItemStatus(str(row["dispatch_item_status"]))
+                ),
+                outbox_event_id=None if row["outbox_event_id"] is None else str(row["outbox_event_id"]),
+                outbox_status=None if row["outbox_status"] is None else str(row["outbox_status"]),
+                branch_result_id=None if row["branch_result_id"] is None else str(row["branch_result_id"]),
+                barrier_id=None if row["barrier_id"] is None else str(row["barrier_id"]),
+                barrier_status=(
+                    None
+                    if row["barrier_status"] is None
+                    else ReplanBarrierStatus(str(row["barrier_status"]))
+                ),
+            )
+            for row in rows
+        )
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)
@@ -1325,8 +1891,8 @@ def _plan_params(plan: PlanVersion) -> dict[str, Any]:
     }
 
 
-def _step_params(step: DeterministicStepDefinition) -> dict[str, Any]:
-    return {
+def _step_params(step: DeterministicStepDefinition | DynamicStepDefinition) -> dict[str, Any]:
+    params = {
         "step_definition_id": step.step_definition_id,
         "plan_version_id": step.plan_version_id,
         "tenant_id": step.tenant_id,
@@ -1344,7 +1910,33 @@ def _step_params(step: DeterministicStepDefinition) -> dict[str, Any]:
         "budget_ref": step.budget_ref,
         "deadline_at": step.deadline_at,
         "step_hash": step.step_hash,
+        "dynamic_step_id": None,
+        "dependency_step_ids": json.dumps([], sort_keys=True, separators=(",", ":")),
+        "dependency_rule": None,
+        "activation_condition_ref": None,
+        "resource_claim_refs": json.dumps([], sort_keys=True, separators=(",", ":")),
+        "join_policy_ref": None,
     }
+    if isinstance(step, DynamicStepDefinition):
+        params.update(
+            {
+                "dynamic_step_id": step.dynamic_step_id,
+                "dependency_step_ids": json.dumps(
+                    list(step.dependency_step_ids),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+                "dependency_rule": step.dependency_rule,
+                "activation_condition_ref": step.activation_condition_ref,
+                "resource_claim_refs": json.dumps(
+                    list(step.resource_claim_refs),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+                "join_policy_ref": step.join_policy_ref,
+            }
+        )
+    return params
 
 
 def _budget_reservation_params(reservation: BudgetReservation) -> dict[str, Any]:
@@ -1434,7 +2026,29 @@ def _run_from_row(row: Any) -> AgentRun:
     )
 
 
-def _step_from_row(row: Any) -> DeterministicStepDefinition:
+def _step_from_row(row: Any) -> DeterministicStepDefinition | DynamicStepDefinition:
+    if row["dynamic_step_id"]:
+        return DynamicStepDefinition(
+            step_definition_id=row["step_definition_id"],
+            plan_version_id=row["plan_version_id"],
+            tenant_id=row["tenant_id"],
+            step_no=row["step_no"],
+            dynamic_step_id=row["dynamic_step_id"],
+            objective_ref=row["objective_ref"],
+            input_contract_ref=row["input_contract_ref"],
+            output_contract_ref=row["output_contract_ref"],
+            acceptance_refs=tuple(row["acceptance_refs"]),
+            executor_type=StepExecutorType(row["executor_type"]),
+            required_evidence_refs=tuple(row["required_evidence_refs"]),
+            dependency_step_ids=tuple(row["dependency_step_ids"] or ()),
+            dependency_rule=row["dependency_rule"],
+            activation_condition_ref=row["activation_condition_ref"],
+            resource_claim_refs=tuple(row["resource_claim_refs"] or ()),
+            join_policy_ref=row["join_policy_ref"],
+            budget_ref=row["budget_ref"],
+            deadline_at=row["deadline_at"],
+            step_hash=row["step_hash"],
+        )
     return DeterministicStepDefinition(
         step_definition_id=row["step_definition_id"],
         plan_version_id=row["plan_version_id"],

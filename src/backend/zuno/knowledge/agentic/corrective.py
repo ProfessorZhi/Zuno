@@ -12,8 +12,21 @@ class CorrectiveRetrievalPolicy:
         used_actions: list[CorrectiveAction] | None = None,
         max_rounds_reached: bool = False,
         novelty: float = 1.0,
+        frontier_stop_reasons: list[str] | tuple[str, ...] = (),
     ) -> CorrectiveAction:
         used = set(used_actions or [])
+        stop_reasons = set(frontier_stop_reasons)
+        if stop_reasons:
+            if max_rounds_reached:
+                return CorrectiveAction.ABSTAIN
+            if "conflict_unresolved" in stop_reasons:
+                return self._first_unused([CorrectiveAction.GRAPH_EXPAND, CorrectiveAction.ASK_USER], used)
+            if "strict_citation_missing" in stop_reasons:
+                return self._first_unused([CorrectiveAction.FOCUSED_CITATION_RETRIEVE], used)
+            if "coverage_incomplete" in stop_reasons:
+                return self._first_unused([CorrectiveAction.QUERY_REWRITE, CorrectiveAction.STEP_BACK], used)
+            if "no_evidence" in stop_reasons:
+                return self._first_unused([CorrectiveAction.QUERY_REWRITE, CorrectiveAction.MULTI_QUERY], used)
         if verdict == RetrievalQualityVerdict.RELEVANT:
             return CorrectiveAction.CONTINUE
         if max_rounds_reached or (novelty <= 0.0 and not failure_bucket):

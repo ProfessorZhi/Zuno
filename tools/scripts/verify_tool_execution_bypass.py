@@ -30,9 +30,10 @@ REQUIRED_PHRASES = {
         "MemoryUnitOfWork",
     ],
     "CapabilityRuntime": [
-        "readonly_cutover_only=True",
+        "readonly_cutover_only=False",
         "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
         "_record_tool_runtime_facts",
+        "email sent",
     ],
 }
 

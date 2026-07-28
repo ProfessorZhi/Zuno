@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 from pathlib import Path
@@ -7,7 +8,12 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
+from zuno.capability.tool_runtime.invocation_gateway import ToolEffectUnknownError, ToolInvocationGateway
+
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
+from zuno.platform.database.foundation import InfrastructureUnitOfWork, create_foundation_engine
 from zuno.platform.database.memory import ContextPackInput, MemoryRepository, MemoryUnitOfWork, MemoryVersionInput
 from zuno.platform.database.tool_runtime import (
     PreparedToolActionInput,
@@ -15,6 +21,7 @@ from zuno.platform.database.tool_runtime import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolRepository,
+    ToolRuntimeConflict,
     ToolUnitOfWork,
     ToolVersionInput,
 )
@@ -53,6 +60,24 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    infra_worker_leases,
+                    infra_idempotency_claims,
+                    security_approval_decisions,
+                    security_approval_requests,
+                    security_audit_requirements,
+                    security_authorization_decisions,
+                    security_principal_contexts,
+                    security_effective_epochs,
+                    security_secret_leases,
+                    security_secret_refs,
+                    tool_compensation_attempts,
+                    tool_compensation_definitions,
+                    tool_manual_effect_assessments,
+                    tool_cancellation_receipts,
+                    tool_async_callbacks,
+                    tool_async_jobs,
+                    tool_effect_reconciliations,
+                    tool_effect_receipts,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
                     tool_execution_receipts,
@@ -299,7 +324,7 @@ def test_phase15_tool_repository_records_readonly_prepared_action_attempt_and_re
         assert receipt["append_only_generation"] == 1
 
 
-def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_effects(engine) -> None:
+def test_phase16_default_tool_runtime_records_readonly_gateway_and_executes_approved_side_effects(engine) -> None:
     from zuno.capability.runtime import ToolRuntimeRequest, build_default_tool_control_plane_runtime
 
     runtime = build_default_tool_control_plane_runtime()
@@ -330,10 +355,28 @@ def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_e
             execution_id="readonly-mail-1",
         )
     )
+    write_replay = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "review@example.com", "body": "hello", "target": "mailto:review@example.com"},
+            workspace_id="workspace-b",
+            user_id="tenant-b",
+            task_id="task-mail",
+            trace_id="trace-mail",
+            model_intent="Send email.",
+            approved=True,
+            execution_id="readonly-mail-1",
+        )
+    )
 
     assert read_result.status == "completed"
-    assert write_result.status == "blocked"
-    assert "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL" in repr(write_result.to_dict())
+    assert write_result.status == "completed"
+    assert write_replay.status == "completed"
+    assert write_result.normalized_result is not None
+    assert write_result.normalized_result.data["message_id"] == "msg_123"
+    assert write_replay.normalized_result is not None
+    assert write_replay.normalized_result.data["idempotency_replay"] is True
+    assert write_replay.normalized_result.data["result_ref"] == "tool-effect-receipt:readonly-mail-1"
 
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM prepared_tool_actions")).scalar_one() == 2
@@ -345,4 +388,2350 @@ def test_phase15_default_tool_runtime_records_readonly_gateway_and_blocks_side_e
         statuses = conn.execute(
             text("SELECT status, effect_certainty FROM tool_execution_receipts ORDER BY receipt_id")
         ).all()
-        assert ("FAILED", "NO_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
+        effect = conn.execute(
+            text(
+                """
+                SELECT provider_effect_id, effect_status, effect_certainty, secret_lease_id
+                FROM tool_effect_receipts
+                WHERE effect_receipt_id = 'tool-effect-receipt:readonly-mail-1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = 'tenant-b'
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = 'readonly-mail-1'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:readonly-mail-1'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:readonly-mail-1'")
+        ).scalar_one() == 1
+        assert ("SUCCEEDED", "CONFIRMED_EFFECT") in [(row.status, row.effect_certainty) for row in statuses]
+        assert effect["provider_effect_id"] == "provider-effect:readonly-mail-1"
+        assert effect["effect_status"] == "CONFIRMED"
+        assert effect["effect_certainty"] == "CONFIRMED_EFFECT"
+        assert effect["secret_lease_id"] == "security-secret-lease:readonly-mail-1"
+        assert claim["status"] == "completed"
+        assert claim["result_ref"] == "tool-effect-receipt:readonly-mail-1"
+
+
+def test_phase16_gateway_records_side_effect_classification_before_blocking(engine) -> None:
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    dispatched = False
+
+    async def executor() -> str:
+        nonlocal dispatched
+        dispatched = True
+        return "sent"
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        tenant_id="tenant-phase16",
+        workspace_id="workspace-phase16",
+        trace_id="trace-phase16",
+        call_id="call-phase16-mail",
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+
+    with engine.connect() as conn:
+        prepared = conn.execute(
+            text(
+                """
+                SELECT effect_level, status, approval_required, prepared_action_hash
+                FROM prepared_tool_actions
+                WHERE prepared_tool_action_id = 'prepared-tool-action:call-phase16-mail'
+                """
+            )
+        ).mappings().one()
+        version = conn.execute(
+            text(
+                """
+                SELECT effect_level
+                FROM tool_versions
+                WHERE tool_version_id = 'tool-version:mail.send:v1'
+                """
+            )
+        ).mappings().one()
+        observation = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-mail'
+                """
+            )
+        ).mappings().one()
+
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        readonly=False,
+        adapter_kind="API",
+    )
+    expected_hash = canonical_sha256(
+        {
+            "action_proposal_ref": "action-proposal:call-phase16-mail",
+            "tool_operation_id": "tool-version:mail.send:v1:operation:default",
+            "canonical_args": redact_sensitive_payload({"to": "review@example.com", "body": "hello"}),
+            "target_resources": list(effect_policy.target_resource_set.resource_refs),
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+            "effect_level": effect_policy.effect_level,
+            "effect_policy_version": effect_policy.policy_version,
+            "effect_policy_hash": effect_policy.policy_hash,
+            "approval_required": effect_policy.approval_required,
+            "security_epoch_ref": "security-epoch:trace-phase16",
+            "idempotency_key": "call-phase16-mail",
+        }
+    )
+
+    assert prepared["effect_level"] == "IRREVERSIBLE_WRITE"
+    assert prepared["status"] == "OBSOLETE"
+    assert prepared["approval_required"] is True
+    assert prepared["prepared_action_hash"] == expected_hash
+    assert version["effect_level"] == "IRREVERSIBLE_WRITE"
+    assert observation["redacted_payload_hash"] == canonical_sha256(
+        {
+            "blocked": True,
+            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "effect_class": "IRREVERSIBLE_WRITE",
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+        }
+    )
+
+def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+    )
+    dispatched = False
+
+    async def executor() -> str:
+        nonlocal dispatched
+        dispatched = True
+        return "sent"
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello"},
+        tenant_id="tenant-phase16-security",
+        workspace_id="workspace-phase16-security",
+        trace_id="trace-phase16-security",
+        call_id="call-phase16-security-mail",
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+
+    with engine.connect() as conn:
+        prepared_hash = conn.execute(
+            text(
+                """
+                SELECT prepared_action_hash
+                FROM prepared_tool_actions
+                WHERE prepared_tool_action_id = 'prepared-tool-action:call-phase16-security-mail'
+                """
+            )
+        ).scalar_one()
+        auth = conn.execute(
+            text(
+                """
+                SELECT decision, reason_code, prepared_action_hash
+                FROM security_authorization_decisions
+                WHERE decision_id = 'authorization-decision:call-phase16-security-mail'
+                """
+            )
+        ).mappings().one()
+        approval = conn.execute(
+            text(
+                """
+                SELECT status, prepared_action_hash
+                FROM security_approval_requests
+                WHERE approval_request_id = 'approval-request:call-phase16-security-mail'
+                """
+            )
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-security-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert auth["decision"] == "REQUIRES_APPROVAL"
+    assert auth["reason_code"] == "side_effect_requires_approval"
+    assert auth["prepared_action_hash"] == prepared_hash
+    assert approval["status"] == "pending"
+    assert approval["prepared_action_hash"] == prepared_hash
+    assert observation_hash == canonical_sha256(
+        {
+            "blocked": True,
+            "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "effect_class": "IRREVERSIBLE_WRITE",
+            "target_resource_set_ref": classify_tool_effect(
+                tool_name="mail.send",
+                args={"to": "review@example.com", "body": "hello"},
+                readonly=False,
+                adapter_kind="API",
+            ).target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(
+                classify_tool_effect(
+                    tool_name="mail.send",
+                    args={"to": "review@example.com", "body": "hello"},
+                    readonly=False,
+                    adapter_kind="API",
+                ).target_resource_set.conflict_keys
+            ),
+            "security_blocked_reason": "approval required before effect",
+        }
+    )
+
+    with SecurityUnitOfWork(engine) as repo:
+        with pytest.raises(SecurityPersistenceError, match="prepared action hash changed before effect"):
+            repo.validate_pre_effect_authorization(
+                decision_id="authorization-decision:call-phase16-security-mail",
+                tenant_id="tenant-phase16-security",
+                prepared_action_hash="0" * 64,
+            )
+        with pytest.raises(SecurityPersistenceError, match="approval required before effect"):
+            repo.validate_pre_effect_authorization(
+                decision_id="authorization-decision:call-phase16-security-mail",
+                tenant_id="tenant-phase16-security",
+                prepared_action_hash=prepared_hash,
+            )
+
+def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> None:
+    tenant_id = "tenant-phase16-execute"
+    workspace_id = "workspace-phase16-execute"
+    call_id = "call-phase16-execute-mail"
+    secret_ref = "security-secret-ref:phase16:mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-execute",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"}
+    assert dispatched is True
+    assert receipt.status == "completed"
+
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        readonly=False,
+        adapter_kind="API",
+    )
+    effect_payload = {
+        "provider_effect_id": "mail-provider-effect:phase16:1",
+        "effect_status": "CONFIRMED",
+        "effect_certainty": "CONFIRMED_EFFECT",
+        "native_result": {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"},
+    }
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT status FROM security_approval_requests WHERE approval_request_id = 'approval-request:call-phase16-execute-mail'")
+        ).scalar_one() == "approved"
+        assert conn.execute(
+            text("SELECT count(*) FROM security_audit_requirements WHERE audit_requirement_id = 'audit-requirement:call-phase16-execute-mail:tool-execute'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT audience FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-execute-mail'")
+        ).scalar_one() == "tool:mail.send"
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-execute-mail'
+                """
+            )
+        ).mappings().one()
+        effect = conn.execute(
+            text(
+                """
+                SELECT provider_effect_id, effect_status, effect_certainty,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       fencing_resource_id, fencing_epoch, secret_lease_id,
+                       native_result_hash, effect_payload_hash
+                FROM tool_effect_receipts
+                WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-execute-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT owner, status, generation, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+        lease = conn.execute(
+            text(
+                """
+                SELECT owner_id, epoch
+                FROM infra_worker_leases
+                WHERE resource_id = :resource_id
+                """
+            ),
+            {"resource_id": effect_policy.target_resource_set.resource_set_ref},
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-execute-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert execution["status"] == "SUCCEEDED"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "CONFIRMED_EFFECT"
+    assert effect["provider_effect_id"] == "mail-provider-effect:phase16:1"
+    assert effect["effect_status"] == "CONFIRMED"
+    assert effect["effect_certainty"] == "CONFIRMED_EFFECT"
+    assert effect["idempotency_scope"] == "tool-side-effect"
+    assert effect["idempotency_key"] == call_id
+    assert effect["idempotency_generation"] == 1
+    assert effect["fencing_resource_id"] == effect_policy.target_resource_set.resource_set_ref
+    assert effect["fencing_epoch"] == 1
+    assert effect["secret_lease_id"] == "security-secret-lease:call-phase16-execute-mail"
+    assert effect["native_result_hash"] == canonical_sha256({"result": effect_payload["native_result"]})
+    assert effect["effect_payload_hash"] == canonical_sha256(effect_payload)
+    assert claim["owner"] == f"tool-runtime:{call_id}"
+    assert claim["status"] == "completed"
+    assert claim["generation"] == 1
+    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-execute-mail"
+    assert lease["owner_id"] == f"tool-runtime:{call_id}"
+    assert lease["epoch"] == 1
+    assert observation_hash == canonical_sha256(effect_payload)
+
+
+def test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-stale-execute"
+    workspace_id = "workspace-phase16-stale-execute"
+    call_id = "call-phase16-stale-execute-mail"
+    trace_id = "trace-phase16-stale-execute"
+    secret_ref = "security-secret-ref:phase16:stale-execute"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:stale-execute:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    security_factory_calls = 0
+
+    def security_factory() -> SecurityUnitOfWork:
+        nonlocal security_factory_calls
+        security_factory_calls += 1
+        if security_factory_calls == 2:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE security_effective_epochs
+                        SET status = 'revoked'
+                        WHERE epoch_ref = :epoch_ref
+                        """
+                    ),
+                    {"epoch_ref": f"security-epoch:{trace_id}"},
+                )
+        return SecurityUnitOfWork(engine)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=security_factory,
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:stale-execute:1", "message_id": "message-stale-execute"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert "stale security epoch before effect" in receipt.blocked_reason
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-stale-execute-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-stale-execute-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-stale-execute-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+    assert claim["status"] == "in_progress"
+    assert claim["result_ref"] is None
+
+
+def test_phase16_gateway_reauthorizes_approval_deadline_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-expired-approval"
+    workspace_id = "workspace-phase16-expired-approval"
+    call_id = "call-phase16-expired-approval-mail"
+    trace_id = "trace-phase16-expired-approval"
+    secret_ref = "security-secret-ref:phase16:expired-approval"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:expired-approval:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    security_factory_calls = 0
+
+    def security_factory() -> SecurityUnitOfWork:
+        nonlocal security_factory_calls
+        security_factory_calls += 1
+        if security_factory_calls == 2:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE security_approval_requests
+                        SET deadline_at = now() - interval '1 second'
+                        WHERE approval_request_id = :approval_request_id
+                        """
+                    ),
+                    {"approval_request_id": f"approval-request:{call_id}"},
+                )
+        return SecurityUnitOfWork(engine)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=security_factory,
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:expired-approval:1", "message_id": "message-expired-approval"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert "approval deadline expired before effect" in receipt.blocked_reason
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-expired-approval-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-expired-approval-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-expired-approval-mail'
+                """
+            )
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+
+
+def test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-revoked-secret"
+    workspace_id = "workspace-phase16-revoked-secret"
+    call_id = "call-phase16-revoked-secret-mail"
+    trace_id = "trace-phase16-revoked-secret"
+    secret_ref = "security-secret-ref:phase16:revoked-secret"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:revoked-secret:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    security_factory_calls = 0
+
+    def security_factory() -> SecurityUnitOfWork:
+        nonlocal security_factory_calls
+        security_factory_calls += 1
+        if security_factory_calls == 3:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        UPDATE security_secret_refs
+                        SET status = 'revoked'
+                        WHERE secret_ref = :secret_ref
+                        """
+                    ),
+                    {"secret_ref": secret_ref},
+                )
+        return SecurityUnitOfWork(engine)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=security_factory,
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:revoked-secret:1", "message_id": "message-revoked-secret"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert "revoked secret" in receipt.blocked_reason
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-revoked-secret-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-revoked-secret-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-revoked-secret-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+    assert claim["status"] == "in_progress"
+    assert claim["result_ref"] is None
+
+
+def test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-preheld-claim"
+    workspace_id = "workspace-phase16-preheld-claim"
+    call_id = "call-phase16-preheld-claim-mail"
+    trace_id = "trace-phase16-preheld-claim"
+    secret_ref = "security-secret-ref:phase16:preheld-claim"
+    args = {"to": "review@example.com", "body": "hello", "secret_ref": secret_ref}
+    effect_policy = classify_tool_effect(
+        tool_name="mail.send",
+        args=args,
+        readonly=False,
+        adapter_kind="API",
+    )
+    prepared_action_hash = canonical_sha256(
+        {
+            "action_proposal_ref": f"action-proposal:{call_id}",
+            "tool_operation_id": "tool-version:mail.send:v1:operation:default",
+            "canonical_args": redact_sensitive_payload(args),
+            "target_resources": list(effect_policy.target_resource_set.resource_refs),
+            "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
+            "effect_level": effect_policy.effect_level,
+            "effect_policy_version": effect_policy.policy_version,
+            "effect_policy_hash": effect_policy.policy_hash,
+            "approval_required": effect_policy.approval_required,
+            "security_epoch_ref": f"security-epoch:{trace_id}",
+            "idempotency_key": call_id,
+        }
+    )
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:preheld-claim:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+    with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+        claim = repo.claim_idempotency_receipt(
+            scope="tool-side-effect",
+            key=call_id,
+            owner="tool-runtime:already-running",
+            request={
+                "prepared_action_hash": prepared_action_hash,
+                "target_resource_set_ref": effect_policy.target_resource_set.resource_set_ref,
+            },
+            ttl_seconds=60,
+        )
+        assert claim.acquired is True
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"provider_effect_id": "mail-provider-effect:phase16:preheld-claim:1", "message_id": "message-preheld-claim"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args=args,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id=trace_id,
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert dispatched is False
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "idempotency claim is already held or completed"
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-preheld-claim-mail'")
+        ).scalar_one() == 0
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-preheld-claim-mail'")
+        ).scalar_one() == 0
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-preheld-claim-mail'
+                """
+            )
+        ).mappings().one()
+        claim_row = conn.execute(
+            text(
+                """
+                SELECT status, owner, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "FAILED"
+    assert execution["dispatch_certainty"] == "NOT_DISPATCHED"
+    assert execution["effect_certainty"] == "NO_EFFECT"
+    assert claim_row["status"] == "in_progress"
+    assert claim_row["owner"] == "tool-runtime:already-running"
+    assert claim_row["result_ref"] is None
+
+
+def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispatch(engine) -> None:
+    tenant_id = "tenant-phase16-idempotency"
+    workspace_id = "workspace-phase16-idempotency"
+    call_id = "call-phase16-idempotent-mail"
+    secret_ref = "security-secret-ref:phase16:idempotent-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:idempotent-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_effect_id": "mail-provider-effect:phase16:idempotent:1", "message_id": "message-idem-1"}
+
+    first_result, first_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-idempotency",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    async def replay_executor() -> dict[str, str]:
+        raise AssertionError("completed side-effect idempotency replay must not redispatch provider")
+
+    replay_result, replay_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-idempotency",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=replay_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert first_result == {"provider_effect_id": "mail-provider-effect:phase16:idempotent:1", "message_id": "message-idem-1"}
+    assert first_receipt.status == "completed"
+    assert replay_result == {
+        "idempotency_replay": True,
+        "result_ref": "tool-effect-receipt:call-phase16-idempotent-mail",
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": call_id,
+    }
+    assert replay_receipt.status == "replayed"
+    assert replay_receipt.blocked_reason == "IDEMPOTENT_SIDE_EFFECT_REPLAY"
+    assert replay_receipt.result_ref == "tool-effect-receipt:call-phase16-idempotent-mail"
+    assert calls == 1
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-idempotent-mail'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-idempotent-mail'")
+        ).scalar_one() == 1
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, generation, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert claim["status"] == "completed"
+    assert claim["generation"] == 1
+    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-idempotent-mail"
+
+
+def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(engine) -> None:
+    tenant_id = "tenant-phase16-claim-repair"
+    workspace_id = "workspace-phase16-claim-repair"
+    call_id = "call-phase16-claim-repair-mail"
+    secret_ref = "security-secret-ref:phase16:claim-repair-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:claim-repair-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    fail_complete_once = True
+
+    class _CompletionFailureProxy:
+        def __init__(self, repo):
+            self._repo = repo
+
+        def __getattr__(self, name: str):
+            return getattr(self._repo, name)
+
+        def complete_idempotency(self, **kwargs) -> None:
+            nonlocal fail_complete_once
+            if fail_complete_once:
+                fail_complete_once = False
+                raise RuntimeError("infra completion outage after effect receipt")
+            self._repo.complete_idempotency(**kwargs)
+
+    class _CompletionFailureUnitOfWork:
+        def __init__(self, tenant: str) -> None:
+            self._inner = InfrastructureUnitOfWork(engine, tenant_id=tenant)
+
+        def __enter__(self):
+            return _CompletionFailureProxy(self._inner.__enter__())
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self._inner.__exit__(exc_type, exc, tb)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: _CompletionFailureUnitOfWork(tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_effect_id": "mail-provider-effect:phase16:claim-repair:1", "message_id": "message-claim-repair"}
+
+    first_result, first_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-claim-repair",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert first_result is None
+    assert first_receipt.status == "reconcile_required"
+    assert first_receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    async def replay_executor() -> dict[str, str]:
+        raise AssertionError("durable side-effect repair replay must not redispatch provider")
+
+    replay_result, replay_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-claim-repair",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=replay_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert calls == 1
+    assert replay_result == {
+        "idempotency_replay": True,
+        "result_ref": "tool-effect-reconciliation:call-phase16-claim-repair-mail",
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": call_id,
+    }
+    assert replay_receipt.status == "replayed"
+    assert replay_receipt.result_ref == "tool-effect-reconciliation:call-phase16-claim-repair-mail"
+
+    with engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_reconciliations WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-claim-repair-mail'")
+        ).scalar_one() == 1
+        assert conn.execute(
+            text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-claim-repair-mail'")
+        ).scalar_one() == 1
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, owner, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert claim["status"] == "completed"
+    assert claim["owner"] == f"tool-runtime:{call_id}"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-claim-repair-mail"
+
+
+def test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails(engine) -> None:
+    tenant_id = "tenant-phase16-effect-persistence-fail"
+    workspace_id = "workspace-phase16-effect-persistence-fail"
+    call_id = "call-phase16-effect-persistence-fail-mail"
+    secret_ref = "security-secret-ref:phase16:effect-persistence-fail-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:effect-persistence-fail-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    fail_receipt_once = True
+
+    class _EffectReceiptFailureProxy:
+        def __init__(self, repo):
+            self._repo = repo
+
+        def __getattr__(self, name: str):
+            return getattr(self._repo, name)
+
+        def record_effect_receipt(self, receipt) -> None:
+            nonlocal fail_receipt_once
+            if fail_receipt_once:
+                fail_receipt_once = False
+                raise RuntimeError("effect receipt storage outage")
+            self._repo.record_effect_receipt(receipt)
+
+    class _EffectReceiptFailureUnitOfWork:
+        def __init__(self, tenant: str) -> None:
+            self._inner = ToolUnitOfWork(engine)
+
+        def __enter__(self):
+            return _EffectReceiptFailureProxy(self._inner.__enter__())
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self._inner.__exit__(exc_type, exc, tb)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: _EffectReceiptFailureUnitOfWork(tenant_id),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_effect_id": "mail-provider-effect:phase16:effect-persistence-fail:1", "message_id": "message-effect-persistence-fail"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-effect-persistence-fail",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-effect-persistence-fail-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-effect-persistence-fail-mail'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, reconciliation_query_hash, reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-effect-persistence-fail-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "mail-provider-effect:phase16:effect-persistence-fail:1"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-effect-persistence-fail-mail"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(
+        {
+            "reason": "post_dispatch_persistence_failure",
+            "error_type": "RuntimeError",
+            "error": "effect receipt storage outage",
+            "result": {"provider_effect_id": "mail-provider-effect:phase16:effect-persistence-fail:1", "message_id": "message-effect-persistence-fail"},
+            "call_id": call_id,
+        }
+    )
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-effect-persistence-fail-mail"
+
+
+def test_phase16_gateway_records_provider_exception_as_unknown_reconciliation(engine) -> None:
+    tenant_id = "tenant-phase16-provider-exception"
+    workspace_id = "workspace-phase16-provider-exception"
+    call_id = "call-phase16-provider-exception-mail"
+    secret_ref = "security-secret-ref:phase16:provider-exception-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:provider-exception-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise TimeoutError("provider timed out after accepting request")
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-provider-exception",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    reconciliation_query = {
+        "reason": "provider_exception_after_dispatch_boundary",
+        "error_type": "TimeoutError",
+        "error": "provider timed out after accepting request",
+        "call_id": call_id,
+    }
+    unknown_payload = {
+        "provider_effect_id": "provider-effect:call-phase16-provider-exception-mail:unknown",
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": "tool-effect-reconciliation:call-phase16-provider-exception-mail",
+        "next_action": "RECONCILE",
+        "reconciliation_query": reconciliation_query,
+    }
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-provider-exception-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-provider-exception-mail'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, reconciliation_query_hash, reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-provider-exception-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-provider-exception-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "provider-effect:call-phase16-provider-exception-mail:unknown"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-provider-exception-mail"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(reconciliation_query)
+    assert reconciliation["reconciliation_payload_hash"] == canonical_sha256(unknown_payload)
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-provider-exception-mail"
+    assert observation_hash == canonical_sha256(unknown_payload)
+
+
+def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(engine) -> None:
+    tenant_id = "tenant-phase16-unknown"
+    workspace_id = "workspace-phase16-unknown"
+    call_id = "call-phase16-unknown-mail"
+    secret_ref = "security-secret-ref:phase16:unknown-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:unknown-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-unknown-1"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-unknown",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    unknown_payload = {
+        "provider_effect_id": "mail-provider-effect:phase16:unknown:1",
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": "tool-effect-reconciliation:call-phase16-unknown-mail",
+        "next_action": "RECONCILE",
+        "reconciliation_query": {"provider": "mail", "message_id": "message-unknown-1"},
+    }
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE provider_effect_id = 'mail-provider-effect:phase16:unknown:1'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       age_escalation_after_seconds, idempotency_scope, idempotency_key,
+                       idempotency_generation, secret_lease_id, reconciliation_query_hash,
+                       reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+        observation_hash = conn.execute(
+            text(
+                """
+                SELECT redacted_payload_hash
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase16-unknown-mail'
+                """
+            )
+        ).scalar_one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "mail-provider-effect:phase16:unknown:1"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["age_escalation_after_seconds"] == 900
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-unknown-mail"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(
+        {"provider": "mail", "message_id": "message-unknown-1"}
+    )
+    assert reconciliation["reconciliation_payload_hash"] == canonical_sha256(unknown_payload)
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
+    assert observation_hash == canonical_sha256(unknown_payload)
+    assessment_payload = {
+        "provider_console_status": "message id not found after provider outage",
+        "operator_note": "manual review could not prove delivery",
+    }
+    with pytest.raises(ToolRuntimeConflict, match="manual effect assessment requires escalated reconciliation"):
+        gateway.record_manual_effect_assessment(
+            tenant_id=tenant_id,
+            manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail:too-early",
+            reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            conclusion="UNRESOLVED",
+            confidence=0.55,
+            assessor_principal_id="workspace-user:manual-reviewer",
+            residual_uncertainty="provider outage left delivery unknown",
+            evidence_payload=assessment_payload,
+        )
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET manual_assessment_required = true,
+                    status = 'ESCALATED',
+                    next_action = 'MANUAL_ASSESSMENT'
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-unknown-mail'
+                """
+            )
+        )
+    with pytest.raises(ToolRuntimeConflict, match="manual effect assessment requires authorized manual reviewer"):
+        gateway.record_manual_effect_assessment(
+            tenant_id=tenant_id,
+            manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail:unauthorized",
+            reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+            provider_effect_id="mail-provider-effect:phase16:unknown:1",
+            conclusion="UNRESOLVED",
+            confidence=0.55,
+            assessor_principal_id="workspace-user:ordinary",
+            residual_uncertainty="provider outage left delivery unknown",
+            evidence_payload=assessment_payload,
+        )
+    gateway.record_manual_effect_assessment(
+        tenant_id=tenant_id,
+        manual_assessment_id="tool-manual-assessment:call-phase16-unknown-mail",
+        reconciliation_id="tool-effect-reconciliation:call-phase16-unknown-mail",
+        provider_effect_id="mail-provider-effect:phase16:unknown:1",
+        conclusion="UNRESOLVED",
+        confidence=0.55,
+        assessor_principal_id="workspace-user:manual-reviewer",
+        residual_uncertainty="provider outage left delivery unknown",
+        evidence_payload=assessment_payload,
+    )
+    with engine.connect() as conn:
+        assessment = conn.execute(
+            text(
+                """
+                SELECT reconciliation_id, provider_effect_id, conclusion, confidence,
+                       assessor_principal_id, residual_uncertainty, evidence_payload_hash
+                FROM tool_manual_effect_assessments
+                WHERE manual_assessment_id = 'tool-manual-assessment:call-phase16-unknown-mail'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_effect_receipts WHERE provider_effect_id = 'mail-provider-effect:phase16:unknown:1'")
+        ).scalar_one() == 0
+
+    assert assessment["reconciliation_id"] == "tool-effect-reconciliation:call-phase16-unknown-mail"
+    assert assessment["provider_effect_id"] == "mail-provider-effect:phase16:unknown:1"
+    assert assessment["conclusion"] == "UNRESOLVED"
+    assert float(assessment["confidence"]) == 0.55
+    assert assessment["assessor_principal_id"] == "workspace-user:manual-reviewer"
+    assert assessment["residual_uncertainty"] == "provider outage left delivery unknown"
+    assert assessment["evidence_payload_hash"] == canonical_sha256(assessment_payload)
+
+
+def test_phase16_reconciliation_restart_age_escalates_without_retry(engine) -> None:
+    tenant_id = "tenant-phase16-restart-reconcile"
+    workspace_id = "workspace-phase16-restart-reconcile"
+    call_id = "call-phase16-restart-unknown"
+    secret_ref = "security-secret-ref:phase16:restart-unknown"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:restart-unknown:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:restart-unknown:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-restart-unknown-1"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-restart-unknown",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert receipt.status == "reconcile_required"
+    assert calls == 1
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET created_at = now() - interval '20 minutes',
+                    age_escalation_after_seconds = 60
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-restart-unknown'
+                """
+            )
+        )
+
+    restarted_gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    escalated = restarted_gateway.escalate_due_reconciliations(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT status, next_action, manual_assessment_required
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-restart-unknown'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert escalated == 1
+    assert calls == 1
+    assert row["status"] == "ESCALATED"
+    assert row["next_action"] == "MANUAL_ASSESSMENT"
+    assert row["manual_assessment_required"] is True
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-restart-unknown"
+
+
+def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> None:
+    tenant_id = "tenant-phase16-async"
+    workspace_id = "workspace-phase16-async"
+    call_id = "call-phase16-async-export"
+    secret_ref = "security-secret-ref:phase16:async-export"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-export:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=2,
+        callback_payload={"state": "done", "order": 2},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=1,
+        callback_payload={"state": "running", "order": 1},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=2,
+        callback_payload={"state": "done", "order": 2},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:call-phase16-async-export",
+    )
+    gateway.record_async_callback(
+        tenant_id=tenant_id,
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        callback_order=3,
+        callback_payload={"state": "done", "order": 3},
+        expected_binding_ref="callback-binding:call-phase16-async-export",
+        provided_binding_ref="callback-binding:forged",
+    )
+    gateway.record_cancellation_request(
+        tenant_id=tenant_id,
+        prepared_id="prepared-tool-action:call-phase16-async-export",
+        attempt_id="tool-attempt:call-phase16-async-export",
+        async_job_id="tool-async-job:call-phase16-async-export",
+        provider_job_id="provider-job:phase16:async:1",
+        requested_by_principal_id="workspace-user:cancel",
+        audit_requirement_id="audit-requirement:call-phase16-async-export:cancel",
+    )
+
+    async_payload = {
+        "provider_job_id": "provider-job:phase16:async:1",
+        "async_status": "WAITING_CALLBACK",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "native_result": {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"},
+    }
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-async-export'
+                """
+            )
+        ).mappings().one()
+        job = conn.execute(
+            text(
+                """
+                SELECT provider_job_id, status, callback_binding_ref, callback_order,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, job_payload_hash
+                FROM tool_async_jobs
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-export'
+                """
+            )
+        ).mappings().one()
+        callbacks = conn.execute(
+            text(
+                """
+                SELECT callback_order, authenticity_status, accepted
+                FROM tool_async_callbacks
+                WHERE provider_job_id = 'provider-job:phase16:async:1'
+                ORDER BY callback_order
+                """
+            )
+        ).mappings().all()
+        cancellation = conn.execute(
+            text(
+                """
+                SELECT status, external_effect_revoked, requested_by_principal_id,
+                       audit_requirement_id, cancellation_payload_hash
+                FROM tool_cancellation_receipts
+                WHERE cancellation_receipt_id = 'tool-cancellation-receipt:provider-job:phase16:async:1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "DISPATCHED"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert job["provider_job_id"] == "provider-job:phase16:async:1"
+    assert job["status"] == "COMPLETED"
+    assert job["callback_binding_ref"] == "callback-binding:call-phase16-async-export"
+    assert job["callback_order"] == 2
+    assert job["idempotency_scope"] == "tool-side-effect"
+    assert job["idempotency_key"] == call_id
+    assert job["idempotency_generation"] == 1
+    assert job["secret_lease_id"] == "security-secret-lease:call-phase16-async-export"
+    assert job["job_payload_hash"] == canonical_sha256(async_payload)
+    assert [dict(row) for row in callbacks] == [
+        {"callback_order": 1, "authenticity_status": "VERIFIED", "accepted": True},
+        {"callback_order": 2, "authenticity_status": "VERIFIED", "accepted": True},
+        {"callback_order": 3, "authenticity_status": "FORGED", "accepted": False},
+    ]
+    assert cancellation["status"] == "NOT_GUARANTEED"
+    assert cancellation["external_effect_revoked"] is False
+    assert cancellation["requested_by_principal_id"] == "workspace-user:cancel"
+    assert cancellation["audit_requirement_id"] == "audit-requirement:call-phase16-async-export:cancel"
+    assert cancellation["cancellation_payload_hash"] == canonical_sha256(
+        {
+            "provider_job_id": "provider-job:phase16:async:1",
+            "status": "NOT_GUARANTEED",
+            "external_effect_revoked": False,
+            "requested_by_principal_id": "workspace-user:cancel",
+            "audit_requirement_id": "audit-requirement:call-phase16-async-export:cancel",
+        }
+    )
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-async-job:call-phase16-async-export"
+
+
+def test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails(engine) -> None:
+    tenant_id = "tenant-phase16-async-persistence-fail"
+    workspace_id = "workspace-phase16-async-persistence-fail"
+    call_id = "call-phase16-async-persistence-fail-export"
+    secret_ref = "security-secret-ref:phase16:async-persistence-fail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-persistence-fail:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    fail_async_job_once = True
+
+    class _AsyncJobFailureProxy:
+        def __init__(self, repo):
+            self._repo = repo
+
+        def __getattr__(self, name: str):
+            return getattr(self._repo, name)
+
+        def record_async_job(self, job) -> None:
+            nonlocal fail_async_job_once
+            if fail_async_job_once:
+                fail_async_job_once = False
+                raise RuntimeError("async job storage outage")
+            self._repo.record_async_job(job)
+
+    class _AsyncJobFailureUnitOfWork:
+        def __init__(self, tenant: str) -> None:
+            self._inner = ToolUnitOfWork(engine)
+
+        def __enter__(self):
+            return _AsyncJobFailureProxy(self._inner.__enter__())
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            self._inner.__exit__(exc_type, exc, tb)
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: _AsyncJobFailureUnitOfWork(tenant_id),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async-persistence-fail:1", "status_url": "https://provider/jobs/async-persistence-fail"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-persistence-fail",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert calls == 1
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
+
+    with engine.connect() as conn:
+        execution = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty, effect_certainty
+                FROM tool_execution_receipts
+                WHERE receipt_id = 'tool-execution-receipt:call-phase16-async-persistence-fail-export'
+                """
+            )
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_async_jobs WHERE async_job_id = 'tool-async-job:call-phase16-async-persistence-fail-export'")
+        ).scalar_one() == 0
+        reconciliation = conn.execute(
+            text(
+                """
+                SELECT status, next_action, provider_effect_id, manual_assessment_required,
+                       idempotency_scope, idempotency_key, idempotency_generation,
+                       secret_lease_id, reconciliation_query_hash, reconciliation_payload_hash
+                FROM tool_effect_reconciliations
+                WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-async-persistence-fail-export'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert execution["status"] == "UNKNOWN"
+    assert execution["dispatch_certainty"] == "DISPATCHED"
+    assert execution["effect_certainty"] == "UNKNOWN_EFFECT"
+    assert reconciliation["status"] == "OPEN"
+    assert reconciliation["next_action"] == "RECONCILE"
+    assert reconciliation["provider_effect_id"] == "provider-job:phase16:async-persistence-fail:1"
+    assert reconciliation["manual_assessment_required"] is False
+    assert reconciliation["idempotency_scope"] == "tool-side-effect"
+    assert reconciliation["idempotency_key"] == call_id
+    assert reconciliation["idempotency_generation"] == 1
+    assert reconciliation["secret_lease_id"] == "security-secret-lease:call-phase16-async-persistence-fail-export"
+    assert reconciliation["reconciliation_query_hash"] == canonical_sha256(
+        {
+            "reason": "post_dispatch_persistence_failure",
+            "error_type": "RuntimeError",
+            "error": "async job storage outage",
+            "result": {"provider_job_id": "provider-job:phase16:async-persistence-fail:1", "status_url": "https://provider/jobs/async-persistence-fail"},
+            "call_id": call_id,
+        }
+    )
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-async-persistence-fail-export"
+
+
+def test_phase16_async_restart_times_out_due_job_without_callback_replay(engine) -> None:
+    tenant_id = "tenant-phase16-async-timeout"
+    workspace_id = "workspace-phase16-async-timeout"
+    call_id = "call-phase16-async-timeout-export"
+    secret_ref = "security-secret-ref:phase16:async-timeout"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-timeout:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": "provider-job:phase16:async-timeout:1"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/timeout-export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-timeout",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": "provider-job:phase16:async-timeout:1"}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET deadline_at = now() - interval '1 second'
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-timeout-export'
+                """
+            )
+        )
+
+    restarted_gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    timed_out = restarted_gateway.timeout_due_async_jobs(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        job = conn.execute(
+            text(
+                """
+                SELECT status, provider_job_id
+                FROM tool_async_jobs
+                WHERE async_job_id = 'tool-async-job:call-phase16-async-timeout-export'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "call_id": call_id},
+        ).mappings().one()
+
+    assert timed_out == 1
+    assert calls == 1
+    assert job["provider_job_id"] == "provider-job:phase16:async-timeout:1"
+    assert job["status"] == "TIMEOUT"
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == "tool-async-job:call-phase16-async-timeout-export"
+
+
+def test_phase16_async_cancellation_moves_waiting_job_without_timeout_overwrite(engine) -> None:
+    tenant_id = "tenant-phase16-async-cancel"
+    workspace_id = "workspace-phase16-async-cancel"
+    call_id = "call-phase16-async-cancel-export"
+    secret_ref = "security-secret-ref:phase16:async-cancel"
+    async_job_id = "tool-async-job:call-phase16-async-cancel-export"
+    provider_job_id = "provider-job:phase16:async-cancel:1"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:async-cancel:1",
+            audience="tool:export.start",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "export.start", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        return {"provider_job_id": provider_job_id}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="export.start",
+        args={"resource": "s3://bucket/cancel-export", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-async-cancel",
+        call_id=call_id,
+        adapter_kind="ASYNC_JOB",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result == {"provider_job_id": provider_job_id}
+    assert receipt.status == "async_waiting"
+    assert calls == 1
+
+    gateway.record_cancellation_request(
+        tenant_id=tenant_id,
+        prepared_id=f"prepared-tool-action:{call_id}",
+        attempt_id=f"tool-attempt:{call_id}",
+        async_job_id=async_job_id,
+        provider_job_id=provider_job_id,
+        requested_by_principal_id="workspace-user:cancel",
+        audit_requirement_id=f"audit-requirement:{call_id}:cancel",
+    )
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_async_jobs
+                SET deadline_at = now() - interval '1 second'
+                WHERE async_job_id = :async_job_id
+                """
+            ),
+            {"async_job_id": async_job_id},
+        )
+
+    timed_out = gateway.timeout_due_async_jobs(tenant_id=tenant_id)
+
+    with engine.connect() as conn:
+        job = conn.execute(
+            text(
+                """
+                SELECT status, provider_job_id, callback_order
+                FROM tool_async_jobs
+                WHERE async_job_id = :async_job_id
+                """
+            ),
+            {"async_job_id": async_job_id},
+        ).mappings().one()
+        cancellation = conn.execute(
+            text(
+                """
+                SELECT status, external_effect_revoked, requested_by_principal_id,
+                       audit_requirement_id
+                FROM tool_cancellation_receipts
+                WHERE cancellation_receipt_id = :receipt_id
+                """
+            ),
+            {"receipt_id": f"tool-cancellation-receipt:{provider_job_id}"},
+        ).mappings().one()
+
+    assert timed_out == 0
+    assert calls == 1
+    assert job["provider_job_id"] == provider_job_id
+    assert job["status"] == "CANCEL_REQUESTED"
+    assert job["callback_order"] == 0
+    assert cancellation["status"] == "NOT_GUARANTEED"
+    assert cancellation["external_effect_revoked"] is False
+    assert cancellation["requested_by_principal_id"] == "workspace-user:cancel"
+    assert cancellation["audit_requirement_id"] == f"audit-requirement:{call_id}:cancel"
+
+
+def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> None:
+    tenant_id = "tenant-phase16-compensation"
+    workspace_id = "workspace-phase16-compensation"
+    source_call_id = "call-phase16-source-mail"
+    compensation_call_id = "call-phase16-compensation-mail"
+    secret_ref = "security-secret-ref:phase16:compensation-mail"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:compensation-mail:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+
+    async def source_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:source:1", "message_id": "message-source-1"}
+
+    async def compensation_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:compensation:1", "message_id": "message-compensation-1"}
+
+    source_result, source_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "incorrect body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-source",
+        call_id=source_call_id,
+        adapter_kind="API",
+        executor=source_executor,
+        readonly=False,
+        approved=True,
+    ))
+    compensation_result, compensation_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "correction@example.com", "body": "correction body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-action",
+        call_id=compensation_call_id,
+        adapter_kind="API",
+        executor=compensation_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert source_result["provider_effect_id"] == "mail-provider-effect:phase16:source:1"
+    assert compensation_result["provider_effect_id"] == "mail-provider-effect:phase16:compensation:1"
+    assert source_receipt.status == "completed"
+    assert compensation_receipt.status == "completed"
+
+    gateway.record_compensation_attempt(
+        tenant_id=tenant_id,
+        compensation_definition_id="tool-compensation-definition:phase16:source-mail",
+        compensation_attempt_id="tool-compensation-attempt:phase16:source-mail:1",
+        source_effect_receipt_id=f"tool-effect-receipt:{source_call_id}",
+        source_reconciliation_id=None,
+        compensation_call_id=compensation_call_id,
+        new_action_proposal_ref="action-proposal:phase16:compensate-source-mail",
+        operation_ref="tool-version:mail.send:v1:operation:default",
+        compensation_capability="BEST_EFFORT_COMPENSATION",
+        residual_impact="PARTIAL",
+        audit_requirement_id=f"audit-requirement:{compensation_call_id}:tool-execute",
+        idempotency_generation=1,
+    )
+
+    definition_payload = {
+        "source_effect_receipt_id": f"tool-effect-receipt:{source_call_id}",
+        "source_reconciliation_id": None,
+        "compensation_capability": "BEST_EFFORT_COMPENSATION",
+        "operation_ref": "tool-version:mail.send:v1:operation:default",
+        "new_action_proposal_ref": "action-proposal:phase16:compensate-source-mail",
+        "requires_approval": True,
+        "residual_impact": "PARTIAL",
+        "hidden_rollback": False,
+    }
+    attempt_payload = {
+        "compensation_definition_id": "tool-compensation-definition:phase16:source-mail",
+        "prepared_tool_action_id": f"prepared-tool-action:{compensation_call_id}",
+        "attempt_id": f"tool-attempt:{compensation_call_id}",
+        "execution_receipt_id": f"tool-execution-receipt:{compensation_call_id}",
+        "status": "CONFIRMED",
+        "hidden_rollback": False,
+        "idempotency_scope": "tool-side-effect",
+        "idempotency_key": compensation_call_id,
+        "idempotency_generation": 1,
+        "audit_requirement_id": f"audit-requirement:{compensation_call_id}:tool-execute",
+    }
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM tool_effect_receipts")).scalar_one() == 2
+        definition = conn.execute(
+            text(
+                """
+                SELECT source_effect_receipt_id, source_reconciliation_id, compensation_capability,
+                       operation_ref, new_action_proposal_ref, requires_approval,
+                       residual_impact, definition_payload_hash
+                FROM tool_compensation_definitions
+                WHERE compensation_definition_id = 'tool-compensation-definition:phase16:source-mail'
+                """
+            )
+        ).mappings().one()
+        attempt = conn.execute(
+            text(
+                """
+                SELECT compensation_definition_id, prepared_tool_action_id, attempt_id,
+                       execution_receipt_id, status, hidden_rollback, idempotency_scope,
+                       idempotency_key, idempotency_generation, audit_requirement_id,
+                       attempt_payload_hash
+                FROM tool_compensation_attempts
+                WHERE compensation_attempt_id = 'tool-compensation-attempt:phase16:source-mail:1'
+                """
+            )
+        ).mappings().one()
+        claim = conn.execute(
+            text(
+                """
+                SELECT status, result_ref
+                FROM infra_idempotency_claims
+                WHERE tenant_id = :tenant_id
+                  AND scope = 'tool-side-effect'
+                  AND idempotency_key = :compensation_call_id
+                """
+            ),
+            {"tenant_id": tenant_id, "compensation_call_id": compensation_call_id},
+        ).mappings().one()
+
+    assert definition["source_effect_receipt_id"] == f"tool-effect-receipt:{source_call_id}"
+    assert definition["source_reconciliation_id"] is None
+    assert definition["compensation_capability"] == "BEST_EFFORT_COMPENSATION"
+    assert definition["operation_ref"] == "tool-version:mail.send:v1:operation:default"
+    assert definition["new_action_proposal_ref"] == "action-proposal:phase16:compensate-source-mail"
+    assert definition["requires_approval"] is True
+    assert definition["residual_impact"] == "PARTIAL"
+    assert definition["definition_payload_hash"] == canonical_sha256(definition_payload)
+    assert attempt["compensation_definition_id"] == "tool-compensation-definition:phase16:source-mail"
+    assert attempt["prepared_tool_action_id"] == f"prepared-tool-action:{compensation_call_id}"
+    assert attempt["attempt_id"] == f"tool-attempt:{compensation_call_id}"
+    assert attempt["execution_receipt_id"] == f"tool-execution-receipt:{compensation_call_id}"
+    assert attempt["status"] == "CONFIRMED"
+    assert attempt["hidden_rollback"] is False
+    assert attempt["idempotency_scope"] == "tool-side-effect"
+    assert attempt["idempotency_key"] == compensation_call_id
+    assert attempt["idempotency_generation"] == 1
+    assert attempt["audit_requirement_id"] == f"audit-requirement:{compensation_call_id}:tool-execute"
+    assert attempt["attempt_payload_hash"] == canonical_sha256(attempt_payload)
+    assert claim["status"] == "completed"
+    assert claim["result_ref"] == f"tool-effect-receipt:{compensation_call_id}"
+
+
+def test_phase16_compensation_from_unresolved_reconciliation_requires_escalation(engine) -> None:
+    tenant_id = "tenant-phase16-compensation-reconcile"
+    workspace_id = "workspace-phase16-compensation-reconcile"
+    call_id = "call-phase16-compensation-reconcile"
+    secret_ref = "security-secret-ref:phase16:compensation-reconcile"
+    with SecurityUnitOfWork(engine) as repo:
+        repo.record_secret_ref(
+            secret_ref=secret_ref,
+            tenant_id=tenant_id,
+            credential_version_ref="credential-version:phase16:compensation-reconcile:1",
+            audience="tool:mail.send",
+            owner_principal_id=f"workspace-user:{workspace_id}",
+            scope={"tool": "mail.send", "tenant_id": tenant_id},
+        )
+
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+    )
+    calls = 0
+
+    async def executor() -> dict[str, str]:
+        nonlocal calls
+        calls += 1
+        raise ToolEffectUnknownError(
+            provider_effect_id="mail-provider-effect:phase16:compensation-reconcile:1",
+            reconciliation_query={"provider": "mail", "message_id": "message-compensation-reconcile"},
+        )
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "unknown", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-reconcile",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert result is None
+    assert receipt.status == "reconcile_required"
+    assert calls == 1
+
+    async def compensation_executor() -> dict[str, str]:
+        return {"provider_effect_id": "mail-provider-effect:phase16:compensation-reconcile:2", "message_id": "message-compensation-reconcile"}
+
+    compensation_result, compensation_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "correction@example.com", "body": "correction body", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-compensation-reconcile-action",
+        call_id="call-phase16-compensation-reconcile-action",
+        adapter_kind="API",
+        executor=compensation_executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert compensation_result["provider_effect_id"] == "mail-provider-effect:phase16:compensation-reconcile:2"
+    assert compensation_receipt.status == "completed"
+
+    with pytest.raises(ToolRuntimeConflict, match="compensation requires escalated source reconciliation"):
+        gateway.record_compensation_attempt(
+            tenant_id=tenant_id,
+            compensation_definition_id="tool-compensation-definition:phase16:reconcile",
+            compensation_attempt_id="tool-compensation-attempt:phase16:reconcile:1",
+            source_effect_receipt_id=None,
+            source_reconciliation_id=f"tool-effect-reconciliation:{call_id}",
+            compensation_call_id="call-phase16-compensation-reconcile-action",
+            new_action_proposal_ref="action-proposal:phase16:compensate-reconcile",
+            operation_ref="tool-version:mail.send:v1:operation:default",
+            compensation_capability="MANUAL_COMPENSATION",
+            residual_impact="HIGH",
+            audit_requirement_id="audit-requirement:phase16:compensation-reconcile:tool-execute",
+            idempotency_generation=1,
+        )
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET manual_assessment_required = true,
+                    status = 'ESCALATED',
+                    next_action = 'MANUAL_ASSESSMENT'
+                WHERE reconciliation_id = :reconciliation_id
+                """,
+            ),
+            {"reconciliation_id": f"tool-effect-reconciliation:{call_id}"},
+        )
+
+    gateway.record_compensation_attempt(
+        tenant_id=tenant_id,
+        compensation_definition_id="tool-compensation-definition:phase16:reconcile",
+        compensation_attempt_id="tool-compensation-attempt:phase16:reconcile:1",
+        source_effect_receipt_id=None,
+        source_reconciliation_id=f"tool-effect-reconciliation:{call_id}",
+        compensation_call_id="call-phase16-compensation-reconcile-action",
+        new_action_proposal_ref="action-proposal:phase16:compensate-reconcile",
+        operation_ref="tool-version:mail.send:v1:operation:default",
+        compensation_capability="MANUAL_COMPENSATION",
+        residual_impact="HIGH",
+        audit_requirement_id="audit-requirement:phase16:compensation-reconcile:tool-execute",
+        idempotency_generation=1,
+    )
+
+    with engine.connect() as conn:
+        definition = conn.execute(
+            text(
+                """
+                SELECT source_effect_receipt_id, source_reconciliation_id
+                FROM tool_compensation_definitions
+                WHERE compensation_definition_id = 'tool-compensation-definition:phase16:reconcile'
+                """
+            )
+        ).mappings().one()
+        attempt = conn.execute(
+            text(
+                """
+                SELECT status, hidden_rollback, idempotency_key
+                FROM tool_compensation_attempts
+                WHERE compensation_attempt_id = 'tool-compensation-attempt:phase16:reconcile:1'
+                """
+            )
+        ).mappings().one()
+
+    assert definition["source_effect_receipt_id"] is None
+    assert definition["source_reconciliation_id"] == f"tool-effect-reconciliation:{call_id}"
+    assert attempt["status"] == "CONFIRMED"
+    assert attempt["hidden_rollback"] is False
+    assert attempt["idempotency_key"] == "call-phase16-compensation-reconcile-action"

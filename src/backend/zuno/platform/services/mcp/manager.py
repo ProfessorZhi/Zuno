@@ -1,8 +1,10 @@
-import asyncio
+﻿import asyncio
 import logging
 from typing import Any, Dict, List
 
 from langchain_core.tools import BaseTool
+
+from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
 
 from zuno.services.mcp.multi_client import MultiServerMCPClient
 from zuno.schema.mcp import MCPBaseConfig

@@ -199,7 +199,9 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[12]: "completed",
         PHASE_FILES[13]: "completed",
         PHASE_FILES[14]: "completed",
-        PHASE_FILES[15]: "ready",
+        PHASE_FILES[15]: "completed",
+        PHASE_FILES[16]: "completed",
+        PHASE_FILES[17]: "completed",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -300,6 +302,72 @@ def verify_current_program() -> list[str]:
     migration = _read(PROGRAM_ROOT / "legacy-to-target-migration-map.md")
     directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
+    phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
+    phase17_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-coordinator-closure.md")
+    phase18_startup = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-startup-audit.md")
+    phase18_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-coordinator-closure.md")
+    dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
+    dynamic_controller = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_controller.py")
+    dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
+    branch_result = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "branch_result.py")
+    dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
+    dynamic_reducer = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "reducer.py")
+    control_decision = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "control_decision.py")
+    replan_barrier = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "replan_barrier.py")
+    dynamic_send = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "send.py")
+    dynamic_worker = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_worker.py")
+    parallel_recovery = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "recovery.py")
+    dispatch_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
+    )
+    branch_result_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_47_phase17_branch_results.py"
+    )
+    join_outcome_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_48_phase17_join_outcomes.py"
+    )
+    replan_barrier_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_49_phase17_replan_barriers.py"
+    )
+    agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
+    agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
+    dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
+    dynamic_controller_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_runtime_controller.py"
+    )
+    dynamic_plan_version_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_plan_version_domain.py"
+    )
+    readyset_admission_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_readyset_admission.py"
+    )
+    branch_result_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_branch_result_fencing.py"
+    )
+    dispatch_commit_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dispatch_commit.py"
+    )
+    reducer_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_reducer_join_policy.py"
+    )
+    control_decision_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_control_decision.py"
+    )
+    replan_barrier_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_replan_barrier.py"
+    )
+    dynamic_send_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_send.py"
+    )
+    dynamic_worker_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_worker.py"
+    )
+    parallel_recovery_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_parallel_recovery.py"
+    )
+    dispatch_persistence_tests = _read(
+        REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
+    )
 
     errors.extend(
         _require_phrases(
@@ -321,7 +389,11 @@ def verify_current_program() -> list[str]:
                 "PHASE14 completed",
                 "PHASE15 completed",
                 "PHASE10 ready",
-                "PHASE16 ready",
+                "PHASE16 completed",
+                "PHASE17 completed",
+                "goal04-phase17-coordinator-closure.md",
+                "PHASE18 completed",
+                "goal04-phase18-coordinator-closure.md",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
                 "measurement blocked",
@@ -367,9 +439,258 @@ def verify_current_program() -> list[str]:
                 "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
                 "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
                 "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
-                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: ready",
+                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
+                "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed",
+                "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed",
             ],
             "program-manifest.yaml",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            phase18_startup,
+            [
+                "Goal04 PHASE18 Startup Audit",
+                "phase_status: in_progress",
+                "branch: codex/goal04-phase18-agentic-graphrag",
+                "base_main_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae",
+                "phase17_merge_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae",
+                "Alembic head",
+                "20260728_49 (head)",
+                "Frozen Gap List",
+                "P18-T01 EvidenceRequirement and Profile Selection",
+                "P18-T02 Fixed KnowledgeRetrievalGraph and Round Domain",
+                "P18-T03 Graph Entity/Relation/Path/Community Runtime",
+                "P18-T04 DRIFT and Multi-retriever Dispatch",
+                "P18-T05 Fusion, Rerank and Rank Lineage",
+                "P18-T06 EvidenceLedger, Frontier and Quality Verdict",
+                "P18-T07 Corrective Retrieval Decision",
+                "P18-T08 KnowledgeControlProposal and Agent Integration",
+                "CorrectiveAgenticRetrievalRuntime",
+                "EvidenceLedger",
+                "DurableKnowledgeRetrievalPort",
+                "GraphRAGQueryService",
+                "RetrievalPlanner / RetrievalOrchestrator",
+                "KnowledgeControlProposal",
+                "PHASE18 已启动并冻结 Gap List",
+            ],
+            "PHASE18 startup evidence",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            phase18_closure,
+            [
+                "Goal04 PHASE18 Coordinator Closure",
+                "status: completed",
+                "coordinator_approval: approved",
+                "head_sha: 42a77f9fccf0b328bb48098eb6b16dcad883abcd",
+                "P18-T01",
+                "P18-T08",
+                "KnowledgeRetrievalGraph",
+                "RetrievalPlan",
+                "EvidenceFrontier",
+                "KnowledgeControlProposal",
+                "CorrectiveAgenticGraphRAGRuntime",
+                "KnowledgeQueryService.query()",
+                "26 passed, 1 warning in 23.28s",
+                "PR #49 GitHub validate",
+                "retry count: 1",
+                "PHASE19 仍必须等待 PHASE18 与 PHASE10 都进入 main 后才能创建分支",
+                "Production readiness not established",
+            ],
+            "PHASE18 closure evidence",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            (
+                phase17_evidence
+                + phase17_closure
+                + dynamic_dag
+                + dynamic_dag_tests
+                + dynamic_controller
+                + dynamic_controller_tests
+                + agent_domain
+                + dynamic_plan_version_tests
+                + dynamic_admission
+                + readyset_admission_tests
+                + branch_result
+                + branch_result_tests
+                + dynamic_dispatch
+                + dispatch_commit_tests
+                + dynamic_reducer
+                + reducer_tests
+                + control_decision
+                + control_decision_tests
+                + replan_barrier
+                + replan_barrier_tests
+                + dynamic_send
+                + dynamic_send_tests
+                + dynamic_worker
+                + dynamic_worker_tests
+                + parallel_recovery
+                + parallel_recovery_tests
+                + dispatch_migration
+                + branch_result_migration
+                + join_outcome_migration
+                + replan_barrier_migration
+                + agent_repository
+                + dispatch_persistence_tests
+            ),
+            [
+                "P17-T01 Dynamic DAG Proposal and Validator Slice",
+                "DynamicPlanProposal",
+                "DynamicPlanValidator",
+                "DynamicPlanRepairer",
+                "DynamicPlanSideEffectClass",
+                "DynamicPlanResourceClaim",
+                "test_phase17_dynamic_plan_validator_rejects_unsafe_parallel_writes",
+                "test_phase17_dynamic_plan_repairer_adds_deterministic_acceptance_and_output_contract",
+                "P17-T02 Dynamic PlanVersion Domain and Supersession Slice",
+                "PlanKind",
+                "DYNAMIC_DAG",
+                "DynamicStepDefinition",
+                "create_dynamic_dag",
+                "supersede",
+                "test_phase17_dynamic_plan_version_supersession_requires_active_cas",
+                "test_phase17_dynamic_plan_version_rejects_unknown_dependency_and_cycles",
+                "P17-T03 ReadySet and Admission Domain Slice",
+                "ReadySetBuilder",
+                "AdmissionController",
+                "AdmissionContext",
+                "AdmissionRejectionCode",
+                "STALE_SECURITY_EPOCH",
+                "CAPABILITY_NOT_AUTHORIZED",
+                "test_phase17_readyset_finds_dependency_satisfied_steps",
+                "test_phase17_admission_defers_budget_quota_capacity_and_resource_conflicts",
+                "P17-T04 Dispatch Commit-before-Send Domain Slice",
+                "DispatchCommitBuilder",
+                "DispatchGroup",
+                "DispatchItem",
+                "StepRun",
+                "DispatchOutboxMessage",
+                "commit_required_before_send",
+                "agent.dynamic_step.dispatch.requested",
+                "test_phase17_dispatch_commit_binds_group_items_step_runs_and_outbox_before_send",
+                "test_phase17_dispatch_commit_is_deterministic_for_same_admission",
+                "P17-T05 Dispatch PostgreSQL Persistence Slice",
+                "20260728_46_phase17_dynamic_dispatch",
+                "agent_dispatch_groups",
+                "agent_step_runs",
+                "agent_dispatch_items",
+                "record_dispatch_commit",
+                "InfrastructureRepository",
+                "test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow",
+                "P17-T06 BranchResultRef and Late-result Fencing Slice",
+                "BranchResultSubmission",
+                "BranchResultFencer",
+                "BranchResultRef",
+                "REJECTED_STALE_PLAN",
+                "REJECTED_STALE_EPOCH",
+                "REJECTED_STALE_STEP_HASH",
+                "REJECTED_OBSOLETE_STEP_RUN",
+                "REJECTED_INLINE_PAYLOAD",
+                "test_phase17_branch_result_fencer_rejects_late_result_fencing_mismatch",
+                "P17-T07 BranchResultRef PostgreSQL Persistence Slice",
+                "20260728_47_phase17_branch_results",
+                "agent_branch_result_refs",
+                "record_branch_result_ref",
+                "duplicate:ACCEPTED",
+                "test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs",
+                "P17-T08 Idempotent Reducer and JoinPolicy Slice",
+                "BranchResultReducer",
+                "ReducedJoinOutcome",
+                "JoinDecision",
+                "ALL_REQUIRED",
+                "BEST_EFFORT",
+                "FAIL_FAST",
+                "test_phase17_reducer_is_order_independent_and_idempotent_for_duplicate_refs",
+                "test_phase17_reducer_evaluates_join_policy",
+                "P17-T09 JoinOutcome PostgreSQL Persistence Slice",
+                "20260728_48_phase17_join_outcomes",
+                "agent_join_outcomes",
+                "record_join_outcome",
+                "duplicate:CONTINUE",
+                "test_phase17_join_outcome_persistence_records_reducer_decision",
+                "P17-T10 Conditional Reflection ControlDecision Slice",
+                "JoinControlDecisionEngine",
+                "ConditionalReflectionPolicy",
+                "DynamicControlAction",
+                "REQUEST_REFLECTION",
+                "REQUEST_REPLAN_BARRIER",
+                "retry_permitted",
+                "test_phase17_control_decision_requests_reflection_for_best_effort_partial_join",
+                "test_phase17_control_decision_requests_replan_barrier_for_failed_join",
+                "test_phase17_control_decision_hash_fences_mutation",
+                "P17-T11 Replan Barrier Domain Slice",
+                "ReplanBarrierBuilder",
+                "ReplanBarrierRequest",
+                "StepRunBarrierDecision",
+                "freeze_new_dispatch",
+                "new_plan_version_required",
+                "DRAIN_NON_INTERRUPTIBLE",
+                "test_phase17_replan_barrier_freezes_dispatch_and_advances_epoch",
+                "test_phase17_replan_barrier_assigns_cancel_drain_and_terminal_actions",
+                "test_phase17_replan_barrier_hash_fences_mutation",
+                "P17-T12 Replan Barrier PostgreSQL Persistence Slice",
+                "20260728_49_phase17_replan_barriers",
+                "agent_replan_barriers",
+                "record_replan_barrier_request",
+                "duplicate:REQUESTED",
+                "test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary",
+                "P17-T13 LangGraph Send and Outbox Claim Boundary Slice",
+                "DynamicStepSendBuilder",
+                "DynamicStepSendEnvelope",
+                "DYNAMIC_STEP_WORKER_NODE",
+                "langgraph.types",
+                "record_dynamic_step_send_claim",
+                "duplicate:CLAIMED_FOR_SEND",
+                "test_phase17_dynamic_step_send_builds_real_langgraph_send_from_claimed_outbox",
+                "test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox",
+                "P17-T14 Dynamic Step Worker and BranchResultRef Writeback Slice",
+                "DynamicStepWorker",
+                "LocalBranchResultObjectStore",
+                "BranchResultObjectStore",
+                "StepExecutorRegistry",
+                "BranchResultFencer",
+                "test_phase17_dynamic_step_worker_executes_and_returns_fenced_branch_result",
+                "test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim",
+                "P17-T15 Restart Parallel Recovery Slice",
+                "ParallelRecoveryPlanner",
+                "PersistedStepRunSnapshot",
+                "RecoveryAction",
+                "load_parallel_recovery_snapshot",
+                "HONOR_REPLAN_BARRIER",
+                "RESEND_OUTBOX",
+                "RESUME_IN_FLIGHT",
+                "REDUCE_RESULT",
+                "test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier_facts",
+                "P17-T16 Replan Barrier Execution Slice",
+                "ReplanBarrierExecutor",
+                "ReplanBarrierExecutionResult",
+                "record_replan_barrier_execution",
+                "duplicate:DRAINING",
+                "READY_FOR_REPLAN",
+                "test_phase17_replan_barrier_executor_marks_ready_when_no_in_flight_drain_remains",
+                "test_phase17_replan_barrier_execution_persists_cancel_and_drain_state",
+                "P17-T17 Default Dynamic Runtime Controller Slice",
+                "DynamicPlanRuntimeController",
+                "DynamicRuntimeDispatchResult",
+                "dispatch_ready_steps",
+                "record_dispatch_commit",
+                "test_phase17_dynamic_runtime_controller_dispatches_ready_steps_through_commit_before_send",
+                "test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry",
+                "Goal04 PHASE17 Coordinator Closure",
+                "phase_status: completed",
+                "coordinator_decision: approved",
+                "closure_head_sha: b27d45a5",
+                "20260728_49 (head)",
+                "59 passed in 29.18s",
+                "9 passed in 41.32s",
+                "refined Agent Core target architecture verification passed",
+            ],
+            "PHASE17 dynamic DAG closure evidence",
         )
     )
 

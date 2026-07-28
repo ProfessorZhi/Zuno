@@ -12,7 +12,7 @@ program_version: 2
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
 
-Goal04 PR A 已启动：PHASE10 Web/Desktop Product Adaptation 在 `codex/goal04-phase10-product-adaptation` 中为 `in_progress`。这不是 completed 证据；PHASE16 仍为 ready，可由独立 PR B / worktree 启动；PHASE17、PHASE18、PHASE19 仍受依赖约束，不得提前标记 in_progress。
+Goal04 PR A 已启动：PHASE10 Web/Desktop Product Adaptation 在 `codex/goal04-phase10-product-adaptation` 中为 `in_progress`，需基于 PHASE18 合并后的最新 main 完成 Coordinator Closure。Goal04 PR B 已完成 Coordinator Closure 并合并到 main：PHASE16 Tool Side Effect and Reconciliation 为 `completed`。Goal04 PR C 已完成 Coordinator Closure 并合并到 main：PHASE17 Dynamic Plan DAG and Parallel Control 为 `completed`，merge commit 为 `4d14ae9e8cd953359c82e51d55279cc123ab47ae`。Goal04 PR D 已完成 Coordinator Closure 并合并到 main：PHASE18 Agentic GraphRAG Inner Loop 为 `completed`，merge commit 为 `cbc04cb0be16c3915537b82a4f3f743cb7add963`，closure evidence 为 `docs/evidence/goal04-phase18-coordinator-closure.md`；PHASE19 仍受 PHASE10 依赖约束，不得提前标记 in_progress。
 
 入口：
 
