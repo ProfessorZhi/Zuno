@@ -45,17 +45,20 @@ def test_workspace_page_exposes_tool_approval_runtime_surface():
     workspace_page = (REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue").read_text(encoding="utf-8")
 
     for phrase in [
-        "pendingToolApproval",
-        "capturePendingToolApproval",
-        "submitToolApproval",
         "submitProductAvailableAction",
         "consumeProductStoreAction",
+        "productProjectionStore.sortedAvailableActions.length > 0",
         "tool-approval-card",
-        "required_approval",
-        "audit_ref",
+        "Product Available Actions",
+        "action.action_token_id",
+        "action.disabled_reason",
+        "productActionLabel(action)",
     ]:
         assert phrase in workspace_page
 
+    assert "pendingToolApproval" not in workspace_page
+    assert "capturePendingToolApproval" not in workspace_page
+    assert "submitToolApproval" not in workspace_page
     assert "approveWorkspaceTaskAPI" not in workspace_page
 
 
@@ -67,7 +70,6 @@ def test_workspace_agent_mode_uses_product_runtime_projection_loop():
         "createWorkspaceIngestAPI",
         "getProductArtifact",
         "downloadProductArtifact",
-        "getWorkspaceTaskLifecycleAPI",
         "submitProductFeedback",
         "submitAgentRuntimeTask",
         "registerRuntimeAttachments",
@@ -89,12 +91,9 @@ def test_workspace_agent_mode_uses_product_runtime_projection_loop():
         "runtime-observability-panel",
         "runtime-feedback-panel",
         "runtime-failure-panel",
-        "recoverable_failed",
-        "recovery_actions",
         "release-eval",
-        "security_gate",
-        "eval_diagnostic",
-        "artifact_created",
+        "productSubmission.projection.display_status === 'BLOCKED'",
+        "productSubmission.projection.display_status === 'REFUSED'",
         "if (isAgentMode.value) return await submitAgentRuntimeTask",
     ]:
         assert phrase in workspace_page
@@ -103,6 +102,7 @@ def test_workspace_agent_mode_uses_product_runtime_projection_loop():
     assert "workspaceTaskEventsStreamAPI" not in workspace_page
     assert "streamWorkspaceTaskEvents" not in workspace_page
     assert "approveWorkspaceTaskAPI" not in workspace_page
+    assert "getWorkspaceTaskLifecycleAPI" not in workspace_page
 
 
 def test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream():

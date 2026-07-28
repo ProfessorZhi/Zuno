@@ -14,6 +14,7 @@ FILES = {
     "frontend_contract_tests": REPO_ROOT / "tests/frontend/test_phase10_product_contracts.py",
     "product_route_tests": REPO_ROOT / "tests/api/test_goal03_product_route.py",
     "workspace_tests": REPO_ROOT / "tests/api/test_workspace_task_runtime.py",
+    "workspace_page": REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue",
     "full_e2e": REPO_ROOT / "tools/qa/full-e2e/full_e2e.py",
     "launcher_tests": REPO_ROOT / "tests/tools/test_launcher_scripts.py",
     "evidence": REPO_ROOT / "docs/evidence/goal04-phase10-startup-audit.md",
@@ -32,6 +33,11 @@ def _require(text: str, phrase: str, label: str, errors: list[str]) -> None:
         errors.append(f"{label} missing phrase: {phrase}")
 
 
+def _forbid(text: str, phrase: str, label: str, errors: list[str]) -> None:
+    if phrase in text:
+        errors.append(f"{label} still contains forbidden phrase: {phrase}")
+
+
 def verify_phase10_product_cutover_evidence() -> list[str]:
     errors: list[str] = []
     web_runtime = _read(FILES["web_runtime"], errors)
@@ -42,6 +48,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
     frontend_tests = _read(FILES["frontend_contract_tests"], errors)
     route_tests = _read(FILES["product_route_tests"], errors)
     workspace_tests = _read(FILES["workspace_tests"], errors)
+    workspace_page = _read(FILES["workspace_page"], errors)
     full_e2e = _read(FILES["full_e2e"], errors)
     launcher_tests = _read(FILES["launcher_tests"], errors)
     evidence = _read(FILES["evidence"], errors)
@@ -96,9 +103,34 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
 
     for phrase in (
         "test_phase10_product_runtime_cutover_modes_are_explicit_and_rollback_fail_closed",
+        "test_phase10_workspace_page_removes_single_pending_approval_and_status_inference",
         "command_kind: buildProductCommandKindForCutover(cutoverMode)",
     ):
         _require(frontend_tests, phrase, "frontend cutover tests", errors)
+
+    for phrase in (
+        "pendingToolApproval",
+        "capturePendingToolApproval",
+        "submitToolApproval",
+        "workspaceTaskLifecycleStates",
+        "workspaceTaskRecoveryActions",
+        "refreshWorkspaceTaskLifecycleContract",
+        "event.type === 'approval_required'",
+        "event.type === 'task_failed'",
+        "event.type === 'task_completed'",
+        "lifecycleState === 'recoverable_failed'",
+        "String(data.status || '').toLowerCase() === 'failed'",
+        "String(data.phase || '').toLowerCase().includes('failed')",
+    ):
+        _forbid(workspace_page, phrase, "workspace Product-only action surface", errors)
+
+    for phrase in (
+        "productProjectionStore.sortedAvailableActions.length > 0",
+        "submitProductAvailableAction(action)",
+        "Product Available Actions",
+        "consumeProductStoreAction(action",
+    ):
+        _require(workspace_page, phrase, "workspace Product-only action surface", errors)
 
     for phrase in (
         "test_goal03_product_runtime_request_route_rejects_rollback_before_service",
@@ -143,6 +175,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T25 Product Runtime Cutover Handoff Context",
         "P10-T27 Browser Product Runtime Cutover Smoke Gate",
         "P10-T28 Branch-Scoped Alembic Upgrade Gate",
+        "P10-T29 Product-only Workspace Action Surface",
         "PHASE10 仍为 `in_progress`",
         "20260727_43 (head)",
         "temporary PostgreSQL database",

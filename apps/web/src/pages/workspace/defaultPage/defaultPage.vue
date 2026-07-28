@@ -13,14 +13,12 @@ import {
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
-  getWorkspaceTaskLifecycleAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
   type WorkspaceArtifactResponse,
   type WorkspaceExecutionConfig,
   type WorkspaceObservabilitySnapshot,
   type WorkspaceRetrievalProfile,
-  type WorkspaceStreamEvent,
   type KnowledgeSpaceRetrievalSelection,
   type WorkSpaceSimpleTask,
 } from '../../../apis/workspace'
@@ -119,14 +117,6 @@ const consumedInitialMessageKey = ref('')
 const initialRouteMessageInFlightKey = ref('')
 const messages = ref<ChatMessage[]>([])
 const executionEvents = ref<TraceRecord[]>([])
-const pendingToolApproval = ref<{
-  taskId: string
-  toolId: string
-  requiredApproval: string
-  approvalId: string
-  toolCallId: string
-  auditRef: string
-} | null>(null)
 const activeRuntimeTaskId = ref('')
 const activeRuntimeArtifact = ref<{
   artifactId: string
@@ -144,8 +134,6 @@ const activeRuntimeArtifact = ref<{
 } | null>(null)
 const activeRuntimeCitationIds = ref<string[]>([])
 const activeRuntimeObservability = ref<WorkspaceObservabilitySnapshot | null>(null)
-const workspaceTaskLifecycleStates = ref<string[]>(['pending', 'running', 'approval_required', 'recoverable_failed', 'cancelled', 'completed'])
-const workspaceTaskRecoveryActions = ref<Record<string, string[]>>({})
 const runtimeFailure = ref<{ title: string; detail: string } | null>(null)
 const feedbackSubmitting = ref(false)
 const feedbackSent = ref(false)
@@ -491,21 +479,6 @@ const runtimeFeedbackCopy = computed(() => {
   if (!feedbackSent.value) return '等待反馈。'
   return runtimeFeedbackLabel.value === 'helpful' ? '已记录为可用结果。' : '已记录为需要调整。'
 })
-const refreshWorkspaceTaskLifecycleContract = async () => {
-  try {
-    const response = await getWorkspaceTaskLifecycleAPI()
-    const contract = response.data?.data
-    if (Array.isArray(contract?.states)) {
-      workspaceTaskLifecycleStates.value = contract.states.map((state: unknown) => String(state))
-    }
-    if (contract?.recovery_actions && typeof contract.recovery_actions === 'object') {
-      workspaceTaskRecoveryActions.value = contract.recovery_actions
-    }
-  } catch (error) {
-    console.warn('workspace task lifecycle contract unavailable', error)
-  }
-}
-
 const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value) ? String(value[0] || fallback) : (typeof value === 'string' && value.trim() ? value : fallback)
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
 const normalizeSessionMode = (session: any): WorkspaceMode => {
@@ -1070,7 +1043,6 @@ const clearConversationState = (options?: { keepSessionHistoryLoading?: boolean 
   composerFocused.value = false
   clearTransientPetMood()
   executionEvents.value = []
-  pendingToolApproval.value = null
   toolApprovalSubmitting.value = false
   resetRuntimeSurface()
   pendingAttachments.value = []
@@ -1089,7 +1061,6 @@ const isCurrentSessionDisposable = () => (
   Boolean(currentSessionId.value)
   && messages.value.length === 0
   && executionEvents.value.length === 0
-  && !pendingToolApproval.value
   && pendingAttachments.value.length === 0
 )
 
@@ -1252,47 +1223,6 @@ const getQualityReasonLabel = (reason: string) => {
   if (reason === 'no_relevant_documents') return '没有相关文档'
   return reason || ''
 }
-const buildRetrievalTrace = (data: Record<string, any>, retrievalMode: string): RetrievalTraceSummary | null => {
-  const rounds = Array.isArray(data.rounds) ? data.rounds : []
-  const firstMode = String(data.first_mode || retrievalMode || '').trim()
-  const finalMode = String(data.final_mode || retrievalMode || '').trim()
-  const fallbackReason = String(data.fallback_reason || '').trim()
-  const roundCount = Number(data.round_count || rounds.length || 0)
-  const rewrittenQueryUsed = Boolean(data.rewritten_query_used)
-  if (!firstMode && !finalMode && !roundCount && !fallbackReason && rounds.length === 0)
-    return null
-  return {
-    firstMode: firstMode || finalMode || retrievalMode || 'rag',
-    finalMode: finalMode || firstMode || retrievalMode || 'rag',
-    roundCount: roundCount || Math.max(rounds.length, 1),
-    fallbackReason,
-    rewrittenQueryUsed,
-    rounds: rounds.map((item: any, index: number) => ({
-      round: Number(item?.round || index + 1),
-      mode: String(item?.mode || finalMode || retrievalMode || 'rag'),
-      trigger: String(item?.trigger || ''),
-      qualityReason: String(item?.quality_reason || ''),
-      query: String(item?.query || ''),
-    })),
-  }
-}
-const buildRetrievalTraceDetail = (data: Record<string, any>, retrievalMode: string) => {
-  const retrieval = buildRetrievalTrace(data, retrievalMode)
-  if (!retrieval) return ''
-  const routeSummary = retrieval.firstMode && retrieval.finalMode && retrieval.firstMode !== retrieval.finalMode
-    ? `首轮 ${getRetrievalModeLabel(retrieval.firstMode)}，最终切到 ${getRetrievalModeLabel(retrieval.finalMode)}`
-    : `检索策略：${getRetrievalModeLabel(retrieval.finalMode || retrievalMode)}`
-  const parts = [`${routeSummary}，共 ${retrieval.roundCount} 轮。`]
-  if (retrieval.fallbackReason) parts.push(`补检原因：${retrieval.fallbackReason}。`)
-  if (retrieval.rewrittenQueryUsed) parts.push('已启用改写后的问题再次检索。')
-  const lastRound = retrieval.rounds[retrieval.rounds.length - 1]
-  if (lastRound?.trigger === 'query_rewrite_retry') {
-    parts.push('最后一轮来自改写后重试。')
-  } else if (lastRound?.trigger === 'route_broadening') {
-    parts.push('最后一轮来自自动扩路补检。')
-  }
-  return parts.join('')
-}
 const normalizeStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
   if (typeof value === 'string' && value.trim()) return [value.trim()]
@@ -1309,231 +1239,6 @@ const mergeRuntimeCitationIds = (ids: string[]) => {
     }
   }
 }
-const buildEvalDiagnosticDetail = (data: Record<string, any>) => {
-  const releaseEval = data.release_eval || data.eval || data
-  const status = String(releaseEval.status || releaseEval.overall_status || releaseEval.verdict || data.status || 'unknown')
-  const metrics = Array.isArray(releaseEval.metrics)
-    ? releaseEval.metrics
-    : Object.entries(releaseEval.metrics || {}).map(([name, value]) => ({ name, value }))
-  const metricCopy = metrics
-    .slice(0, 3)
-    .map((metric: any) => `${metric.name || metric.metric || 'metric'}=${metric.value ?? metric.score ?? metric.status ?? ''}`.replace(/=$/, ''))
-    .filter(Boolean)
-    .join('，')
-  return metricCopy ? `release_eval=${status}；${metricCopy}` : `release_eval=${status}`
-}
-const captureRuntimeEventSurface = (event: WorkspaceStreamEvent) => {
-  const data = event.data || {}
-  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
-  if (citationIds.length > 0) mergeRuntimeCitationIds(citationIds)
-  const artifactId = String(event.artifact_id || data.artifact_id || '')
-  if (artifactId && !activeRuntimeArtifact.value) {
-    activeRuntimeArtifact.value = {
-      artifactId,
-      content: '',
-      citations: citationIds,
-      citationRefs: [],
-      uri: '',
-      downloadUrl: String(event.download_url || data.download_url || ''),
-      qualityDisclosure: null,
-    }
-  }
-  const lifecycleState = String(event.lifecycle_state || data.lifecycle_state || '')
-  const recoveryActions = normalizeStringList(event.recovery_actions || data.recovery_actions)
-  const failed = event.type === 'task_failed'
-    || String(data.status || '').toLowerCase() === 'failed'
-    || String(data.phase || '').toLowerCase().includes('failed')
-    || lifecycleState === 'recoverable_failed'
-  if (failed) {
-    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
-    runtimeFailure.value = {
-      title: lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
-      detail: `${String(data.error || data.reason || data.message || event.detail || '任务未能完成。')}${recoveryCopy}`,
-    }
-  }
-}
-
-const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
-  const data = event.data || {}
-  const phase = String(data.phase || '')
-  const status = String(data.status || '')
-  const retrievalMode = String(data.retrieval_mode || effectiveRetrievalMode.value || '')
-  const retrieval = buildRetrievalTrace(data, retrievalMode)
-  const toolName = String(data.tool_name || '')
-  const toolResult = String(data.result || data.message || '')
-  const artifactId = String(event.artifact_id || data.artifact_id || '')
-  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
-  const sourceRefs = normalizeStringList(data.source_refs || data.source_event_ids)
-  const isToolCreation = event.type === 'tool_result' && ['create_remote_api_tool', 'create_cli_tool'].includes(toolName)
-  if (event.type === 'approval_required') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '等待工具审批',
-      detail: String(data.tool_id || event.tool_id || data.required_approval || event.required_approval || '需要确认后继续执行'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'approval',
-      status: status || 'approval_waiting',
-      accent: 'tool',
-      retrieval,
-    }
-  }
-  if (event.type === 'security_gate') {
-    const decision = String(data.action || data.decision?.action || status || 'review')
-    const blocked = ['block', 'blocked', 'failed', 'deny'].some((token) => decision.toLowerCase().includes(token))
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: blocked ? '安全策略已阻断' : '安全检查通过',
-      detail: String(data.message || data.reason || event.detail || decision),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'security_gate',
-      status: status || decision,
-      accent: blocked ? 'error' : 'tool',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'eval_diagnostic') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '评测诊断',
-      detail: buildEvalDiagnosticDetail(data),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'eval_diagnostic',
-      status,
-      accent: String(data.status || '').toLowerCase().includes('fail') ? 'error' : 'answer',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'artifact_created') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: 'Artifact 已创建',
-      detail: artifactId ? `artifact_id=${artifactId}` : '任务产物已生成。',
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'artifact',
-      status: status || 'created',
-      accent: 'answer',
-      retrieval,
-      artifactId,
-      citationIds,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'task_failed') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '任务失败',
-      detail: String(data.error || data.message || event.detail || '任务未能完成。'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'failed',
-      status: status || 'failed',
-      accent: 'error',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'task_completed') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '任务完成',
-      detail: artifactId ? `已生成 artifact：${artifactId}` : String(data.message || '完整 task runtime 已完成。'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'complete',
-      status: status || 'completed',
-      accent: 'answer',
-      retrieval,
-      artifactId,
-      citationIds,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'tool_call') {
-    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_id || data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool', retrieval }
-  }
-  if (event.type === 'tool_result') {
-    const failed = data.ok === false
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: isToolCreation
-        ? (
-            failed
-              ? (toolName === 'create_remote_api_tool' ? '创建 API 工具失败' : '创建 CLI 工具失败')
-              : (toolName === 'create_remote_api_tool' ? '已创建 API 工具' : '已创建 CLI 工具')
-          )
-        : '工具已返回结果',
-      detail: isToolCreation
-        ? toolResult
-        : String(data.tool_name || data.message || '已收到工具结果'),
-      at: new Date().toLocaleTimeString(),
-      phase,
-      status,
-      accent: data.ok === false ? 'error' : 'tool',
-      retrieval,
-    }
-  }
-  if (event.type === 'final') {
-    return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: `${buildRetrievalTraceDetail(data, retrievalMode)} 正在生成最终答案。`, at: new Date().toLocaleTimeString(), phase: phase || 'answer', status, accent: 'answer', retrieval }
-  }
-  const accent = phase.includes('error')
-    ? 'error'
-    : retrievalMode === 'graphrag'
-      ? 'graph'
-      : retrievalMode === 'hybrid' || retrievalMode === 'auto' || retrievalMode === 'rag'
-        ? 'retrieval'
-        : 'default'
-  return {
-    id: event.id || crypto.randomUUID(),
-    title: String(data.message || event.title || '正在处理中'),
-    detail: String(
-      data.result
-      || data.error
-      || data.tool_name
-      || event.detail
-      || (
-        retrievalMode
-          ? buildRetrievalTraceDetail(data, retrievalMode)
-          : ''
-      )
-    ),
-    at: new Date().toLocaleTimeString(),
-    phase,
-    status,
-    accent,
-    retrieval,
-    artifactId,
-    citationIds,
-    sourceRefs,
-  }
-}
-const pushTraceEvent = (event: WorkspaceStreamEvent) => {
-  captureRuntimeEventSurface(event)
-  const nextRecord = buildTraceRecord(event)
-  const lastRecord = executionEvents.value[executionEvents.value.length - 1]
-  if (lastRecord && lastRecord.title === nextRecord.title && lastRecord.detail === nextRecord.detail) return
-  executionEvents.value.push(nextRecord)
-  if (executionEvents.value.length > 24) executionEvents.value.splice(0, executionEvents.value.length - 24)
-}
-
-const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
-  if (event.type !== 'approval_required') return
-  const data = event.data || {}
-  const taskId = String(event.task_id || data.task_id || '')
-  const requiredApproval = String(event.required_approval || data.required_approval || '')
-  const toolId = String(event.tool_id || data.tool_id || requiredApproval.replace(/^tool:/, ''))
-  if (!taskId || !requiredApproval.startsWith('tool:')) return
-  pendingToolApproval.value = {
-    taskId,
-    toolId,
-    requiredApproval,
-    approvalId: String(event.approval_id || data.approval_id || requiredApproval),
-    toolCallId: String(event.tool_call_id || data.tool_call_id || toolId),
-    auditRef: String(event.audit_ref || data.audit_ref || ''),
-  }
-  isGenerating.value = false
-  assistantTextStreaming.value = false
-}
-
 const normalizeRuntimeSlug = (value: string, prefix: string) => {
   const slug = value
     .trim()
@@ -1675,27 +1380,6 @@ const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
   }
 }
 
-const submitToolApproval = async (decision: 'approved' | 'rejected') => {
-  const pending = pendingToolApproval.value
-  if (!pending || toolApprovalSubmitting.value) return
-  try {
-    const availableAction = Object.values(productProjectionStore.availableActions).find(
-      (action) => action.action === (decision === 'approved' ? 'APPROVE' : 'DENY') && action.target_ref === pending.approvalId
-    )
-    if (!availableAction) throw new Error('Product AvailableAction token is required before approval can be consumed.')
-    await submitProductAvailableAction(availableAction, {
-      decision,
-      approval_id: pending.approvalId,
-      tool_call_id: pending.toolCallId,
-      required_approval: pending.requiredApproval,
-    })
-    pendingToolApproval.value = null
-  } catch (error) {
-    console.error('工具审批失败', error)
-    ElMessage.error('工具审批失败，请稍后重试')
-  }
-}
-
 const productActionLabel = (action: AvailableAction) => {
   switch (action.action) {
     case 'APPROVE': return '批准'
@@ -1740,23 +1424,6 @@ const submitProductAvailableAction = async (action: AvailableAction, payload: Re
   } finally {
     toolApprovalSubmitting.value = false
   }
-}
-
-const parseCreatedToolId = (text: string) => {
-  const matched = text.match(/\(tool_id=([^)]+)\)/)
-  return matched?.[1] || ''
-}
-
-const refreshToolSelectionsAfterCreation = async (event: WorkspaceStreamEvent) => {
-  const data = event.data || {}
-  const toolName = String(data.tool_name || '')
-  if (event.type !== 'tool_result' || data.ok === false) return
-  if (!['create_remote_api_tool', 'create_cli_tool'].includes(toolName)) return
-  if (!canPickTools.value) return
-  await fetchPlugins()
-  const createdToolId = parseCreatedToolId(String(data.result || data.message || ''))
-  if (createdToolId && !selectedTools.value.includes(createdToolId)) selectedTools.value.push(createdToolId)
-  ElMessage.success(toolName === 'create_remote_api_tool' ? 'API 工具已创建并刷新到当前工具列表。' : 'CLI 工具已创建并刷新到当前工具列表。')
 }
 
 const buildLiveAssistantProgress = () => {
@@ -2308,7 +1975,7 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       await renderAgentProgress()
     }
     await renderAgentProgress()
-    const hasPendingApproval = Boolean(pendingToolApproval.value)
+    const hasAvailableActions = productProjectionStore.sortedAvailableActions.length > 0
     if (runtimeFailure.value) {
       generationFailed = true
       if (messages.value[assistantIndex]) {
@@ -2316,7 +1983,7 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
         setMessageMotion(messages.value[assistantIndex], 'error', 1800)
       }
       pulsePetMood('error', 1800)
-    } else if (hasPendingApproval) {
+    } else if (hasAvailableActions) {
       if (messages.value[assistantIndex]) {
         messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
         setMessageMotion(messages.value[assistantIndex], 'thinking')
@@ -2639,7 +2306,7 @@ onMounted(async () => {
   window.addEventListener('resize', handleViewportResize)
   window.addEventListener('pointerdown', handleAgentPickerPointerDown)
   window.addEventListener('workspace-settings-navigate', handleSettingsNavigateRequest as EventListener)
-  await Promise.all([refreshWorkspaceTaskLifecycleContract(), fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
+  await Promise.all([fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
   const savedDefaults = loadWorkspaceDefaults()
   selectedMode.value = safeQueryValue(route.query.mode, savedDefaults.mode || 'normal') === 'agent' ? 'agent' : 'normal'
   activeAgentName.value = selectedMode.value === 'agent' ? safeQueryValue(route.query.agent_name, '') : ''
@@ -2981,16 +2648,6 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div class="picker-head"><div class="trace-head-copy"><strong>执行进展</strong><small>{{ selectedToolCount > 0 ? `已启用 ${selectedToolCount} 项能力` : '未启用额外工具' }}</small></div></div>
-            <div v-if="pendingToolApproval" class="tool-approval-card" aria-label="工具审批">
-              <div class="tool-approval-copy">
-                <strong>{{ pendingToolApproval.toolId }}</strong>
-                <small>{{ pendingToolApproval.auditRef ? `审计：${pendingToolApproval.auditRef}` : pendingToolApproval.requiredApproval }}</small>
-              </div>
-              <div class="tool-approval-actions">
-                <button type="button" class="tool-approval-button reject" :disabled="toolApprovalSubmitting" @click="submitToolApproval('rejected')">拒绝</button>
-                <button type="button" class="tool-approval-button approve" :disabled="toolApprovalSubmitting" @click="submitToolApproval('approved')">批准</button>
-              </div>
-            </div>
             <div v-if="productProjectionStore.sortedAvailableActions.length > 0" class="tool-approval-card" aria-label="Product Available Actions">
               <div class="tool-approval-copy">
                 <strong>Product Actions</strong>

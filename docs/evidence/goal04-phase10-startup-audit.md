@@ -1242,6 +1242,49 @@ cleanup=dropped
 - 默认本地 `zuno` 数据库的 `20260727_45` stamp 仍是外部环境残留，不再作为 PHASE10 分支迁移 gate 的失败证据；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T29 Product-only Workspace Action Surface
+
+本轮删除默认 Workspace 页面的旧单一 approval / task lifecycle 残留：
+
+- 删除 `pendingToolApproval`、`capturePendingToolApproval` 和 `submitToolApproval`；
+- 删除默认 Workspace 页面对 `getWorkspaceTaskLifecycleAPI`、`workspaceTaskLifecycleStates` 和 `workspaceTaskRecoveryActions` 的初始化依赖；
+- 删除未调用的旧 `WorkspaceStreamEvent` helper，避免继续根据 `approval_required`、`task_failed`、`task_completed`、`recoverable_failed` 或 `data.status/data.phase` 字符串推断运行语义；
+- 默认 Workspace 页只显示 `productProjectionStore.sortedAvailableActions`，并通过 `consumeProductStoreAction` 消费服务端授权的 Product action token。
+
+RED 验证：
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_workspace_page_removes_single_pending_approval_and_status_inference -q
+failed: pendingToolApproval still present in apps/web/src/pages/workspace/defaultPage/defaultPage.vue
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_workspace_page_removes_single_pending_approval_and_status_inference -q
+1 passed
+```
+
+```text
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+20 passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed
+```
+
+```text
+python tools\scripts\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- 本轮新增的是 Product-only action surface 删除证据，不等于 Coordinator Closure Approval；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1290,6 +1333,9 @@ python -m py_compile tools\qa\full-e2e\full_e2e.py tools\scripts\verify_phase10_
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
 ZUNO_CONFIG=<temp phase10 config> python -m alembic -c infra/db/alembic.ini upgrade head
 ZUNO_CONFIG=<temp phase10 config> python -m alembic -c infra/db/alembic.ini current
+python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_workspace_page_removes_single_pending_approval_and_status_inference -q
+python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+npm run build -w zuno-frontend
 ```
 
 未通过 / 未完成：

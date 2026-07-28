@@ -377,10 +377,6 @@ def test_phase10_default_workspace_page_uses_product_projection_path_without_leg
         "const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>",
         "activeRuntimeTaskId.value = productSubmission.receipt.command_id",
         "void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore",
-        "Object.values(productProjectionStore.availableActions).find",
-        "action.action === (decision === 'approved' ? 'APPROVE' : 'DENY')",
-        "if (!availableAction) throw new Error('Product AvailableAction token is required before approval can be consumed.')",
-        "await submitProductAvailableAction(availableAction",
         "await consumeProductStoreAction(action",
         "productProjectionStore.sortedAvailableActions.length > 0",
         "submitProductAvailableAction(action)",
@@ -402,6 +398,36 @@ def test_phase10_default_workspace_page_uses_product_projection_path_without_leg
     assert "workspaceTaskEventsStreamAPI" not in text
     assert "streamWorkspaceTaskEvents" not in text
     assert "approveWorkspaceTaskAPI" not in text
+
+
+def test_phase10_workspace_page_removes_single_pending_approval_and_status_inference() -> None:
+    assert DEFAULT_PAGE.exists()
+    text = DEFAULT_PAGE.read_text(encoding="utf-8")
+
+    forbidden = [
+        "pendingToolApproval",
+        "capturePendingToolApproval",
+        "submitToolApproval",
+        "workspaceTaskLifecycleStates",
+        "workspaceTaskRecoveryActions",
+        "refreshWorkspaceTaskLifecycleContract",
+        "event.type === 'approval_required'",
+        "event.type === 'task_failed'",
+        "event.type === 'task_completed'",
+        "lifecycleState === 'recoverable_failed'",
+        "String(data.status || '').toLowerCase() === 'failed'",
+        "String(data.phase || '').toLowerCase().includes('failed')",
+    ]
+    for phrase in forbidden:
+        assert phrase not in text
+
+    for phrase in [
+        "productProjectionStore.sortedAvailableActions.length > 0",
+        "submitProductAvailableAction(action)",
+        "productSubmission.projection.display_status === 'BLOCKED'",
+        "productSubmission.projection.display_status === 'REFUSED'",
+    ]:
+        assert phrase in text
 
 
 def test_phase10_desktop_bridge_is_versioned_product_surface() -> None:
