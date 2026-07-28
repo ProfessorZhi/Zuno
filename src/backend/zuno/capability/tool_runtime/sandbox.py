@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+import json
+import shutil
+import subprocess
+import tempfile
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 from zuno.platform.contracts import canonical_sha256
 
@@ -82,6 +88,179 @@ class SandboxDispatch:
     dispatch_payload: dict[str, Any]
 
 
+@dataclass(frozen=True, slots=True)
+class SandboxExecutionResult:
+    status: str
+    stdout: str
+    stderr: str
+    exit_code: int
+    output_payload: dict[str, Any]
+
+
+class SandboxRunner:
+    adapter_tier: str
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
+        raise NotImplementedError
+
+
+class DenoPyodideWasmRunner(SandboxRunner):
+    adapter_tier = "WASM_PYTHON"
+
+    def __init__(self, *, deno_executable: str = "deno") -> None:
+        self._deno_executable = deno_executable
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
+        deno_path = shutil.which(self._deno_executable)
+        if deno_path is None:
+            raise SandboxPolicyViolation("Deno executable unavailable for WASM Python sandbox")
+        code = str(args.get("code") or args.get("python") or "")
+        if not code.strip():
+            raise SandboxPolicyViolation("WASM Python sandbox requires explicit code payload")
+        pyodide_entrypoint = str(args.get("pyodide_entrypoint") or "")
+        if not pyodide_entrypoint:
+            raise SandboxPolicyViolation("WASM Python sandbox requires explicit Pyodide entrypoint")
+        profile = dispatch.dispatch_payload["profile"]
+        payload = {
+            "code": code,
+            "profile": profile,
+            "session": dispatch.dispatch_payload["session"],
+        }
+        script = _deno_pyodide_runner_script()
+        with tempfile.NamedTemporaryFile("w", suffix=".mjs", encoding="utf-8", delete=False) as handle:
+            handle.write(script)
+            script_path = handle.name
+        try:
+            completed = subprocess.run(
+                [
+                    deno_path,
+                    "run",
+                    "--quiet",
+                    "--no-prompt",
+                    "--no-config",
+                    "--no-lock",
+                    "--no-npm",
+                    "--no-remote",
+                    "--deny-env",
+                    "--deny-ffi",
+                    "--deny-hrtime",
+                    "--deny-net",
+                    f"--allow-read={script_path},{_deno_read_permission_path(pyodide_entrypoint)}",
+                    "--deny-run",
+                    "--deny-sys",
+                    "--deny-write",
+                    script_path,
+                    pyodide_entrypoint,
+                ],
+                input=json.dumps(payload, ensure_ascii=True, sort_keys=True),
+                text=True,
+                capture_output=True,
+                timeout=int(profile["limits"]["wall_time_seconds"]),
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise SandboxPolicyViolation("WASM Python sandbox timed out") from exc
+        finally:
+            try:
+                import os
+
+                os.unlink(script_path)
+            except OSError:
+                pass
+        stdout = completed.stdout[: int(profile["limits"]["output_bytes"])]
+        stderr = completed.stderr[: int(profile["limits"]["output_bytes"])]
+        return SandboxExecutionResult(
+            status="SUCCEEDED" if completed.returncode == 0 else "FAILED",
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=completed.returncode,
+            output_payload={
+                "sandbox_adapter_tier": "WASM_PYTHON",
+                "stdout": stdout,
+                "stderr": stderr,
+                "exit_code": completed.returncode,
+                "session_ref": dispatch.session_ref,
+            },
+        )
+
+
+class OciProcessSandboxRunner(SandboxRunner):
+    adapter_tier = "OCI_PROCESS"
+
+    def __init__(self, *, docker_executable: str = "docker", image: str = "python:3.12-alpine") -> None:
+        self._docker_executable = docker_executable
+        self._image = image
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
+        docker_path = shutil.which(self._docker_executable)
+        if docker_path is None:
+            raise SandboxPolicyViolation("Docker executable unavailable for OCI process sandbox")
+        command = _command_arg(args)
+        if not command:
+            raise SandboxPolicyViolation("OCI process sandbox requires explicit command payload")
+        profile = dispatch.dispatch_payload["profile"]
+        docker_command = [
+            docker_path,
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--pids-limit",
+            "128",
+            "--memory",
+            f"{int(profile['limits']['memory_mb'])}m",
+            "--cpus",
+            str(max(1, int(profile["limits"]["cpu_seconds"]))),
+            "-u",
+            "65532:65532",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=64m",
+            "--tmpfs",
+            "/workspace:rw,nosuid,size=128m",
+            "--workdir",
+            "/workspace",
+            self._image,
+            "sh",
+            "-lc",
+            command,
+        ]
+        if profile["egress_allowlist"]:
+            raise SandboxPolicyViolation("OCI process sandbox egress allowlist requires a configured proxy")
+        try:
+            completed = subprocess.run(
+                docker_command,
+                text=True,
+                capture_output=True,
+                timeout=int(profile["limits"]["wall_time_seconds"]),
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise SandboxPolicyViolation("OCI process sandbox timed out") from exc
+        except OSError as exc:
+            raise SandboxPolicyViolation(f"OCI process sandbox failed to start: {exc}") from exc
+        stdout = completed.stdout[: int(profile["limits"]["output_bytes"])]
+        stderr = completed.stderr[: int(profile["limits"]["output_bytes"])]
+        if completed.returncode == 125:
+            raise SandboxPolicyViolation(f"OCI process sandbox runtime unavailable: {stderr or stdout}")
+        return SandboxExecutionResult(
+            status="SUCCEEDED" if completed.returncode == 0 else "FAILED",
+            stdout=stdout,
+            stderr=stderr,
+            exit_code=completed.returncode,
+            output_payload={
+                "sandbox_adapter_tier": "OCI_PROCESS",
+                "stdout": stdout,
+                "stderr": stderr,
+                "exit_code": completed.returncode,
+                "session_ref": dispatch.session_ref,
+                "image": self._image,
+            },
+        )
+
+
 class SandboxAdapterRegistry:
     """Deterministic control-plane wrapper for the real sandbox adapters.
 
@@ -89,6 +268,13 @@ class SandboxAdapterRegistry:
     dispatch is allowed only after this registry resolves a concrete target
     adapter profile that matches the canonical PHASE15 sandbox contract.
     """
+
+    def __init__(
+        self,
+        *,
+        runner_factory: Callable[[str], SandboxRunner] | None = None,
+    ) -> None:
+        self._runner_factory = runner_factory or self._default_runner
 
     def prepare(
         self,
@@ -133,6 +319,12 @@ class SandboxAdapterRegistry:
             limits_hash=canonical_sha256(profile.limits.to_payload()),
             dispatch_payload=dispatch_payload,
         )
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
+        runner = self._runner_factory(dispatch.adapter_tier)
+        if runner.adapter_tier != dispatch.adapter_tier:
+            raise SandboxPolicyViolation("sandbox runner tier does not match dispatch profile")
+        return runner.execute(dispatch=dispatch, args=args)
 
     def _resolve_profile(self, *, tool_name: str, adapter_kind: str, args: dict[str, Any]) -> SandboxProfile:
         kind = str(adapter_kind).upper()
@@ -183,6 +375,14 @@ class SandboxAdapterRegistry:
         if profile.adapter_tier == "OCI_PROCESS" and profile.limits.memory_mb <= 0:
             raise SandboxPolicyViolation("OCI process sandbox requires bounded memory")
 
+    @staticmethod
+    def _default_runner(adapter_tier: str) -> SandboxRunner:
+        if adapter_tier == "WASM_PYTHON":
+            return DenoPyodideWasmRunner()
+        if adapter_tier == "OCI_PROCESS":
+            return OciProcessSandboxRunner()
+        raise SandboxPolicyViolation(f"unsupported sandbox adapter tier: {adapter_tier}")
+
 
 def _tuple_arg(args: dict[str, Any], key: str) -> tuple[str, ...]:
     value = args.get(key)
@@ -195,10 +395,49 @@ def _tuple_arg(args: dict[str, Any], key: str) -> tuple[str, ...]:
     return (str(value),)
 
 
+def _command_arg(args: dict[str, Any]) -> str:
+    command = args.get("command") or args.get("shell") or args.get("cmd")
+    if isinstance(command, str):
+        return command
+    if isinstance(command, Sequence) and not isinstance(command, (bytes, bytearray, str)):
+        return " ".join(str(part) for part in command)
+    return ""
+
+
+def _deno_read_permission_path(entrypoint: str) -> str:
+    parsed = urlparse(entrypoint)
+    if parsed.scheme == "file":
+        return unquote(parsed.path)
+    return entrypoint
+
+
+def _deno_pyodide_runner_script() -> str:
+    return """
+const decoder = new TextDecoder();
+let input = "";
+for await (const chunk of Deno.stdin.readable) {
+  input += decoder.decode(chunk);
+}
+const payload = JSON.parse(input || "{}");
+const pyodideEntrypoint = Deno.args[0];
+const pyodide = await import(pyodideEntrypoint);
+if (!pyodide.loadPyodide) {
+  throw new Error("Pyodide entrypoint must export loadPyodide");
+}
+const runtime = await pyodide.loadPyodide({ stdout: (line) => console.log(line), stderr: (line) => console.error(line) });
+const value = await runtime.runPythonAsync(String(payload.code || ""));
+console.log(JSON.stringify({ session: payload.session, value }));
+""".strip()
+
+
 __all__ = [
     "SandboxAdapterRegistry",
     "SandboxDispatch",
+    "SandboxExecutionResult",
     "SandboxLimits",
     "SandboxPolicyViolation",
     "SandboxProfile",
+    "SandboxRunner",
+    "DenoPyodideWasmRunner",
+    "OciProcessSandboxRunner",
 ]

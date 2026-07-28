@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
 from zuno.capability.tool_runtime.invocation_gateway import ToolEffectUnknownError, ToolInvocationGateway
+from zuno.capability.tool_runtime.sandbox import SandboxAdapterRegistry, SandboxDispatch, SandboxExecutionResult, SandboxRunner
 
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
@@ -25,6 +26,20 @@ from zuno.platform.database.tool_runtime import (
     ToolUnitOfWork,
     ToolVersionInput,
 )
+
+
+class _IntegrationSandboxRunner(SandboxRunner):
+    def __init__(self, adapter_tier: str) -> None:
+        self.adapter_tier = adapter_tier
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+        return SandboxExecutionResult(
+            status="SUCCEEDED",
+            stdout="integration sandbox",
+            stderr="",
+            exit_code=0,
+            output_payload={"sandbox_adapter_tier": dispatch.adapter_tier, "session_ref": dispatch.session_ref},
+        )
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -519,7 +534,10 @@ def test_phase16_gateway_records_side_effect_classification_before_blocking(engi
 
 
 def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine) -> None:
-    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        sandbox_registry=SandboxAdapterRegistry(runner_factory=lambda tier: _IntegrationSandboxRunner(tier)),
+    )
     dispatched = False
 
     async def executor() -> dict[str, str]:

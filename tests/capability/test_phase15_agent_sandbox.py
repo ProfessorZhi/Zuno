@@ -2,8 +2,32 @@ from __future__ import annotations
 
 import pytest
 
-from zuno.capability.tool_runtime import SandboxAdapterRegistry
-from zuno.capability.tool_runtime.sandbox import SandboxPolicyViolation, SandboxProfile
+from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner
+from zuno.capability.tool_runtime.sandbox import (
+    DenoPyodideWasmRunner,
+    OciProcessSandboxRunner,
+    SandboxDispatch,
+    SandboxPolicyViolation,
+    SandboxProfile,
+)
+
+
+class _FakeRunner(SandboxRunner):
+    def __init__(self, adapter_tier: str) -> None:
+        self.adapter_tier = adapter_tier
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+        return SandboxExecutionResult(
+            status="SUCCEEDED",
+            stdout="sandboxed",
+            stderr="",
+            exit_code=0,
+            output_payload={
+                "tier": dispatch.adapter_tier,
+                "code": args.get("code", ""),
+                "session_ref": dispatch.session_ref,
+            },
+        )
 
 
 def test_phase15_wasm_python_sandbox_is_deny_by_default_and_observation_only() -> None:
@@ -67,3 +91,56 @@ def test_phase15_sandbox_registry_fails_closed_when_profile_violates_deny_defaul
 
     with pytest.raises(SandboxPolicyViolation, match="deny environment"):
         SandboxAdapterRegistry._validate_profile(profile)
+
+
+def test_phase15_sandbox_registry_executes_matching_runner_contract() -> None:
+    registry = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier))
+    dispatch = registry.prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-python-execute",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+
+    result = registry.execute(dispatch=dispatch, args={"code": "print(42)"})
+
+    assert result.status == "SUCCEEDED"
+    assert result.output_payload["tier"] == "WASM_PYTHON"
+    assert result.output_payload["session_ref"] == dispatch.session_ref
+
+
+def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(monkeypatch) -> None:
+    monkeypatch.setattr("shutil.which", lambda _name: None)
+    dispatch = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier)).prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-runtime-missing",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+
+    with pytest.raises(SandboxPolicyViolation, match="Deno executable unavailable"):
+        DenoPyodideWasmRunner().execute(
+            dispatch=dispatch,
+            args={"code": "print(42)", "pyodide_entrypoint": "file:///opt/zuno/pyodide/pyodide.mjs"},
+        )
+
+    oci_dispatch = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier)).prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-oci-missing",
+        tool_name="compiler.run",
+        adapter_kind="CLI",
+        args={"command": "python -V"},
+    )
+    with pytest.raises(SandboxPolicyViolation, match="Docker executable unavailable"):
+        OciProcessSandboxRunner().execute(dispatch=oci_dispatch, args={"command": "python -V"})

@@ -143,7 +143,7 @@ requirements:
     legacy_bypass_status: "Bypass guard still present; PHASE22 cleanup pending."
     verdict: GAP
     repair_pr: "Repair PR PHASE15"
-    closure_evidence: ""
+    closure_evidence: "docs/evidence/goal05-phase15-sandbox-repair.md (partial; runtime blocked)"
   - requirement_id: ARCH-SEC-SANDBOX-MANDATORY-GOAL05
     owner_module: "09 Security"
     owner_phase: PHASE15
@@ -158,7 +158,7 @@ requirements:
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: GAP
     repair_pr: "Repair PR PHASE15 / PR C"
-    closure_evidence: ""
+    closure_evidence: "docs/evidence/goal05-phase15-sandbox-repair.md (partial; runtime blocked)"
   - requirement_id: ARCH-OBS-MANDATORY-GOAL05
     owner_module: "10 Observability & Eval"
     owner_phase: PHASE20
@@ -188,4 +188,4 @@ requirements:
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: GAP
     repair_pr: "Repair PR PHASE15"
-    closure_evidence: ""
+    closure_evidence: "docs/evidence/goal05-phase15-sandbox-repair.md (partial; runtime blocked)"

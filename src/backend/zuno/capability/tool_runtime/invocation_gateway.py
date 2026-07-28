@@ -34,7 +34,7 @@ from zuno.platform.security import (
     redact_sensitive_payload,
 )
 from .effect_policy import classify_tool_effect
-from .sandbox import SandboxAdapterRegistry, SandboxPolicyViolation
+from .sandbox import SandboxAdapterRegistry, SandboxExecutionResult, SandboxPolicyViolation
 
 
 class ToolEffectUnknownError(RuntimeError):
@@ -291,7 +291,7 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
-                    sandbox_blocked_reason = self._prepare_sandbox_or_block(
+                    sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
                         tenant_id=tenant_id,
                         workspace_id=workspace_id,
                         trace_id=trace_id,
@@ -318,7 +318,7 @@ class ToolInvocationGateway:
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
                     try:
-                        result = await executor()
+                        result = sandbox_result.output_payload if sandbox_result is not None else await executor()
                     except ToolEffectUnknownError as exc:
                         unknown_payload = _unknown_effect_payload(exc=exc, call_id=call_id)
                         self._record_terminal(
@@ -698,7 +698,7 @@ class ToolInvocationGateway:
             return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
 
         try:
-            sandbox_blocked_reason = self._prepare_sandbox_or_block(
+            sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
                 tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 trace_id=trace_id,
@@ -723,7 +723,7 @@ class ToolInvocationGateway:
                     payload={"blocked": True, "reason": sandbox_blocked_reason},
                 )
                 return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
-            result = await executor()
+            result = sandbox_result.output_payload if sandbox_result is not None else await executor()
         except Exception as exc:
             self._record_terminal(
                 tenant_id=tenant_id,
@@ -856,7 +856,7 @@ class ToolInvocationGateway:
         prepared_id: str,
         attempt_id: str,
         receipt_id: str,
-    ) -> str:
+    ) -> tuple[str, SandboxExecutionResult | None]:
         try:
             sandbox = self._sandbox_registry.prepare(
                 tenant_id=tenant_id,
@@ -868,12 +868,15 @@ class ToolInvocationGateway:
                 adapter_kind=adapter_kind,
                 args=redact_sensitive_payload(args),
             )
+            sandbox_result = self._sandbox_registry.execute(dispatch=sandbox, args=redact_sensitive_payload(args))
         except SandboxPolicyViolation as exc:
-            return str(exc)
+            return str(exc), None
         payload = dict(sandbox.dispatch_payload)
         payload["prepared_tool_action_id"] = prepared_id
         payload["attempt_id"] = attempt_id
         payload["execution_receipt_id"] = receipt_id
+        payload["sandbox_execution"] = sandbox_result.output_payload
+        payload["sandbox_execution_status"] = sandbox_result.status
         with self._unit_of_work_factory() as repo:
             repo.record_attempt(
                 ToolAttemptInput(
@@ -912,7 +915,9 @@ class ToolInvocationGateway:
                     receipt_payload=payload,
                 )
             )
-        return ""
+        if sandbox_result.status != "SUCCEEDED":
+            return "sandbox execution failed", None
+        return "", sandbox_result
 
     def _issue_secret_lease(
         self,
