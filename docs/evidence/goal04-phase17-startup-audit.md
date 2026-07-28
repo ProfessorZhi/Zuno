@@ -426,3 +426,34 @@ python -m pytest tests\agent\dag\test_phase17_replan_barrier.py -q -p no:cachepr
 - 该切片完成 Replan Barrier 的 deterministic domain request；
 - 尚未实现 Replan Barrier PostgreSQL persistence、默认 runtime barrier 执行、LangGraph Send worker 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T12 Replan Barrier PostgreSQL Persistence Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 append-only migration `infra/db/alembic/versions/20260728_49_phase17_replan_barriers.py`，并扩展 `src/backend/zuno/platform/database/agent/domain.py`：
+
+- 新增 `agent_replan_barriers`，绑定 `agent_domain_runs` 和 `agent_plan_versions`；
+- 表约束强制 positive execution epoch、`next_execution_epoch > execution_epoch`、`freeze_new_dispatch=true`、`new_plan_version_required=true`、`retry_permitted=false`；
+- 保存 source control decision id/hash、step decisions、barrier hash 和状态；
+- `AgentDomainRepository.record_replan_barrier_request(...)` 以 barrier hash 幂等记录 barrier request，冲突 hash fail closed；
+- `schema_registry.py` 将 `agent_replan_barriers` 归属到 Agent Core / Planning & Control；
+- integration test 证明 failed JoinOutcome 先进入 `JoinControlDecisionEngine`，再经 `ReplanBarrierBuilder` 生成 barrier，并在同一 UoW 中落库；重复写入返回 `duplicate:REQUESTED`。
+
+验证：
+
+```text
+python -m py_compile infra\db\alembic\versions\20260728_49_phase17_replan_barriers.py src\backend\zuno\platform\database\agent\domain.py src\backend\zuno\platform\database\schema_registry.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+4 passed
+```
+
+边界：
+
+- 该切片完成 Replan Barrier PostgreSQL persistence；
+- 尚未实现默认 runtime barrier 执行、LangGraph Send worker 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

@@ -10,6 +10,7 @@ DOMAIN_TABLE_OWNERS = {
     "agent_dispatch_groups": "Agent Core / Planning & Control",
     "agent_dispatch_items": "Agent Core / Planning & Control",
     "agent_join_outcomes": "Agent Core / Planning & Control",
+    "agent_replan_barriers": "Agent Core / Planning & Control",
     "agent_step_runs": "Agent Core / Planning & Control",
     "agent_skill": "Capability / Skill",
     "dialog": "Product Surface",

@@ -132,6 +132,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     join_outcome_migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_48_phase17_join_outcomes.py"
     ).read_text(encoding="utf-8")
+    replan_barrier_migration = (
+        REPO_ROOT / "infra/db/alembic/versions/20260728_49_phase17_replan_barriers.py"
+    ).read_text(encoding="utf-8")
     repository = (
         REPO_ROOT / "src/backend/zuno/platform/database/agent/domain.py"
     ).read_text(encoding="utf-8")
@@ -256,3 +259,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "test_phase17_replan_barrier_freezes_dispatch_and_advances_epoch" in replan_barrier_tests
     assert "test_phase17_replan_barrier_assigns_cancel_drain_and_terminal_actions" in replan_barrier_tests
     assert "test_phase17_replan_barrier_hash_fences_mutation" in replan_barrier_tests
+    assert "P17-T12 Replan Barrier PostgreSQL Persistence Slice" in evidence
+    assert "20260728_49" in replan_barrier_migration
+    assert "agent_replan_barriers" in replan_barrier_migration
+    assert "def record_replan_barrier_request" in repository
+    assert "duplicate:REQUESTED" in persistence_tests
+    assert "test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary" in persistence_tests

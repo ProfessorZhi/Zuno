@@ -29,6 +29,7 @@ from zuno.agent.runtime.planning.dispatch import DispatchCommit
 from zuno.agent.runtime.planning.branch_result import BranchResultRef
 from zuno.platform.database.foundation import InfrastructureRepository
 from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
+from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierRequest
 
 
 class AgentDomainPersistenceError(RuntimeError):
@@ -647,6 +648,68 @@ class AgentDomainRepository:
                 return AgentDomainReceipt(join_outcome_id, f"duplicate:{existing['decision']}", 1)
             raise AgentDomainConflict(f"conflicting JoinOutcome for {join_outcome_id}")
         return AgentDomainReceipt(join_outcome_id, outcome.decision.value, 1)
+
+    def record_replan_barrier_request(
+        self,
+        *,
+        tenant_id: str,
+        barrier: ReplanBarrierRequest,
+    ) -> AgentDomainReceipt:
+        params = {
+            "barrier_id": barrier.barrier_id,
+            "tenant_id": tenant_id,
+            "run_id": barrier.run_id,
+            "plan_id": barrier.plan_id,
+            "plan_version_id": barrier.plan_version_id,
+            "execution_epoch": barrier.execution_epoch,
+            "source_control_decision_id": barrier.source_control_decision_id,
+            "source_control_decision_hash": barrier.source_control_decision_hash,
+            "status": barrier.status.value,
+            "freeze_new_dispatch": barrier.freeze_new_dispatch,
+            "new_plan_version_required": barrier.new_plan_version_required,
+            "retry_permitted": barrier.retry_permitted,
+            "next_execution_epoch": barrier.next_execution_epoch,
+            "step_decisions": json.dumps(
+                [decision.model_dump(mode="json") for decision in barrier.step_decisions],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "barrier_hash": barrier.barrier_hash,
+        }
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_replan_barriers(
+                    barrier_id, tenant_id, run_id, plan_id, plan_version_id,
+                    execution_epoch, source_control_decision_id, source_control_decision_hash,
+                    status, freeze_new_dispatch, new_plan_version_required,
+                    retry_permitted, next_execution_epoch, step_decisions, barrier_hash
+                ) VALUES (
+                    :barrier_id, :tenant_id, :run_id, :plan_id, :plan_version_id,
+                    :execution_epoch, :source_control_decision_id, :source_control_decision_hash,
+                    :status, :freeze_new_dispatch, :new_plan_version_required,
+                    :retry_permitted, :next_execution_epoch, CAST(:step_decisions AS JSON), :barrier_hash
+                )
+                ON CONFLICT (barrier_id) DO NOTHING
+                """
+            ),
+            params,
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT barrier_id, barrier_hash, status
+                    FROM agent_replan_barriers
+                    WHERE barrier_id = :barrier_id
+                    """
+                ),
+                {"barrier_id": barrier.barrier_id},
+            ).mappings().first()
+            if existing and existing["barrier_hash"] == barrier.barrier_hash:
+                return AgentDomainReceipt(barrier.barrier_id, f"duplicate:{existing['status']}", 1)
+            raise AgentDomainConflict(f"conflicting ReplanBarrier for {barrier.barrier_id}")
+        return AgentDomainReceipt(barrier.barrier_id, barrier.status.value, 1)
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)

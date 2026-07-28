@@ -32,7 +32,10 @@ from zuno.agent.runtime.planning import (
     DynamicPlanResourceClaim,
     DynamicPlanResourceMode,
     DynamicPlanStep,
+    JoinControlDecisionEngine,
     ReadySetBuilder,
+    ReplanBarrierBuilder,
+    StepRunStatus,
 )
 from zuno.platform.database.agent import AgentDomainUnitOfWork
 from zuno.platform.database.foundation import create_foundation_engine
@@ -72,6 +75,7 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_replan_barriers,
                     agent_branch_result_refs,
                     agent_join_outcomes,
                     agent_dispatch_items,
@@ -481,3 +485,120 @@ def test_phase17_join_outcome_persistence_records_reducer_decision(engine) -> No
     assert [item["dynamic_step_id"] for item in row["reduced_results"]] == ["collect", "enrich"]
     assert row["duplicate_result_ids"] == []
     assert row["outcome_hash"] == outcome.outcome_hash
+
+
+def test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(
+        proposal,
+        admission,
+        run_id=run.run_id,
+        execution_epoch=1,
+    )
+    failed_join = BranchResultReducer().reduce(
+        plan_id=proposal.plan_id,
+        plan_version_id=plan.plan_version_id,
+        join_policy=DynamicPlanJoinPolicy.FAIL_FAST,
+        expected_branch_count=2,
+        branch_results=(
+            BranchReductionInput(
+                branch_result=BranchResultFencer().accept(
+                    BranchResultSubmission(
+                        branch_result_id="branch-result:p17:barrier:collect",
+                        step_run_id=commit.step_runs[0].step_run_id,
+                        run_id=commit.step_runs[0].run_id,
+                        plan_version_id=commit.step_runs[0].plan_version_id,
+                        dynamic_step_id=commit.step_runs[0].dynamic_step_id,
+                        execution_epoch=commit.step_runs[0].execution_epoch,
+                        attempt_no=commit.step_runs[0].attempt_no,
+                        step_hash=commit.step_runs[0].step_hash,
+                        result_ref="object://agent-results/p17/barrier/collect.json",
+                        result_hash="f" * 64,
+                        producer_ref="langgraph-send:collect",
+                    ),
+                    step_run=commit.step_runs[0],
+                    active_plan_version_id=plan.plan_version_id,
+                    active_execution_epoch=1,
+                ).branch_result,
+                terminal_status=BranchTerminalStatus.FAILED,
+            ),
+        ),
+    )
+    control_decision = JoinControlDecisionEngine().decide(outcome=failed_join)
+    barrier = ReplanBarrierBuilder().build(
+        run_id=run.run_id,
+        control_decision=control_decision,
+        execution_epoch=1,
+        step_runs=tuple(
+            step_run.model_copy(
+                update={
+                    "status": StepRunStatus.RUNNING
+                    if step_run.dynamic_step_id == "collect"
+                    else StepRunStatus.QUEUED
+                }
+            )
+            for step_run in commit.step_runs
+        ),
+        non_interruptible_step_ids=("collect",),
+    )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+        receipt = repo.record_replan_barrier_request(tenant_id=goal.tenant_id, barrier=barrier)
+        duplicate = repo.record_replan_barrier_request(tenant_id=goal.tenant_id, barrier=barrier)
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT
+                    barrier_id,
+                    status,
+                    freeze_new_dispatch,
+                    new_plan_version_required,
+                    retry_permitted,
+                    execution_epoch,
+                    next_execution_epoch,
+                    step_decisions,
+                    barrier_hash
+                FROM agent_replan_barriers
+                """
+            )
+        ).mappings().one()
+
+    assert receipt.status == "REQUESTED"
+    assert duplicate.status == "duplicate:REQUESTED"
+    assert row["barrier_id"] == barrier.barrier_id
+    assert row["freeze_new_dispatch"] is True
+    assert row["new_plan_version_required"] is True
+    assert row["retry_permitted"] is False
+    assert row["execution_epoch"] == 1
+    assert row["next_execution_epoch"] == 2
+    assert row["barrier_hash"] == barrier.barrier_hash
+    assert [item["action"] for item in row["step_decisions"]] == [
+        "DRAIN_NON_INTERRUPTIBLE",
+        "CANCEL_BEFORE_SEND",
+    ]

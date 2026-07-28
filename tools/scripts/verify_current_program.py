@@ -318,6 +318,9 @@ def verify_current_program() -> list[str]:
     join_outcome_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_48_phase17_join_outcomes.py"
     )
+    replan_barrier_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_49_phase17_replan_barriers.py"
+    )
     agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
@@ -442,6 +445,7 @@ def verify_current_program() -> list[str]:
                 + dispatch_migration
                 + branch_result_migration
                 + join_outcome_migration
+                + replan_barrier_migration
                 + agent_repository
                 + dispatch_persistence_tests
             ),
@@ -540,6 +544,12 @@ def verify_current_program() -> list[str]:
                 "test_phase17_replan_barrier_freezes_dispatch_and_advances_epoch",
                 "test_phase17_replan_barrier_assigns_cancel_drain_and_terminal_actions",
                 "test_phase17_replan_barrier_hash_fences_mutation",
+                "P17-T12 Replan Barrier PostgreSQL Persistence Slice",
+                "20260728_49_phase17_replan_barriers",
+                "agent_replan_barriers",
+                "record_replan_barrier_request",
+                "duplicate:REQUESTED",
+                "test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )
