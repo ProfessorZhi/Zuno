@@ -712,7 +712,7 @@ passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings 
 
 已更新：
 
-- `infra/db/alembic/versions/20260727_42_goal04_product_agent_editor_payloads.py`
+- `infra/db/alembic/versions/20260728_50_goal04_product_agent_editor_payloads.py`
 - `src/backend/zuno/platform/database/product/domain.py`
 - `src/backend/zuno/platform/database/product/__init__.py`
 - `src/backend/zuno/api/services/product/command_service.py`
@@ -731,7 +731,7 @@ passed；Vite chunk-size / Sass legacy-js-api / Rollup PURE annotation warnings 
 - Product Service 新增 `load_agent_studio_snapshot`，返回 definition / draft / version / catalog / configuration 快照；
 - Product API 新增 `GET /api/v1/product/agent-studio/{agent_definition_id}`，前端编辑页用它恢复表单；
 - Agent Editor 删除旧 `getAgentByIdAPI`，改为只读 Product snapshot 后填充表单；
-- 迁移合同测试新增对 20260727_42 migration 的校验，避免配置 payload 列被后续改掉。
+- 迁移合同测试新增对 20260728_50 migration 的校验，避免配置 payload 列被后续改掉。
 
 仍未完成：
 
@@ -850,7 +850,7 @@ passed
 - `tools/scripts/run-desktop-smoke.ps1`
 - `src/backend/zuno/platform/database/product/domain.py`
 - `src/backend/zuno/api/services/product/command_service.py`
-- `infra/db/alembic/versions/20260727_43_goal04_product_agent_definition_description.py`
+- `infra/db/alembic/versions/20260728_51_goal04_product_agent_definition_description.py`
 - `tests/tools/test_launcher_scripts.py`
 - `tests/repo/test_goal03_wave_a_migration_contract.py`
 
@@ -864,7 +864,7 @@ passed
 Desktop smoke 暴露的真实后端缺口：
 
 - Product Catalog API 初次从桌面 renderer 请求时返回 HTTP 200 包裹的 `status_code=500`，根因是 repository 查询 `product_agent_definitions.description`，但当前 tracked Alembic schema 未创建该列；
-- 已追加 append-only migration `20260727_43_goal04_product_agent_definition_description.py`，并让 Product repository / ProductService 在 AgentDefinition 创建时写入 description，避免 Catalog projection 丢字段。
+- 已追加 append-only migration `20260728_51_goal04_product_agent_definition_description.py`，并让 Product repository / ProductService 在 AgentDefinition 创建时写入 description，避免 Catalog projection 丢字段。
 
 本轮验证：
 
@@ -884,7 +884,7 @@ python -m pytest tests\\repo\\test_goal03_wave_a_migration_contract.py::test_goa
 ```
 
 ```text
-python -m py_compile src\\backend\\zuno\\platform\\database\\product\\domain.py src\\backend\\zuno\\api\\services\\product\\command_service.py infra\\db\\alembic\\versions\\20260727_43_goal04_product_agent_definition_description.py
+python -m py_compile src\\backend\\zuno\\platform\\database\\product\\domain.py src\\backend\\zuno\\api\\services\\product\\command_service.py infra\\db\\alembic\\versions\\20260728_51_goal04_product_agent_definition_description.py
 passed
 ```
 
@@ -898,7 +898,7 @@ Alembic 状态：
 
 ```text
 python -m alembic -c infra\\db\\alembic.ini heads
-20260727_43 (head)
+20260728_51 (head)
 ```
 
 ```text
@@ -906,7 +906,7 @@ python -m alembic -c infra\\db\\alembic.ini upgrade head
 failed
 exception: Can't locate revision identified by '20260727_45'
 first relevant stack frame: Alembic version resolution before upgrade execution
-environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260727_43
+environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260728_51
 recovery used for runtime smoke only: ALTER TABLE product_agent_definitions ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT ''; ALTER COLUMN description DROP DEFAULT
 ```
 
@@ -1231,14 +1231,14 @@ python -m alembic -c infra/db/alembic.ini upgrade head
 upgrade_returncode=0
 python -m alembic -c infra/db/alembic.ini current
 current_returncode=0
-20260727_43 (head)
+20260728_51 (head)
 cleanup=dropped
 ```
 
 结论：
 
-- 当前分支 Alembic 单一 head 仍为 `20260727_43`；
-- 当前分支可从空 PostgreSQL 数据库 `upgrade head` 到 `20260727_43`；
+- 当前分支 Alembic 单一 head 仍为 `20260728_51`；
+- 当前分支可从空 PostgreSQL 数据库 `upgrade head` 到 `20260728_51`；
 - 默认本地 `zuno` 数据库的 `20260727_45` stamp 仍是外部环境残留，不再作为 PHASE10 分支迁移 gate 的失败证据；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
@@ -1415,7 +1415,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
 python -m pytest tests\tools\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check tests\tools\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode -q
 node --check apps\desktop\main.cjs
 python -m pytest tests\repo\test_goal03_wave_a_migration_contract.py::test_goal04_product_agent_definition_description_migration_repairs_catalog_projection -q
-python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py infra\db\alembic\versions\20260727_43_goal04_product_agent_definition_description.py
+python -m py_compile src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\product\command_service.py infra\db\alembic\versions\20260728_51_goal04_product_agent_definition_description.py
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-desktop-smoke.ps1
 python -m pytest tests\tools\test_launcher_scripts.py tests\repo\test_goal03_wave_a_migration_contract.py tests\api\test_goal03_product_route.py -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_product_runtime_cutover_modes_are_explicit_and_rollback_fail_closed -q
@@ -1474,9 +1474,9 @@ command: python -m alembic -c infra\db\alembic.ini upgrade head
 status: resolved with branch-scoped temporary PostgreSQL database
 previous_exception: Can't locate revision identified by '20260727_45'
 first relevant stack frame: Alembic version resolution before upgrade execution
-environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260727_43
+environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260728_51
 recovery_used: create temporary PostgreSQL database, point Alembic at it with ZUNO_CONFIG, run upgrade head/current, then drop the temporary database
-result: 20260727_43 (head)
+result: 20260728_51 (head)
 ```
 
 ```text

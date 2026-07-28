@@ -1,7 +1,7 @@
 """add product agent definition description
 
-Revision ID: 20260727_43
-Revises: 20260727_42
+Revision ID: 20260728_51
+Revises: 20260728_50
 Create Date: 2026-07-27 00:00:00.000000
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 
 
-revision = "20260727_43"
-down_revision = "20260727_42"
+revision = "20260728_51"
+down_revision = "20260728_50"
 branch_labels = None
 depends_on = None
 

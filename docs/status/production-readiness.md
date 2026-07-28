@@ -24,8 +24,8 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE16 completed：Goal04 PR B 已完成 Tool Side Effect and Reconciliation Coordinator Closure 并通过 merge commit `d78426171df0591643af12549a36214a24734f7c` 合并到 main；P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay 均有本地证据；不代表 production ready。
 - PHASE17 completed：Goal04 PR C 已通过 merge commit `4d14ae9e8cd953359c82e51d55279cc123ab47ae` 合并到 main；证据为 `docs/evidence/goal04-phase17-coordinator-closure.md` 和 `docs/evidence/goal04-phase17-startup-audit.md`，Alembic head 为 `20260728_49`；不代表 production ready。
 - PHASE18 completed：Goal04 PR D 已完成 Agentic GraphRAG Inner Loop Coordinator Closure 并通过 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main；证据为 `docs/evidence/goal04-phase18-coordinator-closure.md`、`docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md` 和 `docs/evidence/goal04-phase18-startup-audit.md`；固定 KnowledgeRetrievalGraph、RetrievalPlan/Round、Profile、multi-retriever dispatch plan、EvidenceLedger/Frontier、Corrective Retrieval、KnowledgeControlProposal、Agent Core accept/reject gate 和默认 PHASE18 runtime path 均有本地验证；不代表 PHASE20 quality gate 或 production readiness。
-- PHASE10 in_progress：Goal04 PR A 已完成 Web/Desktop Product Contract、Product API client、projection-first store、SSE resume/resync、multi interrupt / AvailableAction UI、Evidence/Citation/Artifact/Quality/Blocked view、Desktop versioned bridge、Browser cutover smoke、Desktop smoke、build/lint 和 branch-scoped Alembic upgrade gate 的本地证据；正在基于 PHASE18 合并后的最新 main 收口；仍等待 Coordinator Closure Approval，不代表 PHASE10 completed。
-- current_phase = PHASE10；PHASE19–22 不得提前冒充 Current。
+- PHASE10 completed：Goal04 PR A 已完成 Web/Desktop Product Adaptation Coordinator Closure；证据为 `docs/evidence/goal04-phase10-coordinator-closure.md` 和 `docs/evidence/goal04-phase10-startup-audit.md`；Web/Desktop Product Contract、Product API client、projection-first store、SSE resume/resync、multi interrupt / AvailableAction UI、Evidence/Citation/Artifact/Quality/Blocked view、Desktop versioned bridge、Browser cutover smoke、Desktop smoke、build/lint、legacy DTO/action/bridge removal、rollback fail-closed 和 Alembic clean upgrade 均有本地证据；不代表 production ready。
+- current_phase = PHASE19；PHASE19 尚未启动，PHASE20–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
@@ -39,7 +39,7 @@ Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；P
 
 ## Goal04 PR A / D Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main，证据为 `docs/evidence/goal04-phase18-coordinator-closure.md`。PHASE10 PR A 当前只证明 Web/Desktop Product Adaptation 的 `in_progress` 实现证据正在基于最新 main 收口。除非 Coordinator 在独立 Closure Commit 中批准，否则不得把 PHASE10、Goal04 或 production readiness 写成 completed；PHASE19 必须等待 PHASE10 和 PHASE18 都完成且合并后才能启动。
+PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main。PHASE10 PR A 已完成 Coordinator Closure；PR #47 合并到 main 后，PHASE19 可以创建独立分支并启动。当前不得把 Goal04 或 production readiness 写成 completed。
 
 PHASE08 当前保留的部分证据：
 

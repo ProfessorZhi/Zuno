@@ -1,7 +1,7 @@
 """add product agent editor payload snapshots
 
-Revision ID: 20260727_42
-Revises: 20260727_41
+Revision ID: 20260728_50
+Revises: 20260728_49
 Create Date: 2026-07-27 00:00:00.000000
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 
 
-revision = "20260727_42"
-down_revision = "20260727_41"
+revision = "20260728_50"
+down_revision = "20260728_49"
 branch_labels = None
 depends_on = None
 

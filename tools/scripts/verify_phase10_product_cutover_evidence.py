@@ -252,7 +252,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T31 Desktop Legacy Workspace Bridge Removal",
         "P10-T32 Product Runtime Batch Legacy DTO Guard",
         "PHASE10 仍为 `in_progress`",
-        "20260727_43 (head)",
+        "20260728_51 (head)",
         "temporary PostgreSQL database",
         "shadow/canary/default-new/rollback 仍缺完整闭环",
     ):
