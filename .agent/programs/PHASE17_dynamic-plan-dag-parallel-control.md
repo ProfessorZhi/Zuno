@@ -108,7 +108,7 @@ alembic_head: 20260728_49
 
 2026-07-28 Coordinator Closure 确认 PHASE17 mandatory scope 已完整进入默认动态运行路径：`DynamicPlanRuntimeController.dispatch_ready_steps` 通过 ReadySet、Admission、DispatchCommitBuilder 和 PostgreSQL `record_dispatch_commit` 实现 commit-before-send；LangGraph Send、dynamic step worker、BranchResultRef、Reducer、JoinPolicy、ControlDecision、Replan Barrier、Barrier Execution 和 Restart Parallel Recovery 均有 focused test 与 PostgreSQL integration evidence。
 
-该 closure 只关闭 PHASE17。PHASE18 仍必须等待 PR C merge 到 main 后才能启动；Goal04 未完成，production readiness 未建立。
+该 closure 只关闭 PHASE17。PR C 已通过 `4d14ae9e8cd953359c82e51d55279cc123ab47ae` 合并到 main，PHASE18 已在 PR D 分支启动；Goal04 未完成，production readiness 未建立。
 
 ## Validation
 

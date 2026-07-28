@@ -1,13 +1,36 @@
 # PHASE18 Agentic GraphRAG Inner Loop
 
 phase_id: PHASE18
-status: planned
+status: completed
 depends_on: PHASE12, PHASE17
 owner: Module 03 Knowledge / Agentic GraphRAG
 
 ## Phase 目标
 
 实现固定 KnowledgeRetrievalGraph 与动态 RetrievalPlan/Round，支持 Standard/Local/Global/DRIFT/Deep/Agentic Profile、BM25/Vector/Entity/Relation/Path/Community Retriever、Fusion/Rerank、EvidenceLedger/Frontier、Quality Verdict、Corrective Retrieval 和 KnowledgeControlProposal。内层纠正不得直接修改 Agent Plan。
+
+## Goal04 PR D Startup
+
+status: in_progress
+branch: codex/goal04-phase18-agentic-graphrag
+base_main_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae
+startup_evidence: docs/evidence/goal04-phase18-startup-audit.md
+alembic_head_at_start: 20260728_49
+
+2026-07-28 PHASE17 PR C 已合并到 main，PHASE18 依赖满足并启动一次性 startup audit。Frozen Gap List 已冻结 P18-T01 至 P18-T08；startup audit 仍只表示 PHASE18 启动，不单独证明 completed、quality proven 或 production ready。
+
+## Goal04 PR D Closure
+
+status: completed
+coordinator_approval: approved
+closure_evidence: docs/evidence/goal04-phase18-coordinator-closure.md
+branch: codex/goal04-phase18-agentic-graphrag
+base_main_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae
+head_sha: 42a77f9fccf0b328bb48098eb6b16dcad883abcd
+
+PHASE18 PR D 已完成 P18-T01 至 P18-T08：固定 KnowledgeRetrievalGraph、动态 RetrievalPlan/Round、STANDARD/LOCAL/GLOBAL/DRIFT/DEEP/AGENTIC Profile、BM25/Vector/Entity/Relation/Path/Community dispatch plan、EvidenceLedger/Frontier、Quality Verdict、Corrective Retrieval、KnowledgeControlProposal、Agent Core accept/reject gate、WorkspaceTaskRuntimeService 默认 PHASE18 路径、product_baseline retrieval probe 和应用层 KnowledgeQueryService PHASE18 trace adapter 均有代码和聚焦验证证据。
+
+本 closure 只关闭 PHASE18。PHASE10 仍需在 PHASE18 合并后的最新 main 上完成并合并；PHASE19 仍必须等待 PHASE10 与 PHASE18 都进入 main 后才能启动。PHASE18 不声明 Agentic GraphRAG 相对 baseline 的质量提升，quality / release gate 仍等待 PHASE20/22；production readiness 未建立。
 
 ## Minimal Read Set
 
@@ -62,6 +85,8 @@ docs/evidence/**
 - Goal：实现 validate→pin snapshot→scope→interpret→select profile→plan round→admit→dispatch→normalize→fuse→ledger→evaluate→decide。
 - Tests：state schema、round immutability、restart、deadline、cancel、invalid snapshot。
 - Acceptance：RetrievalRound 不修改 Agent PlanVersion。
+- 2026-07-28 closure：固定 `KnowledgeRetrievalGraph` trace、内部 profile、`KnowledgeControlProposal` 和 `KnowledgeStepExecutor` observation metadata 已完成；验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md` 和 `docs/evidence/goal04-phase18-coordinator-closure.md`。
+- 2026-07-28 progress：`RetrievalPlan` / `RetrieverDispatchPlan` 已接入 `plan_round/admit/dispatch` trace，预算耗尽时阻断 dispatch 并输出 proposal；验证见同一 evidence 文件。
 
 ### P18-T03 Graph Entity/Relation/Path/Community Runtime
 - Goal：实现 entity resolution、relation/path traversal、local/global/community summary、source grounding。
@@ -72,6 +97,7 @@ docs/evidence/**
 - Goal：实现 follow-up branch、parallel retriever batch、budget/branch cap、partial failure。
 - Tests：branch explosion、low yield、retriever timeout、duplicate candidate、late result。
 - Acceptance：使用 Knowledge 内部 dispatch，不混用 Agent Plan DAG 事实。
+- 2026-07-28 closure：Deep profile 已产生 BM25/Vector/Entity/Relation/Path/Community retriever dispatch plan，并记录 budget、timeout 和 parallel group；`RetrieverAttemptResult` 覆盖 required retriever timeout / index unavailable、budget exhausted 和 optional graph late-result fencing；BM25/Vector 失败阻断 normalize，optional graph late result 不进入 EvidenceLedger。验证见 `docs/evidence/goal04-phase18-coordinator-closure.md`。
 
 ### P18-T05 Fusion, Rerank and Rank Lineage
 - Goal：记录 raw/fused/reranked rank、score normalization、dropped reason、gold evidence loss。
@@ -82,6 +108,9 @@ docs/evidence/**
 - Goal：累计 coverage、authority、temporal、conflict、citation availability、novel evidence yield 和 stopping criteria。
 - Tests：insufficient coverage、conflict unresolved、no new evidence、budget exhausted、strict citation missing。
 - Acceptance：Verdict 是 Knowledge 事实，不是 Agent ControlDecision。
+- 2026-07-28 closure：Durable port 已使用稳定 QueryRun/Round id 与 `strict_evidence_ids` 进行 idempotent replay，重复请求不会重复写 strict evidence，并在 trace 中输出 `idempotent_replay`；Frontier/coverage/conflict 聚合已进入 ledger/evaluate/proposal trace。验证见 `docs/evidence/goal04-phase18-coordinator-closure.md`。
+- 2026-07-28 progress：`EvidenceFrontier` / `EvidenceCoverageSummary` 已计算 claim coverage、strict citation coverage、authority、temporal versions、conflict groups、missing strict citation 和 stop reasons，并进入 `evidence_ledger`、`evaluate` 与 proposal trace。
+- 2026-07-28 progress：Corrective decision 已消费 Frontier stop reasons；coverage gap、strict citation 缺失和 unresolved conflict 不再被 `RELEVANT` 单轮 verdict 直接放行为 `accept_evidence`。
 
 ### P18-T07 Corrective Retrieval Decision
 - Goal：根据 failure bucket 选择 rewrite、parent expansion、alternate retriever、graph expansion、snapshot/index recovery、新 RetrievalRound 或 stop。
@@ -92,6 +121,8 @@ docs/evidence/**
 - Goal：当内层无法解决时输出 ASK_USER/EXTERNAL_SEARCH/REPLAN_REQUIRED/ABSTAIN Proposal，由 Agent Core 验证决策。
 - Tests：proposal schema、security refs、Agent accept/reject、Replan Barrier、no direct plan mutation。
 - Acceptance：旧 GraphRAG query/orchestrator 切流；无 `legacy_graphrag` 包，临时 adapter PHASE22 删除。
+- 2026-07-28 progress：`KnowledgeStepExecutor` 已增加 deterministic proposal gate，接受 `accept_evidence`，拒绝 `abstain` 等未解决 proposal 并转为 blocked observation；验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md`。
+- 2026-07-28 closure：`WorkspaceTaskRuntimeService` 默认 `_agentic_retrieval_runtime`、`product_baseline.py` retrieval probe 和应用层 `KnowledgeQueryService.query()` 均已接入 PHASE18 graph/proposal/frontier trace；`KnowledgeQueryService` 作为应用 facade 受控保留返回形状，不再作为无 PHASE18 trace 的旧旁路。验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md` 和 `docs/evidence/goal04-phase18-coordinator-closure.md`。
 
 ## Phase 完成定义
 

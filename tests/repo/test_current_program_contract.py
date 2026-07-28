@@ -33,7 +33,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase17_closure() -> None:
+def test_phase_states_reflect_goal04_phase18_closure() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -50,6 +50,7 @@ def test_phase_states_reflect_goal04_phase17_closure() -> None:
         "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: completed",
         "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
         "PHASE17_dynamic-plan-dag-parallel-control.md": "status: completed",
+        "PHASE18_agentic-graphrag-inner-loop.md": "status: completed",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -63,6 +64,7 @@ def test_phase_states_reflect_goal04_phase17_closure() -> None:
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
     assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed" in manifest
+    assert "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed" in manifest
 
 
 def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
@@ -84,6 +86,8 @@ def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
     assert "PHASE16 completed" in current
     assert "PHASE17 completed" in current
     assert "goal04-phase17-coordinator-closure.md" in current
+    assert "PHASE18 completed" in current
+    assert "goal04-phase18-coordinator-closure.md" in current
     assert "production readiness not established" in production
 
 
@@ -344,3 +348,61 @@ def test_phase17_dynamic_dag_closure_evidence_is_guarded() -> None:
     assert "59 passed in 29.18s" in closure
     assert "9 passed in 41.32s" in closure
     assert "refined Agent Core target architecture verification passed" in closure
+
+
+def test_phase18_agentic_graphrag_startup_evidence_is_guarded() -> None:
+    startup = (
+        REPO_ROOT / "docs/evidence/goal04-phase18-startup-audit.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "Goal04 PHASE18 Startup Audit",
+        "phase_status: in_progress",
+        "branch: codex/goal04-phase18-agentic-graphrag",
+        "base_main_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae",
+        "phase17_merge_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae",
+        "20260728_49 (head)",
+        "Frozen Gap List",
+        "P18-T01 EvidenceRequirement and Profile Selection",
+        "P18-T02 Fixed KnowledgeRetrievalGraph and Round Domain",
+        "P18-T03 Graph Entity/Relation/Path/Community Runtime",
+        "P18-T04 DRIFT and Multi-retriever Dispatch",
+        "P18-T05 Fusion, Rerank and Rank Lineage",
+        "P18-T06 EvidenceLedger, Frontier and Quality Verdict",
+        "P18-T07 Corrective Retrieval Decision",
+        "P18-T08 KnowledgeControlProposal and Agent Integration",
+        "CorrectiveAgenticRetrievalRuntime",
+        "EvidenceLedger",
+        "DurableKnowledgeRetrievalPort",
+        "GraphRAGQueryService",
+        "RetrievalPlanner / RetrievalOrchestrator",
+        "KnowledgeControlProposal",
+        "PHASE18 已启动并冻结 Gap List",
+    ]:
+        assert phrase in startup
+
+
+def test_phase18_agentic_graphrag_closure_evidence_is_guarded() -> None:
+    closure = (
+        REPO_ROOT / "docs/evidence/goal04-phase18-coordinator-closure.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in [
+        "Goal04 PHASE18 Coordinator Closure",
+        "status: completed",
+        "coordinator_approval: approved",
+        "head_sha: 42a77f9fccf0b328bb48098eb6b16dcad883abcd",
+        "P18-T01",
+        "P18-T08",
+        "KnowledgeRetrievalGraph",
+        "RetrievalPlan",
+        "EvidenceFrontier",
+        "KnowledgeControlProposal",
+        "CorrectiveAgenticGraphRAGRuntime",
+        "KnowledgeQueryService.query()",
+        "26 passed, 1 warning in 23.28s",
+        "PR #49 GitHub validate",
+        "retry count: 1",
+        "Production readiness not established",
+    ]:
+        assert phrase in closure
