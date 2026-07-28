@@ -1320,19 +1320,22 @@ def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(en
         calls += 1
         return {"provider_effect_id": "mail-provider-effect:phase16:claim-repair:1", "message_id": "message-claim-repair"}
 
-    with pytest.raises(RuntimeError, match="infra completion outage after effect receipt"):
-        asyncio.run(gateway.invoke_readonly(
-            tool_name="mail.send",
-            args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
-            tenant_id=tenant_id,
-            workspace_id=workspace_id,
-            trace_id="trace-phase16-claim-repair",
-            call_id=call_id,
-            adapter_kind="API",
-            executor=executor,
-            readonly=False,
-            approved=True,
-        ))
+    first_result, first_receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="mail.send",
+        args={"to": "review@example.com", "body": "hello", "secret_ref": secret_ref},
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        trace_id="trace-phase16-claim-repair",
+        call_id=call_id,
+        adapter_kind="API",
+        executor=executor,
+        readonly=False,
+        approved=True,
+    ))
+
+    assert first_result is None
+    assert first_receipt.status == "reconcile_required"
+    assert first_receipt.blocked_reason == "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED"
 
     async def replay_executor() -> dict[str, str]:
         raise AssertionError("durable side-effect repair replay must not redispatch provider")
@@ -1353,16 +1356,16 @@ def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(en
     assert calls == 1
     assert replay_result == {
         "idempotency_replay": True,
-        "result_ref": "tool-effect-receipt:call-phase16-claim-repair-mail",
+        "result_ref": "tool-effect-reconciliation:call-phase16-claim-repair-mail",
         "idempotency_scope": "tool-side-effect",
         "idempotency_key": call_id,
     }
     assert replay_receipt.status == "replayed"
-    assert replay_receipt.result_ref == "tool-effect-receipt:call-phase16-claim-repair-mail"
+    assert replay_receipt.result_ref == "tool-effect-reconciliation:call-phase16-claim-repair-mail"
 
     with engine.connect() as conn:
         assert conn.execute(
-            text("SELECT count(*) FROM tool_effect_receipts WHERE effect_receipt_id = 'tool-effect-receipt:call-phase16-claim-repair-mail'")
+            text("SELECT count(*) FROM tool_effect_reconciliations WHERE reconciliation_id = 'tool-effect-reconciliation:call-phase16-claim-repair-mail'")
         ).scalar_one() == 1
         assert conn.execute(
             text("SELECT count(*) FROM security_secret_leases WHERE lease_id = 'security-secret-lease:call-phase16-claim-repair-mail'")
@@ -1382,7 +1385,7 @@ def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(en
 
     assert claim["status"] == "completed"
     assert claim["owner"] == f"tool-runtime:{call_id}"
-    assert claim["result_ref"] == "tool-effect-receipt:call-phase16-claim-repair-mail"
+    assert claim["result_ref"] == "tool-effect-reconciliation:call-phase16-claim-repair-mail"
 
 
 def test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails(engine) -> None:

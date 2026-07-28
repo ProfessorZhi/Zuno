@@ -455,11 +455,13 @@ Failure Fingerprint：
 - `ToolRepository.existing_side_effect_result_ref(...)` 可按 call id 查找已持久化的 EffectReceipt / EffectReconciliation / AsyncJob result ref。
 - `ToolInvocationGateway` 在 infra idempotency claim 未 acquired 且仍为 in-progress 时，若 Tool Runtime 已存在 durable side-effect result，会修复同 owner claim 到 completed 并返回 replay，而不是阻塞或重新 dispatch provider。
 - 该恢复路径覆盖 EffectReceipt 已落库但 `_complete_execute_prerequisites(...)` 失败的危险窗口，避免外部副作用已经确认但 infra claim 永久卡住。
+- 当前 gateway 不把该 infra completion 异常泄漏给调用方；第一次调用会进入受控 `reconcile_required / UNKNOWN_EFFECT_RECONCILIATION_REQUIRED`，第二次同 call id replay 从 durable EffectReconciliation 修复 claim，且不重新 dispatch provider。
 
 验证：
 
-- 使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short`：1 passed。
-- Failure Fingerprint：本切片 focused test 首次通过，无失败重试。
+- RED：`python -m pytest tests\integration\test_goal03_wave_b_persistence.py -q -p no:cacheprovider --tb=short` 失败于 `test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed`，旧测试仍期望 `RuntimeError("infra completion outage after effect receipt")` 泄漏；当前实现已经将该故障转为受控 UNKNOWN reconciliation。
+- 修正后使用显式 `sys.path.insert(...)` 运行 `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short`：1 passed。
+- Failure Fingerprint：旧断言与当前恢复语义冲突；更新测试断言为第一次 `reconcile_required`、第二次 durable reconciliation replay 修复 claim。
 ### P16-T21 Effect Receipt Persistence Failure Falls Back to UNKNOWN Reconciliation
 
 状态：completed-for-current-slice，未构成 PHASE16 closure。
