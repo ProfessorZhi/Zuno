@@ -112,3 +112,24 @@ def test_failure_bucket_maps_to_corrective_action_sequence() -> None:
         verdict=RetrievalQualityVerdict.IRRELEVANT,
         novelty=0.0,
     ) == CorrectiveAction.ABSTAIN
+    assert (
+        policy.decide(
+            verdict=RetrievalQualityVerdict.RELEVANT,
+            frontier_stop_reasons=["coverage_incomplete"],
+        )
+        == CorrectiveAction.QUERY_REWRITE
+    )
+    assert (
+        policy.decide(
+            verdict=RetrievalQualityVerdict.RELEVANT,
+            frontier_stop_reasons=["strict_citation_missing"],
+        )
+        == CorrectiveAction.FOCUSED_CITATION_RETRIEVE
+    )
+    assert (
+        policy.decide(
+            verdict=RetrievalQualityVerdict.RELEVANT,
+            frontier_stop_reasons=["conflict_unresolved"],
+        )
+        == CorrectiveAction.GRAPH_EXPAND
+    )

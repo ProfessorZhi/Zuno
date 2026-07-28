@@ -260,11 +260,15 @@ class CorrectiveAgenticRetrievalRuntime:
                 used_actions=used_actions,
                 max_rounds_reached=round_number >= request.max_rounds,
                 novelty=novelty,
+                frontier_stop_reasons=frontier.stop_reasons,
             )
             graph_trace.add(
                 KnowledgeRetrievalGraphNode.CORRECTIVE_DECISION,
                 round=round_number,
-                payload={"corrective_action": final_action.value},
+                payload={
+                    "corrective_action": final_action.value,
+                    "frontier_stop_reasons": list(frontier.stop_reasons),
+                },
             )
             rounds.append(
                 {

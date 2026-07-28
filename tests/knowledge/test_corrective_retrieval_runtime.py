@@ -83,7 +83,6 @@ def test_corrective_runtime_continues_when_first_round_has_strict_source_span() 
             knowledge_space_ids=["ks_corrective"],
             trace_id="trace_corrective_pass",
             task_id="task_corrective_pass",
-            claims=["renewal notice", "missing claim"],
             max_rounds=2,
         )
     )
@@ -92,9 +91,29 @@ def test_corrective_runtime_continues_when_first_round_has_strict_source_span() 
     assert result.rounds[0]["corrective_action"] == CorrectiveAction.CONTINUE.value
     assert result.ledger.records()[0].source_span["page"] == 3
     assert result.ledger.records()[0].strict_citation_allowed is True
+
+
+def test_corrective_runtime_does_not_accept_incomplete_claim_coverage() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_coverage_gap",
+            task_id="task_coverage_gap",
+            claims=["renewal notice", "missing claim"],
+            max_rounds=1,
+        )
+    )
+
     frontier = result.trace["knowledge_retrieval_graph"]["proposal"]["payload"]["frontier"]
     assert frontier["coverage"]["covered_claim_count"] == 1
     assert frontier["uncovered_claim_refs"] == ["missing claim"]
+    assert frontier["stop_reasons"] == ["coverage_incomplete"]
+    assert result.final_action == CorrectiveAction.ABSTAIN
+    assert result.trace["knowledge_retrieval_graph"]["proposal"]["proposal_type"] == (
+        KnowledgeControlProposalType.ABSTAIN.value
+    )
 
 
 def test_corrective_runtime_records_fixed_knowledge_retrieval_graph() -> None:
