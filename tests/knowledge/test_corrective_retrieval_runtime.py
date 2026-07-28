@@ -365,6 +365,7 @@ def test_knowledge_step_executor_defaults_to_standard_retrieval_profile() -> Non
 class _FakeKnowledgeRepo:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []
+        self.strict_ids: set[str] = set()
 
     def active_snapshot_id(self, *, tenant_id: str, knowledge_space_id: str) -> str | None:
         self.calls.append(("active_snapshot_id", {"tenant_id": tenant_id, "knowledge_space_id": knowledge_space_id}))
@@ -378,12 +379,17 @@ class _FakeKnowledgeRepo:
 
     def commit_evidence(self, **kwargs) -> None:
         self.calls.append(("commit_evidence", kwargs))
+        self.strict_ids.add(str(kwargs["evidence_id"]))
 
     def commit_citation_lineage(self, **kwargs) -> None:
         self.calls.append(("commit_citation_lineage", kwargs))
 
     def mark_query_run_status(self, **kwargs) -> None:
         self.calls.append(("mark_query_run_status", kwargs))
+
+    def strict_evidence_ids(self, *, query_run_id: str) -> tuple[str, ...]:
+        self.calls.append(("strict_evidence_ids", {"query_run_id": query_run_id}))
+        return tuple(sorted(self.strict_ids))
 
 
 class _FakeKnowledgeUow:
@@ -434,13 +440,14 @@ def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineag
     assert call_names == [
         "active_snapshot_id",
         "start_query_run",
+        "strict_evidence_ids",
         "start_retrieval_round",
         "commit_evidence",
         "commit_citation_lineage",
         "mark_query_run_status",
     ]
-    evidence_call = dict(repo.calls[3][1])
-    citation_call = dict(repo.calls[4][1])
+    evidence_call = dict(repo.calls[4][1])
+    citation_call = dict(repo.calls[5][1])
     query_call = dict(repo.calls[1][1])
     assert query_call["request_payload"]["retrieval_profile"] == RetrievalProfile.STANDARD.value
     assert evidence_call["chunk_id"].endswith("block_notice::cite1")
@@ -449,6 +456,36 @@ def test_durable_knowledge_port_commits_query_round_evidence_and_citation_lineag
     assert citation_call["authorization_ref"] == "authorization:durable"
     assert result.trace["durable_knowledge_port"]["status"] == "committed"
     assert result.trace["durable_knowledge_port"]["evidence_committed"] == 1
+    assert result.trace["durable_knowledge_port"]["evidence_replayed"] == 0
+
+
+def test_durable_knowledge_port_replays_existing_query_run_without_duplicate_evidence() -> None:
+    repo = _FakeKnowledgeRepo()
+    runtime = DurableKnowledgeRetrievalPort(
+        runtime=_runtime(),
+        unit_of_work_factory=lambda: _FakeKnowledgeUow(repo),
+    )
+    request = CorrectiveRetrievalRequest(
+        query="renewal notice 30 days anniversary",
+        workspace_id="workspace_corrective",
+        knowledge_space_ids=["ks_corrective"],
+        trace_id="trace_durable_replay",
+        task_id="task_durable_replay",
+        tenant_id="tenant-durable",
+        agent_core_decision_ref="agent-core:decision:retrieve",
+        authorization_ref="authorization:durable",
+        max_rounds=1,
+    )
+
+    first = runtime.retrieve(request)
+    second = runtime.retrieve(request)
+
+    assert first.trace["durable_knowledge_port"]["status"] == "committed"
+    assert second.trace["durable_knowledge_port"]["status"] == "idempotent_replay"
+    assert second.trace["durable_knowledge_port"]["evidence_committed"] == 0
+    assert second.trace["durable_knowledge_port"]["evidence_replayed"] == 1
+    assert [name for name, _ in repo.calls].count("commit_evidence") == 1
+    assert [name for name, _ in repo.calls].count("commit_citation_lineage") == 2
 
 
 def test_knowledge_step_blocks_when_durable_persistence_fails() -> None:

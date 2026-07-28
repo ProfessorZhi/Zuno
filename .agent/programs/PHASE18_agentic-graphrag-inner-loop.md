@@ -96,6 +96,7 @@ docs/evidence/**
 - Goal：累计 coverage、authority、temporal、conflict、citation availability、novel evidence yield 和 stopping criteria。
 - Tests：insufficient coverage、conflict unresolved、no new evidence、budget exhausted、strict citation missing。
 - Acceptance：Verdict 是 Knowledge 事实，不是 Agent ControlDecision。
+- 2026-07-28 progress：Durable port 已使用稳定 QueryRun/Round id 与 `strict_evidence_ids` 进行 idempotent replay，重复请求不会重复写 strict evidence，并在 trace 中输出 `idempotent_replay`；Frontier/coverage/conflict 聚合仍待补齐。
 
 ### P18-T07 Corrective Retrieval Decision
 - Goal：根据 failure bucket 选择 rewrite、parent expansion、alternate retriever、graph expansion、snapshot/index recovery、新 RetrievalRound 或 stop。

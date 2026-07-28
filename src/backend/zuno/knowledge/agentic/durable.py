@@ -58,6 +58,8 @@ class KnowledgeRepositoryProtocol(Protocol):
 
     def mark_query_run_status(self, *, query_run_id: str, status: str) -> None: ...
 
+    def strict_evidence_ids(self, *, query_run_id: str) -> tuple[str, ...]: ...
+
 
 class KnowledgeUnitOfWorkProtocol(Protocol):
     def __enter__(self) -> KnowledgeRepositoryProtocol: ...
@@ -118,7 +120,9 @@ class DurableKnowledgeRetrievalPort:
                 },
             )
             committed = 0
+            replayed = 0
             skipped: list[dict[str, str]] = []
+            existing_evidence_ids = _strict_evidence_ids(repo, query_run_id=query_run_id)
             for round_payload in result.rounds:
                 round_no = int(round_payload["round"])
                 round_id = _stable_ref("knowledge-round", query_run_id, str(round_no))
@@ -135,6 +139,17 @@ class DurableKnowledgeRetrievalPort:
                 for record in result.ledger.by_round(round_no):
                     if not _is_strict_persistable(record):
                         skipped.append({"evidence_id": record.evidence_id, "reason": _skip_reason(record)})
+                        continue
+                    if record.evidence_id in existing_evidence_ids:
+                        replayed += 1
+                        repo.commit_citation_lineage(
+                            citation_lineage_id=_stable_ref("citation-lineage", record.evidence_id),
+                            evidence_id=record.evidence_id,
+                            document_version_id=record.document_version,
+                            source_span_ref=_source_span_ref(record),
+                            span_text=record.text,
+                            authorization_ref=request.authorization_ref,
+                        )
                         continue
                     repo.commit_evidence(
                         evidence_id=record.evidence_id,
@@ -154,15 +169,17 @@ class DurableKnowledgeRetrievalPort:
                         authorization_ref=request.authorization_ref,
                     )
                     committed += 1
+                    existing_evidence_ids.add(record.evidence_id)
             repo.mark_query_run_status(
                 query_run_id=query_run_id,
-                status="SUFFICIENT_EVIDENCE" if committed else "PARTIAL_EVIDENCE",
+                status="SUFFICIENT_EVIDENCE" if committed or replayed else "PARTIAL_EVIDENCE",
             )
             return {
-                "status": "committed",
+                "status": "committed" if committed else "idempotent_replay" if replayed else "committed",
                 "query_run_id": query_run_id,
                 "snapshot_id": snapshot_id,
                 "evidence_committed": committed,
+                "evidence_replayed": replayed,
                 "evidence_skipped": skipped,
             }
 
@@ -188,6 +205,12 @@ def _source_span_ref(record: EvidenceLedgerRecord) -> str:
     if explicit:
         return str(explicit)
     return _stable_ref("source-span", record.document_id, record.document_version, canonical_sha256(record.source_span))
+
+
+def _strict_evidence_ids(repo: KnowledgeRepositoryProtocol, *, query_run_id: str) -> set[str]:
+    if not hasattr(repo, "strict_evidence_ids"):
+        return set()
+    return set(repo.strict_evidence_ids(query_run_id=query_run_id))
 
 
 def _stable_ref(prefix: str, *parts: str) -> str:
