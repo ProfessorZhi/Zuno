@@ -214,3 +214,34 @@ passed
 - 该切片只完成 DispatchGroup / DispatchItem / StepRun / OutboxMessage 的领域提交 payload；
 - 尚未完成 PostgreSQL append-only migration、Repository/UoW 同事务提交、真实 LangGraph Send、BranchResultRef、Reducer、JoinEvaluation 或 Replan Barrier；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T05 Dispatch PostgreSQL Persistence Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 append-only migration `infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py`，并扩展 `src/backend/zuno/platform/database/agent/domain.py`：
+
+- 放开 `agent_plan_versions.plan_kind`，允许 `DYNAMIC_DAG`；
+- 放开 `agent_plan_step_definitions.step_no = 1`，并新增 dynamic step id、dependency ids、dependency rule、activation condition、resource claim refs 和 join policy ref；
+- 新增 `agent_dispatch_groups`、`agent_step_runs`、`agent_dispatch_items`；
+- `AgentDomainRepository.record_dispatch_commit(...)` 在一个 UoW 事务中写 DispatchGroup、StepRun、infra outbox 和 DispatchItem；
+- outbox 使用 `InfrastructureRepository.enqueue_outbox(...)`，topic 为 `agent.dynamic_step.dispatch.requested`，ordering key 为 DispatchGroup；
+- integration test 查询数据库证明 outbox payload 的 `step_run_id` 已对应已提交 `agent_step_runs`，且 `commit_required_before_send = true`。
+
+验证：
+
+```text
+python -m py_compile infra\db\alembic\versions\20260728_46_phase17_dynamic_dispatch.py src\backend\zuno\platform\database\agent\domain.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+1 passed
+```
+
+边界：
+
+- 该切片完成 dispatch commit-before-send 的 PostgreSQL migration 和 Repository/UoW 同事务提交；
+- 尚未实现真实 LangGraph Send worker、BranchResultRef、late-result fencing、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

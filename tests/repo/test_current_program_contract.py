@@ -111,6 +111,12 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     dispatch = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dispatch.py"
     ).read_text(encoding="utf-8")
+    migration = (
+        REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
+    ).read_text(encoding="utf-8")
+    repository = (
+        REPO_ROOT / "src/backend/zuno/platform/database/agent/domain.py"
+    ).read_text(encoding="utf-8")
     domain = (
         REPO_ROOT / "src/backend/zuno/agent/domain/task_contracts.py"
     ).read_text(encoding="utf-8")
@@ -125,6 +131,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     dispatch_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dispatch_commit.py"
+    ).read_text(encoding="utf-8")
+    persistence_tests = (
+        REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
     ).read_text(encoding="utf-8")
 
     assert "P17-T01 Dynamic DAG Proposal and Validator Slice" in evidence
@@ -157,3 +166,11 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "agent.dynamic_step.dispatch.requested" in dispatch
     assert "test_phase17_dispatch_commit_binds_group_items_step_runs_and_outbox_before_send" in dispatch_tests
     assert "test_phase17_dispatch_commit_is_deterministic_for_same_admission" in dispatch_tests
+    assert "P17-T05 Dispatch PostgreSQL Persistence Slice" in evidence
+    assert "20260728_46" in migration
+    assert "agent_dispatch_groups" in migration
+    assert "agent_step_runs" in migration
+    assert "agent_dispatch_items" in migration
+    assert "def record_dispatch_commit" in repository
+    assert "InfrastructureRepository" in repository
+    assert "test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow" in persistence_tests

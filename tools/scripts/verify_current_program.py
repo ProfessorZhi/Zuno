@@ -305,6 +305,10 @@ def verify_current_program() -> list[str]:
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
     dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
+    dispatch_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
+    )
+    agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
     dynamic_plan_version_tests = _read(
@@ -315,6 +319,9 @@ def verify_current_program() -> list[str]:
     )
     dispatch_commit_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dispatch_commit.py"
+    )
+    dispatch_persistence_tests = _read(
+        REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
     )
 
     errors.extend(
@@ -402,6 +409,9 @@ def verify_current_program() -> list[str]:
                 + readyset_admission_tests
                 + dynamic_dispatch
                 + dispatch_commit_tests
+                + dispatch_migration
+                + agent_repository
+                + dispatch_persistence_tests
             ),
             [
                 "P17-T01 Dynamic DAG Proposal and Validator Slice",
@@ -439,6 +449,14 @@ def verify_current_program() -> list[str]:
                 "agent.dynamic_step.dispatch.requested",
                 "test_phase17_dispatch_commit_binds_group_items_step_runs_and_outbox_before_send",
                 "test_phase17_dispatch_commit_is_deterministic_for_same_admission",
+                "P17-T05 Dispatch PostgreSQL Persistence Slice",
+                "20260728_46_phase17_dynamic_dispatch",
+                "agent_dispatch_groups",
+                "agent_step_runs",
+                "agent_dispatch_items",
+                "record_dispatch_commit",
+                "InfrastructureRepository",
+                "test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )
