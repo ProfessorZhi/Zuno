@@ -33,7 +33,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase16_closure() -> None:
+def test_phase_states_reflect_goal04_phase17_startup() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -49,6 +49,7 @@ def test_phase_states_reflect_goal04_phase16_closure() -> None:
         "PHASE14_capability-skill-control-plane.md": "status: completed",
         "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: completed",
         "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
+        "PHASE17_dynamic-plan-dag-parallel-control.md": "status: in_progress",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -61,6 +62,7 @@ def test_phase_states_reflect_goal04_phase16_closure() -> None:
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
+    assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: in_progress" in manifest
 
 
 def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
@@ -80,6 +82,7 @@ def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
     assert "PHASE15 completed" in current
     assert "PHASE10 ready" in current
     assert "PHASE16 completed" in current
+    assert "PHASE17 in_progress" in current
     assert "production readiness not established" in production
 
 

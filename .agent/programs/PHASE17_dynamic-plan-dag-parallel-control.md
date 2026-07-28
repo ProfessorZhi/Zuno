@@ -1,7 +1,7 @@
 # PHASE17 Dynamic Plan DAG and Parallel Control
 
 phase_id: PHASE17
-status: planned
+status: in_progress
 depends_on: PHASE08, PHASE12, PHASE16
 owner: Module 06 Agent Core
 

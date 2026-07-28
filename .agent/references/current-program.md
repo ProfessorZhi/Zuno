@@ -12,7 +12,7 @@ program_version: 2
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
 
-Goal04 PR B 已完成 Coordinator Closure：PHASE16 Tool Side Effect and Reconciliation 在 `codex/goal04-phase16-tool-side-effect` 中为 `completed`，当前 evidence 覆盖 P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay。这不表示 PR B 已合并、PHASE17 已启动或 production ready；PHASE17、PHASE18、PHASE19 仍受依赖约束，不得提前标记 in_progress。
+Goal04 PR B 已完成 Coordinator Closure 并合并到 main：PHASE16 Tool Side Effect and Reconciliation 为 `completed`，当前 evidence 覆盖 P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay。Goal04 PR C 已在 `codex/goal04-phase17-dynamic-plan-dag` 启动：PHASE17 Dynamic Plan DAG and Parallel Control 为 `in_progress`；PHASE18 和 PHASE19 仍受依赖约束，不得提前标记 in_progress。
 
 入口：
 
