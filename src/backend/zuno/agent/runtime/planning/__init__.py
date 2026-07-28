@@ -20,6 +20,14 @@ from zuno.agent.runtime.planning.branch_result import (
     BranchResultSubmission,
     BranchResultValidationError,
 )
+from zuno.agent.runtime.planning.control_decision import (
+    ConditionalReflectionPolicy,
+    ControlDecisionReason,
+    ControlDecisionValidationError,
+    DynamicControlAction,
+    JoinControlDecision,
+    JoinControlDecisionEngine,
+)
 from zuno.agent.runtime.planning.executor import PlanExecutor
 from zuno.agent.runtime.planning.dynamic_dag import (
     DynamicPlanDependencyRule,
@@ -78,6 +86,12 @@ __all__ = [
     "BranchResultStatus",
     "BranchResultSubmission",
     "BranchResultValidationError",
+    "ConditionalReflectionPolicy",
+    "ControlDecisionReason",
+    "ControlDecisionValidationError",
+    "DynamicControlAction",
+    "JoinControlDecision",
+    "JoinControlDecisionEngine",
     "PlanExecutor",
     "DynamicPlanDependencyRule",
     "DynamicPlanInputBinding",

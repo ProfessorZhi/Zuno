@@ -307,6 +307,7 @@ def verify_current_program() -> list[str]:
     branch_result = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "branch_result.py")
     dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
     dynamic_reducer = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "reducer.py")
+    control_decision = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "control_decision.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
@@ -333,6 +334,9 @@ def verify_current_program() -> list[str]:
     )
     reducer_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_reducer_join_policy.py"
+    )
+    control_decision_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_control_decision.py"
     )
     dispatch_persistence_tests = _read(
         REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
@@ -427,6 +431,8 @@ def verify_current_program() -> list[str]:
                 + dispatch_commit_tests
                 + dynamic_reducer
                 + reducer_tests
+                + control_decision
+                + control_decision_tests
                 + dispatch_migration
                 + branch_result_migration
                 + join_outcome_migration
@@ -508,6 +514,16 @@ def verify_current_program() -> list[str]:
                 "record_join_outcome",
                 "duplicate:CONTINUE",
                 "test_phase17_join_outcome_persistence_records_reducer_decision",
+                "P17-T10 Conditional Reflection ControlDecision Slice",
+                "JoinControlDecisionEngine",
+                "ConditionalReflectionPolicy",
+                "DynamicControlAction",
+                "REQUEST_REFLECTION",
+                "REQUEST_REPLAN_BARRIER",
+                "retry_permitted",
+                "test_phase17_control_decision_requests_reflection_for_best_effort_partial_join",
+                "test_phase17_control_decision_requests_replan_barrier_for_failed_join",
+                "test_phase17_control_decision_hash_fences_mutation",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

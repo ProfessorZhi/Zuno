@@ -365,3 +365,33 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 JoinOutcome PostgreSQL persistence；
 - 尚未实现 conditional Reflection、Replan Barrier 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T10 Conditional Reflection ControlDecision Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/control_decision.py`，在 JoinOutcome 之后建立条件式 Reflection 和 Replan Barrier 的确定性控制决策边界：
+
+- `JoinControlDecisionEngine` 只消费 `ReducedJoinOutcome`，输出 `JoinControlDecision`，不直接修改 active PlanVersion，不直接 retry、replan、publish 或写 RunOutcome；
+- `DynamicControlAction` 区分 `CONTINUE`、`WAIT_FOR_BRANCHES`、`REQUEST_REFLECTION`、`REQUEST_REPLAN_BARRIER` 和 `FAIL_RUN`；
+- `ConditionalReflectionPolicy` 控制 partial continue 是否进入 Reflection、失败 join 是否需要 Reflection 后再进入 Replan Barrier；
+- `JoinControlDecision` 绑定 source join outcome hash、policy id、action、reason、failed branch ids、pending branch count，并用 decision id / decision hash 防止决策被原地篡改；
+- Retry 与 Replan 在该切片中明确分离：Join failure 只产生 Replan Barrier 请求，`retry_permitted=false`，不把失败分支盲目 retry。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\control_decision.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_control_decision.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_control_decision.py -q -p no:cacheprovider --tb=short
+6 passed
+```
+
+边界：
+
+- 该切片完成 Join Evaluation 后的 conditional Reflection / Replan Barrier 控制事实；
+- 尚未实现 Replan Barrier 持久化、真实 barrier 执行、LangGraph Send worker 默认路径或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

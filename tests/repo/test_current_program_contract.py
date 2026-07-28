@@ -117,6 +117,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     reducer = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/reducer.py"
     ).read_text(encoding="utf-8")
+    control_decision = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/control_decision.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -149,6 +152,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     reducer_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_reducer_join_policy.py"
+    ).read_text(encoding="utf-8")
+    control_decision_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_control_decision.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -224,3 +230,13 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "duplicate:{existing['decision']}" in repository
     assert "duplicate:CONTINUE" in persistence_tests
     assert "test_phase17_join_outcome_persistence_records_reducer_decision" in persistence_tests
+    assert "P17-T10 Conditional Reflection ControlDecision Slice" in evidence
+    assert "class JoinControlDecisionEngine" in control_decision
+    assert "class ConditionalReflectionPolicy" in control_decision
+    assert "class DynamicControlAction" in control_decision
+    assert "REQUEST_REFLECTION" in control_decision
+    assert "REQUEST_REPLAN_BARRIER" in control_decision
+    assert "retry_permitted" in control_decision
+    assert "test_phase17_control_decision_requests_reflection_for_best_effort_partial_join" in control_decision_tests
+    assert "test_phase17_control_decision_requests_replan_barrier_for_failed_join" in control_decision_tests
+    assert "test_phase17_control_decision_hash_fences_mutation" in control_decision_tests
