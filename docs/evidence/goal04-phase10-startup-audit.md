@@ -1211,10 +1211,14 @@ python tools\scripts\verify_phase10_product_cutover_evidence.py
 PHASE10 Product cutover evidence verifier passed.
 ```
 
+```text
+powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
+passed
+```
+
 仍未完成：
 
 - 本轮新增的是 Browser full-e2e cutover smoke gate，不等于已经完成并通过完整 PHASE10 closure；
-- `powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1` 需要在后端、前端、QA API、auth state 和本机数据库 stamp 可用时重新运行；
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
@@ -1263,6 +1267,7 @@ python -m pytest tests\repo\test_phase10_product_cutover_evidence.py -q
 python tools\scripts\verify_phase10_product_cutover_evidence.py
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes -q
 python -m py_compile tools\qa\full-e2e\full_e2e.py tools\scripts\verify_phase10_product_cutover_evidence.py
+powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
 ```
 
 未通过 / 未完成：
@@ -1285,5 +1290,5 @@ environment signature: local PostgreSQL alembic_version contains 20260727_45; cu
 ```
 
 ```text
-Browser cutover smoke gate 已补入 full-e2e helper，但完整 run-full-e2e-smoke.ps1 需要在后端、前端、QA API、auth state 和本机数据库 stamp 可用时重跑；PHASE10 仍为 in_progress，不能写 completed。
+Browser cutover smoke gate 已补入 full-e2e helper，且完整 run-full-e2e-smoke.ps1 已在 Docker Desktop 恢复、PostgreSQL/backend/frontend/QA API/auth state 可用后重跑通过；PHASE10 仍为 in_progress，不能写 completed。
 ```
