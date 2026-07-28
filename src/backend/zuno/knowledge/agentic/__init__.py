@@ -10,7 +10,10 @@ from zuno.knowledge.agentic.contracts import (
     KnowledgeRetrievalGraphTrace,
     KnowledgeRetrievalProfile,
     QueryStrategy,
+    RetrievalPlan,
     RetrievalQualityVerdict,
+    RetrieverDispatchPlan,
+    RetrieverKind,
 )
 from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
 from zuno.knowledge.agentic.durable import DurableKnowledgeRetrievalPort
@@ -34,6 +37,9 @@ __all__ = [
     "KnowledgeRetrievalGraphTrace",
     "KnowledgeRetrievalProfile",
     "QueryStrategy",
+    "RetrievalPlan",
     "RetrievalQualityGate",
     "RetrievalQualityVerdict",
+    "RetrieverDispatchPlan",
+    "RetrieverKind",
 ]

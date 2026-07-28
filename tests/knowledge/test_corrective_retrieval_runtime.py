@@ -12,6 +12,7 @@ from zuno.knowledge.agentic import (
     KnowledgeControlProposalType,
     KnowledgeRetrievalGraphNode,
     QueryStrategy,
+    RetrieverKind,
 )
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import CanonicalDocumentIR, DocumentBlock, DocumentMetadata, DocumentProvenance, SourceSpan
@@ -125,6 +126,58 @@ def test_corrective_runtime_records_fixed_knowledge_retrieval_graph() -> None:
     assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
     assert graph_trace["proposal"]["requires_agent_core_decision"] is True
     assert graph_trace["proposal"]["accepted_by_knowledge"] is False
+
+
+def test_corrective_runtime_plans_admitted_parallel_retriever_dispatch() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_dispatch_plan",
+            task_id="task_dispatch_plan",
+            retrieval_profile=RetrievalProfile.DEEP,
+            round_budget_tokens=600,
+            retriever_timeout_ms=750,
+            max_rounds=1,
+        )
+    )
+
+    graph_trace = result.trace["knowledge_retrieval_graph"]
+    plan_event = next(event for event in graph_trace["node_events"] if event["node"] == "plan_round")
+    admit_event = next(event for event in graph_trace["node_events"] if event["node"] == "admit")
+    dispatch_event = next(event for event in graph_trace["node_events"] if event["node"] == "dispatch")
+    retrievers = plan_event["payload"]["retrievers"]
+
+    assert plan_event["payload"]["profile"] == "deep"
+    assert [item["retriever"] for item in retrievers] == [kind.value for kind in RetrieverKind]
+    assert {item["budget_tokens"] for item in retrievers} == {100}
+    assert {item["timeout_ms"] for item in retrievers} == {750}
+    assert admit_event["status"] == "admitted"
+    assert admit_event["payload"]["round_budget_tokens"] == 600
+    assert dispatch_event["payload"]["parallel_group"] == "trace_dispatch_plan:retrieval-round:1"
+
+
+def test_corrective_runtime_blocks_admission_when_budget_is_exhausted() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_budget_exhausted",
+            task_id="task_budget_exhausted",
+            round_budget_tokens=0,
+            max_rounds=1,
+        )
+    )
+
+    graph_trace = result.trace["knowledge_retrieval_graph"]
+    admit_event = next(event for event in graph_trace["node_events"] if event["node"] == "admit")
+    assert admit_event["status"] == "blocked"
+    assert admit_event["payload"]["admission_reason"] == "budget_exhausted"
+    assert [event["node"] for event in graph_trace["node_events"]].count("dispatch") == 0
+    assert result.rounds[0]["admission_reason"] == "budget_exhausted"
+    assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ABSTAIN.value
 
 
 def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None:

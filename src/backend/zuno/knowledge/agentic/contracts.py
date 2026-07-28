@@ -72,6 +72,15 @@ class KnowledgeControlProposalType(StrEnum):
     ABSTAIN = "abstain"
 
 
+class RetrieverKind(StrEnum):
+    BM25 = "bm25"
+    VECTOR = "vector"
+    ENTITY = "entity"
+    RELATION = "relation"
+    PATH = "path"
+    COMMUNITY = "community"
+
+
 class EvidenceLedgerRecord(BaseModel):
     evidence_id: str
     document_id: str
@@ -94,6 +103,26 @@ class EvidenceLedgerRecord(BaseModel):
     text_hash: str = ""
     text: str = ""
     strict_citation_allowed: bool = True
+
+
+class RetrieverDispatchPlan(BaseModel):
+    retriever: RetrieverKind
+    knowledge_space_ids: list[str] = Field(default_factory=list)
+    budget_tokens: int = 0
+    timeout_ms: int = 0
+    parallel_group: str = ""
+
+
+class RetrievalPlan(BaseModel):
+    round: int
+    query: str
+    query_strategy: QueryStrategy
+    profile: KnowledgeRetrievalProfile
+    retrievers: list[RetrieverDispatchPlan] = Field(default_factory=list)
+    round_budget_tokens: int = 0
+    deadline_ms: int = 0
+    admitted: bool = True
+    admission_reason: str = "admitted"
 
 
 class KnowledgeRetrievalGraphNodeEvent(BaseModel):
@@ -153,5 +182,8 @@ __all__ = [
     "KnowledgeRetrievalGraphTrace",
     "KnowledgeRetrievalProfile",
     "QueryStrategy",
+    "RetrievalPlan",
     "RetrievalQualityVerdict",
+    "RetrieverDispatchPlan",
+    "RetrieverKind",
 ]

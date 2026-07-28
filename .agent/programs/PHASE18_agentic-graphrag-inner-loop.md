@@ -73,6 +73,7 @@ docs/evidence/**
 - Tests：state schema、round immutability、restart、deadline、cancel、invalid snapshot。
 - Acceptance：RetrievalRound 不修改 Agent PlanVersion。
 - 2026-07-28 progress：固定 `KnowledgeRetrievalGraph` trace、内部 profile、`KnowledgeControlProposal` 和 `KnowledgeStepExecutor` observation metadata 已实现第一版；验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md`。PHASE18 仍为 in_progress。
+- 2026-07-28 progress：`RetrievalPlan` / `RetrieverDispatchPlan` 已接入 `plan_round/admit/dispatch` trace，预算耗尽时阻断 dispatch 并输出 proposal；验证见同一 evidence 文件。
 
 ### P18-T03 Graph Entity/Relation/Path/Community Runtime
 - Goal：实现 entity resolution、relation/path traversal、local/global/community summary、source grounding。
@@ -83,6 +84,7 @@ docs/evidence/**
 - Goal：实现 follow-up branch、parallel retriever batch、budget/branch cap、partial failure。
 - Tests：branch explosion、low yield、retriever timeout、duplicate candidate、late result。
 - Acceptance：使用 Knowledge 内部 dispatch，不混用 Agent Plan DAG 事实。
+- 2026-07-28 progress：Deep profile 已产生 BM25/Vector/Entity/Relation/Path/Community retriever dispatch plan，并记录 budget、timeout 和 parallel group；实际 retriever partial failure / late result 仍待实现。
 
 ### P18-T05 Fusion, Rerank and Rank Lineage
 - Goal：记录 raw/fused/reranked rank、score normalization、dropped reason、gold evidence loss。

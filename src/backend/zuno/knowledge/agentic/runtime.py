@@ -13,7 +13,10 @@ from zuno.knowledge.agentic.contracts import (
     KnowledgeRetrievalGraphTrace,
     KnowledgeRetrievalProfile,
     QueryStrategy,
+    RetrievalPlan,
     RetrievalQualityVerdict,
+    RetrieverDispatchPlan,
+    RetrieverKind,
 )
 from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
@@ -35,6 +38,8 @@ class CorrectiveRetrievalRequest:
     retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
     claims: list[str] = field(default_factory=list)
     max_rounds: int = 2
+    round_budget_tokens: int = 2048
+    retriever_timeout_ms: int = 1500
     failure_bucket: str = ""
 
 
@@ -99,18 +104,53 @@ class CorrectiveAgenticRetrievalRuntime:
         )
 
         for round_number in range(1, request.max_rounds + 1):
+            retrieval_plan = _build_retrieval_plan(
+                request=request,
+                graph_trace=graph_trace,
+                round_number=round_number,
+                query=current_query,
+                strategy=strategy,
+            )
             graph_trace.add(
                 KnowledgeRetrievalGraphNode.PLAN_ROUND,
                 round=round_number,
-                payload={"query": current_query, "query_strategy": strategy.value},
+                payload=retrieval_plan.model_dump(mode="json"),
             )
             graph_trace.add(
                 KnowledgeRetrievalGraphNode.ADMIT,
                 round=round_number,
-                status="admitted",
-                payload={"max_rounds": request.max_rounds},
+                status="admitted" if retrieval_plan.admitted else "blocked",
+                payload={
+                    "admitted": retrieval_plan.admitted,
+                    "admission_reason": retrieval_plan.admission_reason,
+                    "round_budget_tokens": retrieval_plan.round_budget_tokens,
+                    "retriever_count": len(retrieval_plan.retrievers),
+                },
             )
-            graph_trace.add(KnowledgeRetrievalGraphNode.DISPATCH, round=round_number)
+            if not retrieval_plan.admitted:
+                final_verdict = RetrievalQualityVerdict.IRRELEVANT
+                final_action = CorrectiveAction.ABSTAIN
+                rounds.append(
+                    {
+                        "round": round_number,
+                        "query": current_query,
+                        "query_strategy": strategy.value,
+                        "ledger_record_count": 0,
+                        "verdict": final_verdict.value,
+                        "corrective_action": final_action.value,
+                        "novelty": 0.0,
+                        "admission_reason": retrieval_plan.admission_reason,
+                    }
+                )
+                break
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.DISPATCH,
+                round=round_number,
+                payload={
+                    "parallel_group": f"{request.trace_id}:retrieval-round:{round_number}",
+                    "retrievers": [item.model_dump(mode="json") for item in retrieval_plan.retrievers],
+                },
+            )
             result = self._base_runtime.answer(
                 AgenticRetrievalRuntimeRequest(
                     query=current_query,
@@ -281,6 +321,63 @@ def _knowledge_profile(request: CorrectiveRetrievalRequest) -> KnowledgeRetrieva
     if request.max_rounds > 1:
         return KnowledgeRetrievalProfile.AGENTIC
     return KnowledgeRetrievalProfile.STANDARD
+
+
+def _build_retrieval_plan(
+    *,
+    request: CorrectiveRetrievalRequest,
+    graph_trace: KnowledgeRetrievalGraphTrace,
+    round_number: int,
+    query: str,
+    strategy: QueryStrategy,
+) -> RetrievalPlan:
+    retrievers = _retriever_kinds(graph_trace.profile, strategy)
+    admitted = bool(request.knowledge_space_ids and request.round_budget_tokens > 0 and retrievers)
+    if not request.knowledge_space_ids:
+        reason = "knowledge_scope_empty"
+    elif request.round_budget_tokens <= 0:
+        reason = "budget_exhausted"
+    elif not retrievers:
+        reason = "retriever_set_empty"
+    else:
+        reason = "admitted"
+    budget_per_retriever = request.round_budget_tokens // max(len(retrievers), 1)
+    return RetrievalPlan(
+        round=round_number,
+        query=query,
+        query_strategy=strategy,
+        profile=graph_trace.profile,
+        retrievers=[
+            RetrieverDispatchPlan(
+                retriever=retriever,
+                knowledge_space_ids=list(request.knowledge_space_ids),
+                budget_tokens=budget_per_retriever,
+                timeout_ms=request.retriever_timeout_ms,
+                parallel_group=f"{request.trace_id}:round:{round_number}",
+            )
+            for retriever in retrievers
+        ],
+        round_budget_tokens=request.round_budget_tokens,
+        deadline_ms=request.retriever_timeout_ms,
+        admitted=admitted,
+        admission_reason=reason,
+    )
+
+
+def _retriever_kinds(profile: KnowledgeRetrievalProfile, strategy: QueryStrategy) -> list[RetrieverKind]:
+    if profile == KnowledgeRetrievalProfile.STANDARD:
+        return [RetrieverKind.BM25, RetrieverKind.VECTOR]
+    if profile == KnowledgeRetrievalProfile.LOCAL:
+        return [RetrieverKind.BM25, RetrieverKind.VECTOR, RetrieverKind.ENTITY, RetrieverKind.RELATION]
+    if profile == KnowledgeRetrievalProfile.GLOBAL:
+        return [RetrieverKind.BM25, RetrieverKind.VECTOR, RetrieverKind.COMMUNITY]
+    if profile == KnowledgeRetrievalProfile.DRIFT:
+        return [RetrieverKind.BM25, RetrieverKind.VECTOR, RetrieverKind.ENTITY, RetrieverKind.PATH]
+    if profile == KnowledgeRetrievalProfile.DEEP:
+        return list(RetrieverKind)
+    if strategy in {QueryStrategy.ENTITY_DECOMPOSITION, QueryStrategy.RELATION_QUERY}:
+        return [RetrieverKind.BM25, RetrieverKind.VECTOR, RetrieverKind.ENTITY, RetrieverKind.RELATION, RetrieverKind.PATH]
+    return [RetrieverKind.BM25, RetrieverKind.VECTOR]
 
 
 def _retrievers_used(index_payloads: list[dict[str, Any]]) -> list[str]:

@@ -16,6 +16,8 @@ production_readiness: not established
 
 - 新增固定节点 contract：`validate -> pin_snapshot -> scope -> interpret -> select_profile -> plan_round -> admit -> dispatch -> normalize -> fuse_rerank -> evidence_ledger -> evaluate -> corrective_decision`。
 - 新增内部 profile contract：`standard/local/global/drift/deep/agentic`。
+- 新增 `RetrievalPlan` 与 `RetrieverDispatchPlan`，将 profile、query strategy、knowledge scope、round budget、timeout 和 parallel group 固化到 `plan_round/admit/dispatch` trace。
+- `admit` 节点在 scope 为空、预算耗尽或 retriever set 为空时阻断 dispatch，并通过 `KnowledgeControlProposal` 交给 Agent Core gate。
 - 新增 `KnowledgeControlProposal`，默认要求 Agent Core 显式接受或拒绝，Knowledge 不直接修改 Agent PlanVersion、不问用户、不调用外部 Tool。
 - `CorrectiveAgenticRetrievalRuntime` 每次检索生成 `knowledge_retrieval_graph` trace。
 - `KnowledgeStepExecutor` 把 graph trace 和 proposal 放入 observation metadata，供 Agent Core 后续 gate 消费。
@@ -28,6 +30,8 @@ python -m py_compile src\backend\zuno\knowledge\agentic\contracts.py src\backend
 python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
 python -m py_compile src\backend\zuno\agent\runtime\execution\knowledge_step.py tests\knowledge\test_corrective_retrieval_runtime.py
 python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py -q -p no:cacheprovider --tb=short
+python -m py_compile src\backend\zuno\knowledge\agentic\contracts.py src\backend\zuno\knowledge\agentic\runtime.py src\backend\zuno\knowledge\agentic\__init__.py tests\knowledge\test_corrective_retrieval_runtime.py
+python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
 ```
 
 结果：
@@ -35,6 +39,7 @@ python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py -q -p no:c
 ```text
 11 passed in 48.15s
 9 passed in 12.27s
+14 passed in 12.84s
 ```
 
 ## 剩余范围
