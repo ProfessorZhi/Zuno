@@ -40,6 +40,17 @@ class StepRunBarrierDecision(BaseModel):
     accepts_late_result: bool = False
 
 
+class ReplanBarrierExecutionResult(BaseModel):
+    barrier_id: str
+    status: ReplanBarrierStatus
+    cancelled_before_send_step_run_ids: tuple[str, ...] = ()
+    cancel_requested_step_run_ids: tuple[str, ...] = ()
+    draining_step_run_ids: tuple[str, ...] = ()
+    obsolete_step_run_ids: tuple[str, ...] = ()
+    terminal_step_run_ids: tuple[str, ...] = ()
+    ready_for_replan: bool = False
+
+
 class ReplanBarrierRequest(BaseModel):
     barrier_id: str
     run_id: str
@@ -145,6 +156,37 @@ class ReplanBarrierBuilder:
         )
 
 
+class ReplanBarrierExecutor:
+    def execute(self, barrier: ReplanBarrierRequest) -> ReplanBarrierExecutionResult:
+        cancelled: list[str] = []
+        cancel_requested: list[str] = []
+        draining: list[str] = []
+        obsolete: list[str] = []
+        terminal: list[str] = []
+        for decision in barrier.step_decisions:
+            if decision.action is StepRunBarrierAction.CANCEL_BEFORE_SEND:
+                cancelled.append(decision.step_run_id)
+            elif decision.action is StepRunBarrierAction.REQUEST_CANCEL:
+                cancel_requested.append(decision.step_run_id)
+            elif decision.action is StepRunBarrierAction.DRAIN_NON_INTERRUPTIBLE:
+                draining.append(decision.step_run_id)
+            elif decision.action is StepRunBarrierAction.MARK_OBSOLETE:
+                obsolete.append(decision.step_run_id)
+            elif decision.action is StepRunBarrierAction.KEEP_TERMINAL:
+                terminal.append(decision.step_run_id)
+        ready = not cancel_requested and not draining
+        return ReplanBarrierExecutionResult(
+            barrier_id=barrier.barrier_id,
+            status=ReplanBarrierStatus.READY_FOR_REPLAN if ready else ReplanBarrierStatus.DRAINING,
+            cancelled_before_send_step_run_ids=tuple(cancelled),
+            cancel_requested_step_run_ids=tuple(cancel_requested),
+            draining_step_run_ids=tuple(draining),
+            obsolete_step_run_ids=tuple(obsolete),
+            terminal_step_run_ids=tuple(terminal),
+            ready_for_replan=ready,
+        )
+
+
 def _barrier_action(
     step_run: StepRun,
     non_interruptible_step_ids: set[str],
@@ -171,6 +213,8 @@ def _canonical_hash(payload: dict[str, object]) -> str:
 
 __all__ = [
     "ReplanBarrierBuilder",
+    "ReplanBarrierExecutionResult",
+    "ReplanBarrierExecutor",
     "ReplanBarrierRequest",
     "ReplanBarrierStatus",
     "ReplanBarrierValidationError",

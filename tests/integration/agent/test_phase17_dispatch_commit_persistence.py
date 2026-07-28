@@ -41,6 +41,7 @@ from zuno.agent.runtime.planning import (
     ReadySetBuilder,
     RecoveryAction,
     ReplanBarrierBuilder,
+    ReplanBarrierExecutor,
     StepRunStatus,
 )
 from zuno.agent.runtime.contracts import NormalizedObservation, ObservationKind, ObservationStatus
@@ -589,6 +590,132 @@ def test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier
         RecoveryAction.HONOR_REPLAN_BARRIER,
     ]
     assert {decision.barrier_id for decision in recovery.decisions} == {barrier.barrier_id}
+
+
+def test_phase17_replan_barrier_execution_persists_cancel_and_drain_state(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(proposal, admission, run_id=run.run_id, execution_epoch=1)
+    collect_run = next(item for item in commit.step_runs if item.dynamic_step_id == "collect")
+    failed_branch = BranchResultFencer().accept(
+        BranchResultSubmission(
+            branch_result_id="branch-result:p17:barrier-exec:collect",
+            step_run_id=collect_run.step_run_id,
+            run_id=collect_run.run_id,
+            plan_version_id=collect_run.plan_version_id,
+            dynamic_step_id=collect_run.dynamic_step_id,
+            execution_epoch=collect_run.execution_epoch,
+            attempt_no=collect_run.attempt_no,
+            step_hash=collect_run.step_hash,
+            result_ref="object://agent-results/p17/barrier-exec/collect.json",
+            result_hash="8" * 64,
+            producer_ref="dynamic_step_worker:barrier-exec",
+        ),
+        step_run=collect_run,
+        active_plan_version_id=plan.plan_version_id,
+        active_execution_epoch=1,
+    ).branch_result
+    assert failed_branch is not None
+    failed_join = BranchResultReducer().reduce(
+        plan_id=proposal.plan_id,
+        plan_version_id=plan.plan_version_id,
+        join_policy=DynamicPlanJoinPolicy.FAIL_FAST,
+        expected_branch_count=2,
+        branch_results=(
+            BranchReductionInput(branch_result=failed_branch, terminal_status=BranchTerminalStatus.FAILED),
+        ),
+    )
+    barrier = ReplanBarrierBuilder().build(
+        run_id=run.run_id,
+        control_decision=JoinControlDecisionEngine().decide(outcome=failed_join),
+        execution_epoch=1,
+        step_runs=tuple(
+            step_run.model_copy(
+                update={
+                    "status": StepRunStatus.RUNNING
+                    if step_run.dynamic_step_id == "collect"
+                    else StepRunStatus.QUEUED
+                }
+            )
+            for step_run in commit.step_runs
+        ),
+    )
+    execution = ReplanBarrierExecutor().execute(barrier)
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+        repo.record_replan_barrier_request(tenant_id=goal.tenant_id, barrier=barrier)
+        repo.connection.execute(
+            text(
+                """
+                UPDATE agent_step_runs
+                SET status = 'RUNNING'
+                WHERE step_run_id = :step_run_id
+                """
+            ),
+            {"step_run_id": collect_run.step_run_id},
+        )
+        repo.connection.execute(
+            text(
+                """
+                UPDATE agent_dispatch_items
+                SET status = 'SENT'
+                WHERE step_run_id = :step_run_id
+                """
+            ),
+            {"step_run_id": collect_run.step_run_id},
+        )
+        first = repo.record_replan_barrier_execution(tenant_id=goal.tenant_id, execution=execution)
+        duplicate = repo.record_replan_barrier_execution(tenant_id=goal.tenant_id, execution=execution)
+
+    with engine.begin() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT step_run.dynamic_step_id, step_run.status AS step_status, item.status AS item_status, event.status AS outbox_status
+                FROM agent_step_runs AS step_run
+                JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                JOIN infra_outbox_events AS event
+                  ON event.event_id = item.outbox_event_id
+                ORDER BY step_run.dynamic_step_id
+                """
+            )
+        ).mappings().all()
+        barrier_status = conn.execute(
+            text("SELECT status FROM agent_replan_barriers WHERE barrier_id = :barrier_id"),
+            {"barrier_id": barrier.barrier_id},
+        ).scalar_one()
+
+    assert first.status == "DRAINING"
+    assert duplicate.status == "duplicate:DRAINING"
+    assert barrier_status == "DRAINING"
+    assert [(row["dynamic_step_id"], row["step_status"], row["item_status"], row["outbox_status"]) for row in rows] == [
+        ("collect", "CANCELLED", "SENT", "pending"),
+        ("enrich", "CANCELLED", "CANCELLED", "published"),
+    ]
 
 
 def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(engine) -> None:

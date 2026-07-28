@@ -10,6 +10,7 @@ from zuno.agent.runtime.planning import (
     DynamicPlanJoinPolicy,
     JoinControlDecisionEngine,
     ReplanBarrierBuilder,
+    ReplanBarrierExecutor,
     ReplanBarrierRequest,
     ReplanBarrierValidationError,
     StepRun,
@@ -165,3 +166,42 @@ def test_phase17_replan_barrier_hash_fences_mutation() -> None:
                 "barrier_hash": barrier.barrier_hash,
             }
         )
+
+
+def test_phase17_replan_barrier_executor_marks_ready_when_no_in_flight_drain_remains() -> None:
+    barrier = ReplanBarrierBuilder().build(
+        run_id="run:p17:barrier",
+        control_decision=_control_decision(),
+        execution_epoch=3,
+        step_runs=(
+            _step_run("queued", StepRunStatus.QUEUED),
+            _step_run("done", StepRunStatus.SUCCEEDED),
+        ),
+    )
+
+    result = ReplanBarrierExecutor().execute(barrier)
+
+    assert result.status.value == "READY_FOR_REPLAN"
+    assert result.ready_for_replan is True
+    assert result.cancelled_before_send_step_run_ids == ("step-run:p17:barrier:queued",)
+    assert result.terminal_step_run_ids == ("step-run:p17:barrier:done",)
+
+
+def test_phase17_replan_barrier_executor_enters_draining_for_cancel_or_non_interruptible_work() -> None:
+    barrier = ReplanBarrierBuilder().build(
+        run_id="run:p17:barrier",
+        control_decision=_control_decision(),
+        execution_epoch=3,
+        step_runs=(
+            _step_run("running", StepRunStatus.RUNNING),
+            _step_run("claimed", StepRunStatus.CLAIMED),
+        ),
+        non_interruptible_step_ids=("claimed",),
+    )
+
+    result = ReplanBarrierExecutor().execute(barrier)
+
+    assert result.status.value == "DRAINING"
+    assert result.ready_for_replan is False
+    assert result.cancel_requested_step_run_ids == ("step-run:p17:barrier:running",)
+    assert result.draining_step_run_ids == ("step-run:p17:barrier:claimed",)

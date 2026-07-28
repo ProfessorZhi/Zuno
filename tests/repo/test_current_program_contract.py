@@ -311,3 +311,11 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "REDUCE_RESULT" in parallel_recovery
     assert "test_phase17_parallel_recovery_honors_replan_barrier_before_resend" in parallel_recovery_tests
     assert "test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier_facts" in persistence_tests
+    assert "P17-T16 Replan Barrier Execution Slice" in evidence
+    assert "class ReplanBarrierExecutor" in replan_barrier
+    assert "class ReplanBarrierExecutionResult" in replan_barrier
+    assert "def record_replan_barrier_execution" in repository
+    assert "duplicate:DRAINING" in persistence_tests
+    assert "READY_FOR_REPLAN" in replan_barrier
+    assert "test_phase17_replan_barrier_executor_marks_ready_when_no_in_flight_drain_remains" in replan_barrier_tests
+    assert "test_phase17_replan_barrier_execution_persists_cancel_and_drain_state" in persistence_tests

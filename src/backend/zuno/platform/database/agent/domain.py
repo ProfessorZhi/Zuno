@@ -29,7 +29,7 @@ from zuno.agent.runtime.planning.dispatch import DispatchCommit
 from zuno.agent.runtime.planning.branch_result import BranchResultRef
 from zuno.platform.database.foundation import InfrastructureRepository
 from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
-from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierRequest
+from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierExecutionResult, ReplanBarrierRequest
 from zuno.agent.runtime.planning.send import DynamicStepSendEnvelope
 from zuno.agent.runtime.planning.recovery import PersistedStepRunSnapshot
 from zuno.agent.runtime.planning.dispatch import DispatchItemStatus, StepRunStatus
@@ -787,6 +787,131 @@ class AgentDomainRepository:
         if existing and existing["step_status"] == "CLAIMED" and existing["item_status"] == "SENT":
             return AgentDomainReceipt(envelope.step_run_id, "duplicate:CLAIMED_FOR_SEND", 1)
         raise AgentDomainConflict(f"dynamic step send claim rejected for {envelope.step_run_id}")
+
+    def record_replan_barrier_execution(
+        self,
+        *,
+        tenant_id: str,
+        execution: ReplanBarrierExecutionResult,
+    ) -> AgentDomainReceipt:
+        barrier = self.connection.execute(
+            text(
+                """
+                SELECT barrier_id, status, step_decisions
+                FROM agent_replan_barriers
+                WHERE barrier_id = :barrier_id AND tenant_id = :tenant_id
+                FOR UPDATE
+                """
+            ),
+            {"tenant_id": tenant_id, "barrier_id": execution.barrier_id},
+        ).mappings().first()
+        if barrier is None:
+            raise AgentDomainConflict(f"missing ReplanBarrier for {execution.barrier_id}")
+        if barrier["status"] == execution.status.value:
+            return AgentDomainReceipt(execution.barrier_id, f"duplicate:{barrier['status']}", 1)
+        if barrier["status"] not in {"REQUESTED", "DRAINING"}:
+            raise AgentDomainConflict(f"ReplanBarrier is not executable: {execution.barrier_id}")
+
+        cancelled = list(execution.cancelled_before_send_step_run_ids)
+        cancel_requested = list(execution.cancel_requested_step_run_ids)
+        draining = list(execution.draining_step_run_ids)
+        obsolete = list(execution.obsolete_step_run_ids)
+
+        if cancelled:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status = 'QUEUED'
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_dispatch_items
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status = 'PENDING_SEND'
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE infra_outbox_events AS event
+                    SET status = 'published',
+                        published_at = now(),
+                        claim_owner = NULL,
+                        claimed_at = NULL
+                    FROM agent_dispatch_items AS item
+                    WHERE item.outbox_event_id = event.event_id
+                      AND item.tenant_id = :tenant_id
+                      AND item.step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND event.status IN ('pending','claimed')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancelled},
+            )
+        if cancel_requested:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'CANCELLED'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status IN ('CLAIMED','RUNNING')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": cancel_requested},
+            )
+        if draining:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'RUNNING'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                      AND status IN ('CLAIMED','RUNNING')
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": draining},
+            )
+        if obsolete:
+            self.connection.execute(
+                text(
+                    """
+                    UPDATE agent_step_runs
+                    SET status = 'OBSOLETE'
+                    WHERE tenant_id = :tenant_id
+                      AND step_run_id = ANY(CAST(:step_run_ids AS text[]))
+                    """
+                ),
+                {"tenant_id": tenant_id, "step_run_ids": obsolete},
+            )
+        self.connection.execute(
+            text(
+                """
+                UPDATE agent_replan_barriers
+                SET status = :status
+                WHERE barrier_id = :barrier_id AND tenant_id = :tenant_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "barrier_id": execution.barrier_id,
+                "status": execution.status.value,
+            },
+        )
+        return AgentDomainReceipt(execution.barrier_id, execution.status.value, 1)
 
     def load_parallel_recovery_snapshot(
         self,

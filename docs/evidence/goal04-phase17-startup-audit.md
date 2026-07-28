@@ -564,3 +564,39 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 restart parallel recovery 计划和 PostgreSQL snapshot；
 - 尚未实现 barrier 执行器或 PHASE17 closure；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T16 Replan Barrier Execution Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮扩展 `src/backend/zuno/agent/runtime/planning/replan_barrier.py` 和 `src/backend/zuno/platform/database/agent/domain.py`：
+
+- `ReplanBarrierExecutor` 将 `ReplanBarrierRequest.step_decisions` 转成可持久化执行结果；
+- queued StepRun 执行 `CANCEL_BEFORE_SEND`，数据库中 StepRun / DispatchItem 进入 `CANCELLED`，pending/claimed outbox 标记为 published，防止 restart 后重发；
+- claimed/running StepRun 执行 `REQUEST_CANCEL`，数据库中 StepRun 进入 `CANCELLED`；
+- non-interruptible running StepRun 执行 `DRAIN_NON_INTERRUPTIBLE`，barrier 保持 `DRAINING`；
+- terminal StepRun 执行 `KEEP_TERMINAL`，不覆盖既有终态事实；
+- `AgentDomainRepository.record_replan_barrier_execution(...)` 以 barrier row lock 推进 `REQUESTED/DRAINING -> DRAINING/READY_FOR_REPLAN`，重复执行返回 `duplicate:<status>`。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\replan_barrier.py src\backend\zuno\agent\runtime\planning\__init__.py src\backend\zuno\platform\database\agent\domain.py tests\agent\dag\test_phase17_replan_barrier.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_replan_barrier.py -q -p no:cacheprovider --tb=short
+7 passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+8 passed
+```
+
+边界：
+
+- 该切片完成 Replan Barrier 执行和 PostgreSQL 状态推进；
+- 尚未执行 PHASE17 closure audit、状态 completed 更新或 Coordinator Approval；
+- PHASE17 仍为 `in_progress`，不能写 completed。

@@ -81,6 +81,8 @@ from zuno.agent.runtime.planning.recovery import (
 )
 from zuno.agent.runtime.planning.replan_barrier import (
     ReplanBarrierBuilder,
+    ReplanBarrierExecutionResult,
+    ReplanBarrierExecutor,
     ReplanBarrierRequest,
     ReplanBarrierStatus,
     ReplanBarrierValidationError,
@@ -164,6 +166,8 @@ __all__ = [
     "RecoveryAction",
     "RecoveryDecision",
     "ReplanBarrierBuilder",
+    "ReplanBarrierExecutionResult",
+    "ReplanBarrierExecutor",
     "ReplanBarrierRequest",
     "ReplanBarrierStatus",
     "ReplanBarrierValidationError",
