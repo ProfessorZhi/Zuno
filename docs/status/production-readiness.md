@@ -22,8 +22,9 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE14 completed：Goal03 Wave A 已完成 Capability/Skill Definition、Version、Installation、Selection、Availability、Supply-chain guard、Planner Snapshot、progressive loading 和旁路 guard focused suites 与 Capability verifier；不代表 PHASE15。
 - PHASE15 completed：Goal03 Wave B 已完成唯一 ToolInvocationGateway、ToolRepository/UoW 默认路径、只读 CLI/OpenAPI/LangChain gateway cutover 和旁路 guard；有副作用 Tool fail-closed 到 PHASE16，不返回虚构外部 Effect 成功。
 - PHASE10 ready：PHASE09 Wave A 已完成，可启动 Web/Desktop Product Adaptation；尚未实现。
-- PHASE16 completed：Goal04 PR B 已在独立分支完成 Tool Side Effect and Reconciliation Coordinator Closure，P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay 均有本地证据；尚未 merge 到 main，不代表 PHASE17 已启动或 production ready。
-- current_phase = PHASE10；PHASE17–22 不得提前冒充 Current。
+- PHASE16 completed：Goal04 PR B 已完成 Tool Side Effect and Reconciliation Coordinator Closure 并通过 merge commit `d78426171df0591643af12549a36214a24734f7c` 合并到 main；P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay 均有本地证据；不代表 production ready。
+- PHASE17 completed：Goal04 PR C 分支已完成 Dynamic Plan DAG and Parallel Control Coordinator Closure；证据为 `docs/evidence/goal04-phase17-coordinator-closure.md` 和 `docs/evidence/goal04-phase17-startup-audit.md`，Alembic head 为 `20260728_49`；PR C 尚未合并前不解除 PHASE18 启动依赖，也不代表 production ready。
+- current_phase = PHASE10；PHASE18–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
@@ -35,9 +36,9 @@ Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE
 
 Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；PHASE14 completed；PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production readiness not established。
 
-## Goal04 PR B Boundary
+## Goal04 PR C Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 当前只在 PR B 分支 `codex/goal04-phase16-tool-side-effect` 中完成 Coordinator Closure。当前 evidence 证明 P16-T01 至 P16-T22 focused slices、append-only migration、PostgreSQL integration、fault/security gate、bypass zero guard、UNKNOWN/reconciliation/replay/recovery 均已实现并验证；这不表示 PR B 已合并，不解除 PHASE17 必须基于 PR B 合并后最新 main 启动的依赖，不改变 `current_phase = PHASE10`，也不建立 production readiness。
+PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 PR C 基于该合并后的最新 main 完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal04-phase17-coordinator-closure.md`，实现证据覆盖 P17-T01 至 P17-T17。该 closure 不表示 Goal04 completed；PHASE18 必须等待 PHASE17 PR C 合并到 main 后才能启动，不改变 `current_phase = PHASE10`，也不建立 production readiness。
 
 PHASE08 当前保留的部分证据：
 

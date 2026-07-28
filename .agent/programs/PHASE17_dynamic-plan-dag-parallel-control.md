@@ -1,7 +1,7 @@
 # PHASE17 Dynamic Plan DAG and Parallel Control
 
 phase_id: PHASE17
-status: planned
+status: completed
 depends_on: PHASE08, PHASE12, PHASE16
 owner: Module 06 Agent Core
 
@@ -95,6 +95,20 @@ docs/evidence/**
 - Dynamic DAG、ReadySet、Commit-before-Send、Send、Reducer、Join、Replan 真实运行。
 - 并行/晚到/重复/部分失败/重启 Fault Test 通过。
 - Sequential executor 不再是默认动态计划实现；旧路径 PHASE22 删除。
+
+## Goal04 PR C Closure
+
+status: completed
+coordinator_approval: approved
+closure_evidence: docs/evidence/goal04-phase17-coordinator-closure.md
+branch: codex/goal04-phase17-dynamic-plan-dag
+base_main_sha: d78426171df0591643af12549a36214a24734f7c
+closure_head_sha: b27d45a5
+alembic_head: 20260728_49
+
+2026-07-28 Coordinator Closure 确认 PHASE17 mandatory scope 已完整进入默认动态运行路径：`DynamicPlanRuntimeController.dispatch_ready_steps` 通过 ReadySet、Admission、DispatchCommitBuilder 和 PostgreSQL `record_dispatch_commit` 实现 commit-before-send；LangGraph Send、dynamic step worker、BranchResultRef、Reducer、JoinPolicy、ControlDecision、Replan Barrier、Barrier Execution 和 Restart Parallel Recovery 均有 focused test 与 PostgreSQL integration evidence。
+
+该 closure 只关闭 PHASE17。PHASE18 仍必须等待 PR C merge 到 main 后才能启动；Goal04 未完成，production readiness 未建立。
 
 ## Validation
 
