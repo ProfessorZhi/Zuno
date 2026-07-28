@@ -31,6 +31,9 @@ from zuno.platform.database.foundation import InfrastructureRepository
 from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
 from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierRequest
 from zuno.agent.runtime.planning.send import DynamicStepSendEnvelope
+from zuno.agent.runtime.planning.recovery import PersistedStepRunSnapshot
+from zuno.agent.runtime.planning.dispatch import DispatchItemStatus, StepRunStatus
+from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierStatus
 
 
 class AgentDomainPersistenceError(RuntimeError):
@@ -784,6 +787,82 @@ class AgentDomainRepository:
         if existing and existing["step_status"] == "CLAIMED" and existing["item_status"] == "SENT":
             return AgentDomainReceipt(envelope.step_run_id, "duplicate:CLAIMED_FOR_SEND", 1)
         raise AgentDomainConflict(f"dynamic step send claim rejected for {envelope.step_run_id}")
+
+    def load_parallel_recovery_snapshot(
+        self,
+        *,
+        tenant_id: str,
+        run_id: str,
+        plan_version_id: str,
+        execution_epoch: int,
+    ) -> tuple[PersistedStepRunSnapshot, ...]:
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT
+                    step_run.step_run_id,
+                    step_run.dynamic_step_id,
+                    step_run.execution_epoch,
+                    step_run.status AS step_status,
+                    item.status AS dispatch_item_status,
+                    item.outbox_event_id,
+                    outbox.status AS outbox_status,
+                    branch.branch_result_id,
+                    barrier.barrier_id,
+                    barrier.status AS barrier_status
+                FROM agent_step_runs AS step_run
+                LEFT JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                 AND item.tenant_id = step_run.tenant_id
+                LEFT JOIN infra_outbox_events AS outbox
+                  ON outbox.event_id = item.outbox_event_id
+                 AND outbox.tenant_id = step_run.tenant_id
+                LEFT JOIN agent_branch_result_refs AS branch
+                  ON branch.step_run_id = step_run.step_run_id
+                 AND branch.tenant_id = step_run.tenant_id
+                LEFT JOIN agent_replan_barriers AS barrier
+                  ON barrier.run_id = step_run.run_id
+                 AND barrier.plan_version_id = step_run.plan_version_id
+                 AND barrier.execution_epoch = step_run.execution_epoch
+                 AND barrier.tenant_id = step_run.tenant_id
+                 AND barrier.status IN ('REQUESTED','DRAINING','READY_FOR_REPLAN')
+                WHERE step_run.tenant_id = :tenant_id
+                  AND step_run.run_id = :run_id
+                  AND step_run.plan_version_id = :plan_version_id
+                  AND step_run.execution_epoch = :execution_epoch
+                ORDER BY step_run.dynamic_step_id, step_run.step_run_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "plan_version_id": plan_version_id,
+                "execution_epoch": execution_epoch,
+            },
+        ).mappings().all()
+        return tuple(
+            PersistedStepRunSnapshot(
+                step_run_id=str(row["step_run_id"]),
+                dynamic_step_id=str(row["dynamic_step_id"]),
+                execution_epoch=int(row["execution_epoch"]),
+                status=StepRunStatus(str(row["step_status"])),
+                dispatch_item_status=(
+                    None
+                    if row["dispatch_item_status"] is None
+                    else DispatchItemStatus(str(row["dispatch_item_status"]))
+                ),
+                outbox_event_id=None if row["outbox_event_id"] is None else str(row["outbox_event_id"]),
+                outbox_status=None if row["outbox_status"] is None else str(row["outbox_status"]),
+                branch_result_id=None if row["branch_result_id"] is None else str(row["branch_result_id"]),
+                barrier_id=None if row["barrier_id"] is None else str(row["barrier_id"]),
+                barrier_status=(
+                    None
+                    if row["barrier_status"] is None
+                    else ReplanBarrierStatus(str(row["barrier_status"]))
+                ),
+            )
+            for row in rows
+        )
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)

@@ -129,6 +129,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     dynamic_worker = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_worker.py"
     ).read_text(encoding="utf-8")
+    parallel_recovery = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/recovery.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -176,6 +179,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     dynamic_worker_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_step_worker.py"
+    ).read_text(encoding="utf-8")
+    parallel_recovery_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_parallel_recovery.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -294,3 +300,14 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "BranchResultFencer" in dynamic_worker
     assert "test_phase17_dynamic_step_worker_executes_and_returns_fenced_branch_result" in dynamic_worker_tests
     assert "test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim" in persistence_tests
+    assert "P17-T15 Restart Parallel Recovery Slice" in evidence
+    assert "class ParallelRecoveryPlanner" in parallel_recovery
+    assert "class PersistedStepRunSnapshot" in parallel_recovery
+    assert "class RecoveryAction" in parallel_recovery
+    assert "def load_parallel_recovery_snapshot" in repository
+    assert "HONOR_REPLAN_BARRIER" in parallel_recovery
+    assert "RESEND_OUTBOX" in parallel_recovery
+    assert "RESUME_IN_FLIGHT" in parallel_recovery
+    assert "REDUCE_RESULT" in parallel_recovery
+    assert "test_phase17_parallel_recovery_honors_replan_barrier_before_resend" in parallel_recovery_tests
+    assert "test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier_facts" in persistence_tests

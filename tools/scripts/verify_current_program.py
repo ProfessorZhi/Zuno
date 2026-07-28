@@ -311,6 +311,7 @@ def verify_current_program() -> list[str]:
     replan_barrier = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "replan_barrier.py")
     dynamic_send = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "send.py")
     dynamic_worker = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_worker.py")
+    parallel_recovery = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "recovery.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
@@ -352,6 +353,9 @@ def verify_current_program() -> list[str]:
     )
     dynamic_worker_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_worker.py"
+    )
+    parallel_recovery_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_parallel_recovery.py"
     )
     dispatch_persistence_tests = _read(
         REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
@@ -454,6 +458,8 @@ def verify_current_program() -> list[str]:
                 + dynamic_send_tests
                 + dynamic_worker
                 + dynamic_worker_tests
+                + parallel_recovery
+                + parallel_recovery_tests
                 + dispatch_migration
                 + branch_result_migration
                 + join_outcome_migration
@@ -579,6 +585,16 @@ def verify_current_program() -> list[str]:
                 "BranchResultFencer",
                 "test_phase17_dynamic_step_worker_executes_and_returns_fenced_branch_result",
                 "test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim",
+                "P17-T15 Restart Parallel Recovery Slice",
+                "ParallelRecoveryPlanner",
+                "PersistedStepRunSnapshot",
+                "RecoveryAction",
+                "load_parallel_recovery_snapshot",
+                "HONOR_REPLAN_BARRIER",
+                "RESEND_OUTBOX",
+                "RESUME_IN_FLIGHT",
+                "REDUCE_RESULT",
+                "test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier_facts",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

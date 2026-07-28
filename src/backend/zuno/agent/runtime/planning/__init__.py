@@ -72,6 +72,13 @@ from zuno.agent.runtime.planning.reducer import (
     ReducedJoinOutcome,
     ReducerValidationError,
 )
+from zuno.agent.runtime.planning.recovery import (
+    ParallelRecoveryPlan,
+    ParallelRecoveryPlanner,
+    PersistedStepRunSnapshot,
+    RecoveryAction,
+    RecoveryDecision,
+)
 from zuno.agent.runtime.planning.replan_barrier import (
     ReplanBarrierBuilder,
     ReplanBarrierRequest,
@@ -151,6 +158,11 @@ __all__ = [
     "ReducedBranchResult",
     "ReducedJoinOutcome",
     "ReducerValidationError",
+    "ParallelRecoveryPlan",
+    "ParallelRecoveryPlanner",
+    "PersistedStepRunSnapshot",
+    "RecoveryAction",
+    "RecoveryDecision",
     "ReplanBarrierBuilder",
     "ReplanBarrierRequest",
     "ReplanBarrierStatus",

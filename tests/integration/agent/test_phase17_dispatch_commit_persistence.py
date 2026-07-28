@@ -37,7 +37,9 @@ from zuno.agent.runtime.planning import (
     DynamicStepWorker,
     JoinControlDecisionEngine,
     LocalBranchResultObjectStore,
+    ParallelRecoveryPlanner,
     ReadySetBuilder,
+    RecoveryAction,
     ReplanBarrierBuilder,
     StepRunStatus,
 )
@@ -500,6 +502,93 @@ def test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim(e
     assert row["result_ref"].startswith("object://")
     assert row["result_hash"] == worker_result.result_hash
     assert row["outbox_status"] == "published"
+
+
+def test_phase17_parallel_recovery_snapshot_restores_dispatch_branch_and_barrier_facts(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(proposal, admission, run_id=run.run_id, execution_epoch=1)
+    collect_run = next(item for item in commit.step_runs if item.dynamic_step_id == "collect")
+    branch_result = BranchResultFencer().accept(
+        BranchResultSubmission(
+            branch_result_id="branch-result:p17:recovery:collect",
+            step_run_id=collect_run.step_run_id,
+            run_id=collect_run.run_id,
+            plan_version_id=collect_run.plan_version_id,
+            dynamic_step_id=collect_run.dynamic_step_id,
+            execution_epoch=collect_run.execution_epoch,
+            attempt_no=collect_run.attempt_no,
+            step_hash=collect_run.step_hash,
+            result_ref="object://agent-results/p17/recovery/collect.json",
+            result_hash="9" * 64,
+            producer_ref="dynamic_step_worker:recovery",
+        ),
+        step_run=collect_run,
+        active_plan_version_id=plan.plan_version_id,
+        active_execution_epoch=1,
+    ).branch_result
+    assert branch_result is not None
+    failed_join = BranchResultReducer().reduce(
+        plan_id=proposal.plan_id,
+        plan_version_id=plan.plan_version_id,
+        join_policy=DynamicPlanJoinPolicy.FAIL_FAST,
+        expected_branch_count=2,
+        branch_results=(
+            BranchReductionInput(branch_result=branch_result, terminal_status=BranchTerminalStatus.FAILED),
+        ),
+    )
+    barrier = ReplanBarrierBuilder().build(
+        run_id=run.run_id,
+        control_decision=JoinControlDecisionEngine().decide(outcome=failed_join),
+        execution_epoch=1,
+        step_runs=commit.step_runs,
+    )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+        repo.record_branch_result_ref(tenant_id=goal.tenant_id, branch_result=branch_result)
+        repo.record_replan_barrier_request(tenant_id=goal.tenant_id, barrier=barrier)
+        snapshot = repo.load_parallel_recovery_snapshot(
+            tenant_id=goal.tenant_id,
+            run_id=run.run_id,
+            plan_version_id=plan.plan_version_id,
+            execution_epoch=1,
+        )
+
+    recovery = ParallelRecoveryPlanner().plan(
+        run_id=run.run_id,
+        plan_version_id=plan.plan_version_id,
+        execution_epoch=1,
+        step_runs=snapshot,
+    )
+
+    assert [decision.action for decision in recovery.decisions] == [
+        RecoveryAction.HONOR_REPLAN_BARRIER,
+        RecoveryAction.HONOR_REPLAN_BARRIER,
+    ]
+    assert {decision.barrier_id for decision in recovery.decisions} == {barrier.barrier_id}
 
 
 def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(engine) -> None:

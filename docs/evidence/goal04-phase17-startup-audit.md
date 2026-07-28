@@ -527,3 +527,40 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 dynamic step worker 执行和 BranchResultRef 回写路径；
 - 尚未实现 restart parallel recovery、barrier 执行器或 PHASE17 closure；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T15 Restart Parallel Recovery Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/recovery.py`，并扩展 `AgentDomainRepository.load_parallel_recovery_snapshot(...)`：
+
+- `PersistedStepRunSnapshot` 从 PostgreSQL 事实恢复 StepRun、DispatchItem、outbox、BranchResultRef 和 active ReplanBarrier；
+- `ParallelRecoveryPlanner` 只基于已提交事实生成恢复决策，不重新创建 DispatchGroup，不猜测未知结果；
+- queued StepRun + pending/claimed outbox 恢复为 `RESEND_OUTBOX`；
+- claimed/running StepRun 恢复为 `RESUME_IN_FLIGHT`，不重复发送；
+- 已持久化 BranchResultRef 恢复为 `REDUCE_RESULT`；
+- active ReplanBarrier 优先恢复为 `HONOR_REPLAN_BARRIER`，冻结新的 resend/reduce 决策，避免绕过 barrier；
+- integration test 覆盖从真实 PostgreSQL dispatch / branch result / barrier 行读取 snapshot，并由 planner 输出 barrier-first recovery decisions。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\recovery.py src\backend\zuno\agent\runtime\planning\__init__.py src\backend\zuno\platform\database\agent\domain.py tests\agent\dag\test_phase17_parallel_recovery.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_parallel_recovery.py -q -p no:cacheprovider --tb=short
+4 passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+7 passed
+```
+
+边界：
+
+- 该切片完成 restart parallel recovery 计划和 PostgreSQL snapshot；
+- 尚未实现 barrier 执行器或 PHASE17 closure；
+- PHASE17 仍为 `in_progress`，不能写 completed。
