@@ -103,6 +103,7 @@ docs/evidence/**
 - Goal：当内层无法解决时输出 ASK_USER/EXTERNAL_SEARCH/REPLAN_REQUIRED/ABSTAIN Proposal，由 Agent Core 验证决策。
 - Tests：proposal schema、security refs、Agent accept/reject、Replan Barrier、no direct plan mutation。
 - Acceptance：旧 GraphRAG query/orchestrator 切流；无 `legacy_graphrag` 包，临时 adapter PHASE22 删除。
+- 2026-07-28 progress：`KnowledgeStepExecutor` 已增加 deterministic proposal gate，接受 `accept_evidence`，拒绝 `abstain` 等未解决 proposal 并转为 blocked observation；验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md`。旧 GraphRAG 默认路径切流尚未完成。
 
 ## Phase 完成定义
 

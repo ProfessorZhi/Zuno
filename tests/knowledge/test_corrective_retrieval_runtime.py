@@ -162,8 +162,53 @@ def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None
     assert result.observation.metadata["knowledge_control_proposal"]["proposal_type"] == (
         KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
     )
+    assert result.observation.metadata["agent_core_proposal_decision"] == {
+        "decision": "accepted",
+        "proposal_type": KnowledgeControlProposalType.ACCEPT_EVIDENCE.value,
+        "failure_reason": "",
+    }
     assert result.observation.evidence_ids
     assert result.observation.citation_ids
+
+
+def test_knowledge_step_blocks_when_agent_core_rejects_abstain_proposal() -> None:
+    state = AgentRuntimeState(
+        run_id="run_abstain_proposal",
+        thread_id="thread_abstain_proposal",
+        workspace_id="workspace_corrective",
+        user_id="user_abstain_proposal",
+        task_id="task_abstain_proposal",
+        trace_id="trace_abstain_proposal",
+        goal="indemnity waiver",
+        context_pack=ContextPack(
+            context_pack_id="context_abstain_proposal",
+            user_goal="indemnity waiver",
+            task_state={"knowledge_space_ids": ["ks_corrective"]},
+        ),
+    )
+    step = PlanStep(
+        step_id="step_abstain_proposal",
+        goal="retrieve missing indemnity evidence",
+        action_type="retrieve_evidence",
+        budget={"failure_bucket": "doc_miss", "max_retrieval_rounds": 2},
+    )
+
+    result = KnowledgeStepExecutor().execute(
+        state=state,
+        step=step,
+        deps=RuntimeDependencies(knowledge_runtime=_runtime()),
+    )
+
+    assert result.observation.status == "blocked"
+    assert result.observation.failure_reason == "knowledge_retrieval_abstained"
+    assert result.observation.metadata["knowledge_control_proposal"]["proposal_type"] == (
+        KnowledgeControlProposalType.ABSTAIN.value
+    )
+    assert result.observation.metadata["agent_core_proposal_decision"] == {
+        "decision": "rejected",
+        "proposal_type": KnowledgeControlProposalType.ABSTAIN.value,
+        "failure_reason": "knowledge_retrieval_abstained",
+    }
 
 
 class _CaptureRequestRuntime:
