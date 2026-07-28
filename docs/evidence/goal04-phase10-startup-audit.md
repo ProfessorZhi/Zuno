@@ -1125,6 +1125,51 @@ reason: 当前本地 PostgreSQL alembic_version=20260727_45，不在本分支 re
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T26 Product Cutover Evidence Verifier
+
+已更新：
+
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`
+- `tests/repo/test_phase10_product_cutover_evidence.py`
+- `docs/evidence/goal04-phase10-startup-audit.md`
+
+当前 verifier 覆盖：
+
+- Web runtime cutover mode、command kind 映射、rollback fail-closed 和 payload `cutover_mode`；
+- Product API / ProductService rollback boundary、cutover command contract、unknown/mismatch fail-closed；
+- Product outbox `command_kind` / `cutover_mode` handoff；
+- Agent Core handoff `constraints_hash` 和 owner receipt cutover context；
+- workspace legacy bridge default-new command contract；
+- 对应 frontend/API/workspace tests 和 P10-T22..P10-T25 evidence sections。
+
+RED 验证：
+
+```text
+python -m pytest tests\\repo\\test_phase10_product_cutover_evidence.py -q
+failed
+exception: FileNotFoundError
+missing: tools\\scripts\\verify_phase10_product_cutover_evidence.py
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\\repo\\test_phase10_product_cutover_evidence.py -q
+1 passed
+```
+
+```text
+python tools\\scripts\\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- verifier 证明的是当前 cutover evidence bundle 可机器检查，不等于 PHASE10 closure；
+- shadow/canary/default-new/rollback 仍缺完整端到端 runtime closure evidence；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1166,6 +1211,8 @@ python -m pytest tests\api\test_goal03_product_route.py::test_goal03_product_ser
 python -m pytest tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
 python -m pytest tests\api\test_goal03_product_route.py tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_links_task_events_artifact_and_feedback -q
 python -m py_compile src\backend\zuno\api\services\product\command_service.py src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\workspace_task_runtime.py
+python -m pytest tests\repo\test_phase10_product_cutover_evidence.py -q
+python tools\scripts\verify_phase10_product_cutover_evidence.py
 ```
 
 未通过 / 未完成：
