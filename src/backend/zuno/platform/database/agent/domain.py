@@ -28,6 +28,7 @@ from zuno.agent.domain import (
 from zuno.agent.runtime.planning.dispatch import DispatchCommit
 from zuno.agent.runtime.planning.branch_result import BranchResultRef
 from zuno.platform.database.foundation import InfrastructureRepository
+from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
 
 
 class AgentDomainPersistenceError(RuntimeError):
@@ -586,6 +587,66 @@ class AgentDomainRepository:
                 return AgentDomainReceipt(branch_result.branch_result_id, "duplicate:ACCEPTED", 1)
             raise AgentDomainConflict(f"conflicting BranchResultRef for {branch_result.branch_result_id}")
         return AgentDomainReceipt(branch_result.branch_result_id, "ACCEPTED", 1)
+
+    def record_join_outcome(
+        self,
+        *,
+        tenant_id: str,
+        join_outcome_id: str,
+        outcome: ReducedJoinOutcome,
+    ) -> AgentDomainReceipt:
+        params = {
+            "join_outcome_id": join_outcome_id,
+            "tenant_id": tenant_id,
+            "plan_id": outcome.plan_id,
+            "plan_version_id": outcome.plan_version_id,
+            "join_policy": outcome.join_policy.value,
+            "expected_branch_count": outcome.expected_branch_count,
+            "reduced_results": json.dumps(
+                [result.model_dump(mode="json") for result in outcome.reduced_results],
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "duplicate_result_ids": json.dumps(
+                list(outcome.duplicate_result_ids),
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+            "decision": outcome.decision.value,
+            "outcome_hash": outcome.outcome_hash,
+        }
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_join_outcomes(
+                    join_outcome_id, tenant_id, plan_id, plan_version_id, join_policy,
+                    expected_branch_count, reduced_results, duplicate_result_ids,
+                    decision, outcome_hash
+                ) VALUES (
+                    :join_outcome_id, :tenant_id, :plan_id, :plan_version_id, :join_policy,
+                    :expected_branch_count, CAST(:reduced_results AS JSON), CAST(:duplicate_result_ids AS JSON),
+                    :decision, :outcome_hash
+                )
+                ON CONFLICT (join_outcome_id) DO NOTHING
+                """
+            ),
+            params,
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT join_outcome_id, outcome_hash, decision
+                    FROM agent_join_outcomes
+                    WHERE join_outcome_id = :join_outcome_id
+                    """
+                ),
+                {"join_outcome_id": join_outcome_id},
+            ).mappings().first()
+            if existing and existing["outcome_hash"] == outcome.outcome_hash:
+                return AgentDomainReceipt(join_outcome_id, f"duplicate:{existing['decision']}", 1)
+            raise AgentDomainConflict(f"conflicting JoinOutcome for {join_outcome_id}")
+        return AgentDomainReceipt(join_outcome_id, outcome.decision.value, 1)
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)

@@ -123,6 +123,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     branch_result_migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_47_phase17_branch_results.py"
     ).read_text(encoding="utf-8")
+    join_outcome_migration = (
+        REPO_ROOT / "infra/db/alembic/versions/20260728_48_phase17_join_outcomes.py"
+    ).read_text(encoding="utf-8")
     repository = (
         REPO_ROOT / "src/backend/zuno/platform/database/agent/domain.py"
     ).read_text(encoding="utf-8")
@@ -214,3 +217,10 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "FAIL_FAST" in reducer
     assert "test_phase17_reducer_is_order_independent_and_idempotent_for_duplicate_refs" in reducer_tests
     assert "test_phase17_reducer_evaluates_join_policy" in reducer_tests
+    assert "P17-T09 JoinOutcome PostgreSQL Persistence Slice" in evidence
+    assert "20260728_48" in join_outcome_migration
+    assert "agent_join_outcomes" in join_outcome_migration
+    assert "def record_join_outcome" in repository
+    assert "duplicate:{existing['decision']}" in repository
+    assert "duplicate:CONTINUE" in persistence_tests
+    assert "test_phase17_join_outcome_persistence_records_reducer_decision" in persistence_tests

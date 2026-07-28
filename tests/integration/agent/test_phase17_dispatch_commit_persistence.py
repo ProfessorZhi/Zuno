@@ -21,8 +21,12 @@ from zuno.agent.runtime.planning import (
     AdmissionContext,
     AdmissionController,
     BranchResultFencer,
+    BranchReductionInput,
+    BranchResultReducer,
     BranchResultSubmission,
+    BranchTerminalStatus,
     DispatchCommitBuilder,
+    DynamicPlanJoinPolicy,
     DynamicPlanOutputContract,
     DynamicPlanProposal,
     DynamicPlanResourceClaim,
@@ -69,6 +73,7 @@ def engine(migrated_postgres):
                 """
                 TRUNCATE
                     agent_branch_result_refs,
+                    agent_join_outcomes,
                     agent_dispatch_items,
                     agent_step_runs,
                     agent_dispatch_groups,
@@ -377,3 +382,102 @@ def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(e
     assert row["step_run_id"] == step_run.step_run_id
     assert row["result_ref"].startswith("object://")
     assert row["ref_hash"] == accepted.branch_result.ref_hash
+
+
+def test_phase17_join_outcome_persistence_records_reducer_decision(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(
+        proposal,
+        admission,
+        run_id=run.run_id,
+        execution_epoch=1,
+    )
+    branch_results = []
+    for step_run in commit.step_runs:
+        accepted = BranchResultFencer().accept(
+            BranchResultSubmission(
+                branch_result_id=f"branch-result:p17:join:{step_run.dynamic_step_id}",
+                step_run_id=step_run.step_run_id,
+                run_id=step_run.run_id,
+                plan_version_id=step_run.plan_version_id,
+                dynamic_step_id=step_run.dynamic_step_id,
+                execution_epoch=step_run.execution_epoch,
+                attempt_no=step_run.attempt_no,
+                step_hash=step_run.step_hash,
+                result_ref=f"object://agent-results/p17/{step_run.dynamic_step_id}.json",
+                result_hash=("d" if step_run.dynamic_step_id == "collect" else "e") * 64,
+                producer_ref=f"langgraph-send:{step_run.dynamic_step_id}",
+            ),
+            step_run=step_run,
+            active_plan_version_id=plan.plan_version_id,
+            active_execution_epoch=1,
+        )
+        assert accepted.branch_result is not None
+        branch_results.append(accepted.branch_result)
+    outcome = BranchResultReducer().reduce(
+        plan_id=proposal.plan_id,
+        plan_version_id=plan.plan_version_id,
+        join_policy=DynamicPlanJoinPolicy.ALL_REQUIRED,
+        expected_branch_count=2,
+        branch_results=tuple(
+            BranchReductionInput(branch_result=result, terminal_status=BranchTerminalStatus.SUCCEEDED)
+            for result in reversed(branch_results)
+        ),
+    )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+        for result in branch_results:
+            repo.record_branch_result_ref(tenant_id=goal.tenant_id, branch_result=result)
+        receipt = repo.record_join_outcome(
+            tenant_id=goal.tenant_id,
+            join_outcome_id="join-outcome:p17:join:1",
+            outcome=outcome,
+        )
+        duplicate = repo.record_join_outcome(
+            tenant_id=goal.tenant_id,
+            join_outcome_id="join-outcome:p17:join:1",
+            outcome=outcome,
+        )
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT join_policy, decision, expected_branch_count, reduced_results, duplicate_result_ids, outcome_hash
+                FROM agent_join_outcomes
+                """
+            )
+        ).mappings().one()
+
+    assert receipt.status == "CONTINUE"
+    assert duplicate.status == "duplicate:CONTINUE"
+    assert row["join_policy"] == "ALL_REQUIRED"
+    assert row["decision"] == "CONTINUE"
+    assert row["expected_branch_count"] == 2
+    assert [item["dynamic_step_id"] for item in row["reduced_results"]] == ["collect", "enrich"]
+    assert row["duplicate_result_ids"] == []
+    assert row["outcome_hash"] == outcome.outcome_hash

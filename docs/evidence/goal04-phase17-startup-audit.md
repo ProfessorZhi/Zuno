@@ -336,3 +336,32 @@ passed
 - 该切片完成 idempotent reducer 和 JoinPolicy 领域判断；
 - 尚未实现 reducer / join PostgreSQL persistence、conditional Reflection、Replan Barrier 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T09 JoinOutcome PostgreSQL Persistence Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 append-only migration `infra/db/alembic/versions/20260728_48_phase17_join_outcomes.py`，并扩展 `src/backend/zuno/platform/database/agent/domain.py`：
+
+- 新增 `agent_join_outcomes`，绑定 PlanVersion，保存 join policy、expected branch count、reduced results、duplicate result ids、decision 和 outcome hash；
+- 表约束覆盖 `ALL_REQUIRED`、`BEST_EFFORT`、`QUORUM`、`FAIL_FAST` 和 `CONTINUE` / `WAIT` / `FAIL` / `PARTIAL_CONTINUE`；
+- `AgentDomainRepository.record_join_outcome(...)` 以 outcome hash 提供幂等重复写入，冲突 hash fail closed；
+- integration test 证明 BranchResultRef 持久化后 reducer 输出可以落库，重复写入返回 `duplicate:CONTINUE`，reduced results 保持稳定排序。
+
+验证：
+
+```text
+python -m py_compile infra\db\alembic\versions\20260728_48_phase17_join_outcomes.py src\backend\zuno\platform\database\agent\domain.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+3 passed
+```
+
+边界：
+
+- 该切片完成 JoinOutcome PostgreSQL persistence；
+- 尚未实现 conditional Reflection、Replan Barrier 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

@@ -313,6 +313,9 @@ def verify_current_program() -> list[str]:
     branch_result_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_47_phase17_branch_results.py"
     )
+    join_outcome_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_48_phase17_join_outcomes.py"
+    )
     agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
@@ -426,6 +429,7 @@ def verify_current_program() -> list[str]:
                 + reducer_tests
                 + dispatch_migration
                 + branch_result_migration
+                + join_outcome_migration
                 + agent_repository
                 + dispatch_persistence_tests
             ),
@@ -498,6 +502,12 @@ def verify_current_program() -> list[str]:
                 "FAIL_FAST",
                 "test_phase17_reducer_is_order_independent_and_idempotent_for_duplicate_refs",
                 "test_phase17_reducer_evaluates_join_policy",
+                "P17-T09 JoinOutcome PostgreSQL Persistence Slice",
+                "20260728_48_phase17_join_outcomes",
+                "agent_join_outcomes",
+                "record_join_outcome",
+                "duplicate:CONTINUE",
+                "test_phase17_join_outcome_persistence_records_reducer_decision",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )
