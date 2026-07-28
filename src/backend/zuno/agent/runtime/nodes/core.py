@@ -4,6 +4,7 @@ from copy import deepcopy
 from dataclasses import replace
 from typing import Callable
 
+from zuno.agent.application.finalization import FinalizationService
 from zuno.agent.contracts import ContextPack
 from zuno.agent.runtime.contracts import (
     FinalizationStatus,
@@ -32,6 +33,7 @@ from zuno.agent.runtime.synthesis import GroundedSynthesisEngine
 from zuno.memory.contracts import MemoryScope
 from zuno.memory.policy import RetentionPolicy
 from zuno.memory.reflexion import ReflexionCandidateBuilder
+from zuno.platform.database.memory.domain import MemoryGovernanceConflict
 
 RuntimeNodeHandler = Callable[[AgentRuntimeState, RuntimeDependencies], AgentRuntimeState]
 _STRATEGY_SELECTOR = RuntimeStrategySelector()
@@ -40,6 +42,7 @@ _PLAN_EXECUTOR = PlanExecutor()
 _REPLAN_ENGINE = ReplanEngine()
 _REFLECTION_ENGINE = ReflectionEngine()
 _SYNTHESIS_ENGINE = GroundedSynthesisEngine()
+_FINALIZATION_SERVICE = FinalizationService()
 _REFLEXION_BUILDER = ReflexionCandidateBuilder()
 _STEP_EXECUTORS = StepExecutorRegistry(
     (
@@ -341,14 +344,45 @@ def interrupt(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRunti
 
 def finalize(state: AgentRuntimeState, deps: RuntimeDependencies) -> AgentRuntimeState:
     del deps
-    decision = ReflectionDecision(state.reflection_decision or ReflectionDecision.PASS)
-    if decision in {ReflectionDecision.ABSTAIN, ReflectionDecision.REFUSE}:
+    commit = _FINALIZATION_SERVICE.commit(state)
+    if commit.run_outcome.status == "ABSTAINED":
         status = FinalizationStatus.ABSTAINED
+    elif commit.run_outcome.status == "BLOCKED":
+        status = FinalizationStatus.BLOCKED
+    elif commit.run_outcome.status == "FAILED":
+        status = FinalizationStatus.FAILED
     else:
         status = FinalizationStatus.FINALIZED
     artifact_refs = state.artifact_refs or [f"artifact:{state.run_id}:answer"]
+    finalization_observation = NormalizedObservation(
+        observation_id=f"finalization:{state.run_id}:{len(state.observations) + 1}",
+        kind=ObservationKind.GATE,
+        status=ObservationStatus.COMPLETED if status != FinalizationStatus.BLOCKED else ObservationStatus.BLOCKED,
+        source="FinalizationService",
+        summary=f"final_gate={commit.final_gate.outcome.value}; run_outcome={commit.run_outcome.status}",
+        evidence_ids=list(commit.final_candidate.evidence_refs),
+        citation_ids=[binding.citation_id for binding in commit.final_candidate.citation_bindings if binding.citation_id],
+        metadata={
+            "phase19_finalization": True,
+            "finalization_commit": commit.to_dict(),
+            "final_candidate_ref": commit.final_candidate.candidate_id,
+            "publication_ref": commit.publication.publication_id if commit.publication else None,
+            "run_outcome_ref": commit.run_outcome.outcome_id,
+            "delivery_ref": commit.delivery.delivery_id if commit.delivery else None,
+            "reflexion_candidate_ref": commit.reflexion_candidate.candidate_id if commit.reflexion_candidate else None,
+        },
+    )
     return _record_node(
-        replace(state, finalization_status=status, artifact_refs=artifact_refs),
+        replace(
+            state,
+            finalization_status=status,
+            artifact_refs=artifact_refs,
+            final_candidate_ref=commit.final_candidate.candidate_id,
+            publication_ref=commit.publication.publication_id if commit.publication else None,
+            run_outcome_ref=commit.run_outcome.outcome_id,
+            delivery_ref=commit.delivery.delivery_id if commit.delivery else None,
+            observations=[*state.observations, finalization_observation],
+        ),
         RuntimeNode.FINALIZE,
         summary=f"finalization={status.value}",
     )
@@ -384,27 +418,30 @@ def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> Age
             refs = [f"summary:{state.run_id}"]
             governed_runtime = getattr(deps.memory_engine, "governed_context_runtime", None)
             if governed_runtime is not None:
-                governed_receipt = governed_runtime.commit_turn_outcome(
-                    scope=scope,
-                    event_id=event.event_id,
-                    run_id=state.run_id,
-                    step_run_id=state.current_step_id or "post_turn",
-                    task=state.goal,
-                    response=f"{state.goal} -> {_enum_value(state.finalization_status)}",
-                    context_trace={
-                        "trace_event_ids": list(state.trace_event_ids),
-                        "evidence_refs": list(state.evidence_refs),
-                        "artifact_refs": list(state.artifact_refs),
-                        "memory_candidate_refs": list(state.memory_candidate_refs),
-                    },
-                )
-                refs.extend(
-                    [
-                        governed_receipt.candidate_id,
-                        governed_receipt.memory_version_id,
-                        governed_receipt.context_pack_id,
-                    ]
-                )
+                try:
+                    governed_receipt = governed_runtime.commit_turn_outcome(
+                        scope=scope,
+                        event_id=event.event_id,
+                        run_id=state.run_id,
+                        step_run_id=state.current_step_id or "post_turn",
+                        task=state.goal,
+                        response=f"{state.goal} -> {_enum_value(state.finalization_status)}",
+                        context_trace={
+                            "trace_event_ids": list(state.trace_event_ids),
+                            "evidence_refs": list(state.evidence_refs),
+                            "artifact_refs": list(state.artifact_refs),
+                            "memory_candidate_refs": list(state.memory_candidate_refs),
+                        },
+                    )
+                    refs.extend(
+                        [
+                            governed_receipt.candidate_id,
+                            governed_receipt.memory_version_id,
+                            governed_receipt.context_pack_id,
+                        ]
+                    )
+                except MemoryGovernanceConflict:
+                    refs.append(f"memory_candidate:{state.run_id}:summary")
             lesson = _REFLEXION_BUILDER.build(state)
             if lesson is not None:
                 candidate = deps.memory_engine.submit_reflexion_lesson_candidate(
