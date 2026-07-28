@@ -395,3 +395,34 @@ python -m pytest tests\agent\dag\test_phase17_control_decision.py -q -p no:cache
 - 该切片完成 Join Evaluation 后的 conditional Reflection / Replan Barrier 控制事实；
 - 尚未实现 Replan Barrier 持久化、真实 barrier 执行、LangGraph Send worker 默认路径或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T11 Replan Barrier Domain Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/replan_barrier.py`，把 `REQUEST_REPLAN_BARRIER` 控制决策转成可持久化前的 Replan Barrier 领域事实：
+
+- `ReplanBarrierBuilder` 只接受 `JoinControlDecision.action = REQUEST_REPLAN_BARRIER` 且 `replan_barrier_required=true` 的控制决策；
+- `ReplanBarrierRequest` 绑定 run、plan、PlanVersion、execution epoch、source control decision id/hash，并强制 `freeze_new_dispatch=true`、`new_plan_version_required=true`、`retry_permitted=false`；
+- barrier 必须推进 `next_execution_epoch`，避免旧 execution epoch 的 late result 污染新 PlanVersion；
+- `StepRunBarrierDecision` 对 queued / claimed / running / terminal / obsolete StepRun 分别给出 `CANCEL_BEFORE_SEND`、`REQUEST_CANCEL`、`DRAIN_NON_INTERRUPTIBLE`、`KEEP_TERMINAL`、`MARK_OBSOLETE`；
+- late result 只对 claimed / running in-flight StepRun 作为旧 epoch 结果接受，后续仍需 fencing/reducer 处理，不能直接进入新 PlanVersion；
+- `barrier_hash` 防止 barrier request 被原地篡改。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\replan_barrier.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_replan_barrier.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_replan_barrier.py -q -p no:cacheprovider --tb=short
+5 passed
+```
+
+边界：
+
+- 该切片完成 Replan Barrier 的 deterministic domain request；
+- 尚未实现 Replan Barrier PostgreSQL persistence、默认 runtime barrier 执行、LangGraph Send worker 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

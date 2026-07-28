@@ -65,6 +65,14 @@ from zuno.agent.runtime.planning.reducer import (
     ReducedJoinOutcome,
     ReducerValidationError,
 )
+from zuno.agent.runtime.planning.replan_barrier import (
+    ReplanBarrierBuilder,
+    ReplanBarrierRequest,
+    ReplanBarrierStatus,
+    ReplanBarrierValidationError,
+    StepRunBarrierAction,
+    StepRunBarrierDecision,
+)
 from zuno.agent.runtime.planning.replan import ReplanEngine, ReplanResult
 from zuno.agent.runtime.planning.selector import RuntimeStrategySelector
 from zuno.agent.runtime.planning.validator import PlanValidationError, PlanValidator
@@ -124,6 +132,12 @@ __all__ = [
     "ReducedBranchResult",
     "ReducedJoinOutcome",
     "ReducerValidationError",
+    "ReplanBarrierBuilder",
+    "ReplanBarrierRequest",
+    "ReplanBarrierStatus",
+    "ReplanBarrierValidationError",
+    "StepRunBarrierAction",
+    "StepRunBarrierDecision",
     "ReplanEngine",
     "ReplanResult",
     "RuntimePlanner",

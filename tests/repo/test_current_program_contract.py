@@ -120,6 +120,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     control_decision = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/control_decision.py"
     ).read_text(encoding="utf-8")
+    replan_barrier = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/replan_barrier.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -155,6 +158,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     control_decision_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_control_decision.py"
+    ).read_text(encoding="utf-8")
+    replan_barrier_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_replan_barrier.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -240,3 +246,13 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "test_phase17_control_decision_requests_reflection_for_best_effort_partial_join" in control_decision_tests
     assert "test_phase17_control_decision_requests_replan_barrier_for_failed_join" in control_decision_tests
     assert "test_phase17_control_decision_hash_fences_mutation" in control_decision_tests
+    assert "P17-T11 Replan Barrier Domain Slice" in evidence
+    assert "class ReplanBarrierBuilder" in replan_barrier
+    assert "class ReplanBarrierRequest" in replan_barrier
+    assert "class StepRunBarrierDecision" in replan_barrier
+    assert "freeze_new_dispatch" in replan_barrier
+    assert "new_plan_version_required" in replan_barrier
+    assert "DRAIN_NON_INTERRUPTIBLE" in replan_barrier
+    assert "test_phase17_replan_barrier_freezes_dispatch_and_advances_epoch" in replan_barrier_tests
+    assert "test_phase17_replan_barrier_assigns_cancel_drain_and_terminal_actions" in replan_barrier_tests
+    assert "test_phase17_replan_barrier_hash_fences_mutation" in replan_barrier_tests
