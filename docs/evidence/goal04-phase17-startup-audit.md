@@ -152,3 +152,34 @@ passed
 - 该切片只完成动态 PlanVersion 领域模型、激活 CAS 和 supersession 领域入口；
 - 尚未把动态 PlanVersion 持久化 schema 扩展为完整 DAG step metadata，尚未实现 ReadySet / Admission / DispatchGroup / Commit-before-Send；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T03 ReadySet and Admission Domain Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/admission.py`，在 DispatchGroup / Send 之前建立可验证的安全并行闸门：
+
+- `ReadySetBuilder` 根据动态 DAG dependency rule 和 step run state 计算 ready / waiting / terminal step；
+- ReadySet 覆盖 `ALL_SUCCESS`、`ALL_TERMINAL`、`ANY_SUCCESS`、`OPTIONAL_INPUT` 和 `QUORUM` 的确定性判断；
+- `AdmissionContext` 绑定 `plan_id`、`plan_version_id`、security epoch、authorized capabilities、budget、quota、capacity 和 in-flight resource claims；
+- `AdmissionController` 对 ready steps 按 proposal 顺序执行 Resource / Security / Budget / Quota / Capacity gate；
+- admission 结果区分 `ADMITTED`、`DEFERRED` 和 `REJECTED`，stale security epoch 与 unauthorized capability fail closed；
+- admission 只生成可进入后续 dispatch 的决定和预算保留量，不发送 LangGraph worker，不写 StepRun 成功，不冒充领域执行完成。
+
+验证：
+
+```text
+python -m pytest tests\agent\dag\test_phase17_readyset_admission.py -q -p no:cacheprovider --tb=short
+4 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\admission.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_readyset_admission.py
+passed
+```
+
+边界：
+
+- 该切片只完成 ReadySet 和 Admission 的 runtime planning gate；
+- 尚未实现 DispatchGroup、DispatchItem、StepRun、Commit-before-Send、LangGraph Send、BranchResultRef、Reducer、JoinEvaluation 或 Replan Barrier；
+- PHASE17 仍为 `in_progress`，不能写 completed。

@@ -105,6 +105,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     runtime = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_dag.py"
     ).read_text(encoding="utf-8")
+    admission = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/admission.py"
+    ).read_text(encoding="utf-8")
     domain = (
         REPO_ROOT / "src/backend/zuno/agent/domain/task_contracts.py"
     ).read_text(encoding="utf-8")
@@ -113,6 +116,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     domain_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_plan_version_domain.py"
+    ).read_text(encoding="utf-8")
+    admission_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_readyset_admission.py"
     ).read_text(encoding="utf-8")
 
     assert "P17-T01 Dynamic DAG Proposal and Validator Slice" in evidence
@@ -126,3 +132,12 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "def create_dynamic_dag" in domain
     assert "def supersede" in domain
     assert "test_phase17_dynamic_plan_version_supersession_requires_active_cas" in domain_tests
+    assert "P17-T03 ReadySet and Admission Domain Slice" in evidence
+    assert "class ReadySetBuilder" in admission
+    assert "class AdmissionController" in admission
+    assert "class AdmissionContext" in admission
+    assert "class AdmissionRejectionCode" in admission
+    assert "STALE_SECURITY_EPOCH" in admission
+    assert "CAPABILITY_NOT_AUTHORIZED" in admission
+    assert "test_phase17_readyset_finds_dependency_satisfied_steps" in admission_tests
+    assert "test_phase17_admission_defers_budget_quota_capacity_and_resource_conflicts" in admission_tests

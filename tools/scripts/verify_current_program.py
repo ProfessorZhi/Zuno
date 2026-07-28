@@ -303,10 +303,14 @@ def verify_current_program() -> list[str]:
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
+    dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
     dynamic_plan_version_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_plan_version_domain.py"
+    )
+    readyset_admission_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_readyset_admission.py"
     )
 
     errors.extend(
@@ -384,7 +388,15 @@ def verify_current_program() -> list[str]:
     )
     errors.extend(
         _require_phrases(
-            phase17_evidence + dynamic_dag + dynamic_dag_tests + agent_domain + dynamic_plan_version_tests,
+            (
+                phase17_evidence
+                + dynamic_dag
+                + dynamic_dag_tests
+                + agent_domain
+                + dynamic_plan_version_tests
+                + dynamic_admission
+                + readyset_admission_tests
+            ),
             [
                 "P17-T01 Dynamic DAG Proposal and Validator Slice",
                 "DynamicPlanProposal",
@@ -402,6 +414,15 @@ def verify_current_program() -> list[str]:
                 "supersede",
                 "test_phase17_dynamic_plan_version_supersession_requires_active_cas",
                 "test_phase17_dynamic_plan_version_rejects_unknown_dependency_and_cycles",
+                "P17-T03 ReadySet and Admission Domain Slice",
+                "ReadySetBuilder",
+                "AdmissionController",
+                "AdmissionContext",
+                "AdmissionRejectionCode",
+                "STALE_SECURITY_EPOCH",
+                "CAPABILITY_NOT_AUTHORIZED",
+                "test_phase17_readyset_finds_dependency_satisfied_steps",
+                "test_phase17_admission_defers_budget_quota_capacity_and_resource_conflicts",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )
