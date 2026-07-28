@@ -12,6 +12,7 @@ from zuno.knowledge.agentic import (
     CorrectiveRetrievalResult,
     EvidenceLedger,
     EvidenceLedgerRecord,
+    KnowledgeRetrievalGraphTrace,
     QueryStrategy,
     RetrievalQualityVerdict,
 )
@@ -57,7 +58,12 @@ class _EvidenceRuntime:
             rounds=({"round": self.calls, "verdict": RetrievalQualityVerdict.RELEVANT.value},),
             final_verdict=RetrievalQualityVerdict.RELEVANT,
             final_action=CorrectiveAction.CONTINUE,
-            trace={"ledger": ledger.to_trace(), "rounds": []},
+            graph_trace=KnowledgeRetrievalGraphTrace(),
+            trace={
+                "ledger": ledger.to_trace(),
+                "rounds": [],
+                "knowledge_retrieval_graph": {"proposal": {"proposal_type": "accept_evidence"}},
+            },
         )
 
 

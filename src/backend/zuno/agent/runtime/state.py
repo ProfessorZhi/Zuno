@@ -49,6 +49,10 @@ class AgentRuntimeSnapshot(BaseModel):
     counters: RuntimeCounters = Field(default_factory=RuntimeCounters)
     evidence_refs: list[str] = Field(default_factory=list)
     artifact_refs: list[str] = Field(default_factory=list)
+    final_candidate_ref: str | None = None
+    publication_ref: str | None = None
+    run_outcome_ref: str | None = None
+    delivery_ref: str | None = None
     memory_candidate_refs: list[str] = Field(default_factory=list)
     interrupt_refs: list[str] = Field(default_factory=list)
     checkpoint_refs: list[str] = Field(default_factory=list)
@@ -95,6 +99,10 @@ class AgentRuntimeState:
     counters: RuntimeCounters = field(default_factory=RuntimeCounters)
     evidence_refs: list[str] = field(default_factory=list)
     artifact_refs: list[str] = field(default_factory=list)
+    final_candidate_ref: str | None = None
+    publication_ref: str | None = None
+    run_outcome_ref: str | None = None
+    delivery_ref: str | None = None
     memory_candidate_refs: list[str] = field(default_factory=list)
     interrupt_refs: list[str] = field(default_factory=list)
     checkpoint_refs: list[str] = field(default_factory=list)
@@ -124,6 +132,10 @@ class AgentRuntimeState:
             counters=self.counters,
             evidence_refs=list(self.evidence_refs),
             artifact_refs=list(self.artifact_refs),
+            final_candidate_ref=self.final_candidate_ref,
+            publication_ref=self.publication_ref,
+            run_outcome_ref=self.run_outcome_ref,
+            delivery_ref=self.delivery_ref,
             memory_candidate_refs=list(self.memory_candidate_refs),
             interrupt_refs=list(self.interrupt_refs),
             checkpoint_refs=list(self.checkpoint_refs),
@@ -159,6 +171,10 @@ class AgentRuntimeState:
             counters=snapshot.counters,
             evidence_refs=list(snapshot.evidence_refs),
             artifact_refs=list(snapshot.artifact_refs),
+            final_candidate_ref=snapshot.final_candidate_ref,
+            publication_ref=snapshot.publication_ref,
+            run_outcome_ref=snapshot.run_outcome_ref,
+            delivery_ref=snapshot.delivery_ref,
             memory_candidate_refs=list(snapshot.memory_candidate_refs),
             interrupt_refs=list(snapshot.interrupt_refs),
             checkpoint_refs=list(snapshot.checkpoint_refs),
