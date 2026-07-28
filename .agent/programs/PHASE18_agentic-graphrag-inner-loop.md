@@ -72,6 +72,7 @@ docs/evidence/**
 - Goal：实现 validate→pin snapshot→scope→interpret→select profile→plan round→admit→dispatch→normalize→fuse→ledger→evaluate→decide。
 - Tests：state schema、round immutability、restart、deadline、cancel、invalid snapshot。
 - Acceptance：RetrievalRound 不修改 Agent PlanVersion。
+- 2026-07-28 progress：固定 `KnowledgeRetrievalGraph` trace、内部 profile、`KnowledgeControlProposal` 和 `KnowledgeStepExecutor` observation metadata 已实现第一版；验证见 `docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md`。PHASE18 仍为 in_progress。
 
 ### P18-T03 Graph Entity/Relation/Path/Community Runtime
 - Goal：实现 entity resolution、relation/path traversal、local/global/community summary、source grounding。

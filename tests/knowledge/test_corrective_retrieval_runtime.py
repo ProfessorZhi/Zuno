@@ -9,6 +9,8 @@ from zuno.knowledge.agentic import (
     CorrectiveAgenticRetrievalRuntime,
     CorrectiveRetrievalRequest,
     DurableKnowledgeRetrievalPort,
+    KnowledgeControlProposalType,
+    KnowledgeRetrievalGraphNode,
     QueryStrategy,
 )
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
@@ -89,6 +91,42 @@ def test_corrective_runtime_continues_when_first_round_has_strict_source_span() 
     assert result.ledger.records()[0].strict_citation_allowed is True
 
 
+def test_corrective_runtime_records_fixed_knowledge_retrieval_graph() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_graph_contract",
+            task_id="task_graph_contract",
+            snapshot_id="snapshot:phase18",
+            max_rounds=1,
+        )
+    )
+
+    assert result.graph_trace.fixed_graph == list(KnowledgeRetrievalGraphNode)
+    assert result.graph_trace.node_sequence() == [
+        "validate",
+        "pin_snapshot",
+        "scope",
+        "interpret",
+        "select_profile",
+        "plan_round",
+        "admit",
+        "dispatch",
+        "normalize",
+        "fuse_rerank",
+        "evidence_ledger",
+        "evaluate",
+        "corrective_decision",
+    ]
+    graph_trace = result.trace["knowledge_retrieval_graph"]
+    assert graph_trace["snapshot_id"] == "snapshot:phase18"
+    assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
+    assert graph_trace["proposal"]["requires_agent_core_decision"] is True
+    assert graph_trace["proposal"]["accepted_by_knowledge"] is False
+
+
 def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None:
     state = AgentRuntimeState(
         run_id="run_corrective",
@@ -119,6 +157,11 @@ def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None
     assert result.observation.metadata["agentic_corrective_retrieval"] is True
     assert result.observation.metadata["final_action"] == CorrectiveAction.CONTINUE.value
     assert result.observation.metadata["ledger"]["record_count"] == 1
+    graph_trace = result.observation.metadata["knowledge_retrieval_graph"]
+    assert graph_trace["fixed_graph"] == [node.value for node in KnowledgeRetrievalGraphNode]
+    assert result.observation.metadata["knowledge_control_proposal"]["proposal_type"] == (
+        KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
+    )
     assert result.observation.evidence_ids
     assert result.observation.citation_ids
 

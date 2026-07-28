@@ -4,7 +4,17 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from zuno.agent.contracts import RetrievalProfile
-from zuno.knowledge.agentic.contracts import CorrectiveAction, EvidenceLedgerRecord, QueryStrategy, RetrievalQualityVerdict
+from zuno.knowledge.agentic.contracts import (
+    CorrectiveAction,
+    EvidenceLedgerRecord,
+    KnowledgeControlProposal,
+    KnowledgeControlProposalType,
+    KnowledgeRetrievalGraphNode,
+    KnowledgeRetrievalGraphTrace,
+    KnowledgeRetrievalProfile,
+    QueryStrategy,
+    RetrievalQualityVerdict,
+)
 from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
 from zuno.knowledge.agentic.quality import RetrievalQualityGate
@@ -35,6 +45,7 @@ class CorrectiveRetrievalResult:
     rounds: tuple[dict[str, Any], ...]
     final_verdict: RetrievalQualityVerdict
     final_action: CorrectiveAction
+    graph_trace: KnowledgeRetrievalGraphTrace
     trace: dict[str, Any]
 
 
@@ -46,6 +57,7 @@ class CorrectiveAgenticRetrievalRuntime:
 
     def retrieve(self, request: CorrectiveRetrievalRequest) -> CorrectiveRetrievalResult:
         ledger = EvidenceLedger()
+        graph_trace = _start_graph_trace(request)
         rounds: list[dict[str, Any]] = []
         used_actions: list[CorrectiveAction] = []
         current_query = request.query
@@ -53,8 +65,52 @@ class CorrectiveAgenticRetrievalRuntime:
         answer = ""
         final_verdict = RetrievalQualityVerdict.IRRELEVANT
         final_action = CorrectiveAction.ABSTAIN
+        graph_trace.add(
+            KnowledgeRetrievalGraphNode.VALIDATE,
+            status="completed" if request.query.strip() and request.knowledge_space_ids else "blocked",
+            payload={
+                "query_present": bool(request.query.strip()),
+                "knowledge_scope_present": bool(request.knowledge_space_ids),
+            },
+        )
+        graph_trace.add(
+            KnowledgeRetrievalGraphNode.PIN_SNAPSHOT,
+            status="pinned" if request.snapshot_id else "deferred_to_repository",
+            payload={"snapshot_id": request.snapshot_id},
+        )
+        graph_trace.add(
+            KnowledgeRetrievalGraphNode.SCOPE,
+            payload={
+                "workspace_id": request.workspace_id,
+                "knowledge_space_ids": list(request.knowledge_space_ids),
+                "authorization_ref": request.authorization_ref,
+            },
+        )
+        graph_trace.add(
+            KnowledgeRetrievalGraphNode.INTERPRET,
+            payload={"claims": list(request.claims), "failure_bucket": request.failure_bucket},
+        )
+        graph_trace.add(
+            KnowledgeRetrievalGraphNode.SELECT_PROFILE,
+            payload={
+                "requested_profile": str(request.retrieval_profile),
+                "selected_profile": graph_trace.profile.value,
+            },
+        )
 
         for round_number in range(1, request.max_rounds + 1):
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.PLAN_ROUND,
+                round=round_number,
+                payload={"query": current_query, "query_strategy": strategy.value},
+            )
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.ADMIT,
+                round=round_number,
+                status="admitted",
+                payload={"max_rounds": request.max_rounds},
+            )
+            graph_trace.add(KnowledgeRetrievalGraphNode.DISPATCH, round=round_number)
             result = self._base_runtime.answer(
                 AgenticRetrievalRuntimeRequest(
                     query=current_query,
@@ -66,6 +122,22 @@ class CorrectiveAgenticRetrievalRuntime:
                     trace_id=request.trace_id,
                     task_id=request.task_id,
                 )
+            )
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.NORMALIZE,
+                round=round_number,
+                payload={
+                    "candidate_count": len(result.evidence_bundle.items),
+                    "retrieval_required": result.decision.retrieval_required,
+                },
+            )
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.FUSE_RERANK,
+                round=round_number,
+                payload={
+                    "resolved_methods": [method.value for method in result.decision.resolved_methods],
+                    "retrievers_used": _retrievers_used(result.index_payloads),
+                },
             )
             records = [
                 _record_from_item(
@@ -79,14 +151,33 @@ class CorrectiveAgenticRetrievalRuntime:
             ]
             ledger.extend(records)
             round_records = list(ledger.by_round(round_number))
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.EVIDENCE_LEDGER,
+                round=round_number,
+                payload={
+                    "round_record_count": len(round_records),
+                    "ledger_record_count": len(ledger.records()),
+                    "strict_citation_count": len([record for record in round_records if record.strict_citation_allowed]),
+                },
+            )
             final_verdict = self._quality_gate.evaluate(round_records)
             novelty = ledger.novelty_for_round(round_number)
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.EVALUATE,
+                round=round_number,
+                payload={"verdict": final_verdict.value, "novelty": novelty},
+            )
             final_action = self._policy.decide(
                 verdict=final_verdict,
                 failure_bucket=request.failure_bucket,
                 used_actions=used_actions,
                 max_rounds_reached=round_number >= request.max_rounds,
                 novelty=novelty,
+            )
+            graph_trace.add(
+                KnowledgeRetrievalGraphNode.CORRECTIVE_DECISION,
+                round=round_number,
+                payload={"corrective_action": final_action.value},
             )
             rounds.append(
                 {
@@ -107,13 +198,19 @@ class CorrectiveAgenticRetrievalRuntime:
             used_actions.append(final_action)
             strategy, current_query = _next_query(current_query, final_action)
 
+        graph_trace.proposal = _control_proposal(final_action, final_verdict, ledger)
         return CorrectiveRetrievalResult(
             answer=answer,
             ledger=ledger,
             rounds=tuple(rounds),
             final_verdict=final_verdict,
             final_action=final_action,
-            trace={"ledger": ledger.to_trace(), "rounds": rounds},
+            graph_trace=graph_trace,
+            trace={
+                "ledger": ledger.to_trace(),
+                "rounds": rounds,
+                "knowledge_retrieval_graph": graph_trace.model_dump(mode="json"),
+            },
         )
 
 
@@ -161,6 +258,68 @@ def _next_query(query: str, action: CorrectiveAction) -> tuple[QueryStrategy, st
     if action == CorrectiveAction.GRAPH_EXPAND:
         return QueryStrategy.ENTITY_DECOMPOSITION, f"{query} related entities graph evidence"
     return QueryStrategy.DIRECT, query
+
+
+def _start_graph_trace(request: CorrectiveRetrievalRequest) -> KnowledgeRetrievalGraphTrace:
+    requested_profile = str(request.retrieval_profile)
+    return KnowledgeRetrievalGraphTrace(
+        profile=_knowledge_profile(request),
+        requested_profile=requested_profile,
+        snapshot_id=request.snapshot_id,
+    )
+
+
+def _knowledge_profile(request: CorrectiveRetrievalRequest) -> KnowledgeRetrievalProfile:
+    if request.failure_bucket in {"text_hit_citation_miss", "graph_span_miss"}:
+        return KnowledgeRetrievalProfile.LOCAL
+    if request.failure_bucket in {"conflict", "community_conflict"}:
+        return KnowledgeRetrievalProfile.GLOBAL
+    if request.failure_bucket in {"stale_index", "version_drift"}:
+        return KnowledgeRetrievalProfile.DRIFT
+    if request.retrieval_profile == RetrievalProfile.DEEP:
+        return KnowledgeRetrievalProfile.DEEP
+    if request.max_rounds > 1:
+        return KnowledgeRetrievalProfile.AGENTIC
+    return KnowledgeRetrievalProfile.STANDARD
+
+
+def _retrievers_used(index_payloads: list[dict[str, Any]]) -> list[str]:
+    return sorted(
+        {
+            str(retriever)
+            for payload in index_payloads
+            for retriever in payload.get("retrievers_used", [])
+            if retriever
+        }
+    )
+
+
+def _control_proposal(
+    final_action: CorrectiveAction,
+    final_verdict: RetrievalQualityVerdict,
+    ledger: EvidenceLedger,
+) -> KnowledgeControlProposal:
+    if final_action == CorrectiveAction.CONTINUE:
+        return KnowledgeControlProposal(
+            proposal_type=KnowledgeControlProposalType.ACCEPT_EVIDENCE,
+            final_action=final_action,
+            reason=f"retrieval verdict {final_verdict.value} produced grounded evidence",
+            payload={"ledger": ledger.to_trace()},
+        )
+    if final_action == CorrectiveAction.ASK_USER:
+        proposal_type = KnowledgeControlProposalType.REQUEST_USER_CLARIFICATION
+    elif final_action == CorrectiveAction.USE_EXTERNAL_TOOL:
+        proposal_type = KnowledgeControlProposalType.REQUEST_EXTERNAL_TOOL
+    elif final_action == CorrectiveAction.ABSTAIN:
+        proposal_type = KnowledgeControlProposalType.ABSTAIN
+    else:
+        proposal_type = KnowledgeControlProposalType.CORRECTIVE_RETRIEVAL
+    return KnowledgeControlProposal(
+        proposal_type=proposal_type,
+        final_action=final_action,
+        reason=f"retrieval verdict {final_verdict.value} requires agent-core decision",
+        payload={"ledger": ledger.to_trace()},
+    )
 
 
 __all__ = ["CorrectiveAgenticRetrievalRuntime", "CorrectiveRetrievalRequest", "CorrectiveRetrievalResult"]

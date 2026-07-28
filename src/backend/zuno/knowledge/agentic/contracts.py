@@ -38,6 +38,40 @@ class CorrectiveAction(StrEnum):
     ABSTAIN = "abstain"
 
 
+class KnowledgeRetrievalGraphNode(StrEnum):
+    VALIDATE = "validate"
+    PIN_SNAPSHOT = "pin_snapshot"
+    SCOPE = "scope"
+    INTERPRET = "interpret"
+    SELECT_PROFILE = "select_profile"
+    PLAN_ROUND = "plan_round"
+    ADMIT = "admit"
+    DISPATCH = "dispatch"
+    NORMALIZE = "normalize"
+    FUSE_RERANK = "fuse_rerank"
+    EVIDENCE_LEDGER = "evidence_ledger"
+    EVALUATE = "evaluate"
+    CORRECTIVE_DECISION = "corrective_decision"
+
+
+class KnowledgeRetrievalProfile(StrEnum):
+    STANDARD = "standard"
+    LOCAL = "local"
+    GLOBAL = "global"
+    DRIFT = "drift"
+    DEEP = "deep"
+    AGENTIC = "agentic"
+
+
+class KnowledgeControlProposalType(StrEnum):
+    ACCEPT_EVIDENCE = "accept_evidence"
+    CORRECTIVE_RETRIEVAL = "corrective_retrieval"
+    REQUEST_AGENT_REPLAN = "request_agent_replan"
+    REQUEST_USER_CLARIFICATION = "request_user_clarification"
+    REQUEST_EXTERNAL_TOOL = "request_external_tool"
+    ABSTAIN = "abstain"
+
+
 class EvidenceLedgerRecord(BaseModel):
     evidence_id: str
     document_id: str
@@ -62,9 +96,62 @@ class EvidenceLedgerRecord(BaseModel):
     strict_citation_allowed: bool = True
 
 
+class KnowledgeRetrievalGraphNodeEvent(BaseModel):
+    node: KnowledgeRetrievalGraphNode
+    status: str = "completed"
+    round: int | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class KnowledgeControlProposal(BaseModel):
+    proposal_type: KnowledgeControlProposalType
+    final_action: CorrectiveAction
+    reason: str
+    requires_agent_core_decision: bool = True
+    accepted_by_knowledge: bool = False
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class KnowledgeRetrievalGraphTrace(BaseModel):
+    fixed_graph: list[KnowledgeRetrievalGraphNode] = Field(
+        default_factory=lambda: list(KnowledgeRetrievalGraphNode)
+    )
+    profile: KnowledgeRetrievalProfile = KnowledgeRetrievalProfile.STANDARD
+    requested_profile: str = "standard"
+    snapshot_id: str | None = None
+    node_events: list[KnowledgeRetrievalGraphNodeEvent] = Field(default_factory=list)
+    proposal: KnowledgeControlProposal | None = None
+
+    def add(
+        self,
+        node: KnowledgeRetrievalGraphNode,
+        *,
+        status: str = "completed",
+        round: int | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        self.node_events.append(
+            KnowledgeRetrievalGraphNodeEvent(
+                node=node,
+                status=status,
+                round=round,
+                payload=payload or {},
+            )
+        )
+
+    def node_sequence(self) -> list[str]:
+        return [event.node.value for event in self.node_events]
+
+
 __all__ = [
     "CorrectiveAction",
     "EvidenceLedgerRecord",
+    "KnowledgeControlProposal",
+    "KnowledgeControlProposalType",
+    "KnowledgeRetrievalGraphNode",
+    "KnowledgeRetrievalGraphNodeEvent",
+    "KnowledgeRetrievalGraphTrace",
+    "KnowledgeRetrievalProfile",
     "QueryStrategy",
     "RetrievalQualityVerdict",
 ]

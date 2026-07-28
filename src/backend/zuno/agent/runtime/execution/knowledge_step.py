@@ -64,6 +64,8 @@ class KnowledgeStepExecutor:
         evidence_ids = [record.evidence_id for record in ledger_records]
         citation_ids = [f"citation:{record.evidence_id}" for record in ledger_records if record.strict_citation_allowed]
         durable_trace = result.trace.get("durable_knowledge_port")
+        graph_trace = result.trace.get("knowledge_retrieval_graph")
+        control_proposal = graph_trace.get("proposal") if isinstance(graph_trace, dict) else None
         durable_blocked = isinstance(durable_trace, dict) and durable_trace.get("status") == "blocked"
         durable_failure_reason = _durable_failure_reason(durable_trace) if durable_blocked else None
         observation = NormalizedObservation(
@@ -83,6 +85,8 @@ class KnowledgeStepExecutor:
                 "final_verdict": result.final_verdict.value,
                 "rounds": list(result.rounds),
                 "ledger": result.ledger.to_trace(),
+                "knowledge_retrieval_graph": graph_trace,
+                "knowledge_control_proposal": control_proposal,
                 "durable_knowledge_port": durable_trace,
             },
         )
