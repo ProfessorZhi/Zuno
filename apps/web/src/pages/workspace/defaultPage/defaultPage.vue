@@ -20,7 +20,7 @@ import {
   type WorkspaceObservabilitySnapshot,
   type WorkspaceRetrievalProfile,
   type KnowledgeSpaceRetrievalSelection,
-  type WorkSpaceSimpleTask,
+  type WorkspaceProductRuntimePayload,
 } from '../../../apis/workspace'
 import { uploadFile } from '../../../apis/chat'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../../apis/llm'
@@ -1864,7 +1864,7 @@ const handleAttachmentDrop = async (event: DragEvent) => {
   await uploadAttachments(Array.from(event.dataTransfer.files))
 }
 
-const buildPayload = (query: string): WorkSpaceSimpleTask => {
+const buildPayload = (query: string): WorkspaceProductRuntimePayload => {
   const selectedKnowledgeSpaceIds = canPickTools.value ? getValidSelectedKnowledgeIds() : []
   return {
     query,

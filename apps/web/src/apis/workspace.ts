@@ -87,29 +87,6 @@ export const deleteWorkspaceSessionAPI = async (sessionId: string) => {
 
 export type WorkspaceProductMode = 'enterprise_kb' | 'hr_resume' | 'contract_review' | 'general_agent'
 
-export type WorkspaceTaskStatus =
-  | 'created'
-  | 'pending'
-  | 'context_building'
-  | 'planning'
-  | 'running'
-  | 'approval_waiting'
-  | 'approval_required'
-  | 'resuming'
-  | 'finalizing'
-  | 'recoverable_failed'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-
-export type WorkspaceTaskLifecycleState =
-  | 'pending'
-  | 'running'
-  | 'approval_required'
-  | 'recoverable_failed'
-  | 'cancelled'
-  | 'completed'
-
 export interface WorkspaceTaskBudget {
   max_steps?: number
   max_tokens?: number
@@ -180,15 +157,6 @@ export interface WorkspaceSessionContract extends WorkspaceProductObjectBase {
   active_task_id?: string
 }
 
-export interface WorkspaceTaskContract extends WorkspaceProductObjectBase {
-  task_id: string
-  session_id: string
-  goal: string
-  product_mode: WorkspaceProductMode
-  status: WorkspaceTaskStatus
-  budget?: WorkspaceTaskBudget
-}
-
 export interface UploadedFileContract extends WorkspaceProductObjectBase {
   file_id: string
   mime_type: string
@@ -251,45 +219,7 @@ export interface ChangeImpactPreview {
   user_visible_summary?: string
 }
 
-export interface WorkspaceTaskLifecycleSnapshot {
-  task_id: string
-  trace_id?: string
-  state: WorkspaceTaskLifecycleState
-  status: string
-  recoverable: boolean
-  recovery_actions: string[]
-  downloadable_artifact_ids: string[]
-}
-
-export interface TraceEventContract {
-  event_id: string
-  task_id: string
-  trace_id: string
-  type: string
-  timestamp: number
-  payload: Record<string, any>
-}
-
-export interface CitationContract {
-  citation_id: string
-  evidence_id: string
-  document_id: string
-  block_id: string
-  source_span: Record<string, any>
-  created_at?: string
-}
-
-export interface FeedbackContract {
-  feedback_id: string
-  task_id: string
-  rating?: number
-  label?: string
-  comment?: string
-  dataset_candidate?: boolean
-  created_at?: string
-}
-
-export interface WorkSpaceSimpleTask {
+export interface WorkspaceProductRuntimePayload {
   query: string
   model_id: string
   workspace_id?: string
@@ -320,26 +250,6 @@ export interface WorkSpaceSimpleTask {
   desktop_bridge_url?: string
   desktop_bridge_token?: string
   attachments?: WorkspaceAttachment[]
-}
-
-export interface WorkspaceTaskCreateResponse {
-  task: WorkspaceTaskContract
-  artifact_ids: string[]
-  artifacts: ArtifactContract[]
-  feedback_ids?: string[]
-  feedback?: FeedbackContract[]
-  lifecycle?: WorkspaceTaskLifecycleSnapshot
-  runtime?: WorkspaceRuntimeSnapshot
-  observability?: WorkspaceObservabilitySnapshot
-  retrieval_plan?: Record<string, any>
-  plan_summary?: Record<string, any>
-  reflection_summary?: Record<string, any>
-  replan_summary?: Record<string, any>
-  trace_summary?: Record<string, any>
-  eval_summary?: Record<string, any>
-  cost_summary?: Record<string, any>
-  capability_snapshot?: Record<string, any>
-  knowledge_config_summary?: Record<string, any>
 }
 
 export interface WorkspaceArtifactResponse {
@@ -399,41 +309,6 @@ export interface WorkspaceIngestResponse {
   status: string
   file: UploadedFileContract
   file_status?: WorkspaceFileStatus
-}
-
-export interface WorkspaceApprovalRequest {
-  decision: 'approved' | 'rejected'
-  comment?: string
-  approval_id?: string
-  tool_call_id?: string
-  required_approval?: string
-}
-
-export interface WorkspaceApprovalResponse extends WorkspaceTaskCreateResponse {}
-
-export interface WorkspaceCancelRequest {
-  reason?: string
-}
-
-export interface WorkspaceTaskLifecycleResponse {
-  states: WorkspaceTaskLifecycleState[]
-  terminal_states: WorkspaceTaskLifecycleState[]
-  status_mapping: Record<string, WorkspaceTaskLifecycleState>
-  recovery_actions: Record<string, string[]>
-}
-
-export interface WorkspaceRuntimeSnapshot {
-  task_id: string
-  trace_id: string
-  thread_id: string
-  workspace_id: string
-  status: WorkspaceTaskStatus | string
-  state: Record<string, any>
-  checkpoint_ids: string[]
-  latest_checkpoint?: Record<string, any> | null
-  pending_interrupt?: Record<string, any> | null
-  failure?: Record<string, any> | null
-  events: Array<Record<string, any>>
 }
 
 export interface WorkspaceObservabilitySnapshot {
@@ -531,35 +406,6 @@ export interface WorkspaceAttachment {
   url: string
   mime_type?: string
   size?: number
-}
-
-export interface WorkspaceStreamEvent {
-  id: string
-  type: string
-  title: string
-  detail: string
-  isFinal?: boolean
-  task_id?: string
-  trace_id?: string
-  artifact_id?: string
-  citation_ids?: string[]
-  tool_id?: string
-  tool_call_id?: string
-  approval_id?: string
-  required_approval?: string
-  audit_ref?: string
-  lifecycle_state?: WorkspaceTaskLifecycleState | string
-  recovery_actions?: string[]
-  download_url?: string
-  data?: Record<string, any>
-  raw?: any
-}
-
-export const getWorkspaceTaskLifecycleAPI = async () => {
-  return request({
-    url: '/api/v1/workspace/task-lifecycle',
-    method: 'get',
-  })
 }
 
 export const getWorkspaceRetrievalObservabilityAPI = async (limit = 20) => {

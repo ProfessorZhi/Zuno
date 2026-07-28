@@ -4,28 +4,20 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_workspace_api_types_expose_phase03_product_loop_contract() -> None:
+def test_workspace_api_types_expose_product_runtime_payload_contract() -> None:
     workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(
         encoding="utf-8"
     )
 
     for phrase in [
         "export type WorkspaceProductMode = 'enterprise_kb' | 'hr_resume' | 'contract_review' | 'general_agent'",
-        "export type WorkspaceTaskStatus =",
-        "'approval_waiting'",
         "export interface WorkspaceTaskBudget",
         "export interface WorkspaceOutputContract",
         "export interface WorkspaceProductObjectBase",
         "export interface KnowledgeSpaceContract",
-        "export interface WorkspaceTaskContract",
-        "export type WorkspaceTaskLifecycleState =",
-        "'recoverable_failed'",
-        "export interface WorkspaceTaskLifecycleSnapshot",
         "export interface UploadedFileContract",
         "export interface ArtifactContract",
-        "export interface TraceEventContract",
-        "export interface CitationContract",
-        "export interface FeedbackContract",
+        "export interface WorkspaceProductRuntimePayload",
         "workspace_id?: string",
         "goal?: string",
         "product_mode?: WorkspaceProductMode",
@@ -38,6 +30,33 @@ def test_workspace_api_types_expose_phase03_product_loop_contract() -> None:
         "trace_id?: string",
     ]:
         assert phrase in workspace_api
+
+
+def test_workspace_api_removes_legacy_task_status_lifecycle_and_stream_dtos() -> None:
+    workspace_api = (REPO_ROOT / "apps/web/src/apis/workspace.ts").read_text(
+        encoding="utf-8"
+    )
+
+    for phrase in [
+        "export type WorkspaceTaskStatus =",
+        "export type WorkspaceTaskLifecycleState =",
+        "export interface WorkspaceTaskContract",
+        "export interface WorkspaceTaskLifecycleSnapshot",
+        "export interface WorkspaceTaskCreateResponse",
+        "export interface WorkspaceApprovalRequest",
+        "export interface WorkspaceApprovalResponse",
+        "export interface WorkspaceCancelRequest",
+        "export interface WorkspaceTaskLifecycleResponse",
+        "export interface WorkspaceRuntimeSnapshot",
+        "export interface WorkspaceStreamEvent",
+        "export const getWorkspaceTaskLifecycleAPI",
+        "WorkSpaceSimpleTask",
+        "approval_required",
+        "recoverable_failed",
+        "lifecycle_state?:",
+        "required_approval?:",
+    ]:
+        assert phrase not in workspace_api
 
 
 def test_workspace_api_removes_legacy_stream_normalizer_trace_mapping() -> None:
@@ -65,18 +84,9 @@ def test_workspace_api_exposes_phase03_task_runtime_calls() -> None:
         "export interface WorkspaceFileCreateResponse",
         "export interface WorkspaceIngestRequest",
         "export interface WorkspaceIngestResponse",
-        "export interface WorkspaceApprovalRequest",
-        "approval_id?: string",
-        "tool_call_id?: string",
-        "required_approval?: string",
-        "export interface WorkspaceRuntimeSnapshot",
         "export interface WorkspaceObservabilitySnapshot",
-        "observability?: WorkspaceObservabilitySnapshot",
         "release_eval?: Record<string, any> | null",
         "source_refs: string[]",
-        "export interface WorkspaceTaskLifecycleResponse",
-        "export const getWorkspaceTaskLifecycleAPI",
-        "url: '/api/v1/workspace/task-lifecycle'",
         "export const createWorkspaceFileAPI",
         "url: '/api/v1/workspace/file'",
         "export const createWorkspaceIngestAPI",

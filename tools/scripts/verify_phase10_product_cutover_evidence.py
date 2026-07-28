@@ -15,6 +15,7 @@ FILES = {
     "product_route_tests": REPO_ROOT / "tests/api/test_goal03_product_route.py",
     "workspace_tests": REPO_ROOT / "tests/api/test_workspace_task_runtime.py",
     "workspace_page": REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue",
+    "workspace_api": REPO_ROOT / "apps/web/src/apis/workspace.ts",
     "full_e2e": REPO_ROOT / "tools/qa/full-e2e/full_e2e.py",
     "launcher_tests": REPO_ROOT / "tests/tools/test_launcher_scripts.py",
     "evidence": REPO_ROOT / "docs/evidence/goal04-phase10-startup-audit.md",
@@ -49,6 +50,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
     route_tests = _read(FILES["product_route_tests"], errors)
     workspace_tests = _read(FILES["workspace_tests"], errors)
     workspace_page = _read(FILES["workspace_page"], errors)
+    workspace_api = _read(FILES["workspace_api"], errors)
     full_e2e = _read(FILES["full_e2e"], errors)
     launcher_tests = _read(FILES["launcher_tests"], errors)
     evidence = _read(FILES["evidence"], errors)
@@ -125,6 +127,36 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         _forbid(workspace_page, phrase, "workspace Product-only action surface", errors)
 
     for phrase in (
+        "export type WorkspaceTaskStatus =",
+        "export type WorkspaceTaskLifecycleState =",
+        "export interface WorkspaceTaskContract",
+        "export interface WorkspaceTaskLifecycleSnapshot",
+        "export interface WorkspaceTaskCreateResponse",
+        "export interface WorkspaceApprovalRequest",
+        "export interface WorkspaceApprovalResponse",
+        "export interface WorkspaceCancelRequest",
+        "export interface WorkspaceTaskLifecycleResponse",
+        "export interface WorkspaceRuntimeSnapshot",
+        "export interface WorkspaceStreamEvent",
+        "export const getWorkspaceTaskLifecycleAPI",
+        "WorkSpaceSimpleTask",
+        "approval_required",
+        "recoverable_failed",
+        "lifecycle_state?:",
+        "required_approval?:",
+    ):
+        _forbid(workspace_api, phrase, "workspace API Product DTO boundary", errors)
+
+    for phrase in (
+        "export interface WorkspaceProductRuntimePayload",
+        "export interface WorkspaceObservabilitySnapshot",
+        "export const createWorkspaceFileAPI",
+        "export const createWorkspaceIngestAPI",
+        "export const getWorkspaceRetrievalObservabilityAPI",
+    ):
+        _require(workspace_api, phrase, "workspace API Product DTO boundary", errors)
+
+    for phrase in (
         "productProjectionStore.sortedAvailableActions.length > 0",
         "submitProductAvailableAction(action)",
         "Product Available Actions",
@@ -176,6 +208,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T27 Browser Product Runtime Cutover Smoke Gate",
         "P10-T28 Branch-Scoped Alembic Upgrade Gate",
         "P10-T29 Product-only Workspace Action Surface",
+        "P10-T30 Workspace API Legacy DTO Removal",
         "PHASE10 仍为 `in_progress`",
         "20260727_43 (head)",
         "temporary PostgreSQL database",

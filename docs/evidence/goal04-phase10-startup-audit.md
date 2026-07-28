@@ -1285,6 +1285,49 @@ PHASE10 Product cutover evidence verifier passed.
 - 本轮新增的是 Product-only action surface 删除证据，不等于 Coordinator Closure Approval；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T30 Workspace API Legacy DTO Removal
+
+本轮继续删除前端 Workspace API client 中不再由默认 Product runtime 使用的旧 Task DTO：
+
+- 删除 `WorkspaceTaskStatus`、`WorkspaceTaskLifecycleState`、`WorkspaceTaskContract`、`WorkspaceTaskLifecycleSnapshot`、`WorkspaceTaskCreateResponse`、`WorkspaceApprovalRequest`、`WorkspaceApprovalResponse`、`WorkspaceCancelRequest`、`WorkspaceTaskLifecycleResponse`、`WorkspaceRuntimeSnapshot` 和 `WorkspaceStreamEvent`；
+- 删除 `getWorkspaceTaskLifecycleAPI`，默认 Workspace 页不再请求旧 `/api/v1/workspace/task-lifecycle` contract；
+- 将默认 Workspace 页构建 Product runtime 请求使用的前端 payload 类型从旧名 `WorkSpaceSimpleTask` 改为 `WorkspaceProductRuntimePayload`；
+- 保留仍被 Product runtime 和 Dashboard 使用的 session、file、ingest、artifact、observability 和 retrieval observability client。
+
+RED 验证：
+
+```text
+python -m pytest tests\frontend\test_workspace_product_loop_types.py::test_workspace_api_removes_legacy_task_status_lifecycle_and_stream_dtos -q
+failed: export type WorkspaceTaskStatus still present in apps/web/src/apis/workspace.ts
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+25 passed
+```
+
+```text
+npm run lint -w zuno-frontend
+passed
+```
+
+```text
+npm run build -w zuno-frontend
+passed
+```
+
+```text
+python tools\scripts\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- 本轮新增的是 Workspace API 旧 DTO 删除证据，不等于 Coordinator Closure Approval；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1336,6 +1379,9 @@ ZUNO_CONFIG=<temp phase10 config> python -m alembic -c infra/db/alembic.ini curr
 python -m pytest tests\frontend\test_phase10_product_contracts.py::test_phase10_workspace_page_removes_single_pending_approval_and_status_inference -q
 python -m pytest tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 npm run build -w zuno-frontend
+python -m pytest tests\frontend\test_workspace_product_loop_types.py::test_workspace_api_removes_legacy_task_status_lifecycle_and_stream_dtos -q
+python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
+npm run lint -w zuno-frontend
 ```
 
 未通过 / 未完成：
