@@ -37,11 +37,11 @@ from zuno.capability.runtime import (
     build_default_tool_control_plane_runtime,
 )
 from zuno.knowledge.agentic_graphrag import (
-    AgenticRetrievalRuntime,
     AgenticRetrievalRuntimeRequest,
     AgenticRetrievalRuntimeResult,
     ProductMode,
 )
+from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
 from zuno.knowledge.indexing import IndexJobManifest, KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import (
     CanonicalDocumentIR,
@@ -191,7 +191,7 @@ class WorkspaceTaskRuntimeService:
     _unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_workspace_unified_runtime.db")
     _tool_runtime = build_default_tool_control_plane_runtime()
     _knowledge_index_runtime = KnowledgeIndexRuntime()
-    _agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=_knowledge_index_runtime)
+    _agentic_retrieval_runtime = CorrectiveAgenticGraphRAGRuntime(index_runtime=_knowledge_index_runtime)
     _human_review_runtime = HumanReviewRuntime()
     _snapshot_handoff_runtime = SnapshotHandoffRuntime()
     _package_a_production_runtime: PackageAProductionIngestionRuntime | None = None
@@ -369,7 +369,7 @@ class WorkspaceTaskRuntimeService:
         cls._unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_workspace_unified_runtime_tests.db")
         cls._tool_runtime = build_default_tool_control_plane_runtime()
         cls._knowledge_index_runtime = KnowledgeIndexRuntime()
-        cls._agentic_retrieval_runtime = AgenticRetrievalRuntime(index_runtime=cls._knowledge_index_runtime)
+        cls._agentic_retrieval_runtime = CorrectiveAgenticGraphRAGRuntime(index_runtime=cls._knowledge_index_runtime)
         cls._pending_tool_requests = {}
         cls._trace_spans = {}
         cls._release_evals = {}

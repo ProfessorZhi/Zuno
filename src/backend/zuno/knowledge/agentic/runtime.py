@@ -23,7 +23,12 @@ from zuno.knowledge.agentic.contracts import (
 from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
 from zuno.knowledge.agentic.quality import RetrievalQualityGate
-from zuno.knowledge.agentic_graphrag import AgenticRetrievalRuntime, AgenticRetrievalRuntimeRequest, ProductMode
+from zuno.knowledge.agentic_graphrag import (
+    AgenticRetrievalRuntime,
+    AgenticRetrievalRuntimeRequest,
+    AgenticRetrievalRuntimeResult,
+    ProductMode,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +43,10 @@ class CorrectiveRetrievalRequest:
     agent_core_decision_ref: str = ""
     authorization_ref: str = "authorization:default"
     retrieval_profile: RetrievalProfile = RetrievalProfile.STANDARD
+    product_mode: ProductMode = ProductMode.AUTO
+    context_pack: dict[str, Any] = field(default_factory=dict)
+    budget: dict[str, Any] = field(default_factory=dict)
+    allowed_acl_scopes: set[str] = field(default_factory=lambda: {"workspace"})
     claims: list[str] = field(default_factory=list)
     max_rounds: int = 2
     round_budget_tokens: int = 2048
@@ -55,6 +64,56 @@ class CorrectiveRetrievalResult:
     final_action: CorrectiveAction
     graph_trace: KnowledgeRetrievalGraphTrace
     trace: dict[str, Any]
+    base_result: AgenticRetrievalRuntimeResult | None = None
+
+
+class CorrectiveAgenticGraphRAGRuntime:
+    """Compatibility default path that exposes the legacy answer contract through PHASE18 retrieval."""
+
+    def __init__(self, *, index_runtime: Any) -> None:
+        self._corrective_runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime)
+        self._fallback_runtime = AgenticRetrievalRuntime(index_runtime=index_runtime)
+
+    def answer(self, request: AgenticRetrievalRuntimeRequest) -> AgenticRetrievalRuntimeResult:
+        retrieval_result = self._corrective_runtime.retrieve(
+            CorrectiveRetrievalRequest(
+                query=request.query,
+                workspace_id=request.workspace_id,
+                knowledge_space_ids=list(request.knowledge_space_ids),
+                trace_id=request.trace_id,
+                task_id=request.task_id,
+                retrieval_profile=request.retrieval_profile or RetrievalProfile.STANDARD,
+                product_mode=request.product_mode,
+                context_pack=dict(request.context_pack),
+                budget=dict(request.budget),
+                allowed_acl_scopes=set(request.allowed_acl_scopes),
+                claims=list(request.claims),
+                max_rounds=int(request.budget.get("retrieval_max_rounds") or 2),
+                round_budget_tokens=int(request.budget.get("retrieval_round_budget_tokens") or 2048),
+                retriever_timeout_ms=int(request.budget.get("retriever_timeout_ms") or 1500),
+            )
+        )
+        base_result = retrieval_result.base_result or self._fallback_runtime.answer(request)
+        trace_metadata = dict(base_result.trace_metadata)
+        trace_metadata.update(
+            {
+                "phase18_default_path": True,
+                "corrective_final_action": retrieval_result.final_action.value,
+                "corrective_final_verdict": retrieval_result.final_verdict.value,
+                "corrective_rounds": list(retrieval_result.rounds),
+                "knowledge_retrieval_graph": retrieval_result.graph_trace.model_dump(mode="json"),
+                "knowledge_control_proposal": retrieval_result.graph_trace.proposal.model_dump(mode="json")
+                if retrieval_result.graph_trace.proposal
+                else None,
+                "evidence_frontier": retrieval_result.ledger.frontier(claims=request.claims).model_dump(mode="json"),
+            }
+        )
+        return base_result.model_copy(
+            update={
+                "answer": retrieval_result.answer or base_result.answer,
+                "trace_metadata": trace_metadata,
+            }
+        )
 
 
 class CorrectiveAgenticRetrievalRuntime:
@@ -192,7 +251,10 @@ class CorrectiveAgenticRetrievalRuntime:
                     workspace_id=request.workspace_id,
                     knowledge_space_ids=request.knowledge_space_ids,
                     retrieval_profile=request.retrieval_profile,
-                    product_mode=ProductMode.ENHANCED,
+                    product_mode=request.product_mode,
+                    context_pack=dict(request.context_pack),
+                    budget=dict(request.budget),
+                    allowed_acl_scopes=set(request.allowed_acl_scopes),
                     claims=request.claims,
                     trace_id=request.trace_id,
                     task_id=request.task_id,
@@ -302,6 +364,7 @@ class CorrectiveAgenticRetrievalRuntime:
                 "rounds": rounds,
                 "knowledge_retrieval_graph": graph_trace.model_dump(mode="json"),
             },
+            base_result=result if "result" in locals() else None,
         )
 
 
@@ -541,4 +604,9 @@ def _control_proposal(
     )
 
 
-__all__ = ["CorrectiveAgenticRetrievalRuntime", "CorrectiveRetrievalRequest", "CorrectiveRetrievalResult"]
+__all__ = [
+    "CorrectiveAgenticGraphRAGRuntime",
+    "CorrectiveAgenticRetrievalRuntime",
+    "CorrectiveRetrievalRequest",
+    "CorrectiveRetrievalResult",
+]

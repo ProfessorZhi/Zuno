@@ -6,6 +6,7 @@ from zuno.agent.runtime.execution import KnowledgeStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.knowledge.agentic import (
     CorrectiveAction,
+    CorrectiveAgenticGraphRAGRuntime,
     CorrectiveAgenticRetrievalRuntime,
     CorrectiveRetrievalRequest,
     DurableKnowledgeRetrievalPort,
@@ -15,11 +16,12 @@ from zuno.knowledge.agentic import (
     RetrieverAttemptStatus,
     RetrieverKind,
 )
+from zuno.knowledge.agentic_graphrag import AgenticRetrievalRuntimeRequest, AgenticRetrievalRuntimeResult
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import CanonicalDocumentIR, DocumentBlock, DocumentMetadata, DocumentProvenance, SourceSpan
 
 
-def _runtime() -> CorrectiveAgenticRetrievalRuntime:
+def _index_runtime() -> KnowledgeIndexRuntime:
     index = KnowledgeIndexRuntime()
     index.create_knowledge_space("ks_corrective", "workspace_corrective")
     index.index_document(
@@ -51,6 +53,11 @@ def _runtime() -> CorrectiveAgenticRetrievalRuntime:
         ),
         targets=["bm25", "vector", "graph"],
     )
+    return index
+
+
+def _runtime() -> CorrectiveAgenticRetrievalRuntime:
+    index = _index_runtime()
     return CorrectiveAgenticRetrievalRuntime(index_runtime=index)
 
 
@@ -91,6 +98,34 @@ def test_corrective_runtime_continues_when_first_round_has_strict_source_span() 
     assert result.rounds[0]["corrective_action"] == CorrectiveAction.CONTINUE.value
     assert result.ledger.records()[0].source_span["page"] == 3
     assert result.ledger.records()[0].strict_citation_allowed is True
+
+
+def test_corrective_graphrag_default_path_preserves_legacy_answer_contract() -> None:
+    runtime = CorrectiveAgenticGraphRAGRuntime(index_runtime=_index_runtime())
+
+    result = runtime.answer(
+        AgenticRetrievalRuntimeRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_default_cutover",
+            task_id="task_default_cutover",
+            retrieval_profile=RetrievalProfile.STANDARD,
+            allowed_acl_scopes={"workspace"},
+            budget={"retrieval_max_rounds": 1},
+        )
+    )
+
+    assert isinstance(result, AgenticRetrievalRuntimeResult)
+    assert result.trace_metadata["phase18_default_path"] is True
+    assert result.trace_metadata["corrective_final_action"] == CorrectiveAction.CONTINUE.value
+    assert result.trace_metadata["knowledge_retrieval_graph"]["fixed_graph"] == [
+        node.value for node in KnowledgeRetrievalGraphNode
+    ]
+    assert result.trace_metadata["knowledge_control_proposal"]["proposal_type"] == (
+        KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
+    )
+    assert result.to_task_event()["payload"]["citation_ids"]
 
 
 def test_corrective_runtime_does_not_accept_incomplete_claim_coverage() -> None:

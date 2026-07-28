@@ -24,6 +24,9 @@ production_readiness: not established
 - `CorrectiveRetrievalPolicy` 消费 `EvidenceFrontier.stop_reasons`：即使单轮 evidence verdict 为 `relevant`，存在 coverage gap、strict citation 缺失或 unresolved conflict 时，也不能直接输出 `accept_evidence`。
 - 新增 `KnowledgeControlProposal`，默认要求 Agent Core 显式接受或拒绝，Knowledge 不直接修改 Agent PlanVersion、不问用户、不调用外部 Tool。
 - `CorrectiveAgenticRetrievalRuntime` 每次检索生成 `knowledge_retrieval_graph` trace。
+- 新增 `CorrectiveAgenticGraphRAGRuntime` 兼容入口：外部仍返回 `AgenticRetrievalRuntimeResult`，内部先执行 PHASE18 `CorrectiveAgenticRetrievalRuntime`，再把 `phase18_default_path`、`knowledge_retrieval_graph`、`knowledge_control_proposal`、`evidence_frontier` 和 corrective rounds 写入旧结果的 `trace_metadata`。
+- `WorkspaceTaskRuntimeService` 默认 `_agentic_retrieval_runtime` 和 test reset 默认入口从旧 `AgenticRetrievalRuntime` 切到 `CorrectiveAgenticGraphRAGRuntime`。
+- `product_baseline.py` 的标准/Deep retrieval probe 使用 PHASE18 兼容入口生成基线证据，不再直接构造旧 GraphRAG runtime。
 - `KnowledgeStepExecutor` 把 graph trace 和 proposal 放入 observation metadata，供 Agent Core 后续 gate 消费。
 - `KnowledgeStepExecutor` 增加 deterministic proposal gate：只有 `accept_evidence` 被接受为 completed；`abstain`、ask-user、external-tool、agent-replan 和 unresolved corrective proposal 均转为 blocked observation，不由 Knowledge 越权完成 Agent 决策。
 
@@ -45,6 +48,10 @@ python -m py_compile src\backend\zuno\knowledge\agentic\corrective.py src\backen
 python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
 python -m py_compile src\backend\zuno\knowledge\agentic\contracts.py src\backend\zuno\knowledge\agentic\runtime.py src\backend\zuno\knowledge\agentic\__init__.py tests\knowledge\test_corrective_retrieval_runtime.py
 python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
+python -m py_compile src\backend\zuno\knowledge\agentic\runtime.py src\backend\zuno\knowledge\agentic\__init__.py src\backend\zuno\api\services\workspace_task_runtime.py tests\knowledge\test_corrective_retrieval_runtime.py
+python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
+python -m pytest tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_resets_to_phase18_agentic_graphrag_default_path tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py -q -p no:cacheprovider --tb=short
+python -m py_compile src\backend\zuno\knowledge\agentic\runtime.py src\backend\zuno\knowledge\agentic\__init__.py src\backend\zuno\api\services\workspace_task_runtime.py src\backend\zuno\agent\product_baseline.py tests\knowledge\test_corrective_retrieval_runtime.py tests\api\test_workspace_task_runtime.py
 ```
 
 结果：
@@ -58,8 +65,21 @@ python -m pytest tests\knowledge\test_corrective_retrieval_runtime.py tests\know
 17 passed in 13.23s
 18 passed in 24.62s
 19 passed in 21.95s
+20 passed in 24.06s
+21 passed in 29.05s
+```
+
+未计入通过的环境/fixture 漂移：
+
+```text
+command: python -m pytest tests\api\test_workspace_task_runtime.py::test_workspace_task_runtime_resets_to_phase18_agentic_graphrag_default_path tests\knowledge\test_corrective_retrieval_runtime.py tests\knowledge\test_evidence_ledger.py tests\evals\test_agentic_graphrag_product_baseline.py -q -p no:cacheprovider --tb=short
+test: tests\evals\test_agentic_graphrag_product_baseline.py::test_launchable_agentic_graphrag_product_baseline_generates_shareable_summaries
+exception: RuntimeError
+first relevant stack frame: src\backend\zuno\agent\product_baseline.py:423
+message: blocked file did not block: file_phase12_docx
+environment signature: local parser dependency state no longer blocks docx before PHASE18 retrieval probe
 ```
 
 ## 剩余范围
 
-PHASE18 尚未完成。后续仍需继续实现和验证 Retriever 并行预算、持久化 Recovery/Idempotency、Agent Core proposal accept/reject gate、旧 GraphRAG 默认路径切流、Migration / integration / fault / security gate 和 closure approval。
+PHASE18 尚未完成。后续仍需继续实现和验证 Migration / integration / fault / security gate、旧应用层 `KnowledgeQueryService` facade 的受控保留或切流决策，以及 closure approval。

@@ -21,11 +21,8 @@ from zuno.agent.control_runtime import AgentControlRuntime, RuntimeObservation
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
-from zuno.knowledge.agentic_graphrag import (
-    AgenticRetrievalRuntime,
-    AgenticRetrievalRuntimeRequest,
-    ProductMode,
-)
+from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
+from zuno.knowledge.agentic_graphrag import AgenticRetrievalRuntimeRequest, ProductMode
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
 from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 from zuno.knowledge.ingestion.async_runtime import (
@@ -525,7 +522,7 @@ def _create_reconciler_fixture(
 
 def _run_standard_retrieval_probe(
     *,
-    runtime: AgenticRetrievalRuntime,
+    runtime: CorrectiveAgenticGraphRAGRuntime,
     workspace_id: str,
     trace_id: str,
 ):
@@ -566,7 +563,7 @@ def _run_deep_without_graph_probe(*, workspace_id: str):
         targets=["bm25", "vector"],
         parse_job_snapshot=ParseGateway.get_job_snapshot(parse_result.job_id),
     )
-    return AgenticRetrievalRuntime(index_runtime=index_runtime).answer(
+    return CorrectiveAgenticGraphRAGRuntime(index_runtime=index_runtime).answer(
         AgenticRetrievalRuntimeRequest(
             query="Compare renewal conflict evidence without graph expansion.",
             workspace_id=workspace_id,
