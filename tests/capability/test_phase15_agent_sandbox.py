@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from copy import deepcopy
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
+from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway
 from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner
 from zuno.capability.tool_runtime.sandbox import (
     DenoPyodideWasmRunner,
@@ -10,6 +15,7 @@ from zuno.capability.tool_runtime.sandbox import (
     SandboxPolicyViolation,
     SandboxProfile,
 )
+from zuno.platform.contracts import canonical_sha256
 
 
 class _FakeRunner(SandboxRunner):
@@ -28,6 +34,33 @@ class _FakeRunner(SandboxRunner):
                 "session_ref": dispatch.session_ref,
             },
         )
+
+
+class _FailingRunner(SandboxRunner):
+    def __init__(self, adapter_tier: str, reason: str = "sandbox runtime denied") -> None:
+        self.adapter_tier = adapter_tier
+        self.reason = reason
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+        raise SandboxPolicyViolation(self.reason)
+
+
+class _RecordingToolUnitOfWork:
+    def __init__(self) -> None:
+        self.attempts: list[object] = []
+        self.sandbox_receipts: list[object] = []
+
+    def __enter__(self) -> _RecordingToolUnitOfWork:
+        return self
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        return None
+
+    def record_attempt(self, attempt: object) -> None:
+        self.attempts.append(attempt)
+
+    def record_sandbox_receipt(self, receipt: object) -> None:
+        self.sandbox_receipts.append(receipt)
 
 
 def test_phase15_wasm_python_sandbox_is_deny_by_default_and_observation_only() -> None:
@@ -111,6 +144,89 @@ def test_phase15_sandbox_registry_executes_matching_runner_contract() -> None:
     assert result.status == "SUCCEEDED"
     assert result.output_payload["tier"] == "WASM_PYTHON"
     assert result.output_payload["session_ref"] == dispatch.session_ref
+
+
+def test_phase15_sandbox_execute_validates_session_integrity_expiry_and_size() -> None:
+    registry = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier))
+    dispatch = registry.prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-integrity",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+
+    tampered_payload = deepcopy(dispatch.dispatch_payload)
+    tampered_payload["session"]["call_id"] = "call-tampered"
+    tampered_dispatch = replace(dispatch, dispatch_payload=tampered_payload)
+    with pytest.raises(SandboxPolicyViolation, match="session integrity hash mismatch"):
+        registry.execute(dispatch=tampered_dispatch, args={"code": "print(42)"})
+
+    version_payload = deepcopy(dispatch.dispatch_payload)
+    version_payload["session"]["session_version"] = 2
+    version_dispatch = replace(
+        dispatch,
+        dispatch_payload=version_payload,
+        session_hash=canonical_sha256(version_payload["session"]),
+    )
+    with pytest.raises(SandboxPolicyViolation, match="session version mismatch"):
+        registry.execute(dispatch=version_dispatch, args={"code": "print(42)"})
+
+    expired_payload = deepcopy(dispatch.dispatch_payload)
+    expired_payload["session"]["expires_at"] = (datetime.now(tz=UTC) - timedelta(seconds=1)).isoformat()
+    expired_dispatch = replace(
+        dispatch,
+        dispatch_payload=expired_payload,
+        session_hash=canonical_sha256(expired_payload["session"]),
+    )
+    with pytest.raises(SandboxPolicyViolation, match="session expired"):
+        registry.execute(dispatch=expired_dispatch, args={"code": "print(42)"})
+
+    oversized_dispatch = registry.prepare(
+        tenant_id="tenant-" + ("x" * 520_000),
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-oversized",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+    with pytest.raises(SandboxPolicyViolation, match="session exceeds configured size limit"):
+        registry.execute(dispatch=oversized_dispatch, args={"code": "print(42)"})
+
+
+def test_phase15_gateway_records_sandbox_receipt_when_execution_fails_closed() -> None:
+    unit_of_work = _RecordingToolUnitOfWork()
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: unit_of_work,  # type: ignore[arg-type]
+        sandbox_registry=SandboxAdapterRegistry(runner_factory=lambda tier: _FailingRunner(tier)),
+    )
+
+    blocked_reason, sandbox_result = gateway._prepare_sandbox_or_block(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        trace_id="thread-sandbox",
+        call_id="call-sandbox-fail",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+        prepared_id="prepared-tool-action:call-sandbox-fail",
+        attempt_id="tool-attempt:call-sandbox-fail",
+        receipt_id="tool-execution-receipt:call-sandbox-fail",
+    )
+
+    assert blocked_reason == "sandbox runtime denied"
+    assert sandbox_result is None
+    assert len(unit_of_work.attempts) == 1
+    assert len(unit_of_work.sandbox_receipts) == 1
+    receipt = unit_of_work.sandbox_receipts[0]
+    assert receipt.receipt_payload["sandbox_execution_status"] == "BLOCKED"
+    assert receipt.receipt_payload["sandbox_execution"]["sandbox_blocked_reason"] == "sandbox runtime denied"
+    assert receipt.receipt_payload["sandbox_execution"]["session_ref"].endswith(":call-sandbox-fail")
 
 
 def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(monkeypatch) -> None:

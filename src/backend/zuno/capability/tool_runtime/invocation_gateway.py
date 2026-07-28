@@ -868,9 +868,54 @@ class ToolInvocationGateway:
                 adapter_kind=adapter_kind,
                 args=redact_sensitive_payload(args),
             )
-            sandbox_result = self._sandbox_registry.execute(dispatch=sandbox, args=redact_sensitive_payload(args))
         except SandboxPolicyViolation as exc:
             return str(exc), None
+        try:
+            sandbox_result = self._sandbox_registry.execute(dispatch=sandbox, args=redact_sensitive_payload(args))
+        except SandboxPolicyViolation as exc:
+            self._record_sandbox_receipt(
+                tenant_id=tenant_id,
+                call_id=call_id,
+                prepared_id=prepared_id,
+                attempt_id=attempt_id,
+                receipt_id=receipt_id,
+                adapter_kind=adapter_kind,
+                sandbox=sandbox,
+                sandbox_result=SandboxExecutionResult(
+                    status="BLOCKED",
+                    stdout="",
+                    stderr=str(exc),
+                    exit_code=126,
+                    output_payload={"sandbox_blocked_reason": str(exc), "session_ref": sandbox.session_ref},
+                ),
+            )
+            return str(exc), None
+        self._record_sandbox_receipt(
+            tenant_id=tenant_id,
+            call_id=call_id,
+            prepared_id=prepared_id,
+            attempt_id=attempt_id,
+            receipt_id=receipt_id,
+            adapter_kind=adapter_kind,
+            sandbox=sandbox,
+            sandbox_result=sandbox_result,
+        )
+        if sandbox_result.status != "SUCCEEDED":
+            return "sandbox execution failed", None
+        return "", sandbox_result
+
+    def _record_sandbox_receipt(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        prepared_id: str,
+        attempt_id: str,
+        receipt_id: str,
+        adapter_kind: str,
+        sandbox: Any,
+        sandbox_result: SandboxExecutionResult,
+    ) -> None:
         payload = dict(sandbox.dispatch_payload)
         payload["prepared_tool_action_id"] = prepared_id
         payload["attempt_id"] = attempt_id
@@ -915,9 +960,6 @@ class ToolInvocationGateway:
                     receipt_payload=payload,
                 )
             )
-        if sandbox_result.status != "SUCCEEDED":
-            return "sandbox execution failed", None
-        return "", sandbox_result
 
     def _issue_secret_lease(
         self,

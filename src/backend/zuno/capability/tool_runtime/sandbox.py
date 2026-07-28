@@ -321,6 +321,7 @@ class SandboxAdapterRegistry:
         )
 
     def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
+        self._validate_dispatch_integrity(dispatch)
         runner = self._runner_factory(dispatch.adapter_tier)
         if runner.adapter_tier != dispatch.adapter_tier:
             raise SandboxPolicyViolation("sandbox runner tier does not match dispatch profile")
@@ -382,6 +383,29 @@ class SandboxAdapterRegistry:
         if adapter_tier == "OCI_PROCESS":
             return OciProcessSandboxRunner()
         raise SandboxPolicyViolation(f"unsupported sandbox adapter tier: {adapter_tier}")
+
+    @staticmethod
+    def _validate_dispatch_integrity(dispatch: SandboxDispatch) -> None:
+        session = dispatch.dispatch_payload.get("session")
+        profile = dispatch.dispatch_payload.get("profile")
+        if not isinstance(session, dict) or not isinstance(profile, dict):
+            raise SandboxPolicyViolation("sandbox dispatch missing session or profile payload")
+        limits = profile.get("limits")
+        if not isinstance(limits, dict):
+            raise SandboxPolicyViolation("sandbox dispatch missing limits payload")
+        if canonical_sha256(session) != dispatch.session_hash:
+            raise SandboxPolicyViolation("sandbox session integrity hash mismatch")
+        if canonical_sha256(profile) != dispatch.profile_hash:
+            raise SandboxPolicyViolation("sandbox profile integrity hash mismatch")
+        if canonical_sha256(limits) != dispatch.limits_hash:
+            raise SandboxPolicyViolation("sandbox limits integrity hash mismatch")
+        if int(session.get("session_version", 0)) != dispatch.session_version:
+            raise SandboxPolicyViolation("sandbox session version mismatch")
+        if len(json.dumps(session, ensure_ascii=True, sort_keys=True).encode("utf-8")) > int(limits["session_bytes"]):
+            raise SandboxPolicyViolation("sandbox session exceeds configured size limit")
+        expires_at = datetime.fromisoformat(str(session["expires_at"]))
+        if expires_at <= datetime.now(tz=UTC):
+            raise SandboxPolicyViolation("sandbox session expired")
 
 
 def _tuple_arg(args: dict[str, Any], key: str) -> tuple[str, ...]:
