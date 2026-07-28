@@ -1,4 +1,4 @@
-import time
+﻿import time
 from loguru import logger
 from typing import List, Dict, Any, AsyncGenerator, NotRequired, TypedDict, Union, Optional
 from langchain_core.language_models import BaseChatModel
@@ -6,6 +6,7 @@ from langgraph.constants import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.config import get_stream_writer
 from langchain_core.tools import BaseTool
+from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage, AIMessageChunk, AIMessage, HumanMessage
 
 from zuno.core.callbacks import usage_metadata_callback
@@ -183,6 +184,12 @@ class ReactAgent:
                 if current_tool is None:
                     tool_result = f"Error: Tool '{tool_name}' not found."
                     raise ValueError(tool_result)
+
+                ensure_legacy_direct_tool_allowed(
+                    tool_name=tool_name,
+                    args=dict(tool_args or {}),
+                    adapter_kind="LANGCHAIN",
+                )
 
                 # 优化：使用 BaseTool 的 ainvoke/invoke 方法
                 if current_tool.coroutine:

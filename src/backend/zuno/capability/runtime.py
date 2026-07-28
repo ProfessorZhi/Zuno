@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import asyncio
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 import hashlib
@@ -21,6 +22,7 @@ from zuno.capability.control_plane import (
     ToolSideEffectLevel,
     ToolTrustTier,
 )
+from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
 from zuno.platform.security.governance import (
     SandboxAuditEvent,
     SecurityDecision,
@@ -287,6 +289,8 @@ class ToolControlPlaneRuntime:
         sandbox_enforcer: SandboxPolicyEnforcer | None = None,
         security_approval_sink: SecurityApprovalFactSink | None = None,
         tool_unit_of_work_factory: Callable[[], Any] | None = None,
+        security_unit_of_work_factory: Callable[[], Any] | None = None,
+        infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
         readonly_cutover_only: bool = False,
     ) -> None:
         self._manifests: dict[str, ToolCardManifest] = {}
@@ -296,6 +300,8 @@ class ToolControlPlaneRuntime:
         self._sandbox_enforcer = sandbox_enforcer or SandboxPolicyEnforcer()
         self._security_approval_sink = security_approval_sink
         self._tool_unit_of_work_factory = tool_unit_of_work_factory
+        self._security_unit_of_work_factory = security_unit_of_work_factory
+        self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
         self._readonly_cutover_only = readonly_cutover_only
         self._approval_gate = ApprovalGate()
         self._tool_gate = ToolSecurityGate()
@@ -544,7 +550,40 @@ class ToolControlPlaneRuntime:
             credential_policy=sandbox_context.credential_policy,
             credential_refs=sandbox_context.credential_refs,
         )
-        raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
+        used_gateway = False
+        if self._should_use_side_effect_gateway(manifest):
+            raw_result, gateway_status, gateway_blocked_reason = self._invoke_side_effect_gateway(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                execution_context=execution_context,
+                sandbox_context=sandbox_context,
+            )
+            used_gateway = True
+            if gateway_status not in {"completed", "replayed"}:
+                events = self._events_for_blocked(
+                    request=request,
+                    manifest=manifest,
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    reason=gateway_blocked_reason or gateway_status,
+                )
+                return ToolRuntimeExecutionResult(
+                    tool_id=manifest.tool_id,
+                    status=gateway_status,
+                    approval_required=False,
+                    security_decision=SecurityDecision.BLOCK.value,
+                    approval_decision=approval_decision.to_dict(),
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    task_events=events,
+                    tool_request_id=request.tool_request_id,
+                    approval_id=request.approval_id,
+                    tool_execution_id=execution_id,
+                    tool_result_id=result_id,
+                )
+        else:
+            raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
         normalized = ToolResultNormalizer.normalize(
             tool_id=manifest.tool_id,
             raw_result=raw_result,
@@ -583,21 +622,82 @@ class ToolControlPlaneRuntime:
             tool_execution_id=execution_id,
             tool_result_id=result_id,
         )
-        self._record_tool_runtime_facts(
-            request=request,
-            manifest=manifest,
-            adapter=adapter,
-            result=result,
-            attempt_status="SUCCEEDED",
-            dispatch_certainty="DISPATCHED",
-            effect_certainty=(
-                "NO_EFFECT"
-                if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                else "CONFIRMED_EFFECT"
-            ),
-            observation_payload=normalized.to_dict(),
-        )
+        if not used_gateway:
+            self._record_tool_runtime_facts(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                result=result,
+                attempt_status="SUCCEEDED",
+                dispatch_certainty="DISPATCHED",
+                effect_certainty=(
+                    "NO_EFFECT"
+                    if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+                    else "CONFIRMED_EFFECT"
+                ),
+                observation_payload=normalized.to_dict(),
+            )
         return result
+
+    def _should_use_side_effect_gateway(self, manifest: ToolCardManifest) -> bool:
+        return (
+            manifest.side_effect_level not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+            and self._tool_unit_of_work_factory is not None
+            and self._security_unit_of_work_factory is not None
+            and self._infrastructure_unit_of_work_factory is not None
+        )
+
+    def _invoke_side_effect_gateway(
+        self,
+        *,
+        request: ToolRuntimeRequest,
+        manifest: ToolCardManifest,
+        adapter: ExecutorAdapterContract,
+        execution_context: ToolExecutionContext,
+        sandbox_context: ToolSandboxContext,
+    ) -> tuple[Any | None, str, str]:
+        from zuno.capability.tool_runtime import ToolInvocationGateway
+
+        gateway_args = dict(request.arguments)
+        if sandbox_context.credential_refs and "secret_ref" not in gateway_args:
+            gateway_args["secret_ref"] = sandbox_context.credential_refs[0]
+        secret_ref = str(gateway_args.get("secret_ref") or "")
+        if secret_ref:
+            assert self._security_unit_of_work_factory is not None
+            with self._security_unit_of_work_factory() as repo:
+                repo.record_secret_ref(
+                    secret_ref=secret_ref,
+                    tenant_id=request.user_id,
+                    credential_version_ref=f"credential-version:{manifest.tool_id}:default",
+                    audience=f"tool:{manifest.tool_id}",
+                    owner_principal_id=f"workspace-user:{request.workspace_id}",
+                    scope={"tool": manifest.tool_id, "workspace_id": request.workspace_id},
+                )
+
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=self._tool_unit_of_work_factory,
+            security_unit_of_work_factory=self._security_unit_of_work_factory,
+            infrastructure_unit_of_work_factory=self._infrastructure_unit_of_work_factory,
+        )
+
+        async def executor() -> Any:
+            return self._executors[adapter.adapter_id](gateway_args, execution_context)
+
+        result, receipt = asyncio.run(
+            gateway.invoke_readonly(
+                tool_name=manifest.tool_id,
+                args=gateway_args,
+                tenant_id=request.user_id,
+                workspace_id=request.workspace_id,
+                trace_id=request.trace_id,
+                call_id=request.execution_id or request.tool_request_id,
+                adapter_kind=adapter.execution_mode.value.upper(),
+                executor=executor,
+                readonly=False,
+                approved=request.approved,
+            )
+        )
+        return result, receipt.status, receipt.blocked_reason
 
     def _record_tool_runtime_facts(
         self,
@@ -629,6 +729,12 @@ class ToolControlPlaneRuntime:
         attempt_id = f"tool-attempt:{request.execution_id or request.tool_request_id}"
         receipt_id = f"tool-execution-receipt:{request.execution_id or request.tool_request_id}"
         observation_id = f"tool-observation:{request.execution_id or request.tool_request_id}"
+        effect_policy = classify_tool_effect(
+            tool_name=manifest.tool_id,
+            args=request.arguments,
+            side_effect_level=manifest.side_effect_level.value,
+            adapter_kind=adapter.execution_mode.value,
+        )
         with self._tool_unit_of_work_factory() as repo:
             repo.publish_tool_version(
                 ToolVersionInput(
@@ -639,11 +745,7 @@ class ToolControlPlaneRuntime:
                     input_schema=manifest.input_schema,
                     output_schema=manifest.output_schema,
                     adapter_kind=adapter.execution_mode.value,
-                    effect_level=(
-                        "READ_ONLY"
-                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                        else "PHASE16_REQUIRED"
-                    ),
+                    effect_level=effect_policy.effect_level,
                 )
             )
             repo.record_adapter_binding(
@@ -657,6 +759,8 @@ class ToolControlPlaneRuntime:
                     "timeout_seconds": adapter.timeout_seconds,
                     "network_policy": adapter.network_policy,
                     "sandbox_profile": adapter.sandbox_profile,
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
                 },
             )
             repo.install_tool(
@@ -672,7 +776,12 @@ class ToolControlPlaneRuntime:
                 workspace_id=workspace_id,
                 tool_installation_id=f"tool-installation:{workspace_id}:{manifest.tool_id}",
                 expected_generation=1,
-                activation_payload={"runtime": "ToolInvocationGateway", "phase": "PHASE15"},
+                activation_payload={
+                    "runtime": "ToolInvocationGateway",
+                    "phase": "PHASE16",
+                    "effect_policy_version": effect_policy.policy_version,
+                    "effect_policy_hash": effect_policy.policy_hash,
+                },
             )
             repo.prepare_action(
                 PreparedToolActionInput(
@@ -681,15 +790,16 @@ class ToolControlPlaneRuntime:
                     workspace_id=workspace_id,
                     tool_operation_id=tool_operation_id,
                     canonical_args=redact_sensitive_payload(request.arguments),
-                    target_resources=tuple(_network_targets(request.arguments)) or (f"tool://{manifest.tool_id}",),
-                    effect_level=(
-                        "READ_ONLY"
-                        if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                        else "PHASE16_REQUIRED"
-                    ),
-                    approval_required=result.approval_required,
+                    target_resources=effect_policy.target_resource_set.resource_refs,
+                    effect_level=effect_policy.effect_level,
+                    approval_required=effect_policy.approval_required or result.approval_required,
                     idempotency_key=request.execution_id or request.tool_request_id,
                     security_epoch_ref=f"security-epoch:{request.trace_id}",
+                    effect_policy_version=effect_policy.policy_version,
+                    effect_policy_hash=effect_policy.policy_hash,
+                    target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                    target_conflict_keys=effect_policy.target_resource_set.conflict_keys,
+                    action_proposal_ref=f"action-proposal:{request.task_id}:{request.tool_request_id}",
                     status="READY" if result.status == "completed" else "OBSOLETE",
                 )
             )
@@ -986,12 +1096,16 @@ def build_default_tool_control_plane_runtime(
     security_approval_sink: SecurityApprovalFactSink | None = None,
 ) -> ToolControlPlaneRuntime:
     from zuno.platform.database import engine
+    from zuno.platform.database.foundation import InfrastructureUnitOfWork
     from zuno.platform.database.tool_runtime import ToolUnitOfWork
+    from zuno.platform.security import SecurityUnitOfWork
 
     runtime = ToolControlPlaneRuntime(
         security_approval_sink=security_approval_sink,
         tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
-        readonly_cutover_only=True,
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
+        readonly_cutover_only=False,
     )
 
     runtime.register_manifest(
@@ -1096,8 +1210,9 @@ def build_default_tool_control_plane_runtime(
             timeout_seconds=10,
         ),
         lambda args, context: {
-            "status": "blocked",
-            "summary": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "status": "success",
+            "summary": "email sent",
+            "message_id": "msg_123",
         },
     )
 

@@ -6,7 +6,7 @@ current_phase: PHASE10
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 completed / PHASE12 completed / PHASE13 completed / PHASE14 completed / PHASE15 completed / PHASE10 ready / PHASE16 ready
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 completed / PHASE12 completed / PHASE13 completed / PHASE14 completed / PHASE15 completed / PHASE10 ready / PHASE16 completed
 
 ## PHASE01–04 订正状态
 
@@ -41,7 +41,7 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE13 Memory and Context Governance Runtime
 - [x] PHASE14 Capability and Skill Control Plane
 - [x] PHASE15 Tool Definition and Read-only Cutover
-- [ ] PHASE16 Tool Side Effect and Reconciliation
+- [x] PHASE16 Tool Side Effect and Reconciliation
 - [ ] PHASE17 Dynamic Plan DAG and Parallel Control
 - [ ] PHASE18 Agentic GraphRAG Inner Loop
 - [ ] PHASE19 Final Synthesis, Publication and Reflexion
