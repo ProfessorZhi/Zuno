@@ -7,12 +7,18 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 
 BASE_URL = os.getenv("ZUNO_FULL_E2E_BASE", "http://127.0.0.1:8090").rstrip("/")
 API_URL = os.getenv("ZUNO_FULL_E2E_API", "http://127.0.0.1:7860").rstrip("/")
 QA_API_URL = os.getenv("ZUNO_FULL_E2E_QA_API", "http://127.0.0.1:9101").rstrip("/")
 AUTH_PATH = Path(os.getenv("ZUNO_FULL_E2E_AUTH", "auth.json"))
+PRODUCT_CUTOVER_COMMANDS = {
+    "shadow": "SHADOW_SUBMIT_USER_GOAL",
+    "canary": "CANARY_SUBMIT_USER_GOAL",
+    "new_default": "SUBMIT_USER_GOAL",
+}
 
 
 def _read_json_url(url: str) -> dict[str, Any]:
@@ -32,6 +38,26 @@ def _storage_token() -> str:
             if item.get("name") == "token" and item.get("value"):
                 return str(item["value"])
     raise AssertionError("Playwright storage state does not contain localStorage.token")
+
+
+def _runtime_request_body(mode: str, command_kind: str) -> dict[str, Any]:
+    marker = uuid4().hex
+    return {
+        "tenant_id": "tenant:web",
+        "workspace_id": "workspace:agent-studio:web",
+        "conversation_id": f"conversation:phase10-cutover-smoke:{mode}:{marker}",
+        "client_request_id": f"client:phase10-cutover-smoke:{mode}:{marker}",
+        "runtime_request_ref": f"runtime-request:phase10-cutover-smoke:{mode}:{marker}",
+        "raw_intent_ref": f"intent:phase10-cutover-smoke:{mode}:{marker}",
+        "command_kind": command_kind,
+        "active_agent_version_id": "agent-version:web-default",
+        "payload": {
+            "goal": f"PHASE10 browser cutover smoke {mode}",
+            "query": f"PHASE10 browser cutover smoke {mode}",
+            "cutover_mode": mode,
+            **({"rollback_reason": "product_runtime_cutover_rollback"} if mode == "rollback" else {}),
+        },
+    }
 
 
 def _run_browser_smoke() -> None:
@@ -68,6 +94,70 @@ def _run_browser_smoke() -> None:
             entries = catalog["body"].get("data", {}).get("agent_catalog_entries")
             if not isinstance(entries, list):
                 raise AssertionError(f"Product catalog payload missing entries: {catalog}")
+
+            cutover = page.evaluate(
+                """async ({ token, requests }) => {
+                  const results = []
+                  for (const request of requests) {
+                    const response = await fetch('/api/v1/product/runtime-requests', {
+                      method: 'POST',
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(request.body),
+                    })
+                    const body = await response.json()
+                    results.push({
+                      mode: request.mode,
+                      command_kind: request.body.command_kind,
+                      http_status: response.status,
+                      status_code: body.status_code,
+                      status_message: body.status_message || '',
+                      receipt_status: body.data?.status || '',
+                      command_id: body.data?.command_id || '',
+                      projection_event_id: body.data?.projection?.projection_event_id || '',
+                    })
+                  }
+                  return results
+                }""",
+                {
+                    "token": token,
+                    "requests": [
+                        {
+                            "mode": mode,
+                            "body": _runtime_request_body(mode, command_kind),
+                        }
+                        for mode, command_kind in PRODUCT_CUTOVER_COMMANDS.items()
+                    ] + [
+                        {
+                            "mode": "rollback",
+                            "body": _runtime_request_body("rollback", "SUBMIT_USER_GOAL"),
+                        }
+                    ],
+                },
+            )
+            by_mode = {item["mode"]: item for item in cutover}
+            for mode, command_kind in PRODUCT_CUTOVER_COMMANDS.items():
+                result = by_mode.get(mode)
+                if not result:
+                    raise AssertionError(f"Missing Product runtime cutover smoke result for {mode}: {cutover}")
+                if result["http_status"] != 200 or result["status_code"] != 200:
+                    raise AssertionError(f"Product runtime cutover {mode} request failed: {result}")
+                if result["command_kind"] != command_kind:
+                    raise AssertionError(f"Product runtime cutover {mode} used wrong command kind: {result}")
+                if result["receipt_status"] not in {"ACCEPTED", "DUPLICATE"}:
+                    raise AssertionError(f"Product runtime cutover {mode} did not return an accepted receipt: {result}")
+                if not result["command_id"] or not result["projection_event_id"]:
+                    raise AssertionError(f"Product runtime cutover {mode} missing receipt/projection evidence: {result}")
+
+            rollback = by_mode.get("rollback")
+            if not rollback:
+                raise AssertionError(f"Missing Product runtime rollback smoke result: {cutover}")
+            if rollback["http_status"] != 200 or rollback["status_code"] == 200:
+                raise AssertionError(f"Product runtime rollback was not rejected fail-closed: {rollback}")
+            if "Product runtime rollback mode is active" not in rollback["status_message"]:
+                raise AssertionError(f"Product runtime rollback returned wrong failure: {rollback}")
         finally:
             browser.close()
 

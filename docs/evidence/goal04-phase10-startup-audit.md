@@ -1170,6 +1170,54 @@ PHASE10 Product cutover evidence verifier passed.
 - Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T27 Browser Product Runtime Cutover Smoke Gate
+
+已更新：
+
+- `tools/qa/full-e2e/full_e2e.py`
+- `tests/tools/test_launcher_scripts.py`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`
+
+当前 Browser Product runtime cutover smoke gate 覆盖：
+
+- Full E2E smoke 在已登录 browser context 中调用 `/api/v1/product/runtime-requests`；
+- `shadow` 提交 `SHADOW_SUBMIT_USER_GOAL`，`canary` 提交 `CANARY_SUBMIT_USER_GOAL`，`new_default` 提交 `SUBMIT_USER_GOAL`；
+- 三个可提交模式必须返回 HTTP 200、Product `status_code=200`、`ACCEPTED` 或 `DUPLICATE` receipt、`command_id` 和 projection evidence；
+- `rollback` 提交 `SUBMIT_USER_GOAL` + `cutover_mode=rollback`，必须返回 fail-closed Product error，错误信息包含 `Product runtime rollback mode is active`；
+- 静态 launcher test 和 PHASE10 cutover verifier 会防止该 browser smoke gate 被移除。
+
+RED 验证：
+
+```text
+python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes -q
+no tests ran
+ERROR: not found: tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes -q
+1 passed
+```
+
+```text
+python -m py_compile tools\qa\full-e2e\full_e2e.py tools\scripts\verify_phase10_product_cutover_evidence.py
+passed
+```
+
+```text
+python tools\scripts\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- 本轮新增的是 Browser full-e2e cutover smoke gate，不等于已经完成并通过完整 PHASE10 closure；
+- `powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1` 需要在后端、前端、QA API、auth state 和本机数据库 stamp 可用时重新运行；
+- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1213,6 +1261,8 @@ python -m pytest tests\api\test_goal03_product_route.py tests\api\test_workspace
 python -m py_compile src\backend\zuno\api\services\product\command_service.py src\backend\zuno\platform\database\product\domain.py src\backend\zuno\api\services\workspace_task_runtime.py
 python -m pytest tests\repo\test_phase10_product_cutover_evidence.py -q
 python tools\scripts\verify_phase10_product_cutover_evidence.py
+python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes -q
+python -m py_compile tools\qa\full-e2e\full_e2e.py tools\scripts\verify_phase10_product_cutover_evidence.py
 ```
 
 未通过 / 未完成：
@@ -1235,5 +1285,5 @@ environment signature: local PostgreSQL alembic_version contains 20260727_45; cu
 ```
 
 ```text
-shadow/canary/default-new/rollback closure gate 仍未完整完成；PHASE10 仍为 in_progress，不能写 completed。
+Browser cutover smoke gate 已补入 full-e2e helper，但完整 run-full-e2e-smoke.ps1 需要在后端、前端、QA API、auth state 和本机数据库 stamp 可用时重跑；PHASE10 仍为 in_progress，不能写 completed。
 ```

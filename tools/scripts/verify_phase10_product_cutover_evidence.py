@@ -14,6 +14,8 @@ FILES = {
     "frontend_contract_tests": REPO_ROOT / "tests/frontend/test_phase10_product_contracts.py",
     "product_route_tests": REPO_ROOT / "tests/api/test_goal03_product_route.py",
     "workspace_tests": REPO_ROOT / "tests/api/test_workspace_task_runtime.py",
+    "full_e2e": REPO_ROOT / "tools/qa/full-e2e/full_e2e.py",
+    "launcher_tests": REPO_ROOT / "tests/tools/test_launcher_scripts.py",
     "evidence": REPO_ROOT / "docs/evidence/goal04-phase10-startup-audit.md",
 }
 
@@ -40,6 +42,8 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
     frontend_tests = _read(FILES["frontend_contract_tests"], errors)
     route_tests = _read(FILES["product_route_tests"], errors)
     workspace_tests = _read(FILES["workspace_tests"], errors)
+    full_e2e = _read(FILES["full_e2e"], errors)
+    launcher_tests = _read(FILES["launcher_tests"], errors)
     evidence = _read(FILES["evidence"], errors)
 
     for phrase in (
@@ -113,10 +117,31 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         _require(workspace_tests, phrase, "workspace bridge cutover tests", errors)
 
     for phrase in (
+        "PRODUCT_CUTOVER_COMMANDS",
+        '"shadow": "SHADOW_SUBMIT_USER_GOAL"',
+        '"canary": "CANARY_SUBMIT_USER_GOAL"',
+        '"new_default": "SUBMIT_USER_GOAL"',
+        "'/api/v1/product/runtime-requests'",
+        '"cutover_mode": mode',
+        '_runtime_request_body("rollback", "SUBMIT_USER_GOAL")',
+        "receipt/projection evidence",
+        "Product runtime rollback mode is active",
+    ):
+        _require(full_e2e, phrase, "full E2E cutover smoke", errors)
+
+    for phrase in (
+        "test_full_e2e_smoke_covers_product_runtime_cutover_modes",
+        "PRODUCT_CUTOVER_COMMANDS",
+        "receipt/projection evidence",
+    ):
+        _require(launcher_tests, phrase, "launcher cutover smoke tests", errors)
+
+    for phrase in (
         "P10-T22 Web Product Runtime Cutover Guard",
         "P10-T23 Product API Rollback Fail-Closed Boundary",
         "P10-T24 Product API Cutover Command Contract",
         "P10-T25 Product Runtime Cutover Handoff Context",
+        "P10-T27 Browser Product Runtime Cutover Smoke Gate",
         "PHASE10 仍为 `in_progress`",
         "Alembic upgrade head",
         "shadow/canary/default-new/rollback 仍缺完整闭环",

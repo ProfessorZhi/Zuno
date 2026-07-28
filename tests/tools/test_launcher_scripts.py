@@ -41,6 +41,20 @@ def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
     assert (qa_root / "full_e2e.py").exists()
 
 
+def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
+    content = (REPO_ROOT / "tools" / "qa" / "full-e2e" / "full_e2e.py").read_text(encoding="utf-8")
+
+    assert "PRODUCT_CUTOVER_COMMANDS" in content
+    assert '"shadow": "SHADOW_SUBMIT_USER_GOAL"' in content
+    assert '"canary": "CANARY_SUBMIT_USER_GOAL"' in content
+    assert '"new_default": "SUBMIT_USER_GOAL"' in content
+    assert "'/api/v1/product/runtime-requests'" in content
+    assert '"cutover_mode": mode' in content
+    assert '_runtime_request_body("rollback", "SUBMIT_USER_GOAL")' in content
+    assert "Product runtime rollback mode is active" in content
+    assert "receipt/projection evidence" in content
+
+
 def test_desktop_smoke_script_runs_real_electron_bridge_check():
     content = (REPO_ROOT / "tools" / "scripts" / "run-desktop-smoke.ps1").read_text(encoding="utf-8")
 
