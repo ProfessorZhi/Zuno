@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE10"
+CURRENT_PHASE = "PHASE19"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -193,7 +193,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[6]: "completed",
         PHASE_FILES[7]: "completed",
         PHASE_FILES[8]: "completed",
-        PHASE_FILES[9]: "ready",
+        PHASE_FILES[9]: "completed",
         PHASE_FILES[10]: "completed",
         PHASE_FILES[11]: "completed",
         PHASE_FILES[12]: "completed",
@@ -202,6 +202,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[15]: "completed",
         PHASE_FILES[16]: "completed",
         PHASE_FILES[17]: "completed",
+        PHASE_FILES[18]: "ready",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -306,6 +307,7 @@ def verify_current_program() -> list[str]:
     phase17_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-coordinator-closure.md")
     phase18_startup = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-startup-audit.md")
     phase18_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-coordinator-closure.md")
+    phase10_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase10-coordinator-closure.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_controller = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_controller.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
@@ -375,7 +377,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE10",
+                "current_phase: PHASE19",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
@@ -388,12 +390,14 @@ def verify_current_program() -> list[str]:
                 "PHASE13 completed",
                 "PHASE14 completed",
                 "PHASE15 completed",
-                "PHASE10 ready",
+                "PHASE10 completed",
                 "PHASE16 completed",
                 "PHASE17 completed",
                 "goal04-phase17-coordinator-closure.md",
                 "PHASE18 completed",
                 "goal04-phase18-coordinator-closure.md",
+                "goal04-phase10-coordinator-closure.md",
+                "PHASE19 ready",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
                 "measurement blocked",
@@ -407,7 +411,7 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE10",
+                "current_phase: PHASE19",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "implementation available",
@@ -433,7 +437,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE07, file: .agent/programs/PHASE07_model-gateway-runtime.md, state: completed",
                 "id: PHASE08, file: .agent/programs/PHASE08_deterministic-single-controller-runtime.md, state: completed",
                 "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: completed",
-                "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: ready",
+                "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: completed",
                 "id: PHASE11, file: .agent/programs/PHASE11_durable-ingestion-and-source-lineage.md, state: completed",
                 "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed",
                 "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
@@ -442,8 +446,30 @@ def verify_current_program() -> list[str]:
                 "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
                 "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed",
                 "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed",
+                "id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: ready",
             ],
             "program-manifest.yaml",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            phase10_closure,
+            [
+                "Goal04 PHASE10 Coordinator Closure",
+                "status: completed",
+                "coordinator_approval: approved",
+                "post_phase18_merge_commit: 5320dcff873caed383420adf5480d28c25e130f7",
+                "base_after_phase18_merge: cbc04cb0be16c3915537b82a4f3f743cb7add963",
+                "P10-T01",
+                "P10-T08",
+                "20260728_51 (head)",
+                "python -m alembic -c infra/db/alembic.ini upgrade head",
+                "result: 2 passed",
+                "result: 1 passed",
+                "PR #47 may be marked ready and merged after validate success",
+                "Production readiness not established",
+            ],
+            "PHASE10 closure evidence",
         )
     )
     errors.extend(

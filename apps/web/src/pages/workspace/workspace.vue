@@ -7,11 +7,11 @@ import { zunoAgentAvatar } from '../../utils/brand'
 import { useUserStore } from '../../store/user'
 import { logoutAPI, getUserInfoAPI } from '../../apis/auth'
 import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/workspace'
-import { getAgentsAPI, type AgentResponse } from '../../apis/agent'
 import { useResizablePanel } from '../../composables/useResizablePanel'
 import { getSettingsIcon } from '../../utils/settings-icons'
 import { isDesktopRuntime } from '../../utils/api'
 import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../utils/user-avatars'
+import { PRODUCT_AGENT_WORKSPACE_ID, PRODUCT_WEB_TENANT_ID, listProductAgentCatalog, type AgentCatalogEntry } from '../../product'
 import SidebarMascot from '../../components/SidebarMascot.vue'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
 import WorkspaceAuthGate from './WorkspaceAuthGate.vue'
@@ -103,6 +103,13 @@ const normalizeAvatarUrl = (avatar?: string) => {
   if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
   return withUserAvatarVersion(raw)
 }
+
+const normalizeProductSidebarAgent = (entry: AgentCatalogEntry): SidebarAgentItem => ({
+  id: entry.agent_definition_id,
+  name: entry.display_name || entry.agent_version_id || '未命名智能体',
+  description: entry.description || 'Product Catalog entry',
+  avatar: zunoAgentAvatar,
+})
 
 const userAvatarSrc = computed(() => normalizeAvatarUrl(userStore.userInfo?.avatar))
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms))
@@ -438,12 +445,6 @@ const fetchSessions = async () => {
   }
 }
 
-const normalizeAgentAvatar = (avatar?: string) => {
-  const raw = String(avatar || '').trim()
-  if (!raw || raw.startsWith('/src/assets/')) return zunoAgentAvatar
-  return raw
-}
-
 const fetchAgents = async () => {
   if (!hasAuthToken()) {
     agents.value = []
@@ -451,17 +452,13 @@ const fetchAgents = async () => {
   }
 
   try {
-    const response = await getAgentsAPI()
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '获取智能体列表失败')
-    }
-
-    agents.value = (response.data.data || []).map((agent: AgentResponse) => ({
-      id: agent.agent_id || agent.id || agent.name,
-      name: agent.name || '未命名智能体',
-      description: agent.description || '暂无描述',
-      avatar: normalizeAgentAvatar(agent.logo_url),
-    })).filter((agent: SidebarAgentItem) => Boolean(agent.id))
+    const response = await listProductAgentCatalog({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    })
+    agents.value = (response.agent_catalog_entries || [])
+      .map(normalizeProductSidebarAgent)
+      .filter((agent: SidebarAgentItem) => Boolean(agent.id))
   } catch (error) {
     console.error('获取智能体列表失败:', error)
     agents.value = []

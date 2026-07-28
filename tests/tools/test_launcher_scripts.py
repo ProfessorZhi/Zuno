@@ -24,6 +24,61 @@ def test_scripts_start_does_not_install_dependencies_by_default():
     assert "if args.install_deps:" in content
 
 
+def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
+    content = (REPO_ROOT / "tools" / "scripts" / "run-full-e2e-smoke.ps1").read_text(encoding="utf-8")
+    qa_root = REPO_ROOT / "tools" / "qa" / "full-e2e"
+
+    assert "$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)" in content
+    assert "$frontendRoot = Join-Path $repoRoot 'apps\\web'" in content
+    assert "$authPath = Join-Path $qaRoot 'auth.json'" in content
+    assert "$qaSourceRoot = Join-Path $repoRoot 'tools\\qa\\full-e2e'" in content
+    assert "$qaApiScript = Join-Path $qaSourceRoot 'qa_echo_api.py'" in content
+    assert "$quotedQaApiScript = '\"' + $qaApiScript + '\"'" in content
+    assert "Push-Location $qaSourceRoot" in content
+    assert "$env:ZUNO_FULL_E2E_AUTH = $authPath" in content
+    assert (qa_root / "package.json").exists()
+    assert (qa_root / "qa_echo_api.py").exists()
+    assert (qa_root / "full_e2e.py").exists()
+
+
+def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
+    content = (REPO_ROOT / "tools" / "qa" / "full-e2e" / "full_e2e.py").read_text(encoding="utf-8")
+
+    assert "PRODUCT_CUTOVER_COMMANDS" in content
+    assert '"shadow": "SHADOW_SUBMIT_USER_GOAL"' in content
+    assert '"canary": "CANARY_SUBMIT_USER_GOAL"' in content
+    assert '"new_default": "SUBMIT_USER_GOAL"' in content
+    assert "'/api/v1/product/runtime-requests'" in content
+    assert '"cutover_mode": mode' in content
+    assert '_runtime_request_body("rollback", "SUBMIT_USER_GOAL")' in content
+    assert "Product runtime rollback mode is active" in content
+    assert "receipt/projection evidence" in content
+
+
+def test_desktop_smoke_script_runs_real_electron_bridge_check():
+    content = (REPO_ROOT / "tools" / "scripts" / "run-desktop-smoke.ps1").read_text(encoding="utf-8")
+
+    assert "$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)" in content
+    assert "$resultPath = Join-Path $tmpRoot 'desktop-smoke-result.json'" in content
+    assert "$env:DESKTOP_SMOKE_RESULT = $resultPath" in content
+    assert "$env:DESKTOP_SMOKE_TOKEN = New-SmokeToken" in content
+    assert "$env:DESKTOP_FRONTEND_URL = 'http://127.0.0.1:8091'" in content
+    assert "$env:DESKTOP_API_BASE_URL = 'http://127.0.0.1:7860'" in content
+    assert "-WindowStyle Hidden" in content
+
+
+def test_desktop_main_supports_product_bridge_smoke_mode():
+    content = (REPO_ROOT / "apps" / "desktop" / "main.cjs").read_text(encoding="utf-8")
+
+    assert "const DESKTOP_SMOKE_RESULT = getEnv('DESKTOP_SMOKE_RESULT', '')" in content
+    assert "show: !smokeMode" in content
+    assert "runDesktopSmokeCheck(mainWindow)" in content
+    assert "window.__ZUNO_DESKTOP__ missing" in content
+    assert "product-desktop-bridge-v1.phase10" in content
+    assert "Product catalog request failed from desktop renderer" in content
+    assert "writeDesktopSmokeResult(result)" in content
+
+
 def test_desktop_stop_stops_backend_services_too():
     content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Desktop-Common.cmd").read_text(encoding="utf-8")
     stop_block = re.search(r"^:launcher_stop\s*(.*?)^:launcher_rebuild\s*$", content, flags=re.MULTILINE | re.DOTALL)

@@ -26,14 +26,14 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE10"
+    assert manifest["current_phase"] == "PHASE19"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
     assert manifest["measurement_status"] == "measurement_blocked"
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase18_closure() -> None:
+def test_phase_states_reflect_goal04_phase10_closure() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -42,7 +42,7 @@ def test_phase_states_reflect_goal04_phase18_closure() -> None:
         "PHASE07_model-gateway-runtime.md": "status: completed",
         "PHASE08_deterministic-single-controller-runtime.md": "status: completed",
         "PHASE09_product-surface-backend-runtime.md": "status: completed",
-        "PHASE10_web-desktop-product-adaptation.md": "status: ready",
+        "PHASE10_web-desktop-product-adaptation.md": "status: completed",
         "PHASE11_durable-ingestion-and-source-lineage.md": "status: completed",
         "PHASE12_knowledge-version-and-standard-rag.md": "status: completed",
         "PHASE13_memory-context-governance-runtime.md": "status: completed",
@@ -51,6 +51,7 @@ def test_phase_states_reflect_goal04_phase18_closure() -> None:
         "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
         "PHASE17_dynamic-plan-dag-parallel-control.md": "status: completed",
         "PHASE18_agentic-graphrag-inner-loop.md": "status: completed",
+        "PHASE19_final-synthesis-publication-reflexion.md": "status: ready",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -59,15 +60,16 @@ def test_phase_states_reflect_goal04_phase18_closure() -> None:
     manifest = (program_root / "program-manifest.yaml").read_text(encoding="utf-8")
     assert "minimum_vertical_slice_is_phase_completion: false" in manifest
     assert "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: completed" in manifest
-    assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: ready" in manifest
+    assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: completed" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
     assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed" in manifest
     assert "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed" in manifest
+    assert "id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: ready" in manifest
 
 
-def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
+def test_goal04_phase10_closure_advances_to_phase19_without_production_ready() -> None:
     readiness = (
         REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
     ).read_text(encoding="utf-8")
@@ -79,15 +81,17 @@ def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
     assert "current_phase_status: completed" in readiness
     assert "coordinator_approval: approved" in readiness
     assert "target_not_current: 0" in readiness
-    assert "current_phase: PHASE10" in current
+    assert "current_phase: PHASE19" in current
     assert "PHASE09 completed" in current
     assert "PHASE15 completed" in current
-    assert "PHASE10 ready" in current
+    assert "PHASE10 completed" in current
     assert "PHASE16 completed" in current
     assert "PHASE17 completed" in current
     assert "goal04-phase17-coordinator-closure.md" in current
     assert "PHASE18 completed" in current
     assert "goal04-phase18-coordinator-closure.md" in current
+    assert "goal04-phase10-coordinator-closure.md" in current
+    assert "PHASE19 ready" in current
     assert "production readiness not established" in production
 
 

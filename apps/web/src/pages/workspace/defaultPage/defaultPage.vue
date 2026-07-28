@@ -6,39 +6,41 @@ import { ArrowDown, ArrowLeft, ArrowUp, CopyDocument, Download, Plus } from '@el
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
-  approveWorkspaceTaskAPI,
-  createWorkspaceFeedbackAPI,
   createWorkspaceFileAPI,
   createWorkspaceIngestAPI,
-  createWorkspaceTaskAPI,
   createWorkspaceSessionAPI,
   deleteWorkspaceSessionAPI,
-  downloadWorkspaceArtifactAPI,
-  getWorkspaceArtifactAPI,
   getWorkspaceExecutionModesAPI,
   getWorkspacePluginsByModeAPI,
   getWorkspaceSessionInfoAPI,
-  getWorkspaceTaskLifecycleAPI,
-  getWorkspaceTaskAPI,
-  workspaceSimpleChatStreamAPI,
-  workspaceTaskEventsStreamAPI,
   type AccessScopeDefinition,
   type ExecutionModeDefinition,
   type WorkspaceArtifactResponse,
   type WorkspaceExecutionConfig,
   type WorkspaceObservabilitySnapshot,
   type WorkspaceRetrievalProfile,
-  type WorkspaceStreamEvent,
-  type WorkspaceTaskCreateResponse,
   type KnowledgeSpaceRetrievalSelection,
-  type WorkSpaceSimpleTask,
+  type WorkspaceProductRuntimePayload,
 } from '../../../apis/workspace'
 import { uploadFile } from '../../../apis/chat'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../../apis/llm'
-import { getAgentsAPI, type AgentResponse } from '../../../apis/agent'
 import { getAgentSkillsAPI, type AgentSkill } from '../../../apis/agent-skill'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../../apis/knowledge'
 import { useUserStore } from '../../../store/user'
+import {
+  connectProductRuntimeProjectionStream,
+  consumeProductStoreAction,
+  downloadProductArtifact,
+  getProductArtifact,
+  listProductAgentCatalog,
+  submitProductFeedback,
+  submitWorkspacePayloadToProductRuntime,
+  PRODUCT_AGENT_WORKSPACE_ID,
+  PRODUCT_WEB_TENANT_ID,
+  type AgentCatalogEntry,
+  type AvailableAction,
+} from '../../../product'
+import { useProductProjectionStore } from '../../../product/store'
 import { getRetrievalModeLabel, normalizeRetrievalMode } from '../../../utils/retrieval'
 import { describeKnowledgeConfig, normalizeKnowledgeConfig, toWorkspaceRetrievalProfile } from '../../../utils/knowledge-config'
 import { safeDisplayText } from '../../../utils/display-text'
@@ -105,6 +107,7 @@ import type {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const productProjectionStore = useProductProjectionStore()
 
 const selectedMode = ref<WorkspaceMode>('normal')
 const activeAgentName = ref('')
@@ -114,27 +117,23 @@ const consumedInitialMessageKey = ref('')
 const initialRouteMessageInFlightKey = ref('')
 const messages = ref<ChatMessage[]>([])
 const executionEvents = ref<TraceRecord[]>([])
-const pendingToolApproval = ref<{
-  taskId: string
-  toolId: string
-  requiredApproval: string
-  approvalId: string
-  toolCallId: string
-  auditRef: string
-} | null>(null)
 const activeRuntimeTaskId = ref('')
 const activeRuntimeArtifact = ref<{
   artifactId: string
   content: string
   citations: string[]
+  citationRefs: Record<string, any>[]
   uri: string
   downloadUrl?: string
   downloadPolicy?: string
+  qualityDisclosure?: {
+    status: string
+    blocked_reason?: string
+    disclosure?: string
+  } | null
 } | null>(null)
 const activeRuntimeCitationIds = ref<string[]>([])
 const activeRuntimeObservability = ref<WorkspaceObservabilitySnapshot | null>(null)
-const workspaceTaskLifecycleStates = ref<string[]>(['pending', 'running', 'approval_required', 'recoverable_failed', 'cancelled', 'completed'])
-const workspaceTaskRecoveryActions = ref<Record<string, string[]>>({})
 const runtimeFailure = ref<{ title: string; detail: string } | null>(null)
 const feedbackSubmitting = ref(false)
 const feedbackSent = ref(false)
@@ -480,21 +479,6 @@ const runtimeFeedbackCopy = computed(() => {
   if (!feedbackSent.value) return '等待反馈。'
   return runtimeFeedbackLabel.value === 'helpful' ? '已记录为可用结果。' : '已记录为需要调整。'
 })
-const refreshWorkspaceTaskLifecycleContract = async () => {
-  try {
-    const response = await getWorkspaceTaskLifecycleAPI()
-    const contract = response.data?.data
-    if (Array.isArray(contract?.states)) {
-      workspaceTaskLifecycleStates.value = contract.states.map((state: unknown) => String(state))
-    }
-    if (contract?.recovery_actions && typeof contract.recovery_actions === 'object') {
-      workspaceTaskRecoveryActions.value = contract.recovery_actions
-    }
-  } catch (error) {
-    console.warn('workspace task lifecycle contract unavailable', error)
-  }
-}
-
 const safeQueryValue = (value: unknown, fallback: string) => Array.isArray(value) ? String(value[0] || fallback) : (typeof value === 'string' && value.trim() ? value : fallback)
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || ''
 const normalizeSessionMode = (session: any): WorkspaceMode => {
@@ -509,7 +493,6 @@ const normalizeSessionAgentName = (session: any) => {
   return raw
 }
 
-const sanitizeAssistantChunk = (chunk: string) => isAgentMode.value ? chunk : chunk.replace(/ReAct\s*Agent[^\n]*\n?/gi, '').replace(/^\s+/, '')
 const normalizeMessageMarkdown = (content: string) => {
   const lines = content.replace(/\r\n/g, '\n').split('\n')
   let insideFence = false
@@ -1060,7 +1043,6 @@ const clearConversationState = (options?: { keepSessionHistoryLoading?: boolean 
   composerFocused.value = false
   clearTransientPetMood()
   executionEvents.value = []
-  pendingToolApproval.value = null
   toolApprovalSubmitting.value = false
   resetRuntimeSurface()
   pendingAttachments.value = []
@@ -1079,7 +1061,6 @@ const isCurrentSessionDisposable = () => (
   Boolean(currentSessionId.value)
   && messages.value.length === 0
   && executionEvents.value.length === 0
-  && !pendingToolApproval.value
   && pendingAttachments.value.length === 0
 )
 
@@ -1172,21 +1153,21 @@ const normalizeAgentAvatar = (avatar?: string) => {
   return withUserAvatarVersion(raw)
 }
 
-const normalizeAgentOption = (agent: AgentResponse): AgentOption => ({
-  id: String(agent.agent_id || agent.id || agent.name || '').trim(),
-  name: String(agent.name || '未命名智能体').trim(),
-  description: String(agent.description || '暂无描述').trim(),
-  avatar: normalizeAgentAvatar(agent.logo_url),
+const normalizeAgentOption = (agent: AgentCatalogEntry): AgentOption => ({
+  id: String(agent.agent_definition_id || agent.catalog_entry_id || agent.display_name || '').trim(),
+  name: String(agent.display_name || '未命名智能体').trim(),
+  description: String(agent.description || 'Product Catalog entry').trim(),
+  avatar: normalizeAgentAvatar(),
 })
 
 const fetchAgentOptions = async () => {
   try {
     agentPickerLoading.value = true
-    const response = await getAgentsAPI()
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || '获取 Agent 失败')
-    }
-    agentOptions.value = (response.data.data || [])
+    const response = await listProductAgentCatalog({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    })
+    agentOptions.value = (response.agent_catalog_entries || [])
       .map(normalizeAgentOption)
       .filter((agent) => Boolean(agent.id))
   } catch (error) {
@@ -1242,47 +1223,6 @@ const getQualityReasonLabel = (reason: string) => {
   if (reason === 'no_relevant_documents') return '没有相关文档'
   return reason || ''
 }
-const buildRetrievalTrace = (data: Record<string, any>, retrievalMode: string): RetrievalTraceSummary | null => {
-  const rounds = Array.isArray(data.rounds) ? data.rounds : []
-  const firstMode = String(data.first_mode || retrievalMode || '').trim()
-  const finalMode = String(data.final_mode || retrievalMode || '').trim()
-  const fallbackReason = String(data.fallback_reason || '').trim()
-  const roundCount = Number(data.round_count || rounds.length || 0)
-  const rewrittenQueryUsed = Boolean(data.rewritten_query_used)
-  if (!firstMode && !finalMode && !roundCount && !fallbackReason && rounds.length === 0)
-    return null
-  return {
-    firstMode: firstMode || finalMode || retrievalMode || 'rag',
-    finalMode: finalMode || firstMode || retrievalMode || 'rag',
-    roundCount: roundCount || Math.max(rounds.length, 1),
-    fallbackReason,
-    rewrittenQueryUsed,
-    rounds: rounds.map((item: any, index: number) => ({
-      round: Number(item?.round || index + 1),
-      mode: String(item?.mode || finalMode || retrievalMode || 'rag'),
-      trigger: String(item?.trigger || ''),
-      qualityReason: String(item?.quality_reason || ''),
-      query: String(item?.query || ''),
-    })),
-  }
-}
-const buildRetrievalTraceDetail = (data: Record<string, any>, retrievalMode: string) => {
-  const retrieval = buildRetrievalTrace(data, retrievalMode)
-  if (!retrieval) return ''
-  const routeSummary = retrieval.firstMode && retrieval.finalMode && retrieval.firstMode !== retrieval.finalMode
-    ? `首轮 ${getRetrievalModeLabel(retrieval.firstMode)}，最终切到 ${getRetrievalModeLabel(retrieval.finalMode)}`
-    : `检索策略：${getRetrievalModeLabel(retrieval.finalMode || retrievalMode)}`
-  const parts = [`${routeSummary}，共 ${retrieval.roundCount} 轮。`]
-  if (retrieval.fallbackReason) parts.push(`补检原因：${retrieval.fallbackReason}。`)
-  if (retrieval.rewrittenQueryUsed) parts.push('已启用改写后的问题再次检索。')
-  const lastRound = retrieval.rounds[retrieval.rounds.length - 1]
-  if (lastRound?.trigger === 'query_rewrite_retry') {
-    parts.push('最后一轮来自改写后重试。')
-  } else if (lastRound?.trigger === 'route_broadening') {
-    parts.push('最后一轮来自自动扩路补检。')
-  }
-  return parts.join('')
-}
 const normalizeStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
   if (typeof value === 'string' && value.trim()) return [value.trim()]
@@ -1295,238 +1235,10 @@ const mergeRuntimeCitationIds = (ids: string[]) => {
     activeRuntimeArtifact.value = {
       ...activeRuntimeArtifact.value,
       citations: Array.from(new Set([...activeRuntimeArtifact.value.citations, ...merged])),
+      citationRefs: activeRuntimeArtifact.value.citationRefs,
     }
   }
 }
-const buildEvalDiagnosticDetail = (data: Record<string, any>) => {
-  const releaseEval = data.release_eval || data.eval || data
-  const status = String(releaseEval.status || releaseEval.overall_status || releaseEval.verdict || data.status || 'unknown')
-  const metrics = Array.isArray(releaseEval.metrics)
-    ? releaseEval.metrics
-    : Object.entries(releaseEval.metrics || {}).map(([name, value]) => ({ name, value }))
-  const metricCopy = metrics
-    .slice(0, 3)
-    .map((metric: any) => `${metric.name || metric.metric || 'metric'}=${metric.value ?? metric.score ?? metric.status ?? ''}`.replace(/=$/, ''))
-    .filter(Boolean)
-    .join('，')
-  return metricCopy ? `release_eval=${status}；${metricCopy}` : `release_eval=${status}`
-}
-const captureRuntimeEventSurface = (event: WorkspaceStreamEvent) => {
-  const data = event.data || {}
-  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
-  if (citationIds.length > 0) mergeRuntimeCitationIds(citationIds)
-  const artifactId = String(event.artifact_id || data.artifact_id || '')
-  if (artifactId && !activeRuntimeArtifact.value) {
-    activeRuntimeArtifact.value = {
-      artifactId,
-      content: '',
-      citations: citationIds,
-      uri: '',
-      downloadUrl: String(event.download_url || data.download_url || ''),
-    }
-  }
-  const lifecycleState = String(event.lifecycle_state || data.lifecycle_state || '')
-  const recoveryActions = normalizeStringList(event.recovery_actions || data.recovery_actions)
-  const failed = event.type === 'task_failed'
-    || String(data.status || '').toLowerCase() === 'failed'
-    || String(data.phase || '').toLowerCase().includes('failed')
-    || lifecycleState === 'recoverable_failed'
-  if (failed) {
-    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
-    runtimeFailure.value = {
-      title: lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
-      detail: `${String(data.error || data.reason || data.message || event.detail || '任务未能完成。')}${recoveryCopy}`,
-    }
-  }
-}
-
-const buildTraceRecord = (event: WorkspaceStreamEvent): TraceRecord => {
-  const data = event.data || {}
-  const phase = String(data.phase || '')
-  const status = String(data.status || '')
-  const retrievalMode = String(data.retrieval_mode || effectiveRetrievalMode.value || '')
-  const retrieval = buildRetrievalTrace(data, retrievalMode)
-  const toolName = String(data.tool_name || '')
-  const toolResult = String(data.result || data.message || '')
-  const artifactId = String(event.artifact_id || data.artifact_id || '')
-  const citationIds = normalizeStringList(event.citation_ids || data.citation_ids)
-  const sourceRefs = normalizeStringList(data.source_refs || data.source_event_ids)
-  const isToolCreation = event.type === 'tool_result' && ['create_remote_api_tool', 'create_cli_tool'].includes(toolName)
-  if (event.type === 'approval_required') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '等待工具审批',
-      detail: String(data.tool_id || event.tool_id || data.required_approval || event.required_approval || '需要确认后继续执行'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'approval',
-      status: status || 'approval_waiting',
-      accent: 'tool',
-      retrieval,
-    }
-  }
-  if (event.type === 'security_gate') {
-    const decision = String(data.action || data.decision?.action || status || 'review')
-    const blocked = ['block', 'blocked', 'failed', 'deny'].some((token) => decision.toLowerCase().includes(token))
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: blocked ? '安全策略已阻断' : '安全检查通过',
-      detail: String(data.message || data.reason || event.detail || decision),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'security_gate',
-      status: status || decision,
-      accent: blocked ? 'error' : 'tool',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'eval_diagnostic') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '评测诊断',
-      detail: buildEvalDiagnosticDetail(data),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'eval_diagnostic',
-      status,
-      accent: String(data.status || '').toLowerCase().includes('fail') ? 'error' : 'answer',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'artifact_created') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: 'Artifact 已创建',
-      detail: artifactId ? `artifact_id=${artifactId}` : '任务产物已生成。',
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'artifact',
-      status: status || 'created',
-      accent: 'answer',
-      retrieval,
-      artifactId,
-      citationIds,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'task_failed') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '任务失败',
-      detail: String(data.error || data.message || event.detail || '任务未能完成。'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'failed',
-      status: status || 'failed',
-      accent: 'error',
-      retrieval,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'task_completed') {
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: '任务完成',
-      detail: artifactId ? `已生成 artifact：${artifactId}` : String(data.message || '完整 task runtime 已完成。'),
-      at: new Date().toLocaleTimeString(),
-      phase: phase || 'complete',
-      status: status || 'completed',
-      accent: 'answer',
-      retrieval,
-      artifactId,
-      citationIds,
-      sourceRefs,
-    }
-  }
-  if (event.type === 'tool_call') {
-    return { id: event.id || crypto.randomUUID(), title: '正在调用工具', detail: String(data.tool_id || data.tool_name || data.message || '正在执行外部能力'), at: new Date().toLocaleTimeString(), phase, status, accent: 'tool', retrieval }
-  }
-  if (event.type === 'tool_result') {
-    const failed = data.ok === false
-    return {
-      id: event.id || crypto.randomUUID(),
-      title: isToolCreation
-        ? (
-            failed
-              ? (toolName === 'create_remote_api_tool' ? '创建 API 工具失败' : '创建 CLI 工具失败')
-              : (toolName === 'create_remote_api_tool' ? '已创建 API 工具' : '已创建 CLI 工具')
-          )
-        : '工具已返回结果',
-      detail: isToolCreation
-        ? toolResult
-        : String(data.tool_name || data.message || '已收到工具结果'),
-      at: new Date().toLocaleTimeString(),
-      phase,
-      status,
-      accent: data.ok === false ? 'error' : 'tool',
-      retrieval,
-    }
-  }
-  if (event.type === 'final') {
-    return { id: event.id || crypto.randomUUID(), title: '正在整理最终回复', detail: `${buildRetrievalTraceDetail(data, retrievalMode)} 正在生成最终答案。`, at: new Date().toLocaleTimeString(), phase: phase || 'answer', status, accent: 'answer', retrieval }
-  }
-  const accent = phase.includes('error')
-    ? 'error'
-    : retrievalMode === 'graphrag'
-      ? 'graph'
-      : retrievalMode === 'hybrid' || retrievalMode === 'auto' || retrievalMode === 'rag'
-        ? 'retrieval'
-        : 'default'
-  return {
-    id: event.id || crypto.randomUUID(),
-    title: String(data.message || event.title || '正在处理中'),
-    detail: String(
-      data.result
-      || data.error
-      || data.tool_name
-      || event.detail
-      || (
-        retrievalMode
-          ? buildRetrievalTraceDetail(data, retrievalMode)
-          : ''
-      )
-    ),
-    at: new Date().toLocaleTimeString(),
-    phase,
-    status,
-    accent,
-    retrieval,
-    artifactId,
-    citationIds,
-    sourceRefs,
-  }
-}
-const pushTraceEvent = (event: WorkspaceStreamEvent) => {
-  captureRuntimeEventSurface(event)
-  const nextRecord = buildTraceRecord(event)
-  const lastRecord = executionEvents.value[executionEvents.value.length - 1]
-  if (lastRecord && lastRecord.title === nextRecord.title && lastRecord.detail === nextRecord.detail) return
-  executionEvents.value.push(nextRecord)
-  if (executionEvents.value.length > 24) executionEvents.value.splice(0, executionEvents.value.length - 24)
-}
-
-const capturePendingToolApproval = (event: WorkspaceStreamEvent) => {
-  if (event.type !== 'approval_required') return
-  const data = event.data || {}
-  const taskId = String(event.task_id || data.task_id || '')
-  const requiredApproval = String(event.required_approval || data.required_approval || '')
-  const toolId = String(event.tool_id || data.tool_id || requiredApproval.replace(/^tool:/, ''))
-  if (!taskId || !requiredApproval.startsWith('tool:')) return
-  pendingToolApproval.value = {
-    taskId,
-    toolId,
-    requiredApproval,
-    approvalId: String(event.approval_id || data.approval_id || requiredApproval),
-    toolCallId: String(event.tool_call_id || data.tool_call_id || toolId),
-    auditRef: String(event.audit_ref || data.audit_ref || ''),
-  }
-  isGenerating.value = false
-  assistantTextStreaming.value = false
-}
-
-const unwrapWorkspaceTaskResponse = (response: any): WorkspaceTaskCreateResponse | null => (
-  response?.data?.data || response?.data || response || null
-)
-const unwrapWorkspaceArtifactResponse = (response: any): WorkspaceArtifactResponse | null => (
-  response?.data?.data || response?.data || response || null
-)
 const normalizeRuntimeSlug = (value: string, prefix: string) => {
   const slug = value
     .trim()
@@ -1578,17 +1290,32 @@ const buildRuntimeAssistantMessage = () => {
 }
 const loadWorkspaceArtifact = async (artifactId: string, assistantIndex = -1) => {
   if (!artifactId) return
-  const response = await getWorkspaceArtifactAPI(artifactId)
-  const data = unwrapWorkspaceArtifactResponse(response)
+  const data = await getProductArtifact(artifactId) as WorkspaceArtifactResponse | null
   const artifact = data?.artifact
+  const productArtifact = (data as any)?.product_artifact
+  const productQuality = (data as any)?.product_quality
+  const citationRefs = Array.isArray((data as any)?.citation_refs) ? (data as any).citation_refs : []
+  if (productArtifact) productProjectionStore.upsertArtifact(productArtifact)
+  if (productQuality) productProjectionStore.upsertQuality(productQuality)
   const content = String(data?.content || '')
   activeRuntimeArtifact.value = {
     artifactId,
     content,
-    citations: activeRuntimeCitationIds.value,
+    citations: Array.from(new Set([
+      ...activeRuntimeCitationIds.value,
+      ...(Array.isArray(productArtifact?.citation_refs) ? productArtifact.citation_refs.map((item: any) => String(item || '')).filter(Boolean) : []),
+    ])),
+    citationRefs,
     uri: String(artifact?.uri || ''),
     downloadUrl: String(data?.download?.url || ''),
     downloadPolicy: String(data?.download?.policy || artifact?.download_policy || ''),
+    qualityDisclosure: productQuality
+      ? {
+          status: String(productQuality.status || 'UNMEASURED'),
+          blocked_reason: productQuality.blocked_reason ? String(productQuality.blocked_reason) : '',
+          disclosure: productQuality.disclosure ? String(productQuality.disclosure) : '',
+        }
+      : null,
   }
   if (content && assistantIndex >= 0 && messages.value[assistantIndex]) {
     messages.value[assistantIndex].content = content
@@ -1606,7 +1333,7 @@ const downloadActiveWorkspaceArtifact = async () => {
   const artifact = activeRuntimeArtifact.value
   if (!artifact?.artifactId) return
   try {
-    const response = await downloadWorkspaceArtifactAPI(artifact.artifactId)
+    const response = await downloadProductArtifact(artifact.artifactId)
     const blob = response.data instanceof Blob ? response.data : new Blob([response.data], { type: 'text/markdown;charset=utf-8' })
     const downloadUrl = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
@@ -1622,61 +1349,11 @@ const downloadActiveWorkspaceArtifact = async () => {
     ElMessage.error('Artifact 下载失败')
   }
 }
-const applyWorkspaceTaskSnapshot = async (snapshot: WorkspaceTaskCreateResponse | null, assistantIndex = -1) => {
-  if (!snapshot?.task) return
-  activeRuntimeTaskId.value = snapshot.task.task_id
-  if (snapshot.observability) activeRuntimeObservability.value = snapshot.observability
-  const runtimeEvents = Array.isArray(snapshot.runtime?.events) ? snapshot.runtime?.events || [] : []
-  const runtimeCitationIds = runtimeEvents.flatMap((event: any) => normalizeStringList(event?.citation_ids || event?.payload?.citation_ids))
-  if (runtimeCitationIds.length > 0) mergeRuntimeCitationIds(runtimeCitationIds)
-  const artifactIds = [
-    ...normalizeStringList(snapshot.artifact_ids),
-    ...(snapshot.artifacts || []).map((artifact) => artifact.artifact_id).filter(Boolean),
-  ]
-  if (artifactIds[0]) await loadWorkspaceArtifact(artifactIds[0], assistantIndex)
-  const status = String(snapshot.task.status || snapshot.runtime?.status || '').toLowerCase()
-  const lifecycleState = String(snapshot.lifecycle?.state || '').toLowerCase()
-  const recoveryActions = normalizeStringList(
-    snapshot.lifecycle?.recovery_actions
-    || workspaceTaskRecoveryActions.value[lifecycleState]
-    || []
-  )
-  const failure = snapshot.runtime?.failure || snapshot.runtime?.state?.failure
-  if (lifecycleState === 'recoverable_failed' || status === 'failed' || status === 'cancelled' || failure) {
-    const recoveryCopy = recoveryActions.length > 0 ? ` recovery_actions=${recoveryActions.join(',')}` : ''
-    runtimeFailure.value = {
-      title: status === 'cancelled' ? '任务已取消' : lifecycleState === 'recoverable_failed' ? '任务可恢复失败' : '任务失败',
-      detail: `${String(failure?.message || failure?.reason || failure?.error || '任务未能完成。')}${recoveryCopy}`,
-    }
-    if (assistantIndex >= 0 && messages.value[assistantIndex] && !activeRuntimeArtifact.value?.content) {
-      messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
-      setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-      await scrollToBottom()
-    }
-  }
-}
-const streamWorkspaceTaskEvents = async (taskId: string, assistantIndex: number, renderAgentProgress: () => Promise<void>) => {
-  let streamError: any = null
-  await workspaceTaskEventsStreamAPI(taskId, {
-    onEvent: (event) => {
-      pushTraceEvent(event)
-      capturePendingToolApproval(event)
-      void refreshToolSelectionsAfterCreation(event)
-      void renderAgentProgress()
-    },
-    onError: (error) => {
-      streamError = error
-    },
-  })
-  if (streamError) throw streamError
-  const response = await getWorkspaceTaskAPI(taskId)
-  await applyWorkspaceTaskSnapshot(unwrapWorkspaceTaskResponse(response), assistantIndex)
-}
 const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
   if (!activeRuntimeTaskId.value || feedbackSubmitting.value) return
   feedbackSubmitting.value = true
   try {
-    await createWorkspaceFeedbackAPI({
+    await submitProductFeedback({
       task_id: activeRuntimeTaskId.value,
       rating: label === 'helpful' ? 5 : 2,
       label,
@@ -1703,57 +1380,50 @@ const submitWorkspaceFeedback = async (label: 'helpful' | 'needs_revision') => {
   }
 }
 
-const submitToolApproval = async (decision: 'approved' | 'rejected') => {
-  const pending = pendingToolApproval.value
-  if (!pending || toolApprovalSubmitting.value) return
-  toolApprovalSubmitting.value = true
-  try {
-    const response = await approveWorkspaceTaskAPI(pending.taskId, {
-      decision,
-      comment: decision === 'approved' ? 'Approved from workspace approval panel.' : 'Rejected from workspace approval panel.',
-      approval_id: pending.approvalId,
-      tool_call_id: pending.toolCallId,
-      required_approval: pending.requiredApproval,
-    })
-    pendingToolApproval.value = null
-    ElMessage.success(decision === 'approved' ? '工具调用已批准。' : '工具调用已拒绝。')
-    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
-    await applyWorkspaceTaskSnapshot(taskSnapshot, activeAssistantMessageIndex.value)
-    const task = taskSnapshot?.task
-    if (task?.status === 'completed') {
-      executionEvents.value.push({
-        id: crypto.randomUUID(),
-        title: '工具审批已处理',
-        detail: `${pending.toolId} 已继续执行。`,
-        at: new Date().toLocaleTimeString(),
-        phase: 'approval',
-        status: 'completed',
-        accent: 'tool',
-      })
-    }
-  } catch (error) {
-    console.error('工具审批失败', error)
-    ElMessage.error('工具审批失败，请稍后重试')
-  } finally {
-    toolApprovalSubmitting.value = false
+const productActionLabel = (action: AvailableAction) => {
+  switch (action.action) {
+    case 'APPROVE': return '批准'
+    case 'DENY': return '拒绝'
+    case 'CANCEL': return '取消'
+    case 'INPUT': return '补充'
+    case 'RECONCILE': return '对账'
+    case 'DOWNLOAD': return '下载授权'
+    case 'RESYNC': return '重同步'
+    default: return '处理'
   }
 }
 
-const parseCreatedToolId = (text: string) => {
-  const matched = text.match(/\(tool_id=([^)]+)\)/)
-  return matched?.[1] || ''
-}
-
-const refreshToolSelectionsAfterCreation = async (event: WorkspaceStreamEvent) => {
-  const data = event.data || {}
-  const toolName = String(data.tool_name || '')
-  if (event.type !== 'tool_result' || data.ok === false) return
-  if (!['create_remote_api_tool', 'create_cli_tool'].includes(toolName)) return
-  if (!canPickTools.value) return
-  await fetchPlugins()
-  const createdToolId = parseCreatedToolId(String(data.result || data.message || ''))
-  if (createdToolId && !selectedTools.value.includes(createdToolId)) selectedTools.value.push(createdToolId)
-  ElMessage.success(toolName === 'create_remote_api_tool' ? 'API 工具已创建并刷新到当前工具列表。' : 'CLI 工具已创建并刷新到当前工具列表。')
+const submitProductAvailableAction = async (action: AvailableAction, payload: Record<string, unknown> = {}) => {
+  if (toolApprovalSubmitting.value) return
+  toolApprovalSubmitting.value = true
+  try {
+    await consumeProductStoreAction(action, {
+      workspace_id: currentSessionId.value || activeRuntimeTaskId.value || action.target_ref,
+      conversation_id: currentSessionId.value || activeRuntimeTaskId.value || action.target_ref,
+      query: String(payload.required_approval || action.target_ref),
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, {
+      action: action.action,
+      target_ref: action.target_ref,
+      ...payload,
+    }, productProjectionStore)
+    executionEvents.value.push({
+      id: crypto.randomUUID(),
+      title: 'Product Action 已消费',
+      detail: `${action.action} -> ${action.target_ref}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_action',
+      status: action.action,
+      accent: action.action === 'DENY' || action.action === 'CANCEL' ? 'error' : 'tool',
+    })
+    ElMessage.success(`${productActionLabel(action)}已提交。`)
+  } catch (error) {
+    console.error('Product action consume failed', error)
+    ElMessage.error('Product action 提交失败')
+    throw error
+  } finally {
+    toolApprovalSubmitting.value = false
+  }
 }
 
 const buildLiveAssistantProgress = () => {
@@ -2194,7 +1864,7 @@ const handleAttachmentDrop = async (event: DragEvent) => {
   await uploadAttachments(Array.from(event.dataTransfer.files))
 }
 
-const buildPayload = (query: string): WorkSpaceSimpleTask => {
+const buildPayload = (query: string): WorkspaceProductRuntimePayload => {
   const selectedKnowledgeSpaceIds = canPickTools.value ? getValidSelectedKnowledgeIds() : []
   return {
     query,
@@ -2252,6 +1922,46 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       timeout_seconds: 180,
     }
     payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
+    const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
+      workspace_id: workspaceId,
+      conversation_id: currentSessionId.value || workspaceId,
+      query,
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, productProjectionStore)
+    activeRuntimeTaskId.value = productSubmission.receipt.command_id
+    executionEvents.value.push({
+      id: productSubmission.receipt.receipt_id || crypto.randomUUID(),
+      title: 'Product Command 已接收',
+      detail: `command_id=${productSubmission.receipt.command_id}; projection=${productSubmission.projection.projection_event_id}; status=${productSubmission.receipt.status}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_command',
+      status: productSubmission.projection.display_status,
+      accent: productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'default',
+    })
+    void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore, {
+      onEvent: (event) => {
+        executionEvents.value.push({
+          id: event.event_id,
+          title: 'Product 投影已同步',
+          detail: `sequence=${event.sequence_no}; freshness=${productProjectionStore.freshness}`,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: event.event_type,
+          accent: event.resync_required ? 'error' : 'default',
+        })
+      },
+      onProblem: (problem) => {
+        executionEvents.value.push({
+          id: crypto.randomUUID(),
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: problem.type,
+          accent: 'error',
+        })
+      },
+    })
     if (registered.length > 0) {
       executionEvents.value.push({
         id: crypto.randomUUID(),
@@ -2264,24 +1974,8 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
       })
       await renderAgentProgress()
     }
-    const response = await createWorkspaceTaskAPI(payload)
-    const taskSnapshot = unwrapWorkspaceTaskResponse(response)
-    await applyWorkspaceTaskSnapshot(taskSnapshot, assistantIndex)
-    const taskId = taskSnapshot?.task?.task_id || ''
-    const traceId = taskSnapshot?.task?.trace_id || taskSnapshot?.runtime?.trace_id || ''
-    if (!taskId) throw new Error('Workspace task runtime did not return task_id.')
-    executionEvents.value.push({
-      id: crypto.randomUUID(),
-      title: 'Task 已创建',
-      detail: `task_id=${taskId}${traceId ? ` / trace_id=${traceId}` : ''}`,
-      at: new Date().toLocaleTimeString(),
-      phase: 'task',
-      status: taskSnapshot?.task?.status || 'created',
-      accent: 'default',
-    })
     await renderAgentProgress()
-    await streamWorkspaceTaskEvents(taskId, assistantIndex, renderAgentProgress)
-    const hasPendingApproval = Boolean(pendingToolApproval.value)
+    const hasAvailableActions = productProjectionStore.sortedAvailableActions.length > 0
     if (runtimeFailure.value) {
       generationFailed = true
       if (messages.value[assistantIndex]) {
@@ -2289,7 +1983,7 @@ const submitAgentRuntimeTask = async (query: string, attachmentsForRequest: Pend
         setMessageMotion(messages.value[assistantIndex], 'error', 1800)
       }
       pulsePetMood('error', 1800)
-    } else if (hasPendingApproval) {
+    } else if (hasAvailableActions) {
       if (messages.value[assistantIndex]) {
         messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
         setMessageMotion(messages.value[assistantIndex], 'thinking')
@@ -2398,86 +2092,81 @@ const submitMessage = async () => {
   await syncRouteState({ preserveConversation: true })
   if (isAgentMode.value) executionEvents.value.push({ id: crypto.randomUUID(), title: '开始执行', detail: `${activeExecutionMode.value?.label || selectedExecutionMode.value} / ${activeAccessScope.value?.label || selectedAccessScope.value} / ${effectiveRetrievalModeLabel.value}`, at: new Date().toLocaleTimeString(), phase: 'start', status: 'START', accent: 'default' })
   if (isAgentMode.value) return await submitAgentRuntimeTask(query, attachmentsForRequest, assistantIndex)
-  let assistantHasRealContent = false
-  let generationFailed = false
-  const renderAgentProgress = async () => {
-    if (!isAgentMode.value || assistantHasRealContent || !messages.value[assistantIndex]) return
-    messages.value[assistantIndex].content = buildLiveAssistantProgress()
-    await scrollToBottom()
-  }
-  const applyFallback = () => {
-    if (messages.value[assistantIndex] && !assistantHasRealContent) messages.value[assistantIndex].content = buildFallbackAssistantMessage()
-  }
   try {
+    const workspaceId = currentSessionId.value || normalizeRuntimeSlug('workspace', 'workspace')
     const payload = buildPayload(query)
+    payload.workspace_id = workspaceId
+    payload.goal = query
+    payload.product_mode = 'simple_chat'
+    payload.approval_mode = 'runtime'
     payload.attachments = attachmentsForRequest.map(({ id: _id, preview_url: _previewUrl, ...attachment }) => attachment)
-    await workspaceSimpleChatStreamAPI(payload, {
-      onMessage: async (chunk) => {
-        const safeChunk = sanitizeAssistantChunk(chunk)
-        if (!safeChunk) return
-        if (!assistantHasRealContent) {
-          messages.value[assistantIndex].content = ''
-          assistantHasRealContent = true
-        }
-        assistantTextStreaming.value = true
-        setMessageMotion(messages.value[assistantIndex], 'streaming')
-        messages.value[assistantIndex].content += safeChunk
-        await scrollToBottom()
-      },
-      onFinalMessage: async (message) => {
-        const safeMessage = sanitizeAssistantChunk(message)
-        if (!safeMessage || !messages.value[assistantIndex]) return
-        messages.value[assistantIndex].content = safeMessage
-        assistantHasRealContent = true
-        assistantTextStreaming.value = true
-        setMessageMotion(messages.value[assistantIndex], 'streaming')
-        await scrollToBottom()
-      },
+    const productSubmission = await submitWorkspacePayloadToProductRuntime(payload as Record<string, unknown>, {
+      workspace_id: workspaceId,
+      conversation_id: currentSessionId.value || workspaceId,
+      query,
+      active_agent_version_id: activeAgentId.value || undefined,
+    }, productProjectionStore)
+    activeRuntimeTaskId.value = productSubmission.receipt.command_id
+    executionEvents.value.push({
+      id: productSubmission.receipt.receipt_id || crypto.randomUUID(),
+      title: 'Product Command 已接收',
+      detail: `command_id=${productSubmission.receipt.command_id}; projection=${productSubmission.projection.projection_event_id}; status=${productSubmission.receipt.status}`,
+      at: new Date().toLocaleTimeString(),
+      phase: 'product_command',
+      status: productSubmission.projection.display_status,
+      accent: productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'default',
+    })
+    void connectProductRuntimeProjectionStream({ workspace_id: workspaceId }, productProjectionStore, {
       onEvent: async (event) => {
-        if (String(event.data?.status || '').toUpperCase() === 'ERROR') {
-          if (messages.value[assistantIndex]) {
-            messages.value[assistantIndex].content = buildChatErrorMessage(event.detail || event.title)
-            assistantHasRealContent = true
-            assistantTextStreaming.value = false
-            generationFailed = true
-            setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-            pulsePetMood('error', 1600)
-            await scrollToBottom()
-          }
-          return
+        executionEvents.value.push({
+          id: event.event_id,
+          title: 'Product 投影已同步',
+          detail: `sequence=${event.sequence_no}; freshness=${productProjectionStore.freshness}`,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: event.event_type,
+          accent: event.resync_required ? 'error' : 'default',
+        })
+        if (messages.value[assistantIndex]) {
+          messages.value[assistantIndex].content = buildFallbackAssistantMessage()
+          setMessageMotion(messages.value[assistantIndex], event.resync_required ? 'error' : 'complete', event.resync_required ? 1800 : 1100)
+          await scrollToBottom()
         }
-        if (!isAgentMode.value) return
-        pushTraceEvent(event)
-        capturePendingToolApproval(event)
-        await refreshToolSelectionsAfterCreation(event)
-        await renderAgentProgress()
       },
-      onError: (error) => {
-        console.error('对话失败', error)
-        generationFailed = true
-        pendingAttachments.value = attachmentsForRequest
-        applyFallback()
-        assistantTextStreaming.value = false
-        setMessageMotion(messages.value[assistantIndex], 'error', 1800)
-        pulsePetMood('error', 1800)
-        ElMessage.error('对话失败，请稍后重试')
-        isGenerating.value = false
-      },
-      onClose: () => {
-        attachmentsForRequest.forEach(revokeAttachmentPreview)
-        applyFallback()
-        isGenerating.value = false
-        assistantTextStreaming.value = false
-        setMessageMotion(messages.value[assistantIndex], generationFailed ? 'error' : 'complete', generationFailed ? 1800 : 1100)
-        pulsePetMood(generationFailed ? 'error' : 'success', generationFailed ? 1800 : 1300)
-        emitSessionUpdated()
+      onProblem: (problem) => {
+        runtimeFailure.value = {
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+        }
+        executionEvents.value.push({
+          id: crypto.randomUUID(),
+          title: 'Product 投影同步受阻',
+          detail: problem.detail,
+          at: new Date().toLocaleTimeString(),
+          phase: 'product_projection',
+          status: problem.type,
+          accent: 'error',
+        })
+        if (messages.value[assistantIndex]) {
+          messages.value[assistantIndex].content = buildRuntimeAssistantMessage()
+          setMessageMotion(messages.value[assistantIndex], 'error', 1800)
+        }
       },
     })
+    if (messages.value[assistantIndex]) {
+      messages.value[assistantIndex].content = buildFallbackAssistantMessage()
+      setMessageMotion(messages.value[assistantIndex], productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'complete', productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 1800 : 1100)
+    }
+    attachmentsForRequest.forEach(revokeAttachmentPreview)
+    assistantTextStreaming.value = false
+    isGenerating.value = false
+    pulsePetMood(productSubmission.projection.display_status === 'BLOCKED' || productSubmission.projection.display_status === 'REFUSED' ? 'error' : 'success', 1300)
+    emitSessionUpdated()
     return true
   } catch (error) {
     console.error('对话异常', error)
     pendingAttachments.value = attachmentsForRequest
-    applyFallback()
+    if (messages.value[assistantIndex]) messages.value[assistantIndex].content = buildFallbackAssistantMessage()
     assistantTextStreaming.value = false
     setMessageMotion(messages.value[assistantIndex], 'error', 1800)
     pulsePetMood('error', 1800)
@@ -2617,7 +2306,7 @@ onMounted(async () => {
   window.addEventListener('resize', handleViewportResize)
   window.addEventListener('pointerdown', handleAgentPickerPointerDown)
   window.addEventListener('workspace-settings-navigate', handleSettingsNavigateRequest as EventListener)
-  await Promise.all([refreshWorkspaceTaskLifecycleContract(), fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
+  await Promise.all([fetchExecutionConfig(), fetchModels(), fetchMcpServers()])
   const savedDefaults = loadWorkspaceDefaults()
   selectedMode.value = safeQueryValue(route.query.mode, savedDefaults.mode || 'normal') === 'agent' ? 'agent' : 'normal'
   activeAgentName.value = selectedMode.value === 'agent' ? safeQueryValue(route.query.agent_name, '') : ''
@@ -2959,14 +2648,24 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div class="picker-head"><div class="trace-head-copy"><strong>执行进展</strong><small>{{ selectedToolCount > 0 ? `已启用 ${selectedToolCount} 项能力` : '未启用额外工具' }}</small></div></div>
-            <div v-if="pendingToolApproval" class="tool-approval-card" aria-label="工具审批">
+            <div v-if="productProjectionStore.sortedAvailableActions.length > 0" class="tool-approval-card" aria-label="Product Available Actions">
               <div class="tool-approval-copy">
-                <strong>{{ pendingToolApproval.toolId }}</strong>
-                <small>{{ pendingToolApproval.auditRef ? `审计：${pendingToolApproval.auditRef}` : pendingToolApproval.requiredApproval }}</small>
+                <strong>Product Actions</strong>
+                <small>{{ productProjectionStore.sortedAvailableActions.length }} 个服务器授权动作</small>
               </div>
               <div class="tool-approval-actions">
-                <button type="button" class="tool-approval-button reject" :disabled="toolApprovalSubmitting" @click="submitToolApproval('rejected')">拒绝</button>
-                <button type="button" class="tool-approval-button approve" :disabled="toolApprovalSubmitting" @click="submitToolApproval('approved')">批准</button>
+                <button
+                  v-for="action in productProjectionStore.sortedAvailableActions"
+                  :key="action.action_token_id"
+                  type="button"
+                  class="tool-approval-button"
+                  :class="action.action === 'DENY' || action.action === 'CANCEL' ? 'reject' : 'approve'"
+                  :disabled="toolApprovalSubmitting || Boolean(action.disabled_reason)"
+                  :title="action.disabled_reason || action.target_ref"
+                  @click="submitProductAvailableAction(action)"
+                >
+                  {{ productActionLabel(action) }}
+                </button>
               </div>
             </div>
             <div v-if="runtimeFailure" class="runtime-failure-panel" aria-label="任务失败">
@@ -2985,6 +2684,11 @@ onBeforeUnmount(() => {
                 </button>
               </div>
               <div v-if="activeRuntimeArtifact.uri" class="runtime-panel-copy">{{ activeRuntimeArtifact.uri }}</div>
+              <div v-if="activeRuntimeArtifact.qualityDisclosure" class="runtime-panel-copy">
+                Quality {{ activeRuntimeArtifact.qualityDisclosure.status }}
+                <span v-if="activeRuntimeArtifact.qualityDisclosure.blocked_reason">：{{ activeRuntimeArtifact.qualityDisclosure.blocked_reason }}</span>
+                <span v-else-if="activeRuntimeArtifact.qualityDisclosure.disclosure">：{{ activeRuntimeArtifact.qualityDisclosure.disclosure }}</span>
+              </div>
               <div v-if="activeRuntimeArtifact.citations.length > 0 || activeRuntimeCitationIds.length > 0" class="runtime-citation-row">
                 <span
                   v-for="citationId in (activeRuntimeArtifact.citations.length > 0 ? activeRuntimeArtifact.citations : activeRuntimeCitationIds)"
@@ -2992,6 +2696,15 @@ onBeforeUnmount(() => {
                   class="runtime-citation-chip"
                 >
                   {{ citationId }}
+                </span>
+              </div>
+              <div v-if="activeRuntimeArtifact.citationRefs.length > 0" class="runtime-citation-row">
+                <span
+                  v-for="citationRef in activeRuntimeArtifact.citationRefs"
+                  :key="String(citationRef.citation_id || citationRef.source_ref || citationRef.evidence_id)"
+                  class="runtime-citation-chip"
+                >
+                  {{ citationRef.citation_id || citationRef.source_ref || citationRef.evidence_id }}
                 </span>
               </div>
             </div>

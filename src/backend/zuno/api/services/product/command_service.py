@@ -16,6 +16,11 @@ PRODUCT_RUNTIME_DISPATCH_TOPIC = "product.runtime_request.dispatch"
 PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
+PRODUCT_RUNTIME_CUTOVER_COMMANDS = {
+    "shadow": "SHADOW_SUBMIT_USER_GOAL",
+    "canary": "CANARY_SUBMIT_USER_GOAL",
+    "new_default": "SUBMIT_USER_GOAL",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +28,8 @@ class ProductAvailableActionResult:
     action: str
     action_token_id: str
     target_ref: str
+    effective_security_epoch_ref: str
+    projection_version: int
     expires_at: str
 
 
@@ -42,6 +49,7 @@ class ProductProjectionResult:
     stream_cursor_id: str
     stream_sequence_no: int
     freshness: str
+    redaction_decision_ref: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,7 +91,118 @@ class ProductStreamEventResult:
     resync_required: bool
 
 
+@dataclass(frozen=True, slots=True)
+class ProductAgentDefinitionResult:
+    agent_definition_id: str
+    tenant_id: str
+    workspace_id: str
+    owner_principal_ref: str
+    display_name: str
+    description: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentDraftResult:
+    agent_draft_id: str
+    agent_definition_id: str
+    draft_version: int
+    editor_principal_ref: str
+    configuration_hash: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentPublicationResult:
+    publication_id: str
+    agent_version_id: str
+    scope: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentInstallationResult:
+    installation_id: str
+    agent_version_id: str
+    workspace_id: str
+    principal_ref: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentCatalogEntryResult:
+    catalog_entry_id: str
+    agent_version_id: str
+    publication_ref: str
+    agent_definition_id: str
+    display_name: str
+    description: str
+    definition_status: str
+    authorized: bool
+    visibility_scope: str
+    effective_permission_preview_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentVersionResult:
+    agent_version_id: str
+    agent_definition_id: str
+    version_no: int
+    configuration_hash: str
+    primary_agent_core_profile_ref: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentEditorSnapshotResult:
+    agent_definition: ProductAgentDefinitionResult
+    agent_draft: ProductAgentDraftResult | None
+    agent_version: ProductAgentVersionResult | None
+    agent_catalog_entry: ProductAgentCatalogEntryResult | None
+    configuration: dict[str, Any]
+
+
 class ProductService:
+    @staticmethod
+    def validate_runtime_cutover_contract(*, command_kind: str, payload: dict[str, Any]) -> str:
+        cutover_mode = str(payload.get("cutover_mode") or "new_default").strip().lower()
+        if cutover_mode == "rollback":
+            raise ValueError(
+                "Product runtime rollback mode is active; Product command submission is blocked fail-closed."
+            )
+        expected_command_kind = PRODUCT_RUNTIME_CUTOVER_COMMANDS.get(cutover_mode)
+        if expected_command_kind is None:
+            raise ValueError(f"unsupported Product runtime cutover mode: {cutover_mode}")
+        if command_kind != expected_command_kind:
+            raise ValueError(
+                "Product runtime cutover command mismatch: "
+                f"cutover_mode={cutover_mode} requires command_kind={expected_command_kind}."
+            )
+        return cutover_mode
+
+    @staticmethod
+    def build_runtime_cutover_owner_context(
+        *,
+        active_agent_version_id: str | None,
+        command_id: str,
+        command_kind: str,
+        payload: dict[str, Any],
+    ) -> dict[str, str]:
+        cutover_mode = ProductService.validate_runtime_cutover_contract(
+            command_kind=command_kind,
+            payload=payload,
+        )
+        context = {
+            "active_agent_version_id": str(active_agent_version_id or ""),
+            "command_id": command_id,
+            "command_kind": command_kind,
+            "cutover_mode": cutover_mode,
+        }
+        return {
+            **context,
+            "constraints_hash": canonical_sha256(context),
+        }
+
     @staticmethod
     def runtime_agent_version_id(*, surface: str, tenant_id: str, workspace_id: str) -> str:
         version_hash = canonical_sha256(
@@ -111,6 +230,7 @@ class ProductService:
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
+        ProductService.validate_runtime_cutover_contract(command_kind=command_kind, payload=payload)
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -191,12 +311,15 @@ class ProductService:
                 stream_cursor_id=cursor.cursor_id,
                 stream_sequence_no=projection.source_watermark,
                 freshness="gap" if projection.gap_detected else "current",
+                redaction_decision_ref=projection.redaction_decision_ref,
             ),
             available_actions=(
                 ProductAvailableActionResult(
-                    action="cancel",
+                    action="CANCEL",
                     action_token_id=action.action_token_id,
                     target_ref=action.target_ref,
+                    effective_security_epoch_ref=action.effective_security_epoch_ref,
+                    projection_version=projection.source_watermark,
                     expires_at=action.expires_at.isoformat(),
                 ),
             ),
@@ -233,6 +356,335 @@ class ProductService:
         )
 
     @staticmethod
+    def create_agent_draft(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        client_request_id: str,
+        display_name: str,
+        description: str,
+        primary_agent_core_profile_ref: str,
+        configuration: dict[str, Any],
+    ) -> tuple[ProductAgentDefinitionResult, ProductAgentDraftResult]:
+        from zuno.database import engine
+
+        agent_definition_id = f"agent-definition:{client_request_id}"
+        draft_id = f"agent-draft:{client_request_id}"
+        draft_payload = {
+            "display_name": display_name,
+            "description": description,
+            "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+            "configuration": configuration,
+        }
+        with ProductUnitOfWork(engine) as repo:
+            definition = repo.create_agent_definition(
+                agent_definition_id=agent_definition_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                owner_principal_id=principal_id,
+                display_name=display_name,
+                description=description,
+            )
+            draft = repo.create_agent_draft(
+                draft_id=draft_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+                draft_payload=draft_payload,
+            )
+        return (
+            ProductAgentDefinitionResult(
+                agent_definition_id=definition.ref_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                owner_principal_ref=f"principal:{principal_id}",
+                display_name=display_name,
+                description=description,
+                status=definition.status,
+            ),
+            ProductAgentDraftResult(
+                agent_draft_id=draft.ref_id,
+                agent_definition_id=agent_definition_id,
+                draft_version=1,
+                editor_principal_ref=f"principal:{principal_id}",
+                configuration_hash=canonical_sha256(draft_payload),
+                status=draft.status,
+            ),
+        )
+
+    @staticmethod
+    def publish_agent_version(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        client_request_id: str,
+        agent_definition_id: str,
+        agent_version_id: str,
+        publication_scope: str,
+        primary_agent_core_profile_ref: str,
+        configuration: dict[str, Any],
+    ) -> tuple[ProductAgentPublicationResult, ProductAgentCatalogEntryResult]:
+        from zuno.database import engine
+
+        publication_id = f"agent-publication:{client_request_id}"
+        catalog_entry_id = f"agent-catalog:{tenant_id}:{workspace_id}:{agent_definition_id}"
+        with ProductUnitOfWork(engine) as repo:
+            repo.create_agent_version(
+                agent_version_id=agent_version_id,
+                tenant_id=tenant_id,
+                agent_definition_id=agent_definition_id,
+                version_no=1,
+                configuration_payload=configuration,
+                primary_agent_core_profile_ref=primary_agent_core_profile_ref,
+                status="PUBLISHED",
+            )
+            publication = repo.publish_agent_version(
+                publication_id=publication_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_version_id=agent_version_id,
+                publication_scope=publication_scope,
+                publication_payload={
+                    "publication_scope": publication_scope,
+                    "agent_definition_id": agent_definition_id,
+                    "agent_version_id": agent_version_id,
+                    "configuration_hash": canonical_sha256(configuration),
+                },
+            )
+            catalog = repo.upsert_catalog_entry(
+                catalog_entry_id=catalog_entry_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+                latest_version_id=agent_version_id,
+                visibility_scope=publication_scope,
+            )
+        return (
+            ProductAgentPublicationResult(
+                publication_id=publication.ref_id,
+                agent_version_id=agent_version_id,
+                scope=publication_scope,
+                status=publication.status,
+            ),
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id=catalog.ref_id,
+                agent_version_id=agent_version_id,
+                publication_ref=publication.ref_id,
+                authorized=True,
+                visibility_scope=publication_scope,
+                effective_permission_preview_ref=f"permission-preview:{catalog.ref_id}",
+            ),
+        )
+
+    @staticmethod
+    def install_agent_version(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        client_request_id: str,
+        agent_version_id: str,
+        installation_scope: str,
+    ) -> ProductAgentInstallationResult:
+        from zuno.database import engine
+
+        installation_id = f"agent-installation:{client_request_id}"
+        with ProductUnitOfWork(engine) as repo:
+            installation = repo.install_agent_version(
+                installation_id=installation_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_version_id=agent_version_id,
+                principal_id=principal_id,
+                installation_scope=installation_scope,
+                status="INSTALLED",
+            )
+        return ProductAgentInstallationResult(
+            installation_id=installation.ref_id,
+            agent_version_id=agent_version_id,
+            workspace_id=workspace_id,
+            principal_ref=f"principal:{principal_id}",
+            status=installation.status,
+        )
+
+    @staticmethod
+    def revoke_agent_installation(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        installation_id: str,
+    ) -> ProductAgentInstallationResult:
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            revoked = repo.revoke_agent_installation(
+                installation_id=installation_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                principal_id=principal_id,
+            )
+        return ProductAgentInstallationResult(
+            installation_id=revoked.ref_id,
+            agent_version_id="",
+            workspace_id=workspace_id,
+            principal_ref=f"principal:{principal_id}",
+            status=revoked.status,
+        )
+
+    @staticmethod
+    def revoke_agent_publication(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        publication_id: str,
+    ) -> ProductAgentPublicationResult:
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            revoked = repo.revoke_agent_publication(
+                publication_id=publication_id,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+            )
+        return ProductAgentPublicationResult(
+            publication_id=revoked.ref_id,
+            agent_version_id="",
+            scope="",
+            status=revoked.status,
+        )
+
+    @staticmethod
+    def list_agent_catalog(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+    ) -> tuple[ProductAgentCatalogEntryResult, ...]:
+        _ = principal_id
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            entries = repo.list_catalog_entries(tenant_id=tenant_id, workspace_id=workspace_id)
+        return tuple(
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id=entry.catalog_entry_id,
+                agent_version_id=entry.latest_version_id,
+                publication_ref=entry.publication_id,
+                agent_definition_id=entry.agent_definition_id,
+                display_name=entry.display_name,
+                description=entry.description,
+                definition_status=entry.definition_status,
+                authorized=True,
+                visibility_scope=entry.visibility_scope,
+                effective_permission_preview_ref=f"permission-preview:{entry.catalog_entry_id}",
+            )
+            for entry in entries
+        )
+
+    @staticmethod
+    def load_agent_studio_snapshot(
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentEditorSnapshotResult:
+        _ = principal_id
+        from zuno.database import engine
+
+        with ProductUnitOfWork(engine) as repo:
+            definition = repo.get_agent_definition(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            if definition is None:
+                raise ValueError("Product AgentDefinition not found")
+            draft = repo.get_latest_agent_draft(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            version = repo.get_latest_agent_version(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                agent_definition_id=agent_definition_id,
+            )
+            catalog_entry = next(
+                (
+                    entry
+                    for entry in repo.list_catalog_entries(tenant_id=tenant_id, workspace_id=workspace_id)
+                    if entry.agent_definition_id == agent_definition_id
+                ),
+                None,
+            )
+
+        configuration: dict[str, Any] = {}
+        if draft is not None:
+            configuration = dict(draft.draft_payload_json.get("configuration") or draft.draft_payload_json)
+        elif version is not None:
+            configuration = dict(version.configuration_json)
+
+        agent_definition_result = ProductAgentDefinitionResult(
+            agent_definition_id=definition.agent_definition_id,
+            tenant_id=definition.tenant_id,
+            workspace_id=definition.workspace_id,
+            owner_principal_ref=f"principal:{definition.owner_principal_id}",
+            display_name=definition.display_name,
+            description=definition.description,
+            status=definition.status,
+        )
+        draft_result = (
+            ProductAgentDraftResult(
+                agent_draft_id=draft.draft_id,
+                agent_definition_id=draft.agent_definition_id,
+                draft_version=1,
+                editor_principal_ref=f"principal:{definition.owner_principal_id}",
+                configuration_hash=draft.draft_hash,
+                status=draft.status,
+            )
+            if draft is not None
+            else None
+        )
+        version_result = (
+            ProductAgentVersionResult(
+                agent_version_id=version.agent_version_id,
+                agent_definition_id=version.agent_definition_id,
+                version_no=version.version_no,
+                configuration_hash=version.config_hash,
+                primary_agent_core_profile_ref=version.primary_agent_core_profile_ref,
+                status=version.status,
+            )
+            if version is not None
+            else None
+        )
+        catalog_result = (
+            ProductAgentCatalogEntryResult(
+                catalog_entry_id=catalog_entry.catalog_entry_id,
+                agent_version_id=catalog_entry.latest_version_id,
+                publication_ref=catalog_entry.publication_id,
+                agent_definition_id=catalog_entry.agent_definition_id,
+                display_name=catalog_entry.display_name,
+                description=catalog_entry.description,
+                definition_status=catalog_entry.definition_status,
+                authorized=True,
+                visibility_scope=catalog_entry.visibility_scope,
+                effective_permission_preview_ref=f"permission-preview:{catalog_entry.catalog_entry_id}",
+            )
+            if catalog_entry is not None
+            else None
+        )
+        return ProductAgentEditorSnapshotResult(
+            agent_definition=agent_definition_result,
+            agent_draft=draft_result,
+            agent_version=version_result,
+            agent_catalog_entry=catalog_result,
+            configuration=configuration,
+        )
+
+    @staticmethod
     def consume_runtime_request_dispatch(
         *,
         event_id: str,
@@ -265,6 +717,12 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
+            cutover_context = ProductService.build_runtime_cutover_owner_context(
+                active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
+                command_id=command_id,
+                command_kind=str(payload.get("command_kind") or "SUBMIT_USER_GOAL"),
+                payload=payload,
+            )
             agent_run_id = f"agent-run:{runtime_request_ref}"
             owner_receipt_ref: str | None = None
             agent_run_status = "duplicate"
@@ -296,12 +754,7 @@ class ProductService:
                                 input_classification=GoalInputClassification.NEW_TASK,
                                 objective_hash=str(payload["payload_hash"]),
                                 output_contract_ref=f"output-contract:{runtime_request_ref}",
-                                constraints_hash=canonical_sha256(
-                                    {
-                                        "active_agent_version_id": payload.get("active_agent_version_id"),
-                                        "command_id": command_id,
-                                    }
-                                ),
+                                constraints_hash=cutover_context["constraints_hash"],
                             )
                         )
                         agent_repo.record_task_contract(
@@ -339,6 +792,9 @@ class ProductService:
                                 "agent_run_ref": run_receipt.ref,
                                 "task_contract_ref": task_contract_id,
                                 "outbox_event_id": record.event_id,
+                                "command_kind": cutover_context["command_kind"],
+                                "cutover_mode": cutover_context["cutover_mode"],
+                                "constraints_hash": cutover_context["constraints_hash"],
                             },
                         )
                         infra_repo.mark_inbox_processed(
@@ -479,6 +935,11 @@ class ProductService:
 
 __all__ = [
     "ProductActionConsumeResult",
+    "ProductAgentCatalogEntryResult",
+    "ProductAgentDefinitionResult",
+    "ProductAgentDraftResult",
+    "ProductAgentInstallationResult",
+    "ProductAgentPublicationResult",
     "ProductAvailableActionResult",
     "ProductProjectionResult",
     "ProductProjectionRebuildConsumeResult",

@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "full-e2e": "python full_e2e.py"
+  }
+}

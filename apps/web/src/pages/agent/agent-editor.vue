@@ -4,13 +4,20 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ArrowLeft, Check, PictureFilled } from '@element-plus/icons-vue'
-import { createAgentAPI, getAgentByIdAPI, updateAgentAPI, type AgentCreateRequest, type AgentUpdateRequest } from '../../apis/agent'
 import { getVisibleLLMsAPI, type LLMResponse } from '../../apis/llm'
 import { getVisibleToolsAPI, type ToolResponse } from '../../apis/tool'
 import { getMCPServersAPI, type MCPServer } from '../../apis/mcp-server'
 import { getKnowledgeListAPI, type KnowledgeResponse } from '../../apis/knowledge'
 import { getAgentSkillsAPI, type AgentSkill } from '../../apis/agent-skill'
 import { uploadFileAPI } from '../../apis/file'
+import {
+  PRODUCT_WEB_TENANT_ID,
+  createProductAgentDraft,
+  getProductAgentStudioSnapshot,
+  installProductAgentVersion,
+  publishProductAgentVersion,
+} from '../../product'
+import { useProductProjectionStore } from '../../product/store'
 import { useUserStore } from '../../store/user'
 import { zunoAgentAvatar } from '../../utils/brand'
 import { USER_AVATAR_PRESETS, withUserAvatarVersion } from '../../utils/user-avatars'
@@ -40,6 +47,7 @@ interface AgentFormData {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const productProjectionStore = useProductProjectionStore()
 const props = defineProps<{ embedded?: boolean; embeddedAgentId?: string }>()
 const emit = defineEmits<{
   (event: 'close'): void
@@ -86,6 +94,7 @@ const pageTitle = computed(() => (isEditing.value ? '编辑智能体' : '创建�
 const isAdmin = computed(() => String(userStore.userInfo?.id || '') === '1')
 const agentListRoute = computed(() => route.name === 'workspaceSettingsAgentEditor' ? { name: 'workspaceSettingsAgent' } : '/agent')
 const isWorkspaceSettings = computed(() => String(route.name || '').startsWith('workspaceSettings'))
+const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 
 const getSettingsThreadId = (event?: Event) => {
   const target = event?.currentTarget as HTMLElement | null
@@ -116,6 +125,9 @@ const navigateInWorkspaceSettings = (location: any, event?: Event) => {
 const namesFromIds = (ids: string[], options: SelectOption[]) =>
   ids.map((id) => options.find((item) => item.id === id)?.name).filter(Boolean) as string[]
 
+const toStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : []
+
 const selectedLLMName = computed(() => llmOptions.value.find((item) => item.id === form.llm_id)?.name || '未选择')
 const selectedToolNames = computed(() => namesFromIds(form.tool_ids, toolOptions.value))
 const selectedMCPNames = computed(() => namesFromIds(form.mcp_ids, mcpOptions.value))
@@ -132,6 +144,68 @@ const summaryItems = computed(() => [
 
 const isAgentDraftComplete = () =>
   Boolean(form.name.trim() && form.description.trim() && form.llm_id && form.system_prompt.trim())
+
+const normalizeProductRefSegment = (value: string) => (
+  value
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+    || 'agent'
+)
+
+const buildProductAgentConfiguration = () => ({
+  name: form.name.trim(),
+  description: form.description.trim(),
+  logo_url: form.logo_url,
+  tool_ids: [...form.tool_ids],
+  llm_id: form.llm_id,
+  mcp_ids: [...form.mcp_ids],
+  system_prompt: form.system_prompt.trim(),
+  knowledge_ids: [...form.knowledge_ids],
+  agent_skill_ids: [...form.agent_skill_ids],
+  enable_memory: form.enable_memory,
+})
+
+const syncProductAgentStudioSurface = async (agentRef: string) => {
+  const stableAgentRef = normalizeProductRefSegment(agentRef || activeAgentId.value || form.name)
+  const clientRequestId = `agent-studio:${stableAgentRef}`
+  const configuration = buildProductAgentConfiguration()
+  const draftReceipt = await createProductAgentDraft({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: clientRequestId,
+    display_name: form.name.trim(),
+    description: form.description.trim(),
+    primary_agent_core_profile_ref: 'agent-core-profile:product:web-agent-studio',
+    configuration,
+  })
+  productProjectionStore.upsertAgentDefinition(draftReceipt.agent_definition)
+  productProjectionStore.upsertAgentDraft(draftReceipt.agent_draft)
+
+  const agentVersionId = `agent-version:${clientRequestId}`
+  const publicationReceipt = await publishProductAgentVersion({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: `${clientRequestId}:publish`,
+    agent_definition_id: draftReceipt.agent_definition.agent_definition_id,
+    agent_version_id: agentVersionId,
+    publication_scope: 'WORKSPACE',
+    primary_agent_core_profile_ref: 'agent-core-profile:product:web-agent-studio',
+    configuration,
+  })
+  productProjectionStore.upsertPublication(publicationReceipt.agent_publication)
+  productProjectionStore.upsertCatalogEntry(publicationReceipt.agent_catalog_entry)
+
+  const installationReceipt = await installProductAgentVersion({
+    tenant_id: PRODUCT_WEB_TENANT_ID,
+    workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+    client_request_id: `${clientRequestId}:install`,
+    agent_version_id: agentVersionId,
+    installation_scope: 'USER',
+  })
+  productProjectionStore.upsertInstallation(installationReceipt.agent_installation)
+}
 
 const resetForm = () => {
   Object.assign(form, {
@@ -214,29 +288,31 @@ const loadOptions = async () => {
 const loadAgent = async (agentId: string) => {
   pageLoading.value = true
   try {
-    const response = await getAgentByIdAPI(agentId)
-    if (response.data.status_code !== 200 || !response.data.data) {
-      throw new Error(response.data.status_message || '智能体不存在')
-    }
+    const snapshot = await getProductAgentStudioSnapshot({
+      tenant_id: PRODUCT_WEB_TENANT_ID,
+      workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      agent_definition_id: agentId,
+    })
 
-    const agent = response.data.data
-    if (agent.is_custom === false && !isAdmin.value) {
+    const agent = snapshot.agent_definition
+    if (agent.owner_principal_ref !== `principal:${userStore.userInfo?.id || ''}` && !isAdmin.value) {
       ElMessage.warning('只有管理员可以编辑官方智能体')
       navigateInWorkspaceSettings(agentListRoute.value)
       return
     }
 
+    const configuration = snapshot.configuration || {}
     Object.assign(form, {
-      name: agent.name || '',
-      description: agent.description || '',
-      logo_url: withUserAvatarVersion(agent.logo_url || ''),
-      tool_ids: agent.tool_ids || [],
-      llm_id: agent.llm_id || '',
-      mcp_ids: agent.mcp_ids || [],
-      system_prompt: agent.system_prompt || '',
-      knowledge_ids: agent.knowledge_ids || [],
-      agent_skill_ids: agent.agent_skill_ids || [],
-      enable_memory: Boolean(agent.enable_memory),
+      name: String(configuration.name || agent.display_name || ''),
+      description: String(configuration.description || agent.description || ''),
+      logo_url: withUserAvatarVersion(String(configuration.logo_url || '')),
+      tool_ids: toStringArray(configuration.tool_ids),
+      llm_id: String(configuration.llm_id || ''),
+      mcp_ids: toStringArray(configuration.mcp_ids),
+      system_prompt: String(configuration.system_prompt || ''),
+      knowledge_ids: toStringArray(configuration.knowledge_ids),
+      agent_skill_ids: toStringArray(configuration.agent_skill_ids),
+      enable_memory: Boolean(configuration.enable_memory ?? true),
     })
   } catch (error: any) {
     console.error('loadAgent failed', error)
@@ -313,25 +389,7 @@ const saveAgent = async (event?: Event) => {
 
   saving.value = true
   try {
-    const payload: AgentCreateRequest | AgentUpdateRequest = {
-      ...(isEditing.value ? { agent_id: activeAgentId.value } : {}),
-      name: form.name.trim(),
-      description: form.description.trim(),
-      logo_url: form.logo_url,
-      tool_ids: [...form.tool_ids],
-      llm_id: form.llm_id,
-      mcp_ids: [...form.mcp_ids],
-      system_prompt: form.system_prompt.trim(),
-      knowledge_ids: [...form.knowledge_ids],
-      agent_skill_ids: [...form.agent_skill_ids],
-      enable_memory: form.enable_memory,
-    }
-
-    const response = isEditing.value ? await updateAgentAPI(payload as AgentUpdateRequest) : await createAgentAPI(payload as AgentCreateRequest)
-
-    if (response.data.status_code !== 200) {
-      throw new Error(response.data.status_message || (isEditing.value ? '更新智能体失败' : '创建智能体失败'))
-    }
+    await syncProductAgentStudioSurface(activeAgentId.value || normalizeProductRefSegment(form.name))
 
     ElMessage.success(isEditing.value ? '智能体已更新' : '智能体已创建')
     if (isEmbedded.value) {

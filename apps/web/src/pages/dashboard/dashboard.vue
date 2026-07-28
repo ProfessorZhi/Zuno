@@ -20,13 +20,13 @@ import {
   type UsageDataByDate,
   type UsageCountByDate,
 } from '../../apis/usage-stats'
-import { getAgentsAPI } from '../../apis/agent'
 import {
   getWorkspaceRetrievalObservabilityAPI,
   type WorkspaceRetrievalBenchmarkMetric,
   type WorkspaceRetrievalObservabilityProfileSummary,
   type WorkspaceRetrievalObservabilitySummary,
 } from '../../apis/workspace'
+import { listProductAgentCatalog, PRODUCT_AGENT_WORKSPACE_ID, PRODUCT_WEB_TENANT_ID } from '../../product'
 
 const loading = ref(false)
 const models = ref<string[]>([])
@@ -256,14 +256,15 @@ const loadMeta = async () => {
     const [modelResponse, agentResponse, createdAgentResponse] = await Promise.all([
       getUsageModelsAPI(),
       getUsageAgentsAPI(),
-      getAgentsAPI(),
+      listProductAgentCatalog({
+        tenant_id: PRODUCT_WEB_TENANT_ID,
+        workspace_id: PRODUCT_AGENT_WORKSPACE_ID,
+      }),
     ])
     if (modelResponse.data.status_code === 200) models.value = modelResponse.data.data || []
-    if (createdAgentResponse.data.status_code === 200) {
-      createdAgentNames.value = (createdAgentResponse.data.data || [])
-        .map((item: any) => String(item?.name || '').trim())
-        .filter(Boolean)
-    }
+    createdAgentNames.value = (createdAgentResponse.agent_catalog_entries || [])
+      .map((item) => String(item.display_name || '').trim())
+      .filter(Boolean)
     if (agentResponse.data.status_code === 200) agents.value = (agentResponse.data.data || []).filter(isRealDashboardAgent)
   } catch (error) {
     console.error('加载统计筛选项失败:', error)

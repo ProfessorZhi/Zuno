@@ -23,13 +23,20 @@ npm run dev
 - `DESKTOP_FRONTEND_URL`
 - `DESKTOP_API_BASE_URL`
 
-## Workspace Task Lifecycle
+## Product Bridge V1
 
-The Electron shell runs the same Web workspace product loop and exposes the same backend task lifecycle contract through `window.__ZUNO_DESKTOP__`:
+PHASE10 adds a versioned Product bridge contract to `window.__ZUNO_DESKTOP__`.
 
-- `taskLifecycleEndpoint`: `/api/v1/workspace/task-lifecycle`
-- `artifactDownloadEndpointTemplate`: `/api/v1/workspace/artifact/:artifactId/download`
-- `workspaceTaskLifecycleStates`: `pending`, `running`, `approval_required`, `recoverable_failed`, `cancelled`, `completed`
+- `productBridgeVersion`: `product-desktop-bridge-v1.phase10`
+- `productBridgeCapabilities`: runtime request, action consume, projection stream, Last-Event-ID resume, dedup, reauthorization, artifact read/download and feedback
+- `productEndpoints.runtimeRequests`: `/api/v1/product/runtime-requests`
+- `productEndpoints.actionConsume`: `/api/v1/product/actions/consume`
+- `productEndpoints.streamEvents`: `/api/v1/product/stream-events`
+- `productEndpoints.stream`: `/api/v1/product/stream`
+- `productEndpoints.artifactReadTemplate`: `/api/v1/product/artifacts/:artifactId`
+- `productEndpoints.artifactDownloadTemplate`: `/api/v1/product/artifacts/:artifactId/download`
+- `productEndpoints.feedback`: `/api/v1/product/feedback`
+- `productBridgeHealth`: reports whether the local desktop bridge URL, token and workspace root were injected
 
 ## Production-style Run
 

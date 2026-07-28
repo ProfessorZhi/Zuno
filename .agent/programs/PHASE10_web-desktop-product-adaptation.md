@@ -1,13 +1,26 @@
 # PHASE10 Web and Desktop Product Adaptation
 
 phase_id: PHASE10
-status: ready
+status: completed
 depends_on: PHASE09
 owner: Module 01 Product Surface
 
 ## Phase 目标
 
 让 Web 和 Desktop 完整消费新 Product Contract、Agent Studio、Agent Catalog、Effective Permission Preview、Authorized Projection、AvailableAction、SSE Cursor 和版本化 Delivery。迁移期允许双 Client Shadow，但 Program 关闭前删除旧 Store、旧 DTO、字符串状态推断和 `legacy`/`compatibility` 前端目录。
+
+## Goal04 PR A Closure
+
+status: completed
+coordinator_approval: approved
+closure_evidence: docs/evidence/goal04-phase10-coordinator-closure.md
+branch: codex/goal04-phase10-product-adaptation
+post_phase18_merge_commit: 5320dcff873caed383420adf5480d28c25e130f7
+alembic_head: 20260728_51
+
+PHASE10 PR A 已在 PHASE18 merge 后的最新 main 上完成收口。Web/Desktop Product Contract、Product API client、Projection store、SSE resume/resync、AvailableAction、多 Interrupt、Artifact/Feedback/Citation/Quality projection、Agent Studio/Catalog、Desktop Product Bridge、Browser full-e2e cutover smoke、Desktop smoke、lint/build、legacy DTO/action/bridge removal、rollback fail-closed 和 branch-scoped Alembic clean upgrade head/current 均有 closure evidence。
+
+本 closure 只关闭 PHASE10，不声明 production ready。PHASE19 可在 PHASE10 与 PHASE18 均合并到 main 后启动。
 
 ## Minimal Read Set
 

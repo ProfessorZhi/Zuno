@@ -1,10 +1,11 @@
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $qaRoot = Join-Path $repoRoot 'tmp-qa-playwright'
+$qaSourceRoot = Join-Path $repoRoot 'tools\qa\full-e2e'
 $frontendRoot = Join-Path $repoRoot 'apps\web'
 $authPath = Join-Path $qaRoot 'auth.json'
-$qaApiScript = Join-Path $qaRoot 'qa_echo_api.py'
+$qaApiScript = Join-Path $qaSourceRoot 'qa_echo_api.py'
 $frontendOut = Join-Path $repoRoot 'tmp\frontend-dev.out.log'
 $frontendErr = Join-Path $repoRoot 'tmp\frontend-dev.err.log'
 $qaApiOut = Join-Path $repoRoot 'tmp\qa-echo-api.out.log'
@@ -75,12 +76,16 @@ function Ensure-QaApi {
     }
 
     Write-Host 'Starting local QA echo API on 9101...'
+    if (-not (Test-Path $qaApiScript)) {
+        throw "Missing QA echo API script: $qaApiScript"
+    }
     if (-not (Test-Path $tmpRoot)) {
         New-Item -ItemType Directory -Path $tmpRoot | Out-Null
     }
+    $quotedQaApiScript = '"' + $qaApiScript + '"'
     Start-Process -FilePath 'python' `
-        -ArgumentList $qaApiScript `
-        -WorkingDirectory $qaRoot `
+        -ArgumentList $quotedQaApiScript `
+        -WorkingDirectory $qaSourceRoot `
         -RedirectStandardOutput $qaApiOut `
         -RedirectStandardError $qaApiErr | Out-Null
 
@@ -98,10 +103,22 @@ Ensure-Frontend
 Ensure-QaApi
 
 Write-Host 'Running full end-to-end smoke validation...'
-Push-Location $qaRoot
+$oldFullE2EAuth = $env:ZUNO_FULL_E2E_AUTH
+$oldFullE2EBase = $env:ZUNO_FULL_E2E_BASE
+$oldFullE2EApi = $env:ZUNO_FULL_E2E_API
+$oldFullE2EQaApi = $env:ZUNO_FULL_E2E_QA_API
+$env:ZUNO_FULL_E2E_AUTH = $authPath
+$env:ZUNO_FULL_E2E_BASE = 'http://127.0.0.1:8090'
+$env:ZUNO_FULL_E2E_API = 'http://127.0.0.1:7860'
+$env:ZUNO_FULL_E2E_QA_API = 'http://127.0.0.1:9101'
+Push-Location $qaSourceRoot
 try {
     & 'E:\develop\nodejs\npm.cmd' run full-e2e
 }
 finally {
     Pop-Location
+    $env:ZUNO_FULL_E2E_AUTH = $oldFullE2EAuth
+    $env:ZUNO_FULL_E2E_BASE = $oldFullE2EBase
+    $env:ZUNO_FULL_E2E_API = $oldFullE2EApi
+    $env:ZUNO_FULL_E2E_QA_API = $oldFullE2EQaApi
 }

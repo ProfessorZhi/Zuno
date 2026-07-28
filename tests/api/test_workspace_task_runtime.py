@@ -21,7 +21,11 @@ from zuno.platform.security import SecurityProductActionDenied
 from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 
 
+_PRODUCT_RUNTIME_SUBMISSIONS: list[dict] = []
+
+
 def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    _PRODUCT_RUNTIME_SUBMISSIONS.append(kwargs)
     client_request_id = kwargs["client_request_id"]
     runtime_request_ref = kwargs["runtime_request_ref"]
     command_id = f"command:{client_request_id}"
@@ -34,12 +38,15 @@ def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
             stream_cursor_id=f"cursor:{command_id}:1",
             stream_sequence_no=1,
             freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
         ),
         available_actions=(
             ProductAvailableActionResult(
-                action="cancel",
+                action="CANCEL",
                 action_token_id=f"action-token:{command_id}:cancel",
                 target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
                 expires_at="2026-07-26T00:00:00+00:00",
             ),
         ),
@@ -69,6 +76,7 @@ def _workspace_capability_runtime_for_tests(monkeypatch) -> None:
 
 
 def _client() -> TestClient:
+    _PRODUCT_RUNTIME_SUBMISSIONS.clear()
     WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     app = FastAPI()
     app.include_router(workspace_router, prefix="/api/v1")
@@ -165,6 +173,8 @@ def test_workspace_task_runtime_links_task_events_artifact_and_feedback() -> Non
     assert product_record["payload"]["product_runtime_recorded"] is True
     assert product_record["payload"]["command_id"].startswith("command:workspace:")
     assert product_record["payload"]["receipt_id"].startswith(product_record["payload"]["command_id"])
+    assert _PRODUCT_RUNTIME_SUBMISSIONS[-1]["command_kind"] == "SUBMIT_USER_GOAL"
+    assert _PRODUCT_RUNTIME_SUBMISSIONS[-1]["payload"]["cutover_mode"] == "new_default"
     assert {event["task_id"] for event in events} == {task_id}
     assert {event["trace_id"] for event in events} == {trace_id}
 

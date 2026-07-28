@@ -51,6 +51,7 @@ class ProductCommandReceiptRef:
 class ProductProjectionEventRef:
     projection_event_id: str
     source_watermark: int
+    redaction_decision_ref: str
     gap_detected: bool = False
     duplicate: bool = False
 
@@ -111,8 +112,45 @@ class ProductAgentCatalogEntryView:
     catalog_entry_id: str
     agent_definition_id: str
     latest_version_id: str
+    publication_id: str
     visibility_scope: str
     status: str
+    display_name: str
+    description: str
+    definition_status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentDefinitionView:
+    agent_definition_id: str
+    tenant_id: str
+    workspace_id: str
+    owner_principal_id: str
+    display_name: str
+    description: str
+    status: str
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentDraftView:
+    draft_id: str
+    agent_definition_id: str
+    draft_hash: str
+    draft_payload_json: dict[str, Any]
+    status: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ProductAgentVersionView:
+    agent_version_id: str
+    agent_definition_id: str
+    version_no: int
+    config_hash: str
+    configuration_json: dict[str, Any]
+    primary_agent_core_profile_ref: str
+    status: str
+    created_at: datetime
 
 
 class ProductUnitOfWork:
@@ -138,6 +176,43 @@ class ProductRepository:
     def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
+    def create_agent_definition(
+        self,
+        *,
+        agent_definition_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        owner_principal_id: str,
+        display_name: str,
+        description: str = "",
+        status: str = "DRAFT",
+    ) -> ProductAgentAssetRef:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_definitions (
+                    agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                    display_name, description, status, aggregate_version
+                )
+                VALUES (
+                    :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
+                    :display_name, :description, :status, 1
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "agent_definition_id": agent_definition_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "owner_principal_id": owner_principal_id,
+                "display_name": display_name,
+                "description": description,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(agent_definition_id, status)
+
     def create_agent_draft(
         self,
         *,
@@ -153,11 +228,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_drafts (
                     draft_id, tenant_id, workspace_id, agent_definition_id,
-                    draft_hash, status
+                    draft_hash, draft_payload_json, status
                 )
                 VALUES (
                     :draft_id, :tenant_id, :workspace_id, :agent_definition_id,
-                    :draft_hash, :status
+                    :draft_hash, :draft_payload_json, :status
                 )
                 ON CONFLICT DO NOTHING
                 """
@@ -168,10 +243,49 @@ class ProductRepository:
                 "workspace_id": workspace_id,
                 "agent_definition_id": agent_definition_id,
                 "draft_hash": canonical_sha256(draft_payload),
+                "draft_payload_json": draft_payload,
                 "status": status,
             },
         )
         return ProductAgentAssetRef(draft_id, status)
+
+    def create_agent_version(
+        self,
+        *,
+        agent_version_id: str,
+        tenant_id: str,
+        agent_definition_id: str,
+        version_no: int,
+        configuration_payload: dict[str, Any],
+        primary_agent_core_profile_ref: str,
+        status: str = "PUBLISHED",
+    ) -> ProductAgentAssetRef:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_agent_versions (
+                    agent_version_id, tenant_id, agent_definition_id, version_no,
+                    config_hash, configuration_json, primary_agent_core_profile_ref, status
+                )
+                VALUES (
+                    :agent_version_id, :tenant_id, :agent_definition_id, :version_no,
+                    :config_hash, :configuration_json, :primary_agent_core_profile_ref, :status
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "agent_version_id": agent_version_id,
+                "tenant_id": tenant_id,
+                "agent_definition_id": agent_definition_id,
+                "version_no": version_no,
+                "config_hash": canonical_sha256(configuration_payload),
+                "configuration_json": configuration_payload,
+                "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+                "status": status,
+            },
+        )
+        return ProductAgentAssetRef(agent_version_id, status)
 
     def ensure_runtime_agent_version(
         self,
@@ -196,11 +310,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_definitions (
                     agent_definition_id, tenant_id, workspace_id, owner_principal_id,
-                    display_name, status, aggregate_version
+                    display_name, description, status, aggregate_version
                 )
                 VALUES (
                     :agent_definition_id, :tenant_id, :workspace_id, :owner_principal_id,
-                    :display_name, 'ACTIVE', 1
+                    :display_name, '', 'ACTIVE', 1
                 )
                 ON CONFLICT (agent_definition_id) DO NOTHING
                 """
@@ -218,11 +332,11 @@ class ProductRepository:
                 """
                 INSERT INTO product_agent_versions (
                     agent_version_id, tenant_id, agent_definition_id, version_no,
-                    config_hash, primary_agent_core_profile_ref, status
+                    config_hash, configuration_json, primary_agent_core_profile_ref, status
                 )
                 VALUES (
                     :agent_version_id, :tenant_id, :agent_definition_id, 1,
-                    :config_hash, :primary_agent_core_profile_ref, 'PUBLISHED'
+                    :config_hash, :configuration_json, :primary_agent_core_profile_ref, 'PUBLISHED'
                 )
                 ON CONFLICT (agent_version_id) DO NOTHING
                 """
@@ -232,6 +346,11 @@ class ProductRepository:
                 "tenant_id": tenant_id,
                 "agent_definition_id": agent_definition_id,
                 "config_hash": config_hash,
+                "configuration_json": {
+                    "agent_version_id": agent_version_id,
+                    "display_name": display_name,
+                    "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+                },
                 "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
             },
         )
@@ -311,6 +430,80 @@ class ProductRepository:
         )
         return ProductAgentAssetRef(installation_id, status)
 
+    def revoke_agent_installation(
+        self,
+        *,
+        installation_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+    ) -> ProductAgentAssetRef:
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_installations
+                SET status = 'REVOKED'
+                WHERE installation_id = :installation_id
+                  AND tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND principal_id = :principal_id
+                """
+            ),
+            {
+                "installation_id": installation_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "principal_id": principal_id,
+            },
+        )
+        if result.rowcount != 1:
+            raise ProductPersistenceConflict("Product AgentInstallation revoke target not found")
+        return ProductAgentAssetRef(installation_id, "REVOKED")
+
+    def revoke_agent_publication(
+        self,
+        *,
+        publication_id: str,
+        tenant_id: str,
+        workspace_id: str,
+    ) -> ProductAgentAssetRef:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_publications
+                SET status = 'REVOKED'
+                WHERE publication_id = :publication_id
+                  AND tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                RETURNING agent_version_id
+                """
+            ),
+            {
+                "publication_id": publication_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("Product AgentPublication revoke target not found")
+        self.connection.execute(
+            text(
+                """
+                UPDATE product_agent_catalog_entries
+                SET status = 'REVOKED'
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND latest_version_id = :agent_version_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_version_id": row["agent_version_id"],
+            },
+        )
+        return ProductAgentAssetRef(publication_id, "REVOKED")
+
     def upsert_catalog_entry(
         self,
         *,
@@ -362,13 +555,29 @@ class ProductRepository:
         rows = self.connection.execute(
             text(
                 """
-                SELECT catalog_entry_id, agent_definition_id, latest_version_id,
-                       visibility_scope, status
-                FROM product_agent_catalog_entries
-                WHERE tenant_id = :tenant_id
-                  AND workspace_id = :workspace_id
-                  AND status = 'VISIBLE'
-                ORDER BY catalog_entry_id
+                SELECT catalog.catalog_entry_id,
+                       catalog.agent_definition_id,
+                       catalog.latest_version_id,
+                       coalesce(publication.publication_id, '') AS publication_id,
+                       catalog.visibility_scope,
+                       catalog.status,
+                       definition.display_name,
+                       coalesce(definition.description, '') AS description,
+                       definition.status AS definition_status
+                FROM product_agent_catalog_entries catalog
+                JOIN product_agent_definitions definition
+                  ON definition.tenant_id = catalog.tenant_id
+                 AND definition.workspace_id = catalog.workspace_id
+                 AND definition.agent_definition_id = catalog.agent_definition_id
+                LEFT JOIN product_agent_publications publication
+                  ON publication.tenant_id = catalog.tenant_id
+                 AND publication.workspace_id = catalog.workspace_id
+                 AND publication.agent_version_id = catalog.latest_version_id
+                 AND publication.status = 'PUBLISHED'
+                WHERE catalog.tenant_id = :tenant_id
+                  AND catalog.workspace_id = :workspace_id
+                  AND catalog.status = 'VISIBLE'
+                ORDER BY catalog.catalog_entry_id
                 """
             ),
             {"tenant_id": tenant_id, "workspace_id": workspace_id},
@@ -378,10 +587,128 @@ class ProductRepository:
                 catalog_entry_id=str(row["catalog_entry_id"]),
                 agent_definition_id=str(row["agent_definition_id"]),
                 latest_version_id=str(row["latest_version_id"]),
+                publication_id=str(row["publication_id"]),
                 visibility_scope=str(row["visibility_scope"]),
                 status=str(row["status"]),
+                display_name=str(row["display_name"]),
+                description=str(row["description"]),
+                definition_status=str(row["definition_status"]),
             )
             for row in rows
+        )
+
+    def get_agent_definition(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentDefinitionView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                       display_name, coalesce(description, '') AS description, status
+                FROM product_agent_definitions
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND agent_definition_id = :agent_definition_id
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        return ProductAgentDefinitionView(
+            agent_definition_id=str(row["agent_definition_id"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            owner_principal_id=str(row["owner_principal_id"]),
+            display_name=str(row["display_name"]),
+            description=str(row["description"]),
+            status=str(row["status"]),
+        )
+
+    def get_latest_agent_draft(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentDraftView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT draft_id, agent_definition_id, draft_hash,
+                       coalesce(draft_payload_json, '{}'::json) AS draft_payload_json,
+                       status, created_at
+                FROM product_agent_drafts
+                WHERE tenant_id = :tenant_id
+                  AND workspace_id = :workspace_id
+                  AND agent_definition_id = :agent_definition_id
+                ORDER BY created_at DESC, draft_id DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        return ProductAgentDraftView(
+            draft_id=str(row["draft_id"]),
+            agent_definition_id=str(row["agent_definition_id"]),
+            draft_hash=str(row["draft_hash"]),
+            draft_payload_json=dict(row["draft_payload_json"] or {}),
+            status=str(row["status"]),
+            created_at=row["created_at"],
+        )
+
+    def get_latest_agent_version(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        agent_definition_id: str,
+    ) -> ProductAgentVersionView | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT agent_version_id, agent_definition_id, version_no, config_hash,
+                       coalesce(configuration_json, '{}'::json) AS configuration_json,
+                       primary_agent_core_profile_ref, status, created_at
+                FROM product_agent_versions
+                WHERE tenant_id = :tenant_id
+                  AND agent_definition_id = :agent_definition_id
+                ORDER BY version_no DESC, created_at DESC, agent_version_id DESC
+                LIMIT 1
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "agent_definition_id": agent_definition_id,
+            },
+        ).mappings().first()
+        if row is None:
+            return None
+        _ = workspace_id
+        return ProductAgentVersionView(
+            agent_version_id=str(row["agent_version_id"]),
+            agent_definition_id=str(row["agent_definition_id"]),
+            version_no=int(row["version_no"]),
+            config_hash=str(row["config_hash"]),
+            configuration_json=dict(row["configuration_json"] or {}),
+            primary_agent_core_profile_ref=str(row["primary_agent_core_profile_ref"]),
+            status=str(row["status"]),
+            created_at=row["created_at"],
         )
 
     def submit_command(self, command: ProductCommandSubmission) -> ProductCommandReceiptRef:
@@ -545,9 +872,11 @@ class ProductRepository:
                 "submission_id": command.submission_id,
                 "message_id": message_id,
                 "command_id": command.command_id,
+                "command_kind": command.command_kind,
                 "runtime_request_ref": command.runtime_request_ref,
                 "active_agent_version_id": command.active_agent_version_id,
                 "principal_id": command.principal_id,
+                "cutover_mode": str(command.payload_json.get("cutover_mode") or "new_default"),
                 "payload_hash": command.request_hash,
             },
         )
@@ -597,7 +926,7 @@ class ProductRepository:
         existing = self.connection.execute(
             text(
                 """
-                SELECT projection_event_id, source_watermark, gap_detected
+                SELECT projection_event_id, source_watermark, redaction_decision_ref, gap_detected
                 FROM product_projection_events
                 WHERE tenant_id = :tenant_id
                   AND source_module = :source_module
@@ -614,6 +943,7 @@ class ProductRepository:
             return ProductProjectionEventRef(
                 projection_event_id=str(existing["projection_event_id"]),
                 source_watermark=int(existing["source_watermark"]),
+                redaction_decision_ref=str(existing["redaction_decision_ref"]),
                 gap_detected=bool(existing["gap_detected"]),
                 duplicate=True,
             )
@@ -648,6 +978,7 @@ class ProductRepository:
         return ProductProjectionEventRef(
             projection_event_id=projection_event_id,
             source_watermark=source_watermark,
+            redaction_decision_ref=redaction_decision_ref,
             gap_detected=gap_detected,
         )
 
