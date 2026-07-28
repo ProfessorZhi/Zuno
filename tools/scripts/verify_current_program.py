@@ -200,7 +200,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[13]: "completed",
         PHASE_FILES[14]: "completed",
         PHASE_FILES[15]: "completed",
-        PHASE_FILES[16]: "in_progress",
+        PHASE_FILES[16]: "completed",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -302,6 +302,7 @@ def verify_current_program() -> list[str]:
     directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
+    phase17_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-coordinator-closure.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_controller = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_controller.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
@@ -386,7 +387,8 @@ def verify_current_program() -> list[str]:
                 "PHASE15 completed",
                 "PHASE10 ready",
                 "PHASE16 completed",
-                "PHASE17 in_progress",
+                "PHASE17 completed",
+                "goal04-phase17-coordinator-closure.md",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
                 "measurement blocked",
@@ -433,7 +435,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
                 "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
                 "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
-                "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: in_progress",
+                "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed",
             ],
             "program-manifest.yaml",
         )
@@ -442,6 +444,7 @@ def verify_current_program() -> list[str]:
         _require_phrases(
             (
                 phase17_evidence
+                + phase17_closure
                 + dynamic_dag
                 + dynamic_dag_tests
                 + dynamic_controller
@@ -616,8 +619,16 @@ def verify_current_program() -> list[str]:
                 "record_dispatch_commit",
                 "test_phase17_dynamic_runtime_controller_dispatches_ready_steps_through_commit_before_send",
                 "test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry",
+                "Goal04 PHASE17 Coordinator Closure",
+                "phase_status: completed",
+                "coordinator_decision: approved",
+                "closure_head_sha: b27d45a5",
+                "20260728_49 (head)",
+                "59 passed in 29.18s",
+                "9 passed in 41.32s",
+                "refined Agent Core target architecture verification passed",
             ],
-            "PHASE17 dynamic DAG startup evidence",
+            "PHASE17 dynamic DAG closure evidence",
         )
     )
 

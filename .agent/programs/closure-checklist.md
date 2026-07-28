@@ -42,7 +42,7 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE14 Capability and Skill Control Plane
 - [x] PHASE15 Tool Definition and Read-only Cutover
 - [x] PHASE16 Tool Side Effect and Reconciliation
-- [ ] PHASE17 Dynamic Plan DAG and Parallel Control
+- [x] PHASE17 Dynamic Plan DAG and Parallel Control
 - [ ] PHASE18 Agentic GraphRAG Inner Loop
 - [ ] PHASE19 Final Synthesis, Publication and Reflexion
 - [ ] PHASE20 Observability Eval, Benchmark and Release Gate
@@ -124,8 +124,8 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 ## Runtime 与故障
 
 - [ ] Deterministic Single-Step Plan 真实闭环。
-- [ ] Dynamic DAG ReadySet/Dispatch/Send/Reducer/Join 真实闭环。
-- [ ] Replan Barrier 和新 PlanVersion 验证。
+- [x] Dynamic DAG ReadySet/Dispatch/Send/Reducer/Join 真实闭环。
+- [x] Replan Barrier 和新 PlanVersion 验证。
 - [ ] Native Interrupt/Resume/Cancel/Deadline 验证。
 - [ ] Tool Approval/Effect/UNKNOWN/Reconciliation/Compensation 验证。
 - [ ] Security Epoch 在等待期变化时旧授权失效。

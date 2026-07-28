@@ -33,7 +33,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase17_startup() -> None:
+def test_phase_states_reflect_goal04_phase17_closure() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -49,7 +49,7 @@ def test_phase_states_reflect_goal04_phase17_startup() -> None:
         "PHASE14_capability-skill-control-plane.md": "status: completed",
         "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: completed",
         "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
-        "PHASE17_dynamic-plan-dag-parallel-control.md": "status: in_progress",
+        "PHASE17_dynamic-plan-dag-parallel-control.md": "status: completed",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -62,7 +62,7 @@ def test_phase_states_reflect_goal04_phase17_startup() -> None:
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
-    assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: in_progress" in manifest
+    assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed" in manifest
 
 
 def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
@@ -82,7 +82,8 @@ def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
     assert "PHASE15 completed" in current
     assert "PHASE10 ready" in current
     assert "PHASE16 completed" in current
-    assert "PHASE17 in_progress" in current
+    assert "PHASE17 completed" in current
+    assert "goal04-phase17-coordinator-closure.md" in current
     assert "production readiness not established" in production
 
 
@@ -98,10 +99,13 @@ def test_program_has_all_phase_files_and_atomic_tasks() -> None:
     assert task_count == 163
 
 
-def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
+def test_phase17_dynamic_dag_closure_evidence_is_guarded() -> None:
     evidence = (REPO_ROOT / "docs/evidence/goal04-phase17-startup-audit.md").read_text(
         encoding="utf-8"
     )
+    closure = (
+        REPO_ROOT / "docs/evidence/goal04-phase17-coordinator-closure.md"
+    ).read_text(encoding="utf-8")
     runtime = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_dag.py"
     ).read_text(encoding="utf-8")
@@ -332,3 +336,11 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "record_dispatch_commit" in dynamic_controller
     assert "test_phase17_dynamic_runtime_controller_dispatches_ready_steps_through_commit_before_send" in dynamic_controller_tests
     assert "test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry" in persistence_tests
+    assert "Goal04 PHASE17 Coordinator Closure" in closure
+    assert "phase_status: completed" in closure
+    assert "coordinator_decision: approved" in closure
+    assert "closure_head_sha: b27d45a5" in closure
+    assert "20260728_49 (head)" in closure
+    assert "59 passed in 29.18s" in closure
+    assert "9 passed in 41.32s" in closure
+    assert "refined Agent Core target architecture verification passed" in closure
