@@ -2,7 +2,7 @@
 
 state: active
 active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE20
+current_phase: PHASE15
 phase_count: 22
 program_version: 2
 
@@ -12,7 +12,9 @@ program_version: 2
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
 
-Goal04 PR A 已完成 Coordinator Closure 并合并到 main：PHASE10 Web/Desktop Product Adaptation 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase10-coordinator-closure.md`。Goal04 PR B 已完成 Coordinator Closure 并合并到 main：PHASE16 Tool Side Effect and Reconciliation 为 `completed`。Goal04 PR C 已完成 Coordinator Closure 并合并到 main：PHASE17 Dynamic Plan DAG and Parallel Control 为 `completed`，merge commit 为 `4d14ae9e8cd953359c82e51d55279cc123ab47ae`。Goal04 PR D 已完成 Coordinator Closure 并合并到 main：PHASE18 Agentic GraphRAG Inner Loop 为 `completed`，merge commit 为 `cbc04cb0be16c3915537b82a4f3f743cb7add963`。Goal04 PHASE19 已完成本地 Coordinator Closure：Final Synthesis, Publication and Reflexion 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`；PHASE20 为 `ready`。
+Goal04 PR A 已完成 Coordinator Closure 并合并到 main：PHASE10 Web/Desktop Product Adaptation 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase10-coordinator-closure.md`。Goal04 PR B 已完成 Coordinator Closure 并合并到 main：PHASE16 Tool Side Effect and Reconciliation 为 `completed`。Goal04 PR C 已完成 Coordinator Closure 并合并到 main：PHASE17 Dynamic Plan DAG and Parallel Control 为 `completed`，merge commit 为 `4d14ae9e8cd953359c82e51d55279cc123ab47ae`。Goal04 PR D 已完成 Coordinator Closure 并合并到 main：PHASE18 Agentic GraphRAG Inner Loop 为 `completed`，merge commit 为 `cbc04cb0be16c3915537b82a4f3f743cb7add963`。Goal04 PHASE19 已完成本地 Coordinator Closure：Final Synthesis, Publication and Reflexion 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`。Goal05 Target Coverage Audit 已冻结 `docs/evidence/goal05-target-coverage-audit.md` 与 `.agent/programs/work-products/goal05-target-gap-ledger.yaml`；PHASE15 因 Agent Sandbox 真实 Deno/Pyodide 和 OCI runtime evidence 缺失重新打开为 `blocked`，PHASE20 在 Mandatory Gap 修复前为 `blocked`。
+
+Machine status summary: PHASE10 completed; PHASE16 completed; PHASE17 completed; PHASE18 completed; PHASE19 completed; PHASE15 blocked; PHASE20 blocked.
 
 入口：
 

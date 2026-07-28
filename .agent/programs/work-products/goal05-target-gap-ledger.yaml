@@ -1,0 +1,191 @@
+ledger_id: goal05-target-gap-ledger
+status: frozen
+frozen_at: 2026-07-28
+base_branch: main
+base_sha: 5b6f880df88fd1d1f3efc782eedd8466aff45554
+audit_rule: one_full_target_coverage_audit_only
+current_decision:
+  phase15: blocked
+  phase20: blocked
+  phase21: planned
+  phase22: planned
+  reason: "Mandatory Agent Sandbox runtime evidence is absent; PHASE20 depends on repaired mandatory target coverage."
+known_environment_blockers:
+  deno:
+    command: "deno --version"
+    status: unavailable
+    evidence: "PowerShell CommandNotFoundException"
+  docker:
+    command: "docker info --format '{{.ServerVersion}}'"
+    status: daemon_unavailable
+    evidence: "Docker CLI 29.4.0 present; daemon pipe missing"
+  postgres:
+    command: "alembic -c infra/db/alembic.ini upgrade head"
+    status: connection_timeout
+    evidence: "psycopg connection timeout to localhost:5432"
+requirements:
+  - requirement_id: ARCH-PRODUCT-MANDATORY-GOAL05
+    owner_module: "01 Product Surface"
+    owner_phase: PHASE21
+    target_contract: "Web/Desktop full E2E, channel resume, revocation, rollback/cutover, no legacy UI path."
+    current_code: "PHASE10 product runtime exists."
+    default_entry: "Product API/Web/Desktop default path exists but full E2E/cutover evidence is pending."
+    persistence_migration: "Product migrations through 20260728_51."
+    state_transition: "Partial current; PHASE21 required."
+    failure_retry_recovery_idempotency: "Full E2E fault matrix pending."
+    security_approval_audit: "Revocation/approval replay E2E pending."
+    evidence: "docs/evidence/goal04-phase10-coordinator-closure.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR C / PR D"
+    closure_evidence: ""
+  - requirement_id: ARCH-ING-MANDATORY-GOAL05
+    owner_module: "02 Input / Document Ingestion"
+    owner_phase: PHASE21
+    target_contract: "Delete/privacy/legal hold/restore E2E and parser fault recovery."
+    current_code: "Durable ingestion implementation exists."
+    default_entry: "Upload/parser default path exists."
+    persistence_migration: "PHASE11 migrations exist."
+    state_transition: "Current for PHASE11 scope; full cross-module lifecycle pending."
+    failure_retry_recovery_idempotency: "Delete/restore E2E pending."
+    security_approval_audit: "Legal hold/delete audit pending full E2E."
+    evidence: "docs/evidence/phase11-ingestion-source-lineage.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR C / PR D"
+    closure_evidence: ""
+  - requirement_id: ARCH-KNOW-MANDATORY-GOAL05
+    owner_module: "03 Knowledge / Agentic GraphRAG"
+    owner_phase: PHASE20
+    target_contract: "Measured GraphRAG diagnostics and fixed benchmark release gate."
+    current_code: "PHASE18 runtime exists."
+    default_entry: "KnowledgeRetrievalGraph default path exists."
+    persistence_migration: "Knowledge persistence exists."
+    state_transition: "Implementation available; measurement blocked."
+    failure_retry_recovery_idempotency: "Graph failure bucket and release gate pending."
+    security_approval_audit: "Citation/source grounding metrics pending."
+    evidence: "docs/evidence/goal04-phase18-coordinator-closure.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR B"
+    closure_evidence: ""
+  - requirement_id: ARCH-MODEL-MANDATORY-GOAL05
+    owner_module: "04 Model Gateway"
+    owner_phase: PHASE20
+    target_contract: "Judge/model/embedding profile comparability for eval and release gate."
+    current_code: "Model Gateway runtime exists."
+    default_entry: "Provider-neutral gateway current for PHASE07 scope."
+    persistence_migration: "PHASE07 evidence exists."
+    state_transition: "Eval comparability pending."
+    failure_retry_recovery_idempotency: "Judge timeout/invalid output metrics pending."
+    security_approval_audit: "Judge dispatch through security/model gateway pending fixed eval evidence."
+    evidence: "docs/status/production-readiness.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR B"
+    closure_evidence: ""
+  - requirement_id: ARCH-MEMORY-MANDATORY-GOAL05
+    owner_module: "05 Memory & Context"
+    owner_phase: PHASE21
+    target_contract: "Privacy delete, restore non-resurrection, negative-transfer eval."
+    current_code: "PHASE13 governed memory runtime exists."
+    default_entry: "Agent post-turn memory default path exists."
+    persistence_migration: "Memory migrations exist."
+    state_transition: "Cross-module delete/restore pending."
+    failure_retry_recovery_idempotency: "Backup/restore and privacy lifecycle pending."
+    security_approval_audit: "Privacy delete audit pending E2E."
+    evidence: "docs/status/production-readiness.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR C"
+    closure_evidence: ""
+  - requirement_id: ARCH-AGENT-MANDATORY-GOAL05
+    owner_module: "06 Agent Core"
+    owner_phase: PHASE21
+    target_contract: "Domain/checkpoint/queue crash matrix and full run E2E."
+    current_code: "PHASE17 dynamic DAG and PHASE19 finalization exist."
+    default_entry: "Single Controller default path exists."
+    persistence_migration: "Agent migrations through PHASE17 exist."
+    state_transition: "Full fault/cutover pending."
+    failure_retry_recovery_idempotency: "Crash matrix pending."
+    security_approval_audit: "Epoch during wait and approval replay E2E pending."
+    evidence: "docs/evidence/goal04-phase17-coordinator-closure.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR C"
+    closure_evidence: ""
+  - requirement_id: ARCH-CAPABILITY-MANDATORY-GOAL05
+    owner_module: "07 Capability / Skill"
+    owner_phase: PHASE21
+    target_contract: "Capability exposure, conformance, and attack E2E."
+    current_code: "PHASE14 runtime exists."
+    default_entry: "Capability selection/planner snapshot exists."
+    persistence_migration: "Capability persistence exists."
+    state_transition: "Full attack/cutover pending."
+    failure_retry_recovery_idempotency: "Conformance under full E2E pending."
+    security_approval_audit: "Exposure vs authorization pending full attack suite."
+    evidence: "docs/status/production-readiness.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "PR C / PR D"
+    closure_evidence: ""
+  - requirement_id: ARCH-TOOL-070
+    owner_module: "08 Tool Runtime"
+    owner_phase: PHASE15
+    target_contract: "Sandbox isolation insufficient must fail closed; WASM Python and OCI process sandbox must be real default adapters."
+    current_code: "Sandbox contract and receipt gate added to ToolInvocationGateway."
+    default_entry: "ToolInvocationGateway now calls SandboxAdapterRegistry before provider executor."
+    persistence_migration: "20260728_52 creates tool_sandbox_receipts."
+    state_transition: "PHASE15 reopened; repair partial."
+    failure_retry_recovery_idempotency: "Sandbox policy violation blocks dispatch; true runtime crash/recovery evidence pending."
+    security_approval_audit: "Receipt is persisted; Deno/OCI evidence pending."
+    evidence: "tests/capability/test_phase15_agent_sandbox.py; tests/repo/test_goal03_wave_b_migration_contract.py"
+    legacy_bypass_status: "Bypass guard still present; PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "Repair PR PHASE15"
+    closure_evidence: ""
+  - requirement_id: ARCH-SEC-SANDBOX-MANDATORY-GOAL05
+    owner_module: "09 Security"
+    owner_phase: PHASE15
+    target_contract: "Sandbox requirement, approval, latest epoch, mandatory audit and secret lease are non-bypassable."
+    current_code: "Security prepare/execute chain exists; sandbox receipt gate added before dispatch."
+    default_entry: "Gateway path."
+    persistence_migration: "Security migrations and 20260728_52."
+    state_transition: "Runtime evidence blocked."
+    failure_retry_recovery_idempotency: "Attack suite pending."
+    security_approval_audit: "Deno/OCI and full security attack evidence pending."
+    evidence: "docs/evidence/goal04-phase16-coordinator-closure.md"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "Repair PR PHASE15 / PR C"
+    closure_evidence: ""
+  - requirement_id: ARCH-OBS-MANDATORY-GOAL05
+    owner_module: "10 Observability & Eval"
+    owner_phase: PHASE20
+    target_contract: "Eval runtime, Core Five, diagnostic metrics, benchmark comparison, release gate."
+    current_code: "PHASE06 observability exists."
+    default_entry: "Eval release gate not implemented."
+    persistence_migration: "PHASE20 migrations pending."
+    state_transition: "PHASE20 blocked."
+    failure_retry_recovery_idempotency: "Eval worker recovery pending."
+    security_approval_audit: "Mandatory audit/eval linkage pending."
+    evidence: ""
+    legacy_bypass_status: "N/A"
+    verdict: GAP
+    repair_pr: "PR B"
+    closure_evidence: ""
+  - requirement_id: ARCH-INFRA-SANDBOX-MANDATORY-GOAL05
+    owner_module: "11 Infrastructure"
+    owner_phase: PHASE15
+    target_contract: "Deno/Pyodide and OCI process sandbox runtime, Postgres migration, container/daemon evidence."
+    current_code: "Sandbox receipt migration added; real runtimes unavailable."
+    default_entry: "Gateway gate exists; physical runtime blocked."
+    persistence_migration: "20260728_52 added."
+    state_transition: "Blocked by missing Deno, Docker daemon, Postgres."
+    failure_retry_recovery_idempotency: "Container crash/session restore evidence pending."
+    security_approval_audit: "Sandbox audit receipt pending real runtime."
+    evidence: "deno command not found; docker daemon unavailable; postgres timeout"
+    legacy_bypass_status: "PHASE22 cleanup pending."
+    verdict: GAP
+    repair_pr: "Repair PR PHASE15"
+    closure_evidence: ""

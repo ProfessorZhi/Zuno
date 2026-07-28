@@ -34,6 +34,7 @@ DOMAIN_TABLE_OWNERS = {
     "message_like": "Product Surface",
     "role": "Security",
     "tool": "Tool Execution",
+    "tool_sandbox_receipts": "Tool Runtime",
     "usage_stats": "Observability / Eval",
     "user": "Security",
     "user_role": "Security",

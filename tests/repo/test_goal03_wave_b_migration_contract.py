@@ -10,6 +10,7 @@ PHASE16_EFFECT_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_42_ph
 PHASE16_RECONCILIATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_43_phase16_tool_effect_reconciliations.py"
 PHASE16_ASYNC_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_44_phase16_tool_async_cancellation.py"
 PHASE16_COMPENSATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py"
+GOAL05_SANDBOX_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260728_52_goal05_tool_sandbox_receipts.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -38,6 +39,10 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260727_45"' in phase16_compensation
     assert 'down_revision = "20260727_44"' in phase16_compensation
     assert phase16_compensation.count("op.create_table(") == phase16_compensation.count("op.drop_table(")
+    goal05_sandbox = GOAL05_SANDBOX_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260728_52"' in goal05_sandbox
+    assert 'down_revision = "20260728_51"' in goal05_sandbox
+    assert goal05_sandbox.count("op.create_table(") == goal05_sandbox.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -173,6 +178,28 @@ def test_phase16_compensation_migration_contains_manual_assessment_and_compensat
         "uq_tool_comp_def_action_proposal",
         "ck_tool_comp_attempt_no_hidden_rollback",
         "ck_tool_manual_assessment_conclusion",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+
+def test_goal05_sandbox_migration_contains_append_only_receipt_table() -> None:
+    text = GOAL05_SANDBOX_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "tool_sandbox_receipts",
+        "sandbox_profile_id",
+        "adapter_tier",
+        "session_ref",
+        "profile_hash",
+        "limits_hash",
+        "session_hash",
+        "state_integrity_hash",
+        "adapter_tier in ('WASM_PYTHON','OCI_PROCESS')",
+        "isolation_verified = true",
+        "allowlist_enforced = true",
+        "fk_tool_sandbox_receipts_prepared",
+        "fk_tool_sandbox_receipts_attempt",
     )
 
     for fragment in required_fragments:

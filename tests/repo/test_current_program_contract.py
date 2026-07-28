@@ -26,14 +26,14 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
     assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE20"
+    assert manifest["current_phase"] == "PHASE15"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
     assert manifest["measurement_status"] == "measurement_blocked"
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase10_closure() -> None:
+def test_phase_states_reflect_goal05_target_coverage_audit() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -47,12 +47,12 @@ def test_phase_states_reflect_goal04_phase10_closure() -> None:
         "PHASE12_knowledge-version-and-standard-rag.md": "status: completed",
         "PHASE13_memory-context-governance-runtime.md": "status: completed",
         "PHASE14_capability-skill-control-plane.md": "status: completed",
-        "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: completed",
+        "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: blocked",
         "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
         "PHASE17_dynamic-plan-dag-parallel-control.md": "status: completed",
         "PHASE18_agentic-graphrag-inner-loop.md": "status: completed",
         "PHASE19_final-synthesis-publication-reflexion.md": "status: completed",
-        "PHASE20_observability-eval-benchmark-release-gate.md": "status: ready",
+        "PHASE20_observability-eval-benchmark-release-gate.md": "status: blocked",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -63,15 +63,15 @@ def test_phase_states_reflect_goal04_phase10_closure() -> None:
     assert "id: PHASE09, file: .agent/programs/PHASE09_product-surface-backend-runtime.md, state: completed" in manifest
     assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: completed" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
-    assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
+    assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: blocked" in manifest
     assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
     assert "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed" in manifest
     assert "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed" in manifest
     assert "id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: completed" in manifest
-    assert "id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: ready" in manifest
+    assert "id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: blocked" in manifest
 
 
-def test_goal04_phase10_closure_advances_to_phase19_without_production_ready() -> None:
+def test_goal05_audit_reopens_phase15_without_production_ready() -> None:
     readiness = (
         REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
     ).read_text(encoding="utf-8")
@@ -83,9 +83,9 @@ def test_goal04_phase10_closure_advances_to_phase19_without_production_ready() -
     assert "current_phase_status: completed" in readiness
     assert "coordinator_approval: approved" in readiness
     assert "target_not_current: 0" in readiness
-    assert "current_phase: PHASE20" in current
+    assert "current_phase: PHASE15" in current
     assert "PHASE09 completed" in current
-    assert "PHASE15 completed" in current
+    assert "PHASE15 blocked" in current
     assert "PHASE10 completed" in current
     assert "PHASE16 completed" in current
     assert "PHASE17 completed" in current
@@ -95,7 +95,8 @@ def test_goal04_phase10_closure_advances_to_phase19_without_production_ready() -
     assert "goal04-phase10-coordinator-closure.md" in current
     assert "PHASE19 completed" in current
     assert "goal04-phase19-coordinator-closure.md" in current
-    assert "PHASE20" in current
+    assert "PHASE20 blocked" in current
+    assert "goal05-target-coverage-audit.md" in current
     assert "production readiness not established" in production
 
 
