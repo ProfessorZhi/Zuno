@@ -85,6 +85,7 @@ docs/evidence/**
 - Tests：branch explosion、low yield、retriever timeout、duplicate candidate、late result。
 - Acceptance：使用 Knowledge 内部 dispatch，不混用 Agent Plan DAG 事实。
 - 2026-07-28 progress：Deep profile 已产生 BM25/Vector/Entity/Relation/Path/Community retriever dispatch plan，并记录 budget、timeout 和 parallel group；实际 retriever partial failure / late result 仍待实现。
+- 2026-07-28 progress：`RetrieverAttemptResult` 已记录 required retriever timeout / index unavailable、budget exhausted 和 optional graph late-result fencing；BM25/Vector 失败阻断 normalize，optional graph late result 不进入 EvidenceLedger。branch explosion、duplicate candidate 和真实 partial failure adapter 仍待实现。
 
 ### P18-T05 Fusion, Rerank and Rank Lineage
 - Goal：记录 raw/fused/reranked rank、score normalization、dropped reason、gold evidence loss。

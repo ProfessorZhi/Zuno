@@ -12,6 +12,8 @@ from zuno.knowledge.agentic.contracts import (
     QueryStrategy,
     RetrievalPlan,
     RetrievalQualityVerdict,
+    RetrieverAttemptResult,
+    RetrieverAttemptStatus,
     RetrieverDispatchPlan,
     RetrieverKind,
 )
@@ -40,6 +42,8 @@ __all__ = [
     "RetrievalPlan",
     "RetrievalQualityGate",
     "RetrievalQualityVerdict",
+    "RetrieverAttemptResult",
+    "RetrieverAttemptStatus",
     "RetrieverDispatchPlan",
     "RetrieverKind",
 ]

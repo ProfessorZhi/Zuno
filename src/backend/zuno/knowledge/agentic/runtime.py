@@ -15,6 +15,8 @@ from zuno.knowledge.agentic.contracts import (
     QueryStrategy,
     RetrievalPlan,
     RetrievalQualityVerdict,
+    RetrieverAttemptResult,
+    RetrieverAttemptStatus,
     RetrieverDispatchPlan,
     RetrieverKind,
 )
@@ -40,6 +42,7 @@ class CorrectiveRetrievalRequest:
     max_rounds: int = 2
     round_budget_tokens: int = 2048
     retriever_timeout_ms: int = 1500
+    retriever_failure_modes: dict[str, str] = field(default_factory=dict)
     failure_bucket: str = ""
 
 
@@ -151,6 +154,38 @@ class CorrectiveAgenticRetrievalRuntime:
                     "retrievers": [item.model_dump(mode="json") for item in retrieval_plan.retrievers],
                 },
             )
+            attempts = _attempt_results(request=request, retrieval_plan=retrieval_plan)
+            blocking_attempts = [
+                attempt
+                for attempt in attempts
+                if attempt.status in {RetrieverAttemptStatus.TIMEOUT, RetrieverAttemptStatus.INDEX_UNAVAILABLE}
+                and attempt.retriever in {RetrieverKind.BM25, RetrieverKind.VECTOR}
+            ]
+            if blocking_attempts:
+                final_verdict = RetrievalQualityVerdict.IRRELEVANT
+                final_action = CorrectiveAction.ABSTAIN
+                graph_trace.add(
+                    KnowledgeRetrievalGraphNode.NORMALIZE,
+                    round=round_number,
+                    status="blocked",
+                    payload={
+                        "attempts": [attempt.model_dump(mode="json") for attempt in attempts],
+                        "blocking_failure": blocking_attempts[0].failure_reason,
+                    },
+                )
+                rounds.append(
+                    {
+                        "round": round_number,
+                        "query": current_query,
+                        "query_strategy": strategy.value,
+                        "ledger_record_count": 0,
+                        "verdict": final_verdict.value,
+                        "corrective_action": final_action.value,
+                        "novelty": 0.0,
+                        "retriever_failure": blocking_attempts[0].failure_reason,
+                    }
+                )
+                break
             result = self._base_runtime.answer(
                 AgenticRetrievalRuntimeRequest(
                     query=current_query,
@@ -167,6 +202,10 @@ class CorrectiveAgenticRetrievalRuntime:
                 KnowledgeRetrievalGraphNode.NORMALIZE,
                 round=round_number,
                 payload={
+                    "attempts": [
+                        _attempt_with_candidate_count(attempt, result.evidence_bundle.items).model_dump(mode="json")
+                        for attempt in attempts
+                    ],
                     "candidate_count": len(result.evidence_bundle.items),
                     "retrieval_required": result.decision.retrieval_required,
                 },
@@ -378,6 +417,66 @@ def _retriever_kinds(profile: KnowledgeRetrievalProfile, strategy: QueryStrategy
     if strategy in {QueryStrategy.ENTITY_DECOMPOSITION, QueryStrategy.RELATION_QUERY}:
         return [RetrieverKind.BM25, RetrieverKind.VECTOR, RetrieverKind.ENTITY, RetrieverKind.RELATION, RetrieverKind.PATH]
     return [RetrieverKind.BM25, RetrieverKind.VECTOR]
+
+
+def _attempt_results(
+    *,
+    request: CorrectiveRetrievalRequest,
+    retrieval_plan: RetrievalPlan,
+) -> list[RetrieverAttemptResult]:
+    attempts: list[RetrieverAttemptResult] = []
+    for dispatch in retrieval_plan.retrievers:
+        mode = str(request.retriever_failure_modes.get(dispatch.retriever.value) or "")
+        if mode == "timeout":
+            status = RetrieverAttemptStatus.TIMEOUT
+            failure_reason = "retriever_timeout"
+            late_result = False
+            accepted = False
+        elif mode == "index_unavailable":
+            status = RetrieverAttemptStatus.INDEX_UNAVAILABLE
+            failure_reason = "retriever_index_unavailable"
+            late_result = False
+            accepted = False
+        elif mode == "late":
+            status = RetrieverAttemptStatus.LATE_RESULT_FENCED
+            failure_reason = "late_result_fenced"
+            late_result = True
+            accepted = False
+        elif dispatch.budget_tokens <= 0:
+            status = RetrieverAttemptStatus.BUDGET_EXHAUSTED
+            failure_reason = "retriever_budget_exhausted"
+            late_result = False
+            accepted = False
+        else:
+            status = RetrieverAttemptStatus.SUCCEEDED
+            failure_reason = ""
+            late_result = False
+            accepted = True
+        attempts.append(
+            RetrieverAttemptResult(
+                retriever=dispatch.retriever,
+                status=status,
+                failure_reason=failure_reason,
+                late_result=late_result,
+                accepted=accepted,
+                round=retrieval_plan.round,
+                parallel_group=dispatch.parallel_group,
+            )
+        )
+    return attempts
+
+
+def _attempt_with_candidate_count(attempt: RetrieverAttemptResult, evidence_items: list[Any]) -> RetrieverAttemptResult:
+    if not attempt.accepted:
+        return attempt
+    candidate_count = len(
+        [
+            item
+            for item in evidence_items
+            if (item.retriever_source or item.retrieval_method.value) == attempt.retriever.value
+        ]
+    )
+    return attempt.model_copy(update={"candidate_count": candidate_count})
 
 
 def _retrievers_used(index_payloads: list[dict[str, Any]]) -> list[str]:

@@ -12,6 +12,7 @@ from zuno.knowledge.agentic import (
     KnowledgeControlProposalType,
     KnowledgeRetrievalGraphNode,
     QueryStrategy,
+    RetrieverAttemptStatus,
     RetrieverKind,
 )
 from zuno.knowledge.indexing import KnowledgeIndexRuntime
@@ -178,6 +179,62 @@ def test_corrective_runtime_blocks_admission_when_budget_is_exhausted() -> None:
     assert [event["node"] for event in graph_trace["node_events"]].count("dispatch") == 0
     assert result.rounds[0]["admission_reason"] == "budget_exhausted"
     assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ABSTAIN.value
+
+
+def test_corrective_runtime_blocks_when_required_retriever_times_out() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_bm25_timeout",
+            task_id="task_bm25_timeout",
+            retriever_failure_modes={"bm25": "timeout"},
+            max_rounds=1,
+        )
+    )
+
+    graph_trace = result.trace["knowledge_retrieval_graph"]
+    normalize_event = next(event for event in graph_trace["node_events"] if event["node"] == "normalize")
+    bm25_attempt = next(
+        attempt for attempt in normalize_event["payload"]["attempts"] if attempt["retriever"] == RetrieverKind.BM25.value
+    )
+    assert normalize_event["status"] == "blocked"
+    assert normalize_event["payload"]["blocking_failure"] == "retriever_timeout"
+    assert bm25_attempt["status"] == RetrieverAttemptStatus.TIMEOUT.value
+    assert bm25_attempt["accepted"] is False
+    assert [event["node"] for event in graph_trace["node_events"]].count("fuse_rerank") == 0
+    assert result.rounds[0]["retriever_failure"] == "retriever_timeout"
+    assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ABSTAIN.value
+
+
+def test_corrective_runtime_fences_late_optional_graph_result_without_blocking_text_evidence() -> None:
+    result = _runtime().retrieve(
+        CorrectiveRetrievalRequest(
+            query="renewal notice 30 days anniversary",
+            workspace_id="workspace_corrective",
+            knowledge_space_ids=["ks_corrective"],
+            trace_id="trace_late_community",
+            task_id="task_late_community",
+            retrieval_profile=RetrievalProfile.DEEP,
+            retriever_failure_modes={"community": "late"},
+            max_rounds=1,
+        )
+    )
+
+    graph_trace = result.trace["knowledge_retrieval_graph"]
+    normalize_event = next(event for event in graph_trace["node_events"] if event["node"] == "normalize")
+    community_attempt = next(
+        attempt
+        for attempt in normalize_event["payload"]["attempts"]
+        if attempt["retriever"] == RetrieverKind.COMMUNITY.value
+    )
+    assert normalize_event["status"] == "completed"
+    assert community_attempt["status"] == RetrieverAttemptStatus.LATE_RESULT_FENCED.value
+    assert community_attempt["late_result"] is True
+    assert community_attempt["accepted"] is False
+    assert result.final_action == CorrectiveAction.CONTINUE
+    assert graph_trace["proposal"]["proposal_type"] == KnowledgeControlProposalType.ACCEPT_EVIDENCE.value
 
 
 def test_knowledge_step_executor_consumes_corrective_retrieval_runtime() -> None:

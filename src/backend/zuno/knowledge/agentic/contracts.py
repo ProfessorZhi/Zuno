@@ -81,6 +81,14 @@ class RetrieverKind(StrEnum):
     COMMUNITY = "community"
 
 
+class RetrieverAttemptStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    TIMEOUT = "timeout"
+    INDEX_UNAVAILABLE = "index_unavailable"
+    BUDGET_EXHAUSTED = "budget_exhausted"
+    LATE_RESULT_FENCED = "late_result_fenced"
+
+
 class EvidenceLedgerRecord(BaseModel):
     evidence_id: str
     document_id: str
@@ -123,6 +131,17 @@ class RetrievalPlan(BaseModel):
     deadline_ms: int = 0
     admitted: bool = True
     admission_reason: str = "admitted"
+
+
+class RetrieverAttemptResult(BaseModel):
+    retriever: RetrieverKind
+    status: RetrieverAttemptStatus
+    candidate_count: int = 0
+    failure_reason: str = ""
+    late_result: bool = False
+    accepted: bool = True
+    round: int
+    parallel_group: str = ""
 
 
 class KnowledgeRetrievalGraphNodeEvent(BaseModel):
@@ -184,6 +203,8 @@ __all__ = [
     "QueryStrategy",
     "RetrievalPlan",
     "RetrievalQualityVerdict",
+    "RetrieverAttemptResult",
+    "RetrieverAttemptStatus",
     "RetrieverDispatchPlan",
     "RetrieverKind",
 ]
