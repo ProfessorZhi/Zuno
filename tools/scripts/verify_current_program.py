@@ -309,6 +309,9 @@ def verify_current_program() -> list[str]:
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
+    branch_result_migration = _read(
+        REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_47_phase17_branch_results.py"
+    )
     agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
@@ -416,6 +419,7 @@ def verify_current_program() -> list[str]:
                 + dynamic_dispatch
                 + dispatch_commit_tests
                 + dispatch_migration
+                + branch_result_migration
                 + agent_repository
                 + dispatch_persistence_tests
             ),
@@ -473,6 +477,12 @@ def verify_current_program() -> list[str]:
                 "REJECTED_OBSOLETE_STEP_RUN",
                 "REJECTED_INLINE_PAYLOAD",
                 "test_phase17_branch_result_fencer_rejects_late_result_fencing_mismatch",
+                "P17-T07 BranchResultRef PostgreSQL Persistence Slice",
+                "20260728_47_phase17_branch_results",
+                "agent_branch_result_refs",
+                "record_branch_result_ref",
+                "duplicate:ACCEPTED",
+                "test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

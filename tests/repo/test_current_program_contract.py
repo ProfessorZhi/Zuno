@@ -117,6 +117,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
+    branch_result_migration = (
+        REPO_ROOT / "infra/db/alembic/versions/20260728_47_phase17_branch_results.py"
+    ).read_text(encoding="utf-8")
     repository = (
         REPO_ROOT / "src/backend/zuno/platform/database/agent/domain.py"
     ).read_text(encoding="utf-8")
@@ -190,3 +193,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "REJECTED_OBSOLETE_STEP_RUN" in branch_result
     assert "REJECTED_INLINE_PAYLOAD" in branch_result
     assert "test_phase17_branch_result_fencer_rejects_late_result_fencing_mismatch" in branch_result_tests
+    assert "P17-T07 BranchResultRef PostgreSQL Persistence Slice" in evidence
+    assert "20260728_47" in branch_result_migration
+    assert "agent_branch_result_refs" in branch_result_migration
+    assert "def record_branch_result_ref" in repository
+    assert "duplicate:ACCEPTED" in repository
+    assert "test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs" in persistence_tests

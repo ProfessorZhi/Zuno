@@ -20,6 +20,8 @@ from zuno.agent.domain import (
 from zuno.agent.runtime.planning import (
     AdmissionContext,
     AdmissionController,
+    BranchResultFencer,
+    BranchResultSubmission,
     DispatchCommitBuilder,
     DynamicPlanOutputContract,
     DynamicPlanProposal,
@@ -66,6 +68,7 @@ def engine(migrated_postgres):
             text(
                 """
                 TRUNCATE
+                    agent_branch_result_refs,
                     agent_dispatch_items,
                     agent_step_runs,
                     agent_dispatch_groups,
@@ -280,3 +283,97 @@ def test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow(engine
     assert [payload["ordering_sequence"] for payload in payload_rows] == [1, 2]
     assert all(payload["payload"]["step_run_id"] == payload["step_run_id"] for payload in payload_rows)
     assert all(payload["payload"]["commit_required_before_send"] is True for payload in payload_rows)
+
+
+def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(
+        proposal,
+        admission,
+        run_id=run.run_id,
+        execution_epoch=1,
+    )
+    step_run = commit.step_runs[0]
+    accepted = BranchResultFencer().accept(
+        BranchResultSubmission(
+            branch_result_id="branch-result:p17:dispatch:collect:1",
+            step_run_id=step_run.step_run_id,
+            run_id=step_run.run_id,
+            plan_version_id=step_run.plan_version_id,
+            dynamic_step_id=step_run.dynamic_step_id,
+            execution_epoch=step_run.execution_epoch,
+            attempt_no=step_run.attempt_no,
+            step_hash=step_run.step_hash,
+            result_ref="object://agent-results/p17/collect.json",
+            result_hash="c" * 64,
+            producer_ref="langgraph-send:worker:1",
+        ),
+        step_run=step_run,
+        active_plan_version_id=plan.plan_version_id,
+        active_execution_epoch=1,
+    )
+    stale = BranchResultFencer().accept(
+        BranchResultSubmission(
+            branch_result_id="branch-result:p17:dispatch:collect:late",
+            step_run_id=step_run.step_run_id,
+            run_id=step_run.run_id,
+            plan_version_id="plan-version:p17:superseded",
+            dynamic_step_id=step_run.dynamic_step_id,
+            execution_epoch=step_run.execution_epoch,
+            attempt_no=step_run.attempt_no,
+            step_hash=step_run.step_hash,
+            result_ref="object://agent-results/p17/late.json",
+            result_hash="d" * 64,
+            producer_ref="langgraph-send:worker:late",
+        ),
+        step_run=step_run,
+        active_plan_version_id=plan.plan_version_id,
+        active_execution_epoch=1,
+    )
+    assert accepted.branch_result is not None
+    assert stale.branch_result is None
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+        receipt = repo.record_branch_result_ref(tenant_id=goal.tenant_id, branch_result=accepted.branch_result)
+        duplicate = repo.record_branch_result_ref(tenant_id=goal.tenant_id, branch_result=accepted.branch_result)
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT branch_result_id, step_run_id, result_ref, ref_hash
+                FROM agent_branch_result_refs
+                """
+            )
+        ).mappings().one()
+
+    assert receipt.status == "ACCEPTED"
+    assert duplicate.status == "duplicate:ACCEPTED"
+    assert row["branch_result_id"] == "branch-result:p17:dispatch:collect:1"
+    assert row["step_run_id"] == step_run.step_run_id
+    assert row["result_ref"].startswith("object://")
+    assert row["ref_hash"] == accepted.branch_result.ref_hash

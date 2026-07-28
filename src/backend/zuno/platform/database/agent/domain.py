@@ -26,6 +26,7 @@ from zuno.agent.domain import (
     TaskContract,
 )
 from zuno.agent.runtime.planning.dispatch import DispatchCommit
+from zuno.agent.runtime.planning.branch_result import BranchResultRef
 from zuno.platform.database.foundation import InfrastructureRepository
 
 
@@ -538,6 +539,53 @@ class AgentDomainRepository:
                 },
             )
         return AgentDomainReceipt(group.dispatch_group_id, group.status.value, 1)
+
+    def record_branch_result_ref(self, *, tenant_id: str, branch_result: BranchResultRef) -> AgentDomainReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                INSERT INTO agent_branch_result_refs(
+                    branch_result_id, tenant_id, step_run_id, run_id, plan_version_id,
+                    dynamic_step_id, execution_epoch, attempt_no, result_ref,
+                    result_hash, producer_ref, ref_hash
+                ) VALUES (
+                    :branch_result_id, :tenant_id, :step_run_id, :run_id, :plan_version_id,
+                    :dynamic_step_id, :execution_epoch, :attempt_no, :result_ref,
+                    :result_hash, :producer_ref, :ref_hash
+                )
+                ON CONFLICT (branch_result_id) DO NOTHING
+                """
+            ),
+            {
+                "branch_result_id": branch_result.branch_result_id,
+                "tenant_id": tenant_id,
+                "step_run_id": branch_result.step_run_id,
+                "run_id": branch_result.run_id,
+                "plan_version_id": branch_result.plan_version_id,
+                "dynamic_step_id": branch_result.dynamic_step_id,
+                "execution_epoch": branch_result.execution_epoch,
+                "attempt_no": branch_result.attempt_no,
+                "result_ref": branch_result.result_ref,
+                "result_hash": branch_result.result_hash,
+                "producer_ref": branch_result.producer_ref,
+                "ref_hash": branch_result.ref_hash,
+            },
+        )
+        if result.rowcount != 1:
+            existing = self.connection.execute(
+                text(
+                    """
+                    SELECT branch_result_id, ref_hash
+                    FROM agent_branch_result_refs
+                    WHERE branch_result_id = :branch_result_id
+                    """
+                ),
+                {"branch_result_id": branch_result.branch_result_id},
+            ).mappings().first()
+            if existing and existing["ref_hash"] == branch_result.ref_hash:
+                return AgentDomainReceipt(branch_result.branch_result_id, "duplicate:ACCEPTED", 1)
+            raise AgentDomainConflict(f"conflicting BranchResultRef for {branch_result.branch_result_id}")
+        return AgentDomainReceipt(branch_result.branch_result_id, "ACCEPTED", 1)
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)

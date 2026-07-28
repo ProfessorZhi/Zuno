@@ -275,3 +275,33 @@ passed
 - 该切片完成 BranchResultRef 和 late-result fencing 的领域判断；
 - 尚未实现真实 LangGraph Send worker、BranchResultRef PostgreSQL persistence、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T07 BranchResultRef PostgreSQL Persistence Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 append-only migration `infra/db/alembic/versions/20260728_47_phase17_branch_results.py`，并扩展 `src/backend/zuno/platform/database/agent/domain.py`：
+
+- 新增 `agent_branch_result_refs`，外键绑定 `agent_step_runs`、`agent_domain_runs` 和 `agent_plan_versions`；
+- 表约束要求 positive execution epoch / attempt、`object://` result ref、canonical result hash 和 ref hash；
+- `AgentDomainRepository.record_branch_result_ref(...)` 只记录已经由 `BranchResultFencer` 接受的 immutable `BranchResultRef`；
+- 重复相同 `branch_result_id` + `ref_hash` 返回 `duplicate:ACCEPTED`，不同 ref hash 视为冲突；
+- integration test 证明 accepted BranchResultRef 落库，重复提交幂等，stale PlanVersion result 不产生可记录 BranchResultRef。
+
+验证：
+
+```text
+python -m py_compile infra\db\alembic\versions\20260728_47_phase17_branch_results.py src\backend\zuno\platform\database\agent\domain.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+2 passed
+```
+
+边界：
+
+- 该切片完成 BranchResultRef PostgreSQL persistence；
+- 尚未实现真实 LangGraph Send worker、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。
