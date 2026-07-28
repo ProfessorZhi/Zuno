@@ -24,7 +24,7 @@ PHASE17 PR C 已通过 merge commit `4d14ae9e8cd953359c82e51d55279cc123ab47ae` �
 - PHASE18 worktree：`C:\Users\Administrator\.codex\worktrees\goal04-phase18\Zuno`。
 - PHASE18 branch：`codex/goal04-phase18-agentic-graphrag`。
 - Alembic head：`20260728_49 (head)`。
-- 当前 PHASE18 状态：`in_progress`。
+- startup-time PHASE18 状态：`in_progress`；最终 closure 状态见 `docs/evidence/goal04-phase18-coordinator-closure.md`。
 
 ## 已读事实源
 

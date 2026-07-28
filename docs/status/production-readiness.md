@@ -24,7 +24,7 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE10 ready：PHASE09 Wave A 已完成，可启动 Web/Desktop Product Adaptation；尚未实现。
 - PHASE16 completed：Goal04 PR B 已完成 Tool Side Effect and Reconciliation Coordinator Closure 并通过 merge commit `d78426171df0591643af12549a36214a24734f7c` 合并到 main；P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay 均有本地证据；不代表 production ready。
 - PHASE17 completed：Goal04 PR C 已通过 merge commit `4d14ae9e8cd953359c82e51d55279cc123ab47ae` 合并到 main；证据为 `docs/evidence/goal04-phase17-coordinator-closure.md` 和 `docs/evidence/goal04-phase17-startup-audit.md`，Alembic head 为 `20260728_49`；不代表 production ready。
-- PHASE18 in_progress：Goal04 PR D 已从 PHASE17 merge 后的最新 main 启动 Agentic GraphRAG Inner Loop；启动审计和 Frozen Gap List 为 `docs/evidence/goal04-phase18-startup-audit.md`；不代表 PHASE18 completed，也不解除 PHASE19 依赖。
+- PHASE18 completed：Goal04 PR D 已完成 Agentic GraphRAG Inner Loop Coordinator Closure；证据为 `docs/evidence/goal04-phase18-coordinator-closure.md`、`docs/evidence/goal04-phase18-knowledge-retrieval-graph-contract.md` 和 `docs/evidence/goal04-phase18-startup-audit.md`；固定 KnowledgeRetrievalGraph、RetrievalPlan/Round、Profile、multi-retriever dispatch plan、EvidenceLedger/Frontier、Corrective Retrieval、KnowledgeControlProposal、Agent Core accept/reject gate 和默认 PHASE18 runtime path 均有本地验证；不代表 PHASE20 quality gate 或 production readiness。
 - current_phase = PHASE10；PHASE19–22 不得提前冒充 Current。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
@@ -39,7 +39,7 @@ Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；P
 
 ## Goal04 PR D Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 基于该合并后的最新 main 启动，启动证据为 `docs/evidence/goal04-phase18-startup-audit.md`。当前 evidence 仅证明 PHASE18 已满足启动依赖并冻结 Gap List；不表示 PHASE18 completed，不解除 PHASE19 必须等待 PHASE10 和 PHASE18 completed 并合并后才能启动的依赖，不改变 `current_phase = PHASE10`，也不建立 production readiness。
+PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 基于该合并后的最新 main 完成 Coordinator Closure，证据为 `docs/evidence/goal04-phase18-coordinator-closure.md`。PHASE18 completed 不解除 PHASE19 必须等待 PHASE10 和 PHASE18 都完成且合并后才能启动的依赖，不改变 `current_phase = PHASE10`，也不建立 production readiness。
 
 PHASE08 当前保留的部分证据：
 

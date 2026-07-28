@@ -10,7 +10,7 @@ production_readiness: not established
 
 本证据记录 PHASE18 的第一块实现增量：把 Knowledge 内层检索从“corrective wrapper trace”推进为显式固定 `KnowledgeRetrievalGraph` contract，并把 Knowledge 产出的 `KnowledgeControlProposal` 暴露给 Agent Core observation。
 
-本文件不是 PHASE18 closure approval，不把 PHASE18 标记为 completed。
+本文件记录 PHASE18 implementation evidence；最终 closure approval 见 `docs/evidence/goal04-phase18-coordinator-closure.md`。
 
 ## 实现范围
 
@@ -93,6 +93,6 @@ message: null value in column "description" of relation "product_agent_definitio
 environment signature: PHASE09/product seed schema mismatch before PHASE18 knowledge query-run/evidence assertions
 ```
 
-## 剩余范围
+## Closure Link
 
-PHASE18 尚未完成。后续仍需继续实现和验证 Migration / integration / fault / security gate，以及 closure approval。
+PHASE18 closure 已由 `docs/evidence/goal04-phase18-coordinator-closure.md` 收口。本文保留为实现过程证据，不单独声明 quality proven 或 production ready。

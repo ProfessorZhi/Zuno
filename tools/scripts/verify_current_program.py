@@ -201,7 +201,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[14]: "completed",
         PHASE_FILES[15]: "completed",
         PHASE_FILES[16]: "completed",
-        PHASE_FILES[17]: "in_progress",
+        PHASE_FILES[17]: "completed",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -305,6 +305,7 @@ def verify_current_program() -> list[str]:
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     phase17_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-coordinator-closure.md")
     phase18_startup = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-startup-audit.md")
+    phase18_closure = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase18-coordinator-closure.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_controller = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_controller.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
@@ -391,8 +392,8 @@ def verify_current_program() -> list[str]:
                 "PHASE16 completed",
                 "PHASE17 completed",
                 "goal04-phase17-coordinator-closure.md",
-                "PHASE18 in_progress",
-                "goal04-phase18-startup-audit.md",
+                "PHASE18 completed",
+                "goal04-phase18-coordinator-closure.md",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
                 "measurement blocked",
@@ -440,7 +441,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
                 "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
                 "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed",
-                "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: in_progress",
+                "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed",
             ],
             "program-manifest.yaml",
         )
@@ -474,6 +475,31 @@ def verify_current_program() -> list[str]:
                 "PHASE18 已启动并冻结 Gap List",
             ],
             "PHASE18 startup evidence",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            phase18_closure,
+            [
+                "Goal04 PHASE18 Coordinator Closure",
+                "status: completed",
+                "coordinator_approval: approved",
+                "head_sha: 42a77f9fccf0b328bb48098eb6b16dcad883abcd",
+                "P18-T01",
+                "P18-T08",
+                "KnowledgeRetrievalGraph",
+                "RetrievalPlan",
+                "EvidenceFrontier",
+                "KnowledgeControlProposal",
+                "CorrectiveAgenticGraphRAGRuntime",
+                "KnowledgeQueryService.query()",
+                "26 passed, 1 warning in 23.28s",
+                "PR #49 GitHub validate",
+                "retry count: 1",
+                "PHASE19 仍必须等待 PHASE18 与 PHASE10 都进入 main 后才能创建分支",
+                "Production readiness not established",
+            ],
+            "PHASE18 closure evidence",
         )
     )
     errors.extend(
