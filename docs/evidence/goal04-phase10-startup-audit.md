@@ -1328,6 +1328,37 @@ PHASE10 Product cutover evidence verifier passed.
 - 本轮新增的是 Workspace API 旧 DTO 删除证据，不等于 Coordinator Closure Approval；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T31 Desktop Legacy Workspace Bridge Removal
+
+本轮删除 Desktop bridge 中残留的旧 Workspace task lifecycle contract：
+
+- `apps/desktop/preload.cjs` 不再暴露 `taskLifecycleEndpoint`、`artifactDownloadEndpointTemplate` 和 `workspaceTaskLifecycleStates`；
+- `apps/desktop/README.md` 删除旧 Workspace Task Lifecycle 小节，只保留 Product Bridge V1；
+- `apps/web/src/utils/api.ts` 的 `DesktopConfig` 删除旧 workspace lifecycle 字段；
+- 前端测试从“要求旧 lifecycle bridge 存在”改为“禁止旧 lifecycle bridge 出现在 Desktop preload、README 和 Web DesktopConfig”。
+
+本轮验证：
+
+```text
+python -m pytest tests\frontend\test_frontend_workspace_features.py tests\tools\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode tests\tools\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check -q
+10 passed
+```
+
+```text
+node --check apps\desktop\preload.cjs
+passed
+```
+
+```text
+python tools\scripts\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- 本轮新增的是 Desktop 旧 workspace bridge 删除证据，不等于 Coordinator Closure Approval；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1382,6 +1413,8 @@ npm run build -w zuno-frontend
 python -m pytest tests\frontend\test_workspace_product_loop_types.py::test_workspace_api_removes_legacy_task_status_lifecycle_and_stream_dtos -q
 python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\frontend\test_phase10_product_contracts.py tests\frontend\test_frontend_workspace_features.py -q
 npm run lint -w zuno-frontend
+python -m pytest tests\frontend\test_frontend_workspace_features.py tests\tools\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode tests\tools\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check -q
+node --check apps\desktop\preload.cjs
 ```
 
 未通过 / 未完成：

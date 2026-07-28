@@ -29,9 +29,6 @@ type DesktopConfig = {
     tokenConfigured?: boolean
     workspaceRootConfigured?: boolean
   }
-  taskLifecycleEndpoint?: string
-  artifactDownloadEndpointTemplate?: string
-  workspaceTaskLifecycleStates?: string[]
 }
 
 declare global {

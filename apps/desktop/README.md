@@ -23,14 +23,6 @@ npm run dev
 - `DESKTOP_FRONTEND_URL`
 - `DESKTOP_API_BASE_URL`
 
-## Workspace Task Lifecycle
-
-The Electron shell runs the same Web workspace product loop and exposes the same backend task lifecycle contract through `window.__ZUNO_DESKTOP__`:
-
-- `taskLifecycleEndpoint`: `/api/v1/workspace/task-lifecycle`
-- `artifactDownloadEndpointTemplate`: `/api/v1/workspace/artifact/:artifactId/download`
-- `workspaceTaskLifecycleStates`: `pending`, `running`, `approval_required`, `recoverable_failed`, `cancelled`, `completed`
-
 ## Product Bridge V1
 
 PHASE10 adds a versioned Product bridge contract to `window.__ZUNO_DESKTOP__`.

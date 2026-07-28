@@ -38,16 +38,6 @@ const runtimeConfig = {
     tokenConfigured: Boolean(getEnv('DESKTOP_BRIDGE_TOKEN', '')),
     workspaceRootConfigured: Boolean(getEnv('DESKTOP_WORKSPACE_ROOT', '')),
   },
-  taskLifecycleEndpoint: '/api/v1/workspace/task-lifecycle',
-  artifactDownloadEndpointTemplate: '/api/v1/workspace/artifact/:artifactId/download',
-  workspaceTaskLifecycleStates: [
-    'pending',
-    'running',
-    'approval_required',
-    'recoverable_failed',
-    'cancelled',
-    'completed',
-  ],
 }
 
 contextBridge.exposeInMainWorld('__ZUNO_DESKTOP__', runtimeConfig)

@@ -16,6 +16,9 @@ FILES = {
     "workspace_tests": REPO_ROOT / "tests/api/test_workspace_task_runtime.py",
     "workspace_page": REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue",
     "workspace_api": REPO_ROOT / "apps/web/src/apis/workspace.ts",
+    "desktop_preload": REPO_ROOT / "apps/desktop/preload.cjs",
+    "desktop_readme": REPO_ROOT / "apps/desktop/README.md",
+    "web_api_utils": REPO_ROOT / "apps/web/src/utils/api.ts",
     "full_e2e": REPO_ROOT / "tools/qa/full-e2e/full_e2e.py",
     "launcher_tests": REPO_ROOT / "tests/tools/test_launcher_scripts.py",
     "evidence": REPO_ROOT / "docs/evidence/goal04-phase10-startup-audit.md",
@@ -51,6 +54,9 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
     workspace_tests = _read(FILES["workspace_tests"], errors)
     workspace_page = _read(FILES["workspace_page"], errors)
     workspace_api = _read(FILES["workspace_api"], errors)
+    desktop_preload = _read(FILES["desktop_preload"], errors)
+    desktop_readme = _read(FILES["desktop_readme"], errors)
+    web_api_utils = _read(FILES["web_api_utils"], errors)
     full_e2e = _read(FILES["full_e2e"], errors)
     launcher_tests = _read(FILES["launcher_tests"], errors)
     evidence = _read(FILES["evidence"], errors)
@@ -157,6 +163,29 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         _require(workspace_api, phrase, "workspace API Product DTO boundary", errors)
 
     for phrase in (
+        "taskLifecycleEndpoint",
+        "artifactDownloadEndpointTemplate",
+        "workspaceTaskLifecycleStates",
+        "/api/v1/workspace/task-lifecycle",
+        "/api/v1/workspace/artifact/:artifactId/download",
+        "recoverable_failed",
+    ):
+        for label, text in (
+            ("Desktop preload Product bridge", desktop_preload),
+            ("Desktop README Product bridge", desktop_readme),
+            ("Web DesktopConfig Product bridge", web_api_utils),
+        ):
+            _forbid(text, phrase, label, errors)
+
+    for phrase in (
+        "productBridgeVersion: 'product-desktop-bridge-v1.phase10'",
+        "productBridgeCapabilities",
+        "productEndpoints",
+        "artifactDownloadTemplate: '/api/v1/product/artifacts/:artifactId/download'",
+    ):
+        _require(desktop_preload, phrase, "Desktop Product bridge", errors)
+
+    for phrase in (
         "productProjectionStore.sortedAvailableActions.length > 0",
         "submitProductAvailableAction(action)",
         "Product Available Actions",
@@ -209,6 +238,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T28 Branch-Scoped Alembic Upgrade Gate",
         "P10-T29 Product-only Workspace Action Surface",
         "P10-T30 Workspace API Legacy DTO Removal",
+        "P10-T31 Desktop Legacy Workspace Bridge Removal",
         "PHASE10 仍为 `in_progress`",
         "20260727_43 (head)",
         "temporary PostgreSQL database",

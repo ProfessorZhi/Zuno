@@ -115,7 +115,7 @@ def test_workspace_default_chat_uses_product_runtime_not_simple_chat_stream():
     assert "/api/v1/workspace/simple/chat" not in workspace_page
 
 
-def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():
+def test_desktop_shell_removes_legacy_workspace_task_lifecycle_contract():
     preload = (REPO_ROOT / "apps/desktop/preload.cjs").read_text(encoding="utf-8")
     desktop_readme = (REPO_ROOT / "apps/desktop/README.md").read_text(encoding="utf-8")
     web_api = (REPO_ROOT / "apps/web/src/utils/api.ts").read_text(encoding="utf-8")
@@ -128,7 +128,9 @@ def test_desktop_shell_exposes_same_workspace_task_lifecycle_contract():
         "workspaceTaskLifecycleStates",
         "recoverable_failed",
     ]:
-        assert phrase in preload or phrase in desktop_readme or phrase in web_api
+        assert phrase not in preload
+        assert phrase not in desktop_readme
+        assert phrase not in web_api
 
 
 def test_desktop_shell_exposes_versioned_product_bridge_contract():
