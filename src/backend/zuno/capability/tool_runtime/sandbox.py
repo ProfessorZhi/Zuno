@@ -325,7 +325,9 @@ class SandboxAdapterRegistry:
         runner = self._runner_factory(dispatch.adapter_tier)
         if runner.adapter_tier != dispatch.adapter_tier:
             raise SandboxPolicyViolation("sandbox runner tier does not match dispatch profile")
-        return runner.execute(dispatch=dispatch, args=args)
+        result = runner.execute(dispatch=dispatch, args=args)
+        self._validate_execution_result(dispatch=dispatch, result=result)
+        return result
 
     def _resolve_profile(self, *, tool_name: str, adapter_kind: str, args: dict[str, Any]) -> SandboxProfile:
         kind = str(adapter_kind).upper()
@@ -406,6 +408,25 @@ class SandboxAdapterRegistry:
         expires_at = datetime.fromisoformat(str(session["expires_at"]))
         if expires_at <= datetime.now(tz=UTC):
             raise SandboxPolicyViolation("sandbox session expired")
+
+    @staticmethod
+    def _validate_execution_result(*, dispatch: SandboxDispatch, result: SandboxExecutionResult) -> None:
+        if result.status not in {"SUCCEEDED", "FAILED", "BLOCKED"}:
+            raise SandboxPolicyViolation("sandbox execution returned invalid status")
+        limits = dispatch.dispatch_payload["profile"]["limits"]
+        output_limit = int(limits["output_bytes"])
+        if len(result.stdout.encode("utf-8")) > output_limit:
+            raise SandboxPolicyViolation("sandbox stdout exceeds configured output limit")
+        if len(result.stderr.encode("utf-8")) > output_limit:
+            raise SandboxPolicyViolation("sandbox stderr exceeds configured output limit")
+        if not isinstance(result.output_payload, dict):
+            raise SandboxPolicyViolation("sandbox execution output must be a mapping")
+        if len(json.dumps(result.output_payload, ensure_ascii=True, sort_keys=True).encode("utf-8")) > output_limit:
+            raise SandboxPolicyViolation("sandbox output payload exceeds configured output limit")
+        if result.output_payload.get("sandbox_adapter_tier") != dispatch.adapter_tier:
+            raise SandboxPolicyViolation("sandbox output adapter tier mismatch")
+        if result.output_payload.get("session_ref") != dispatch.session_ref:
+            raise SandboxPolicyViolation("sandbox output session ref mismatch")
 
 
 def _tuple_arg(args: dict[str, Any], key: str) -> tuple[str, ...]:

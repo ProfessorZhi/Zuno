@@ -29,7 +29,7 @@ class _FakeRunner(SandboxRunner):
             stderr="",
             exit_code=0,
             output_payload={
-                "tier": dispatch.adapter_tier,
+                "sandbox_adapter_tier": dispatch.adapter_tier,
                 "code": args.get("code", ""),
                 "session_ref": dispatch.session_ref,
             },
@@ -43,6 +43,25 @@ class _FailingRunner(SandboxRunner):
 
     def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
         raise SandboxPolicyViolation(self.reason)
+
+
+class _LeakyRunner(SandboxRunner):
+    def __init__(self, adapter_tier: str) -> None:
+        self.adapter_tier = adapter_tier
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+        return SandboxExecutionResult(
+            status="SUCCEEDED",
+            stdout="token abc123SECRET",
+            stderr="",
+            exit_code=0,
+            output_payload={
+                "sandbox_adapter_tier": dispatch.adapter_tier,
+                "session_ref": dispatch.session_ref,
+                "api_token": "abc123SECRET",
+                "email": "person@example.com",
+            },
+        )
 
 
 class _RecordingToolUnitOfWork:
@@ -142,8 +161,37 @@ def test_phase15_sandbox_registry_executes_matching_runner_contract() -> None:
     result = registry.execute(dispatch=dispatch, args={"code": "print(42)"})
 
     assert result.status == "SUCCEEDED"
-    assert result.output_payload["tier"] == "WASM_PYTHON"
+    assert result.output_payload["sandbox_adapter_tier"] == "WASM_PYTHON"
     assert result.output_payload["session_ref"] == dispatch.session_ref
+
+
+def test_phase15_sandbox_execute_rejects_invalid_runner_output_contract() -> None:
+    class _InvalidRunner(SandboxRunner):
+        adapter_tier = "WASM_PYTHON"
+
+        def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+            return SandboxExecutionResult(
+                status="SUCCEEDED",
+                stdout="",
+                stderr="",
+                exit_code=0,
+                output_payload={"session_ref": dispatch.session_ref},
+            )
+
+    registry = SandboxAdapterRegistry(runner_factory=lambda _tier: _InvalidRunner())
+    dispatch = registry.prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-invalid-output",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+
+    with pytest.raises(SandboxPolicyViolation, match="adapter tier mismatch"):
+        registry.execute(dispatch=dispatch, args={"code": "print(42)"})
 
 
 def test_phase15_sandbox_execute_validates_session_integrity_expiry_and_size() -> None:
@@ -227,6 +275,36 @@ def test_phase15_gateway_records_sandbox_receipt_when_execution_fails_closed() -
     assert receipt.receipt_payload["sandbox_execution_status"] == "BLOCKED"
     assert receipt.receipt_payload["sandbox_execution"]["sandbox_blocked_reason"] == "sandbox runtime denied"
     assert receipt.receipt_payload["sandbox_execution"]["session_ref"].endswith(":call-sandbox-fail")
+
+
+def test_phase15_gateway_redacts_sandbox_output_before_receipt_and_observation_boundary() -> None:
+    unit_of_work = _RecordingToolUnitOfWork()
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: unit_of_work,  # type: ignore[arg-type]
+        sandbox_registry=SandboxAdapterRegistry(runner_factory=lambda tier: _LeakyRunner(tier)),
+    )
+
+    blocked_reason, sandbox_result = gateway._prepare_sandbox_or_block(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        trace_id="thread-sandbox",
+        call_id="call-sandbox-redact",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)", "api_token": "abc123SECRET"},
+        prepared_id="prepared-tool-action:call-sandbox-redact",
+        attempt_id="tool-attempt:call-sandbox-redact",
+        receipt_id="tool-execution-receipt:call-sandbox-redact",
+    )
+
+    assert blocked_reason == ""
+    assert sandbox_result is not None
+    assert sandbox_result.stdout == "[REDACTED_SECRET]"
+    assert sandbox_result.output_payload["api_token"] == "[REDACTED_SECRET]"
+    assert sandbox_result.output_payload["email"] == "[REDACTED_PII]"
+    receipt = unit_of_work.sandbox_receipts[0]
+    assert receipt.receipt_payload["sandbox_execution"]["api_token"] == "[REDACTED_SECRET]"
+    assert receipt.receipt_payload["sandbox_execution"]["email"] == "[REDACTED_PII]"
 
 
 def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(monkeypatch) -> None:

@@ -890,6 +890,7 @@ class ToolInvocationGateway:
                 ),
             )
             return str(exc), None
+        sandbox_result = _redact_sandbox_execution_result(sandbox_result)
         self._record_sandbox_receipt(
             tenant_id=tenant_id,
             call_id=call_id,
@@ -1360,6 +1361,17 @@ def _async_job_payload_from_result(*, result: Any, call_id: str) -> dict[str, An
         "effect_certainty": "UNKNOWN_EFFECT",
         "native_result": redact_sensitive_payload(native),
     }
+
+
+def _redact_sandbox_execution_result(result: SandboxExecutionResult) -> SandboxExecutionResult:
+    return SandboxExecutionResult(
+        status=result.status,
+        stdout=str(redact_sensitive_payload(result.stdout)),
+        stderr=str(redact_sensitive_payload(result.stderr)),
+        exit_code=result.exit_code,
+        output_payload=redact_sensitive_payload(result.output_payload),
+    )
+
 
 def _unknown_effect_payload(*, exc: ToolEffectUnknownError, call_id: str) -> dict[str, Any]:
     return {
