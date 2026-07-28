@@ -48,6 +48,15 @@ from zuno.agent.runtime.planning.dispatch import (
     StepRunStatus,
 )
 from zuno.agent.runtime.planning.planner import RuntimePlanner
+from zuno.agent.runtime.planning.reducer import (
+    BranchReductionInput,
+    BranchResultReducer,
+    BranchTerminalStatus,
+    JoinDecision,
+    ReducedBranchResult,
+    ReducedJoinOutcome,
+    ReducerValidationError,
+)
 from zuno.agent.runtime.planning.replan import ReplanEngine, ReplanResult
 from zuno.agent.runtime.planning.selector import RuntimeStrategySelector
 from zuno.agent.runtime.planning.validator import PlanValidationError, PlanValidator
@@ -94,6 +103,13 @@ __all__ = [
     "StepRunStatus",
     "PlanValidationError",
     "PlanValidator",
+    "BranchReductionInput",
+    "BranchResultReducer",
+    "BranchTerminalStatus",
+    "JoinDecision",
+    "ReducedBranchResult",
+    "ReducedJoinOutcome",
+    "ReducerValidationError",
     "ReplanEngine",
     "ReplanResult",
     "RuntimePlanner",

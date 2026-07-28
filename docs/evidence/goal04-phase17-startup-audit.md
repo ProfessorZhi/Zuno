@@ -305,3 +305,34 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 BranchResultRef PostgreSQL persistence；
 - 尚未实现真实 LangGraph Send worker、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T08 Idempotent Reducer and JoinPolicy Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/reducer.py`，建立 BranchResultRef 之后的确定性归并和 JoinPolicy 判断：
+
+- `BranchResultReducer` 按 `branch_result_id` 去重，重复相同 `ref_hash` 视为幂等 replay；
+- 同一 `branch_result_id` 不同 `ref_hash` fail closed，拒绝把冲突结果归并；
+- reducer 输出按 dynamic step id / branch result id / ref hash 稳定排序，避免到达顺序影响 reduced results；
+- `ReducedJoinOutcome` 保存 reduced results、duplicate ids、decision 和 outcome hash，防止 JoinOutcome 被原地篡改；
+- 覆盖 `ALL_REQUIRED`、`QUORUM`、`BEST_EFFORT`、`FAIL_FAST` JoinPolicy；
+- decision 只表达 `CONTINUE`、`WAIT`、`FAIL`、`PARTIAL_CONTINUE`，不直接触发 Replan、Reflection、Publication 或 RunOutcome。
+
+验证：
+
+```text
+python -m pytest tests\agent\dag\test_phase17_reducer_join_policy.py -q -p no:cacheprovider --tb=short
+9 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\reducer.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_reducer_join_policy.py
+passed
+```
+
+边界：
+
+- 该切片完成 idempotent reducer 和 JoinPolicy 领域判断；
+- 尚未实现 reducer / join PostgreSQL persistence、conditional Reflection、Replan Barrier 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

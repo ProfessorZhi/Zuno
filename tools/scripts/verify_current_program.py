@@ -306,6 +306,7 @@ def verify_current_program() -> list[str]:
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
     branch_result = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "branch_result.py")
     dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
+    dynamic_reducer = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "reducer.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
@@ -326,6 +327,9 @@ def verify_current_program() -> list[str]:
     )
     dispatch_commit_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dispatch_commit.py"
+    )
+    reducer_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_reducer_join_policy.py"
     )
     dispatch_persistence_tests = _read(
         REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
@@ -418,6 +422,8 @@ def verify_current_program() -> list[str]:
                 + branch_result_tests
                 + dynamic_dispatch
                 + dispatch_commit_tests
+                + dynamic_reducer
+                + reducer_tests
                 + dispatch_migration
                 + branch_result_migration
                 + agent_repository
@@ -483,6 +489,15 @@ def verify_current_program() -> list[str]:
                 "record_branch_result_ref",
                 "duplicate:ACCEPTED",
                 "test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs",
+                "P17-T08 Idempotent Reducer and JoinPolicy Slice",
+                "BranchResultReducer",
+                "ReducedJoinOutcome",
+                "JoinDecision",
+                "ALL_REQUIRED",
+                "BEST_EFFORT",
+                "FAIL_FAST",
+                "test_phase17_reducer_is_order_independent_and_idempotent_for_duplicate_refs",
+                "test_phase17_reducer_evaluates_join_policy",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

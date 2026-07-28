@@ -114,6 +114,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     dispatch = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dispatch.py"
     ).read_text(encoding="utf-8")
+    reducer = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/reducer.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -140,6 +143,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     dispatch_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dispatch_commit.py"
+    ).read_text(encoding="utf-8")
+    reducer_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_reducer_join_policy.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -199,3 +205,12 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "def record_branch_result_ref" in repository
     assert "duplicate:ACCEPTED" in repository
     assert "test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs" in persistence_tests
+    assert "P17-T08 Idempotent Reducer and JoinPolicy Slice" in evidence
+    assert "class BranchResultReducer" in reducer
+    assert "class ReducedJoinOutcome" in reducer
+    assert "class JoinDecision" in reducer
+    assert "ALL_REQUIRED" in reducer
+    assert "BEST_EFFORT" in reducer
+    assert "FAIL_FAST" in reducer
+    assert "test_phase17_reducer_is_order_independent_and_idempotent_for_duplicate_refs" in reducer_tests
+    assert "test_phase17_reducer_evaluates_join_policy" in reducer_tests
