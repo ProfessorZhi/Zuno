@@ -84,6 +84,13 @@ exception: RuntimeError
 first relevant stack frame: src\backend\zuno\agent\product_baseline.py:423
 message: blocked file did not block: file_phase12_docx
 environment signature: local parser dependency state no longer blocks docx before PHASE18 retrieval probe
+
+command: python -m pytest tests\integration\test_goal03_wave_a_persistence.py -q -p no:cacheprovider --tb=short
+test: tests\integration\test_goal03_wave_a_persistence.py::test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain_success and 8 other product-owner tests in the same file
+exception: sqlalchemy.exc.IntegrityError / psycopg.errors.NotNullViolation
+first relevant stack frame: tests\integration\test_goal03_wave_a_persistence.py:114
+message: null value in column "description" of relation "product_agent_definitions" violates not-null constraint
+environment signature: PHASE09/product seed schema mismatch before PHASE18 knowledge query-run/evidence assertions
 ```
 
 ## 剩余范围
