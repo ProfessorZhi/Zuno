@@ -301,6 +301,9 @@ def verify_current_program() -> list[str]:
     migration = _read(PROGRAM_ROOT / "legacy-to-target-migration-map.md")
     directory_contract = _read(PROGRAM_ROOT / "canonical-directory-contract.md")
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
+    phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
+    dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
+    dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
 
     errors.extend(
         _require_phrases(
@@ -373,6 +376,22 @@ def verify_current_program() -> list[str]:
                 "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: in_progress",
             ],
             "program-manifest.yaml",
+        )
+    )
+    errors.extend(
+        _require_phrases(
+            phase17_evidence + dynamic_dag + dynamic_dag_tests,
+            [
+                "P17-T01 Dynamic DAG Proposal and Validator Slice",
+                "DynamicPlanProposal",
+                "DynamicPlanValidator",
+                "DynamicPlanRepairer",
+                "DynamicPlanSideEffectClass",
+                "DynamicPlanResourceClaim",
+                "test_phase17_dynamic_plan_validator_rejects_unsafe_parallel_writes",
+                "test_phase17_dynamic_plan_repairer_adds_deterministic_acceptance_and_output_contract",
+            ],
+            "PHASE17 dynamic DAG startup evidence",
         )
     )
 

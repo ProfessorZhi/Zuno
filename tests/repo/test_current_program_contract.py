@@ -96,3 +96,21 @@ def test_program_has_all_phase_files_and_atomic_tasks() -> None:
 
         task_count += len(set(re.findall(r"P\d{2}-T\d{2}", text)))
     assert task_count == 163
+
+
+def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
+    evidence = (REPO_ROOT / "docs/evidence/goal04-phase17-startup-audit.md").read_text(
+        encoding="utf-8"
+    )
+    runtime = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_dag.py"
+    ).read_text(encoding="utf-8")
+    tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_dag_validator.py"
+    ).read_text(encoding="utf-8")
+
+    assert "P17-T01 Dynamic DAG Proposal and Validator Slice" in evidence
+    assert "DynamicPlanProposal" in runtime
+    assert "DynamicPlanValidator" in runtime
+    assert "DynamicPlanRepairer" in runtime
+    assert "test_phase17_dynamic_plan_validator_rejects_unsafe_parallel_writes" in tests

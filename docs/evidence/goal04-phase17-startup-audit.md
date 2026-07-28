@@ -92,3 +92,32 @@ alembic -c infra\db\alembic.ini heads
 ## 下一步执行边界
 
 优先从 P17-G01 / P17-G03 开始，建立可执行 DAG proposal + validator + ReadySet admission 的最小正式领域模型和 focused tests；不得先接默认并行 dispatch，直到资源、安全、预算和 side-effect conflict gate 可验证。
+
+## P17-T01 Dynamic DAG Proposal and Validator Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/dynamic_dag.py`，建立 PHASE17 动态 DAG proposal 的第一组正式运行合同：
+
+- `DynamicPlanProposal` 绑定 `plan_id`、`goal_version_id`、`planner_ref`、`join_policy` 和 step 列表；
+- `DynamicPlanStep` 显式表达 objective、executor、dependency rule、activation condition、input binding、output contract、acceptance、evidence、capability、resource claim、side-effect class、budget 和 deadline；
+- `DynamicPlanValidator` 覆盖空 plan、step 数上限、重复 step、unsupported executor、空 goal、缺 acceptance、缺 output contract、自依赖、missing dependency、cycle、unbound input、missing output、并行 resource write conflict 和无 resource scope 的并行 side-effect；
+- `DynamicPlanRepairer` 只做确定性修复：补 acceptance criteria 和 output contract，不激活 PlanVersion，不调度并行分支，不绕过后续 ReadySet / Admission / Dispatch gate。
+
+验证：
+
+```text
+python -m pytest tests\agent\dag\test_phase17_dynamic_dag_validator.py -q -p no:cacheprovider --tb=short
+6 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\dynamic_dag.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_dynamic_dag_validator.py
+passed
+```
+
+边界：
+
+- 该切片只完成 P17-T01 的 proposal / normalize / validate / deterministic repair 起点；
+- 尚未实现 ReadySet、Admission、DispatchGroup、Commit-before-Send、LangGraph Send、Reducer、JoinEvaluation 或 Replan Barrier；
+- PHASE17 仍为 `in_progress`，不能写 completed。
