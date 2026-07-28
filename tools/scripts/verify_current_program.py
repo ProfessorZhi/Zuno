@@ -309,6 +309,7 @@ def verify_current_program() -> list[str]:
     dynamic_reducer = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "reducer.py")
     control_decision = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "control_decision.py")
     replan_barrier = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "replan_barrier.py")
+    dynamic_send = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "send.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
@@ -344,6 +345,9 @@ def verify_current_program() -> list[str]:
     )
     replan_barrier_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_replan_barrier.py"
+    )
+    dynamic_send_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_send.py"
     )
     dispatch_persistence_tests = _read(
         REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
@@ -442,6 +446,8 @@ def verify_current_program() -> list[str]:
                 + control_decision_tests
                 + replan_barrier
                 + replan_barrier_tests
+                + dynamic_send
+                + dynamic_send_tests
                 + dispatch_migration
                 + branch_result_migration
                 + join_outcome_migration
@@ -550,6 +556,15 @@ def verify_current_program() -> list[str]:
                 "record_replan_barrier_request",
                 "duplicate:REQUESTED",
                 "test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary",
+                "P17-T13 LangGraph Send and Outbox Claim Boundary Slice",
+                "DynamicStepSendBuilder",
+                "DynamicStepSendEnvelope",
+                "DYNAMIC_STEP_WORKER_NODE",
+                "langgraph.types",
+                "record_dynamic_step_send_claim",
+                "duplicate:CLAIMED_FOR_SEND",
+                "test_phase17_dynamic_step_send_builds_real_langgraph_send_from_claimed_outbox",
+                "test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

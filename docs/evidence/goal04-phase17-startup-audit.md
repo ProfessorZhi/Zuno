@@ -457,3 +457,38 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 Replan Barrier PostgreSQL persistence；
 - 尚未实现默认 runtime barrier 执行、LangGraph Send worker 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T13 LangGraph Send and Outbox Claim Boundary Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/send.py`，把 commit-before-send outbox 事件转成真实 LangGraph `Send` 工作项，并扩展 `AgentDomainRepository`：
+
+- `DynamicStepSendBuilder` 只接受 topic 为 `agent.dynamic_step.dispatch.requested` 的 claimed outbox event；
+- send payload 必须包含 `commit_required_before_send=true`，并且 outbox idempotency key 必须匹配 `send:{step_run_id}:{step_hash}`；
+- `DynamicStepSendEnvelope.to_langgraph_send()` 返回真实 `langgraph.types.Send`，目标 node 固定为 `dynamic_step_worker`；
+- `AgentDomainRepository.record_dynamic_step_send_claim(...)` 要求 outbox 已被同一 worker claim，才允许 StepRun `QUEUED -> CLAIMED`、DispatchItem `PENDING_SEND -> SENT`；
+- 重复相同 send claim 返回 `duplicate:CLAIMED_FOR_SEND`，未 claimed outbox、错 worker、错 step hash 或非 pending item 均 fail closed。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\send.py src\backend\zuno\agent\runtime\planning\__init__.py src\backend\zuno\platform\database\agent\domain.py tests\agent\dag\test_phase17_dynamic_step_send.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_dynamic_step_send.py -q -p no:cacheprovider --tb=short
+4 passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+5 passed
+```
+
+边界：
+
+- 该切片完成 LangGraph Send envelope 和 outbox claim fencing；
+- 尚未实现 dynamic step worker 的实际执行、BranchResultRef worker 回写默认路径或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

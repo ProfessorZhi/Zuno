@@ -32,13 +32,14 @@ from zuno.agent.runtime.planning import (
     DynamicPlanResourceClaim,
     DynamicPlanResourceMode,
     DynamicPlanStep,
+    DynamicStepSendBuilder,
     JoinControlDecisionEngine,
     ReadySetBuilder,
     ReplanBarrierBuilder,
     StepRunStatus,
 )
 from zuno.platform.database.agent import AgentDomainUnitOfWork
-from zuno.platform.database.foundation import create_foundation_engine
+from zuno.platform.database.foundation import InfrastructureRepository, create_foundation_engine
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -292,6 +293,80 @@ def test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow(engine
     assert [payload["ordering_sequence"] for payload in payload_rows] == [1, 2]
     assert all(payload["payload"]["step_run_id"] == payload["step_run_id"] for payload in payload_rows)
     assert all(payload["payload"]["commit_required_before_send"] is True for payload in payload_rows)
+
+
+def test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(
+        proposal,
+        admission,
+        run_id=run.run_id,
+        execution_epoch=1,
+    )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+
+    worker_id = "phase17-dynamic-send-worker"
+    with engine.begin() as conn:
+        infra = InfrastructureRepository(conn)
+        claimed_ids = infra.claim_outbox(
+            worker_id=worker_id,
+            limit=1,
+            topics=("agent.dynamic_step.dispatch.requested",),
+        )
+        claimed_event = infra.load_claimed_outbox_event(event_id=claimed_ids[0], worker_id=worker_id)
+        envelope = DynamicStepSendBuilder().from_claimed_outbox(claimed_event)
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        receipt = repo.record_dynamic_step_send_claim(tenant_id=goal.tenant_id, envelope=envelope)
+        duplicate = repo.record_dynamic_step_send_claim(tenant_id=goal.tenant_id, envelope=envelope)
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT step_run.status AS step_status, item.status AS item_status, event.status AS outbox_status
+                FROM agent_step_runs AS step_run
+                JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                JOIN infra_outbox_events AS event
+                  ON event.event_id = item.outbox_event_id
+                WHERE step_run.step_run_id = :step_run_id
+                """
+            ),
+            {"step_run_id": envelope.step_run_id},
+        ).mappings().one()
+
+    assert receipt.status == "CLAIMED_FOR_SEND"
+    assert duplicate.status == "duplicate:CLAIMED_FOR_SEND"
+    assert envelope.to_langgraph_send().node == "dynamic_step_worker"
+    assert row["step_status"] == "CLAIMED"
+    assert row["item_status"] == "SENT"
+    assert row["outbox_status"] == "claimed"
 
 
 def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(engine) -> None:

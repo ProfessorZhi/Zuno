@@ -123,6 +123,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     replan_barrier = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/replan_barrier.py"
     ).read_text(encoding="utf-8")
+    dynamic_send = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/send.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -164,6 +167,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     replan_barrier_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_replan_barrier.py"
+    ).read_text(encoding="utf-8")
+    dynamic_send_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_step_send.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -265,3 +271,12 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "def record_replan_barrier_request" in repository
     assert "duplicate:REQUESTED" in persistence_tests
     assert "test_phase17_replan_barrier_persistence_records_frozen_epoch_boundary" in persistence_tests
+    assert "P17-T13 LangGraph Send and Outbox Claim Boundary Slice" in evidence
+    assert "class DynamicStepSendBuilder" in dynamic_send
+    assert "class DynamicStepSendEnvelope" in dynamic_send
+    assert "DYNAMIC_STEP_WORKER_NODE" in dynamic_send
+    assert "from langgraph.types import Send" in dynamic_send
+    assert "def record_dynamic_step_send_claim" in repository
+    assert "duplicate:CLAIMED_FOR_SEND" in repository
+    assert "test_phase17_dynamic_step_send_builds_real_langgraph_send_from_claimed_outbox" in dynamic_send_tests
+    assert "test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox" in persistence_tests

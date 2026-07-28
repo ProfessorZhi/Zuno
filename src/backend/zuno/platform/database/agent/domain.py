@@ -30,6 +30,7 @@ from zuno.agent.runtime.planning.branch_result import BranchResultRef
 from zuno.platform.database.foundation import InfrastructureRepository
 from zuno.agent.runtime.planning.reducer import ReducedJoinOutcome
 from zuno.agent.runtime.planning.replan_barrier import ReplanBarrierRequest
+from zuno.agent.runtime.planning.send import DynamicStepSendEnvelope
 
 
 class AgentDomainPersistenceError(RuntimeError):
@@ -710,6 +711,79 @@ class AgentDomainRepository:
                 return AgentDomainReceipt(barrier.barrier_id, f"duplicate:{existing['status']}", 1)
             raise AgentDomainConflict(f"conflicting ReplanBarrier for {barrier.barrier_id}")
         return AgentDomainReceipt(barrier.barrier_id, barrier.status.value, 1)
+
+    def record_dynamic_step_send_claim(
+        self,
+        *,
+        tenant_id: str,
+        envelope: DynamicStepSendEnvelope,
+    ) -> AgentDomainReceipt:
+        result = self.connection.execute(
+            text(
+                """
+                WITH claimed_outbox AS (
+                    SELECT event_id
+                    FROM infra_outbox_events
+                    WHERE event_id = :outbox_event_id
+                      AND tenant_id = :tenant_id
+                      AND status = 'claimed'
+                      AND claim_owner = :worker_id
+                      AND idempotency_key = :send_idempotency_key
+                ),
+                updated_step AS (
+                    UPDATE agent_step_runs AS step_run
+                    SET status = 'CLAIMED'
+                    WHERE step_run.step_run_id = :step_run_id
+                      AND step_run.tenant_id = :tenant_id
+                      AND step_run.status = 'QUEUED'
+                      AND step_run.step_hash = :step_hash
+                      AND EXISTS (SELECT 1 FROM claimed_outbox)
+                    RETURNING step_run.step_run_id
+                )
+                UPDATE agent_dispatch_items AS item
+                SET status = 'SENT'
+                WHERE item.dispatch_item_id = :dispatch_item_id
+                  AND item.tenant_id = :tenant_id
+                  AND item.step_run_id = :step_run_id
+                  AND item.outbox_event_id = :outbox_event_id
+                  AND item.status = 'PENDING_SEND'
+                  AND EXISTS (SELECT 1 FROM updated_step)
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "outbox_event_id": envelope.outbox_event_id,
+                "worker_id": envelope.worker_id,
+                "send_idempotency_key": envelope.send_idempotency_key,
+                "step_run_id": envelope.step_run_id,
+                "step_hash": envelope.step_hash,
+                "dispatch_item_id": envelope.dispatch_item_id,
+            },
+        )
+        if result.rowcount == 1:
+            return AgentDomainReceipt(envelope.step_run_id, "CLAIMED_FOR_SEND", 1)
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT step_run.status AS step_status, item.status AS item_status
+                FROM agent_step_runs AS step_run
+                JOIN agent_dispatch_items AS item
+                  ON item.step_run_id = step_run.step_run_id
+                WHERE step_run.step_run_id = :step_run_id
+                  AND item.dispatch_item_id = :dispatch_item_id
+                  AND step_run.tenant_id = :tenant_id
+                  AND item.tenant_id = :tenant_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "step_run_id": envelope.step_run_id,
+                "dispatch_item_id": envelope.dispatch_item_id,
+            },
+        ).mappings().first()
+        if existing and existing["step_status"] == "CLAIMED" and existing["item_status"] == "SENT":
+            return AgentDomainReceipt(envelope.step_run_id, "duplicate:CLAIMED_FOR_SEND", 1)
+        raise AgentDomainConflict(f"dynamic step send claim rejected for {envelope.step_run_id}")
 
     def record_budget_reservation(self, reservation: BudgetReservation) -> AgentDomainReceipt:
         params = _budget_reservation_params(reservation)
