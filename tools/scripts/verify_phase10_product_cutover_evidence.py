@@ -16,6 +16,7 @@ FILES = {
     "workspace_tests": REPO_ROOT / "tests/api/test_workspace_task_runtime.py",
     "workspace_page": REPO_ROOT / "apps/web/src/pages/workspace/defaultPage/defaultPage.vue",
     "workspace_api": REPO_ROOT / "apps/web/src/apis/workspace.ts",
+    "product_runtime_batch": REPO_ROOT / "src/backend/zuno/product/runtime_batch.py",
     "desktop_preload": REPO_ROOT / "apps/desktop/preload.cjs",
     "desktop_readme": REPO_ROOT / "apps/desktop/README.md",
     "web_api_utils": REPO_ROOT / "apps/web/src/utils/api.ts",
@@ -54,6 +55,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
     workspace_tests = _read(FILES["workspace_tests"], errors)
     workspace_page = _read(FILES["workspace_page"], errors)
     workspace_api = _read(FILES["workspace_api"], errors)
+    product_runtime_batch = _read(FILES["product_runtime_batch"], errors)
     desktop_preload = _read(FILES["desktop_preload"], errors)
     desktop_readme = _read(FILES["desktop_readme"], errors)
     web_api_utils = _read(FILES["web_api_utils"], errors)
@@ -163,6 +165,15 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         _require(workspace_api, phrase, "workspace API Product DTO boundary", errors)
 
     for phrase in (
+        "WorkspaceProductRuntimePayload",
+        "frontend workspace API still exposes legacy field",
+        "WorkspaceTaskStatus",
+        "WorkspaceStreamEvent",
+        "getWorkspaceTaskLifecycleAPI",
+    ):
+        _require(product_runtime_batch, phrase, "Product runtime batch frontend contract guard", errors)
+
+    for phrase in (
         "taskLifecycleEndpoint",
         "artifactDownloadEndpointTemplate",
         "workspaceTaskLifecycleStates",
@@ -239,6 +250,7 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T29 Product-only Workspace Action Surface",
         "P10-T30 Workspace API Legacy DTO Removal",
         "P10-T31 Desktop Legacy Workspace Bridge Removal",
+        "P10-T32 Product Runtime Batch Legacy DTO Guard",
         "PHASE10 仍为 `in_progress`",
         "20260727_43 (head)",
         "temporary PostgreSQL database",

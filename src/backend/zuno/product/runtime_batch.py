@@ -567,17 +567,33 @@ def _validate_frontend_contract(workspace_api_text: str | None) -> list[str]:
         return []
     errors: list[str] = []
     for phrase in (
+        "WorkspaceProductRuntimePayload",
         "WorkspaceProductMode",
+        "WorkspaceTaskBudget",
+        "WorkspaceOutputContract",
+        "WorkspaceObservabilitySnapshot",
+        "createWorkspaceFileAPI",
+        "createWorkspaceIngestAPI",
+        "getWorkspaceRetrievalObservabilityAPI",
+    ):
+        if phrase not in workspace_api_text:
+            errors.append(f"frontend workspace API missing {phrase}")
+    for legacy_phrase in (
         "WorkspaceTaskStatus",
         "WorkspaceTaskLifecycleSnapshot",
         "WorkspaceApprovalRequest",
         "WorkspaceCancelRequest",
+        "WorkspaceTaskLifecycleResponse",
+        "WorkspaceStreamEvent",
+        "getWorkspaceTaskLifecycleAPI",
         "workspaceTaskEventsStreamAPI",
         "downloadWorkspaceArtifactAPI",
         "responseType: 'blob'",
+        "approval_required",
+        "recoverable_failed",
     ):
-        if phrase not in workspace_api_text:
-            errors.append(f"frontend workspace API missing {phrase}")
+        if legacy_phrase in workspace_api_text:
+            errors.append(f"frontend workspace API still exposes legacy field: {legacy_phrase}")
     for forbidden in ("hidden_reasoning", "raw_checkpoint", "api_key"):
         if forbidden in workspace_api_text:
             errors.append(f"frontend workspace API exposes forbidden field: {forbidden}")

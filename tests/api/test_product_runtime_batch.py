@@ -80,8 +80,20 @@ def test_product_runtime_batch_rejects_frontend_forbidden_secret_fields() -> Non
     with pytest.raises(ProductRuntimeBatchError, match="api_key"):
         validate_product_runtime_batch(
             workspace_api_text=(
-                "WorkspaceProductMode WorkspaceTaskStatus WorkspaceTaskLifecycleSnapshot "
-                "WorkspaceApprovalRequest WorkspaceCancelRequest workspaceTaskEventsStreamAPI "
-                "downloadWorkspaceArtifactAPI responseType: 'blob' api_key"
+                "WorkspaceProductRuntimePayload WorkspaceProductMode WorkspaceTaskBudget "
+                "WorkspaceOutputContract WorkspaceObservabilitySnapshot createWorkspaceFileAPI "
+                "createWorkspaceIngestAPI getWorkspaceRetrievalObservabilityAPI api_key"
+            )
+        )
+
+
+def test_product_runtime_batch_rejects_frontend_legacy_workspace_task_contract() -> None:
+    with pytest.raises(ProductRuntimeBatchError, match="legacy field"):
+        validate_product_runtime_batch(
+            workspace_api_text=(
+                "WorkspaceProductRuntimePayload WorkspaceProductMode WorkspaceTaskBudget "
+                "WorkspaceOutputContract WorkspaceObservabilitySnapshot createWorkspaceFileAPI "
+                "createWorkspaceIngestAPI getWorkspaceRetrievalObservabilityAPI "
+                "WorkspaceTaskStatus"
             )
         )

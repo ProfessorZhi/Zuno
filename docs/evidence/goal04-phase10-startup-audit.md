@@ -1359,6 +1359,45 @@ PHASE10 Product cutover evidence verifier passed.
 - 本轮新增的是 Desktop 旧 workspace bridge 删除证据，不等于 Coordinator Closure Approval；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
+## P10-T32 Product Runtime Batch Legacy DTO Guard
+
+本轮修正 `src/backend/zuno/product/runtime_batch.py` 的前端合同检查：旧逻辑仍要求 `apps/web/src/apis/workspace.ts` 暴露 `WorkspaceTaskStatus`、`WorkspaceTaskLifecycleSnapshot`、`WorkspaceApprovalRequest`、`WorkspaceCancelRequest`、`workspaceTaskEventsStreamAPI`、`downloadWorkspaceArtifactAPI` 和 blob 下载字段。该要求已经与 P10-T30 的旧 DTO 删除相冲突。
+
+当前 Product Runtime Batch guard 已改为：
+
+- 要求前端 Workspace API 保留 `WorkspaceProductRuntimePayload`、`WorkspaceProductMode`、`WorkspaceTaskBudget`、`WorkspaceOutputContract`、`WorkspaceObservabilitySnapshot`、file / ingest / retrieval observability client；
+- 禁止前端 Workspace API 重新暴露旧 task status、lifecycle、approval、stream、task lifecycle API、workspace artifact blob 下载和旧状态字符串；
+- 增加 `test_product_runtime_batch_rejects_frontend_legacy_workspace_task_contract`，防止 Product batch verifier 再把旧 DTO 当成正向合同。
+
+RED 验证：
+
+```text
+python -m pytest tests\api\test_product_runtime_batch.py::test_product_runtime_batch_validates_all_eighty_requirements_from_repo -q
+failed: frontend workspace API missing WorkspaceTaskStatus; frontend workspace API missing WorkspaceTaskLifecycleSnapshot; frontend workspace API missing WorkspaceApprovalRequest; frontend workspace API missing WorkspaceCancelRequest; frontend workspace API missing workspaceTaskEventsStreamAPI; frontend workspace API missing downloadWorkspaceArtifactAPI; frontend workspace API missing responseType: 'blob'
+```
+
+本轮验证：
+
+```text
+python -m pytest tests\api\test_product_runtime_batch.py -q
+6 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\product\runtime_batch.py
+passed
+```
+
+```text
+python tools\scripts\verify_phase10_product_cutover_evidence.py
+PHASE10 Product cutover evidence verifier passed.
+```
+
+仍未完成：
+
+- 本轮新增的是 Product Runtime Batch 合同 guard 修复，不等于 Coordinator Closure Approval；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
 ## 本轮验证
 
 已通过：
@@ -1415,6 +1454,8 @@ python -m pytest tests\frontend\test_workspace_product_loop_types.py tests\front
 npm run lint -w zuno-frontend
 python -m pytest tests\frontend\test_frontend_workspace_features.py tests\tools\test_launcher_scripts.py::test_desktop_main_supports_product_bridge_smoke_mode tests\tools\test_launcher_scripts.py::test_desktop_smoke_script_runs_real_electron_bridge_check -q
 node --check apps\desktop\preload.cjs
+python -m pytest tests\api\test_product_runtime_batch.py -q
+python -m py_compile src\backend\zuno\product\runtime_batch.py
 ```
 
 未通过 / 未完成：
