@@ -45,7 +45,7 @@ Current 审计
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09 completed，PHASE12 completed，PHASE13 completed，PHASE14 completed，PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production ready not established。
 
-Goal04 PR B 已启动：PHASE16 Tool Side Effect and Reconciliation 在 `codex/goal04-phase16-tool-side-effect` 中为 `in_progress`，当前 evidence 覆盖 P16-T01 至 P16-T21 focused slices。该状态只表示 PR B 正在实施，不表示 PHASE16 completed、quality proven 或 production ready。PHASE17 仍必须等待 PHASE16 completed 并合并到最新 main 后才能启动。
+Goal04 PR B 已完成 Coordinator Closure：PHASE16 Tool Side Effect and Reconciliation 在 `codex/goal04-phase16-tool-side-effect` 中为 `completed`，evidence 覆盖 P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay。该状态不表示 Goal04 completed、PHASE17 已启动、PR B 已合并、quality proven 或 production ready。PHASE17 仍必须等待 PR B 合并到最新 main 后才能启动。
 
 ## 当前阶段
 
@@ -140,4 +140,4 @@ production readiness not established
 已有 PHASE03/04 代码是可复用的部分实现，不代表完整阶段完成。PHASE22 之前不得声明 Agentic GraphRAG 稳定优于 Baseline，不得把文档完成、最小闭环或局部 CI 绿灯写成系统完成。
 
 
-Goal03 closure status: PHASE09 completed; PHASE12 completed; PHASE13 completed; PHASE14 completed; PHASE15 completed; PHASE10 ready; PHASE16 ready; current_phase PHASE10; production readiness not established.
+Goal04 PR B closure status: PHASE16 completed; PR B not merged; PHASE17 not started; current_phase PHASE10; production readiness not established.

@@ -1,7 +1,7 @@
 # PHASE16 Tool Side Effect and Reconciliation
 
 phase_id: PHASE16
-status: in_progress
+status: completed
 depends_on: PHASE05, PHASE06, PHASE15
 owner: Module 08 Tool Runtime
 
@@ -31,7 +31,7 @@ workspace approval API/UI contract
 
 当前 PR B 分支：`codex/goal04-phase16-tool-side-effect`
 
-当前 PR head：以 GitHub PR #46 / remote branch 为准；本 evidence sync 基线为 `87a406bc`。
+当前 PR head：以 GitHub PR #46 / remote branch 为准；Coordinator Closure 基线为 `2cebf44d`。
 
 当前 Evidence：`docs/evidence/goal04-phase16-startup-audit.md`
 
@@ -46,31 +46,31 @@ workspace approval API/UI contract
 - P16-T07 Compensation 与 Manual Effect Assessment。
 - P16-T08 Side-effect Cutover 与 Bypass Zero Guard。
 - P16-T08R Default ToolControlPlane Gateway Cutover Repair。
-- P16-T09 Restart Recovery、Age Escalation 与 Async Timeout。
-- P16-T10 Side-effect Idempotency Replay。
-- P16-T11 Async Callback Completion 与 Forged Callback Fencing。
-- P16-T12 Async Cancellation State 与 Timeout Fencing。
-- P16-T13 Manual Effect Assessment Authorization Boundary。
-- P16-T14 Compensation from Reconciliation Requires Escalation。
-- P16-T15 Execute Latest Epoch Reauthorization。
-- P16-T16 Approval Deadline Reauthorization。
-- P16-T17 SecretLease Revocation Fail-Closed。
-- P16-T18 Pre-held Idempotency Claim Fail-Closed Reason。
-- P16-T19 Provider Exception Converts to UNKNOWN Reconciliation。
-- P16-T20 Durable Effect Repairs Incomplete Idempotency Claim。
-- P16-T21 Effect Receipt Persistence Failure Falls Back to UNKNOWN Reconciliation。
-- P16-T22 Async Job Persistence Failure Falls Back to UNKNOWN Reconciliation。
+- PHASE16-S09 Restart Recovery、Age Escalation 与 Async Timeout。
+- PHASE16-S10 Side-effect Idempotency Replay。
+- PHASE16-S11 Async Callback Completion 与 Forged Callback Fencing。
+- PHASE16-S12 Async Cancellation State 与 Timeout Fencing。
+- PHASE16-S13 Manual Effect Assessment Authorization Boundary。
+- PHASE16-S14 Compensation from Reconciliation Requires Escalation。
+- PHASE16-S15 Execute Latest Epoch Reauthorization。
+- PHASE16-S16 Approval Deadline Reauthorization。
+- PHASE16-S17 SecretLease Revocation Fail-Closed。
+- PHASE16-S18 Pre-held Idempotency Claim Fail-Closed Reason。
+- PHASE16-S19 Provider Exception Converts to UNKNOWN Reconciliation。
+- PHASE16-S20 Durable Effect Repairs Incomplete Idempotency Claim。
+- PHASE16-S21 Effect Receipt Persistence Failure Falls Back to UNKNOWN Reconciliation。
+- PHASE16-S22 Async Job Persistence Failure Falls Back to UNKNOWN Reconciliation。
 
 当前验证状态：
 
 - `zuno-postgres` 已通过 Docker Compose 恢复为 healthy。
-- P16-T17 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- P16-T18 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- P16-T19 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_provider_exception_as_unknown_reconciliation -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- P16-T20 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- P16-T21 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- P16-T22 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
-- PHASE16 仍为 `in_progress`。本节只同步当前实现证据，不构成 Coordinator Closure Approval，不把 Program、Manifest 或 Production Readiness 改为 completed/ready。
+- PHASE16-S17 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16-S18 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16-S19 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_records_provider_exception_as_unknown_reconciliation -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16-S20 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16-S21 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16-S22 focused test `tests\integration\test_goal03_wave_b_persistence.py::test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails -p no:cacheprovider --tb=short` 已在显式 worktree `sys.path` wrapper 下通过。
+- PHASE16 已由 `docs/evidence/goal04-phase16-coordinator-closure.md` 批准为 `completed`。该状态只表示 PHASE16 完整 Phase Scope 内 implementation available，不代表 Goal04 completed、PHASE17 启动、PR merge 或 production ready。
 
 ## Allowed Paths
 

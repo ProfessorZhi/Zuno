@@ -33,7 +33,7 @@ def test_active_program_manifest_preserves_current_status_boundary() -> None:
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
-def test_phase_states_reflect_goal04_phase16_startup() -> None:
+def test_phase_states_reflect_goal04_phase16_closure() -> None:
     program_root = REPO_ROOT / ".agent" / "programs"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
@@ -48,7 +48,7 @@ def test_phase_states_reflect_goal04_phase16_startup() -> None:
         "PHASE13_memory-context-governance-runtime.md": "status: completed",
         "PHASE14_capability-skill-control-plane.md": "status: completed",
         "PHASE15_tool-runtime-definition-and-readonly-cutover.md": "status: completed",
-        "PHASE16_tool-side-effect-and-reconciliation.md": "status: in_progress",
+        "PHASE16_tool-side-effect-and-reconciliation.md": "status: completed",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -60,7 +60,7 @@ def test_phase_states_reflect_goal04_phase16_startup() -> None:
     assert "id: PHASE10, file: .agent/programs/PHASE10_web-desktop-product-adaptation.md, state: ready" in manifest
     assert "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed" in manifest
     assert "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed" in manifest
-    assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: in_progress" in manifest
+    assert "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed" in manifest
 
 
 def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
@@ -79,7 +79,7 @@ def test_goal03_closure_advances_to_phase10_without_production_ready() -> None:
     assert "PHASE09 completed" in current
     assert "PHASE15 completed" in current
     assert "PHASE10 ready" in current
-    assert "PHASE16 ready" in current
+    assert "PHASE16 completed" in current
     assert "production readiness not established" in production
 
 

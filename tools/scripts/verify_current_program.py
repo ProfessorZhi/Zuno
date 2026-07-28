@@ -199,7 +199,7 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[12]: "completed",
         PHASE_FILES[13]: "completed",
         PHASE_FILES[14]: "completed",
-        PHASE_FILES[15]: "in_progress",
+        PHASE_FILES[15]: "completed",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -321,7 +321,7 @@ def verify_current_program() -> list[str]:
                 "PHASE14 completed",
                 "PHASE15 completed",
                 "PHASE10 ready",
-                "PHASE16 ready",
+                "PHASE16 completed",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
                 "measurement blocked",
@@ -367,7 +367,7 @@ def verify_current_program() -> list[str]:
                 "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
                 "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
                 "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
-                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: in_progress",
+                "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
             ],
             "program-manifest.yaml",
         )
