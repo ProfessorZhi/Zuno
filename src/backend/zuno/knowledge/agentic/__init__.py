@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from zuno.knowledge.agentic.contracts import (
     CorrectiveAction,
+    EvidenceCoverageSummary,
+    EvidenceFrontier,
     EvidenceLedgerRecord,
     KnowledgeControlProposal,
     KnowledgeControlProposalType,
@@ -30,6 +32,8 @@ __all__ = [
     "CorrectiveRetrievalRequest",
     "CorrectiveRetrievalResult",
     "DurableKnowledgeRetrievalPort",
+    "EvidenceCoverageSummary",
+    "EvidenceFrontier",
     "EvidenceLedger",
     "EvidenceLedgerRecord",
     "KnowledgeControlProposal",

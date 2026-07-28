@@ -225,11 +225,13 @@ class CorrectiveAgenticRetrievalRuntime:
                     query_id=f"{request.trace_id}:query:{round_number}",
                     strategy=strategy,
                     trace_id=request.trace_id,
+                    claims=request.claims,
                 )
                 for item in result.evidence_bundle.items
             ]
             ledger.extend(records)
             round_records = list(ledger.by_round(round_number))
+            frontier = ledger.frontier(claims=request.claims)
             graph_trace.add(
                 KnowledgeRetrievalGraphNode.EVIDENCE_LEDGER,
                 round=round_number,
@@ -237,6 +239,7 @@ class CorrectiveAgenticRetrievalRuntime:
                     "round_record_count": len(round_records),
                     "ledger_record_count": len(ledger.records()),
                     "strict_citation_count": len([record for record in round_records if record.strict_citation_allowed]),
+                    "frontier": frontier.model_dump(mode="json"),
                 },
             )
             final_verdict = self._quality_gate.evaluate(round_records)
@@ -244,7 +247,12 @@ class CorrectiveAgenticRetrievalRuntime:
             graph_trace.add(
                 KnowledgeRetrievalGraphNode.EVALUATE,
                 round=round_number,
-                payload={"verdict": final_verdict.value, "novelty": novelty},
+                payload={
+                    "verdict": final_verdict.value,
+                    "novelty": novelty,
+                    "frontier_stop_reasons": list(frontier.stop_reasons),
+                    "coverage": frontier.coverage.model_dump(mode="json"),
+                },
             )
             final_action = self._policy.decide(
                 verdict=final_verdict,
@@ -277,7 +285,7 @@ class CorrectiveAgenticRetrievalRuntime:
             used_actions.append(final_action)
             strategy, current_query = _next_query(current_query, final_action)
 
-        graph_trace.proposal = _control_proposal(final_action, final_verdict, ledger)
+        graph_trace.proposal = _control_proposal(final_action, final_verdict, ledger, claims=request.claims)
         return CorrectiveRetrievalResult(
             answer=answer,
             ledger=ledger,
@@ -300,8 +308,10 @@ def _record_from_item(
     query_id: str,
     strategy: QueryStrategy,
     trace_id: str,
+    claims: list[str] | tuple[str, ...] = (),
 ) -> EvidenceLedgerRecord:
     document_version = str(item.provenance.get("document_version_id") or item.provenance.get("hash") or "")
+    claim_refs = _claim_refs(item.text, claims)
     return EvidenceLedgerRecord(
         evidence_id=item.evidence_id,
         document_id=item.document_id,
@@ -317,10 +327,16 @@ def _record_from_item(
         rerank_score=float(item.rerank_score or item.normalized_score),
         graph_path=list(item.community_ids),
         selection_reason=item.evidence_selected_reason or item.candidate_reason,
+        claim_refs=claim_refs,
         freshness_version=document_version,
         trace_span=f"{trace_id}:retrieval:{retrieval_round}",
         text=item.text,
     )
+
+
+def _claim_refs(text: str, claims: list[str] | tuple[str, ...]) -> list[str]:
+    normalized_text = text.casefold()
+    return [str(claim) for claim in claims if str(claim) and str(claim).casefold() in normalized_text]
 
 
 def _next_query(query: str, action: CorrectiveAction) -> tuple[QueryStrategy, str]:
@@ -494,13 +510,16 @@ def _control_proposal(
     final_action: CorrectiveAction,
     final_verdict: RetrievalQualityVerdict,
     ledger: EvidenceLedger,
+    *,
+    claims: list[str] | tuple[str, ...] = (),
 ) -> KnowledgeControlProposal:
+    frontier = ledger.frontier(claims=claims)
     if final_action == CorrectiveAction.CONTINUE:
         return KnowledgeControlProposal(
             proposal_type=KnowledgeControlProposalType.ACCEPT_EVIDENCE,
             final_action=final_action,
             reason=f"retrieval verdict {final_verdict.value} produced grounded evidence",
-            payload={"ledger": ledger.to_trace()},
+            payload={"ledger": ledger.to_trace(), "frontier": frontier.model_dump(mode="json")},
         )
     if final_action == CorrectiveAction.ASK_USER:
         proposal_type = KnowledgeControlProposalType.REQUEST_USER_CLARIFICATION
@@ -514,7 +533,7 @@ def _control_proposal(
         proposal_type=proposal_type,
         final_action=final_action,
         reason=f"retrieval verdict {final_verdict.value} requires agent-core decision",
-        payload={"ledger": ledger.to_trace()},
+        payload={"ledger": ledger.to_trace(), "frontier": frontier.model_dump(mode="json")},
     )
 
 

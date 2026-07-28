@@ -113,6 +113,30 @@ class EvidenceLedgerRecord(BaseModel):
     strict_citation_allowed: bool = True
 
 
+class EvidenceCoverageSummary(BaseModel):
+    claim_count: int = 0
+    covered_claim_count: int = 0
+    strict_citation_count: int = 0
+    authority_count: int = 0
+    temporal_version_count: int = 0
+    conflict_group_count: int = 0
+    coverage_ratio: float = 0.0
+    strict_citation_ratio: float = 0.0
+
+
+class EvidenceFrontier(BaseModel):
+    total_records: int = 0
+    newest_round: int = 0
+    novelty: float = 0.0
+    uncovered_claim_refs: list[str] = Field(default_factory=list)
+    missing_strict_citation_ids: list[str] = Field(default_factory=list)
+    conflict_groups: dict[str, list[str]] = Field(default_factory=dict)
+    authority_refs: list[str] = Field(default_factory=list)
+    temporal_versions: list[str] = Field(default_factory=list)
+    stop_reasons: list[str] = Field(default_factory=list)
+    coverage: EvidenceCoverageSummary = Field(default_factory=EvidenceCoverageSummary)
+
+
 class RetrieverDispatchPlan(BaseModel):
     retriever: RetrieverKind
     knowledge_space_ids: list[str] = Field(default_factory=list)
@@ -193,6 +217,8 @@ class KnowledgeRetrievalGraphTrace(BaseModel):
 
 __all__ = [
     "CorrectiveAction",
+    "EvidenceCoverageSummary",
+    "EvidenceFrontier",
     "EvidenceLedgerRecord",
     "KnowledgeControlProposal",
     "KnowledgeControlProposalType",
