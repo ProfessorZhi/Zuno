@@ -43,6 +43,10 @@ from zuno.agent.runtime.planning.dynamic_dag import (
     DynamicPlanValidationError,
     DynamicPlanValidator,
 )
+from zuno.agent.runtime.planning.dynamic_controller import (
+    DynamicPlanRuntimeController,
+    DynamicRuntimeDispatchResult,
+)
 from zuno.agent.runtime.planning.dynamic_worker import (
     BranchResultObjectStore,
     DynamicStepWorker,
@@ -136,6 +140,8 @@ __all__ = [
     "DynamicPlanStep",
     "DynamicPlanValidationError",
     "DynamicPlanValidator",
+    "DynamicPlanRuntimeController",
+    "DynamicRuntimeDispatchResult",
     "BranchResultObjectStore",
     "DynamicStepWorker",
     "DynamicStepWorkerResult",

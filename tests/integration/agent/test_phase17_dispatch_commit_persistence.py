@@ -32,6 +32,7 @@ from zuno.agent.runtime.planning import (
     DynamicPlanProposal,
     DynamicPlanResourceClaim,
     DynamicPlanResourceMode,
+    DynamicPlanRuntimeController,
     DynamicPlanStep,
     DynamicStepSendBuilder,
     DynamicStepWorker,
@@ -329,6 +330,54 @@ def test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow(engine
     assert [payload["ordering_sequence"] for payload in payload_rows] == [1, 2]
     assert all(payload["payload"]["step_run_id"] == payload["step_run_id"] for payload in payload_rows)
     assert all(payload["payload"]["commit_required_before_send"] is True for payload in payload_rows)
+
+
+def test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry(engine) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        result = DynamicPlanRuntimeController().dispatch_ready_steps(
+            tenant_id=goal.tenant_id,
+            proposal=proposal,
+            admission_context=AdmissionContext(
+                plan_id=proposal.plan_id,
+                plan_version_id=plan.plan_version_id,
+                security_epoch_ref=task.security_epoch_ref,
+                current_security_epoch_ref=task.security_epoch_ref,
+                authorized_capabilities={"cap:model"},
+                available_budget_units=10,
+                quota_slots=2,
+                capacity_slots=2,
+            ),
+            run_id=run.run_id,
+            execution_epoch=1,
+            repository=repo,
+        )
+
+    with engine.begin() as conn:
+        row = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM agent_dispatch_groups) AS groups,
+                    (SELECT count(*) FROM agent_step_runs) AS step_runs,
+                    (SELECT count(*) FROM infra_outbox_events WHERE topic = 'agent.dynamic_step.dispatch.requested') AS dynamic_outbox
+                """
+            )
+        ).mappings().one()
+
+    assert result.persisted_status == "COMMITTED"
+    assert result.dispatch_commit is not None
+    assert dict(row) == {"groups": 1, "step_runs": 2, "dynamic_outbox": 2}
 
 
 def test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox(engine) -> None:

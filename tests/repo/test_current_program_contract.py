@@ -105,6 +105,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     runtime = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_dag.py"
     ).read_text(encoding="utf-8")
+    dynamic_controller = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_controller.py"
+    ).read_text(encoding="utf-8")
     admission = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/admission.py"
     ).read_text(encoding="utf-8")
@@ -152,6 +155,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_dag_validator.py"
+    ).read_text(encoding="utf-8")
+    dynamic_controller_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_runtime_controller.py"
     ).read_text(encoding="utf-8")
     domain_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_plan_version_domain.py"
@@ -319,3 +325,10 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "READY_FOR_REPLAN" in replan_barrier
     assert "test_phase17_replan_barrier_executor_marks_ready_when_no_in_flight_drain_remains" in replan_barrier_tests
     assert "test_phase17_replan_barrier_execution_persists_cancel_and_drain_state" in persistence_tests
+    assert "P17-T17 Default Dynamic Runtime Controller Slice" in evidence
+    assert "class DynamicPlanRuntimeController" in dynamic_controller
+    assert "class DynamicRuntimeDispatchResult" in dynamic_controller
+    assert "def dispatch_ready_steps" in dynamic_controller
+    assert "record_dispatch_commit" in dynamic_controller
+    assert "test_phase17_dynamic_runtime_controller_dispatches_ready_steps_through_commit_before_send" in dynamic_controller_tests
+    assert "test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry" in persistence_tests

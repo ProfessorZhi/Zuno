@@ -600,3 +600,40 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 Replan Barrier 执行和 PostgreSQL 状态推进；
 - 尚未执行 PHASE17 closure audit、状态 completed 更新或 Coordinator Approval；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T17 Default Dynamic Runtime Controller Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+Closure audit 发现 PHASE17 组件已经覆盖 Dynamic DAG / Admission / Dispatch / Send / Worker / Reducer / Control / Barrier / Recovery，但缺少一个默认动态计划入口把 ReadySet、Admission、DispatchCommit 和 PostgreSQL Repository 串起来。该缺口不允许直接写 PHASE17 completed。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/dynamic_controller.py`：
+
+- `DynamicPlanRuntimeController.dispatch_ready_steps(...)` 是 Dynamic DAG 默认 dispatch 入口；
+- controller 只走 `ReadySetBuilder -> AdmissionController -> DispatchCommitBuilder -> AgentDomainRepository.record_dispatch_commit(...)`；
+- admission 无 admitted steps 时不创建 DispatchGroup，不写 outbox；
+- admitted steps 必须通过 commit-before-send outbox 写入 PostgreSQL，后续 Send worker 从 outbox claim 继续；
+- integration test 证明 controller 直接在 PostgreSQL 中写入 DispatchGroup、StepRun 和 `agent.dynamic_step.dispatch.requested` outbox，不再依赖 sequential `PlanExecutor.next_ready_step(...)` 作为动态计划默认入口。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\dynamic_controller.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_dynamic_runtime_controller.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_dynamic_runtime_controller.py -q -p no:cacheprovider --tb=short
+2 passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+9 passed
+```
+
+边界：
+
+- 该切片完成 Dynamic DAG 默认 dispatch controller；
+- 尚未执行最终 PHASE17 closure gate、状态 completed 更新或 Coordinator Approval；
+- PHASE17 仍为 `in_progress`，不能写 completed。

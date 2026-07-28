@@ -303,6 +303,7 @@ def verify_current_program() -> list[str]:
     phase22 = _read(PROGRAM_ROOT / PHASE_FILES[-1])
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
+    dynamic_controller = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_controller.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
     branch_result = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "branch_result.py")
     dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
@@ -327,6 +328,9 @@ def verify_current_program() -> list[str]:
     agent_repository = _read(REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "agent" / "domain.py")
     agent_domain = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "domain" / "task_contracts.py")
     dynamic_dag_tests = _read(REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_dag_validator.py")
+    dynamic_controller_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_runtime_controller.py"
+    )
     dynamic_plan_version_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_plan_version_domain.py"
     )
@@ -440,6 +444,8 @@ def verify_current_program() -> list[str]:
                 phase17_evidence
                 + dynamic_dag
                 + dynamic_dag_tests
+                + dynamic_controller
+                + dynamic_controller_tests
                 + agent_domain
                 + dynamic_plan_version_tests
                 + dynamic_admission
@@ -603,6 +609,13 @@ def verify_current_program() -> list[str]:
                 "READY_FOR_REPLAN",
                 "test_phase17_replan_barrier_executor_marks_ready_when_no_in_flight_drain_remains",
                 "test_phase17_replan_barrier_execution_persists_cancel_and_drain_state",
+                "P17-T17 Default Dynamic Runtime Controller Slice",
+                "DynamicPlanRuntimeController",
+                "DynamicRuntimeDispatchResult",
+                "dispatch_ready_steps",
+                "record_dispatch_commit",
+                "test_phase17_dynamic_runtime_controller_dispatches_ready_steps_through_commit_before_send",
+                "test_phase17_dynamic_runtime_controller_is_default_dynamic_dispatch_entry",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )
