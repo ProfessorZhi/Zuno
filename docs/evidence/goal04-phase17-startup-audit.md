@@ -492,3 +492,38 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 LangGraph Send envelope 和 outbox claim fencing；
 - 尚未实现 dynamic step worker 的实际执行、BranchResultRef worker 回写默认路径或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T14 Dynamic Step Worker and BranchResultRef Writeback Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/dynamic_worker.py`，把 claimed LangGraph Send envelope 接到真实 step executor 和 BranchResultRef 回写边界：
+
+- `DynamicStepWorker` 从 `DynamicStepSendEnvelope` 构造 `PlanStep`，通过现有 `StepExecutorRegistry` 执行，不伪造执行成功；
+- worker 只接受 `StepRun.status in {CLAIMED,RUNNING}`，执行前校验 step_run_id、PlanVersion、dynamic step、execution epoch、attempt 和 step hash；
+- `LocalBranchResultObjectStore` 将 executor observation 写成 object result，返回 `object://agent-results/...` 与 result hash；
+- worker 生成 `BranchResultSubmission` 后仍交给 `BranchResultFencer`，不绕过 stale plan / stale epoch / stale step hash / obsolete StepRun / inline payload gate；
+- integration test 覆盖 outbox claim → send claim → dynamic worker execute → `record_branch_result_ref(...)` → outbox complete 的默认回写路径。
+
+验证：
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\dynamic_worker.py src\backend\zuno\agent\runtime\planning\send.py src\backend\zuno\agent\runtime\planning\dispatch.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_dynamic_step_worker.py tests\agent\dag\test_phase17_dynamic_step_send.py tests\integration\agent\test_phase17_dispatch_commit_persistence.py
+passed
+```
+
+```text
+python -m pytest tests\agent\dag\test_phase17_dynamic_step_send.py tests\agent\dag\test_phase17_dynamic_step_worker.py -q -p no:cacheprovider --tb=short
+7 passed
+```
+
+```text
+python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistence.py -q -p no:cacheprovider --tb=short
+6 passed
+```
+
+边界：
+
+- 该切片完成 dynamic step worker 执行和 BranchResultRef 回写路径；
+- 尚未实现 restart parallel recovery、barrier 执行器或 PHASE17 closure；
+- PHASE17 仍为 `in_progress`，不能写 completed。

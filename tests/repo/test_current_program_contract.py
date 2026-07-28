@@ -126,6 +126,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     dynamic_send = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/send.py"
     ).read_text(encoding="utf-8")
+    dynamic_worker = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dynamic_worker.py"
+    ).read_text(encoding="utf-8")
     migration = (
         REPO_ROOT / "infra/db/alembic/versions/20260728_46_phase17_dynamic_dispatch.py"
     ).read_text(encoding="utf-8")
@@ -170,6 +173,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     dynamic_send_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_step_send.py"
+    ).read_text(encoding="utf-8")
+    dynamic_worker_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_dynamic_step_worker.py"
     ).read_text(encoding="utf-8")
     persistence_tests = (
         REPO_ROOT / "tests/integration/agent/test_phase17_dispatch_commit_persistence.py"
@@ -280,3 +286,11 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "duplicate:CLAIMED_FOR_SEND" in repository
     assert "test_phase17_dynamic_step_send_builds_real_langgraph_send_from_claimed_outbox" in dynamic_send_tests
     assert "test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox" in persistence_tests
+    assert "P17-T14 Dynamic Step Worker and BranchResultRef Writeback Slice" in evidence
+    assert "class DynamicStepWorker" in dynamic_worker
+    assert "class LocalBranchResultObjectStore" in dynamic_worker
+    assert "class BranchResultObjectStore" in dynamic_worker
+    assert "StepExecutorRegistry" in dynamic_worker
+    assert "BranchResultFencer" in dynamic_worker
+    assert "test_phase17_dynamic_step_worker_executes_and_returns_fenced_branch_result" in dynamic_worker_tests
+    assert "test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim" in persistence_tests

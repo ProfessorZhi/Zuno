@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
+from zuno.agent.contracts import PlanStep
 from zuno.agent.domain import (
     AgentRun,
     DynamicStepDefinition,
@@ -33,13 +34,19 @@ from zuno.agent.runtime.planning import (
     DynamicPlanResourceMode,
     DynamicPlanStep,
     DynamicStepSendBuilder,
+    DynamicStepWorker,
     JoinControlDecisionEngine,
+    LocalBranchResultObjectStore,
     ReadySetBuilder,
     ReplanBarrierBuilder,
     StepRunStatus,
 )
+from zuno.agent.runtime.contracts import NormalizedObservation, ObservationKind, ObservationStatus
 from zuno.platform.database.agent import AgentDomainUnitOfWork
 from zuno.platform.database.foundation import InfrastructureRepository, create_foundation_engine
+from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.execution import StepExecutionResult, StepExecutorRegistry
+from zuno.agent.runtime.state import AgentRuntimeState
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -48,6 +55,32 @@ DATABASE_URL = os.environ.get(
     "postgresql+psycopg://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
 )
 HEX_64 = "a" * 64
+
+
+class _IntegrationModelExecutor:
+    action_types = frozenset({"model"})
+
+    def execute(
+        self,
+        *,
+        state: AgentRuntimeState,
+        step: PlanStep,
+        deps: RuntimeDependencies,
+    ) -> StepExecutionResult:
+        del state, deps
+        return StepExecutionResult(
+            step_id=step.step_id,
+            status=ObservationStatus.COMPLETED,
+            observation=NormalizedObservation(
+                observation_id=f"observation:p17:{step.step_id}",
+                step_id=step.step_id,
+                kind=ObservationKind.MODEL,
+                status=ObservationStatus.COMPLETED,
+                source="phase17-integration-worker",
+                summary=f"completed {step.goal}",
+                evidence_ids=list(step.required_evidence),
+            ),
+        )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -367,6 +400,106 @@ def test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox(engin
     assert row["step_status"] == "CLAIMED"
     assert row["item_status"] == "SENT"
     assert row["outbox_status"] == "claimed"
+
+
+def test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim(engine, tmp_path: Path) -> None:
+    goal = _goal()
+    task = _task(goal)
+    run = _run(task)
+    plan = _dynamic_plan(goal)
+    proposal = _proposal()
+    admission = AdmissionController().admit(
+        proposal,
+        ReadySetBuilder().build(proposal),
+        AdmissionContext(
+            plan_id=proposal.plan_id,
+            plan_version_id=plan.plan_version_id,
+            security_epoch_ref=task.security_epoch_ref,
+            current_security_epoch_ref=task.security_epoch_ref,
+            authorized_capabilities={"cap:model"},
+            available_budget_units=10,
+            quota_slots=2,
+            capacity_slots=2,
+        ),
+    )
+    commit = DispatchCommitBuilder().build(
+        proposal,
+        admission,
+        run_id=run.run_id,
+        execution_epoch=1,
+    )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_goal_version(goal)
+        repo.record_task_contract(task)
+        repo.record_agent_run(run)
+        repo.record_plan_version(plan)
+        repo.activate_plan_version(plan.activate(expected_version=1, activated_at=_now()), expected_version=1)
+        repo.record_dispatch_commit(tenant_id=goal.tenant_id, commit=commit)
+
+    worker_id = "phase17-dynamic-step-worker"
+    with engine.begin() as conn:
+        infra = InfrastructureRepository(conn)
+        claimed_id = infra.claim_outbox(
+            worker_id=worker_id,
+            limit=1,
+            topics=("agent.dynamic_step.dispatch.requested",),
+        )[0]
+        envelope = DynamicStepSendBuilder().from_claimed_outbox(
+            infra.load_claimed_outbox_event(event_id=claimed_id, worker_id=worker_id)
+        )
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        repo.record_dynamic_step_send_claim(tenant_id=goal.tenant_id, envelope=envelope)
+
+    step_run = next(item for item in commit.step_runs if item.step_run_id == envelope.step_run_id).model_copy(
+        update={"status": StepRunStatus.CLAIMED}
+    )
+    worker_result = DynamicStepWorker(
+        executors=StepExecutorRegistry((_IntegrationModelExecutor(),)),
+        object_store=LocalBranchResultObjectStore(tmp_path),
+    ).execute(
+        envelope=envelope,
+        state=AgentRuntimeState(
+            run_id=run.run_id,
+            thread_id="thread:p17:pg",
+            workspace_id=goal.workspace_id,
+            user_id=goal.principal_id,
+            task_id=task.task_contract_id,
+            trace_id=run.trace_id,
+            goal="execute dynamic branch",
+        ),
+        deps=RuntimeDependencies(),
+        step_run=step_run,
+        active_plan_version_id=plan.plan_version_id,
+        active_execution_epoch=1,
+    )
+    assert worker_result.branch_result_decision.branch_result is not None
+
+    with AgentDomainUnitOfWork(engine) as repo:
+        branch_receipt = repo.record_branch_result_ref(
+            tenant_id=goal.tenant_id,
+            branch_result=worker_result.branch_result_decision.branch_result,
+        )
+    with engine.begin() as conn:
+        InfrastructureRepository(conn).complete_outbox(event_id=envelope.outbox_event_id, worker_id=worker_id)
+        row = conn.execute(
+            text(
+                """
+                SELECT branch.result_ref, branch.result_hash, event.status AS outbox_status
+                FROM agent_branch_result_refs AS branch
+                JOIN infra_outbox_events AS event
+                  ON event.event_id = :outbox_event_id
+                WHERE branch.step_run_id = :step_run_id
+                """
+            ),
+            {"outbox_event_id": envelope.outbox_event_id, "step_run_id": envelope.step_run_id},
+        ).mappings().one()
+
+    assert branch_receipt.status == "ACCEPTED"
+    assert row["result_ref"].startswith("object://")
+    assert row["result_hash"] == worker_result.result_hash
+    assert row["outbox_status"] == "published"
 
 
 def test_phase17_branch_result_ref_persistence_records_only_fenced_object_refs(engine) -> None:

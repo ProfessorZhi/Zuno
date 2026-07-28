@@ -200,6 +200,13 @@ class DispatchCommitBuilder:
                     "attempt_no": step_run.attempt_no,
                     "step_hash": step_hash,
                     "commit_required_before_send": True,
+                    "goal": step.goal,
+                    "action_type": step.executor,
+                    "expected_output": ",".join(output.output_name for output in step.outputs),
+                    "acceptance_criteria": list(step.acceptance_criteria),
+                    "required_evidence": list(step.required_evidence),
+                    "allowed_capabilities": list(step.allowed_capabilities),
+                    "budget": dict(step.budget),
                 },
             )
             items.append(item)

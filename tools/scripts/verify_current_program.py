@@ -310,6 +310,7 @@ def verify_current_program() -> list[str]:
     control_decision = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "control_decision.py")
     replan_barrier = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "replan_barrier.py")
     dynamic_send = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "send.py")
+    dynamic_worker = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_worker.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
     )
@@ -348,6 +349,9 @@ def verify_current_program() -> list[str]:
     )
     dynamic_send_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_send.py"
+    )
+    dynamic_worker_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dynamic_step_worker.py"
     )
     dispatch_persistence_tests = _read(
         REPO_ROOT / "tests" / "integration" / "agent" / "test_phase17_dispatch_commit_persistence.py"
@@ -448,6 +452,8 @@ def verify_current_program() -> list[str]:
                 + replan_barrier_tests
                 + dynamic_send
                 + dynamic_send_tests
+                + dynamic_worker
+                + dynamic_worker_tests
                 + dispatch_migration
                 + branch_result_migration
                 + join_outcome_migration
@@ -565,6 +571,14 @@ def verify_current_program() -> list[str]:
                 "duplicate:CLAIMED_FOR_SEND",
                 "test_phase17_dynamic_step_send_builds_real_langgraph_send_from_claimed_outbox",
                 "test_phase17_dynamic_step_send_claim_requires_claimed_committed_outbox",
+                "P17-T14 Dynamic Step Worker and BranchResultRef Writeback Slice",
+                "DynamicStepWorker",
+                "LocalBranchResultObjectStore",
+                "BranchResultObjectStore",
+                "StepExecutorRegistry",
+                "BranchResultFencer",
+                "test_phase17_dynamic_step_worker_executes_and_returns_fenced_branch_result",
+                "test_phase17_dynamic_step_worker_writes_branch_result_ref_after_send_claim",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

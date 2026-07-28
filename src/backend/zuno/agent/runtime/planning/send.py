@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 from langgraph.types import Send
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from zuno.platform.database.foundation import OutboxEventRecord
 
@@ -33,6 +33,13 @@ class DynamicStepSendEnvelope(BaseModel):
     step_hash: str
     send_idempotency_key: str
     commit_required_before_send: bool
+    goal: str
+    action_type: str
+    expected_output: str = ""
+    acceptance_criteria: tuple[str, ...] = ()
+    required_evidence: tuple[str, ...] = ()
+    allowed_capabilities: tuple[str, ...] = ()
+    budget: dict[str, Any] = Field(default_factory=dict)
     envelope_hash: str = ""
 
     def model_post_init(self, __context: object) -> None:
@@ -58,6 +65,13 @@ class DynamicStepSendEnvelope(BaseModel):
                 "step_hash": self.step_hash,
                 "send_idempotency_key": self.send_idempotency_key,
                 "commit_required_before_send": self.commit_required_before_send,
+                "goal": self.goal,
+                "action_type": self.action_type,
+                "expected_output": self.expected_output,
+                "acceptance_criteria": list(self.acceptance_criteria),
+                "required_evidence": list(self.required_evidence),
+                "allowed_capabilities": list(self.allowed_capabilities),
+                "budget": self.budget,
             }
         )
         if not self.envelope_hash:
@@ -82,6 +96,13 @@ class DynamicStepSendEnvelope(BaseModel):
                 "step_hash": self.step_hash,
                 "send_idempotency_key": self.send_idempotency_key,
                 "commit_required_before_send": True,
+                "goal": self.goal,
+                "action_type": self.action_type,
+                "expected_output": self.expected_output,
+                "acceptance_criteria": list(self.acceptance_criteria),
+                "required_evidence": list(self.required_evidence),
+                "allowed_capabilities": list(self.allowed_capabilities),
+                "budget": self.budget,
             },
         )
 
@@ -105,6 +126,9 @@ class DynamicStepSendBuilder:
             "attempt_no",
             "step_hash",
             "commit_required_before_send",
+            "goal",
+            "action_type",
+            "acceptance_criteria",
         }
         missing = sorted(required - set(payload))
         if missing:
@@ -128,6 +152,13 @@ class DynamicStepSendBuilder:
             step_hash=str(payload["step_hash"]),
             send_idempotency_key=event.idempotency_key,
             commit_required_before_send=bool(payload["commit_required_before_send"]),
+            goal=str(payload["goal"]),
+            action_type=str(payload["action_type"]),
+            expected_output=str(payload.get("expected_output") or ""),
+            acceptance_criteria=tuple(str(item) for item in payload.get("acceptance_criteria") or ()),
+            required_evidence=tuple(str(item) for item in payload.get("required_evidence") or ()),
+            allowed_capabilities=tuple(str(item) for item in payload.get("allowed_capabilities") or ()),
+            budget=dict(payload.get("budget") or {}),
         )
 
 

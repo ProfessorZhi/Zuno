@@ -25,6 +25,13 @@ def _event(**overrides) -> OutboxEventRecord:
         "attempt_no": 1,
         "step_hash": "a" * 64,
         "commit_required_before_send": True,
+        "goal": "collect evidence",
+        "action_type": "model",
+        "expected_output": "result",
+        "acceptance_criteria": ["accepted"],
+        "required_evidence": ["source_span"],
+        "allowed_capabilities": ["cap:model"],
+        "budget": {"units": 1},
     }
     payload.update(overrides.pop("payload", {}))
     return OutboxEventRecord(
