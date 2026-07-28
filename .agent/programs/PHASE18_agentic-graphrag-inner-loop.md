@@ -1,13 +1,23 @@
 # PHASE18 Agentic GraphRAG Inner Loop
 
 phase_id: PHASE18
-status: planned
+status: in_progress
 depends_on: PHASE12, PHASE17
 owner: Module 03 Knowledge / Agentic GraphRAG
 
 ## Phase 目标
 
 实现固定 KnowledgeRetrievalGraph 与动态 RetrievalPlan/Round，支持 Standard/Local/Global/DRIFT/Deep/Agentic Profile、BM25/Vector/Entity/Relation/Path/Community Retriever、Fusion/Rerank、EvidenceLedger/Frontier、Quality Verdict、Corrective Retrieval 和 KnowledgeControlProposal。内层纠正不得直接修改 Agent Plan。
+
+## Goal04 PR D Startup
+
+status: in_progress
+branch: codex/goal04-phase18-agentic-graphrag
+base_main_sha: 4d14ae9e8cd953359c82e51d55279cc123ab47ae
+startup_evidence: docs/evidence/goal04-phase18-startup-audit.md
+alembic_head_at_start: 20260728_49
+
+2026-07-28 PHASE17 PR C 已合并到 main，PHASE18 依赖满足并启动一次性 startup audit。Frozen Gap List 已冻结 P18-T01 至 P18-T08；当前仅表示 PHASE18 in_progress，不表示 completed、quality proven 或 production ready。
 
 ## Minimal Read Set
 

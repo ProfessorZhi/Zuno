@@ -70,7 +70,7 @@ phases:
   - {id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed, depends_on: [PHASE08,PHASE14], tasks: [P15-T01,P15-T02,P15-T03,P15-T04,P15-T05,P15-T06,P15-T07,P15-T08]}
   - {id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed, depends_on: [PHASE05,PHASE06,PHASE15], tasks: [P16-T01,P16-T02,P16-T03,P16-T04,P16-T05,P16-T06,P16-T07,P16-T08]}
   - {id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed, depends_on: [PHASE08,PHASE12,PHASE16], tasks: [P17-T01,P17-T02,P17-T03,P17-T04,P17-T05,P17-T06,P17-T07,P17-T08]}
-  - {id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: planned, depends_on: [PHASE12,PHASE17], tasks: [P18-T01,P18-T02,P18-T03,P18-T04,P18-T05,P18-T06,P18-T07,P18-T08]}
+  - {id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: in_progress, depends_on: [PHASE12,PHASE17], tasks: [P18-T01,P18-T02,P18-T03,P18-T04,P18-T05,P18-T06,P18-T07,P18-T08]}
   - {id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: planned, depends_on: [PHASE10,PHASE13,PHASE16,PHASE18], tasks: [P19-T01,P19-T02,P19-T03,P19-T04,P19-T05,P19-T06,P19-T07,P19-T08]}
   - {id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: planned, depends_on: [PHASE06,PHASE18,PHASE19], tasks: [P20-T01,P20-T02,P20-T03,P20-T04,P20-T05,P20-T06,P20-T07,P20-T08]}
   - {id: PHASE21, file: .agent/programs/PHASE21_fault-recovery-full-e2e-and-cutover.md, state: planned, depends_on: [PHASE10,PHASE19,PHASE20], tasks: [P21-T01,P21-T02,P21-T03,P21-T04,P21-T05,P21-T06,P21-T07,P21-T08]}

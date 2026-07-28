@@ -45,7 +45,7 @@ Current 审计
 
 Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09 completed，PHASE12 completed，PHASE13 completed，PHASE14 completed，PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production ready not established。
 
-Goal04 PR B 已合并：PHASE16 Tool Side Effect and Reconciliation 通过 `d78426171df0591643af12549a36214a24734f7c` 进入 `main`，evidence 覆盖 P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay。Goal04 PR C 已完成分支内 Coordinator Closure：PHASE17 Dynamic Plan DAG and Parallel Control 在 `codex/goal04-phase17-dynamic-plan-dag` 中为 `completed`，closure evidence 为 `docs/evidence/goal04-phase17-coordinator-closure.md`，启动审计与实现证据见 `docs/evidence/goal04-phase17-startup-audit.md`。该状态不表示 Goal04 completed、PHASE18 已启动、quality proven 或 production ready；PHASE18 必须等待 PR C merge 到 main 后才能启动。
+Goal04 PR B 已合并：PHASE16 Tool Side Effect and Reconciliation 通过 `d78426171df0591643af12549a36214a24734f7c` 进入 `main`，evidence 覆盖 P16-T01 至 P16-T22、migration、PostgreSQL integration、fault/security gate、bypass zero guard 和 recovery replay。Goal04 PR C 已合并：PHASE17 Dynamic Plan DAG and Parallel Control 通过 `4d14ae9e8cd953359c82e51d55279cc123ab47ae` 进入 `main`，closure evidence 为 `docs/evidence/goal04-phase17-coordinator-closure.md`，启动审计与实现证据见 `docs/evidence/goal04-phase17-startup-audit.md`。Goal04 PR D 已从该最新 `main` 启动：PHASE18 Agentic GraphRAG Inner Loop 在 `codex/goal04-phase18-agentic-graphrag` 中为 `in_progress`，启动审计见 `docs/evidence/goal04-phase18-startup-audit.md`。该状态不表示 Goal04 completed、PHASE19 已启动、quality proven 或 production ready。
 
 ## 当前阶段
 
@@ -140,4 +140,4 @@ production readiness not established
 已有 PHASE03/04 代码是可复用的部分实现，不代表完整阶段完成。PHASE22 之前不得声明 Agentic GraphRAG 稳定优于 Baseline，不得把文档完成、最小闭环或局部 CI 绿灯写成系统完成。
 
 
-Goal04 PR C closure status: PHASE16 completed and merged at d78426171df0591643af12549a36214a24734f7c; PHASE17 completed on codex/goal04-phase17-dynamic-plan-dag with coordinator approval in docs/evidence/goal04-phase17-coordinator-closure.md; PHASE18 not started until PR C merges to main; current_phase PHASE10; production readiness not established.
+Goal04 PR D startup status: PHASE16 completed and merged at d78426171df0591643af12549a36214a24734f7c; PHASE17 completed and merged at 4d14ae9e8cd953359c82e51d55279cc123ab47ae; PHASE18 in_progress on codex/goal04-phase18-agentic-graphrag with startup audit in docs/evidence/goal04-phase18-startup-audit.md; PHASE19 not started; current_phase PHASE10; production readiness not established.
