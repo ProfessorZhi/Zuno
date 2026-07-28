@@ -245,3 +245,33 @@ python -m pytest tests\integration\agent\test_phase17_dispatch_commit_persistenc
 - 该切片完成 dispatch commit-before-send 的 PostgreSQL migration 和 Repository/UoW 同事务提交；
 - 尚未实现真实 LangGraph Send worker、BranchResultRef、late-result fencing、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
 - PHASE17 仍为 `in_progress`，不能写 completed。
+
+## P17-T06 BranchResultRef and Late-result Fencing Slice
+
+状态：completed-for-current-slice，未构成 PHASE17 closure。
+
+本轮新增 `src/backend/zuno/agent/runtime/planning/branch_result.py`，建立 LangGraph Send worker 返回后的结果入口边界：
+
+- `BranchResultSubmission` 表达 worker 提交的 step_run、PlanVersion、dynamic step、execution epoch、attempt、step hash、object result ref 和 producer；
+- `BranchResultFencer` 只接受当前 active PlanVersion、当前 execution epoch、匹配 StepRun step hash、非终态 StepRun 和 `object://` result ref；
+- stale PlanVersion、stale execution epoch、stale step hash、obsolete/terminal StepRun 和 inline payload 全部拒绝；
+- `BranchResultRef` 是不可变结果引用，保存 object ref 与 result hash，`ref_hash` 防止结果引用被原地篡改；
+- 该切片只处理 Send result ingress 与 late-result fencing，不执行 reducer，不推进 join，不写 StepRun success。
+
+验证：
+
+```text
+python -m pytest tests\agent\dag\test_phase17_branch_result_fencing.py -q -p no:cacheprovider --tb=short
+6 passed
+```
+
+```text
+python -m py_compile src\backend\zuno\agent\runtime\planning\branch_result.py src\backend\zuno\agent\runtime\planning\__init__.py tests\agent\dag\test_phase17_branch_result_fencing.py
+passed
+```
+
+边界：
+
+- 该切片完成 BranchResultRef 和 late-result fencing 的领域判断；
+- 尚未实现真实 LangGraph Send worker、BranchResultRef PostgreSQL persistence、Reducer、JoinEvaluation、Replan Barrier 或 restart parallel recovery；
+- PHASE17 仍为 `in_progress`，不能写 completed。

@@ -304,6 +304,7 @@ def verify_current_program() -> list[str]:
     phase17_evidence = _read(REPO_ROOT / "docs" / "evidence" / "goal04-phase17-startup-audit.md")
     dynamic_dag = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dynamic_dag.py")
     dynamic_admission = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "admission.py")
+    branch_result = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "branch_result.py")
     dynamic_dispatch = _read(REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime" / "planning" / "dispatch.py")
     dispatch_migration = _read(
         REPO_ROOT / "infra" / "db" / "alembic" / "versions" / "20260728_46_phase17_dynamic_dispatch.py"
@@ -316,6 +317,9 @@ def verify_current_program() -> list[str]:
     )
     readyset_admission_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_readyset_admission.py"
+    )
+    branch_result_tests = _read(
+        REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_branch_result_fencing.py"
     )
     dispatch_commit_tests = _read(
         REPO_ROOT / "tests" / "agent" / "dag" / "test_phase17_dispatch_commit.py"
@@ -407,6 +411,8 @@ def verify_current_program() -> list[str]:
                 + dynamic_plan_version_tests
                 + dynamic_admission
                 + readyset_admission_tests
+                + branch_result
+                + branch_result_tests
                 + dynamic_dispatch
                 + dispatch_commit_tests
                 + dispatch_migration
@@ -457,6 +463,16 @@ def verify_current_program() -> list[str]:
                 "record_dispatch_commit",
                 "InfrastructureRepository",
                 "test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow",
+                "P17-T06 BranchResultRef and Late-result Fencing Slice",
+                "BranchResultSubmission",
+                "BranchResultFencer",
+                "BranchResultRef",
+                "REJECTED_STALE_PLAN",
+                "REJECTED_STALE_EPOCH",
+                "REJECTED_STALE_STEP_HASH",
+                "REJECTED_OBSOLETE_STEP_RUN",
+                "REJECTED_INLINE_PAYLOAD",
+                "test_phase17_branch_result_fencer_rejects_late_result_fencing_mismatch",
             ],
             "PHASE17 dynamic DAG startup evidence",
         )

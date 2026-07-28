@@ -108,6 +108,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     admission = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/admission.py"
     ).read_text(encoding="utf-8")
+    branch_result = (
+        REPO_ROOT / "src/backend/zuno/agent/runtime/planning/branch_result.py"
+    ).read_text(encoding="utf-8")
     dispatch = (
         REPO_ROOT / "src/backend/zuno/agent/runtime/planning/dispatch.py"
     ).read_text(encoding="utf-8")
@@ -128,6 +131,9 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     ).read_text(encoding="utf-8")
     admission_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_readyset_admission.py"
+    ).read_text(encoding="utf-8")
+    branch_result_tests = (
+        REPO_ROOT / "tests/agent/dag/test_phase17_branch_result_fencing.py"
     ).read_text(encoding="utf-8")
     dispatch_tests = (
         REPO_ROOT / "tests/agent/dag/test_phase17_dispatch_commit.py"
@@ -174,3 +180,13 @@ def test_phase17_dynamic_dag_startup_evidence_is_guarded() -> None:
     assert "def record_dispatch_commit" in repository
     assert "InfrastructureRepository" in repository
     assert "test_phase17_dispatch_commit_persists_step_runs_and_outbox_in_one_uow" in persistence_tests
+    assert "P17-T06 BranchResultRef and Late-result Fencing Slice" in evidence
+    assert "class BranchResultSubmission" in branch_result
+    assert "class BranchResultFencer" in branch_result
+    assert "class BranchResultRef" in branch_result
+    assert "REJECTED_STALE_PLAN" in branch_result
+    assert "REJECTED_STALE_EPOCH" in branch_result
+    assert "REJECTED_STALE_STEP_HASH" in branch_result
+    assert "REJECTED_OBSOLETE_STEP_RUN" in branch_result
+    assert "REJECTED_INLINE_PAYLOAD" in branch_result
+    assert "test_phase17_branch_result_fencer_rejects_late_result_fencing_mismatch" in branch_result_tests
