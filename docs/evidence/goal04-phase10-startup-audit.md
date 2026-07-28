@@ -1219,7 +1219,27 @@ passed
 仍未完成：
 
 - 本轮新增的是 Browser full-e2e cutover smoke gate，不等于已经完成并通过完整 PHASE10 closure；
-- Alembic upgrade head 需要在数据库 stamp 与当前分支 revision graph 一致后重跑；
+- PHASE10 仍为 `in_progress`，不能写 completed。
+
+## P10-T28 Branch-Scoped Alembic Upgrade Gate
+
+本轮未修改默认 `zuno` 数据库的 `alembic_version=20260727_45` stamp。为避免把外部分支残留 stamp 当作当前分支 schema 失败，使用临时 PostgreSQL 数据库和临时 `ZUNO_CONFIG` 验证当前分支 revision graph：
+
+```text
+database=zuno_phase10_alembic_30ac1525d7ee4406a3e02ac2a7f4ecd8
+python -m alembic -c infra/db/alembic.ini upgrade head
+upgrade_returncode=0
+python -m alembic -c infra/db/alembic.ini current
+current_returncode=0
+20260727_43 (head)
+cleanup=dropped
+```
+
+结论：
+
+- 当前分支 Alembic 单一 head 仍为 `20260727_43`；
+- 当前分支可从空 PostgreSQL 数据库 `upgrade head` 到 `20260727_43`；
+- 默认本地 `zuno` 数据库的 `20260727_45` stamp 仍是外部环境残留，不再作为 PHASE10 分支迁移 gate 的失败证据；
 - PHASE10 仍为 `in_progress`，不能写 completed。
 
 ## 本轮验证
@@ -1268,6 +1288,8 @@ python tools\scripts\verify_phase10_product_cutover_evidence.py
 python -m pytest tests\tools\test_launcher_scripts.py::test_full_e2e_smoke_covers_product_runtime_cutover_modes -q
 python -m py_compile tools\qa\full-e2e\full_e2e.py tools\scripts\verify_phase10_product_cutover_evidence.py
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
+ZUNO_CONFIG=<temp phase10 config> python -m alembic -c infra/db/alembic.ini upgrade head
+ZUNO_CONFIG=<temp phase10 config> python -m alembic -c infra/db/alembic.ini current
 ```
 
 未通过 / 未完成：
@@ -1283,12 +1305,14 @@ resolved_by: formal helper package plus quoted Start-Process path plus generated
 
 ```text
 command: python -m alembic -c infra\db\alembic.ini upgrade head
-exception: Can't locate revision identified by '20260727_45'
+status: resolved with branch-scoped temporary PostgreSQL database
+previous_exception: Can't locate revision identified by '20260727_45'
 first relevant stack frame: Alembic version resolution before upgrade execution
 environment signature: local PostgreSQL alembic_version contains 20260727_45; current branch tracked Alembic head is 20260727_43
-唯一恢复动作: 将本机数据库 stamp 恢复到当前分支 revision graph 后，从 Alembic upgrade head 命令继续。
+recovery_used: create temporary PostgreSQL database, point Alembic at it with ZUNO_CONFIG, run upgrade head/current, then drop the temporary database
+result: 20260727_43 (head)
 ```
 
 ```text
-Browser cutover smoke gate 已补入 full-e2e helper，且完整 run-full-e2e-smoke.ps1 已在 Docker Desktop 恢复、PostgreSQL/backend/frontend/QA API/auth state 可用后重跑通过；PHASE10 仍为 in_progress，不能写 completed。
+Browser cutover smoke gate 已补入 full-e2e helper，完整 run-full-e2e-smoke.ps1 已在 Docker Desktop 恢复、PostgreSQL/backend/frontend/QA API/auth state 可用后重跑通过；当前分支 Alembic upgrade head/current 已在临时 PostgreSQL 数据库通过并清理临时库；PHASE10 仍为 in_progress，不能写 completed。
 ```

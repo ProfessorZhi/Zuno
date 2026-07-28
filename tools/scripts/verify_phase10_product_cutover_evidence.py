@@ -142,8 +142,10 @@ def verify_phase10_product_cutover_evidence() -> list[str]:
         "P10-T24 Product API Cutover Command Contract",
         "P10-T25 Product Runtime Cutover Handoff Context",
         "P10-T27 Browser Product Runtime Cutover Smoke Gate",
+        "P10-T28 Branch-Scoped Alembic Upgrade Gate",
         "PHASE10 仍为 `in_progress`",
-        "Alembic upgrade head",
+        "20260727_43 (head)",
+        "temporary PostgreSQL database",
         "shadow/canary/default-new/rollback 仍缺完整闭环",
     ):
         _require(evidence, phrase, "PHASE10 cutover evidence", errors)
