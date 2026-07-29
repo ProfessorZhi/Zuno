@@ -81,19 +81,22 @@ pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
 docker compose --progress=plain -f infra/docker/docker-compose.yml build backend
 ```
 
-该命令已经通过 `apt`、`pip`、`chromium` 和 `chromium-driver` 下载/安装阶段，但在 Docker Desktop 导出层失败：
+后续在清理 BuildKit 缓存并重启 Docker Desktop / WSL 后，`docker compose --progress=plain -f infra/docker/docker-compose.yml build backend` 已成功完成，生成 `docker-backend:latest`：
 
 ```text
-failed to create temp dir: mkdir /var/lib/desktop-containerd/daemon/tmpmounts/containerd-mount1352738550: input/output error
+Image docker-backend Built
 ```
 
-重启 Docker Desktop 与 `wsl --shutdown` 后，`docker info` 仍返回：
+容器内检查也通过：
 
 ```text
-500 Internal Server Error
-```
+docker run --rm docker-backend python -c "import shutil; print('chrome', shutil.which('google-chrome'), shutil.which('chromium')); print('chromedriver', shutil.which('chromedriver'))"
+chrome /usr/bin/google-chrome /usr/bin/chromium
+chromedriver /usr/bin/chromedriver
 
-因此当前无法把这次后端构建收尾成一个可复现的成功镜像证据。
+docker run --rm docker-backend python -c "import zuno.main; print('backend_import_ok')"
+backend_import_ok
+```
 
 未完成的完整 Web stack / browser smoke：
 
@@ -108,4 +111,4 @@ cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
 
 本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝、产品模式优先级和 Docker frontend build 继续可执行。PHASE21 其余完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
 
-当前阻塞点是 Docker Desktop Linux engine 的内容存储/导出错误，而不是仓库内构建参数或依赖源选择。仓库侧默认路径已修到可持续推进的位置，但还缺一个健康的 Docker 引擎来完成镜像导出与后续 Web stack 启动证据。
+当前不再阻塞在后端镜像构建本身。后续仍缺完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 的真实证据。
