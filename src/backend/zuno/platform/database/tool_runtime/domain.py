@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import Connection, Engine, text
@@ -81,6 +82,26 @@ class ToolExecutionReceiptInput:
     effect_certainty: str
     append_only_generation: int
     receipt_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolSandboxSessionInput:
+    session_ref: str
+    tenant_id: str
+    workspace_id: str
+    run_id: str
+    thread_id: str
+    call_id: str
+    sandbox_profile_id: str
+    adapter_tier: str
+    session_version: int
+    profile_hash: str
+    limits_hash: str
+    session_hash: str
+    state_integrity_hash: str
+    session_size_bytes: int
+    expires_at: datetime
+
 
 @dataclass(frozen=True, slots=True)
 class ToolSandboxReceiptInput:
@@ -621,6 +642,61 @@ class ToolRepository:
                 "redacted_payload_hash": canonical_sha256(observation.payload),
             },
         )
+
+    def record_sandbox_session(self, session: ToolSandboxSessionInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_sandbox_sessions (
+                    session_ref, tenant_id, workspace_id, run_id, thread_id, call_id,
+                    sandbox_profile_id, adapter_tier, session_version,
+                    profile_hash, limits_hash, session_hash, state_integrity_hash,
+                    session_size_bytes, expires_at
+                )
+                VALUES (
+                    :session_ref, :tenant_id, :workspace_id, :run_id, :thread_id, :call_id,
+                    :sandbox_profile_id, :adapter_tier, :session_version,
+                    :profile_hash, :limits_hash, :session_hash, :state_integrity_hash,
+                    :session_size_bytes, :expires_at
+                )
+                ON CONFLICT (session_ref) DO NOTHING
+                """
+            ),
+            {
+                "session_ref": session.session_ref,
+                "tenant_id": session.tenant_id,
+                "workspace_id": session.workspace_id,
+                "run_id": session.run_id,
+                "thread_id": session.thread_id,
+                "call_id": session.call_id,
+                "sandbox_profile_id": session.sandbox_profile_id,
+                "adapter_tier": session.adapter_tier,
+                "session_version": session.session_version,
+                "profile_hash": session.profile_hash,
+                "limits_hash": session.limits_hash,
+                "session_hash": session.session_hash,
+                "state_integrity_hash": session.state_integrity_hash,
+                "session_size_bytes": session.session_size_bytes,
+                "expires_at": session.expires_at,
+            },
+        )
+
+    def get_sandbox_session(self, *, session_ref: str) -> dict[str, Any] | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT
+                    session_ref, tenant_id, workspace_id, run_id, thread_id, call_id,
+                    sandbox_profile_id, adapter_tier, session_version,
+                    profile_hash, limits_hash, session_hash, state_integrity_hash,
+                    session_size_bytes, expires_at
+                FROM tool_sandbox_sessions
+                WHERE session_ref = :session_ref
+                """
+            ),
+            {"session_ref": session_ref},
+        ).mappings().one_or_none()
+        return dict(row) if row is not None else None
 
     def record_execution_receipt(self, receipt: ToolExecutionReceiptInput) -> None:
         self.connection.execute(
@@ -1237,6 +1313,7 @@ __all__ = [
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
     "ToolSandboxReceiptInput",
+    "ToolSandboxSessionInput",
     "ToolRepository",
     "ToolRuntimeConflict",
     "ToolUnitOfWork",

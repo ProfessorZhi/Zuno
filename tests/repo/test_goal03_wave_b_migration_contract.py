@@ -187,19 +187,26 @@ def test_phase16_compensation_migration_contains_manual_assessment_and_compensat
 def test_goal05_sandbox_migration_contains_append_only_receipt_table() -> None:
     text = GOAL05_SANDBOX_MIGRATION.read_text(encoding="utf-8")
     required_fragments = (
+        "tool_sandbox_sessions",
         "tool_sandbox_receipts",
         "sandbox_profile_id",
         "adapter_tier",
         "session_ref",
+        "session_size_bytes",
+        "expires_at",
         "profile_hash",
         "limits_hash",
         "session_hash",
         "state_integrity_hash",
+        "uq_tool_sandbox_sessions_scope",
+        "ck_tool_sandbox_sessions_session_version",
+        "ck_tool_sandbox_sessions_size",
         "adapter_tier in ('WASM_PYTHON','OCI_PROCESS')",
         "isolation_verified = true",
         "allowlist_enforced = true",
         "fk_tool_sandbox_receipts_prepared",
         "fk_tool_sandbox_receipts_attempt",
+        "fk_tool_sandbox_receipts_session",
     )
 
     for fragment in required_fragments:

@@ -14,6 +14,7 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 - `SandboxAdapterRegistry` 新增真实 `execute()` runner contract。
 - `SandboxAdapterRegistry.execute()` 在 runner 启动前校验 Stateful Session 的 hash、版本、过期时间和大小上限。
 - `SandboxAdapterRegistry.prepare()` 写入默认 session store；`execute()` 要求 session store 中存在匹配记录，防止只靠客户端 dispatch payload 自证。
+- `ToolInvocationGateway` 默认使用 Tool Runtime DB-backed sandbox session store；migration `20260728_52` 新增 `tool_sandbox_sessions`，并用 FK 将 `tool_sandbox_receipts.session_ref` 绑定到 session。
 - `SandboxAdapterRegistry.execute()` 还校验 runner 输出结构、session ref、adapter tier 与输出大小上限。
 - WASM Python runner 使用 Deno 权限边界，并要求显式 Pyodide entrypoint；缺 Deno 或缺 Pyodide entrypoint fail-closed。
 - WASM Python runner 将显式 file path allowlist 映射到 `--allow-read`，将显式 domain allowlist 映射到 `--allow-net`；无 domain allowlist 时保持 `--deny-net`。
@@ -42,7 +43,7 @@ pytest -q tests/capability/test_phase15_agent_sandbox.py -p no:cacheprovider
 Result:
 
 ```text
-14 passed
+15 passed
 ```
 
 Environment probes:

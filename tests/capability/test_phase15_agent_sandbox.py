@@ -75,6 +75,7 @@ class _CompletedProcess:
 class _RecordingToolUnitOfWork:
     def __init__(self) -> None:
         self.attempts: list[object] = []
+        self.sandbox_sessions: list[object] = []
         self.sandbox_receipts: list[object] = []
         self.effect_reconciliations: list[object] = []
         self.effect_receipts: list[object] = []
@@ -92,6 +93,30 @@ class _RecordingToolUnitOfWork:
 
     def record_sandbox_receipt(self, receipt: object) -> None:
         self.sandbox_receipts.append(receipt)
+
+    def record_sandbox_session(self, session: object) -> None:
+        self.sandbox_sessions.append(session)
+
+    def get_sandbox_session(self, *, session_ref: str) -> dict[str, object] | None:
+        for session in self.sandbox_sessions:
+            if getattr(session, "session_ref") == session_ref:
+                return {
+                    "session_ref": getattr(session, "session_ref"),
+                    "tenant_id": getattr(session, "tenant_id"),
+                    "workspace_id": getattr(session, "workspace_id"),
+                    "run_id": getattr(session, "run_id"),
+                    "thread_id": getattr(session, "thread_id"),
+                    "call_id": getattr(session, "call_id"),
+                    "sandbox_profile_id": getattr(session, "sandbox_profile_id"),
+                    "adapter_tier": getattr(session, "adapter_tier"),
+                    "session_version": getattr(session, "session_version"),
+                    "profile_hash": getattr(session, "profile_hash"),
+                    "limits_hash": getattr(session, "limits_hash"),
+                    "session_hash": getattr(session, "session_hash"),
+                    "expires_at": getattr(session, "expires_at"),
+                    "session_size_bytes": getattr(session, "session_size_bytes"),
+                }
+        return None
 
     def publish_tool_version(self, *_args: object, **_kwargs: object) -> None:
         return None
@@ -359,6 +384,34 @@ def test_phase15_gateway_records_sandbox_receipt_when_execution_fails_closed() -
     assert receipt.receipt_payload["sandbox_execution_status"] == "BLOCKED"
     assert receipt.receipt_payload["sandbox_execution"]["sandbox_blocked_reason"] == "sandbox runtime denied"
     assert receipt.receipt_payload["sandbox_execution"]["session_ref"].endswith(":call-sandbox-fail")
+
+
+def test_phase15_gateway_default_registry_persists_sandbox_session_before_execution(monkeypatch) -> None:
+    monkeypatch.setattr("shutil.which", lambda _name: None)
+    unit_of_work = _RecordingToolUnitOfWork()
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: unit_of_work)  # type: ignore[arg-type]
+
+    blocked_reason, sandbox_result = gateway._prepare_sandbox_or_block(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        trace_id="thread-sandbox",
+        call_id="call-db-session",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+        prepared_id="prepared-tool-action:call-db-session",
+        attempt_id="tool-attempt:call-db-session",
+        receipt_id="tool-execution-receipt:call-db-session",
+    )
+
+    assert blocked_reason == "Deno executable unavailable for WASM Python sandbox"
+    assert sandbox_result is None
+    assert len(unit_of_work.sandbox_sessions) == 1
+    session = unit_of_work.sandbox_sessions[0]
+    assert session.session_ref.endswith(":call-db-session")
+    assert session.session_version == 1
+    assert len(session.session_hash) == 64
+    assert len(unit_of_work.sandbox_receipts) == 1
 
 
 def test_phase15_gateway_redacts_sandbox_output_before_receipt_and_observation_boundary() -> None:

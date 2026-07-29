@@ -24,6 +24,7 @@ from zuno.platform.database.tool_runtime import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolSandboxReceiptInput,
+    ToolSandboxSessionInput,
     ToolUnitOfWork,
     ToolVersionInput,
 )
@@ -34,7 +35,7 @@ from zuno.platform.security import (
     redact_sensitive_payload,
 )
 from .effect_policy import classify_tool_effect
-from .sandbox import SandboxAdapterRegistry, SandboxExecutionResult, SandboxPolicyViolation
+from .sandbox import SandboxAdapterRegistry, SandboxExecutionResult, SandboxPolicyViolation, SandboxSessionRecord, SandboxSessionStore
 
 
 class ToolEffectUnknownError(RuntimeError):
@@ -77,6 +78,61 @@ class _ExecutePrerequisiteResult:
     fencing_epoch: int = 0
 
 
+class _ToolRuntimeSandboxSessionStore(SandboxSessionStore):
+    def __init__(self, unit_of_work_factory: Callable[[], ToolUnitOfWork]) -> None:
+        self._unit_of_work_factory = unit_of_work_factory
+
+    def put(self, record: SandboxSessionRecord) -> None:
+        with self._unit_of_work_factory() as repo:
+            repo.record_sandbox_session(
+                ToolSandboxSessionInput(
+                    session_ref=record.session_ref,
+                    tenant_id=record.tenant_id,
+                    workspace_id=record.workspace_id,
+                    run_id=record.run_id,
+                    thread_id=record.thread_id,
+                    call_id=record.call_id,
+                    sandbox_profile_id=record.sandbox_profile_id,
+                    adapter_tier=record.adapter_tier,
+                    session_version=record.session_version,
+                    profile_hash=record.profile_hash,
+                    limits_hash=record.limits_hash,
+                    session_hash=record.session_hash,
+                    state_integrity_hash=canonical_sha256(
+                        {
+                            "session_hash": record.session_hash,
+                            "profile_hash": record.profile_hash,
+                            "limits_hash": record.limits_hash,
+                        }
+                    ),
+                    session_size_bytes=record.session_size_bytes,
+                    expires_at=record.expires_at,
+                )
+            )
+
+    def get(self, session_ref: str) -> SandboxSessionRecord | None:
+        with self._unit_of_work_factory() as repo:
+            row = repo.get_sandbox_session(session_ref=session_ref)
+        if row is None:
+            return None
+        return SandboxSessionRecord(
+            session_ref=str(row["session_ref"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            run_id=str(row["run_id"]),
+            thread_id=str(row["thread_id"]),
+            call_id=str(row["call_id"]),
+            sandbox_profile_id=str(row["sandbox_profile_id"]),
+            adapter_tier=str(row["adapter_tier"]),
+            session_version=int(row["session_version"]),
+            profile_hash=str(row["profile_hash"]),
+            limits_hash=str(row["limits_hash"]),
+            session_hash=str(row["session_hash"]),
+            expires_at=row["expires_at"],
+            session_size_bytes=int(row["session_size_bytes"]),
+        )
+
+
 class ToolInvocationGateway:
     def __init__(
         self,
@@ -89,7 +145,9 @@ class ToolInvocationGateway:
         self._unit_of_work_factory = unit_of_work_factory
         self._security_unit_of_work_factory = security_unit_of_work_factory
         self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
-        self._sandbox_registry = sandbox_registry or SandboxAdapterRegistry()
+        self._sandbox_registry = sandbox_registry or SandboxAdapterRegistry(
+            session_store=_ToolRuntimeSandboxSessionStore(unit_of_work_factory)
+        )
 
     async def invoke_readonly(
         self,

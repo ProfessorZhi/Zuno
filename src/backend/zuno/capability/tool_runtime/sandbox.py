@@ -100,6 +100,13 @@ class SandboxExecutionResult:
 @dataclass(frozen=True, slots=True)
 class SandboxSessionRecord:
     session_ref: str
+    tenant_id: str
+    workspace_id: str
+    run_id: str
+    thread_id: str
+    call_id: str
+    sandbox_profile_id: str
+    adapter_tier: str
     session_version: int
     session_hash: str
     profile_hash: str
@@ -352,6 +359,13 @@ class SandboxAdapterRegistry:
         self._session_store.put(
             SandboxSessionRecord(
                 session_ref=session_ref,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                run_id=run_id,
+                thread_id=thread_id,
+                call_id=call_id,
+                sandbox_profile_id=profile.profile_id,
+                adapter_tier=profile.adapter_tier,
                 session_version=1,
                 session_hash=session_hash,
                 profile_hash=profile_hash,

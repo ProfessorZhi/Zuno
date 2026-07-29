@@ -94,6 +94,7 @@ def engine(migrated_postgres):
                     tool_effect_reconciliations,
                     tool_effect_receipts,
                     tool_sandbox_receipts,
+                    tool_sandbox_sessions,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
                     tool_execution_receipts,
