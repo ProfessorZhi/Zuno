@@ -1043,6 +1043,8 @@ def _product_mode_for_retrieval_profile(
     if retrieval_profile is None:
         return default_product_mode
     profile = RetrievalProfile(retrieval_profile)
+    if default_product_mode is ProductMode.ENHANCED:
+        return ProductMode.ENHANCED
     if profile is RetrievalProfile.STANDARD:
         return ProductMode.NORMAL
     return ProductMode.ENHANCED

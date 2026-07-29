@@ -22,6 +22,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - Workspace approve API 现在将 `approval_id`、`tool_call_id` 和 `required_approval` 传入默认 service。
 - 工具审批恢复时必须匹配当前 pending tool request；旧 `approval_id` 或错误 tool call 会产生 `approval_replay_rejected` 事件并保持 `approval_waiting`。
 - 修复 ToolRuntime 在 FastAPI async endpoint 内调用 side-effect gateway 时的 event loop 嵌套问题；已有 event loop 时通过短生命周期线程执行网关协程。
+- 修复知识检索产品模式优先级：显式 `contract_review` / `enterprise_kb` 不再被默认 `standard` retrieval profile 降级为 `normal/basic`。
 
 ## Verification
 
@@ -33,6 +34,7 @@ pytest -q tests/capability/test_capability_skill_layer.py tests/agent/dag/test_p
 pytest -q tests/agent/runtime/test_runtime_restart_persistence.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_real_execution.py -p no:cacheprovider
 pytest -q tests/fault/security/test_phase05_security_pre_effect_faults.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/security/test_phase05_security_eval_gate.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_task_runtime.py -k "tool_approval or security_approval_facts or approval_replay or approval_resume" -p no:cacheprovider
+pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py tests/api/test_knowledge_api_contract.py tests/agent/test_agentic_retrieval_runtime.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/retrieval/test_retrieval_planner.py -p no:cacheprovider
 ```
 
 ## Result
@@ -45,10 +47,11 @@ pytest -q tests/api/test_workspace_task_runtime.py -k "tool_approval or security
 7 passed
 6 passed
 5 passed, 15 deselected
+58 passed
 ```
 
 ## Boundary
 
-本切片只证明 Capability / Agent / Workspace approval 三条默认路径的攻击面约束、crash 恢复语义和旧授权重放拒绝继续可执行。PHASE21 其余 E2E、Web/Desktop、Delete/Restore、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
+本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝和产品模式优先级继续可执行。PHASE21 其余 E2E、Web/Desktop、Delete/Restore、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
 
 完整 `tests/api/test_workspace_task_runtime.py` 当前仍存在独立检索断言漂移：`test_workspace_task_runtime_answers_from_ingested_index_with_citations` 期望 `resolved_methods == ["local", "basic"]`，当前运行时返回 `["basic"]`。本证据不使用该全文件运行作为通过证据，后续 PHASE21 / PHASE22 全验证必须单独处理。
