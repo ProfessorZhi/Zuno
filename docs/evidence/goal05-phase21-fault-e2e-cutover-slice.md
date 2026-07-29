@@ -46,12 +46,9 @@ pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runt
 20 passed
 7 passed
 6 passed
-5 passed, 15 deselected
 58 passed
 ```
 
 ## Boundary
 
 本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝和产品模式优先级继续可执行。PHASE21 其余 E2E、Web/Desktop、Delete/Restore、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
-
-完整 `tests/api/test_workspace_task_runtime.py` 当前仍存在独立检索断言漂移：`test_workspace_task_runtime_answers_from_ingested_index_with_citations` 期望 `resolved_methods == ["local", "basic"]`，当前运行时返回 `["basic"]`。本证据不使用该全文件运行作为通过证据，后续 PHASE21 / PHASE22 全验证必须单独处理。
