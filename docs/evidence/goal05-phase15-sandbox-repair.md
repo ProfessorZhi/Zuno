@@ -40,14 +40,16 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 
 ```text
 python -m py_compile src/backend/zuno/capability/tool_runtime/sandbox.py src/backend/zuno/capability/tool_runtime/invocation_gateway.py src/backend/zuno/capability/tool_runtime/__init__.py src/backend/zuno/platform/database/tool_runtime/domain.py src/backend/zuno/platform/database/tool_runtime/__init__.py tests/capability/test_phase15_agent_sandbox.py tests/integration/test_goal03_wave_b_persistence.py
-pytest -q tests/capability/test_phase15_agent_sandbox.py tests/repo/test_goal03_wave_b_migration_contract.py -p no:cacheprovider
+pytest -q tests/capability/test_phase15_agent_sandbox.py tests/repo/test_goal03_wave_b_migration_contract.py tests/integration/test_goal03_wave_b_persistence.py -p no:cacheprovider
 ```
 
 Result:
 
 ```text
-24 passed
+24 passed, 25 errors
 ```
+
+错误均来自 `tests/integration/test_goal03_wave_b_persistence.py` 的会话级 PostgreSQL 迁移 fixture，当前机器无法连接 `localhost:5432`。
 
 Environment probes:
 
