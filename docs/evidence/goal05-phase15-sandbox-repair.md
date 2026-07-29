@@ -21,11 +21,13 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/52
 - `SandboxAdapterRegistry.execute()` 还校验 runner 输出结构、session ref、adapter tier 与输出大小上限。
 - WASM Python runner 使用 Deno 权限边界，并要求显式 Pyodide entrypoint；缺 Deno 或缺 Pyodide entrypoint fail-closed。
 - WASM Python runner 将显式 file path allowlist 映射到 `--allow-read`，将显式 domain allowlist 映射到 `--allow-net`；无 domain allowlist 时保持 `--deny-net`。
+- Pyodide 入口不再只放行单个 loader 文件，而是放行其所在目录，避免真实 WASM runtime 在加载邻接 `.wasm`/资源文件时因权限不足失败。
 - OCI Process runner 使用 Docker CLI 短生命周期容器命令边界：`--rm`、`--network none`、`--read-only`、`--cap-drop ALL`、`no-new-privileges`、non-root、tmpfs workspace、memory/cpu/pid/output/time limit。
 - OCI Process runner 的 `/tmp` 与 `/workspace` 使用独立 tmpfs，显式 `mode=1777`，保证 non-root attempt 能写入隔离工作区但不能写宿主或只读 root filesystem。
 - OCI Process runner 默认 `--network none`；存在显式 egress allowlist 时必须提供 proxy，否则 fail-closed；提供 proxy 时注入 `HTTP_PROXY`、`HTTPS_PROXY` 和 `ZUNO_EGRESS_ALLOWLIST`，且不允许宿主 volume/mount。
 - Deno 和 Docker runner 调用外部进程时显式使用空环境变量，不继承宿主 env；容器内 proxy 只通过 Docker `--env` 显式注入。
 - 新增真实 Docker execution 测试 `test_phase15_oci_runner_executes_real_container_with_isolated_defaults`：使用 `alpine:3.20` 短生命周期容器证明 uid `65532`、宿主 env 不泄露、root filesystem read-only、`/workspace` tmpfs 可写、默认网络不可用。
+- 新增 Deno 权限回归测试 `test_phase15_deno_runner_allows_pyodide_entrypoint_directory_not_only_loader_file`，避免把 Pyodide 资源加载错误地收缩成单文件 allow-read。
 - `ToolInvocationGateway` 对 Python、CLI、OpenAPI、Browser、Shell、Git 等 sandboxable adapter 在 provider executor 前执行 sandbox；sandbox 失败记录 `NOT_DISPATCHED`，不会调用 provider executor。
 - `ToolInvocationGateway` 不再把 sandbox output 直接作为 readonly/domain result；sandbox output 只能进入 `ToolObservation` / receipt 边界，真实 result 必须来自 provider executor。
 - Sandbox execute 失败后仍写入 `tool_sandbox_receipts`，记录 `sandbox_execution_status=BLOCKED` 和 blocked reason。
@@ -38,6 +40,7 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/52
 未完成：
 
 - 当前机器没有 Deno，因此不能证明 Deno + Pyodide/WASM 真实执行。
+- 本轮多次下载 Deno 官方 Windows zip 被网络中断，未能得到可执行的本地 Deno 二进制；这仍是 WASM 真实执行的外部阻塞。
 - Docker daemon 已启动，Docker CLI 与 Zuno Postgres 可用；本轮已用隔离数据库 `zuno_goal05_phase15` 跑通 migration-backed integration。
 - OCI Process Sandbox 已有真实 Docker container execution 证据；PHASE15 仍不能关闭的剩余原因是 WASM Python 缺少 Deno + Pyodide 真实执行证据。
 
@@ -51,7 +54,7 @@ pytest -q tests/capability/test_phase15_agent_sandbox.py tests/repo/test_goal03_
 Result:
 
 ```text
-50 passed
+51 passed
 ```
 
 运行环境：
@@ -76,6 +79,7 @@ Deno CommandNotFoundException
 Docker CLI / daemon 29.4.0 available
 zuno-postgres healthy on localhost:5432
 alpine:3.20 image available for real OCI sandbox execution
+pyodide entrypoint directory permissions verified by unit tests
 ```
 
 ## Closure Decision

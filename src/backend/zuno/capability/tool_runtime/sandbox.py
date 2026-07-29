@@ -540,7 +540,7 @@ def _deno_read_permission_path(entrypoint: str) -> str:
 
 
 def _deno_permission_args(*, script_path: str, pyodide_entrypoint: str, profile: dict[str, Any]) -> list[str]:
-    read_paths = [script_path, _deno_read_permission_path(pyodide_entrypoint)]
+    read_paths = [script_path, _deno_pyodide_read_permission_path(pyodide_entrypoint)]
     for allowed_path in profile.get("read_allowlist", []):
         permission_path = _deno_optional_permission_path(str(allowed_path))
         if permission_path:
@@ -560,6 +560,13 @@ def _deno_permission_args(*, script_path: str, pyodide_entrypoint: str, profile:
     else:
         permissions.append("--deny-net")
     return permissions
+
+
+def _deno_pyodide_read_permission_path(entrypoint: str) -> str:
+    path = _deno_read_permission_path(entrypoint)
+    if path.endswith((".mjs", ".js")):
+        return path.rsplit("/", 1)[0] if "/" in path else "."
+    return path
 
 
 def _deno_optional_permission_path(path: str) -> str:
