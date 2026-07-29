@@ -196,12 +196,16 @@ class OciProcessSandboxRunner(SandboxRunner):
         if not command:
             raise SandboxPolicyViolation("OCI process sandbox requires explicit command payload")
         profile = dispatch.dispatch_payload["profile"]
+        egress_allowlist = [str(domain) for domain in profile["egress_allowlist"] if str(domain).strip()]
+        egress_proxy_url = str(args.get("egress_proxy_url") or args.get("egress_proxy") or "").strip()
+        if egress_allowlist and not egress_proxy_url:
+            raise SandboxPolicyViolation("OCI process sandbox egress allowlist requires a configured proxy")
         docker_command = [
             docker_path,
             "run",
             "--rm",
             "--network",
-            "none",
+            "bridge" if egress_proxy_url else "none",
             "--read-only",
             "--cap-drop",
             "ALL",
@@ -221,13 +225,12 @@ class OciProcessSandboxRunner(SandboxRunner):
             "/workspace:rw,nosuid,size=128m",
             "--workdir",
             "/workspace",
+            *_oci_proxy_env_args(egress_proxy_url=egress_proxy_url, egress_allowlist=egress_allowlist),
             self._image,
             "sh",
             "-lc",
             command,
         ]
-        if profile["egress_allowlist"]:
-            raise SandboxPolicyViolation("OCI process sandbox egress allowlist requires a configured proxy")
         try:
             completed = subprocess.run(
                 docker_command,
@@ -484,6 +487,22 @@ def _deno_optional_permission_path(path: str) -> str:
     if parsed.scheme:
         return ""
     return path
+
+
+def _oci_proxy_env_args(*, egress_proxy_url: str, egress_allowlist: Sequence[str]) -> list[str]:
+    if not egress_proxy_url:
+        return []
+    allowlist = ",".join(str(domain) for domain in egress_allowlist)
+    return [
+        "--env",
+        f"HTTP_PROXY={egress_proxy_url}",
+        "--env",
+        f"HTTPS_PROXY={egress_proxy_url}",
+        "--env",
+        "NO_PROXY=localhost,127.0.0.1",
+        "--env",
+        f"ZUNO_EGRESS_ALLOWLIST={allowlist}",
+    ]
 
 
 def _deno_pyodide_runner_script() -> str:

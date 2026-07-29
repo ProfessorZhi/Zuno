@@ -386,3 +386,61 @@ def test_phase15_deno_runner_maps_explicit_path_and_domain_allowlists_to_permiss
     assert "workspace://logical/input.csv" not in allow_read
     assert "--allow-net=example.com" in captured_command
     assert "--deny-net" not in captured_command
+
+
+def test_phase15_oci_runner_requires_proxy_for_explicit_egress_allowlist(monkeypatch) -> None:
+    monkeypatch.setattr("shutil.which", lambda name: f"C:/tools/{name}.exe")
+    dispatch = SandboxAdapterRegistry().prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-oci-egress-no-proxy",
+        tool_name="compiler.run",
+        adapter_kind="CLI",
+        args={"command": "python -V", "allowed_domains": ["pypi.org"]},
+    )
+
+    with pytest.raises(SandboxPolicyViolation, match="egress allowlist requires a configured proxy"):
+        OciProcessSandboxRunner().execute(dispatch=dispatch, args={"command": "python -V"})
+
+
+def test_phase15_oci_runner_uses_short_lived_container_and_proxy_env_without_host_mounts(monkeypatch) -> None:
+    captured_command: list[str] = []
+    monkeypatch.setattr("shutil.which", lambda name: f"C:/tools/{name}.exe")
+
+    def fake_run(command: list[str], **_kwargs: object) -> _CompletedProcess:
+        captured_command.extend(command)
+        return _CompletedProcess(stdout="Python 3.12")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    dispatch = SandboxAdapterRegistry().prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-oci-proxy",
+        tool_name="compiler.run",
+        adapter_kind="CLI",
+        args={"command": "python -V", "allowed_domains": ["pypi.org"]},
+    )
+
+    result = OciProcessSandboxRunner().execute(
+        dispatch=dispatch,
+        args={"command": "python -V", "egress_proxy_url": "http://egress-proxy.local:8080"},
+    )
+
+    assert result.status == "SUCCEEDED"
+    assert captured_command[:3] == ["C:/tools/docker.exe", "run", "--rm"]
+    assert captured_command[captured_command.index("--network") + 1] == "bridge"
+    assert "--read-only" in captured_command
+    assert captured_command[captured_command.index("--cap-drop") + 1] == "ALL"
+    assert captured_command[captured_command.index("--security-opt") + 1] == "no-new-privileges"
+    assert captured_command[captured_command.index("-u") + 1] == "65532:65532"
+    assert "--tmpfs" in captured_command
+    assert "--mount" not in captured_command
+    assert "-v" not in captured_command
+    assert "--volume" not in captured_command
+    assert "HTTP_PROXY=http://egress-proxy.local:8080" in captured_command
+    assert "HTTPS_PROXY=http://egress-proxy.local:8080" in captured_command
+    assert "ZUNO_EGRESS_ALLOWLIST=pypi.org" in captured_command
