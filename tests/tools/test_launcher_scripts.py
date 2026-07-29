@@ -296,11 +296,21 @@ def test_docker_stack_includes_neo4j_runtime():
     local_config = (REPO_ROOT / "infra" / "docker" / "docker_config.example.yaml").read_text(encoding="utf-8")
 
     assert "\n  neo4j:\n" in compose
-    assert "image: neo4j:5-community" in compose
+    assert "image: ${NEO4J_IMAGE:-neo4j:5-community}" in compose
     assert "neo4j:\n        condition: service_healthy" in compose
     assert "neo4j:" in local_config
     assert "enabled: true" in local_config
     assert "bolt://neo4j:7687" in local_config
+
+
+def test_elasticsearch_is_optional_when_disabled_in_default_config():
+    compose = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+    local_config = (REPO_ROOT / "infra" / "docker" / "docker_config.example.yaml").read_text(encoding="utf-8")
+
+    assert "enable_elasticsearch: false" in local_config
+    assert "profiles:\n      - elasticsearch" in compose
+    assert "image: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch:7.17.24}" in compose
+    assert "elasticsearch:\n        condition: service_healthy" not in compose
 
 
 def test_compose_launchers_remove_orphans_on_lifecycle_commands():

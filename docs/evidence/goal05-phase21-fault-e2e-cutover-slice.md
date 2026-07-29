@@ -113,21 +113,45 @@ cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
 
 当前不再阻塞在后端镜像构建本身。后续仍缺完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 的真实证据。
 
-## 2026-07-29 Docker Desktop 环境现状
+## 2026-07-29 Docker Desktop 与 Registry 状态
 
-本轮已完成安全清理：
+本轮先完成了安全清理：
 
 - `docker builder prune -a -f`
 - `docker image prune -a -f`
 - `diskpart compact vdisk` 压缩 `F:\DockerData\DockerDesktopWSL\disk\docker_data.vhdx`
 
-结果是 F 盘可用空间恢复到约 `15.39GB`，Docker build cache 和未使用镜像也已清空。
+随后通过重建 `docker-desktop` 运行发行版恢复了 Docker Desktop Linux engine。当前 `docker info` 可用，`docker-backend` 与 `docker-frontend` 镜像也已成功重建，并且镜像内自检通过：
 
-但当前 Docker Desktop Linux engine 仍未真正恢复到可用状态，以下现象在最新日志中持续出现：
+```text
+chrome /usr/bin/google-chrome /usr/bin/chromium
+chromedriver /usr/bin/chromedriver
+backend_import_ok
+```
 
-- `wsl-bootstrap` 仍在等待 init control API，`/ping` 长时间返回 `HTTP 500`
-- `monitor.log` 里持续出现 `still waiting for the engine to respond to _ping`
-- `wsl -d docker-desktop` 下 `/opt/docker-desktop/componentsVersion.json` 不存在，`/opt/docker-desktop` 目录为空
-- `docker info`、`docker system df`、`docker images`、`docker ps` 均返回 `request returned 500 Internal Server Error`
+同时修复了 compose 默认路径中的一个真实 gap：
 
-因此，本轮不能把 Docker-based full Web stack / browser smoke 记为已通过；它仍是 PHASE21 的真实阻塞点，不是测试遗漏。
+- `rag.enable_elasticsearch: false` 时，Elasticsearch 不再作为默认启动依赖
+- `elasticsearch` 改为可选 `profile`
+- `backend` / `worker` 不再默认等待 Elasticsearch 健康检查
+
+静态验证通过：
+
+```text
+pytest -q tests/tools/test_launcher_scripts.py tests/storage/test_rag_persistence_setup.py -p no:cacheprovider
+25 passed
+```
+
+但完整 Web stack 仍被外部 registry 阻塞。当前失败点已经从 Docker Desktop engine 转移为基础设施镜像拉取失败：
+
+```text
+cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
+```
+
+最新失败在拉取 `neo4j:5-community` 时返回：
+
+```text
+failed to do request: Head "https://registry-1.docker.io/v2/library/neo4j/manifests/5-community": EOF
+```
+
+这说明 full Web stack / browser smoke 现在仍未完成，但原因是 registry 可达性，不是 Docker engine 假死。
