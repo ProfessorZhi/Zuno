@@ -53,7 +53,7 @@ class SandboxProfile:
         default_factory=lambda: SandboxLimits(
             cpu_seconds=3,
             memory_mb=128,
-            wall_time_seconds=5,
+            wall_time_seconds=30,
             output_bytes=64_000,
             session_bytes=512_000,
             expires_at=datetime.now(tz=UTC) + timedelta(minutes=15),
@@ -535,7 +535,10 @@ def _command_arg(args: dict[str, Any]) -> str:
 def _deno_read_permission_path(entrypoint: str) -> str:
     parsed = urlparse(entrypoint)
     if parsed.scheme == "file":
-        return unquote(parsed.path)
+        path = unquote(parsed.path)
+        if len(path) >= 3 and path[0] == "/" and path[2] == ":":
+            return path[1:]
+        return path
     return entrypoint
 
 
@@ -548,7 +551,6 @@ def _deno_permission_args(*, script_path: str, pyodide_entrypoint: str, profile:
     permissions = [
         "--deny-env",
         "--deny-ffi",
-        "--deny-hrtime",
         f"--allow-read={','.join(read_paths)}",
         "--deny-run",
         "--deny-sys",

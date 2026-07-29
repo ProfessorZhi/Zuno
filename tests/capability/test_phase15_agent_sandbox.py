@@ -4,6 +4,7 @@ import asyncio
 from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 import shutil
 import subprocess
 
@@ -73,6 +74,9 @@ class _CompletedProcess:
         self.stdout = stdout
         self.stderr = stderr
         self.returncode = returncode
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class _RecordingToolUnitOfWork:
@@ -622,6 +626,45 @@ def test_phase15_deno_runner_allows_pyodide_entrypoint_directory_not_only_loader
     allow_read = next(arg for arg in captured_command if arg.startswith("--allow-read="))
     assert "/opt/zuno/pyodide" in allow_read
     assert "/opt/zuno/pyodide/pyodide.mjs" not in allow_read
+
+
+def test_phase15_deno_pyodide_runner_executes_real_wasm_python_session(monkeypatch) -> None:
+    deno_dir = REPO_ROOT / ".local" / "tools" / "deno"
+    deno_executable = deno_dir / "deno.exe"
+    if not deno_executable.exists():
+        deno_executable = deno_dir / "deno"
+    pyodide_entrypoint = REPO_ROOT / ".local" / "tools" / "pyodide" / "314.0.3" / "pyodide.mjs"
+    if not deno_executable.exists():
+        pytest.skip("local Deno executable unavailable for real WASM Python sandbox execution")
+    if not pyodide_entrypoint.exists():
+        pytest.skip("local Pyodide entrypoint unavailable for real WASM Python sandbox execution")
+
+    monkeypatch.setenv("ZUNO_HOST_SECRET", "must-not-leak")
+    dispatch = SandboxAdapterRegistry().prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-wasm-real",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(40 + 2)"},
+    )
+
+    result = DenoPyodideWasmRunner(deno_executable=str(deno_executable)).execute(
+        dispatch=dispatch,
+        args={
+            "code": "import os\nprint(40 + 2)\nprint(os.environ.get('ZUNO_HOST_SECRET', 'host_env_absent'))\n40 + 2",
+            "pyodide_entrypoint": pyodide_entrypoint.as_uri(),
+        },
+    )
+
+    assert result.status == "SUCCEEDED"
+    assert result.output_payload["sandbox_adapter_tier"] == "WASM_PYTHON"
+    assert result.output_payload["session_ref"] == dispatch.session_ref
+    assert "42" in result.stdout
+    assert "host_env_absent" in result.stdout
+    assert "must-not-leak" not in result.stdout
 
 
 def test_phase15_oci_runner_requires_proxy_for_explicit_egress_allowlist(monkeypatch) -> None:

@@ -1,13 +1,13 @@
 # Goal05 PHASE15 Sandbox Repair Evidence
 
-status: repair_partial_wasm_runtime_blocked
+status: repair_complete
 date: 2026-07-29
 branch: codex/goal05-phase15-sandbox-repair
 base_pr: https://github.com/ProfessorZhi/Zuno/pull/52
 
 ## Repair Scope
 
-本修复只针对 frozen gap ledger 中的 PHASE15 Agent Sandbox Gap。没有重复全仓审计，也没有启动 PHASE20。
+本修复只针对 frozen gap ledger 中的 PHASE15 Agent Sandbox Gap。没有重复全仓审计；PHASE15 重新关闭后，Program 状态已推进到 PHASE20。
 
 已完成：
 
@@ -37,12 +37,11 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/52
 - `zuno.platform.database` 初始化现在读取标准 `ZUNO_CONFIG` / `.local/config/zuno/config.local.yaml` 解析路径，防止迁移、测试 fixture 与默认 runtime security/infrastructure UoW 混用不同数据库。
 - `ToolRepository.publish_provider()` 修复为按 `provider_id` upsert；`ToolRepository.record_attempt()` 修复为同一 attempt 可从 `STARTED` 推进到 `SUCCEEDED` / `FAILED` / `UNKNOWN`。
 
-未完成：
+已完成：
 
-- 当前机器没有 Deno，因此不能证明 Deno + Pyodide/WASM 真实执行。
-- 本轮多次下载 Deno 官方 Windows zip 被网络中断，未能得到可执行的本地 Deno 二进制；这仍是 WASM 真实执行的外部阻塞。
+- 本地 Deno 2.9.4 可执行；`DenoPyodideWasmRunner` 已通过真实 Pyodide 314.0.3 运行 `print(40 + 2)`。
 - Docker daemon 已启动，Docker CLI 与 Zuno Postgres 可用；本轮已用隔离数据库 `zuno_goal05_phase15` 跑通 migration-backed integration。
-- OCI Process Sandbox 已有真实 Docker container execution 证据；PHASE15 仍不能关闭的剩余原因是 WASM Python 缺少 Deno + Pyodide 真实执行证据。
+- OCI Process Sandbox 已有真实 Docker container execution 证据；PHASE15 真实 sandbox closure 已完成。
 
 ## Verification
 
@@ -54,7 +53,7 @@ pytest -q tests/capability/test_phase15_agent_sandbox.py tests/repo/test_goal03_
 Result:
 
 ```text
-51 passed
+52 passed
 ```
 
 运行环境：
@@ -75,13 +74,14 @@ docker info --format '{{.ServerVersion}}'
 Result:
 
 ```text
-Deno CommandNotFoundException
+Deno 2.9.4 available at .local/tools/deno/deno.exe
 Docker CLI / daemon 29.4.0 available
 zuno-postgres healthy on localhost:5432
 alpine:3.20 image available for real OCI sandbox execution
 pyodide entrypoint directory permissions verified by unit tests
+Pyodide 314.0.3 files available under .local/tools/pyodide/314.0.3
 ```
 
 ## Closure Decision
 
-PHASE15 remains `blocked`. 本 repair 证明 sandbox execution contract、DB-backed session/receipt、Postgres migration-backed default gateway 与真实 OCI container execution 已恢复到真实默认路径；但 Deno + Pyodide/WASM 真实执行仍缺少完整可复现证据。
+PHASE15 completed. 本 repair 证明 sandbox execution contract、DB-backed session/receipt、Postgres migration-backed default gateway、真实 OCI container execution 与真实 Deno + Pyodide/WASM execution 已恢复到真实默认路径。
