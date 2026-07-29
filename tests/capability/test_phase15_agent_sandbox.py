@@ -4,6 +4,8 @@ import asyncio
 from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+import shutil
+import subprocess
 
 import pytest
 
@@ -648,3 +650,47 @@ def test_phase15_oci_runner_uses_short_lived_container_and_proxy_env_without_hos
     assert "HTTPS_PROXY=http://egress-proxy.local:8080" in captured_command
     assert "ZUNO_EGRESS_ALLOWLIST=pypi.org" in captured_command
     assert captured_env == {}
+
+
+def test_phase15_oci_runner_executes_real_container_with_isolated_defaults(monkeypatch) -> None:
+    if shutil.which("docker") is None:
+        pytest.skip("Docker CLI unavailable for real OCI sandbox execution")
+    if subprocess.run(
+        ["docker", "image", "inspect", "alpine:3.20"],
+        text=True,
+        capture_output=True,
+        timeout=10,
+    ).returncode != 0:
+        pytest.skip("alpine:3.20 image unavailable for real OCI sandbox execution")
+
+    monkeypatch.setenv("ZUNO_HOST_SECRET", "must-not-leak")
+    dispatch = SandboxAdapterRegistry().prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-oci-real",
+        tool_name="compiler.run",
+        adapter_kind="CLI",
+        args={"command": "probe"},
+    )
+    command = (
+        "printf 'uid='; id -u; "
+        "if printenv ZUNO_HOST_SECRET; then echo host_env_leaked; else echo host_env_absent; fi; "
+        "if touch /etc/zuno-denied 2>/tmp/root.err; then echo rootfs_write_ok; else echo rootfs_readonly; fi; "
+        "if touch /workspace/zuno-ok 2>/tmp/workspace.err; then echo workspace_write_ok; else echo workspace_write_denied; fi; "
+        "if wget -T 2 -qO- http://example.com >/tmp/net.out 2>/tmp/net.err; then echo network_ok; else echo network_denied; fi"
+    )
+
+    result = OciProcessSandboxRunner(image="alpine:3.20").execute(dispatch=dispatch, args={"command": command})
+
+    assert result.status == "SUCCEEDED"
+    assert result.output_payload["sandbox_adapter_tier"] == "OCI_PROCESS"
+    assert result.output_payload["session_ref"] == dispatch.session_ref
+    assert "uid=65532" in result.stdout
+    assert "host_env_absent" in result.stdout
+    assert "host_env_leaked" not in result.stdout
+    assert "rootfs_readonly" in result.stdout
+    assert "workspace_write_ok" in result.stdout
+    assert "network_denied" in result.stdout
+    assert "network_ok" not in result.stdout
