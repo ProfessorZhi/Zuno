@@ -130,6 +130,11 @@ class DenoPyodideWasmRunner(SandboxRunner):
         with tempfile.NamedTemporaryFile("w", suffix=".mjs", encoding="utf-8", delete=False) as handle:
             handle.write(script)
             script_path = handle.name
+        deno_permissions = _deno_permission_args(
+            script_path=script_path,
+            pyodide_entrypoint=pyodide_entrypoint,
+            profile=profile,
+        )
         try:
             completed = subprocess.run(
                 [
@@ -141,14 +146,7 @@ class DenoPyodideWasmRunner(SandboxRunner):
                     "--no-lock",
                     "--no-npm",
                     "--no-remote",
-                    "--deny-env",
-                    "--deny-ffi",
-                    "--deny-hrtime",
-                    "--deny-net",
-                    f"--allow-read={script_path},{_deno_read_permission_path(pyodide_entrypoint)}",
-                    "--deny-run",
-                    "--deny-sys",
-                    "--deny-write",
+                    *deno_permissions,
                     script_path,
                     pyodide_entrypoint,
                 ],
@@ -454,6 +452,38 @@ def _deno_read_permission_path(entrypoint: str) -> str:
     if parsed.scheme == "file":
         return unquote(parsed.path)
     return entrypoint
+
+
+def _deno_permission_args(*, script_path: str, pyodide_entrypoint: str, profile: dict[str, Any]) -> list[str]:
+    read_paths = [script_path, _deno_read_permission_path(pyodide_entrypoint)]
+    for allowed_path in profile.get("read_allowlist", []):
+        permission_path = _deno_optional_permission_path(str(allowed_path))
+        if permission_path:
+            read_paths.append(permission_path)
+    permissions = [
+        "--deny-env",
+        "--deny-ffi",
+        "--deny-hrtime",
+        f"--allow-read={','.join(read_paths)}",
+        "--deny-run",
+        "--deny-sys",
+        "--deny-write",
+    ]
+    egress_allowlist = [str(domain) for domain in profile.get("egress_allowlist", []) if str(domain).strip()]
+    if egress_allowlist:
+        permissions.append(f"--allow-net={','.join(egress_allowlist)}")
+    else:
+        permissions.append("--deny-net")
+    return permissions
+
+
+def _deno_optional_permission_path(path: str) -> str:
+    parsed = urlparse(path)
+    if parsed.scheme == "file":
+        return unquote(parsed.path)
+    if parsed.scheme:
+        return ""
+    return path
 
 
 def _deno_pyodide_runner_script() -> str:

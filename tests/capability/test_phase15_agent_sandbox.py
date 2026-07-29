@@ -64,6 +64,13 @@ class _LeakyRunner(SandboxRunner):
         )
 
 
+class _CompletedProcess:
+    def __init__(self, *, stdout: str = "sandboxed", stderr: str = "", returncode: int = 0) -> None:
+        self.stdout = stdout
+        self.stderr = stderr
+        self.returncode = returncode
+
+
 class _RecordingToolUnitOfWork:
     def __init__(self) -> None:
         self.attempts: list[object] = []
@@ -338,3 +345,44 @@ def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(mon
     )
     with pytest.raises(SandboxPolicyViolation, match="Docker executable unavailable"):
         OciProcessSandboxRunner().execute(dispatch=oci_dispatch, args={"command": "python -V"})
+
+
+def test_phase15_deno_runner_maps_explicit_path_and_domain_allowlists_to_permissions(monkeypatch) -> None:
+    captured_command: list[str] = []
+    monkeypatch.setattr("shutil.which", lambda name: f"C:/tools/{name}.exe")
+
+    def fake_run(command: list[str], **_kwargs: object) -> _CompletedProcess:
+        captured_command.extend(command)
+        return _CompletedProcess(stdout="42")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    dispatch = SandboxAdapterRegistry().prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-deno-permissions",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={
+            "code": "print(42)",
+            "allowed_paths": ["file:///workspace/input.csv", "workspace://logical/input.csv"],
+            "allowed_domains": ["example.com"],
+        },
+    )
+
+    result = DenoPyodideWasmRunner().execute(
+        dispatch=dispatch,
+        args={
+            "code": "print(42)",
+            "pyodide_entrypoint": "file:///opt/zuno/pyodide/pyodide.mjs",
+        },
+    )
+
+    assert result.status == "SUCCEEDED"
+    allow_read = next(arg for arg in captured_command if arg.startswith("--allow-read="))
+    assert "/opt/zuno/pyodide/pyodide.mjs" in allow_read
+    assert "/workspace/input.csv" in allow_read
+    assert "workspace://logical/input.csv" not in allow_read
+    assert "--allow-net=example.com" in captured_command
+    assert "--deny-net" not in captured_command

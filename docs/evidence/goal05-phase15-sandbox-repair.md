@@ -15,6 +15,7 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 - `SandboxAdapterRegistry.execute()` 在 runner 启动前校验 Stateful Session 的 hash、版本、过期时间和大小上限。
 - `SandboxAdapterRegistry.execute()` 还校验 runner 输出结构、session ref、adapter tier 与输出大小上限。
 - WASM Python runner 使用 Deno 权限边界，并要求显式 Pyodide entrypoint；缺 Deno 或缺 Pyodide entrypoint fail-closed。
+- WASM Python runner 将显式 file path allowlist 映射到 `--allow-read`，将显式 domain allowlist 映射到 `--allow-net`；无 domain allowlist 时保持 `--deny-net`。
 - OCI Process runner 使用 Docker CLI 短生命周期容器命令边界：`--rm`、`--network none`、`--read-only`、`--cap-drop ALL`、`no-new-privileges`、non-root、tmpfs workspace、memory/cpu/pid/output/time limit。
 - `ToolInvocationGateway` 在 provider executor 前执行 sandbox；sandbox 失败记录 `NOT_DISPATCHED`，不会调用 provider executor。
 - Sandbox execute 失败后仍写入 `tool_sandbox_receipts`，记录 `sandbox_execution_status=BLOCKED` 和 blocked reason。
@@ -37,7 +38,7 @@ pytest -q tests/capability/test_phase15_agent_sandbox.py -p no:cacheprovider
 Result:
 
 ```text
-9 passed
+10 passed
 ```
 
 Environment probes:
