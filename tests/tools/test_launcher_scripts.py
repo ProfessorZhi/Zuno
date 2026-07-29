@@ -1,4 +1,5 @@
 import re
+import json
 from pathlib import Path
 
 
@@ -53,6 +54,20 @@ def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
     assert '_runtime_request_body("rollback", "SUBMIT_USER_GOAL")' in content
     assert "Product runtime rollback mode is active" in content
     assert "receipt/projection evidence" in content
+
+
+def test_web_package_scripts_support_container_and_workspace_node_modules():
+    package = json.loads((REPO_ROOT / "apps" / "web" / "package.json").read_text(encoding="utf-8"))
+    runner = (REPO_ROOT / "apps" / "web" / "scripts" / "run-bin.mjs").read_text(encoding="utf-8")
+
+    assert package["scripts"]["dev"] == "node scripts/run-bin.mjs vite"
+    assert package["scripts"]["build"] == "node scripts/run-bin.mjs vite build"
+    assert package["scripts"]["preview"] == "node scripts/run-bin.mjs vite preview"
+    assert package["scripts"]["lint"] == "node scripts/run-bin.mjs vue-tsc --noEmit"
+    assert "resolve(appRoot, 'node_modules', bins[binName])" in runner
+    assert "resolve(appRoot, '..', '..', 'node_modules', bins[binName])" in runner
+    assert "vite: 'vite/bin/vite.js'" in runner
+    assert "'vue-tsc': 'vue-tsc/bin/vue-tsc.js'" in runner
 
 
 def test_desktop_smoke_script_runs_real_electron_bridge_check():
