@@ -172,6 +172,27 @@ def test_phase15_sandbox_registry_executes_matching_runner_contract() -> None:
     assert result.output_payload["session_ref"] == dispatch.session_ref
 
 
+def test_phase15_sandbox_execute_requires_stateful_session_store_entry() -> None:
+    preparing_registry = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier))
+    dispatch = preparing_registry.prepare(
+        tenant_id="tenant-sandbox",
+        workspace_id="workspace-sandbox",
+        run_id="run-sandbox",
+        thread_id="thread-sandbox",
+        call_id="call-stateful-session",
+        tool_name="analysis.python",
+        adapter_kind="PYTHON",
+        args={"code": "print(42)"},
+    )
+
+    fresh_registry = SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier))
+    with pytest.raises(SandboxPolicyViolation, match="session missing from state store"):
+        fresh_registry.execute(dispatch=dispatch, args={"code": "print(42)"})
+
+    result = preparing_registry.execute(dispatch=dispatch, args={"code": "print(42)"})
+    assert result.status == "SUCCEEDED"
+
+
 def test_phase15_sandbox_execute_rejects_invalid_runner_output_contract() -> None:
     class _InvalidRunner(SandboxRunner):
         adapter_tier = "WASM_PYTHON"

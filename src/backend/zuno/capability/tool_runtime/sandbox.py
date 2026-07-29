@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 import json
@@ -95,6 +95,36 @@ class SandboxExecutionResult:
     stderr: str
     exit_code: int
     output_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class SandboxSessionRecord:
+    session_ref: str
+    session_version: int
+    session_hash: str
+    profile_hash: str
+    limits_hash: str
+    expires_at: datetime
+    session_size_bytes: int
+
+
+class SandboxSessionStore:
+    def put(self, record: SandboxSessionRecord) -> None:
+        raise NotImplementedError
+
+    def get(self, session_ref: str) -> SandboxSessionRecord | None:
+        raise NotImplementedError
+
+
+class InMemorySandboxSessionStore(SandboxSessionStore):
+    def __init__(self) -> None:
+        self._records: MutableMapping[str, SandboxSessionRecord] = {}
+
+    def put(self, record: SandboxSessionRecord) -> None:
+        self._records[record.session_ref] = record
+
+    def get(self, session_ref: str) -> SandboxSessionRecord | None:
+        return self._records.get(session_ref)
 
 
 class SandboxRunner:
@@ -276,8 +306,10 @@ class SandboxAdapterRegistry:
         self,
         *,
         runner_factory: Callable[[str], SandboxRunner] | None = None,
+        session_store: SandboxSessionStore | None = None,
     ) -> None:
         self._runner_factory = runner_factory or self._default_runner
+        self._session_store = session_store or InMemorySandboxSessionStore()
 
     def prepare(
         self,
@@ -312,19 +344,36 @@ class SandboxAdapterRegistry:
             "profile": profile.to_payload(),
             "session": session_payload,
         }
+        session_ref = f"sandbox-session:{tenant_id}:{workspace_id}:{run_id}:{thread_id}:{call_id}"
+        session_hash = canonical_sha256(session_payload)
+        profile_payload = profile.to_payload()
+        profile_hash = canonical_sha256(profile_payload)
+        limits_hash = canonical_sha256(profile.limits.to_payload())
+        self._session_store.put(
+            SandboxSessionRecord(
+                session_ref=session_ref,
+                session_version=1,
+                session_hash=session_hash,
+                profile_hash=profile_hash,
+                limits_hash=limits_hash,
+                expires_at=profile.limits.expires_at,
+                session_size_bytes=len(json.dumps(session_payload, ensure_ascii=True, sort_keys=True).encode("utf-8")),
+            )
+        )
         return SandboxDispatch(
             sandbox_profile_id=profile.profile_id,
             adapter_tier=profile.adapter_tier,
-            session_ref=f"sandbox-session:{tenant_id}:{workspace_id}:{run_id}:{thread_id}:{call_id}",
+            session_ref=session_ref,
             session_version=1,
-            session_hash=canonical_sha256(session_payload),
-            profile_hash=canonical_sha256(profile.to_payload()),
-            limits_hash=canonical_sha256(profile.limits.to_payload()),
+            session_hash=session_hash,
+            profile_hash=profile_hash,
+            limits_hash=limits_hash,
             dispatch_payload=dispatch_payload,
         )
 
     def execute(self, *, dispatch: SandboxDispatch, args: dict[str, Any]) -> SandboxExecutionResult:
         self._validate_dispatch_integrity(dispatch)
+        self._validate_stored_session(dispatch)
         runner = self._runner_factory(dispatch.adapter_tier)
         if runner.adapter_tier != dispatch.adapter_tier:
             raise SandboxPolicyViolation("sandbox runner tier does not match dispatch profile")
@@ -388,6 +437,23 @@ class SandboxAdapterRegistry:
         if adapter_tier == "OCI_PROCESS":
             return OciProcessSandboxRunner()
         raise SandboxPolicyViolation(f"unsupported sandbox adapter tier: {adapter_tier}")
+
+    def _validate_stored_session(self, dispatch: SandboxDispatch) -> None:
+        record = self._session_store.get(dispatch.session_ref)
+        if record is None:
+            raise SandboxPolicyViolation("sandbox session missing from state store")
+        if record.session_version != dispatch.session_version:
+            raise SandboxPolicyViolation("sandbox stored session version mismatch")
+        if record.session_hash != dispatch.session_hash:
+            raise SandboxPolicyViolation("sandbox stored session hash mismatch")
+        if record.profile_hash != dispatch.profile_hash:
+            raise SandboxPolicyViolation("sandbox stored profile hash mismatch")
+        if record.limits_hash != dispatch.limits_hash:
+            raise SandboxPolicyViolation("sandbox stored limits hash mismatch")
+        if record.expires_at <= datetime.now(tz=UTC):
+            raise SandboxPolicyViolation("sandbox stored session expired")
+        if record.session_size_bytes > int(dispatch.dispatch_payload["profile"]["limits"]["session_bytes"]):
+            raise SandboxPolicyViolation("sandbox stored session exceeds configured size limit")
 
     @staticmethod
     def _validate_dispatch_integrity(dispatch: SandboxDispatch) -> None:
@@ -530,10 +596,13 @@ __all__ = [
     "SandboxAdapterRegistry",
     "SandboxDispatch",
     "SandboxExecutionResult",
+    "SandboxSessionRecord",
+    "SandboxSessionStore",
     "SandboxLimits",
     "SandboxPolicyViolation",
     "SandboxProfile",
     "SandboxRunner",
+    "InMemorySandboxSessionStore",
     "DenoPyodideWasmRunner",
     "OciProcessSandboxRunner",
 ]

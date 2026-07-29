@@ -13,10 +13,13 @@ from .runtime_batch import (
 from .invocation_gateway import ToolGatewayReceipt, ToolInvocationGateway
 from .sandbox import (
     DenoPyodideWasmRunner,
+    InMemorySandboxSessionStore,
     OciProcessSandboxRunner,
     SandboxAdapterRegistry,
     SandboxDispatch,
     SandboxExecutionResult,
+    SandboxSessionRecord,
+    SandboxSessionStore,
     SandboxPolicyViolation,
     SandboxProfile,
     SandboxRunner,
@@ -38,6 +41,9 @@ __all__ = [
     "OciProcessSandboxRunner",
     "SandboxDispatch",
     "SandboxExecutionResult",
+    "SandboxSessionRecord",
+    "SandboxSessionStore",
+    "InMemorySandboxSessionStore",
     "SandboxPolicyViolation",
     "SandboxProfile",
     "SandboxRunner",
