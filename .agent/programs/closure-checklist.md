@@ -2,11 +2,11 @@
 
 program: zuno-canonical-architecture-runtime-realization-v1
 state: active
-current_phase: PHASE20
+current_phase: PHASE21
 program_version: 2
 
 PHASE04 completed
-PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 completed / PHASE12 completed / PHASE13 completed / PHASE14 completed / PHASE15 completed / PHASE10 completed / PHASE16 completed / PHASE17 completed / PHASE18 completed / PHASE19 completed / PHASE20 in_progress
+PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / PHASE11 completed / PHASE09 completed / PHASE12 completed / PHASE13 completed / PHASE14 completed / PHASE15 completed / PHASE10 completed / PHASE16 completed / PHASE17 completed / PHASE18 completed / PHASE19 completed / PHASE20 completed / PHASE21 in_progress
 
 ## PHASE01–04 订正状态
 
@@ -45,8 +45,8 @@ PHASE05 completed / PHASE06 completed / PHASE07 completed / PHASE08 completed / 
 - [x] PHASE17 Dynamic Plan DAG and Parallel Control
 - [x] PHASE18 Agentic GraphRAG Inner Loop
 - [x] PHASE19 Final Synthesis, Publication and Reflexion
-- [ ] PHASE20 Observability Eval, Benchmark and Release Gate（当前进行中）
-- [ ] PHASE21 Fault Recovery, Full E2E and Cutover
+- [x] PHASE20 Observability Eval, Benchmark and Release Gate
+- [ ] PHASE21 Fault Recovery, Full E2E and Cutover（当前进行中）
 - [ ] PHASE22 Fixed Benchmark, Production Readiness and Closure
 
 ## Phase 完整关闭纪律

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Engine, text
@@ -44,6 +46,13 @@ class ReleaseGateStatus(StrEnum):
     BLOCKED = "BLOCKED"
     INCOMPARABLE = "INCOMPARABLE"
     ERROR = "ERROR"
+
+
+class EvidenceValidationStatus(StrEnum):
+    AVAILABLE = "AVAILABLE"
+    EXPIRED = "EXPIRED"
+    HASH_MISMATCH = "HASH_MISMATCH"
+    MISSING = "MISSING"
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,6 +431,96 @@ class EvidenceRecord:
             }
         )
 
+    def validate_artifact(self, *, artifact_root: Path | None = None, now: datetime | None = None) -> EvidenceValidationStatus:
+        checked_at = now or datetime.now(tz=UTC)
+        if self.expires_at is not None:
+            expires_at = datetime.fromisoformat(self.expires_at)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=UTC)
+            if expires_at <= checked_at:
+                return EvidenceValidationStatus.EXPIRED
+        artifact_path = Path(self.artifact_ref)
+        if not artifact_path.is_absolute() and artifact_root is not None:
+            artifact_path = artifact_root / artifact_path
+        if not artifact_path.exists() or not artifact_path.is_file():
+            return EvidenceValidationStatus.MISSING
+        actual_hash = canonical_sha256({"bytes_sha256": _file_sha256(artifact_path)})
+        if actual_hash != self.artifact_hash:
+            return EvidenceValidationStatus.HASH_MISMATCH
+        return EvidenceValidationStatus.AVAILABLE
+
+
+def _file_sha256(path: Path) -> str:
+    import hashlib
+
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def evidence_artifact_hash(path: Path) -> str:
+    return canonical_sha256({"bytes_sha256": _file_sha256(path)})
+
+
+@dataclass(frozen=True, slots=True)
+class EvalResultRevision:
+    revision_id: str
+    run_id: str
+    previous_result_set_hash: str
+    revised_result_set_hash: str
+    reason: str
+    revision_hash: str
+
+
+def create_eval_result_revision(*, previous: EvalRunResultSet, revised: EvalRunResultSet, reason: str) -> EvalResultRevision:
+    if previous.run_id != revised.run_id:
+        raise EvalRuntimeError("late revision must keep the same eval run id")
+    if previous.result_set_hash == revised.result_set_hash:
+        raise EvalRuntimeError("late revision requires a changed result set hash")
+    revision_hash = canonical_sha256(
+        {
+            "run_id": previous.run_id,
+            "previous_result_set_hash": previous.result_set_hash,
+            "revised_result_set_hash": revised.result_set_hash,
+            "reason": reason,
+        }
+    )
+    return EvalResultRevision(
+        revision_id=f"eval-result-revision:{previous.run_id}:{revision_hash[:16]}",
+        run_id=previous.run_id,
+        previous_result_set_hash=previous.result_set_hash,
+        revised_result_set_hash=revised.result_set_hash,
+        reason=reason,
+        revision_hash=revision_hash,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class FixedProfileReplayPlan:
+    plan_id: str
+    required_profile_ids: tuple[str, ...]
+    observed_profile_result_hashes: dict[str, str]
+
+    @property
+    def complete(self) -> bool:
+        return set(self.required_profile_ids) == set(self.observed_profile_result_hashes)
+
+    @property
+    def missing_profile_ids(self) -> tuple[str, ...]:
+        return tuple(profile_id for profile_id in self.required_profile_ids if profile_id not in self.observed_profile_result_hashes)
+
+    @property
+    def replay_hash(self) -> str:
+        return canonical_sha256(
+            {
+                "plan_id": self.plan_id,
+                "required_profile_ids": list(self.required_profile_ids),
+                "observed_profile_result_hashes": self.observed_profile_result_hashes,
+            }
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class ReleaseGateEvaluation:
@@ -502,6 +601,54 @@ class ReleaseGateReport:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class BenchmarkComparisonReport:
+    comparison_hash: str
+    tenant_id: str
+    workspace_id: str
+    baseline_run_id: str
+    candidate_run_id: str
+    comparable: bool
+    status: str
+    reason: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "comparison_hash": self.comparison_hash,
+            "tenant_id": self.tenant_id,
+            "workspace_id": self.workspace_id,
+            "baseline_run_id": self.baseline_run_id,
+            "candidate_run_id": self.candidate_run_id,
+            "comparable": self.comparable,
+            "status": self.status,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceReport:
+    evidence_hash: str
+    evidence_id: str
+    tenant_id: str
+    workspace_id: str
+    artifact_ref: str
+    artifact_hash: str
+    result_set_hash: str
+    gate_hash: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "evidence_hash": self.evidence_hash,
+            "evidence_id": self.evidence_id,
+            "tenant_id": self.tenant_id,
+            "workspace_id": self.workspace_id,
+            "artifact_ref": self.artifact_ref,
+            "artifact_hash": self.artifact_hash,
+            "result_set_hash": self.result_set_hash,
+            "gate_hash": self.gate_hash,
+        }
+
+
 def evaluate_release_gate(
     *,
     gate_id: str,
@@ -511,6 +658,9 @@ def evaluate_release_gate(
     comparison: BenchmarkComparison | None,
     evidence_artifact_ref: str,
     evidence_artifact_hash: str,
+    evidence_record: EvidenceRecord | None = None,
+    evidence_artifact_root: Path | None = None,
+    fixed_profile_replay: FixedProfileReplayPlan | None = None,
 ) -> ReleaseGateEvaluation:
     gate_inputs = {
         "gate_id": gate_id,
@@ -520,6 +670,7 @@ def evaluate_release_gate(
         "comparison_hash": comparison.comparison_hash if comparison else None,
         "evidence_artifact_ref": evidence_artifact_ref,
         "evidence_artifact_hash": evidence_artifact_hash,
+        "fixed_profile_replay_hash": fixed_profile_replay.replay_hash if fixed_profile_replay else None,
     }
     gate_hash = canonical_sha256(gate_inputs)
     evidence = EvidenceRecord(
@@ -533,6 +684,11 @@ def evaluate_release_gate(
     reason = "passed"
     if not result_set.complete:
         status, reason = ReleaseGateStatus.BLOCKED, "result_set_not_fully_measured"
+    elif evidence_record is not None and evidence_record.validate_artifact(artifact_root=evidence_artifact_root) != EvidenceValidationStatus.AVAILABLE:
+        evidence_status = evidence_record.validate_artifact(artifact_root=evidence_artifact_root)
+        status, reason = ReleaseGateStatus.BLOCKED, f"evidence_{evidence_status.value.lower()}"
+    elif fixed_profile_replay is not None and not fixed_profile_replay.complete:
+        status, reason = ReleaseGateStatus.BLOCKED, "fixed_profile_replay_incomplete:" + ",".join(fixed_profile_replay.missing_profile_ids)
     elif comparison is not None and comparison.status == ReleaseGateStatus.INCOMPARABLE:
         status, reason = ReleaseGateStatus.INCOMPARABLE, comparison.reason
     elif comparison is not None and comparison.status == ReleaseGateStatus.BLOCKED:
@@ -570,6 +726,35 @@ def evaluate_release_gate(
         result_set_hash=result_set.result_set_hash,
         comparison_hash=comparison.comparison_hash if comparison else None,
         evidence_hash=evidence.evidence_hash,
+        gate_hash=gate_hash,
+    )
+
+
+def build_error_release_gate(*, gate_id: str, result_set_hash: str, reason: str) -> ReleaseGateEvaluation:
+    gate_hash = canonical_sha256(
+        {
+            "gate_id": gate_id,
+            "result_set_hash": result_set_hash,
+            "status": ReleaseGateStatus.ERROR.value,
+            "reason": reason,
+        }
+    )
+    evidence_hash = canonical_sha256(
+        {
+            "gate_id": gate_id,
+            "result_set_hash": result_set_hash,
+            "status": ReleaseGateStatus.ERROR.value,
+            "reason": reason,
+            "evidence": "error_gate_no_quality_claim",
+        }
+    )
+    return ReleaseGateEvaluation(
+        gate_id=gate_id,
+        status=ReleaseGateStatus.ERROR,
+        reason=reason,
+        result_set_hash=result_set_hash,
+        comparison_hash=None,
+        evidence_hash=evidence_hash,
         gate_hash=gate_hash,
     )
 
@@ -931,6 +1116,31 @@ class PostgresEvalRuntimeRepository:
                 },
             )
 
+    def record_result_revision(self, revision: EvalResultRevision) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO observability_eval_result_revisions(
+                        revision_id, run_id, previous_result_set_hash,
+                        revised_result_set_hash, reason, revision_hash
+                    ) VALUES (
+                        :revision_id, :run_id, :previous_result_set_hash,
+                        :revised_result_set_hash, :reason, :revision_hash
+                    )
+                    ON CONFLICT (revision_id) DO NOTHING
+                    """
+                ),
+                {
+                    "revision_id": revision.revision_id,
+                    "run_id": revision.run_id,
+                    "previous_result_set_hash": revision.previous_result_set_hash,
+                    "revised_result_set_hash": revision.revised_result_set_hash,
+                    "reason": revision.reason,
+                    "revision_hash": revision.revision_hash,
+                },
+            )
+
     def eval_run_projection(self, *, tenant_id: str, workspace_id: str, run_id: str) -> EvalRunProjection:
         with self.engine.connect() as conn:
             run = conn.execute(
@@ -1049,4 +1259,78 @@ class PostgresEvalRuntimeRepository:
             artifact_hash=str(row["artifact_hash"]),
             projection_freshness="fresh",
             measurement_status=EvalMeasurementStatus.MEASURED.value if str(row["status"]) == ReleaseGateStatus.PASSED.value else EvalMeasurementStatus.BLOCKED.value,
+        )
+
+    def comparison_report(self, *, tenant_id: str, workspace_id: str, comparison_hash: str) -> BenchmarkComparisonReport:
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT
+                        c.comparison_hash,
+                        c.baseline_run_id,
+                        c.candidate_run_id,
+                        c.comparable,
+                        c.status,
+                        c.reason,
+                        r.tenant_id,
+                        r.workspace_id
+                    FROM observability_benchmark_comparisons c
+                    JOIN observability_eval_runs r
+                      ON r.run_id = c.candidate_run_id
+                    WHERE c.comparison_hash = :comparison_hash
+                    """
+                ),
+                {"comparison_hash": comparison_hash},
+            ).mappings().first()
+        if row is None:
+            raise EvalRuntimeError("benchmark comparison not found")
+        if str(row["tenant_id"]) != tenant_id or str(row["workspace_id"]) != workspace_id:
+            raise EvalRuntimeError("benchmark comparison authorization scope mismatch")
+        return BenchmarkComparisonReport(
+            comparison_hash=comparison_hash,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            baseline_run_id=str(row["baseline_run_id"]),
+            candidate_run_id=str(row["candidate_run_id"]),
+            comparable=bool(row["comparable"]),
+            status=str(row["status"]),
+            reason=str(row["reason"]),
+        )
+
+    def evidence_report(self, *, tenant_id: str, workspace_id: str, evidence_id: str) -> EvidenceReport:
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT
+                        e.evidence_hash,
+                        e.evidence_id,
+                        e.artifact_ref,
+                        e.artifact_hash,
+                        e.result_set_hash,
+                        e.gate_hash,
+                        r.tenant_id,
+                        r.workspace_id
+                    FROM observability_evidence_records e
+                    JOIN observability_eval_runs r
+                      ON r.result_set_hash = e.result_set_hash
+                    WHERE e.evidence_id = :evidence_id
+                    """
+                ),
+                {"evidence_id": evidence_id},
+            ).mappings().first()
+        if row is None:
+            raise EvalRuntimeError("evidence record not found")
+        if str(row["tenant_id"]) != tenant_id or str(row["workspace_id"]) != workspace_id:
+            raise EvalRuntimeError("evidence record authorization scope mismatch")
+        return EvidenceReport(
+            evidence_hash=str(row["evidence_hash"]),
+            evidence_id=evidence_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            artifact_ref=str(row["artifact_ref"]),
+            artifact_hash=str(row["artifact_hash"]),
+            result_set_hash=str(row["result_set_hash"]),
+            gate_hash=str(row["gate_hash"]),
         )

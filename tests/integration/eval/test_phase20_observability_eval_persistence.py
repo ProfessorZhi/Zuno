@@ -24,6 +24,7 @@ from zuno.platform.observability.eval_runtime import (
     RAGCoreFiveInputBundle,
     ReleaseGateStatus,
     compare_benchmark_runs,
+    create_eval_result_revision,
     evaluate_release_gate,
 )
 
@@ -62,6 +63,7 @@ def engine(migrated_postgres):
                     observability_release_gate_evaluations,
                     observability_evidence_records,
                     observability_benchmark_comparisons,
+                    observability_eval_result_revisions,
                     observability_failure_buckets,
                     observability_agent_efficiency_snapshots,
                     observability_graphrag_diagnostics,
@@ -210,6 +212,29 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
     repo.complete_run(candidate)
     repo.record_comparison(comparison)
     repo.record_release_gate(gate, evidence)
+    late_revision = create_eval_result_revision(
+        previous=candidate,
+        revised=EvalRunResultSet(
+            run_id=candidate.run_id,
+            profile_id=candidate.profile_id,
+            config=candidate.config,
+            case_results=(
+                CaseExecutionResult(
+                    case_id=case_result.case_id,
+                    status=case_result.status,
+                    attempt=2,
+                    lease_ref="lease:phase20:case:late",
+                    checkpoint_ref="checkpoint:phase20:case:late",
+                    metric_results=case_result.metric_results,
+                    failure_buckets=("late_trace_revision",),
+                    recovered=True,
+                ),
+            ),
+            efficiency=efficiency,
+        ),
+        reason="late_trace_arrived_after_gate",
+    )
+    repo.record_result_revision(late_revision)
     run_projection = repo.eval_run_projection(
         tenant_id="tenant-a",
         workspace_id="workspace-a",
@@ -219,6 +244,16 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
         tenant_id="tenant-a",
         workspace_id="workspace-a",
         gate_id=gate.gate_id,
+    )
+    comparison_report = repo.comparison_report(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        comparison_hash=comparison.comparison_hash,
+    )
+    evidence_report = repo.evidence_report(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        evidence_id=evidence.evidence_id,
     )
 
     assert gate.status == ReleaseGateStatus.PASSED
@@ -231,6 +266,7 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
         assert conn.execute(text("SELECT count(*) FROM observability_graphrag_diagnostics")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM observability_agent_efficiency_snapshots")).scalar_one() == 2
         assert conn.execute(text("SELECT count(*) FROM observability_benchmark_comparisons")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM observability_eval_result_revisions")).scalar_one() == 1
         assert conn.execute(text("SELECT count(*) FROM observability_evidence_records")).scalar_one() == 1
         stored_gate = conn.execute(
             text("SELECT status, reason, result_set_hash, evidence_hash FROM observability_release_gate_evaluations")
@@ -244,3 +280,6 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
     assert run_projection.metric_status_counts == {"MEASURED": 5}
     assert gate_report.status == "PASSED"
     assert gate_report.evidence_hash == evidence.evidence_hash
+    assert comparison_report.status == "PASSED"
+    assert comparison_report.candidate_run_id == candidate.run_id
+    assert evidence_report.evidence_hash == evidence.evidence_hash

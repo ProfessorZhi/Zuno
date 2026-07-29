@@ -1,7 +1,7 @@
 # PHASE20 Observability Eval, Benchmark and Release Gate
 
 phase_id: PHASE20
-status: in_progress
+status: completed
 depends_on: PHASE06, PHASE18, PHASE19
 owner: Module 10 Observability & Eval
 
@@ -33,7 +33,7 @@ tests/fault/eval/test_phase20_eval_fault_semantics.py
 tests/integration/eval/test_phase20_observability_eval_persistence.py
 ```
 
-该证据证明 Eval Runtime foundation、query/report surface 和部分 fault semantics；不得在 late revision、expired evidence、fixed profile replay 和 closure evidence 完成前声明 PHASE20 completed、quality proven 或 production ready。
+该证据证明 Eval Runtime foundation、query/report surface、fault semantics、late revision、expired evidence、artifact hash readback 和 fixed profile replay 已完成。PHASE20 completed 不等于 quality proven 或 production ready；固定生产 benchmark 与生产就绪判定仍属于 PHASE22。
 
 ## Minimal Read Set
 

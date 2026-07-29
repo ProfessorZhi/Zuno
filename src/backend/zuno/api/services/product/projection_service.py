@@ -186,6 +186,86 @@ class ObservabilityEvalQueryService:
         except EvalRuntimeError as exc:
             raise ObservabilityQueryAuthorizationError(str(exc)) from exc
 
+    def get_eval_metrics_projection(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        eval_run_id: str,
+    ) -> dict[str, Any]:
+        projection = self.get_eval_run_projection(
+            principal=principal,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            eval_run_id=eval_run_id,
+        )
+        return {
+            "run_id": eval_run_id,
+            "measurement_status": projection["measurement_status"],
+            "metric_status_counts": projection["metric_status_counts"],
+            "projection_freshness": projection["projection_freshness"],
+        }
+
+    def get_eval_failures_projection(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        eval_run_id: str,
+    ) -> dict[str, Any]:
+        projection = self.get_eval_run_projection(
+            principal=principal,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            eval_run_id=eval_run_id,
+        )
+        return {
+            "run_id": eval_run_id,
+            "failure_buckets": projection["failure_buckets"],
+            "case_status_counts": projection["case_status_counts"],
+            "projection_freshness": projection["projection_freshness"],
+        }
+
+    def get_comparison_report(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        comparison_hash: str,
+    ) -> dict[str, Any]:
+        self._authorize(principal=principal, tenant_id=tenant_id, workspace_id=workspace_id)
+        try:
+            with self._repository() as repo:
+                return repo.comparison_report(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    comparison_hash=comparison_hash,
+                ).to_dict()
+        except EvalRuntimeError as exc:
+            raise ObservabilityQueryAuthorizationError(str(exc)) from exc
+
+    def get_evidence_report(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        evidence_id: str,
+    ) -> dict[str, Any]:
+        self._authorize(principal=principal, tenant_id=tenant_id, workspace_id=workspace_id)
+        try:
+            with self._repository() as repo:
+                return repo.evidence_report(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    evidence_id=evidence_id,
+                ).to_dict()
+        except EvalRuntimeError as exc:
+            raise ObservabilityQueryAuthorizationError(str(exc)) from exc
+
     def _repository(self) -> AbstractContextManager[Any]:
         if self.repository_context_factory is not None:
             return self.repository_context_factory()

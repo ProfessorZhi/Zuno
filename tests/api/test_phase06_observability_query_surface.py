@@ -103,6 +103,35 @@ class FakeEvalRepository:
             measurement_status="MEASURED",
         )
 
+    def comparison_report(self, *, tenant_id: str, workspace_id: str, comparison_hash: str):
+        assert tenant_id == "tenant-a"
+        assert workspace_id == "workspace-a"
+        return type(
+            "ComparisonReport",
+            (),
+            {
+                "to_dict": lambda self: {
+                    "comparison_hash": comparison_hash,
+                    "status": "PASSED",
+                    "comparable": True,
+                }
+            },
+        )()
+
+    def evidence_report(self, *, tenant_id: str, workspace_id: str, evidence_id: str):
+        assert tenant_id == "tenant-a"
+        assert workspace_id == "workspace-a"
+        return type(
+            "EvidenceReport",
+            (),
+            {
+                "to_dict": lambda self: {
+                    "evidence_id": evidence_id,
+                    "artifact_hash": "d" * 64,
+                }
+            },
+        )()
+
 
 @contextmanager
 def fake_repository_context():
@@ -208,6 +237,41 @@ def test_eval_query_surface_returns_authorized_run_projection_and_gate_report() 
     assert run["metric_status_counts"] == {"MEASURED": 5}
     assert gate["status"] == "PASSED"
     assert gate["comparison_status"] == "PASSED"
+
+
+def test_eval_query_surface_returns_metrics_failures_comparison_and_evidence_reports() -> None:
+    service = ObservabilityEvalQueryService(repository_context_factory=fake_eval_repository_context)
+    principal = _principal(scopes=frozenset({"eval:read"}))
+
+    metrics = service.get_eval_metrics_projection(
+        principal=principal,
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        eval_run_id="run-a",
+    )
+    failures = service.get_eval_failures_projection(
+        principal=principal,
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        eval_run_id="run-a",
+    )
+    comparison = service.get_comparison_report(
+        principal=principal,
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        comparison_hash="comparison-a",
+    )
+    evidence = service.get_evidence_report(
+        principal=principal,
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        evidence_id="evidence-a",
+    )
+
+    assert metrics["metric_status_counts"] == {"MEASURED": 5}
+    assert failures["failure_buckets"] == []
+    assert comparison["status"] == "PASSED"
+    assert evidence["artifact_hash"] == "d" * 64
 
 
 def test_eval_query_surface_rejects_missing_eval_scope() -> None:

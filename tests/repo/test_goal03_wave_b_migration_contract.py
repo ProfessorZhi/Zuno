@@ -16,6 +16,7 @@ PHASE20_EVAL_QUERY_SCOPE_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/2026
 PHASE20_RELEASE_GATE_IDENTITY_MIGRATION = (
     REPO_ROOT / "infra/db/alembic/versions/20260729_55_phase20_release_gate_query_identity.py"
 )
+PHASE20_RESULT_REVISION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260729_56_phase20_eval_result_revisions.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -58,6 +59,9 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     phase20_gate_identity = PHASE20_RELEASE_GATE_IDENTITY_MIGRATION.read_text(encoding="utf-8")
     assert 'revision = "20260729_55"' in phase20_gate_identity
     assert 'down_revision = "20260729_54"' in phase20_gate_identity
+    phase20_result_revision = PHASE20_RESULT_REVISION_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260729_56"' in phase20_result_revision
+    assert 'down_revision = "20260729_55"' in phase20_result_revision
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -284,5 +288,18 @@ def test_phase20_release_gate_identity_migration_contains_query_identity_constra
         "uq_observability_release_gate_evaluations_gate_id",
         "observability_release_gate_evaluations",
         "gate_id",
+    ):
+        assert fragment in text
+
+
+def test_phase20_result_revision_migration_contains_append_only_late_revision_table() -> None:
+    text = PHASE20_RESULT_REVISION_MIGRATION.read_text(encoding="utf-8")
+    for fragment in (
+        "observability_eval_result_revisions",
+        "previous_result_set_hash",
+        "revised_result_set_hash",
+        "revision_hash",
+        "previous_result_set_hash <> revised_result_set_hash",
+        "uq_observability_eval_result_revisions_pair",
     ):
         assert fragment in text

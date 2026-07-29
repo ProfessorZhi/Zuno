@@ -1,12 +1,12 @@
 # Goal05 PHASE20 Eval Runtime Evidence
 
-status: implementation_progress
+status: completed
 date: 2026-07-29
 branch: codex/goal05-phase15-sandbox-repair
 
 ## Scope
 
-本证据只证明 PHASE20 Observability Eval Runtime 的核心运行时基础已经进入代码、migration 和真实 Postgres 默认路径。它不关闭 PHASE20，也不声明 fixed benchmark、quality proven、PHASE21、PHASE22、22/22 completed 或 production ready。
+本证据证明 PHASE20 Observability Eval Runtime 已进入代码、migration、真实 Postgres 默认路径、API query surface、fault suite 和 closure 状态。它不声明 fixed production benchmark、quality proven、PHASE21、PHASE22、22/22 completed 或 production ready。
 
 已完成：
 
@@ -28,10 +28,13 @@ branch: codex/goal05-phase15-sandbox-repair
 - 新增 Eval Query / Report surface：`/api/v1/eval/runs/{eval_run_id}` 与 `/api/v1/eval/release-gates/{gate_id}`。
 - Query API 返回 projection freshness、authorization scope、redaction status、trace completeness、measurement status、case/metric status counts、failure buckets、comparison/evidence hashes。
 - 新增 fault suite 覆盖 worker crash partial attempt、recovered attempt、cancelled case、dataset/model mismatch、incomparable gate 和 gate replay hash stability。
+- 新增 Alembic migration `20260729_56_phase20_eval_result_revisions.py`，保存 late trace / late eval 的 append-only result revision。
+- EvidenceRecord 支持真实 artifact hash readback、expired evidence 和 hash mismatch 判定。
+- FixedProfileReplayPlan 验证 standard/local/deep/agentic 等固定 profile replay 是否完整。
+- Release Gate 覆盖 `ERROR` 状态，且不会折算为 PASS 或 FAILED。
 
-未完成：
+边界：
 
-- PHASE20 fault suite 尚未完整覆盖 late revision、expired evidence、external object artifact hash readback 和 full fixed-profile replay。
 - 固定 benchmark 数据集运行和 production readiness 判定属于 PHASE22，不在本证据中声明。
 
 ## Verification
@@ -48,12 +51,12 @@ alembic -c infra/db/alembic.ini current
 Result:
 
 ```text
-31 passed
+38 passed
 1 passed
 observability/eval single-document target protocol verification passed
-alembic current: 20260729_55 (head)
+alembic current: 20260729_56 (head)
 ```
 
 ## Closure Decision
 
-PHASE20 remains `in_progress`. 本轮证据证明 Eval Runtime、Query / Report surface、部分 fault semantics 已进入真实代码、migration、unit/fault/API test 和 Postgres integration；PHASE20 仍需 late revision、expired evidence、固定 profile replay 与 closure evidence 后才能进入 completed。
+PHASE20 completed. 本轮证据证明 Eval Runtime、Query / Report surface、fault semantics、late revision、expired evidence、artifact hash readback、fixed profile replay 和 release gate error state 已进入真实代码、migration、unit/fault/API test 和 Postgres integration。固定生产 benchmark、PHASE21 E2E/Fault/Cutover、PHASE22 closure 与 production readiness 不在本证据中声明。

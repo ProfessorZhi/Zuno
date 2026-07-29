@@ -9,10 +9,16 @@ from zuno.platform.observability.eval_runtime import (
     EvalRunConfig,
     EvalRunResultSet,
     EvalRunStatus,
+    EvidenceRecord,
+    EvidenceValidationStatus,
+    FixedProfileReplayPlan,
     RAGCoreFiveEvaluator,
     RAGCoreFiveInputBundle,
     ReleaseGateStatus,
+    build_error_release_gate,
     compare_benchmark_runs,
+    create_eval_result_revision,
+    evidence_artifact_hash,
     evaluate_release_gate,
 )
 
@@ -214,3 +220,137 @@ def test_phase20_dataset_or_model_mismatch_stays_incomparable_and_gate_replay_ha
     assert first.status == ReleaseGateStatus.INCOMPARABLE
     assert replay.gate_hash == first.gate_hash
     assert replay.evidence_hash == first.evidence_hash
+
+
+def test_phase20_late_revision_creates_new_immutable_result_hash_without_overwriting_original() -> None:
+    dataset = _dataset()
+    original = EvalRunResultSet(
+        run_id="run-late",
+        profile_id="agentic_graphrag",
+        config=_config(dataset.dataset_hash),
+        case_results=(_measured_case(),),
+        efficiency=_efficiency(),
+    )
+    late_case = CaseExecutionResult(
+        case_id="case-1",
+        status=EvalRunStatus.COMPLETED,
+        attempt=2,
+        lease_ref="lease:late",
+        checkpoint_ref="checkpoint:late",
+        metric_results=_measured_case().metric_results,
+        failure_buckets=("late_trace_revision",),
+        recovered=True,
+    )
+    revised = EvalRunResultSet(
+        run_id=original.run_id,
+        profile_id=original.profile_id,
+        config=original.config,
+        case_results=(late_case,),
+        efficiency=_efficiency(),
+    )
+    revision = create_eval_result_revision(
+        previous=original,
+        revised=revised,
+        reason="late_trace_arrived_after_gate",
+    )
+
+    assert revision.previous_result_set_hash == original.result_set_hash
+    assert revision.revised_result_set_hash == revised.result_set_hash
+    assert revision.previous_result_set_hash != revision.revised_result_set_hash
+    assert revision.revision_hash
+
+
+def test_phase20_expired_or_mismatched_evidence_blocks_release_gate(tmp_path) -> None:
+    artifact = tmp_path / "phase20-evidence.txt"
+    artifact.write_text("phase20 evidence\n", encoding="utf-8")
+    dataset = _dataset()
+    result_set = EvalRunResultSet(
+        run_id="run-evidence",
+        profile_id="agentic_graphrag",
+        config=_config(dataset.dataset_hash),
+        case_results=(_measured_case(),),
+        efficiency=_efficiency(),
+    )
+    expired = EvidenceRecord(
+        evidence_id="evidence:expired",
+        artifact_ref=str(artifact),
+        artifact_hash=evidence_artifact_hash(artifact),
+        result_set_hash=result_set.result_set_hash,
+        gate_hash="0" * 64,
+        expires_at="2020-01-01T00:00:00+00:00",
+    )
+    mismatch = EvidenceRecord(
+        evidence_id="evidence:mismatch",
+        artifact_ref=str(artifact),
+        artifact_hash="1" * 64,
+        result_set_hash=result_set.result_set_hash,
+        gate_hash="0" * 64,
+    )
+    expired_gate = evaluate_release_gate(
+        gate_id="gate:expired",
+        result_set=result_set,
+        thresholds={"CONTEXT_RECALL": 0.9},
+        critical_slices=set(),
+        comparison=None,
+        evidence_artifact_ref=str(artifact),
+        evidence_artifact_hash=expired.artifact_hash,
+        evidence_record=expired,
+    )
+
+    assert expired.validate_artifact() == EvidenceValidationStatus.EXPIRED
+    assert mismatch.validate_artifact() == EvidenceValidationStatus.HASH_MISMATCH
+    assert expired_gate.status == ReleaseGateStatus.BLOCKED
+    assert expired_gate.reason == "evidence_expired"
+
+
+def test_phase20_fixed_profile_replay_must_cover_all_required_profiles() -> None:
+    dataset = _dataset()
+    result_set = EvalRunResultSet(
+        run_id="run-fixed-profile",
+        profile_id="agentic_graphrag",
+        config=_config(dataset.dataset_hash),
+        case_results=(_measured_case(),),
+        efficiency=_efficiency(),
+    )
+    incomplete_replay = FixedProfileReplayPlan(
+        plan_id="phase20-fixed-replay",
+        required_profile_ids=("standard_rag", "local_graphrag", "deep_graphrag", "agentic_graphrag"),
+        observed_profile_result_hashes={"standard_rag": result_set.result_set_hash},
+    )
+    complete_replay = FixedProfileReplayPlan(
+        plan_id="phase20-fixed-replay",
+        required_profile_ids=incomplete_replay.required_profile_ids,
+        observed_profile_result_hashes={
+            profile_id: result_set.result_set_hash
+            for profile_id in incomplete_replay.required_profile_ids
+        },
+    )
+    blocked = evaluate_release_gate(
+        gate_id="gate:fixed-replay",
+        result_set=result_set,
+        thresholds={"CONTEXT_RECALL": 0.9},
+        critical_slices=set(),
+        comparison=None,
+        evidence_artifact_ref="docs/evidence/goal05-phase20-eval-runtime.md",
+        evidence_artifact_hash=_hash("artifact"),
+        fixed_profile_replay=incomplete_replay,
+    )
+
+    assert incomplete_replay.complete is False
+    assert incomplete_replay.missing_profile_ids == ("local_graphrag", "deep_graphrag", "agentic_graphrag")
+    assert complete_replay.complete is True
+    assert blocked.status == ReleaseGateStatus.BLOCKED
+    assert blocked.reason == "fixed_profile_replay_incomplete:local_graphrag,deep_graphrag,agentic_graphrag"
+
+
+def test_phase20_release_gate_error_state_does_not_become_failed_or_passed() -> None:
+    error_gate = build_error_release_gate(
+        gate_id="gate:error",
+        result_set_hash="a" * 64,
+        reason="artifact_store_unavailable",
+    )
+
+    assert error_gate.status == ReleaseGateStatus.ERROR
+    assert error_gate.reason == "artifact_store_unavailable"
+    assert error_gate.gate_hash
+    assert error_gate.evidence_hash

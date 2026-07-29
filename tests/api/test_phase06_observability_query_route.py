@@ -74,6 +74,26 @@ class FakeEvalQueryService:
             "projection_freshness": "fresh",
         }
 
+    def get_eval_metrics_projection(self, *, principal, tenant_id: str, workspace_id: str, eval_run_id: str):
+        if not principal.is_admin:
+            raise ObservabilityQueryAuthorizationError("eval read scope is required")
+        return {"run_id": eval_run_id, "metric_status_counts": {"MEASURED": 5}}
+
+    def get_eval_failures_projection(self, *, principal, tenant_id: str, workspace_id: str, eval_run_id: str):
+        if not principal.is_admin:
+            raise ObservabilityQueryAuthorizationError("eval read scope is required")
+        return {"run_id": eval_run_id, "failure_buckets": []}
+
+    def get_comparison_report(self, *, principal, tenant_id: str, workspace_id: str, comparison_hash: str):
+        if not principal.is_admin:
+            raise ObservabilityQueryAuthorizationError("eval read scope is required")
+        return {"comparison_hash": comparison_hash, "status": "PASSED"}
+
+    def get_evidence_report(self, *, principal, tenant_id: str, workspace_id: str, evidence_id: str):
+        if not principal.is_admin:
+            raise ObservabilityQueryAuthorizationError("eval read scope is required")
+        return {"evidence_id": evidence_id, "artifact_hash": "a" * 64}
+
 
 def _client(monkeypatch, *, role: str | list[str]) -> TestClient:
     app = FastAPI()
@@ -166,3 +186,22 @@ def test_eval_query_routes_reject_non_admin(monkeypatch) -> None:
     )
 
     assert response.status_code == 403
+
+
+def test_eval_metrics_failures_comparison_and_evidence_routes_return_authorized_reports(monkeypatch) -> None:
+    client = _client(monkeypatch, role="admin")
+    params = {"tenant_id": "tenant-a", "workspace_id": "workspace-a"}
+
+    metrics = client.get("/api/v1/eval/runs/run-a/metrics", params=params)
+    failures = client.get("/api/v1/eval/runs/run-a/failures", params=params)
+    comparison = client.get("/api/v1/eval/comparisons/comparison-a", params=params)
+    evidence = client.get("/api/v1/evidence/evidence-a", params=params)
+
+    assert metrics.status_code == 200
+    assert metrics.json()["data"]["metric_status_counts"] == {"MEASURED": 5}
+    assert failures.status_code == 200
+    assert failures.json()["data"]["failure_buckets"] == []
+    assert comparison.status_code == 200
+    assert comparison.json()["data"]["comparison_hash"] == "comparison-a"
+    assert evidence.status_code == 200
+    assert evidence.json()["data"]["evidence_id"] == "evidence-a"
