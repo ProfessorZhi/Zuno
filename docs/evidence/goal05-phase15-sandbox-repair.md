@@ -15,6 +15,8 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 - `SandboxAdapterRegistry.execute()` 在 runner 启动前校验 Stateful Session 的 hash、版本、过期时间和大小上限。
 - `SandboxAdapterRegistry.prepare()` 写入默认 session store；`execute()` 要求 session store 中存在匹配记录，防止只靠客户端 dispatch payload 自证。
 - `ToolInvocationGateway` 默认使用 Tool Runtime DB-backed sandbox session store；migration `20260728_52` 新增 `tool_sandbox_sessions`，并用 FK 将 `tool_sandbox_receipts.session_ref` 绑定到 session。
+- `InMemorySandboxSessionStore` roundtrip 保留 session metadata，用于验证 stateful session contract；DB-backed default store 由 `ToolInvocationGateway` 注入。
+- integration 侧 PHASE15 用例已更新为同时断言 `tool_sandbox_sessions` 与 `tool_sandbox_receipts`，证明默认路径先写 session 再写 receipt。
 - `SandboxAdapterRegistry.execute()` 还校验 runner 输出结构、session ref、adapter tier 与输出大小上限。
 - WASM Python runner 使用 Deno 权限边界，并要求显式 Pyodide entrypoint；缺 Deno 或缺 Pyodide entrypoint fail-closed。
 - WASM Python runner 将显式 file path allowlist 映射到 `--allow-read`，将显式 domain allowlist 映射到 `--allow-net`；无 domain allowlist 时保持 `--deny-net`。
@@ -36,14 +38,14 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 ## Verification
 
 ```text
-python -m py_compile src/backend/zuno/capability/tool_runtime/sandbox.py src/backend/zuno/capability/tool_runtime/invocation_gateway.py src/backend/zuno/capability/tool_runtime/__init__.py tests/capability/test_phase15_agent_sandbox.py tests/integration/test_goal03_wave_b_persistence.py
-pytest -q tests/capability/test_phase15_agent_sandbox.py -p no:cacheprovider
+python -m py_compile src/backend/zuno/capability/tool_runtime/sandbox.py src/backend/zuno/capability/tool_runtime/invocation_gateway.py src/backend/zuno/capability/tool_runtime/__init__.py src/backend/zuno/platform/database/tool_runtime/domain.py src/backend/zuno/platform/database/tool_runtime/__init__.py tests/capability/test_phase15_agent_sandbox.py tests/integration/test_goal03_wave_b_persistence.py
+pytest -q tests/capability/test_phase15_agent_sandbox.py tests/repo/test_goal03_wave_b_migration_contract.py -p no:cacheprovider
 ```
 
 Result:
 
 ```text
-15 passed
+24 passed
 ```
 
 Environment probes:

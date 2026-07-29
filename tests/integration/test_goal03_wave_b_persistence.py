@@ -573,6 +573,16 @@ def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine
                 """
             )
         ).mappings().one()
+        session = conn.execute(
+            text(
+                """
+                SELECT session_ref, session_version, sandbox_profile_id, adapter_tier
+                FROM tool_sandbox_sessions
+                WHERE session_ref = :session_ref
+                """
+            ),
+            {"session_ref": sandbox["session_ref"]},
+        ).mappings().one()
         attempt = conn.execute(
             text(
                 """
@@ -598,6 +608,10 @@ def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine
     assert sandbox["session_version"] == 1
     assert sandbox["isolation_verified"] is True
     assert sandbox["allowlist_enforced"] is True
+    assert session["session_ref"] == sandbox["session_ref"]
+    assert session["session_version"] == 1
+    assert session["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
+    assert session["adapter_tier"] == "WASM_PYTHON"
     assert attempt["status"] == "SUCCEEDED"
     assert attempt["dispatch_certainty"] == "DISPATCHED"
     assert observation["output_trusted"] is False

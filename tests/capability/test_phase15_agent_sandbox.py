@@ -8,13 +8,14 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway, _ExecutePrerequisiteResult
-from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner
+from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner, InMemorySandboxSessionStore
 from zuno.capability.tool_runtime.sandbox import (
     DenoPyodideWasmRunner,
     OciProcessSandboxRunner,
     SandboxDispatch,
     SandboxPolicyViolation,
     SandboxProfile,
+    SandboxSessionRecord,
 )
 from zuno.platform.contracts import canonical_sha256
 
@@ -272,6 +273,31 @@ def test_phase15_sandbox_execute_requires_stateful_session_store_entry() -> None
 
     result = preparing_registry.execute(dispatch=dispatch, args={"code": "print(42)"})
     assert result.status == "SUCCEEDED"
+
+
+def test_phase15_sandbox_session_store_roundtrip_preserves_stateful_metadata() -> None:
+    store = InMemorySandboxSessionStore()
+    record = SandboxSessionRecord(
+        session_ref="sandbox-session:tenant:workspace:run:thread:call",
+        tenant_id="tenant",
+        workspace_id="workspace",
+        run_id="run",
+        thread_id="thread",
+        call_id="call",
+        sandbox_profile_id="sandbox-profile:wasm-python:v1",
+        adapter_tier="WASM_PYTHON",
+        session_version=1,
+        session_hash="a" * 64,
+        profile_hash="b" * 64,
+        limits_hash="c" * 64,
+        expires_at=datetime.now(tz=UTC) + timedelta(minutes=10),
+        session_size_bytes=512,
+    )
+
+    store.put(record)
+    loaded = store.get("sandbox-session:tenant:workspace:run:thread:call")
+
+    assert loaded == record
 
 
 def test_phase15_sandbox_execute_rejects_invalid_runner_output_contract() -> None:
