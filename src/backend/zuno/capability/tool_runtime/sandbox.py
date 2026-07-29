@@ -153,6 +153,7 @@ class DenoPyodideWasmRunner(SandboxRunner):
                 input=json.dumps(payload, ensure_ascii=True, sort_keys=True),
                 text=True,
                 capture_output=True,
+                env={},
                 timeout=int(profile["limits"]["wall_time_seconds"]),
             )
         except subprocess.TimeoutExpired as exc:
@@ -236,6 +237,7 @@ class OciProcessSandboxRunner(SandboxRunner):
                 docker_command,
                 text=True,
                 capture_output=True,
+                env={},
                 timeout=int(profile["limits"]["wall_time_seconds"]),
             )
         except subprocess.TimeoutExpired as exc:

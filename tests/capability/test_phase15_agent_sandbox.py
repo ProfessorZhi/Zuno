@@ -349,10 +349,13 @@ def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(mon
 
 def test_phase15_deno_runner_maps_explicit_path_and_domain_allowlists_to_permissions(monkeypatch) -> None:
     captured_command: list[str] = []
+    captured_env: dict[str, str] | None = None
     monkeypatch.setattr("shutil.which", lambda name: f"C:/tools/{name}.exe")
 
     def fake_run(command: list[str], **_kwargs: object) -> _CompletedProcess:
+        nonlocal captured_env
         captured_command.extend(command)
+        captured_env = _kwargs.get("env")  # type: ignore[assignment]
         return _CompletedProcess(stdout="42")
 
     monkeypatch.setattr("subprocess.run", fake_run)
@@ -386,6 +389,7 @@ def test_phase15_deno_runner_maps_explicit_path_and_domain_allowlists_to_permiss
     assert "workspace://logical/input.csv" not in allow_read
     assert "--allow-net=example.com" in captured_command
     assert "--deny-net" not in captured_command
+    assert captured_env == {}
 
 
 def test_phase15_oci_runner_requires_proxy_for_explicit_egress_allowlist(monkeypatch) -> None:
@@ -407,10 +411,13 @@ def test_phase15_oci_runner_requires_proxy_for_explicit_egress_allowlist(monkeyp
 
 def test_phase15_oci_runner_uses_short_lived_container_and_proxy_env_without_host_mounts(monkeypatch) -> None:
     captured_command: list[str] = []
+    captured_env: dict[str, str] | None = None
     monkeypatch.setattr("shutil.which", lambda name: f"C:/tools/{name}.exe")
 
     def fake_run(command: list[str], **_kwargs: object) -> _CompletedProcess:
+        nonlocal captured_env
         captured_command.extend(command)
+        captured_env = _kwargs.get("env")  # type: ignore[assignment]
         return _CompletedProcess(stdout="Python 3.12")
 
     monkeypatch.setattr("subprocess.run", fake_run)
@@ -444,3 +451,4 @@ def test_phase15_oci_runner_uses_short_lived_container_and_proxy_env_without_hos
     assert "HTTP_PROXY=http://egress-proxy.local:8080" in captured_command
     assert "HTTPS_PROXY=http://egress-proxy.local:8080" in captured_command
     assert "ZUNO_EGRESS_ALLOWLIST=pypi.org" in captured_command
+    assert captured_env == {}
