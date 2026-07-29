@@ -23,6 +23,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - 工具审批恢复时必须匹配当前 pending tool request；旧 `approval_id` 或错误 tool call 会产生 `approval_replay_rejected` 事件并保持 `approval_waiting`。
 - 修复 ToolRuntime 在 FastAPI async endpoint 内调用 side-effect gateway 时的 event loop 嵌套问题；已有 event loop 时通过短生命周期线程执行网关协程。
 - 修复知识检索产品模式优先级：显式 `contract_review` / `enterprise_kb` 不再被默认 `standard` retrieval profile 降级为 `normal/basic`。
+- 修复产品仓库的 `ProductCommandSubmission.payload_json` 兼容别名，并将 `product_agent_versions` / `product_agent_drafts` 的 JSON 入库参数规范化为可复现 JSON 文本，恢复统一产品场景的默认记录链。
 
 ## Verification
 
@@ -34,6 +35,7 @@ pytest -q tests/capability/test_capability_skill_layer.py tests/agent/dag/test_p
 pytest -q tests/agent/runtime/test_runtime_restart_persistence.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_real_execution.py -p no:cacheprovider
 pytest -q tests/fault/security/test_phase05_security_pre_effect_faults.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/security/test_phase05_security_eval_gate.py -p no:cacheprovider
 pytest -q tests/api/test_workspace_task_runtime.py -k "tool_approval or security_approval_facts or approval_replay or approval_resume" -p no:cacheprovider
+pytest -q tests/e2e/test_unified_agent_product_scenario.py tests/fault/capability/test_phase21_capability_attack_conformance.py tests/fault/agent/test_phase21_crash_recovery_matrix.py tests/knowledge/test_ingestion_delete_restore.py tests/api/test_goal03_product_route.py tests/api/test_completion_unified_runtime.py tests/api/test_workspace_task_runtime.py tests/repo/test_goal03_wave_a_migration_contract.py -k "tool_approval or security_approval_facts or approval_replay or answers_from_ingested_index_with_citations or canaries_phase08_cutover_from_product_entry or workspace_task_runtime_links_task_events_artifact_and_feedback or unified_agent_product_scenario_exposes_artifact_trace_and_runtime_recovery or goal03_product_runtime_request_route_rejects_rollback_before_service or goal03_product_service_rejects_rollback_before_database_write or completion_cutover_mode_resolution_supports_explicit_modes or completion_route_uses_legacy_runtime_in_rollback_window or test_phase21_capability_attack_route_ignores_prompt_injection_and_hides_denied_capability or test_phase21_capability_conformance_blocks_cross_workspace_exposure or test_phase21_crash_matrix_reconciles_domain_checkpoint_and_resends_committed_outbox or test_phase21_crash_matrix_reduces_persisted_result_and_rejects_late_epoch or test_ingestion_delete_restore or test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authorization or test_goal04_product_command_submission_exposes_payload_json_alias" -p no:cacheprovider
 pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py tests/api/test_knowledge_api_contract.py tests/agent/test_agentic_retrieval_runtime.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/retrieval/test_retrieval_planner.py -p no:cacheprovider
 ```
 
@@ -46,6 +48,7 @@ pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runt
 20 passed
 7 passed
 6 passed
+23 passed
 58 passed
 ```
 
