@@ -70,6 +70,32 @@ def test_web_package_scripts_support_container_and_workspace_node_modules():
     assert "'vue-tsc': 'vue-tsc/bin/vue-tsc.js'" in runner
 
 
+def test_docker_backend_build_uses_configurable_mirrored_python_base():
+    dockerfile = (REPO_ROOT / "infra" / "docker" / "Dockerfile").read_text(encoding="utf-8")
+    compose = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "ARG PYTHON_BASE_IMAGE=python:3.12-bookworm" in dockerfile
+    assert "ARG DEBIAN_MIRROR=deb.debian.org" in dockerfile
+    assert "ARG DEBIAN_SECURITY_MIRROR=deb.debian.org" in dockerfile
+    assert "ARG PIP_TRUSTED_HOST=" in dockerfile
+    assert "ARG PIP_DEFAULT_TIMEOUT=120" in dockerfile
+    assert "ARG PIP_RETRIES=10" in dockerfile
+    assert "FROM ${PYTHON_BASE_IMAGE} AS backend-base" in dockerfile
+    assert "chromium" in dockerfile
+    assert "chromium-driver" in dockerfile
+    assert "apt-get install -o Acquire::Retries=10 -y --no-install-recommends" in dockerfile
+    assert "ln -sf /usr/bin/chromium /usr/bin/google-chrome" in dockerfile
+    assert 'pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}" --trusted-host "${PIP_TRUSTED_HOST}" --timeout "${PIP_DEFAULT_TIMEOUT}" --retries "${PIP_RETRIES}"' in dockerfile
+    assert compose.count("image: docker-backend") == 2
+    assert compose.count("PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-mirror.gcr.io/library/python:3.12-bookworm}") == 2
+    assert compose.count("DEBIAN_MIRROR: ${DEBIAN_MIRROR:-mirrors.aliyun.com}") == 2
+    assert compose.count("DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-mirrors.ustc.edu.cn}") == 2
+    assert compose.count("PIP_INDEX_URL: ${PIP_INDEX_URL:-http://mirrors.aliyun.com/pypi/simple/}") == 2
+    assert compose.count("PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-mirrors.aliyun.com}") == 2
+    assert compose.count("PIP_DEFAULT_TIMEOUT: ${PIP_DEFAULT_TIMEOUT:-120}") == 2
+    assert compose.count("PIP_RETRIES: ${PIP_RETRIES:-10}") == 2
+
+
 def test_desktop_smoke_script_runs_real_electron_bridge_check():
     content = (REPO_ROOT / "tools" / "scripts" / "run-desktop-smoke.ps1").read_text(encoding="utf-8")
 

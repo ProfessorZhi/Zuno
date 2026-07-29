@@ -57,6 +57,44 @@ docker compose build frontend: built docker-frontend:latest
 58 passed
 ```
 
+## Backend Docker Build Repair
+
+后端默认 Docker 构建链路已补齐这些真实修复：
+
+- `PYTHON_BASE_IMAGE` 可配置，默认走 `mirror.gcr.io/library/python:3.12-bookworm`。
+- `DEBIAN_MIRROR` 与 `DEBIAN_SECURITY_MIRROR` 分离，默认主仓走 `mirrors.aliyun.com`，security 仓走 `mirrors.ustc.edu.cn`。
+- `PIP_INDEX_URL` 默认走 `http://mirrors.aliyun.com/pypi/simple/`，并显式传入 `PIP_TRUSTED_HOST`。
+- `PIP_DEFAULT_TIMEOUT=120` 与 `PIP_RETRIES=10` 进入默认构建链，避免大 wheel 在默认 timeout 下频繁失败。
+- `chromium` 与 `chromium-driver` 改为 Debian 包，`/usr/bin/google-chrome` 通过 symlink 兼容，移除 Google Storage ZIP 下载依赖。
+- `apt-get install` 也显式启用 `Acquire::Retries=10`。
+
+对应静态测试继续通过：
+
+```text
+pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
+23 passed
+```
+
+构建过程真实结果：
+
+```text
+docker compose --progress=plain -f infra/docker/docker-compose.yml build backend
+```
+
+该命令已经通过 `apt`、`pip`、`chromium` 和 `chromium-driver` 下载/安装阶段，但在 Docker Desktop 导出层失败：
+
+```text
+failed to create temp dir: mkdir /var/lib/desktop-containerd/daemon/tmpmounts/containerd-mount1352738550: input/output error
+```
+
+重启 Docker Desktop 与 `wsl --shutdown` 后，`docker info` 仍返回：
+
+```text
+500 Internal Server Error
+```
+
+因此当前无法把这次后端构建收尾成一个可复现的成功镜像证据。
+
 未完成的完整 Web stack / browser smoke：
 
 ```text
@@ -69,3 +107,5 @@ cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
 ## Boundary
 
 本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝、产品模式优先级和 Docker frontend build 继续可执行。PHASE21 其余完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
+
+当前阻塞点是 Docker Desktop Linux engine 的内容存储/导出错误，而不是仓库内构建参数或依赖源选择。仓库侧默认路径已修到可持续推进的位置，但还缺一个健康的 Docker 引擎来完成镜像导出与后续 Web stack 启动证据。

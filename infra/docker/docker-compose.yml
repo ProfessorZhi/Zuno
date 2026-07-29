@@ -184,9 +184,18 @@ services:
 
   backend:
     container_name: zuno-backend
+    image: docker-backend
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile
+      args:
+        PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-mirror.gcr.io/library/python:3.12-bookworm}
+        DEBIAN_MIRROR: ${DEBIAN_MIRROR:-mirrors.aliyun.com}
+        DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-mirrors.ustc.edu.cn}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-http://mirrors.aliyun.com/pypi/simple/}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-mirrors.aliyun.com}
+        PIP_DEFAULT_TIMEOUT: ${PIP_DEFAULT_TIMEOUT:-120}
+        PIP_RETRIES: ${PIP_RETRIES:-10}
     restart: unless-stopped
     ports:
       - "7860:7860"
@@ -226,6 +235,14 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/Dockerfile
+      args:
+        PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-mirror.gcr.io/library/python:3.12-bookworm}
+        DEBIAN_MIRROR: ${DEBIAN_MIRROR:-mirrors.aliyun.com}
+        DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-mirrors.ustc.edu.cn}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-http://mirrors.aliyun.com/pypi/simple/}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-mirrors.aliyun.com}
+        PIP_DEFAULT_TIMEOUT: ${PIP_DEFAULT_TIMEOUT:-120}
+        PIP_RETRIES: ${PIP_RETRIES:-10}
     restart: unless-stopped
     command: ["python", "-m", "zuno.services.queue.runner"]
     environment:
