@@ -24,6 +24,7 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 - Sandbox execute 失败后仍写入 `tool_sandbox_receipts`，记录 `sandbox_execution_status=BLOCKED` 和 blocked reason。
 - Sandbox 输出在 gateway 进入 receipt/observation 边界前会做敏感信息脱敏。
 - Python/CLI sandbox 成功时，sandbox output 形成 `ToolObservation` 输入，不直接成为领域成功。
+- Approved side-effect 路径中 sandbox output 不会生成 confirmed `ToolEffectReceipt`；该输出只进入 observation/reconciliation 边界，等待真实 effect 证明。
 
 未完成：
 
@@ -41,7 +42,7 @@ pytest -q tests/capability/test_phase15_agent_sandbox.py -p no:cacheprovider
 Result:
 
 ```text
-13 passed
+14 passed
 ```
 
 Environment probes:

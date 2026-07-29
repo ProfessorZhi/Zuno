@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway
+from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway, _ExecutePrerequisiteResult
 from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner
 from zuno.capability.tool_runtime.sandbox import (
     DenoPyodideWasmRunner,
@@ -75,6 +76,10 @@ class _RecordingToolUnitOfWork:
     def __init__(self) -> None:
         self.attempts: list[object] = []
         self.sandbox_receipts: list[object] = []
+        self.effect_reconciliations: list[object] = []
+        self.effect_receipts: list[object] = []
+        self.observations: list[object] = []
+        self.execution_receipts: list[object] = []
 
     def __enter__(self) -> _RecordingToolUnitOfWork:
         return self
@@ -87,6 +92,57 @@ class _RecordingToolUnitOfWork:
 
     def record_sandbox_receipt(self, receipt: object) -> None:
         self.sandbox_receipts.append(receipt)
+
+    def publish_tool_version(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def record_adapter_binding(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def install_tool(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def activate_tool(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def prepare_action(self, *_args: object, **_kwargs: object) -> str:
+        return "prepared-action-hash"
+
+    def record_observation(self, observation: object) -> None:
+        self.observations.append(observation)
+
+    def record_execution_receipt(self, receipt: object) -> None:
+        self.execution_receipts.append(receipt)
+
+    def record_bypass_guard(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def record_effect_reconciliation(self, reconciliation: object) -> None:
+        self.effect_reconciliations.append(reconciliation)
+
+    def record_effect_receipt(self, receipt: object) -> None:
+        self.effect_receipts.append(receipt)
+
+
+class _SandboxObservationOnlyGateway(ToolInvocationGateway):
+    def _record_execute_prerequisites(self, **_kwargs: object) -> _ExecutePrerequisiteResult:
+        return _ExecutePrerequisiteResult(
+            idempotency_scope="tool-side-effect",
+            idempotency_key="call-side-effect-sandbox",
+            idempotency_generation=1,
+            fencing_resource_id="resource:side-effect",
+            fencing_lease_id="lease:side-effect",
+            fencing_epoch=1,
+        )
+
+    def _reauthorize_execute_epoch(self, **_kwargs: object) -> None:
+        return None
+
+    def _issue_secret_lease(self, **_kwargs: object) -> str:
+        return "security-secret-lease:call-side-effect-sandbox"
+
+    def _complete_execute_prerequisites(self, **_kwargs: object) -> None:
+        return None
 
 
 def test_phase15_wasm_python_sandbox_is_deny_by_default_and_observation_only() -> None:
@@ -333,6 +389,46 @@ def test_phase15_gateway_redacts_sandbox_output_before_receipt_and_observation_b
     receipt = unit_of_work.sandbox_receipts[0]
     assert receipt.receipt_payload["sandbox_execution"]["api_token"] == "[REDACTED_SECRET]"
     assert receipt.receipt_payload["sandbox_execution"]["email"] == "[REDACTED_PII]"
+
+
+def test_phase15_side_effect_sandbox_output_requires_reconciliation_not_domain_success() -> None:
+    unit_of_work = _RecordingToolUnitOfWork()
+    gateway = _SandboxObservationOnlyGateway(
+        unit_of_work_factory=lambda: unit_of_work,  # type: ignore[arg-type]
+        infrastructure_unit_of_work_factory=lambda _tenant: object(),  # type: ignore[arg-type]
+        sandbox_registry=SandboxAdapterRegistry(runner_factory=lambda tier: _FakeRunner(tier)),
+    )
+    executor_called = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal executor_called
+        executor_called = True
+        return {"provider_effect_id": "provider-effect:must-not-confirm"}
+
+    result, receipt = asyncio.run(
+        gateway.invoke_readonly(
+            tool_name="mail.send",
+            args={"to": "review@example.com", "body": "hello", "secret_ref": "security-secret-ref:mail"},
+            tenant_id="tenant-sandbox",
+            workspace_id="workspace-sandbox",
+            trace_id="thread-sandbox",
+            call_id="call-side-effect-sandbox",
+            adapter_kind="API",
+            executor=executor,
+            readonly=False,
+            approved=True,
+        )
+    )
+
+    assert result is None
+    assert executor_called is False
+    assert receipt.status == "reconcile_required"
+    assert receipt.blocked_reason == "SANDBOX_OBSERVATION_REQUIRES_EFFECT_RECONCILIATION"
+    assert len(unit_of_work.effect_receipts) == 0
+    assert len(unit_of_work.effect_reconciliations) == 1
+    reconciliation = unit_of_work.effect_reconciliations[0]
+    assert reconciliation.provider_effect_id == "sandbox-observation:call-side-effect-sandbox"
+    assert reconciliation.reconciliation_query["reason"] == "sandbox_observation_requires_effect_reconciliation"
 
 
 def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(monkeypatch) -> None:

@@ -317,8 +317,62 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
+                    if sandbox_result is not None:
+                        sandbox_reconciliation_payload = _sandbox_observation_reconciliation_payload(
+                            sandbox_result=sandbox_result,
+                            call_id=call_id,
+                        )
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="UNKNOWN",
+                            dispatch_certainty="DISPATCHED",
+                            effect_certainty="UNKNOWN_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=sandbox_reconciliation_payload,
+                        )
+                        reconciliation_id = f"tool-effect-reconciliation:{call_id}"
+                        with self._unit_of_work_factory() as repo:
+                            repo.record_effect_reconciliation(
+                                ToolEffectReconciliationInput(
+                                    reconciliation_id=reconciliation_id,
+                                    tenant_id=tenant_id,
+                                    prepared_tool_action_id=prepared_id,
+                                    attempt_id=attempt_id,
+                                    execution_receipt_id=receipt_id,
+                                    provider_effect_id=str(sandbox_reconciliation_payload["provider_effect_id"]),
+                                    status="OPEN",
+                                    next_action="RECONCILE",
+                                    reconciliation_query=sandbox_reconciliation_payload["reconciliation_query"],
+                                    manual_assessment_required=False,
+                                    age_escalation_after_seconds=900,
+                                    idempotency_scope=execute_prerequisites.idempotency_scope,
+                                    idempotency_key=execute_prerequisites.idempotency_key,
+                                    idempotency_generation=execute_prerequisites.idempotency_generation,
+                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
+                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
+                                    fencing_epoch=execute_prerequisites.fencing_epoch,
+                                    secret_lease_id=secret_lease_id,
+                                    reconciliation_payload=sandbox_reconciliation_payload,
+                                )
+                            )
+                        self._complete_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                            result_ref=reconciliation_id,
+                        )
+                        return None, ToolGatewayReceipt(
+                            "reconcile_required",
+                            prepared_id,
+                            attempt_id,
+                            receipt_id,
+                            "SANDBOX_OBSERVATION_REQUIRES_EFFECT_RECONCILIATION",
+                        )
                     try:
-                        result = sandbox_result.output_payload if sandbox_result is not None else await executor()
+                        result = await executor()
                     except ToolEffectUnknownError as exc:
                         unknown_payload = _unknown_effect_payload(exc=exc, call_id=call_id)
                         self._record_terminal(
@@ -1360,6 +1414,31 @@ def _async_job_payload_from_result(*, result: Any, call_id: str) -> dict[str, An
         "async_status": "WAITING_CALLBACK",
         "effect_certainty": "UNKNOWN_EFFECT",
         "native_result": redact_sensitive_payload(native),
+    }
+
+
+def _sandbox_observation_reconciliation_payload(
+    *,
+    sandbox_result: SandboxExecutionResult,
+    call_id: str,
+) -> dict[str, Any]:
+    return {
+        "provider_effect_id": f"sandbox-observation:{call_id}",
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": f"tool-effect-reconciliation:{call_id}",
+        "next_action": "RECONCILE",
+        "reconciliation_query": redact_sensitive_payload(
+            {
+                "reason": "sandbox_observation_requires_effect_reconciliation",
+                "sandbox_adapter_tier": sandbox_result.output_payload.get("sandbox_adapter_tier"),
+                "session_ref": sandbox_result.output_payload.get("session_ref"),
+                "exit_code": sandbox_result.exit_code,
+                "stdout": sandbox_result.stdout,
+                "stderr": sandbox_result.stderr,
+                "output_payload": sandbox_result.output_payload,
+            }
+        ),
     }
 
 
