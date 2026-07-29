@@ -105,6 +105,46 @@ for /f "usebackq delims=" %%C in (`powershell -NoProfile -ExecutionPolicy Bypass
 )
 exit /b 0
 
+:default_compose_images
+if not defined POSTGRES_IMAGE set "POSTGRES_IMAGE=postgres:16"
+if not defined REDIS_IMAGE set "REDIS_IMAGE=redis:7.0-alpine"
+if not defined RABBITMQ_IMAGE set "RABBITMQ_IMAGE=rabbitmq:3.13-management-alpine"
+if not defined NEO4J_IMAGE set "NEO4J_IMAGE=neo4j:5-community"
+if not defined MINIO_IMAGE set "MINIO_IMAGE=minio/minio:RELEASE.2023-03-20T20-16-18Z"
+if not defined ETCD_IMAGE set "ETCD_IMAGE=quay.io/coreos/etcd:v3.5.5"
+if not defined MILVUS_IMAGE set "MILVUS_IMAGE=milvusdb/milvus:v2.4.15"
+exit /b 0
+
+:pull_image
+set "PULL_IMAGE=%~1"
+docker image inspect "!PULL_IMAGE!" >nul 2>nul
+if not errorlevel 1 exit /b 0
+for /L %%I in (1,1,3) do (
+  echo Pulling !PULL_IMAGE! ^(attempt %%I/3^)...
+  docker pull "!PULL_IMAGE!"
+  if not errorlevel 1 exit /b 0
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds (10 * %%I)"
+)
+exit /b 1
+
+:pull_infra_images
+call :default_compose_images
+call :pull_image "!POSTGRES_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!REDIS_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!RABBITMQ_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!NEO4J_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!MINIO_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!ETCD_IMAGE!"
+if errorlevel 1 exit /b 1
+call :pull_image "!MILVUS_IMAGE!"
+if errorlevel 1 exit /b 1
+exit /b 0
+
 :start
 call :config
 call :ensure_docker
@@ -115,6 +155,8 @@ call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Starting Zuno Web stack...
+call :pull_infra_images
+if errorlevel 1 goto :fail
 docker compose up -d --remove-orphans
 if errorlevel 1 goto :fail
 call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90
@@ -152,6 +194,8 @@ call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Rebuilding and restarting Zuno Web stack...
+call :pull_infra_images
+if errorlevel 1 goto :fail
 docker compose up --build -d --remove-orphans
 if errorlevel 1 goto :fail
 call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90
@@ -173,6 +217,8 @@ call :cleanup_stale_stack
 if errorlevel 1 goto :fail
 cd /d "%DOCKER_DIR%"
 echo Running full rebuild for Zuno Web stack...
+call :pull_infra_images
+if errorlevel 1 goto :fail
 docker compose build --no-cache
 if errorlevel 1 goto :fail
 docker compose up -d --remove-orphans

@@ -12,10 +12,26 @@ def test_web_start_launcher_does_not_rebuild_on_plain_start():
 
     assert start_block is not None
     assert 'for %%I in ("%SCRIPT_DIR%..\\..\\..") do set "PROJECT_ROOT=%%~fI"' in content
+    assert "call :pull_infra_images" in start_block.group(1)
     assert "docker compose up -d --remove-orphans" in start_block.group(1)
     assert "docker compose up --build -d" not in start_block.group(1)
     assert 'call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90' in start_block.group(1)
     assert 'call :wait_http "http://127.0.0.1:8090" "Web frontend" 90' in start_block.group(1)
+
+
+def test_web_launcher_prepulls_infra_images_with_retry_and_env_overrides():
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
+
+    assert ':default_compose_images' in content
+    assert 'if not defined POSTGRES_IMAGE set "POSTGRES_IMAGE=postgres:16"' in content
+    assert 'if not defined NEO4J_IMAGE set "NEO4J_IMAGE=neo4j:5-community"' in content
+    assert 'if not defined MILVUS_IMAGE set "MILVUS_IMAGE=milvusdb/milvus:v2.4.15"' in content
+    assert ':pull_image' in content
+    assert "docker image inspect \"!PULL_IMAGE!\"" in content
+    assert "docker pull \"!PULL_IMAGE!\"" in content
+    assert "for /L %%I in (1,1,3) do (" in content
+    assert "call :pull_image \"!POSTGRES_IMAGE!\"" in content
+    assert "call :pull_image \"!MILVUS_IMAGE!\"" in content
 
 
 def test_scripts_start_does_not_install_dependencies_by_default():

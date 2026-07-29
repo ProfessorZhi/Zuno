@@ -134,12 +134,13 @@ backend_import_ok
 - `rag.enable_elasticsearch: false` 时，Elasticsearch 不再作为默认启动依赖
 - `elasticsearch` 改为可选 `profile`
 - `backend` / `worker` 不再默认等待 Elasticsearch 健康检查
+- Windows Web launcher 在 `docker compose up` 前串行预拉默认基础设施镜像，每个镜像重试 3 次，并尊重 `POSTGRES_IMAGE`、`REDIS_IMAGE`、`RABBITMQ_IMAGE`、`NEO4J_IMAGE`、`MINIO_IMAGE`、`ETCD_IMAGE` 与 `MILVUS_IMAGE` 覆盖，避免一次并发拉取失败中断整条启动链。
 
 静态验证通过：
 
 ```text
-pytest -q tests/tools/test_launcher_scripts.py tests/storage/test_rag_persistence_setup.py -p no:cacheprovider
-25 passed
+pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
+26 passed
 ```
 
 但完整 Web stack 仍被外部 registry 阻塞。当前失败点已经从 Docker Desktop engine 转移为基础设施镜像拉取失败：
@@ -148,10 +149,12 @@ pytest -q tests/tools/test_launcher_scripts.py tests/storage/test_rag_persistenc
 cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
 ```
 
-最新失败在拉取 `neo4j:5-community` 时返回：
+最新失败已经进一步定位到 `postgres` 基础镜像拉取。`postgres:16` 与 `postgres:16-alpine` 多次重试后仍在 Docker Hub token / manifest / blob 路径超时或 EOF：
 
 ```text
-failed to do request: Head "https://registry-1.docker.io/v2/library/neo4j/manifests/5-community": EOF
+failed to fetch anonymous token: Get "https://auth.docker.io/token?...": EOF
+failed to do request: Head "https://registry-1.docker.io/v2/library/postgres/manifests/16-alpine": EOF
+failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://registry-1.docker.io/v2/library/postgres/manifests/sha256:57c72...": net/http: TLS handshake timeout
 ```
 
 这说明 full Web stack / browser smoke 现在仍未完成，但原因是 registry 可达性，不是 Docker engine 假死。

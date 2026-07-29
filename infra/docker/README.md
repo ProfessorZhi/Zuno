@@ -167,6 +167,8 @@ $env:ELASTICSEARCH_IMAGE="docker.elastic.co/elasticsearch/elasticsearch:7.17.24"
 docker compose --profile elasticsearch -f infra/docker/docker-compose.yml up -d
 ```
 
+Windows Web launcher 会在 `docker compose up` 前串行预拉默认基础设施镜像，并对每个镜像重试 3 次。若某个 registry 在当前网络下不可达，可先设置对应镜像变量，例如 `POSTGRES_IMAGE`、`REDIS_IMAGE`、`RABBITMQ_IMAGE`、`NEO4J_IMAGE`、`MINIO_IMAGE`、`ETCD_IMAGE` 或 `MILVUS_IMAGE`。
+
 ## 常见问题
 
 ### `docker compose config` 失败
