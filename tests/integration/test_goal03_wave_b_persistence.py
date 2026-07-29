@@ -619,6 +619,50 @@ def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine
     assert observation["evidence_write_allowed"] is False
 
 
+def test_phase15_default_gateway_persists_sandbox_session_before_fail_closed_dispatch(engine, monkeypatch) -> None:
+    monkeypatch.setattr("shutil.which", lambda _name: None)
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+
+    async def executor() -> dict[str, str]:
+        return {"value": "should-not-run"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="analysis.python",
+        args={"allowed_paths": ["workspace://inputs/table.csv"], "code": "print(40 + 2)"},
+        tenant_id="tenant-phase15-sandbox-default",
+        workspace_id="workspace-phase15-sandbox-default",
+        trace_id="trace-phase15-sandbox-default",
+        call_id="call-phase15-sandbox-default",
+        adapter_kind="PYTHON",
+        executor=executor,
+        readonly=True,
+    ))
+
+    expected_session_ref = "sandbox-session:tenant-phase15-sandbox-default:workspace-phase15-sandbox-default:call-phase15-sandbox-default:trace-phase15-sandbox-default:call-phase15-sandbox-default"
+    assert result is None
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "Deno executable unavailable for WASM Python sandbox"
+
+    with engine.connect() as conn:
+        session = conn.execute(
+            text(
+                """
+                SELECT session_ref, session_version, sandbox_profile_id, adapter_tier
+                FROM tool_sandbox_sessions
+                WHERE session_ref = :session_ref
+                """
+            ),
+            {"session_ref": expected_session_ref},
+        ).mappings().one()
+        assert conn.execute(
+            text("SELECT count(*) FROM tool_sandbox_receipts WHERE sandbox_receipt_id = 'tool-sandbox-receipt:call-phase15-sandbox-default'")
+        ).scalar_one() == 0
+
+    assert session["session_version"] == 1
+    assert session["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
+    assert session["adapter_tier"] == "WASM_PYTHON"
+
+
 def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:
     gateway = ToolInvocationGateway(
         unit_of_work_factory=lambda: ToolUnitOfWork(engine),

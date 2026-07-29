@@ -17,6 +17,7 @@ base_pr: https://github.com/ProfessorZhi/Zuno/pull/51
 - `ToolInvocationGateway` 默认使用 Tool Runtime DB-backed sandbox session store；migration `20260728_52` 新增 `tool_sandbox_sessions`，并用 FK 将 `tool_sandbox_receipts.session_ref` 绑定到 session。
 - `InMemorySandboxSessionStore` roundtrip 保留 session metadata，用于验证 stateful session contract；DB-backed default store 由 `ToolInvocationGateway` 注入。
 - integration 侧 PHASE15 用例已更新为同时断言 `tool_sandbox_sessions` 与 `tool_sandbox_receipts`，证明默认路径先写 session 再写 receipt。
+- integration 侧还新增默认 gateway 用例：Deno 缺失时默认 DB-backed session store 会先写 `tool_sandbox_sessions`，然后 fail-closed，不会生成 `tool_sandbox_receipts`。
 - `SandboxAdapterRegistry.execute()` 还校验 runner 输出结构、session ref、adapter tier 与输出大小上限。
 - WASM Python runner 使用 Deno 权限边界，并要求显式 Pyodide entrypoint；缺 Deno 或缺 Pyodide entrypoint fail-closed。
 - WASM Python runner 将显式 file path allowlist 映射到 `--allow-read`，将显式 domain allowlist 映射到 `--allow-net`；无 domain allowlist 时保持 `--deny-net`。
