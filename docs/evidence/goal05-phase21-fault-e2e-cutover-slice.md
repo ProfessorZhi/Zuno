@@ -112,3 +112,22 @@ cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
 本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝、产品模式优先级和 Docker frontend build 继续可执行。PHASE21 其余完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
 
 当前不再阻塞在后端镜像构建本身。后续仍缺完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 的真实证据。
+
+## 2026-07-29 Docker Desktop 环境现状
+
+本轮已完成安全清理：
+
+- `docker builder prune -a -f`
+- `docker image prune -a -f`
+- `diskpart compact vdisk` 压缩 `F:\DockerData\DockerDesktopWSL\disk\docker_data.vhdx`
+
+结果是 F 盘可用空间恢复到约 `15.39GB`，Docker build cache 和未使用镜像也已清空。
+
+但当前 Docker Desktop Linux engine 仍未真正恢复到可用状态，以下现象在最新日志中持续出现：
+
+- `wsl-bootstrap` 仍在等待 init control API，`/ping` 长时间返回 `HTTP 500`
+- `monitor.log` 里持续出现 `still waiting for the engine to respond to _ping`
+- `wsl -d docker-desktop` 下 `/opt/docker-desktop/componentsVersion.json` 不存在，`/opt/docker-desktop` 目录为空
+- `docker info`、`docker system df`、`docker images`、`docker ps` 均返回 `request returned 500 Internal Server Error`
+
+因此，本轮不能把 Docker-based full Web stack / browser smoke 记为已通过；它仍是 PHASE21 的真实阻塞点，不是测试遗漏。
