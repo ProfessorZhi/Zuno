@@ -11,6 +11,7 @@ PHASE16_RECONCILIATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/202607
 PHASE16_ASYNC_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_44_phase16_tool_async_cancellation.py"
 PHASE16_COMPENSATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py"
 GOAL05_SANDBOX_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260728_52_goal05_tool_sandbox_receipts.py"
+PHASE20_EVAL_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260729_53_phase20_observability_eval_runtime.py"
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -43,6 +44,10 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260728_52"' in goal05_sandbox
     assert 'down_revision = "20260728_51"' in goal05_sandbox
     assert goal05_sandbox.count("op.create_table(") == goal05_sandbox.count("op.drop_table(")
+    phase20_eval = PHASE20_EVAL_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260729_53"' in phase20_eval
+    assert 'down_revision = "20260728_52"' in phase20_eval
+    assert phase20_eval.count("op.create_table(") == phase20_eval.count("op.drop_table(")
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -207,6 +212,45 @@ def test_goal05_sandbox_migration_contains_append_only_receipt_table() -> None:
         "fk_tool_sandbox_receipts_prepared",
         "fk_tool_sandbox_receipts_attempt",
         "fk_tool_sandbox_receipts_session",
+    )
+
+    for fragment in required_fragments:
+        assert fragment in text
+
+
+def test_phase20_eval_migration_contains_runtime_gate_and_evidence_tables() -> None:
+    text = PHASE20_EVAL_MIGRATION.read_text(encoding="utf-8")
+    required_fragments = (
+        "observability_eval_datasets",
+        "observability_eval_cases",
+        "observability_eval_runs",
+        "observability_eval_case_executions",
+        "observability_eval_metric_results",
+        "observability_graphrag_diagnostics",
+        "observability_agent_efficiency_snapshots",
+        "observability_failure_buckets",
+        "observability_benchmark_comparisons",
+        "observability_evidence_records",
+        "observability_release_gate_evaluations",
+        "dataset_hash",
+        "case_hashes",
+        "reference_claim_refs",
+        "gold_evidence_refs",
+        "security_scope_ref",
+        "corpus_snapshot_hash",
+        "index_snapshot_hash",
+        "model_profile_hash",
+        "judge_policy_hash",
+        "embedding_profile_hash",
+        "metric_config_hash",
+        "runtime_profile_hash",
+        "security_scope_hash",
+        "measurement_status in ('MEASURED','BLOCKED','UNAVAILABLE','INVALID')",
+        "status in ('PASSED','FAILED','BLOCKED','INCOMPARABLE','ERROR')",
+        "settled_cost_available",
+        "comparison_hash",
+        "evidence_hash",
+        "gate_hash",
     )
 
     for fragment in required_fragments:

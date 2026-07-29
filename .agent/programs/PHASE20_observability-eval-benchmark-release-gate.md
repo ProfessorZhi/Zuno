@@ -1,7 +1,7 @@
 # PHASE20 Observability Eval, Benchmark and Release Gate
 
 phase_id: PHASE20
-status: blocked
+status: in_progress
 depends_on: PHASE06, PHASE18, PHASE19
 owner: Module 10 Observability & Eval
 
@@ -9,16 +9,28 @@ owner: Module 10 Observability & Eval
 
 在完整 Trace 基础上实现 EvalDataset/Version/Case、EvalRun/CaseExecution、RAG Core Five、GraphRAG Trace、Agent Efficiency、Failure Bucket、BenchmarkComparison、MeasurementStatus、ReleaseGateEvaluation 和 EvidenceRecord。此 Phase 建立真实评测能力，但最终固定数据集运行和生产就绪结论在 PHASE22。
 
-## Goal05 Blocker
+## Goal05 Status
 
-PHASE20 在所有 Mandatory Target Gap 修复前保持 blocked。Goal05 一次性 Target Coverage Audit 已冻结：
+PHASE20 曾在所有 Mandatory Target Gap 修复前保持 blocked。Goal05 一次性 Target Coverage Audit 已冻结：
 
 ```text
 docs/evidence/goal05-target-coverage-audit.md
 .agent/programs/work-products/goal05-target-gap-ledger.yaml
 ```
 
-当前阻塞项：PHASE15 Agent Sandbox 真实 Deno/Pyodide、OCI Process Sandbox 和 Postgres integration evidence 缺失。不得在该 Gap 修复前启动 PHASE20 或声明 Eval/Release Gate current。
+PHASE15 Agent Sandbox 真实 Deno/Pyodide、OCI Process Sandbox 和 Postgres integration evidence 已在 `docs/evidence/goal05-phase15-sandbox-repair.md` 补齐，PHASE20 已进入 `in_progress`。
+
+当前 PHASE20 证据：
+
+```text
+docs/evidence/goal05-phase20-eval-runtime.md
+infra/db/alembic/versions/20260729_53_phase20_observability_eval_runtime.py
+src/backend/zuno/platform/observability/eval_runtime.py
+tests/eval/test_phase20_observability_eval_runtime.py
+tests/integration/eval/test_phase20_observability_eval_persistence.py
+```
+
+该证据只证明 Eval Runtime foundation；不得在 fault / recovery / query / report / closure evidence 完成前声明 PHASE20 completed、quality proven 或 production ready。
 
 ## Minimal Read Set
 
