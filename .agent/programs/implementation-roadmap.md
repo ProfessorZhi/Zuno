@@ -1,7 +1,7 @@
 # zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
-current_phase: PHASE19
+current_phase: PHASE15
 program_version: 2
 phase_count: 22
 execution_mode: full-scope / runtime-first / vertical-slice-checkpoints / evidence-gated
@@ -104,12 +104,12 @@ flowchart TB
 | 12 | Knowledge Version and Standard RAG | 03 | PHASE12 completed：KnowledgeVersion、Snapshot、Index Visibility、Cutover、Standard RAG durable port 与容器化 retrieval readback integration 已完成 |
 | 13 | Memory and Context Governance Runtime | 05 | PHASE13 completed：Capture Intent、Candidate、Governance Decision、Memory Record/Version、ContextPack、Compression Trace 和 Memory Use Trace 均已持久化 |
 | 14 | Capability and Skill Control Plane | 07 | PHASE14 completed：Definition、Version、Installation、Selection、Availability、Supply-chain guard、Planner Snapshot 和 progressive loading 已完成 |
-| 15 | Tool Definition and Read-only Cutover | 08 | PHASE15 completed：唯一 Invocation Gateway、ToolRepository/UoW 默认路径、只读 CLI/OpenAPI/LangChain gateway cutover 和 bypass guard 已完成 |
+| 15 | Tool Definition and Read-only Cutover | 08 | PHASE15 blocked：Goal05 已撤回 completed；唯一 Gateway 与默认路径证据保留，但真实 Deno/Pyodide、OCI Process Sandbox 和 Postgres integration evidence 未闭环 |
 | 16 | Tool Side Effect and Reconciliation | 08 | PHASE16 completed：Approval/Audit/Claim/Attempt/Effect/UNKNOWN/Reconciliation/Compensation 已由 PR B 合并到 main |
 | 17 | Dynamic Plan DAG and Parallel Control | 06 | PHASE17 completed：ReadySet、Commit-before-Send、Reducer、Join、Replan Barrier 已由 PR C 合并到 main |
 | 18 | Agentic GraphRAG Inner Loop | 03 | PHASE18 completed：RetrievalRound、Graph Route、EvidenceLedger、Corrective Retrieval、Proposal 已由 PR D 合并到 main |
-| 19 | Final Synthesis, Publication and Reflexion | 06/05/03/01 | PHASE19 ready：Claim/Citation、Final Gate、Publication、RunOutcome、Reflexion Candidate 尚未启动 |
-| 20 | Observability Eval, Benchmark and Release Gate | 10 | Core Five、Failure Bucket、Efficiency、Comparison、Gate、Evidence |
+| 19 | Final Synthesis, Publication and Reflexion | 06/05/03/01 | PHASE19 completed：Claim/Citation、Final Gate、Publication、RunOutcome、Reflexion Candidate 已有本地 Coordinator Closure |
+| 20 | Observability Eval, Benchmark and Release Gate | 10 | PHASE20 blocked：必须等待 PHASE15 Agent Sandbox Mandatory Gap 修复 |
 | 21 | Fault Recovery, Full E2E and Cutover | 全部 | Crash/Resume/Unknown/Revocation/Delete/Restore、Web E2E、切流演练 |
 | 22 | Fixed Benchmark, Production Readiness and Closure | 全部 | 同集对照、Legacy 删除、状态更新、归档 |
 

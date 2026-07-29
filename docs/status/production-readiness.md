@@ -47,11 +47,11 @@ Goal02 completed：PHASE08 completed；PHASE11 completed；PHASE09 ready；PHASE
 
 ## Goal03 Closure Boundary
 
-Goal03 completed：PHASE09 completed；PHASE12 completed；PHASE13 completed；PHASE14 completed；PHASE15 completed；PHASE10 ready；PHASE16 ready；current_phase PHASE10；production readiness not established。
+Goal03 historical closure：PHASE09、PHASE12、PHASE13、PHASE14 的完成结论仍保留；PHASE15 completed 结论已被 Goal05 一次性 Target Coverage Audit 撤回，当前状态以本文 `PHASE15 blocked` 为准；production readiness not established。
 
 ## Goal04 PR A / D Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main。PHASE10 PR A 已由 merge commit `0351eab1c135601a7e1ac4406e967a4c7af07bc4` 合并到 main。PHASE19 已完成本地 Coordinator Closure，当前阶段推进到 PHASE20。当前不得把 production readiness 写成 completed。
+PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main。PHASE10 PR A 已由 merge commit `0351eab1c135601a7e1ac4406e967a4c7af07bc4` 合并到 main。PHASE19 已完成本地 Coordinator Closure；Goal05 已重新打开 PHASE15，PHASE20 在 PHASE15 真实 sandbox closure 前保持 blocked。当前不得把 production readiness 写成 completed。
 
 PHASE08 当前保留的部分证据：
 
