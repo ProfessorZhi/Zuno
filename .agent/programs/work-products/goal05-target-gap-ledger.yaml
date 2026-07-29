@@ -107,13 +107,13 @@ requirements:
     default_entry: "Single Controller default path exists."
     persistence_migration: "Agent migrations through PHASE17 exist."
     state_transition: "Full fault/cutover pending."
-    failure_retry_recovery_idempotency: "Crash matrix pending."
+    failure_retry_recovery_idempotency: "PHASE21 crash matrix evaluator now covers domain/checkpoint reconcile, dispatch outbox resend, result-before-reducer and late epoch fencing; full product E2E/cutover/load evidence still pending."
     security_approval_audit: "Epoch during wait and approval replay E2E pending."
-    evidence: "docs/evidence/goal04-phase17-coordinator-closure.md"
+    evidence: "docs/evidence/goal04-phase17-coordinator-closure.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: GAP
     repair_pr: "PR C"
-    closure_evidence: ""
+    closure_evidence: "partial: docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
   - requirement_id: ARCH-CAPABILITY-MANDATORY-GOAL05
     owner_module: "07 Capability / Skill"
     owner_phase: PHASE21
@@ -122,13 +122,13 @@ requirements:
     default_entry: "Capability selection/planner snapshot exists."
     persistence_migration: "Capability persistence exists."
     state_transition: "Full attack/cutover pending."
-    failure_retry_recovery_idempotency: "Conformance under full E2E pending."
-    security_approval_audit: "Exposure vs authorization pending full attack suite."
-    evidence: "docs/status/production-readiness.md"
+    failure_retry_recovery_idempotency: "Capability planner exposure conformance now runs on the default route; full cross-module E2E/cutover/load evidence still pending."
+    security_approval_audit: "Prompt injection, denied capability hiding and cross-workspace exposure attacks now have fault evidence; broader PHASE21 attack suite still pending."
+    evidence: "docs/status/production-readiness.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: GAP
     repair_pr: "PR C / PR D"
-    closure_evidence: ""
+    closure_evidence: "partial: docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
   - requirement_id: ARCH-TOOL-070
     owner_module: "08 Tool Runtime"
     owner_phase: PHASE15
