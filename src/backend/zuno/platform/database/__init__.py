@@ -38,12 +38,20 @@ from zuno.database.models.usage_stats import UsageStats
 from zuno.database.models.user import SystemUser
 from zuno.database.models.user_role import UserRole
 from zuno.database.models.workspace_session import WorkSpaceSession
-from zuno.settings import app_settings
+from zuno.settings import app_settings, resolve_app_config_path
 
 
 def _load_database_config() -> dict:
     if app_settings.database:
         return app_settings.database
+
+    config_path = resolve_app_config_path()
+    if config_path.exists():
+        with config_path.open("r", encoding="utf-8") as file:
+            data = yaml.safe_load(file) or {}
+        database = data.get("database") or {}
+        if database:
+            return database
 
     for package_path in __path__:
         package_root = Path(package_path).resolve().parent

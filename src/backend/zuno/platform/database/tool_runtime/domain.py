@@ -298,10 +298,11 @@ class ToolRepository:
                 VALUES (
                     :provider_id, :tenant_id, :owner_module, :provider_name, :status, :schema_hash
                 )
-                ON CONFLICT (attempt_id) DO UPDATE
+                ON CONFLICT (provider_id) DO UPDATE
                 SET status = EXCLUDED.status,
-                    dispatch_certainty = EXCLUDED.dispatch_certainty,
-                    state_history = EXCLUDED.state_history
+                    owner_module = EXCLUDED.owner_module,
+                    provider_name = EXCLUDED.provider_name,
+                    schema_hash = EXCLUDED.schema_hash
                 """
             ),
             {
@@ -597,7 +598,11 @@ class ToolRepository:
                     :dispatch_certainty, :adapter_family, :hidden_retry_count,
                     CAST(:state_history AS jsonb)
                 )
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (attempt_id) DO UPDATE
+                SET status = EXCLUDED.status,
+                    dispatch_certainty = EXCLUDED.dispatch_certainty,
+                    hidden_retry_count = EXCLUDED.hidden_retry_count,
+                    state_history = EXCLUDED.state_history
                 """
             ),
             {

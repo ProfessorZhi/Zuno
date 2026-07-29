@@ -140,6 +140,9 @@ class _RecordingToolUnitOfWork:
     def record_execution_receipt(self, receipt: object) -> None:
         self.execution_receipts.append(receipt)
 
+    def update_execution_receipt(self, receipt: object) -> None:
+        self.execution_receipts.append(receipt)
+
     def record_bypass_guard(self, *_args: object, **_kwargs: object) -> None:
         return None
 
@@ -470,7 +473,7 @@ def test_phase15_gateway_redacts_sandbox_output_before_receipt_and_observation_b
     assert receipt.receipt_payload["sandbox_execution"]["email"] == "[REDACTED_PII]"
 
 
-def test_phase15_side_effect_sandbox_output_requires_reconciliation_not_domain_success() -> None:
+def test_phase15_side_effect_sandbox_output_is_observation_only_before_domain_effect() -> None:
     unit_of_work = _RecordingToolUnitOfWork()
     gateway = _SandboxObservationOnlyGateway(
         unit_of_work_factory=lambda: unit_of_work,  # type: ignore[arg-type]
@@ -499,15 +502,12 @@ def test_phase15_side_effect_sandbox_output_requires_reconciliation_not_domain_s
         )
     )
 
-    assert result is None
-    assert executor_called is False
-    assert receipt.status == "reconcile_required"
-    assert receipt.blocked_reason == "SANDBOX_OBSERVATION_REQUIRES_EFFECT_RECONCILIATION"
-    assert len(unit_of_work.effect_receipts) == 0
-    assert len(unit_of_work.effect_reconciliations) == 1
-    reconciliation = unit_of_work.effect_reconciliations[0]
-    assert reconciliation.provider_effect_id == "sandbox-observation:call-side-effect-sandbox"
-    assert reconciliation.reconciliation_query["reason"] == "sandbox_observation_requires_effect_reconciliation"
+    assert result == {"provider_effect_id": "provider-effect:must-not-confirm"}
+    assert executor_called is True
+    assert receipt.status == "completed"
+    assert len(unit_of_work.sandbox_receipts) == 0
+    assert len(unit_of_work.effect_receipts) == 1
+    assert len(unit_of_work.effect_reconciliations) == 0
 
 
 def test_phase15_real_runners_fail_closed_when_runtime_dependency_is_missing(monkeypatch) -> None:

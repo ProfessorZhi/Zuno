@@ -654,13 +654,22 @@ def test_phase15_default_gateway_persists_sandbox_session_before_fail_closed_dis
             ),
             {"session_ref": expected_session_ref},
         ).mappings().one()
-        assert conn.execute(
-            text("SELECT count(*) FROM tool_sandbox_receipts WHERE sandbox_receipt_id = 'tool-sandbox-receipt:call-phase15-sandbox-default'")
-        ).scalar_one() == 0
+        blocked_receipt = conn.execute(
+            text(
+                """
+                SELECT adapter_tier, session_ref, receipt_payload_hash
+                FROM tool_sandbox_receipts
+                WHERE sandbox_receipt_id = 'tool-sandbox-receipt:call-phase15-sandbox-default'
+                """
+            )
+        ).mappings().one()
 
     assert session["session_version"] == 1
     assert session["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
     assert session["adapter_tier"] == "WASM_PYTHON"
+    assert blocked_receipt["adapter_tier"] == "WASM_PYTHON"
+    assert blocked_receipt["session_ref"] == expected_session_ref
+    assert blocked_receipt["receipt_payload_hash"]
 
 
 def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:

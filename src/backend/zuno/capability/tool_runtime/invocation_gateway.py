@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+import json
 from typing import Any
 
 from zuno.platform.database.foundation import (
@@ -36,6 +37,9 @@ from zuno.platform.security import (
 )
 from .effect_policy import classify_tool_effect
 from .sandbox import SandboxAdapterRegistry, SandboxExecutionResult, SandboxPolicyViolation, SandboxSessionRecord, SandboxSessionStore
+
+
+_SANDBOXABLE_ADAPTER_KINDS = {"PYTHON", "WASM_PYTHON", "PYODIDE", "CLI", "OPENAPI", "BROWSER", "SHELL", "GIT"}
 
 
 class ToolEffectUnknownError(RuntimeError):
@@ -349,18 +353,21 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
-                    sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
-                        tenant_id=tenant_id,
-                        workspace_id=workspace_id,
-                        trace_id=trace_id,
-                        call_id=call_id,
-                        tool_name=tool_name,
-                        adapter_kind=adapter_kind,
-                        args=args,
-                        prepared_id=prepared_id,
-                        attempt_id=attempt_id,
-                        receipt_id=receipt_id,
-                    )
+                    sandbox_blocked_reason = ""
+                    sandbox_result: SandboxExecutionResult | None = None
+                    if adapter_kind.upper() in _SANDBOXABLE_ADAPTER_KINDS:
+                        sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
+                            tenant_id=tenant_id,
+                            workspace_id=workspace_id,
+                            trace_id=trace_id,
+                            call_id=call_id,
+                            tool_name=tool_name,
+                            adapter_kind=adapter_kind,
+                            args=args,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                        )
                     if sandbox_blocked_reason:
                         payload["sandbox_blocked_reason"] = sandbox_blocked_reason
                         self._record_terminal(
@@ -375,60 +382,6 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
-                    if sandbox_result is not None:
-                        sandbox_reconciliation_payload = _sandbox_observation_reconciliation_payload(
-                            sandbox_result=sandbox_result,
-                            call_id=call_id,
-                        )
-                        self._record_terminal(
-                            tenant_id=tenant_id,
-                            prepared_id=prepared_id,
-                            attempt_id=attempt_id,
-                            receipt_id=receipt_id,
-                            status="UNKNOWN",
-                            dispatch_certainty="DISPATCHED",
-                            effect_certainty="UNKNOWN_EFFECT",
-                            adapter_kind=adapter_kind,
-                            payload=sandbox_reconciliation_payload,
-                        )
-                        reconciliation_id = f"tool-effect-reconciliation:{call_id}"
-                        with self._unit_of_work_factory() as repo:
-                            repo.record_effect_reconciliation(
-                                ToolEffectReconciliationInput(
-                                    reconciliation_id=reconciliation_id,
-                                    tenant_id=tenant_id,
-                                    prepared_tool_action_id=prepared_id,
-                                    attempt_id=attempt_id,
-                                    execution_receipt_id=receipt_id,
-                                    provider_effect_id=str(sandbox_reconciliation_payload["provider_effect_id"]),
-                                    status="OPEN",
-                                    next_action="RECONCILE",
-                                    reconciliation_query=sandbox_reconciliation_payload["reconciliation_query"],
-                                    manual_assessment_required=False,
-                                    age_escalation_after_seconds=900,
-                                    idempotency_scope=execute_prerequisites.idempotency_scope,
-                                    idempotency_key=execute_prerequisites.idempotency_key,
-                                    idempotency_generation=execute_prerequisites.idempotency_generation,
-                                    fencing_resource_id=execute_prerequisites.fencing_resource_id,
-                                    fencing_lease_id=execute_prerequisites.fencing_lease_id,
-                                    fencing_epoch=execute_prerequisites.fencing_epoch,
-                                    secret_lease_id=secret_lease_id,
-                                    reconciliation_payload=sandbox_reconciliation_payload,
-                                )
-                            )
-                        self._complete_execute_prerequisites(
-                            tenant_id=tenant_id,
-                            owner=f"tool-runtime:{call_id}",
-                            prerequisites=execute_prerequisites,
-                            result_ref=reconciliation_id,
-                        )
-                        return None, ToolGatewayReceipt(
-                            "reconcile_required",
-                            prepared_id,
-                            attempt_id,
-                            receipt_id,
-                            "SANDBOX_OBSERVATION_REQUIRES_EFFECT_RECONCILIATION",
-                        )
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
@@ -810,18 +763,21 @@ class ToolInvocationGateway:
             return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
 
         try:
-            sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
-                tenant_id=tenant_id,
-                workspace_id=workspace_id,
-                trace_id=trace_id,
-                call_id=call_id,
-                tool_name=tool_name,
-                adapter_kind=adapter_kind,
-                args=args,
-                prepared_id=prepared_id,
-                attempt_id=attempt_id,
-                receipt_id=receipt_id,
-            )
+            sandbox_blocked_reason = ""
+            sandbox_result: SandboxExecutionResult | None = None
+            if adapter_kind.upper() in _SANDBOXABLE_ADAPTER_KINDS:
+                sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    trace_id=trace_id,
+                    call_id=call_id,
+                    tool_name=tool_name,
+                    adapter_kind=adapter_kind,
+                    args=args,
+                    prepared_id=prepared_id,
+                    attempt_id=attempt_id,
+                    receipt_id=receipt_id,
+                )
             if sandbox_blocked_reason:
                 self._record_terminal(
                     tenant_id=tenant_id,
@@ -835,7 +791,7 @@ class ToolInvocationGateway:
                     payload={"blocked": True, "reason": sandbox_blocked_reason},
                 )
                 return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
-            result = sandbox_result.output_payload if sandbox_result is not None else await executor()
+            result = await executor()
         except Exception as exc:
             self._record_terminal(
                 tenant_id=tenant_id,
@@ -1035,7 +991,44 @@ class ToolInvocationGateway:
         payload["execution_receipt_id"] = receipt_id
         payload["sandbox_execution"] = sandbox_result.output_payload
         payload["sandbox_execution_status"] = sandbox_result.status
+        session_payload = dict(sandbox.dispatch_payload.get("session") or {})
+        profile_payload = dict(sandbox.dispatch_payload.get("profile") or {})
+        session_workspace_id = str(session_payload.get("workspace_id") or "")
+        session_run_id = str(session_payload.get("run_id") or call_id)
+        session_thread_id = str(session_payload.get("thread_id") or call_id)
+        session_call_id = str(session_payload.get("call_id") or call_id)
+        session_profile_id = str(session_payload.get("profile_id") or sandbox.sandbox_profile_id)
+        session_version = int(session_payload.get("session_version") or sandbox.session_version)
+        expires_at = datetime.fromisoformat(
+            str(session_payload.get("expires_at") or profile_payload.get("limits", {}).get("expires_at"))
+        )
         with self._unit_of_work_factory() as repo:
+            if repo.get_sandbox_session(session_ref=sandbox.session_ref) is None:
+                repo.record_sandbox_session(
+                    ToolSandboxSessionInput(
+                        session_ref=sandbox.session_ref,
+                        tenant_id=tenant_id,
+                        workspace_id=session_workspace_id,
+                        run_id=session_run_id,
+                        thread_id=session_thread_id,
+                        call_id=session_call_id,
+                        sandbox_profile_id=session_profile_id,
+                        adapter_tier=sandbox.adapter_tier,
+                        session_version=session_version,
+                        profile_hash=sandbox.profile_hash,
+                        limits_hash=sandbox.limits_hash,
+                        session_hash=sandbox.session_hash,
+                        state_integrity_hash=canonical_sha256(
+                            {
+                                "session_hash": sandbox.session_hash,
+                                "profile_hash": sandbox.profile_hash,
+                                "limits_hash": sandbox.limits_hash,
+                            }
+                        ),
+                        session_size_bytes=len(json.dumps(session_payload, ensure_ascii=True, sort_keys=True).encode("utf-8")),
+                        expires_at=expires_at,
+                    )
+                )
             repo.record_attempt(
                 ToolAttemptInput(
                     attempt_id=attempt_id,
