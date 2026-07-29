@@ -247,6 +247,9 @@ async def approve_workspace_task(
             task_id=task_id,
             decision=payload.decision,
             comment=payload.comment,
+            approval_id=payload.approval_id,
+            tool_call_id=payload.tool_call_id,
+            required_approval=payload.required_approval,
             principal_id=str(login_user.user_id or ""),
         )
     )

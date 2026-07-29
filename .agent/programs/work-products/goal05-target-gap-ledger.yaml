@@ -32,13 +32,13 @@ requirements:
     default_entry: "Product API/Web/Desktop default path exists but full E2E/cutover evidence is pending."
     persistence_migration: "Product migrations through 20260728_51."
     state_transition: "Partial current; PHASE21 required."
-    failure_retry_recovery_idempotency: "Full E2E fault matrix pending."
-    security_approval_audit: "Revocation/approval replay E2E pending."
-    evidence: "docs/evidence/goal04-phase10-coordinator-closure.md"
+    failure_retry_recovery_idempotency: "Workspace tool approval replay is now rejected on stale approval_id/tool_call_id binding and preserves approval_waiting; full Web/Desktop E2E/cutover matrix still pending."
+    security_approval_audit: "Tool approval resume now binds latest pending action and emits approval_replay_rejected audit event; broader revocation/cutover E2E still pending."
+    evidence: "docs/evidence/goal04-phase10-coordinator-closure.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: CURRENT
     repair_pr: "PR C / PR D"
-    closure_evidence: "docs/evidence/goal05-phase15-sandbox-repair.md"
+    closure_evidence: "partial: docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
   - requirement_id: ARCH-ING-MANDATORY-GOAL05
     owner_module: "02 Input / Document Ingestion"
     owner_phase: PHASE21
@@ -153,8 +153,8 @@ requirements:
     persistence_migration: "Security migrations and 20260728_52."
     state_transition: "PHASE15 completed; sandbox security closure achieved."
     failure_retry_recovery_idempotency: "Attack suite pending."
-    security_approval_audit: "Deno/OCI sandbox evidence recorded; full cross-module attack suite remains PHASE21."
-    evidence: "docs/evidence/goal04-phase16-coordinator-closure.md"
+    security_approval_audit: "Deno/OCI sandbox evidence recorded; workspace tool approval replay now requires latest pending approval binding; full cross-module attack suite remains PHASE21."
+    evidence: "docs/evidence/goal04-phase16-coordinator-closure.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
     verdict: CURRENT
     repair_pr: "Repair PR PHASE15 / PR C"

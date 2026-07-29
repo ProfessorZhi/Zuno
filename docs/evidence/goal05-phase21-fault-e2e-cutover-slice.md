@@ -19,6 +19,9 @@ branch: codex/goal05-phase15-sandbox-repair
 - crash matrix 覆盖 domain commit before checkpoint、dispatch commit before send、result before reducer、publisher restart、consumer restart、late branch result。
 - late result 会被 fenced，不会直接覆盖当前 execution epoch。
 - 新增 fault tests 覆盖 capability attack conformance 与 crash recovery matrix。
+- Workspace approve API 现在将 `approval_id`、`tool_call_id` 和 `required_approval` 传入默认 service。
+- 工具审批恢复时必须匹配当前 pending tool request；旧 `approval_id` 或错误 tool call 会产生 `approval_replay_rejected` 事件并保持 `approval_waiting`。
+- 修复 ToolRuntime 在 FastAPI async endpoint 内调用 side-effect gateway 时的 event loop 嵌套问题；已有 event loop 时通过短生命周期线程执行网关协程。
 
 ## Verification
 
@@ -29,6 +32,7 @@ pytest -q tests/fault/capability/test_phase21_capability_attack_conformance.py t
 pytest -q tests/capability/test_capability_skill_layer.py tests/agent/dag/test_phase17_dispatch_commit.py tests/agent/dag/test_phase17_parallel_recovery.py tests/agent/dag/test_phase17_readyset_admission.py -p no:cacheprovider
 pytest -q tests/agent/runtime/test_runtime_restart_persistence.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_real_execution.py -p no:cacheprovider
 pytest -q tests/fault/security/test_phase05_security_pre_effect_faults.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/security/test_phase05_security_eval_gate.py -p no:cacheprovider
+pytest -q tests/api/test_workspace_task_runtime.py -k "tool_approval or security_approval_facts or approval_replay or approval_resume" -p no:cacheprovider
 ```
 
 ## Result
@@ -40,8 +44,11 @@ pytest -q tests/fault/security/test_phase05_security_pre_effect_faults.py tests/
 20 passed
 7 passed
 6 passed
+5 passed, 15 deselected
 ```
 
 ## Boundary
 
-本切片只证明 Capability / Agent 两条默认路径的攻击面约束和 crash 恢复语义继续可执行。PHASE21 其余 E2E、Web/Desktop、Delete/Restore、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
+本切片只证明 Capability / Agent / Workspace approval 三条默认路径的攻击面约束、crash 恢复语义和旧授权重放拒绝继续可执行。PHASE21 其余 E2E、Web/Desktop、Delete/Restore、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
+
+完整 `tests/api/test_workspace_task_runtime.py` 当前仍存在独立检索断言漂移：`test_workspace_task_runtime_answers_from_ingested_index_with_citations` 期望 `resolved_methods == ["local", "basic"]`，当前运行时返回 `["basic"]`。本证据不使用该全文件运行作为通过证据，后续 PHASE21 / PHASE22 全验证必须单独处理。
