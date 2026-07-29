@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import Engine
 
-from zuno.platform.observability import ObservabilityUnitOfWork
+from zuno.platform.observability import EvalRuntimeError, ObservabilityUnitOfWork, PostgresEvalRuntimeRepository
 
 
 class ObservabilityQueryAuthorizationError(RuntimeError):
@@ -134,6 +134,83 @@ class ObservabilityProjectionQueryService:
             or f"observability:read:{workspace_id}" in principal.scopes
         ):
             raise ObservabilityQueryAuthorizationError("observability read scope is required")
+
+
+class ObservabilityEvalQueryService:
+    def __init__(
+        self,
+        *,
+        engine: Engine | None = None,
+        repository_context_factory: RepositoryContextFactory | None = None,
+    ) -> None:
+        if engine is None and repository_context_factory is None:
+            raise ValueError("engine or repository_context_factory is required")
+        self.engine = engine
+        self.repository_context_factory = repository_context_factory
+
+    def get_eval_run_projection(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        eval_run_id: str,
+    ) -> dict[str, Any]:
+        self._authorize(principal=principal, tenant_id=tenant_id, workspace_id=workspace_id)
+        try:
+            with self._repository() as repo:
+                return repo.eval_run_projection(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    run_id=eval_run_id,
+                ).to_dict()
+        except EvalRuntimeError as exc:
+            raise ObservabilityQueryAuthorizationError(str(exc)) from exc
+
+    def get_release_gate_report(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+        gate_id: str,
+    ) -> dict[str, Any]:
+        self._authorize(principal=principal, tenant_id=tenant_id, workspace_id=workspace_id)
+        try:
+            with self._repository() as repo:
+                return repo.release_gate_report(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    gate_id=gate_id,
+                ).to_dict()
+        except EvalRuntimeError as exc:
+            raise ObservabilityQueryAuthorizationError(str(exc)) from exc
+
+    def _repository(self) -> AbstractContextManager[Any]:
+        if self.repository_context_factory is not None:
+            return self.repository_context_factory()
+        assert self.engine is not None
+        return nullcontext(PostgresEvalRuntimeRepository(self.engine))
+
+    def _authorize(
+        self,
+        *,
+        principal: ObservabilityQueryPrincipal,
+        tenant_id: str,
+        workspace_id: str,
+    ) -> None:
+        if principal.is_admin:
+            return
+        if tenant_id not in principal.tenant_ids:
+            raise ObservabilityQueryAuthorizationError("tenant is not authorized")
+        if workspace_id not in principal.workspace_ids:
+            raise ObservabilityQueryAuthorizationError("workspace is not authorized")
+        if not (
+            "eval:read" in principal.scopes
+            or "observability:read" in principal.scopes
+            or f"eval:read:{workspace_id}" in principal.scopes
+        ):
+            raise ObservabilityQueryAuthorizationError("eval read scope is required")
 
 
 def _public_payload(payload: Any) -> Any:

@@ -12,6 +12,10 @@ PHASE16_ASYNC_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_44_pha
 PHASE16_COMPENSATION_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py"
 GOAL05_SANDBOX_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260728_52_goal05_tool_sandbox_receipts.py"
 PHASE20_EVAL_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260729_53_phase20_observability_eval_runtime.py"
+PHASE20_EVAL_QUERY_SCOPE_MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260729_54_phase20_eval_query_scope.py"
+PHASE20_RELEASE_GATE_IDENTITY_MIGRATION = (
+    REPO_ROOT / "infra/db/alembic/versions/20260729_55_phase20_release_gate_query_identity.py"
+)
 
 
 def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
@@ -48,6 +52,12 @@ def test_goal03_wave_b_migration_is_append_only_single_head_successor() -> None:
     assert 'revision = "20260729_53"' in phase20_eval
     assert 'down_revision = "20260728_52"' in phase20_eval
     assert phase20_eval.count("op.create_table(") == phase20_eval.count("op.drop_table(")
+    phase20_eval_query_scope = PHASE20_EVAL_QUERY_SCOPE_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260729_54"' in phase20_eval_query_scope
+    assert 'down_revision = "20260729_53"' in phase20_eval_query_scope
+    phase20_gate_identity = PHASE20_RELEASE_GATE_IDENTITY_MIGRATION.read_text(encoding="utf-8")
+    assert 'revision = "20260729_55"' in phase20_gate_identity
+    assert 'down_revision = "20260729_54"' in phase20_gate_identity
 
 
 def test_goal03_wave_b_migration_contains_memory_and_tool_owner_fact_tables() -> None:
@@ -254,4 +264,25 @@ def test_phase20_eval_migration_contains_runtime_gate_and_evidence_tables() -> N
     )
 
     for fragment in required_fragments:
+        assert fragment in text
+
+
+def test_phase20_eval_query_scope_migration_contains_authorization_boundary() -> None:
+    text = PHASE20_EVAL_QUERY_SCOPE_MIGRATION.read_text(encoding="utf-8")
+    for fragment in (
+        "tenant_id",
+        "workspace_id",
+        "ix_observability_eval_runs_scope",
+        "observability_eval_runs",
+    ):
+        assert fragment in text
+
+
+def test_phase20_release_gate_identity_migration_contains_query_identity_constraint() -> None:
+    text = PHASE20_RELEASE_GATE_IDENTITY_MIGRATION.read_text(encoding="utf-8")
+    for fragment in (
+        "uq_observability_release_gate_evaluations_gate_id",
+        "observability_release_gate_evaluations",
+        "gate_id",
+    ):
         assert fragment in text

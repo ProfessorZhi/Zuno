@@ -14,6 +14,7 @@ from zuno.api.services.product.command_service import (
     ProductStreamEventResult,
 )
 from zuno.api.services.product.projection_service import (
+    ObservabilityEvalQueryService,
     ObservabilityProjectionQueryService,
     ObservabilityQueryAuthorizationError,
     ObservabilityQueryPrincipal,
@@ -34,6 +35,7 @@ __all__ = [
     "ProductService",
     "ProductStreamEventResult",
     "ObservabilityProjectionQueryService",
+    "ObservabilityEvalQueryService",
     "ObservabilityQueryAuthorizationError",
     "ObservabilityQueryPrincipal",
 ]

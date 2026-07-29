@@ -25,12 +25,15 @@ PHASE15 Agent Sandbox 真实 Deno/Pyodide、OCI Process Sandbox 和 Postgres int
 ```text
 docs/evidence/goal05-phase20-eval-runtime.md
 infra/db/alembic/versions/20260729_53_phase20_observability_eval_runtime.py
+infra/db/alembic/versions/20260729_54_phase20_eval_query_scope.py
+infra/db/alembic/versions/20260729_55_phase20_release_gate_query_identity.py
 src/backend/zuno/platform/observability/eval_runtime.py
 tests/eval/test_phase20_observability_eval_runtime.py
+tests/fault/eval/test_phase20_eval_fault_semantics.py
 tests/integration/eval/test_phase20_observability_eval_persistence.py
 ```
 
-该证据只证明 Eval Runtime foundation；不得在 fault / recovery / query / report / closure evidence 完成前声明 PHASE20 completed、quality proven 或 production ready。
+该证据证明 Eval Runtime foundation、query/report surface 和部分 fault semantics；不得在 late revision、expired evidence、fixed profile replay 和 closure evidence 完成前声明 PHASE20 completed、quality proven 或 production ready。
 
 ## Minimal Read Set
 

@@ -434,6 +434,74 @@ class ReleaseGateEvaluation:
     gate_hash: str
 
 
+@dataclass(frozen=True, slots=True)
+class EvalRunProjection:
+    run_id: str
+    tenant_id: str
+    workspace_id: str
+    status: str
+    result_set_hash: str | None
+    projection_freshness: str
+    authorization_scope: str
+    redaction_status: str
+    trace_completeness: str
+    measurement_status: str
+    case_status_counts: dict[str, int]
+    metric_status_counts: dict[str, int]
+    failure_buckets: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "tenant_id": self.tenant_id,
+            "workspace_id": self.workspace_id,
+            "status": self.status,
+            "result_set_hash": self.result_set_hash,
+            "projection_freshness": self.projection_freshness,
+            "authorization_scope": self.authorization_scope,
+            "redaction_status": self.redaction_status,
+            "trace_completeness": self.trace_completeness,
+            "measurement_status": self.measurement_status,
+            "case_status_counts": dict(self.case_status_counts),
+            "metric_status_counts": dict(self.metric_status_counts),
+            "failure_buckets": list(self.failure_buckets),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ReleaseGateReport:
+    gate_id: str
+    tenant_id: str
+    workspace_id: str
+    status: str
+    reason: str
+    result_set_hash: str
+    comparison_hash: str | None
+    comparison_status: str | None
+    evidence_hash: str
+    artifact_ref: str
+    artifact_hash: str
+    projection_freshness: str
+    measurement_status: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "gate_id": self.gate_id,
+            "tenant_id": self.tenant_id,
+            "workspace_id": self.workspace_id,
+            "status": self.status,
+            "reason": self.reason,
+            "result_set_hash": self.result_set_hash,
+            "comparison_hash": self.comparison_hash,
+            "comparison_status": self.comparison_status,
+            "evidence_hash": self.evidence_hash,
+            "artifact_ref": self.artifact_ref,
+            "artifact_hash": self.artifact_hash,
+            "projection_freshness": self.projection_freshness,
+            "measurement_status": self.measurement_status,
+        }
+
+
 def evaluate_release_gate(
     *,
     gate_id: str,
@@ -559,17 +627,25 @@ class PostgresEvalRuntimeRepository:
                     },
                 )
 
-    def start_run(self, *, run_id: str, profile_id: str, config: EvalRunConfig) -> None:
+    def start_run(
+        self,
+        *,
+        run_id: str,
+        profile_id: str,
+        config: EvalRunConfig,
+        tenant_id: str = "tenant-unknown",
+        workspace_id: str = "workspace-unknown",
+    ) -> None:
         with self.engine.begin() as conn:
             conn.execute(
                 text(
                     """
                     INSERT INTO observability_eval_runs(
-                        run_id, profile_id, dataset_hash, config_hash, corpus_snapshot_hash,
+                        run_id, tenant_id, workspace_id, profile_id, dataset_hash, config_hash, corpus_snapshot_hash,
                         index_snapshot_hash, model_profile_hash, judge_policy_hash, embedding_profile_hash,
                         metric_config_hash, runtime_profile_hash, security_scope_hash, status, result_set_hash
                     ) VALUES (
-                        :run_id, :profile_id, :dataset_hash, :config_hash, :corpus_snapshot_hash,
+                        :run_id, :tenant_id, :workspace_id, :profile_id, :dataset_hash, :config_hash, :corpus_snapshot_hash,
                         :index_snapshot_hash, :model_profile_hash, :judge_policy_hash, :embedding_profile_hash,
                         :metric_config_hash, :runtime_profile_hash, :security_scope_hash, 'RUNNING', NULL
                     )
@@ -580,7 +656,14 @@ class PostgresEvalRuntimeRepository:
                         END
                     """
                 ),
-                {"run_id": run_id, "profile_id": profile_id, **config.comparable_payload(), "config_hash": config.config_hash},
+                {
+                    "run_id": run_id,
+                    "tenant_id": tenant_id,
+                    "workspace_id": workspace_id,
+                    "profile_id": profile_id,
+                    **config.comparable_payload(),
+                    "config_hash": config.config_hash,
+                },
             )
 
     def record_case_execution(self, *, run_id: str, case_hash: str, result: CaseExecutionResult) -> None:
@@ -847,3 +930,123 @@ class PostgresEvalRuntimeRepository:
                     "evidence_hash": gate.evidence_hash,
                 },
             )
+
+    def eval_run_projection(self, *, tenant_id: str, workspace_id: str, run_id: str) -> EvalRunProjection:
+        with self.engine.connect() as conn:
+            run = conn.execute(
+                text(
+                    """
+                    SELECT run_id, tenant_id, workspace_id, status, result_set_hash
+                    FROM observability_eval_runs
+                    WHERE run_id = :run_id
+                    """
+                ),
+                {"run_id": run_id},
+            ).mappings().first()
+            if run is None:
+                raise EvalRuntimeError("eval run not found")
+            if str(run["tenant_id"]) != tenant_id or str(run["workspace_id"]) != workspace_id:
+                raise EvalRuntimeError("eval run authorization scope mismatch")
+            case_rows = conn.execute(
+                text(
+                    """
+                    SELECT status, count(*) AS count
+                    FROM observability_eval_case_executions
+                    WHERE run_id = :run_id
+                    GROUP BY status
+                    """
+                ),
+                {"run_id": run_id},
+            ).mappings().all()
+            metric_rows = conn.execute(
+                text(
+                    """
+                    SELECT m.measurement_status, count(*) AS count
+                    FROM observability_eval_metric_results m
+                    JOIN observability_eval_case_executions c
+                      ON c.case_execution_id = m.case_execution_id
+                    WHERE c.run_id = :run_id
+                    GROUP BY m.measurement_status
+                    """
+                ),
+                {"run_id": run_id},
+            ).mappings().all()
+            bucket_rows = conn.execute(
+                text(
+                    """
+                    SELECT bucket
+                    FROM observability_failure_buckets
+                    WHERE run_id = :run_id
+                    ORDER BY bucket
+                    """
+                ),
+                {"run_id": run_id},
+            ).scalars().all()
+        case_counts = {str(row["status"]): int(row["count"]) for row in case_rows}
+        metric_counts = {str(row["measurement_status"]): int(row["count"]) for row in metric_rows}
+        run_status = str(run["status"])
+        all_measured = bool(metric_counts) and set(metric_counts) == {EvalMeasurementStatus.MEASURED.value}
+        return EvalRunProjection(
+            run_id=run_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            status=run_status,
+            result_set_hash=run["result_set_hash"],
+            projection_freshness="fresh",
+            authorization_scope=f"{tenant_id}:{workspace_id}",
+            redaction_status="redacted",
+            trace_completeness="complete" if run_status == EvalRunStatus.COMPLETED.value else "partial",
+            measurement_status=EvalMeasurementStatus.MEASURED.value if run_status == EvalRunStatus.COMPLETED.value and all_measured else EvalMeasurementStatus.BLOCKED.value,
+            case_status_counts=case_counts,
+            metric_status_counts=metric_counts,
+            failure_buckets=tuple(str(bucket) for bucket in bucket_rows),
+        )
+
+    def release_gate_report(self, *, tenant_id: str, workspace_id: str, gate_id: str) -> ReleaseGateReport:
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    """
+                    SELECT
+                        g.gate_id,
+                        g.status,
+                        g.reason,
+                        g.result_set_hash,
+                        g.comparison_hash,
+                        c.status AS comparison_status,
+                        g.evidence_hash,
+                        e.artifact_ref,
+                        e.artifact_hash,
+                        r.tenant_id,
+                        r.workspace_id
+                    FROM observability_release_gate_evaluations g
+                    JOIN observability_evidence_records e
+                      ON e.evidence_hash = g.evidence_hash
+                    JOIN observability_eval_runs r
+                      ON r.result_set_hash = g.result_set_hash
+                    LEFT JOIN observability_benchmark_comparisons c
+                      ON c.comparison_hash = g.comparison_hash
+                    WHERE g.gate_id = :gate_id
+                    """
+                ),
+                {"gate_id": gate_id},
+            ).mappings().first()
+        if row is None:
+            raise EvalRuntimeError("release gate not found")
+        if str(row["tenant_id"]) != tenant_id or str(row["workspace_id"]) != workspace_id:
+            raise EvalRuntimeError("release gate authorization scope mismatch")
+        return ReleaseGateReport(
+            gate_id=gate_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            status=str(row["status"]),
+            reason=str(row["reason"]),
+            result_set_hash=str(row["result_set_hash"]),
+            comparison_hash=None if row["comparison_hash"] is None else str(row["comparison_hash"]),
+            comparison_status=None if row["comparison_status"] is None else str(row["comparison_status"]),
+            evidence_hash=str(row["evidence_hash"]),
+            artifact_ref=str(row["artifact_ref"]),
+            artifact_hash=str(row["artifact_hash"]),
+            projection_freshness="fresh",
+            measurement_status=EvalMeasurementStatus.MEASURED.value if str(row["status"]) == ReleaseGateStatus.PASSED.value else EvalMeasurementStatus.BLOCKED.value,
+        )

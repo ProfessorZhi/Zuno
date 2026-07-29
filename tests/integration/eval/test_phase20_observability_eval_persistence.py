@@ -181,7 +181,13 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
     repo = PostgresEvalRuntimeRepository(engine)
     repo.record_dataset(dataset)
     for run_id in (baseline.run_id, candidate.run_id):
-        repo.start_run(run_id=run_id, profile_id="agentic_graphrag", config=config)
+        repo.start_run(
+            run_id=run_id,
+            profile_id="agentic_graphrag",
+            config=config,
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+        )
         repo.record_case_execution(run_id=run_id, case_hash=dataset.cases[0].case_hash, result=case_result)
         repo.record_efficiency(run_id=run_id, efficiency=efficiency)
     repo.record_graph_diagnostic(
@@ -204,6 +210,16 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
     repo.complete_run(candidate)
     repo.record_comparison(comparison)
     repo.record_release_gate(gate, evidence)
+    run_projection = repo.eval_run_projection(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        run_id=candidate.run_id,
+    )
+    gate_report = repo.release_gate_report(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        gate_id=gate.gate_id,
+    )
 
     assert gate.status == ReleaseGateStatus.PASSED
     with engine.connect() as conn:
@@ -223,3 +239,8 @@ def test_phase20_eval_runtime_persists_dataset_run_metrics_comparison_gate_and_e
         assert stored_gate.reason == "passed"
         assert stored_gate.result_set_hash == candidate.result_set_hash
         assert stored_gate.evidence_hash == evidence.evidence_hash
+    assert run_projection.measurement_status == "MEASURED"
+    assert run_projection.case_status_counts == {"COMPLETED": 1}
+    assert run_projection.metric_status_counts == {"MEASURED": 5}
+    assert gate_report.status == "PASSED"
+    assert gate_report.evidence_hash == evidence.evidence_hash
