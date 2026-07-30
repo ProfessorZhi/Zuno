@@ -8,6 +8,13 @@ API_V1_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1"
 API_ERRCODE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "errcode"
 PLATFORM_DATABASE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database"
 PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
+MAIN_ENTRYPOINT = REPO_ROOT / "src" / "backend" / "zuno" / "main.py"
+MEMORY_FEEDBACK_CONSUMER = REPO_ROOT / "src" / "backend" / "zuno" / "memory" / "feedback_consumer.py"
+AGENT_PRODUCT_BASELINE = REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "product_baseline.py"
+WORKSPACE_TASK_RUNTIME_SERVICE = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_task_runtime.py"
+)
+KNOWLEDGE_DTO = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "knowledge.py"
 WORK_PRODUCT = (
     REPO_ROOT / ".agent" / "programs" / "work-products" / "phase22-removal-candidates.yaml"
 )
@@ -130,6 +137,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/agent_skill.py",
             "src/backend/zuno/platform/database/",
             "src/backend/zuno/platform/settings.py",
+            "src/backend/zuno/main.py",
+            "src/backend/zuno/memory/feedback_consumer.py",
+            "src/backend/zuno/agent/product_baseline.py",
+            "src/backend/zuno/api/services/workspace_task_runtime.py",
+            "src/backend/zuno/api/dto/knowledge.py",
             "src/backend/zuno/platform/services/cli_tool_discovery.py",
             "src/backend/zuno/platform/services/simple_api_tool.py",
             "src/backend/zuno/platform/services/tool_creation_service.py",
@@ -213,6 +225,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("mcp agent service", MCP_AGENT_SERVICE),
         ("capability service", CAPABILITY_SERVICE),
         ("agent skill service", AGENT_SKILL_SERVICE),
+        ("main entrypoint", MAIN_ENTRYPOINT),
+        ("memory feedback consumer", MEMORY_FEEDBACK_CONSUMER),
+        ("agent product baseline", AGENT_PRODUCT_BASELINE),
+        ("workspace task runtime service", WORKSPACE_TASK_RUNTIME_SERVICE),
+        ("knowledge dto", KNOWLEDGE_DTO),
         ("cli tool discovery", CLI_TOOL_DISCOVERY),
         ("simple api tool", SIMPLE_API_TOOL),
         ("tool creation service", TOOL_CREATION_SERVICE),

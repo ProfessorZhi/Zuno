@@ -39,7 +39,7 @@ from zuno.knowledge.storage import (
 from zuno.memory.contracts import MemoryScope
 from zuno.memory.engine import MemoryEngine
 from zuno.memory.policy import RetentionPolicy
-from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract
+from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract
 
 
 @dataclass(frozen=True, slots=True)

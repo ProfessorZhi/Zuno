@@ -287,6 +287,27 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
         assert "from zuno.resources." not in content
 
 
+def test_runtime_entrypoints_and_cross_module_dtos_use_canonical_imports() -> None:
+    main = _read("src/backend/zuno/main.py")
+    memory_feedback = _read("src/backend/zuno/memory/feedback_consumer.py")
+    product_baseline = _read("src/backend/zuno/agent/product_baseline.py")
+    workspace_task_runtime = _read("src/backend/zuno/api/services/workspace_task_runtime.py")
+    knowledge_dto = _read("src/backend/zuno/api/dto/knowledge.py")
+
+    assert "from zuno.platform.common.runtime_observability import configure_langsmith" in main
+    assert "from zuno.platform.database.init_data import (" in main
+    assert "from zuno.platform.database.models.memory_runtime import MemoryRawEventTable" in memory_feedback
+    assert "from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract" in product_baseline
+    assert "from zuno.api.dto.workspace import (" in workspace_task_runtime
+    assert "from zuno.platform.services.graphrag.models import GraphRAGProjectContract" in knowledge_dto
+
+    for content in [main, memory_feedback, product_baseline, workspace_task_runtime, knowledge_dto]:
+        assert "from zuno.schema." not in content
+        assert "from zuno.database." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.utils." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

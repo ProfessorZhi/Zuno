@@ -149,7 +149,7 @@ def build_package_a_production_ingestion_runtime(
         object_store=durable_object_store,
         worker_id=worker_id,
     )
-from zuno.schema.workspace import (
+from zuno.api.dto.workspace import (
     ArtifactContract,
     FeedbackContract,
     TraceEventContract,
