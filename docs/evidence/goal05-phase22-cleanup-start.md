@@ -66,6 +66,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/integration/test_goal03_wave_a_persistence.py` active Goal03 Wave A persistence 集成测试继续改为 canonical `zuno.platform.database` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/evals/test_rag_eval_metrics.py` active RAG eval metrics 测试继续改为 canonical `zuno.agent.core` / `zuno.api.dto` / `zuno.platform.services` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_stackless_local_eval_contract_project_query_policy.py`、`tests/evals/test_stackless_local_eval_project_assets.py`、`tests/evals/test_stackless_local_eval_project_guard.py` 与 `tests/evals/test_stackless_local_eval_rerank_runtime.py` active stackless local eval 测试继续改为 canonical `zuno.api.dto` / `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/knowledge/test_parse_gateway_runtime.py` active parse gateway runtime 测试继续改为 canonical `zuno.api.dto.chunk` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/retrieval/test_query_rewrite.py`、`tests/retrieval/test_rerank_fallback.py`、`tests/retrieval/test_retrieval_fusion.py` 与 `tests/retrieval/test_retrieval_planner.py` active retrieval 测试继续改为 canonical `zuno.platform.services` / `zuno.platform.database` / `zuno.platform.settings` import 和 patch 路径，并纳入 PHASE22 cleanup verifier 扫描。
@@ -352,6 +353,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/agent/test_platform_layer_surfaces.py passed
 5 passed in 27.46s
 rg no matches in tests/agent/test_platform_layer_surfaces.py for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/evals/test_rag_eval_metrics.py passed
+56 passed in 16.48s
+rg no matches in tests/evals/test_rag_eval_metrics.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

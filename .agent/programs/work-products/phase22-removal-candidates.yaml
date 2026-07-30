@@ -603,6 +603,10 @@ resolved_this_slice:
     before: "active Platform layer surface tests imported foundation objects through zuno.services / zuno.utils aliases and described them as legacy"
     after: "active Platform layer surface tests verify canonical zuno.platform services / common foundation objects"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/evals/test_rag_eval_metrics.py"
+    before: "active RAG eval metric tests imported model manager, SearchModel, GraphRAG and RAG runtime through zuno.core / zuno.schema / zuno.services aliases"
+    after: "active RAG eval metric tests import canonical zuno.agent.core / zuno.api.dto / zuno.platform.services runtime paths"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

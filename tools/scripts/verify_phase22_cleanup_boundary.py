@@ -101,6 +101,7 @@ TESTS_FRONTEND_CANONICAL_FILES = [
 ]
 TESTS_EVALS_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "evals" / "test_local_runtime_registry.py",
+    REPO_ROOT / "tests" / "evals" / "test_rag_eval_metrics.py",
     REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_contract_project_query_policy.py",
     REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_project_assets.py",
     REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_project_guard.py",
@@ -377,6 +378,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/api/test_workspace_task_runtime.py",
             "tests/e2e/test_unified_agent_product_scenario.py",
             "tests/evals/test_local_runtime_registry.py",
+            "tests/evals/test_rag_eval_metrics.py",
             "tests/evals/test_stackless_local_eval_contract_project_query_policy.py",
             "tests/evals/test_stackless_local_eval_project_assets.py",
             "tests/evals/test_stackless_local_eval_project_guard.py",
