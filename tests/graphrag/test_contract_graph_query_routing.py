@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def _contract_review_query_policy() -> dict:
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
@@ -10,7 +10,7 @@ def _contract_review_query_policy() -> dict:
 
 
 def test_contract_relation_question_is_graph_worthy():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     query = (
         "\u4e3b\u670d\u52a1\u5408\u540c\u91cc\uff0c\u53d1\u751f\u6570\u636e\u6cc4\u9732\u540e"
@@ -26,7 +26,7 @@ def test_contract_relation_question_is_graph_worthy():
 
 
 def test_contract_title_alias_is_promoted_to_seed():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     query = (
         "\u5916\u5305\u8fd0\u7ef4\u670d\u52a1\u5408\u540c\u4e2d\uff0c\u9ad8\u5371\u5b89\u5168\u4e8b\u4ef6"
@@ -42,7 +42,7 @@ def test_contract_title_alias_is_promoted_to_seed():
 
 
 def test_contract_step_question_is_graph_worthy():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     query = (
         "SaaS\u8ba2\u9605\u670d\u52a1\u5408\u540c\u7ec8\u6b62\u540e\uff0c"

@@ -100,6 +100,9 @@ TESTS_KNOWLEDGE_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "knowledge" / "test_parse_gateway_runtime.py",
 ]
 TESTS_GRAPHRAG_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_query_routing.py",
+    REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_retriever.py",
+    REPO_ROOT / "tests" / "graphrag" / "test_graphrag.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_project_contracts.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_project_loader.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_prompt_registry.py",
@@ -340,6 +343,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/e2e/test_unified_agent_product_scenario.py",
             "tests/evals/test_local_runtime_registry.py",
             "tests/frontend/test_product_wiring_v1_api_contract.py",
+            "tests/graphrag/test_contract_graph_query_routing.py",
+            "tests/graphrag/test_contract_graph_retriever.py",
+            "tests/graphrag/test_graphrag.py",
             "tests/graphrag/test_graphrag_project_contracts.py",
             "tests/graphrag/test_graphrag_project_loader.py",
             "tests/graphrag/test_graphrag_prompt_registry.py",
