@@ -23,7 +23,7 @@ def test_blank_usage_filters_are_treated_as_all(monkeypatch):
         return [_usage()]
 
     monkeypatch.setattr(
-        "zuno.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
+        "zuno.platform.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
         fake_get_agent_model_time_usage,
     )
 
@@ -50,7 +50,7 @@ def test_specific_usage_filters_are_preserved(monkeypatch):
         return [_usage()]
 
     monkeypatch.setattr(
-        "zuno.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
+        "zuno.platform.database.dao.usage_stats.UsageStatsDao.get_agent_model_time_usage",
         fake_get_agent_model_time_usage,
     )
 
