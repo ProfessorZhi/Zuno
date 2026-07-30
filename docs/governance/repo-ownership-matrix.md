@@ -100,21 +100,21 @@ phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 | --- | --- | --- | --- |
 | agent | `agent/harness.py`、`agent/durable_runtime.py` | 旧 `zuno.core.*` 仍由 legacy alias registry 保护。 | `tests/repo/test_repo_structure_consistency.py`、`tools/scripts/verify_repo_structure.py` |
 | capability | `capability/control_plane.py`、`capability/retrieval.py`、`capability/runtime.py` | 旧 `zuno.services.application.capabilities.*` 仍是 migration source，不删除。 | `tests/repo/test_static_target_layer_imports.py`、`tests/repo/test_repo_structure_consistency.py` |
-| knowledge | `knowledge/agentic_graphrag.py`、`knowledge/indexing/` | 旧 `zuno.services.graphrag.*`、`zuno.services.retrieval.*`、`zuno.services.rag.*` 仍由 legacy guard 保护。 | `tests/repo/test_backend_facade_layers.py`、`tests/repo/test_repo_structure_consistency.py` |
+| knowledge | `knowledge/agentic_graphrag.py`、`knowledge/indexing/` | 旧 `zuno.services.graphrag.*`、`zuno.services.retrieval.*`、`zuno.services.rag.*` 仍由 canonical repo guard 保护。 | `tests/repo/test_backend_facade_layers.py`、`tests/repo/test_repo_structure_consistency.py` |
 | api/dto | `api/dto/` | 旧 `zuno.schema.*` 是 compatibility alias，不是 root-level physical schema directory。 | `tests/repo/test_zuno_canonical_import_surfaces.py`、`tools/scripts/verify_repo_structure.py` |
 
 ## Compatibility Retirement Table
 
 | compatibility surface | PHASE05 status | retirement condition |
 | --- | --- | --- |
-| `zuno.schema.*` | 保留；映射到 `api/dto`。 | 所有 public DTO import consumer 迁移后，先更新 legacy guard，再按单独 public API 计划退休。 |
+| `zuno.schema.*` | 保留；映射到 `api/dto`。 | 所有 public DTO import consumer 迁移后，先更新 canonical import guard，再按单独 public API 计划退休。 |
 | `zuno.services.application.capabilities.*` | 保留；真实 provider foundation 仍在 `platform/services/application/capabilities/`。 | Capability provider runtime 有独立 owner、import matrix 和 focused tests 后，再逐项迁移。 |
-| `platform/compatibility/legacy_aliases.py` | 保留；是旧 public path 的唯一注册表。 | 所有被保护 alias 都有替代路径、consumer 迁移证据和 legacy guard 更新后才能收缩。 |
+| `platform/compatibility/legacy_aliases.py` | 保留；是旧 public path 的唯一注册表。 | 所有被保护 alias 都有替代路径、consumer 迁移证据和 canonical repo guard 更新后才能收缩。 |
 | `platform/compatibility/vendor/fastapi_jwt_auth` | 保留；当前 vendor shim compat path。 | `platform/vendor/fastapi_jwt_auth` 迁移方案、API compat tests 和 import matrix 完成后再迁移。 |
 
 ## Guardrails
 
 - 新增 `platform/services/*` 子目录前，必须先更新 `PLATFORM_SERVICES_TARGET_OWNERS` 和本矩阵。
 - 新增 `capability/tools/*` 或 `capability/mcp/servers/*` 前，必须先更新 provider 分类和本矩阵。
-- `platform/compatibility` 不接收新 runtime code。只有 `legacy_aliases.py`、`legacy/` 和当前已存在的 `vendor/fastapi_jwt_auth` 兼容路径属于允许范围。
+- `platform/compatibility` 不接收新 runtime code。只有 `legacy_aliases.py` 和当前已存在的 `vendor/fastapi_jwt_auth` 兼容路径属于允许范围；`legacy/` 空包已在 PHASE22 删除。
 - `platform/vendor` 在 PHASE02 只作为目标 owner 和 import guard；迁移实际 vendor shim 前，必须先更新 `tests/api/test_fastapi_jwt_auth_compat.py` 和 legacy import matrix。

@@ -537,8 +537,22 @@ python tools/scripts/verify_repo_structure.py passed
 pytest -q tests/repo/test_repo_structure_consistency.py -p no:cacheprovider passed
 4 passed in 0.22s
 python .agent/scripts/verify_repo_hygiene.py passed
-pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider passed
+pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_phase22_cleanup_boundary.py tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider passed
 39 passed in 17.10s
+```
+
+2026-07-30 compatibility scope documentation alignment:
+```text
+`src/backend/zuno/platform/compatibility/README.md` no longer lists `legacy/` as current allowed scope.
+`docs/governance/repo-ownership-matrix.md` no longer lists `legacy/` as current allowed compatibility scope.
+Current guarded public alias language now points to canonical import/repo guards, not the retired legacy guard suite.
+python .agent/scripts/verify_repo_hygiene.py passed
+python tools/scripts/verify_phase22_cleanup_boundary.py passed
+python tools/scripts/verify_current_program.py passed
+python tools/scripts/verify_repo_structure.py passed
+git diff --check passed
+pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_phase22_cleanup_boundary.py tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider passed
+39 passed in 17.94s
 ```
 
 ## Remaining

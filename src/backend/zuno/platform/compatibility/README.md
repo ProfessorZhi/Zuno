@@ -6,7 +6,7 @@
 
 `compatibility/` 收纳迁移兼容边界：历史 alias、当前已存在的 vendor 兼容路径、退休 public import 的替代入口。它存在是为了减少顶层目录噪音，同时保留可测试的迁移路径。
 
-PHASE02 之后，本目录的目标收缩为 legacy import registry only。当前允许范围只有 `legacy_aliases.py`、`legacy/` 和已经被 tests 保护的 `vendor/fastapi_jwt_auth` 兼容路径。
+PHASE02 之后，本目录的目标收缩为 legacy import registry only。当前允许范围只有 `legacy_aliases.py` 和已经被 tests 保护的 `vendor/fastapi_jwt_auth` 兼容路径；`legacy/` 空包已在 PHASE22 删除，不再属于当前范围。
 
 ## Target role
 
