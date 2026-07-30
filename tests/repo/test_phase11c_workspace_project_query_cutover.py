@@ -4,14 +4,14 @@ from types import SimpleNamespace
 
 def _patch_model(monkeypatch):
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
 
 def test_workspace_agent_does_not_expose_legacy_agent_runtime(monkeypatch):
-    from zuno.services.workspace import simple_agent as workspace_module
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace import simple_agent as workspace_module
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     _patch_model(monkeypatch)
 
@@ -28,8 +28,8 @@ def test_workspace_agent_does_not_expose_legacy_agent_runtime(monkeypatch):
 
 
 def test_workspace_prefetch_uses_project_query_runtime(monkeypatch):
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     _patch_model(monkeypatch)
 
@@ -59,7 +59,7 @@ def test_workspace_prefetch_uses_project_query_runtime(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.KnowledgeQueryService.query",
+        "zuno.platform.services.workspace.simple_agent.KnowledgeQueryService.query",
         fake_project_query,
     )
 
