@@ -1,0 +1,65 @@
+# PHASE22 Removal Candidates
+phase_id: PHASE22
+task_id: P21-T08 / P22-T03
+status: frozen_from_phase21_runtime_and_phase22_startup_scan
+generated_at: 2026-07-30
+branch: codex/goal05-phase15-sandbox-repair
+source_inputs:
+  - ".agent/programs/work-products/legacy-bypass-inventory.yaml"
+  - ".agent/programs/work-products/temporary-allowlist.yaml"
+  - ".agent/programs/work-products/feature-flag-registry.yaml"
+  - "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
+boundary: "本清单是 PHASE22 cleanup 输入，不是完成证明。删除必须由 canonical import/search、boundary verifier 和真实测试共同证明。"
+commands:
+  - 'rg --files | rg "(^|/)(legacy|legacy_|.*_legacy)(/|\.)|legacy_aliases|tests/legacy_guards|compatibility"'
+  - 'rg -n "zuno\.(core|services|schema|database|tools|resources|config|mcp_servers)|legacy_general_agent_completion_rollback|ROLLBACK_WINDOW" src tests tools apps'
+mandatory_removal_candidates:
+  - path: "src/backend/zuno/platform/compatibility/legacy_aliases.py"
+    owner: "Repository Governance"
+    reason: "legacy root import registry keeps old zuno.* package aliases alive."
+    replacement: "canonical imports under zuno.api, zuno.platform, zuno.agent, zuno.capability and zuno.knowledge."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+  - path: "src/backend/zuno/__init__.py"
+    owner: "Repository Governance"
+    reason: "package bootstrap auto-registers the legacy alias finder."
+    replacement: "plain package marker without meta_path mutation."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+  - path: "src/backend/zuno/platform/compatibility/legacy/"
+    owner: "Repository Governance"
+    reason: "production source tree still contains a legacy-named directory."
+    replacement: "no legacy package; versioned public API adapters only where required."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+  - path: "tests/legacy_guards/"
+    owner: "Repository Governance"
+    reason: "temporary legacy guard suite remains in active test tree."
+    replacement: "tests/repo canonical boundary guards."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+  - path: "legacy_general_agent_completion_rollback"
+    owner: "06 Agent Core"
+    reason: "rollback flag is expired after PHASE21 cutover evidence."
+    replacement: "canonical Product Runtime new-default path and explicit failure evidence."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+  - path: "src/backend/zuno/agent/core/agents/general_agent.py"
+    owner: "06 Agent Core"
+    reason: "old GeneralAgent runtime remains available behind rollback tests and aliases."
+    replacement: "Single Controller Product Runtime path."
+    current_status: "active_candidate"
+    removal_task: "P22-T03"
+resolved_this_slice:
+  - path: "src/backend/zuno/product/runtime_batch.py"
+    before: "from zuno.schema.workspace import ..."
+    after: "from zuno.api.dto.workspace import ..."
+    evidence: "tests/api/test_product_runtime_batch.py"
+  - path: "src/backend/zuno/api/services/product/command_service.py"
+    before: "from zuno.database import engine"
+    after: "from zuno.platform.database import engine"
+    evidence: "tests/api/test_goal03_product_route.py"
+remaining_not_closed:
+  - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
+  - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."
+  - "PHASE22 fixed benchmark and full final verification are still pending."

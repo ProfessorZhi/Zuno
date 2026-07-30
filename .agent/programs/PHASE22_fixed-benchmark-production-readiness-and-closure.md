@@ -110,6 +110,7 @@ docs/evidence/**
 ```bash
 git diff --check
 python tools/scripts/verify_current_program.py
+python tools/scripts/verify_phase22_cleanup_boundary.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python tools/scripts/verify_architecture_document_set.py
