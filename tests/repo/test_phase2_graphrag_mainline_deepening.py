@@ -18,9 +18,9 @@ def _ensure_runtime_paths() -> None:
 def test_phase2_orchestrator_delegates_auto_mode_decision_to_planner() -> None:
     _ensure_runtime_paths()
 
-    retrieval_models = importlib.import_module("zuno.services.retrieval.models")
+    retrieval_models = importlib.import_module("zuno.platform.services.retrieval.models")
     RetrievalOrchestrator = importlib.import_module(
-        "zuno.services.retrieval.orchestrator"
+        "zuno.platform.services.retrieval.orchestrator"
     ).RetrievalOrchestrator
 
     RetrievalPlan = retrieval_models.RetrievalPlan
@@ -139,7 +139,7 @@ def test_phase2_orchestrator_delegates_auto_mode_decision_to_planner() -> None:
 def test_phase2_graph_retriever_accepts_domain_policy_driven_graph_cues() -> None:
     _ensure_runtime_paths()
 
-    GraphRetriever = importlib.import_module("zuno.services.graphrag.retriever").GraphRetriever
+    GraphRetriever = importlib.import_module("zuno.platform.services.graphrag.retriever").GraphRetriever
 
     class FakeClient:
         async def query_neighbors(

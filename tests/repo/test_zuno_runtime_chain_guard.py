@@ -104,6 +104,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
 
     root_guard_tests = [
         "tests/repo/test_phase0_runtime_recovery.py",
+        "tests/repo/test_phase2_graphrag_mainline_deepening.py",
         "tests/repo/test_phase2_retrieval_strategy_program.py",
         "tests/repo/test_phase11a_knowledge_query_service.py",
         "tests/repo/test_phase11b_single_generalagent_cutover.py",

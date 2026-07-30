@@ -82,6 +82,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/legacy_guards/test_phase11a_knowledge_query_service.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase11a_knowledge_query_service.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase11b_single_generalagent_cutover.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase11b_single_generalagent_cutover.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase2_retrieval_strategy_program.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase2_retrieval_strategy_program.py` 位置，改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_phase2_graphrag_mainline_deepening.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase2_graphrag_mainline_deepening.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase0_runtime_recovery.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase0_runtime_recovery.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_graphrag_index_filters.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_graphrag_index_filters.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_langgraph_runtime_imports.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_langgraph_runtime_imports.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -462,6 +463,10 @@ PHASE22 cleanup boundary verification passed.
 
 python -m compileall -q tests/repo/test_phase0_runtime_recovery.py tests/repo/test_zuno_runtime_chain_guard.py passed
 21 passed in 33.24s
+PHASE22 cleanup boundary verification passed.
+
+python -m compileall -q tests/repo/test_phase2_graphrag_mainline_deepening.py tests/repo/test_zuno_runtime_chain_guard.py passed
+15 passed in 3.43s
 PHASE22 cleanup boundary verification passed.
 ```
 
