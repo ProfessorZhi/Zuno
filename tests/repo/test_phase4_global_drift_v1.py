@@ -1,8 +1,8 @@
 import asyncio
 
-from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
-from zuno.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.retrieval.models import ProcessedQuery, RetrievalRequest
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
 
 
 def _processed(

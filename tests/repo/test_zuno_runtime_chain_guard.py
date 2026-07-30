@@ -107,6 +107,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
         "tests/repo/test_phase2_graphrag_mainline_deepening.py",
         "tests/repo/test_phase3_community_graphrag_v1.py",
         "tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py",
+        "tests/repo/test_phase4_global_drift_v1.py",
         "tests/repo/test_phase2_retrieval_strategy_program.py",
         "tests/repo/test_phase11a_knowledge_query_service.py",
         "tests/repo/test_phase11b_single_generalagent_cutover.py",
@@ -144,6 +145,7 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert (REPO_ROOT / "tests/repo/test_phase2_retrieval_strategy_program.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase3_community_graphrag_v1.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase4_global_drift_v1.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11a_knowledge_query_service.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11b_single_generalagent_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11c_workspace_project_query_cutover.py").exists()
