@@ -16,7 +16,7 @@ def _ensure_runtime_paths() -> None:
 def test_phase6_agent_runtime_no_longer_binds_domain_pack_graph_runtime() -> None:
     _ensure_runtime_paths()
 
-    general_agent = importlib.import_module("zuno.core.agents.general_agent")
+    general_agent = importlib.import_module("zuno.agent.core.agents.general_agent")
     GeneralAgent = general_agent.GeneralAgent
     AgentConfig = general_agent.AgentConfig
 
