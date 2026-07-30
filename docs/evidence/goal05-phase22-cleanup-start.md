@@ -64,6 +64,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/retrieval/test_query_rewrite.py`、`tests/retrieval/test_rerank_fallback.py`、`tests/retrieval/test_retrieval_fusion.py` 与 `tests/retrieval/test_retrieval_planner.py` active retrieval 测试继续改为 canonical `zuno.platform.services` / `zuno.platform.database` / `zuno.platform.settings` import 和 patch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/retrieval/test_enhanced_requery_activation.py`、`tests/retrieval/test_enhanced_requery_precision_gate.py` 与 `tests/retrieval/test_enhanced_standard_floor_invariance.py` active enhanced retrieval 测试继续改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/retrieval/test_enhanced_retrieval_composition.py`、`tests/retrieval/test_standard_retrieval_composition.py` 与 `tests/retrieval/test_retrieval_orchestrator.py` active retrieval composition / orchestrator 测试继续改为 canonical `zuno.platform.services.graphrag` / `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/retrieval/test_graph_retriever_local_runtime.py` 与 `tests/retrieval/test_workspace_retrieval_trace.py` active retrieval local runtime / workspace trace 测试继续改为 canonical `zuno.platform.services` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/graphrag/test_graphrag_project_contracts.py`、`tests/graphrag/test_graphrag_project_loader.py` 与 `tests/graphrag/test_graphrag_prompt_registry.py` active GraphRAG project contract / loader / prompt registry 测试继续改为 canonical `zuno.platform.services.graphrag` / `zuno.platform.services.retrieval` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/graphrag/test_graphrag.py`、`tests/graphrag/test_contract_graph_query_routing.py` 与 `tests/graphrag/test_contract_graph_retriever.py` active GraphRAG orchestrator / contract graph retriever 测试继续改为 canonical `zuno.platform.services.graphrag` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/graphrag/test_graphrag_baseline_preserving_fusion.py`、`tests/graphrag/test_graphrag_bridge_guardrail.py`、`tests/graphrag/test_graphrag_chain_aware_fusion.py`、`tests/graphrag/test_graphrag_comparison_guardrail.py` 与 `tests/graphrag/test_graphrag_genealogy_guardrail.py` active GraphRAG fusion guardrail 测试继续改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -312,6 +313,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/graphrag/test_contract_review_project_payload.py tests/graphrag/test_structured_graph_extractor_contract.py passed
 10 passed in 1.14s
 rg no matches in selected GraphRAG contract review / structured extractor tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/retrieval/test_graph_retriever_local_runtime.py tests/retrieval/test_workspace_retrieval_trace.py passed
+3 passed in 15.52s
+rg no matches in selected retrieval local runtime / workspace trace tests for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

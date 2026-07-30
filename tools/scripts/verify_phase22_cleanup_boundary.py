@@ -126,12 +126,14 @@ TESTS_RETRIEVAL_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "retrieval" / "test_enhanced_requery_precision_gate.py",
     REPO_ROOT / "tests" / "retrieval" / "test_enhanced_standard_floor_invariance.py",
     REPO_ROOT / "tests" / "retrieval" / "test_enhanced_retrieval_composition.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_graph_retriever_local_runtime.py",
     REPO_ROOT / "tests" / "retrieval" / "test_query_rewrite.py",
     REPO_ROOT / "tests" / "retrieval" / "test_rerank_fallback.py",
     REPO_ROOT / "tests" / "retrieval" / "test_retrieval_fusion.py",
     REPO_ROOT / "tests" / "retrieval" / "test_retrieval_orchestrator.py",
     REPO_ROOT / "tests" / "retrieval" / "test_retrieval_planner.py",
     REPO_ROOT / "tests" / "retrieval" / "test_standard_retrieval_composition.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_workspace_retrieval_trace.py",
 ]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
@@ -383,11 +385,13 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/retrieval/test_enhanced_requery_precision_gate.py",
             "tests/retrieval/test_enhanced_standard_floor_invariance.py",
             "tests/retrieval/test_enhanced_retrieval_composition.py",
+            "tests/retrieval/test_graph_retriever_local_runtime.py",
             "tests/retrieval/test_rerank_fallback.py",
             "tests/retrieval/test_retrieval_fusion.py",
             "tests/retrieval/test_retrieval_orchestrator.py",
             "tests/retrieval/test_retrieval_planner.py",
             "tests/retrieval/test_standard_retrieval_composition.py",
+            "tests/retrieval/test_workspace_retrieval_trace.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
