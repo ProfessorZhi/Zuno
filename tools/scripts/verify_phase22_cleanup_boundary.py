@@ -11,6 +11,12 @@ PLATFORM_APPLICATION_KNOWLEDGE_ROOT = (
     REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "knowledge"
 )
 PLATFORM_REWRITE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rewrite"
+PLATFORM_PIPELINE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "pipeline"
+EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
+LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
+CONVERT_FILES_INIT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "convert_files" / "__init__.py"
+)
 QUEUE_WORKERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "workers.py"
 QUEUE_MESSAGES = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "messages.py"
 PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
@@ -150,6 +156,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/database/",
             "src/backend/zuno/platform/services/application/knowledge/",
             "src/backend/zuno/platform/services/rewrite/",
+            "src/backend/zuno/platform/services/pipeline/",
+            "src/backend/zuno/platform/services/embedding/__init__.py",
+            "src/backend/zuno/platform/services/llm/__init__.py",
+            "src/backend/zuno/platform/services/convert_files/__init__.py",
             "src/backend/zuno/platform/services/queue/workers.py",
             "src/backend/zuno/platform/services/queue/messages.py",
             "src/backend/zuno/platform/settings.py",
@@ -276,7 +286,14 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         for path in sorted(PLATFORM_REWRITE_ROOT.rglob("*.py"))
     )
     checked_paths.extend(
+        (f"platform pipeline {path.relative_to(PLATFORM_PIPELINE_ROOT)}", path)
+        for path in sorted(PLATFORM_PIPELINE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
         [
+            ("platform embedding init", EMBEDDING_INIT),
+            ("platform llm init", LLM_INIT),
+            ("platform convert files init", CONVERT_FILES_INIT),
             ("platform queue workers", QUEUE_WORKERS),
             ("platform queue messages", QUEUE_MESSAGES),
         ]

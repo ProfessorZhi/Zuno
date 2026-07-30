@@ -361,6 +361,45 @@ def test_platform_application_rewrite_and_queue_use_canonical_imports() -> None:
         assert "from zuno.resources." not in content
 
 
+def test_platform_pipeline_and_provider_inits_use_canonical_imports() -> None:
+    pipeline_init = _read("src/backend/zuno/platform/services/pipeline/__init__.py")
+    pipeline_stages = _read("src/backend/zuno/platform/services/pipeline/stages.py")
+    pipeline_manager = _read("src/backend/zuno/platform/services/pipeline/manager.py")
+    embedding_init = _read("src/backend/zuno/platform/services/embedding/__init__.py")
+    llm_init = _read("src/backend/zuno/platform/services/llm/__init__.py")
+    convert_files_init = _read("src/backend/zuno/platform/services/convert_files/__init__.py")
+
+    assert "from zuno.platform.services.pipeline.models import KnowledgeTaskStage" in pipeline_init
+    assert "from zuno.platform.services.pipeline.stages import (" in pipeline_init
+    assert "from zuno.platform.database.models.knowledge_file import Status as KnowledgeFileStatus" in pipeline_stages
+    assert "from zuno.platform.services.pipeline.models import KnowledgeTaskStage" in pipeline_stages
+    assert "from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao" in pipeline_manager
+    assert "from zuno.platform.database.dao.knowledge_task import KnowledgeTaskDao" in pipeline_manager
+    assert "from zuno.platform.services.rag.handler import RagHandler" in pipeline_manager
+    assert "from zuno.platform.services.storage import storage_client" in pipeline_manager
+    assert "from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile" in pipeline_manager
+    assert "from zuno.platform.common.runtime_observability import RedisKeys" in pipeline_manager
+    assert "from zuno.platform.services.graphrag.client import Neo4jClient" in pipeline_manager
+    assert "from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor" in pipeline_manager
+    assert "from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter" in pipeline_manager
+    assert "from zuno.platform.services.redis import redis_client" in pipeline_manager
+    assert "from zuno.platform.services.embedding.providers import EmbeddingProvider, FakeEmbeddingProvider" in embedding_init
+    assert "from zuno.platform.services.llm.providers import EchoLLMProvider, LLMProvider" in llm_init
+    assert "from zuno.platform.services.convert_files.convert_pdf import convert_to_pdf, get_libreoffice_command" in convert_files_init
+
+    for content in [
+        pipeline_init,
+        pipeline_stages,
+        pipeline_manager,
+        embedding_init,
+        llm_init,
+        convert_files_init,
+    ]:
+        assert "from zuno.services." not in content
+        assert "from zuno.database." not in content
+        assert "from zuno.utils." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

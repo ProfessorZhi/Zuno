@@ -5,24 +5,24 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.database.dao.knowledge_file import KnowledgeFileDao
-from zuno.database.dao.knowledge_task import KnowledgeTaskDao
-from zuno.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
-from zuno.services.pipeline.stages import (
+from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao
+from zuno.platform.database.dao.knowledge_task import KnowledgeTaskDao
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
+from zuno.platform.services.pipeline.stages import (
     build_failed_file_patch,
     build_running_file_patch,
     build_success_file_patch,
 )
-from zuno.services.rag.handler import RagHandler
-from zuno.services.storage import storage_client
-from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
-from zuno.utils.runtime_observability import RedisKeys
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.platform.services.storage import storage_client
+from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile
+from zuno.platform.common.runtime_observability import RedisKeys
 
-from zuno.services.graphrag.client import Neo4jClient
-from zuno.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
-from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+from zuno.platform.services.graphrag.client import Neo4jClient
+from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
+from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 from zuno.knowledge.ingestion import parse_file_into_legacy_chunks
-from zuno.services.redis import redis_client
+from zuno.platform.services.redis import redis_client
 
 
 class KnowledgePipelineManager:
