@@ -107,6 +107,9 @@ TESTS_EVALS_CANONICAL_FILES = [
 TESTS_KNOWLEDGE_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "knowledge" / "test_parse_gateway_runtime.py",
 ]
+TESTS_INTEGRATION_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "integration" / "test_goal03_wave_a_persistence.py",
+]
 TESTS_GRAPHRAG_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_query_routing.py",
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_retriever.py",
@@ -396,6 +399,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/graphrag/test_graphrag_seed_expansion.py",
             "tests/graphrag/test_structured_graph_extractor_contract.py",
             "tests/knowledge/test_parse_gateway_runtime.py",
+            "tests/integration/test_goal03_wave_a_persistence.py",
             "tests/retrieval/test_query_rewrite.py",
             "tests/retrieval/test_enhanced_requery_activation.py",
             "tests/retrieval/test_enhanced_requery_precision_gate.py",
@@ -654,6 +658,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tests knowledge canonical {path.name}", path)
         for path in TESTS_KNOWLEDGE_CANONICAL_FILES
+    )
+    checked_paths.extend(
+        (f"tests integration canonical {path.name}", path)
+        for path in TESTS_INTEGRATION_CANONICAL_FILES
     )
     checked_paths.extend(
         (f"tests graphrag canonical {path.name}", path)

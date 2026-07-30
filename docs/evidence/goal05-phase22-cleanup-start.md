@@ -61,6 +61,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_workspace_usage_agent_name.py` active Workspace usage / simple chat 测试继续改为 canonical `zuno.api.dto.workspace` import 和 `zuno.platform.services.workspace.simple_agent` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/api/test_knowledge_api_contract.py` active Knowledge API contract 测试继续改为 canonical `zuno.api.dto.knowledge` 与 `zuno.platform.services` import / monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/api/test_goal03_knowledge_route.py` active Goal03 Knowledge route 测试继续改为 canonical `zuno.platform.services.application.knowledge` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/integration/test_goal03_wave_a_persistence.py` active Goal03 Wave A persistence 集成测试继续改为 canonical `zuno.platform.database` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_stackless_local_eval_contract_project_query_policy.py`、`tests/evals/test_stackless_local_eval_project_assets.py`、`tests/evals/test_stackless_local_eval_project_guard.py` 与 `tests/evals/test_stackless_local_eval_rerank_runtime.py` active stackless local eval 测试继续改为 canonical `zuno.api.dto` / `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -337,6 +338,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/agent/test_knowledge_layer_surfaces.py passed
 5 passed in 4.15s
 rg no matches in tests/agent/test_knowledge_layer_surfaces.py for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/integration/test_goal03_wave_a_persistence.py passed
+2 passed in 16.18s
+rg no matches in tests/integration/test_goal03_wave_a_persistence.py for legacy import references
 PHASE22 cleanup boundary verification passed.
 ```
 

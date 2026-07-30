@@ -219,7 +219,7 @@ def test_phase09_product_command_is_idempotent_and_receipt_does_not_claim_domain
 
 
 def test_phase09_product_service_bootstraps_legacy_runtime_agent_version(engine, monkeypatch) -> None:
-    import zuno.database as zuno_database
+    import zuno.platform.database as zuno_database
 
     monkeypatch.setattr(zuno_database, "engine", engine)
     active_agent_version_id = ProductService.runtime_agent_version_id(
