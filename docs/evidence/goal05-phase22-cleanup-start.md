@@ -45,6 +45,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/agent/__init__.py` 顶层 `AgentConfig` / `GeneralAgent` lazy facade 改为直接指向 canonical `zuno.agent.core.agents`，避免继续指向与 `zuno.agent.runtime/` package 冲突的旧 facade 模块名。
 - `tests/agent/test_capability_registry.py` active Capability Registry 测试继续改为 canonical `zuno.platform.services.capability_registry` / `zuno.api.dto.capability` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_context_orchestrator.py` 与 `tests/agent/test_context_contracts.py` active Agent Context Pack 测试继续改为 canonical `zuno.platform.services.application.context` / `zuno.platform.services.graphrag` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/agent/test_knowledge_graphrag_runtime_contracts.py` 与 `tests/agent/test_hooks_evidence_trace_artifacts.py` active Knowledge GraphRAG runtime / hook trace 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core` import；tool middleware 测试补齐 `runtime.context` 合约输入，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -188,6 +189,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/agent/test_context_orchestrator.py tests/agent/test_context_contracts.py passed
 14 passed in 5.11s
 rg no matches in selected Agent Context Pack tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/agent/test_hooks_evidence_trace_artifacts.py passed
+10 passed in 29.12s
+rg no matches in selected Knowledge GraphRAG runtime / hook trace tests for legacy alias references
 ```
 
 ## Remaining

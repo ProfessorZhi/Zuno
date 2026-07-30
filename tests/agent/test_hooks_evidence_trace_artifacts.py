@@ -92,7 +92,7 @@ def test_evidence_checker_low_confidence_records_fallback_reason() -> None:
 
 
 def test_enhanced_query_result_adds_hook_trace_verdict_and_manifest() -> None:
-    from zuno.services.graphrag.query_service import (
+    from zuno.platform.services.graphrag.query_service import (
         GraphRAGProjectSnapshot,
         GraphRAGQueryService,
     )
@@ -163,11 +163,11 @@ def test_enhanced_query_result_adds_hook_trace_verdict_and_manifest() -> None:
 def test_tool_middleware_emits_pre_and_post_tool_trace_events(monkeypatch) -> None:
     from langchain_core.messages import ToolMessage
 
-    from zuno.core.agents.general_agent import EmitEventAgentMiddleware
+    from zuno.agent.core.agents.general_agent import EmitEventAgentMiddleware
 
     emitted = []
     monkeypatch.setattr(
-        "zuno.core.agents.general_agent.get_stream_writer",
+        "zuno.agent.core.agents.general_agent.get_stream_writer",
         lambda: emitted.append,
     )
     middleware = EmitEventAgentMiddleware(
@@ -177,7 +177,8 @@ def test_tool_middleware_emits_pre_and_post_tool_trace_events(monkeypatch) -> No
         user_id="u_1",
     )
     request = SimpleNamespace(
-        tool_call={"id": "call_1", "name": "search_knowledge_base", "args": {}}
+        tool_call={"id": "call_1", "name": "search_knowledge_base", "args": {}},
+        runtime=SimpleNamespace(context={"workspace_id": "workspace_trace"}),
     )
 
     async def handler(_request):
