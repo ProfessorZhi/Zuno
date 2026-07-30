@@ -4,13 +4,13 @@ PHASE02 status: target-owner-reserved
 
 ## 当前角色
 
-`platform/vendor/` 是第三方 shim 的目标 owner。PHASE02 只建立 README 和 import guard，不搬迁当前 `fastapi_jwt_auth` 兼容实现。
+`platform/vendor/` 是第三方 shim 的目标 owner。PHASE02 只建立 README 和 import guard，不搬迁当前 `fastapi_jwt_auth` 迁移兼容实现。
 
-当前事实是：`fastapi_jwt_auth` 仍通过 `zuno.compatibility.vendor.fastapi_jwt_auth` 保护旧 import path，物理位置仍在 `platform/compatibility/vendor/fastapi_jwt_auth`。
+当前事实是：`fastapi_jwt_auth` 仅通过 `zuno.compatibility.vendor.fastapi_jwt_auth` 作为迁移兼容面保护旧 import path，物理位置仍在 `platform/compatibility/vendor/fastapi_jwt_auth`。
 
 ## Target role
 
-目标状态下，第三方 shim 放在 `platform/vendor/`，legacy import registry 放在 `platform/compatibility/`。迁移必须先保持 `zuno.compatibility.vendor.fastapi_jwt_auth` 兼容路径，再把实际实现移动到本目录。
+目标状态下，第三方 shim 放在 `platform/vendor/`，legacy import registry 放在 `platform/compatibility/`。迁移必须先保持 `zuno.compatibility.vendor.fastapi_jwt_auth` 的迁移兼容路径，再把实际实现移动到本目录。
 
 ## 允许新增内容
 

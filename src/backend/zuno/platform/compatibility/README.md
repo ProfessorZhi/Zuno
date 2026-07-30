@@ -12,7 +12,7 @@ PHASE02 之后，本目录的目标收缩为 legacy import registry only。当�
 
 目标是让 `src/backend/zuno` 顶层不再暴露 `legacy/`、`vendor/` 以及只剩历史 import 语义的目录或 `.py` alias 文件。旧 public import path 由 `legacy_aliases.py` 注册，不再占用包根目录。
 
-第三方 shim 的目标 owner 是 `platform/vendor`。`fastapi_jwt_auth` 仍在 `platform/compatibility/vendor/fastapi_jwt_auth`，只是因为当前旧 import path 还由 `tests/api/test_fastapi_jwt_auth_compat.py` 保护；物理迁移必须先提供兼容 re-export 证据。
+第三方 shim 的目标 owner 是 `platform/vendor`。`fastapi_jwt_auth` 仍在 `platform/compatibility/vendor/fastapi_jwt_auth`，只是因为旧 import path 仍需要迁移兼容测试保护；物理迁移必须先提供兼容 re-export 证据。
 
 ## 禁止事项
 

@@ -8,7 +8,7 @@
 
 ## Target role
 
-目标状态下，runtime tools 应进入 Capability 层的 ToolCard、权限、健康状态、成本提示和执行策略边界；具体 tool 实现可以保留旧路径，直到 capability registry、tool tests 和 import compatibility 都能证明迁移安全。
+目标状态下，runtime tools 应进入 Capability 层的 ToolCard、权限、健康状态、成本提示和执行策略边界；具体 tool 实现可以保留迁移兼容路径，直到 capability registry、tool tests 和 import compatibility 都能证明迁移安全。
 
 ## 允许新增内容
 
@@ -20,7 +20,7 @@
 
 - 禁止改变工具注册、权限、执行模式、provider 调用、trace metadata 或 tool response shape。
 - 禁止把仓库维护脚本放入 `src/backend/zuno/tools/`。
-- 禁止直接删除 `zuno.tools.*` 旧 import path。
+- 禁止直接删除 `zuno.tools.*` 迁移兼容 import path。
 
 ## Focused tests
 

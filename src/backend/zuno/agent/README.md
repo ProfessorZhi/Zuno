@@ -19,7 +19,7 @@
 ## 禁止事项
 
 - 禁止搬动或重写 `GeneralAgent` 主循环、LangGraph runtime、streaming 行为或 tool execution 行为。
-- 禁止直接迁移或删除 `zuno.core.agents`、`zuno.services.application.context` 等旧 import path。
+- 禁止直接迁移或删除 `zuno.core.agents`、`zuno.services.application.context` 等迁移兼容 import path。
 - 禁止把 Codex 执行工作流里的多 agent 写成 Zuno runtime 当前架构。
 
 ## Focused tests

@@ -578,6 +578,7 @@ pytest -q tests/repo/test_phase22_cleanup_boundary.py -p no:cacheprovider passed
 `src/backend/zuno/memory/README.md` describes `zuno.services.memory.layers` as a compatibility shell read path, not the current owner.
 `src/backend/zuno/api/README.md`, `src/backend/zuno/api/dto/README.md`, and `src/backend/zuno/platform/database/README.md` now consistently describe old public import paths as migration compatibility surfaces.
 `src/backend/zuno/platform/README.md`, `src/backend/zuno/platform/middleware/README.md`, and `src/backend/zuno/platform/config/README.md` now use migration-compatibility wording instead of "continue through / current compatibility path" phrasing.
+`src/backend/zuno/platform/vendor/README.md`, `src/backend/zuno/platform/common/README.md`, `src/backend/zuno/platform/security/README.md`, `src/backend/zuno/capability/tools/README.md`, `src/backend/zuno/knowledge/README.md`, `src/backend/zuno/knowledge/ingestion/README.md`, `src/backend/zuno/agent/README.md`, `src/backend/zuno/agent/core/README.md`, and `src/backend/zuno/platform/compatibility/README.md` now use migration-compatibility wording for old import surfaces.
 rg found no remaining `当前 runtime 兼容面` or `legacy-compatible foundation` wording under src/backend/zuno.
 python tools/scripts/verify_phase22_cleanup_boundary.py passed
 git diff --check passed

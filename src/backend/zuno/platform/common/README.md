@@ -8,12 +8,12 @@
 
 ## Target role
 
-目标状态下，helper 不应长期停留在泛化 utils 桶里。每个 helper 要按实际 owner 迁入 `agent/`、`capability/`、`knowledge/`、`platform/` 或具体 service 边界；旧 `zuno.utils.*` import path 在迁移期继续兼容。
+目标状态下，helper 不应长期停留在泛化 utils 桶里。每个 helper 要按实际 owner 迁入 `agent/`、`capability/`、`knowledge/`、`platform/` 或具体 service 边界；旧 `zuno.utils.*` import path 作为迁移兼容面保留。
 
 ## 允许新增内容
 
 - 允许小型纯函数 helper 暂留，前提是职责明确且有测试。
-- 允许按 owner 小切片迁移，并保留旧路径 re-export。
+- 允许按 owner 小切片迁移，并保留旧路径 re-export 作为迁移兼容面。
 
 ## 禁止事项
 
