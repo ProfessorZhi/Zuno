@@ -537,6 +537,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     legacy_compatibility_package = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "legacy"
     if legacy_compatibility_package.exists():
         errors.append("legacy compatibility package directory still exists")
+    legacy_guard_suite = REPO_ROOT / "tests" / "legacy_guards"
+    if legacy_guard_suite.exists():
+        errors.append("legacy guard suite directory still exists")
 
     feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")
     if 'flag: "legacy_general_agent_completion_rollback"' not in feature_flags:

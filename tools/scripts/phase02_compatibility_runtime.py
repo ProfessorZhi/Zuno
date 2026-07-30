@@ -227,6 +227,9 @@ def verify_phase02_runtime_controls() -> list[str]:
     retired_legacy_package = "src/backend/zuno/platform/compatibility/legacy/__init__.py"
     if retired_legacy_package in allowlist.allowlist_paths or retired_legacy_package in allowlist.legacy_paths:
         errors.append("retired platform compatibility legacy package must not remain allowlisted")
+    retired_legacy_guard_suite = "tests/legacy_guards/**"
+    if retired_legacy_guard_suite in allowlist.allowlist_paths or retired_legacy_guard_suite in allowlist.legacy_paths:
+        errors.append("retired legacy guard suite must not remain allowlisted")
 
     if len(cutover.dry_run_hashes()) < 6:
         errors.append("data cutover dry run must cover at least six owners")
