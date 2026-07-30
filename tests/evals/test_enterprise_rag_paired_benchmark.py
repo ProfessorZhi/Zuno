@@ -854,3 +854,120 @@ def test_enterprise_rag_hard_negative_classifier_covers_phase08_taxonomy() -> No
 
     assert [category for _, category in examples] == HARD_NEGATIVE_CATEGORIES
     assert observed == set(HARD_NEGATIVE_CATEGORIES)
+
+
+def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
+    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+        validate_dataset,
+        generate_blocked_gap_report,
+        _build_and_write_benchmark_manifest,
+        _sha256_file
+    )
+
+    # 1. Test validate_dataset
+    valid_rows = [
+        {
+            "id": f"case_{i}",
+            "question": f"Question {i}?",
+            "expected_doc_ids": [f"doc_{i}"],
+            "expected_answer": f"Answer {i}",
+            "question_type": "simple_retrieval",
+            "complexity": "easy"
+        }
+        for i in range(5)
+    ]
+
+    val_res = validate_dataset(valid_rows)
+    assert val_res["is_valid"] is True
+    assert val_res["case_count"] == 5
+    assert val_res["unique_case_count"] == 5
+    assert val_res["question_type_counts"]["simple_retrieval"] == 5
+
+    # Invalid dataset (missing required field + duplicate id)
+    invalid_rows = [
+        {
+            "id": "dup_1",
+            "question": "Q1",
+            "expected_doc_ids": ["doc_1"],
+            "expected_answer": "A1",
+            "question_type": "simple_retrieval",
+            "complexity": "easy"
+        },
+        {
+            "id": "dup_1",
+            "question": "Q2",
+            "expected_doc_ids": ["doc_2"],
+            "expected_answer": "A2",
+            "complexity": "medium"
+        }
+    ]
+    val_res_inv = validate_dataset(invalid_rows)
+    assert val_res_inv["is_valid"] is False
+    assert len(val_res_inv["errors"]) >= 2
+
+    # 2. Test generate_blocked_gap_report
+    gap_report = generate_blocked_gap_report(
+        dataset_validation=val_res,
+        expected_case_count=80,
+    )
+    assert gap_report["blocked"] is True
+    assert gap_report["gap"] == 75
+    assert "simple_retrieval" not in gap_report["missing_question_types"]
+    assert "multi_hop" in gap_report["missing_question_types"]
+
+    # 3. Test _build_and_write_benchmark_manifest output
+    questions_file = tmp_path / "questions.jsonl"
+    _write_questions(questions_file)
+
+    arguments = {
+        "questions_file": questions_file,
+        "output_root": tmp_path,
+        "sample_size": 80,
+        "stratify_by_question_type": True,
+        "hard_negative_count": 0,
+        "allow_blocked": True,
+        "run_profiles": False,
+        "inspect_schema": False,
+        "spawn_dev_embedding_server": False,
+        "rerank_score_threshold_override": 0.0,
+        "chunk_size_override": 1800,
+        "overlap_override": 240,
+    }
+
+    (tmp_path / "metrics.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "report.md").write_text("Mock Report", encoding="utf-8")
+    (tmp_path / "failure_cases.md").write_text("Mock Failures", encoding="utf-8")
+
+    import time
+    created_at = time.time()
+
+    _build_and_write_benchmark_manifest(
+        output_root=tmp_path,
+        questions_file=questions_file,
+        status="BLOCKED",
+        measurement_status="blocked_not_measured",
+        created_at=created_at,
+        completed_at=created_at + 1.0,
+        arguments=arguments,
+        dataset_path=questions_file,
+        corpus_manifest_path=None,
+        profile_completeness=None,
+        metrics=None,
+        failure_fingerprint="Mock Fingerprint",
+        incomparable_reason="dataset_insufficient",
+    )
+
+    manifest_file = tmp_path / "benchmark_manifest.json"
+    assert manifest_file.exists()
+
+    manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    assert manifest_data["schema_version"] == "1.0.0"
+    assert manifest_data["benchmark_id"] == "enterprise_rag_paired_benchmark"
+    assert manifest_data["status"] == "BLOCKED"
+    assert manifest_data["measurement_status"] == "blocked_not_measured"
+    assert manifest_data["failure_fingerprint"] == "Mock Fingerprint"
+    assert manifest_data["incomparable_reason"] == "dataset_insufficient"
+    assert manifest_data["is_comparable"] is False
+    assert "manifest_checksum_sidecar" in manifest_data
+
+    assert "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py" in manifest_data["reproduce_command"][1]
