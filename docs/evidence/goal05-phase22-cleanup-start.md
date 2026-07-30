@@ -38,6 +38,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/application/__init__.py` 的 application service 入口示例继续改为 canonical `zuno.platform.services.application` 路径，避免文档入口继续引导 legacy alias。
 - `src/backend/zuno/platform/common/` 与 `src/backend/zuno/platform/middleware/` 基础层入口继续改为 canonical `zuno.platform.common` / `zuno.platform.services` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/model_gateway.py` 与 `src/backend/zuno/platform/model_gateway_adapters.py` lazy ModelManager factory 继续改为 canonical `zuno.agent.core.models.manager` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tools/evals/zuno/` fixed benchmark、contract review、stackless/local RAG eval 与 multihop runtime runner 继续改为 canonical `zuno.agent.core` / `zuno.platform` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -157,6 +158,10 @@ PHASE22 cleanup boundary verification passed.
 30 passed in 0.52s
 python -m compileall -q src/backend/zuno/platform/model_gateway.py src/backend/zuno/platform/model_gateway_adapters.py passed
 rg no matches in src/backend/zuno for legacy alias imports outside legacy guards and eval tools
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tools/evals/zuno passed
+32 passed in 26.26s
+rg no matches in tools/evals/zuno for legacy alias imports
 ```
 
 ## Remaining

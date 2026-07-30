@@ -16,9 +16,9 @@ if str(BACKEND_ROOT) not in sys.path:
 
 from zuno.evals.rag_eval.metrics import compute_metrics
 from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.services.rag.handler import RagHandler
+from zuno.platform.common.runtime_observability import configure_langsmith
+from zuno.platform.services.rag.handler import RagHandler
 from zuno.settings import initialize_app_settings
-from zuno.utils.runtime_observability import configure_langsmith
 
 NO_EVIDENCE_ANSWER = "NO_RELEVANT_EVIDENCE_FOUND"
 ANSWER_SYSTEM_PROMPT = (
@@ -1087,7 +1087,7 @@ async def _build_llm_answer(sample: dict[str, Any], contexts: list[dict[str, Any
     try:
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        from zuno.core.models.manager import ModelManager
+        from zuno.agent.core.models.manager import ModelManager
 
         client = ModelManager.get_conversation_model()
         prompt = (
@@ -1199,7 +1199,7 @@ async def _judge_answer_llm(
     try:
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        from zuno.core.models.manager import ModelManager
+        from zuno.agent.core.models.manager import ModelManager
 
         context_text = _context_block(contexts)
         client = ModelManager.get_conversation_model()

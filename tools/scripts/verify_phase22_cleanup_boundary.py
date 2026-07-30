@@ -52,6 +52,7 @@ PLATFORM_CONFIG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "co
 PLATFORM_MODEL_GATEWAY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway.py"
 PLATFORM_MODEL_GATEWAY_ADAPTERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway_adapters.py"
 PLATFORM_APPLICATION_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "__init__.py"
+TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -240,6 +241,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/middleware/",
             "src/backend/zuno/platform/model_gateway.py",
             "src/backend/zuno/platform/model_gateway_adapters.py",
+            "tools/evals/zuno/",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
@@ -448,6 +450,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             ("platform model gateway", PLATFORM_MODEL_GATEWAY),
             ("platform model gateway adapters", PLATFORM_MODEL_GATEWAY_ADAPTERS),
         ]
+    )
+    checked_paths.extend(
+        (f"tools evals zuno {path.relative_to(TOOLS_EVALS_ZUNO_ROOT)}", path)
+        for path in sorted(TOOLS_EVALS_ZUNO_ROOT.rglob("*.py"))
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))

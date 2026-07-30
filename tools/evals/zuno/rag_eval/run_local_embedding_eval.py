@@ -16,9 +16,9 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.llm import LLMService
-from zuno.database.dao.llm import LLMDao
-from zuno.database.models.user import SystemUser
 from zuno.evals.rag_eval.paths import default_runs_root
+from zuno.platform.database.dao.llm import LLMDao
+from zuno.platform.database.models.user import SystemUser
 from zuno.settings import app_settings, initialize_app_settings
 
 
@@ -32,7 +32,7 @@ LOCAL_MODEL_HOSTS = {
 
 
 async def get_embedding(text: str, config_override=None):
-    from zuno.services.rag.embedding import get_embedding as _get_embedding
+    from zuno.platform.services.rag.embedding import get_embedding as _get_embedding
 
     return await _get_embedding(text, config_override=config_override)
 

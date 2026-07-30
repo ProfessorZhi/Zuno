@@ -12,7 +12,7 @@ if str(BACKEND_ROOT) not in sys.path:
 
 from zuno.api.services.knowledge import KnowledgeService
 from zuno.api.services.knowledge_file import KnowledgeFileService
-from zuno.database.models.user import AdminUser
+from zuno.platform.database.models.user import AdminUser
 from zuno.settings import app_settings, initialize_app_settings
 
 
