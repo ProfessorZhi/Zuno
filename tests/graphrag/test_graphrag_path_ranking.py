@@ -6,7 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src" / "backend"))
 
-from zuno.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.graphrag.retriever import GraphRetriever
 
 
 def test_comparison_question_prefers_attribute_path():

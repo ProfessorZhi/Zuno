@@ -6,7 +6,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src" / "backend"))
 
-from zuno.services.graphrag.entity_alias import normalize_entity_name, resolve_alias
+from zuno.platform.services.graphrag.entity_alias import normalize_entity_name, resolve_alias
 
 
 def test_normalize_entity_name_removes_article_and_parenthetical_suffix():
