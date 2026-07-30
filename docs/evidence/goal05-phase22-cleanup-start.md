@@ -44,6 +44,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_agent_layer_surfaces.py`、`tests/agent/test_memory_layer_surfaces.py` 与 `tests/agent/test_memory_layers.py` 的 Agent / Memory layer active tests 继续改为 canonical `zuno.agent` / `zuno.memory` / `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/agent/__init__.py` 顶层 `AgentConfig` / `GeneralAgent` lazy facade 改为直接指向 canonical `zuno.agent.core.agents`，避免继续指向与 `zuno.agent.runtime/` package 冲突的旧 facade 模块名。
 - `tests/agent/test_capability_registry.py` active Capability Registry 测试继续改为 canonical `zuno.platform.services.capability_registry` / `zuno.api.dto.capability` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/agent/test_capability_system.py` 与 `tests/agent/test_capability_layer_surfaces.py` active Capability system / layer surface 测试继续改为 canonical `zuno.platform.services.application.capabilities` import，并把 layer surface 的 foundation 断言改为 canonical platform foundation objects，同时纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_context_orchestrator.py` 与 `tests/agent/test_context_contracts.py` active Agent Context Pack 测试继续改为 canonical `zuno.platform.services.application.context` / `zuno.platform.services.graphrag` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_knowledge_graphrag_runtime_contracts.py` 与 `tests/agent/test_hooks_evidence_trace_artifacts.py` active Knowledge GraphRAG runtime / hook trace 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core` import；tool middleware 测试补齐 `runtime.context` 合约输入，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_general_agent_project_query_runtime.py` 与 `tests/agent/test_generalagent_context_memory_runtime.py` active GeneralAgent project query / context / memory runtime 测试继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.memory` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -322,6 +323,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/api/test_goal03_knowledge_route.py passed
 8 passed in 3.01s
 rg no matches in tests/api/test_goal03_knowledge_route.py for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/agent/test_capability_system.py tests/agent/test_capability_layer_surfaces.py passed
+12 passed in 3.88s
+rg no matches in selected Capability system / layer surface tests for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

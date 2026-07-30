@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 def test_capability_record_schema_covers_required_types_and_fields() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
@@ -48,7 +48,7 @@ def test_capability_record_schema_covers_required_types_and_fields() -> None:
 
 
 def test_tool_card_contract_serializes_compact_retrieval_metadata() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
@@ -98,7 +98,7 @@ def test_tool_card_contract_serializes_compact_retrieval_metadata() -> None:
 
 
 def test_native_bm25_retriever_returns_explainable_tool_card_candidates() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
@@ -149,7 +149,7 @@ def test_native_bm25_retriever_returns_explainable_tool_card_candidates() -> Non
 
 
 def test_dynamic_selector_uses_task_relevance_and_does_not_return_every_capability() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
@@ -219,7 +219,7 @@ def test_dynamic_selector_uses_task_relevance_and_does_not_return_every_capabili
 
 
 def test_selector_can_choose_knowledge_without_loading_tool_schemas() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
@@ -273,7 +273,7 @@ def test_selector_can_choose_knowledge_without_loading_tool_schemas() -> None:
 
 
 def test_dynamic_selector_records_toolcard_trace_and_policy_filters() -> None:
-    from zuno.services.application.capabilities import (
+    from zuno.platform.services.application.capabilities import (
         CapabilityCost,
         CapabilityHealth,
         CapabilityPermissions,
