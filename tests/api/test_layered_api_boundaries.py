@@ -453,6 +453,34 @@ def test_platform_graphrag_query_and_retriever_use_canonical_imports() -> None:
         assert "from zuno.services." not in content
 
 
+def test_platform_retrieval_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/retrieval/__init__.py",
+        "src/backend/zuno/platform/services/retrieval/planner.py",
+        "src/backend/zuno/platform/services/retrieval/orchestrator.py",
+        "src/backend/zuno/platform/services/retrieval/retrievers.py",
+        "src/backend/zuno/platform/services/retrieval/fusion.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.platform.services.retrieval.models import (" in contents[paths[0]]
+    assert "from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator" in contents[paths[0]]
+    assert "from zuno.platform.services.graphrag.models import normalize_retrieval_mode" in contents[paths[1]]
+    assert "from zuno.platform.services.graphrag.retriever import GraphRetriever" in contents[paths[2]]
+    assert "from zuno.platform.services.graphrag.versioning import detect_stale_index_reasons" in contents[paths[2]]
+    assert "from zuno.platform.services.graphrag.community.service import CommunityGraphService" in contents[paths[2]]
+    assert "from zuno.platform.services.rewrite.query_write import query_rewriter" in contents[paths[2]]
+    assert "from zuno.platform.common.runtime_observability import get_active_trace_id" in contents[paths[2]]
+    assert "from zuno.platform.services.rag.retrieval import MixRetrival" in contents[paths[3]]
+    assert "from zuno.platform.services.rag.handler import RagHandler" in contents[paths[3]]
+    assert "from zuno.platform.services.retrieval.models import FusionResult, RetrievedDocument" in contents[paths[4]]
+    assert "from zuno.platform.services.rag.handler import RagHandler" in contents[paths[4]]
+
+    for content in contents.values():
+        assert "from zuno.services." not in content
+        assert "from zuno.utils." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

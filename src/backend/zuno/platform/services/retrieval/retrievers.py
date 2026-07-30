@@ -4,8 +4,8 @@ import re
 from typing import Any
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.services.graphrag.retriever import GraphRetriever
-from zuno.services.rag.retrieval import MixRetrival
+from zuno.platform.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.rag.retrieval import MixRetrival
 from zuno.settings import app_settings
 
 
@@ -50,7 +50,7 @@ class QueryProcessor:
 
 class VectorRetrieverAdapter:
     async def retrieve(self, query: str, knowledge_ids: list[str], options: dict | None = None) -> dict:
-        from zuno.services.rag.handler import RagHandler
+        from zuno.platform.services.rag.handler import RagHandler
 
         options = options or {}
         return await RagHandler._retrieve_ranked_documents_rag_detail(

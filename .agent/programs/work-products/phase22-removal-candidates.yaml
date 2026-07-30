@@ -359,6 +359,10 @@ resolved_this_slice:
     before: "zuno.services.graphrag / zuno.services.rag aliases"
     after: "zuno.platform.services.graphrag / zuno.platform.services.rag canonical imports"
     evidence: "tests/api/test_layered_api_boundaries.py"
+  - path: "src/backend/zuno/platform/services/retrieval/"
+    before: "zuno.services.retrieval / zuno.services.graphrag / zuno.services.rag / zuno.services.rewrite / zuno.utils aliases"
+    after: "zuno.platform.services.retrieval / zuno.platform.services.graphrag / zuno.platform.services.rag / zuno.platform.services.rewrite / zuno.platform.common canonical imports"
+    evidence: "tests/api/test_layered_api_boundaries.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

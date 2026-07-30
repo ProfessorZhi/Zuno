@@ -1,4 +1,4 @@
-from zuno.services.retrieval.models import (
+from zuno.platform.services.retrieval.models import (
     FusionResult,
     ProcessedQuery,
     PRODUCT_MODES,
@@ -9,7 +9,7 @@ from zuno.services.retrieval.models import (
     RetrievedDocument,
     normalize_product_mode,
 )
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
 
 __all__ = [
     "FusionResult",
