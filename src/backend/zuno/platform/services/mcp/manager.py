@@ -6,8 +6,8 @@ from langchain_core.tools import BaseTool
 
 from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
 
-from zuno.services.mcp.multi_client import MultiServerMCPClient
-from zuno.schema.mcp import MCPBaseConfig
+from zuno.platform.services.mcp.multi_client import MultiServerMCPClient
+from zuno.api.dto.mcp import MCPBaseConfig
 
 
 logger = logging.getLogger(__name__)

@@ -51,6 +51,11 @@ TOOL_CREATION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "s
 TOOL_CONNECTIVITY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_connectivity_service.py"
 USER_DEFINED_TOOL_RUNTIME = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "user_defined_tool_runtime.py"
 INIT_DATA = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "init_data.py"
+MCP_MANAGER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp" / "manager.py"
+MCP_MULTI_CLIENT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp" / "multi_client.py"
+MCP_LOAD_TOOLS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp" / "load_mcp" / "tools.py"
+MCP_OPENAI_MANAGER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_manager.py"
+MCP_OPENAI_UTIL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_util.py"
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -95,6 +100,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/tool_connectivity_service.py",
             "src/backend/zuno/platform/services/user_defined_tool_runtime.py",
             "src/backend/zuno/platform/database/init_data.py",
+            "src/backend/zuno/platform/services/mcp/manager.py",
+            "src/backend/zuno/platform/services/mcp/multi_client.py",
+            "src/backend/zuno/platform/services/mcp/load_mcp/tools.py",
+            "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+            "src/backend/zuno/platform/services/mcp_openai/mcp_util.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -149,6 +159,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("tool connectivity service", TOOL_CONNECTIVITY_SERVICE),
         ("user defined tool runtime", USER_DEFINED_TOOL_RUNTIME),
         ("init data", INIT_DATA),
+        ("mcp manager", MCP_MANAGER),
+        ("mcp multi client", MCP_MULTI_CLIENT),
+        ("mcp load tools", MCP_LOAD_TOOLS),
+        ("mcp openai manager", MCP_OPENAI_MANAGER),
+        ("mcp openai util", MCP_OPENAI_UTIL),
     ]:
         text = _read(path)
         for alias_import in alias_imports:

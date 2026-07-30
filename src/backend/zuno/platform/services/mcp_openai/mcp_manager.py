@@ -2,9 +2,9 @@ import logging
 
 from mcp.types import CallToolResult
 
-from zuno.services.mcp_openai.mcp_client import MCPClient
-from zuno.services.mcp_openai.mcp_util import MCPUtil
-from zuno.services.mcp_openai.schema import FunctionTool
+from zuno.platform.services.mcp_openai.mcp_client import MCPClient
+from zuno.platform.services.mcp_openai.mcp_util import MCPUtil
+from zuno.platform.services.mcp_openai.schema import FunctionTool
 
 
 class MCPManager:

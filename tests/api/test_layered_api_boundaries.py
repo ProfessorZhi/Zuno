@@ -259,6 +259,11 @@ def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     tool_connectivity_service = _read("src/backend/zuno/platform/services/tool_connectivity_service.py")
     user_defined_tool_runtime = _read("src/backend/zuno/platform/services/user_defined_tool_runtime.py")
     init_data = _read("src/backend/zuno/platform/database/init_data.py")
+    mcp_manager = _read("src/backend/zuno/platform/services/mcp/manager.py")
+    mcp_multi_client = _read("src/backend/zuno/platform/services/mcp/multi_client.py")
+    mcp_load_tools = _read("src/backend/zuno/platform/services/mcp/load_mcp/tools.py")
+    mcp_openai_manager = _read("src/backend/zuno/platform/services/mcp_openai/mcp_manager.py")
+    mcp_openai_util = _read("src/backend/zuno/platform/services/mcp_openai/mcp_util.py")
 
     assert "from zuno.api.dto.tool import (" in cli_tool_discovery
     assert "from zuno.agent.core.models.manager import ModelManager" in simple_api_tool
@@ -286,8 +291,21 @@ def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     assert "from zuno.platform.services.storage import storage_client" in init_data
     assert "from zuno.platform.common.convert import convert_mcp_config" in init_data
     assert "from zuno.platform.common.helpers import get_provider_from_model" in init_data
+    assert "from zuno.platform.services.mcp.multi_client import MultiServerMCPClient" in mcp_manager
+    assert "from zuno.api.dto.mcp import MCPBaseConfig" in mcp_manager
+    assert "from zuno.platform.services.mcp.load_mcp.prompts import load_mcp_prompt" in mcp_multi_client
+    assert "from zuno.platform.services.mcp.load_mcp.resources import load_mcp_resources" in mcp_multi_client
+    assert "from zuno.platform.services.mcp.load_mcp.tools import load_mcp_tools" in mcp_multi_client
+    assert "from zuno.platform.services.mcp.sessions import (" in mcp_multi_client
+    assert "from zuno.platform.services.mcp.sessions import Connection, create_session" in mcp_load_tools
+    assert "from zuno.platform.services.mcp_openai.mcp_client import MCPClient" in mcp_openai_manager
+    assert "from zuno.platform.services.mcp_openai.mcp_util import MCPUtil" in mcp_openai_manager
+    assert "from zuno.platform.services.mcp_openai.schema import FunctionTool" in mcp_openai_manager
+    assert "from zuno.platform.services.mcp_openai.mcp_client import MCPClient" in mcp_openai_util
+    assert "from zuno.platform.services.mcp_openai.schema import FunctionTool" in mcp_openai_util
+    assert "from zuno.platform.services.mcp_openai.strict_schema import ensure_strict_json_schema" in mcp_openai_util
 
-    for content in [cli_tool_discovery, simple_api_tool, tool_creation_service, tool_connectivity_service, user_defined_tool_runtime, init_data]:
+    for content in [cli_tool_discovery, simple_api_tool, tool_creation_service, tool_connectivity_service, user_defined_tool_runtime, init_data, mcp_manager, mcp_multi_client, mcp_load_tools, mcp_openai_manager, mcp_openai_util]:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content
