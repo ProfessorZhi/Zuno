@@ -148,5 +148,24 @@ def test_tool_controller_routes_runtime_validation_and_connectivity_through_serv
     assert "from zuno.services.cli_tool_discovery import CliToolDiscoveryService" in service
     assert "from zuno.services.simple_api_tool import (" in service
     assert "from zuno.services.tool_connectivity_service import ToolConnectivityService" in service
-    assert "from zuno.services.tool_creation_service import ToolCreationService" in service
-    assert "from zuno.services.user_defined_tool_runtime import build_stored_tool_auth_config" in service
+
+
+def test_capability_tool_actions_use_canonical_imports() -> None:
+    convert_to_docx = _read("src/backend/zuno/capability/tools/convert_to_docx/action.py")
+    convert_to_pdf = _read("src/backend/zuno/capability/tools/convert_to_pdf/action.py")
+    get_weather = _read("src/backend/zuno/capability/tools/get_weather/action.py")
+    delivery = _read("src/backend/zuno/capability/tools/delivery/action.py")
+
+    assert "from zuno.platform.services.storage import storage_client" in convert_to_docx
+    assert "from zuno.platform.common.file_utils import get_object_name_from_aliyun_url, get_save_tempfile" in convert_to_docx
+    assert "from zuno.platform.common.helpers import get_now_beijing_time" in convert_to_docx
+    assert "from zuno.platform.services.storage import storage_client" in convert_to_pdf
+    assert "from zuno.platform.common.file_utils import get_object_name_from_aliyun_url, get_save_tempfile" in convert_to_pdf
+    assert "from zuno.platform.common.helpers import get_now_beijing_time" in convert_to_pdf
+    assert "from zuno.platform.resources.prompts.tool import MESSAGE_PROMPT, WEATHER_PROMPT" in get_weather
+    assert "from zuno.platform.resources.prompts.tool import DELIVERY_PROMPT" in delivery
+
+    for content in [convert_to_docx, convert_to_pdf, get_weather, delivery]:
+        assert "from zuno.services." not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content

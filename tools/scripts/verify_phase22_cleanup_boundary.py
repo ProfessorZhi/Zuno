@@ -21,6 +21,18 @@ STORAGE_FACADE = (
 TEXT_TO_IMAGE_ACTION = (
     REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "text2image" / "action.py"
 )
+CONVERT_TO_DOCX_ACTION = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "convert_to_docx" / "action.py"
+)
+CONVERT_TO_PDF_ACTION = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "convert_to_pdf" / "action.py"
+)
+GET_WEATHER_ACTION = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "get_weather" / "action.py"
+)
+DELIVERY_ACTION = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "delivery" / "action.py"
+)
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -45,6 +57,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/product/command_service.py",
             "src/backend/zuno/api/services/workspace.py",
             "src/backend/zuno/platform/services/workspace/attachment_service.py",
+            "src/backend/zuno/capability/tools/convert_to_docx/action.py",
+            "src/backend/zuno/capability/tools/convert_to_pdf/action.py",
+            "src/backend/zuno/capability/tools/get_weather/action.py",
+            "src/backend/zuno/capability/tools/delivery/action.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -79,6 +95,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("workspace attachment service", ATTACHMENT_SERVICE),
         ("storage facade", STORAGE_FACADE),
         ("text2image action", TEXT_TO_IMAGE_ACTION),
+        ("convert_to_docx action", CONVERT_TO_DOCX_ACTION),
+        ("convert_to_pdf action", CONVERT_TO_PDF_ACTION),
+        ("get_weather action", GET_WEATHER_ACTION),
+        ("delivery action", DELIVERY_ACTION),
     ]:
         text = _read(path)
         for alias_import in alias_imports:

@@ -5,9 +5,9 @@ import tempfile
 
 from langchain.tools import tool
 
-from zuno.services.storage import storage_client
-from zuno.utils.file_utils import get_object_name_from_aliyun_url, get_save_tempfile
-from zuno.utils.helpers import get_now_beijing_time
+from zuno.platform.services.storage import storage_client
+from zuno.platform.common.file_utils import get_object_name_from_aliyun_url, get_save_tempfile
+from zuno.platform.common.helpers import get_now_beijing_time
 
 
 @tool("docx_to_pdf", parse_docstring=True)
