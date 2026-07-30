@@ -4,7 +4,7 @@ from typing import List
 from elasticsearch import Elasticsearch
 from loguru import logger
 
-from zuno.config.es_index import ESIndex
+from zuno.platform.config.es_index import ESIndex
 from zuno.api.dto.chunk import ChunkModel
 from zuno.api.dto.search import SearchModel
 from zuno.settings import app_settings

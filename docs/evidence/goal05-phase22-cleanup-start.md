@@ -114,7 +114,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
 - `src/backend/zuno/platform/services/retrieval/` 默认检索编排、规划、融合和 adapter 入口继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` / `zuno.platform.services.rewrite` / `zuno.platform.common` import。
-- `src/backend/zuno/platform/services/rag/` 默认 RAG handler、parser、rerank、vector DB 与 doc parser 入口继续改为 canonical `zuno.platform.services.rag` / `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.api.dto` / `zuno.agent.core` / `zuno.platform.common` import。
+- `src/backend/zuno/platform/services/rag/` 默认 RAG handler、parser、rerank、vector DB、ES client 与 doc parser 入口继续改为 canonical `zuno.platform.services.rag` / `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.api.dto` / `zuno.agent.core` / `zuno.platform.common` / `zuno.platform.config` import。
 - `src/backend/zuno/platform/services/memory/` 默认 Memory client、utils 与 vector store 入口继续改为 canonical `zuno.agent.core` / `zuno.platform.services.memory` / `zuno.platform.database` import。
 - `src/backend/zuno/platform/services/sandbox/__init__.py`、`src/backend/zuno/platform/services/capability_registry.py`、`src/backend/zuno/knowledge/ingestion/legacy_cutover.py`、`src/backend/zuno/capability/mcp/servers/remote_proxy/main.py`、`src/backend/zuno/capability/tools/image2text/__init__.py`、`src/backend/zuno/capability/tools/text2image/__init__.py` 与 `src/backend/zuno/capability/tools/send_email/cli.py` 继续改为 canonical `zuno.platform.services` / `zuno.api.dto` / `zuno.capability` import。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
@@ -555,9 +555,19 @@ pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_phase22_cleanup_bounda
 39 passed in 17.94s
 ```
 
+2026-07-30 final production alias import sweep:
+```text
+`src/backend/zuno/platform/services/rag/es_client.py` imports ESIndex from canonical `zuno.platform.config.es_index`.
+PHASE22 cleanup boundary verifier now checks `zuno.config` alias imports.
+python tools/scripts/verify_phase22_cleanup_boundary.py passed
+pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_phase22_cleanup_boundary.py tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider passed
+39 passed in 17.05s
+rg -n "^\s*(from|import)\s+zuno\.(core|services|schema|database|tools|resources|config|mcp_servers)(\b|\.)" src tests tools apps -g '!docs/history/**' -g '!**/__pycache__/**' returned no matches after repair.
+```
+
 ## Remaining
 
-- `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在大量生产 import 仍依赖 `zuno.core` / `zuno.services` / `zuno.schema` / `zuno.database` / `zuno.tools` / `zuno.resources` 时直接删除。
+- `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在旧 public import 行为尚未转换、显式版本化或 fail-closed 前直接删除。
 - `tests/legacy_guards/` 已无 active guard 文件，目录缓存空壳已清理，PHASE02 temporary allowlist 与 PHASE01 legacy bypass inventory 已移除该迁移期例外。
 - `src/backend/zuno/platform/compatibility/legacy/` 空 legacy 目录已删除；temporary allowlist 和 legacy bypass inventory 也移除了这条迁移期例外。
 - `legacy_general_agent_completion_rollback` 已退役；后续只保留显式 cutover drill mode 的失败证据与最终全量验证。

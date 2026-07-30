@@ -588,6 +588,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         "import zuno.utils.",
         "from zuno.resources.",
         "import zuno.resources.",
+        "from zuno.config.",
+        "import zuno.config.",
     ]
     checked_paths = [
         ("workspace service", WORKSPACE_SERVICE),
