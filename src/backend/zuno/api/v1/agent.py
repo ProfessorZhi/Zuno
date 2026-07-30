@@ -6,8 +6,8 @@ from loguru import logger
 
 from zuno.api.services.agent import AgentService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.agent import AgentCreateReq, AgentDeleteReq, AgentSearchReq, AgentUpdateReq
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.agent import AgentCreateReq, AgentDeleteReq, AgentSearchReq, AgentUpdateReq
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 from zuno.settings import app_settings
 
 router = APIRouter(tags=["Agent"])

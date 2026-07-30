@@ -8,8 +8,8 @@ from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace import WorkspaceService
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
-from zuno.schema.schemas import resp_200
-from zuno.schema.workspace import WorkSpaceSimpleTask
+from zuno.api.dto.schemas import resp_200
+from zuno.api.dto.workspace import WorkSpaceSimpleTask
 
 router = APIRouter(prefix="/workspace", tags=["WorkSpace"])
 

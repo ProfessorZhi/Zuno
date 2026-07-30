@@ -4,8 +4,8 @@ from loguru import logger
 from zuno.api.services.agent import AgentService
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.dialog import DialogCreateRequest
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.dialog import DialogCreateRequest
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["Dialog"])
 

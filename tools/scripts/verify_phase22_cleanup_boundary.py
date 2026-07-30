@@ -4,6 +4,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+API_V1_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1"
+API_ERRCODE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "errcode"
 WORK_PRODUCT = (
     REPO_ROOT / ".agent" / "programs" / "work-products" / "phase22-removal-candidates.yaml"
 )
@@ -125,6 +127,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/agent/core/callbacks/usage_metadata.py",
             "src/backend/zuno/agent/core/models/manager.py",
             "src/backend/zuno/agent/core/models/usage_model.py",
+            "src/backend/zuno/api/v1/",
+            "src/backend/zuno/api/errcode/",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -159,7 +163,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         "from zuno.resources.",
         "import zuno.resources.",
     ]
-    for label, path in [
+    checked_paths = [
         ("workspace service", WORKSPACE_SERVICE),
         ("workspace attachment service", ATTACHMENT_SERVICE),
         ("storage facade", STORAGE_FACADE),
@@ -189,7 +193,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("mcp load tools", MCP_LOAD_TOOLS),
         ("mcp openai manager", MCP_OPENAI_MANAGER),
         ("mcp openai util", MCP_OPENAI_UTIL),
-    ] + [(f"agent core {path.name}", path) for path in AGENT_CORE_FILES]:
+    ] + [(f"agent core {path.name}", path) for path in AGENT_CORE_FILES]
+    checked_paths.extend((f"api v1 {path.name}", path) for path in sorted(API_V1_ROOT.glob("*.py")))
+    checked_paths.extend((f"api errcode {path.name}", path) for path in sorted(API_ERRCODE_ROOT.glob("*.py")))
+
+    for label, path in checked_paths:
         text = _read(path)
         for alias_import in alias_imports:
             if alias_import in text:

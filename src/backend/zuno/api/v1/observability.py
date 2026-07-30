@@ -10,7 +10,7 @@ from zuno.api.services.product import (
 )
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.platform.database import engine
-from zuno.schema.schemas import resp_200
+from zuno.api.dto.schemas import resp_200
 
 router = APIRouter(tags=["Observability"])
 

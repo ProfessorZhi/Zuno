@@ -21,6 +21,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/cli_tool_discovery.py`、`src/backend/zuno/platform/services/simple_api_tool.py`、`src/backend/zuno/platform/services/tool_creation_service.py`、`src/backend/zuno/platform/services/tool_connectivity_service.py`、`src/backend/zuno/platform/services/user_defined_tool_runtime.py` 与 `src/backend/zuno/platform/database/init_data.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.capability` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/mcp/manager.py`、`src/backend/zuno/platform/services/mcp/multi_client.py`、`src/backend/zuno/platform/services/mcp/load_mcp/tools.py`、`src/backend/zuno/platform/services/mcp_openai/mcp_manager.py` 与 `src/backend/zuno/platform/services/mcp_openai/mcp_util.py` 继续改为 canonical `zuno.platform.services.mcp` / `zuno.platform.services.mcp_openai` / `zuno.api.dto.mcp` import。
 - `src/backend/zuno/agent/core/agents/*`、`src/backend/zuno/agent/core/callbacks/*` 与 `src/backend/zuno/agent/core/models/*` 的默认链 import 继续改为 canonical `zuno.agent.core` / `zuno.platform` / `zuno.api.dto` / `zuno.capability` import。
+- `src/backend/zuno/api/v1/*` 与 `src/backend/zuno/api/errcode/*` 的控制器 DTO import 继续改为 canonical `zuno.api.dto`，并把 context helper 改为 `zuno.platform.common.contexts`。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
 - 新增 `tools/scripts/verify_phase22_cleanup_boundary.py` 和 `tests/repo/test_phase22_cleanup_boundary.py`，防止 Product Runtime 重新引入这两个 legacy alias import，并确保 removal candidates 文件存在。
 - 新增 `tests/api/test_layered_api_boundaries.py::test_capability_tool_actions_use_canonical_imports`，防止四个 capability tool action 回退到 `zuno.services` / `zuno.resources` / `zuno.utils`。
@@ -57,6 +58,9 @@ PHASE22 cleanup boundary verification passed.
 PHASE22 cleanup boundary verification passed.
 16 passed in 0.23s
 python -m compileall -q src/backend/zuno/agent/core src/backend/zuno/api/services/mcp_server.py passed
+PHASE22 cleanup boundary verification passed.
+16 passed in 0.32s
+python -m compileall -q src/backend/zuno/api/v1 src/backend/zuno/api/errcode passed
 ```
 
 ## Remaining

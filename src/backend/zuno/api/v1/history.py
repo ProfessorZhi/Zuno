@@ -3,7 +3,7 @@ from loguru import logger
 
 from zuno.api.services.history import HistoryService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["History"])
 

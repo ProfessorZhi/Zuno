@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from zuno.api.services.agent_skill import AgentSkillService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.agent_skill import (
+from zuno.api.dto.agent_skill import (
     AgentSkillCreateReq,
     AgentSkillDeleteReq,
     AgentSkillFileAddReq,
     AgentSkillFileDeleteReq,
     AgentSkillFileUpdateReq,
 )
-from zuno.schema.schemas import resp_200
+from zuno.api.dto.schemas import resp_200
 
 router = APIRouter(prefix="/agent_skill", tags=["Agent-Skill"])
 

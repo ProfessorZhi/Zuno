@@ -23,6 +23,9 @@ def test_api_v1_routes_no_longer_directly_import_runtime_layers() -> None:
                 or stripped.startswith("import zuno.core.")
                 or stripped.startswith("from zuno.tools.")
                 or stripped.startswith("import zuno.tools.")
+                or stripped.startswith("from zuno.schema.")
+                or stripped.startswith("import zuno.schema.")
+                or stripped.startswith("from zuno.utils.contexts")
             ):
                 direct_import_lines.append(f"{path}:{line_number}:{stripped}")
 

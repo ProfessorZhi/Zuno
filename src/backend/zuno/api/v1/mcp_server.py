@@ -3,8 +3,8 @@ from loguru import logger
 
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.mcp import MCPServerImportedReq, MCPServerUpdateReq
-from zuno.schema.schemas import resp_200, resp_500
+from zuno.api.dto.mcp import MCPServerImportedReq, MCPServerUpdateReq
+from zuno.api.dto.schemas import resp_200, resp_500
 from zuno.settings import app_settings
 
 router = APIRouter(tags=["MCP-Server"])

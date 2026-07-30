@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 
 from zuno.api.services.message import MessageDownService, MessageLikeService
-from zuno.schema.schemas import resp_200
+from zuno.api.dto.schemas import resp_200
 
 router = APIRouter(tags=["Message"])
 
