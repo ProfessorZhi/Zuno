@@ -7,6 +7,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 API_V1_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1"
 API_ERRCODE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "errcode"
 PLATFORM_DATABASE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database"
+PLATFORM_APPLICATION_KNOWLEDGE_ROOT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "knowledge"
+)
+PLATFORM_REWRITE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rewrite"
+QUEUE_WORKERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "workers.py"
+QUEUE_MESSAGES = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "messages.py"
 PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
 MAIN_ENTRYPOINT = REPO_ROOT / "src" / "backend" / "zuno" / "main.py"
 MEMORY_FEEDBACK_CONSUMER = REPO_ROOT / "src" / "backend" / "zuno" / "memory" / "feedback_consumer.py"
@@ -142,6 +148,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/wechat.py",
             "src/backend/zuno/api/services/mcp_chat.py",
             "src/backend/zuno/platform/database/",
+            "src/backend/zuno/platform/services/application/knowledge/",
+            "src/backend/zuno/platform/services/rewrite/",
+            "src/backend/zuno/platform/services/queue/workers.py",
+            "src/backend/zuno/platform/services/queue/messages.py",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
             "src/backend/zuno/memory/feedback_consumer.py",
@@ -256,6 +266,20 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"platform database {path.relative_to(PLATFORM_DATABASE_ROOT)}", path)
         for path in sorted(PLATFORM_DATABASE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform application knowledge {path.relative_to(PLATFORM_APPLICATION_KNOWLEDGE_ROOT)}", path)
+        for path in sorted(PLATFORM_APPLICATION_KNOWLEDGE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform rewrite {path.relative_to(PLATFORM_REWRITE_ROOT)}", path)
+        for path in sorted(PLATFORM_REWRITE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        [
+            ("platform queue workers", QUEUE_WORKERS),
+            ("platform queue messages", QUEUE_MESSAGES),
+        ]
     )
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 

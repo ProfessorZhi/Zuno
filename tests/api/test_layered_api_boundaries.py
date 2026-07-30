@@ -323,6 +323,44 @@ def test_runtime_entrypoints_and_cross_module_dtos_use_canonical_imports() -> No
         assert "from zuno.utils." not in content
 
 
+def test_platform_application_rewrite_and_queue_use_canonical_imports() -> None:
+    app_knowledge_init = _read("src/backend/zuno/platform/services/application/knowledge/__init__.py")
+    app_knowledge_query = _read("src/backend/zuno/platform/services/application/knowledge/query_service.py")
+    rewrite_init = _read("src/backend/zuno/platform/services/rewrite/__init__.py")
+    rewrite_query = _read("src/backend/zuno/platform/services/rewrite/query_write.py")
+    rewrite_markdown = _read("src/backend/zuno/platform/services/rewrite/markdown_rewrite.py")
+    queue_workers = _read("src/backend/zuno/platform/services/queue/workers.py")
+    queue_messages = _read("src/backend/zuno/platform/services/queue/messages.py")
+
+    assert "from zuno.platform.services.application.knowledge.query_service import KnowledgeQueryService" in app_knowledge_init
+    assert "from zuno.platform.services.graphrag.models import GraphRAGExtractorConfig" in app_knowledge_query
+    assert "from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader" in app_knowledge_query
+    assert "from zuno.platform.services.graphrag.prompts.registry import GraphRAGPromptRegistry" in app_knowledge_query
+    assert "from zuno.platform.services.graphrag.query_service import (" in app_knowledge_query
+    assert "from zuno.platform.services.rewrite.markdown_rewrite import" in rewrite_init
+    assert "from zuno.platform.services.rewrite.query_write import" in rewrite_init
+    assert "from zuno.agent.core.models.manager import ModelManager" in rewrite_query
+    assert "from zuno.platform.resources.prompts.rewrite import system_query_rewrite, user_query_write" in rewrite_query
+    assert "from zuno.agent.core.models.manager import ModelManager" in rewrite_markdown
+    assert "from zuno.platform.services.pipeline.models import KnowledgeTaskStage" in queue_workers
+    assert "from zuno.platform.services.queue.client import get_queue_names" in queue_workers
+    assert "from zuno.platform.services.queue.messages import build_task_message" in queue_workers
+    assert "from zuno.platform.services.pipeline.models import KnowledgeTaskStage" in queue_messages
+
+    for content in [
+        app_knowledge_init,
+        app_knowledge_query,
+        rewrite_init,
+        rewrite_query,
+        rewrite_markdown,
+        queue_workers,
+        queue_messages,
+    ]:
+        assert "from zuno.services." not in content
+        assert "from zuno.core." not in content
+        assert "from zuno.resources." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

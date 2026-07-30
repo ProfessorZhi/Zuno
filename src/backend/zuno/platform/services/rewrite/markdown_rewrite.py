@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from loguru import logger
 
-from zuno.core.models.manager import ModelManager
+from zuno.agent.core.models.manager import ModelManager
 
 from zuno.settings import app_settings
 
