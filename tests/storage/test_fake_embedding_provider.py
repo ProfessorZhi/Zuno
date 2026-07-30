@@ -1,6 +1,6 @@
 import asyncio
 
-from zuno.services.embedding.providers import FakeEmbeddingProvider
+from zuno.platform.services.embedding.providers import FakeEmbeddingProvider
 
 
 def test_fake_embedding_provider_is_deterministic():

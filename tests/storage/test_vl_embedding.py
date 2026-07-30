@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_normalize_image_input_converts_local_storage_url_to_data_uri(monkeypatch):
-    from zuno.services.rag import vl_embedding
+    from zuno.platform.services.rag import vl_embedding
 
     captured = {}
     monkeypatch.setattr(

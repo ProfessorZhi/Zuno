@@ -1,9 +1,9 @@
 import asyncio
 from pathlib import Path
 
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.doc_parser.pdf import PDFParser
-from zuno.services.rag.doc_parser.text import text_parser
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.rag.doc_parser.pdf import PDFParser
+from zuno.platform.services.rag.doc_parser.text import text_parser
 
 
 class _FakeMarkdownParser:

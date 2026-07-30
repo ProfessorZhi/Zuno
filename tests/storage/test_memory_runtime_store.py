@@ -7,7 +7,7 @@ def test_database_memory_store_privacy_delete_removes_content_and_keeps_redacted
 
     from zuno.memory.engine import MemoryEngine
     from zuno.memory.store import DatabaseMemoryStore
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,

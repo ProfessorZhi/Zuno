@@ -40,6 +40,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/model_gateway.py` 与 `src/backend/zuno/platform/model_gateway_adapters.py` lazy ModelManager factory 继续改为 canonical `zuno.agent.core.models.manager` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tools/evals/zuno/` fixed benchmark、contract review、stackless/local RAG eval 与 multihop runtime runner 继续改为 canonical `zuno.agent.core` / `zuno.platform` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/tools/` active Tool Runtime 测试继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.capability` import；`src/backend/zuno/capability/tools/send_email/manifest.yaml` CLI entry 继续改为 canonical `zuno.capability.tools.send_email.cli`，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/storage/` active storage / pipeline / RAG / memory runtime 测试继续改为 canonical `zuno.platform.services` / `zuno.platform.database` / `zuno.api.dto` / `zuno.platform.common` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -167,6 +168,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/tools passed
 79 passed in 17.21s
 rg no matches in tests/tools and send_email manifest for legacy alias imports
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/storage passed
+27 passed in 46.76s
+rg no matches in tests/storage for legacy alias imports
 ```
 
 ## Remaining
