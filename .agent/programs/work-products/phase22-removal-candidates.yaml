@@ -599,6 +599,10 @@ resolved_this_slice:
     before: "zuno.tools.send_email alias"
     after: "zuno.capability.tools.send_email canonical import"
     evidence: "tests/api/test_layered_api_boundaries.py"
+  - path: "tests/agent/test_platform_layer_surfaces.py"
+    before: "active Platform layer surface tests imported foundation objects through zuno.services / zuno.utils aliases and described them as legacy"
+    after: "active Platform layer surface tests verify canonical zuno.platform services / common foundation objects"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."
