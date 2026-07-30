@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _agent_config(enable_memory: bool = True):
-    from zuno.core.agents.general_agent import AgentConfig
+    from zuno.agent.core.agents.general_agent import AgentConfig
 
     return AgentConfig(
         user_id="u_1",
@@ -28,8 +28,8 @@ def _agent_config(enable_memory: bool = True):
 
 
 def test_general_agent_prepares_context_packet_and_selected_capability_trace() -> None:
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.application.context import ContextSource, ModelContextPacket
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.application.context import ContextSource, ModelContextPacket
 
     class FakeTool:
         name = "search_knowledge_base"
@@ -71,8 +71,8 @@ def test_general_agent_default_context_does_not_instantiate_legacy_capability_se
 
 
 def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits_memory() -> None:
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.memory import MemoryLayer
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.memory import MemoryLayer
 
     captured_input = {}
 
@@ -115,7 +115,7 @@ def test_general_agent_astream_passes_context_trace_into_single_loop_and_commits
 
 
 def test_general_agent_runtime_turn_ledger_links_runtime_contracts() -> None:
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core.agents.general_agent import GeneralAgent
 
     captured_input = {}
 
@@ -202,8 +202,8 @@ def test_general_agent_runtime_turn_ledger_links_runtime_contracts() -> None:
 
 
 def test_general_agent_runtime_turn_ledger_uses_current_knowledge_tool_trace(monkeypatch) -> None:
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core.agents import general_agent as ga
+    from zuno.agent.core.agents.general_agent import GeneralAgent
     from zuno.knowledge.query_service import KnowledgeQueryResult
 
     captured_input = {}
@@ -300,9 +300,9 @@ def test_general_agent_runtime_turn_ledger_uses_current_knowledge_tool_trace(mon
 
 
 def test_general_agent_reads_task_summary_and_approved_memory_into_context() -> None:
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.application.context import ContextSource
-    from zuno.services.memory import (
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.application.context import ContextSource
+    from zuno.memory import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,
@@ -356,9 +356,9 @@ def test_general_agent_reads_task_summary_and_approved_memory_into_context() -> 
 
 
 def test_general_agent_context_uses_semantic_memory_search_and_excludes_irrelevant_items() -> None:
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.application.context import ContextSource
-    from zuno.services.memory import (
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.application.context import ContextSource
+    from zuno.memory import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,
@@ -424,12 +424,12 @@ def test_general_agent_persists_post_turn_memory_across_database_store_instances
     from sqlalchemy.pool import StaticPool
     from sqlmodel import SQLModel, Session, create_engine
 
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core.agents.general_agent import GeneralAgent
     from zuno.memory.contracts import ExternalKnowledgeRecord
     from zuno.memory.policy import RetentionPolicy
     from zuno.memory.store import DatabaseMemoryStore
     from zuno.platform.database.models.memory_runtime import MemoryRawEventTable
-    from zuno.services.application.context import ContextSource
+    from zuno.platform.services.application.context import ContextSource
 
     sql_engine = create_engine(
         "sqlite://",
