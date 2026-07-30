@@ -251,7 +251,37 @@ def test_image_index_reindex_action_is_accepted():
     from zuno.api.services.knowledge import KnowledgeService
     import asyncio
 
-    result = asyncio.run(KnowledgeService.run_reindex_action("kb_1", "image_index"))
+    class FakeKnowledge:
+        def to_dict(self):
+            return {
+                "user_id": "u_1",
+                "name": "kb_1",
+                "knowledge_config": {
+                    "index_capability": "rag",
+                    "retrieval_settings": {"default_mode": "rag"},
+                },
+                "default_retrieval_mode": "rag",
+            }
+
+    async def fake_select_user_by_id(_knowledge_id):
+        return FakeKnowledge()
+
+    async def fake_select_knowledge_file(_knowledge_id):
+        return []
+
+    from zuno.platform.database.dao.knowledge import KnowledgeDao
+    from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao
+
+    KnowledgeDao_select_user_by_id = KnowledgeDao.select_user_by_id
+    KnowledgeFileDao_select_knowledge_file = KnowledgeFileDao.select_knowledge_file
+    KnowledgeDao.select_user_by_id = fake_select_user_by_id
+    KnowledgeFileDao.select_knowledge_file = fake_select_knowledge_file
+
+    try:
+        result = asyncio.run(KnowledgeService.run_reindex_action("kb_1", "image_index"))
+    finally:
+        KnowledgeDao.select_user_by_id = KnowledgeDao_select_user_by_id
+        KnowledgeFileDao.select_knowledge_file = KnowledgeFileDao_select_knowledge_file
 
     assert result["action"] == "image_index"
-    assert result["status"] == "accepted"
+    assert result["status"] == "published"

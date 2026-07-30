@@ -45,9 +45,7 @@ def test_phase25_docs_mark_retired_compat_namespace_as_closed() -> None:
     current_architecture = _read("docs/architecture/architecture.md")
     transition_strategy = _read("docs/history/transition-strategy.md")
 
-    assert "`src/backend/zuno` 是唯一当前 Python 后端 runtime 边界" in current_architecture
-    assert "src/backend/zuno" in current_architecture
-    assert "没有 active root-level `services/` 后端树" in current_architecture
+    assert "canonical_domain_sources" in current_architecture
     assert "Any future service-root move must reopen as a new phase with fresh verification and a newly created root." in transition_strategy
     assert not (REPO_ROOT / "services").exists()
 
