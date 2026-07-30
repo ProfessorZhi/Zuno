@@ -11,6 +11,16 @@ PRODUCT_RUNTIME_BATCH = REPO_ROOT / "src" / "backend" / "zuno" / "product" / "ru
 PRODUCT_COMMAND_SERVICE = (
     REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "product" / "command_service.py"
 )
+WORKSPACE_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace.py"
+ATTACHMENT_SERVICE = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "workspace" / "attachment_service.py"
+)
+STORAGE_FACADE = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "storage" / "__init__.py"
+)
+TEXT_TO_IMAGE_ACTION = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "text2image" / "action.py"
+)
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -33,6 +43,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "legacy_general_agent_completion_rollback",
             "src/backend/zuno/product/runtime_batch.py",
             "src/backend/zuno/api/services/product/command_service.py",
+            "src/backend/zuno/api/services/workspace.py",
+            "src/backend/zuno/platform/services/workspace/attachment_service.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -49,6 +61,29 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         errors.append("product command service still imports engine through zuno.database alias")
     if "from zuno.platform.database import engine" not in command_service:
         errors.append("product command service missing canonical platform database import")
+
+    alias_imports = [
+        "from zuno.schema.",
+        "import zuno.schema.",
+        "from zuno.services.",
+        "import zuno.services.",
+        "from zuno.tools.",
+        "import zuno.tools.",
+        "from zuno.utils.",
+        "import zuno.utils.",
+        "from zuno.resources.",
+        "import zuno.resources.",
+    ]
+    for label, path in [
+        ("workspace service", WORKSPACE_SERVICE),
+        ("workspace attachment service", ATTACHMENT_SERVICE),
+        ("storage facade", STORAGE_FACADE),
+        ("text2image action", TEXT_TO_IMAGE_ACTION),
+    ]:
+        text = _read(path)
+        for alias_import in alias_imports:
+            if alias_import in text:
+                errors.append(f"{label} still imports through legacy alias: {alias_import}")
 
     current = _read(CURRENT_PROGRAM)
     manifest = _read(MANIFEST)

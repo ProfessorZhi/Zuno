@@ -111,9 +111,9 @@ def test_workspace_controller_routes_runtime_orchestration_through_service_layer
     assert "from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent" not in controller
     assert "from zuno.services.workspace.attachment_service import (" not in controller
     assert "from zuno.utils.helpers import parse_imported_config" not in controller
-    assert "from zuno.services.execution_policy import (" in service
-    assert "from zuno.services.workspace.attachment_service import (" in service
-    assert 'from zuno.services.workspace.simple_agent import MCPConfig' in service or 'from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent' in service
+    assert "from zuno.platform.services.execution_policy import (" in service
+    assert "from zuno.platform.services.workspace.attachment_service import (" in service
+    assert 'from zuno.platform.services.workspace.simple_agent import MCPConfig' in service or 'from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent' in service
 
 
 def test_capability_controller_routes_registry_search_through_service_layer() -> None:
