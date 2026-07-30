@@ -119,4 +119,11 @@ python tools/scripts/verify_wave1_contract_freeze.py
 pytest -q -p no:cacheprovider
 cd apps/web && npm run lint && npm run build
 # browser E2E, desktop build/smoke, migrations, infra fault/load/DR, fixed benchmark commands from evidence manifest
+
+## Current Status & Draft Updates (Pre-Verification Candidate)
+- **Cleanup Slice**: Staged and safely committed (`refactor: retire legacy import aliases`).
+- **Benchmark Runner**: Completed implementation with atomic writeout and 26-field manifest generator.
+- **Dataset Contract & Validator**: Implemented schema checker, unique ID duplications validator, and missing types gap reporter.
+- **Dataset status**: Legitimate case count is 8 (from python_notes_eval.jsonl). Remaining gap is 72 cases. Declared as `measurement_blocked` due to insufficient frozen dataset.
+- **Verification status**: Pre-Verification Candidate achieved. Ready for final integrated check run.
 ```

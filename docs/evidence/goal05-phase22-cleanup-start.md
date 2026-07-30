@@ -591,3 +591,11 @@ git diff --check passed
 - `src/backend/zuno/platform/compatibility/legacy/` 空 legacy 目录已删除；temporary allowlist 和 legacy bypass inventory 也移除了这条迁移期例外。
 - `legacy_general_agent_completion_rollback` 已退役；后续只保留显式 cutover drill mode 的失败证据与最终全量验证。
 - Fixed benchmark、full final verification、production readiness truth 和 Program archive 仍未完成。
+
+## 2026-07-30 Fixed Benchmark Execution & Blocked Evidence:
+- **Benchmark Runner**: 完整实现了原子写入（atomic replace/rename）、checksum 校验侧车以及 26 字段严格元数据 Manifest 自动生成。
+- **Dataset Contract & Validator**: 完成了 Schema 校验器、去重与近重复检测器、以及 question_type 覆盖率检验逻辑。
+- **证据运行 (Evidence Run)**: 以 `--sample-size 80 --allow-blocked` 运行正式 Benchmark，生成证据记录在 `docs/evidence/goal05-phase22-blocked-benchmark` 目录。
+- **运行结果**: 数据集由于物理缺口（缺 72 个 case，仅 8 个 case 且缺少 `reviewer_status: approved` 与 `provenance`）而受控阻断。
+- **判定状态**: 正式宣告降级判定为 `measurement_blocked`，输出状态为 `"BLOCKED"` 的 Manifest 报告 `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`。
+- **测试覆盖**: 配套的 Focused 单元测试集 `test_enterprise_rag_paired_benchmark.py` 完整跑通（11 passed）。

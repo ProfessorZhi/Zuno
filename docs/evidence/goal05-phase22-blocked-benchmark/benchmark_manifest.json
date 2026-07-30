@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "benchmark_id": "enterprise_rag_paired_benchmark",
+  "benchmark_run_id": "run_1785421671",
+  "status": "BLOCKED",
+  "measurement_status": "blocked_not_measured",
+  "created_at": 1785421671.4534976,
+  "completed_at": 1785421671.5079262,
+  "reproduce_command": [
+    "python",
+    "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
+    "--questions-file",
+    "tools\\evals\\zuno\\rag_eval\\python_notes_eval.jsonl",
+    "--output-root",
+    "F:\\internship-work\\resume project\\docs\\evidence\\goal05-phase22-blocked-benchmark",
+    "--sample-size",
+    "80",
+    "--hard-negative-count",
+    "20",
+    "--allow-blocked",
+    "--rerank-score-threshold-override",
+    "0.0",
+    "--chunk-size-override",
+    "1800",
+    "--overlap-override",
+    "240"
+  ],
+  "git_commit_sha": "86de65e187c353cacb290796b3dab0a47a1efb4c",
+  "working_tree_dirty": true,
+  "python_version": "3.12.10",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "dataset_ref": "goal05-phase22-blocked-benchmark\\corpus\\enterprise_rag_bench_eval.jsonl",
+  "dataset_sha256": "48ab6c2aa8541db0de5dc58f391f71ce3b02996904e421ac6d3cc2f447cd56d2",
+  "corpus_manifest_ref": "goal05-phase22-blocked-benchmark\\corpus\\manifest.json",
+  "corpus_manifest_sha256": "7f3739f156b7c91f0e72ea79bf6ced0266206cee9eab8c1c2f86e69d89369957",
+  "benchmark_config_ref": "tools\\evals\\zuno\\rag_eval\\run_enterprise_rag_paired_benchmark.py",
+  "benchmark_config_sha256": "1518d90468c3d22339250f9edff469382a1032050195e39f8f15756ce0c4da99",
+  "profile_set_ref": "PROFILE_ALIASES_IN_RUNNER",
+  "profile_set_sha256": "14e49e2fce70f7fa11ab4ef63ab98d2b91a300768382fea133e13e2bafbe27ee",
+  "threshold_set_ref": "RELEASE_GATE_THRESHOLDS_IN_RUNNER",
+  "threshold_set_sha256": "3e59cf10fffd7e34c8de1ef15eee12b6a0243aff9fa75bd7c84dd55903c4c163",
+  "model_manifest_ref": "src\\backend\\zuno\\agent\\core\\models\\manager.py",
+  "model_manifest_sha256": "93780c56d0ae345cfbe0a3f56993f610fb4f19f1779440ed43d679f1b2529863",
+  "case_set_hash": null,
+  "expected_case_count": 80,
+  "actual_case_count": 0,
+  "profile_completeness": null,
+  "artifact_refs": {
+    "metrics_json": {
+      "path": "metrics.json",
+      "sha256": "0168df7de40029efdd894e4a177e631fdf19b776382a0bacfb80646cff3b83d4"
+    },
+    "report_md": {
+      "path": "report.md",
+      "sha256": "15c5cec00046617d0f8510ad1ad76c85bcdf7d80f1e29e9dd2cc2a3586136bf9"
+    },
+    "failure_cases_md": {
+      "path": "failure_cases.md",
+      "sha256": "b80bffc53fff7854abd89117c9100828bf0c3ae499bb1a98315d46384fac78d9"
+    },
+    "profile_set_json": {
+      "path": "profile_set.json",
+      "sha256": "69822c9f8205a805a55b8f833972d9b246ddfd7fbc128cd329fa54b233a34c91"
+    },
+    "threshold_set_json": {
+      "path": "threshold_set.json",
+      "sha256": "ddd4f951cadacac92a4bea0e08877eefea1e11e4b5e34ba1e5af956b48875ed3"
+    },
+    "benchmark_config_json": {
+      "path": "benchmark_config.json",
+      "sha256": "674a0a493bdd535adbc8f057aca6f0d45a92c770336214803422f25783b69898"
+    },
+    "model_manifest_json": {
+      "path": "model_manifest.json",
+      "sha256": "5ebe8f2f2bec7188d40df27d3d6b267ae5c32d257800744588bfc2c61c91eb37"
+    },
+    "release_gate_config_json": {
+      "path": "release_gate_config.json",
+      "sha256": "ddd4f951cadacac92a4bea0e08877eefea1e11e4b5e34ba1e5af956b48875ed3"
+    }
+  },
+  "release_gate": {
+    "status": "blocked_not_measured",
+    "measured": false,
+    "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
+    "checks": [],
+    "failed_checks": []
+  },
+  "blocker": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
+  "failure_fingerprint": null,
+  "comparable": false,
+  "is_comparable": false,
+  "incomparable_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
+  "manifest_checksum_sidecar": "9e736baa20f27d5dc25d05510b7c11716c81a4e76a51daa553cb1404147b1d08"
+}

@@ -1,0 +1,6 @@
+{
+  "embedding": "openai-text-embedding-3-small",
+  "reranker": "bge-reranker-large",
+  "judge": "gpt-4o-mini",
+  "chat_model": "gpt-4o"
+}
