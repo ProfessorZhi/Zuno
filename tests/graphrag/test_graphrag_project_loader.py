@@ -22,7 +22,7 @@ def _write_project(
 
 
 def test_graphrag_project_loader_loads_settings_and_prompts(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     _write_project(
         tmp_path,
@@ -64,7 +64,7 @@ prompts:
 
 
 def test_graphrag_project_loader_reports_missing_settings(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     _write_project(tmp_path, settings=None)
 
@@ -73,7 +73,7 @@ def test_graphrag_project_loader_reports_missing_settings(tmp_path):
 
 
 def test_graphrag_project_loader_rejects_invalid_query_method(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     _write_project(
         tmp_path,
@@ -88,7 +88,7 @@ query_method: community_global
 
 
 def test_graphrag_project_loader_exposes_not_ready_state_for_missing_prompt(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     _write_project(
         tmp_path,

@@ -33,8 +33,8 @@ prompts:
 
 
 def test_prompt_registry_loads_project_prompt_categories(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-    from zuno.services.graphrag.prompts.registry import GraphRAGPromptRegistry
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.prompts.registry import GraphRAGPromptRegistry
 
     _project(tmp_path)
     project = GraphRAGProjectLoader(projects_root=tmp_path).load("legal")
@@ -54,8 +54,8 @@ def test_prompt_registry_loads_project_prompt_categories(tmp_path):
 
 
 def test_prompt_registry_separates_indexing_and_query_prompt_impacts(tmp_path):
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-    from zuno.services.graphrag.prompts.registry import GraphRAGPromptRegistry
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.prompts.registry import GraphRAGPromptRegistry
 
     _project(tmp_path)
     project = GraphRAGProjectLoader(projects_root=tmp_path).load("legal")
@@ -82,7 +82,7 @@ def test_prompt_registry_separates_indexing_and_query_prompt_impacts(tmp_path):
 
 
 def test_prompt_registry_rejects_unknown_prompt_category(tmp_path):
-    from zuno.services.graphrag.prompts.registry import GraphRAGPromptRegistry
+    from zuno.platform.services.graphrag.prompts.registry import GraphRAGPromptRegistry
 
     try:
         GraphRAGPromptRegistry.from_prompt_texts(

@@ -64,6 +64,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/retrieval/test_query_rewrite.py`、`tests/retrieval/test_rerank_fallback.py`、`tests/retrieval/test_retrieval_fusion.py` 与 `tests/retrieval/test_retrieval_planner.py` active retrieval 测试继续改为 canonical `zuno.platform.services` / `zuno.platform.database` / `zuno.platform.settings` import 和 patch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/retrieval/test_enhanced_requery_activation.py`、`tests/retrieval/test_enhanced_requery_precision_gate.py` 与 `tests/retrieval/test_enhanced_standard_floor_invariance.py` active enhanced retrieval 测试继续改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/retrieval/test_enhanced_retrieval_composition.py`、`tests/retrieval/test_standard_retrieval_composition.py` 与 `tests/retrieval/test_retrieval_orchestrator.py` active retrieval composition / orchestrator 测试继续改为 canonical `zuno.platform.services.graphrag` / `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/graphrag/test_graphrag_project_contracts.py`、`tests/graphrag/test_graphrag_project_loader.py` 与 `tests/graphrag/test_graphrag_prompt_registry.py` active GraphRAG project contract / loader / prompt registry 测试继续改为 canonical `zuno.platform.services.graphrag` / `zuno.platform.services.retrieval` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -282,6 +283,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/retrieval/test_enhanced_retrieval_composition.py tests/retrieval/test_standard_retrieval_composition.py tests/retrieval/test_retrieval_orchestrator.py passed
 10 passed in 17.97s
 rg no matches in selected Retrieval composition / orchestrator tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/graphrag/test_graphrag_project_contracts.py tests/graphrag/test_graphrag_project_loader.py tests/graphrag/test_graphrag_prompt_registry.py passed
+14 passed in 4.66s
+rg no matches in selected GraphRAG project / prompt registry tests for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 
