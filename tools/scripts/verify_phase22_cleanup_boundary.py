@@ -45,6 +45,12 @@ AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "a
 HISTORY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "history.py"
 LLM_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "llm.py"
 MCP_SERVER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_server.py"
+CLI_TOOL_DISCOVERY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "cli_tool_discovery.py"
+SIMPLE_API_TOOL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "simple_api_tool.py"
+TOOL_CREATION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_creation_service.py"
+TOOL_CONNECTIVITY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_connectivity_service.py"
+USER_DEFINED_TOOL_RUNTIME = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "user_defined_tool_runtime.py"
+INIT_DATA = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database" / "init_data.py"
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -83,6 +89,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/history.py",
             "src/backend/zuno/api/services/llm.py",
             "src/backend/zuno/api/services/mcp_server.py",
+            "src/backend/zuno/platform/services/cli_tool_discovery.py",
+            "src/backend/zuno/platform/services/simple_api_tool.py",
+            "src/backend/zuno/platform/services/tool_creation_service.py",
+            "src/backend/zuno/platform/services/tool_connectivity_service.py",
+            "src/backend/zuno/platform/services/user_defined_tool_runtime.py",
+            "src/backend/zuno/platform/database/init_data.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -131,6 +143,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("history service", HISTORY_SERVICE),
         ("llm service", LLM_SERVICE),
         ("mcp server service", MCP_SERVER_SERVICE),
+        ("cli tool discovery", CLI_TOOL_DISCOVERY),
+        ("simple api tool", SIMPLE_API_TOOL),
+        ("tool creation service", TOOL_CREATION_SERVICE),
+        ("tool connectivity service", TOOL_CONNECTIVITY_SERVICE),
+        ("user defined tool runtime", USER_DEFINED_TOOL_RUNTIME),
+        ("init data", INIT_DATA),
     ]:
         text = _read(path)
         for alias_import in alias_imports:

@@ -250,3 +250,47 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content
+
+
+def test_platform_tool_runtime_services_use_canonical_imports() -> None:
+    cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
+    simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")
+    tool_creation_service = _read("src/backend/zuno/platform/services/tool_creation_service.py")
+    tool_connectivity_service = _read("src/backend/zuno/platform/services/tool_connectivity_service.py")
+    user_defined_tool_runtime = _read("src/backend/zuno/platform/services/user_defined_tool_runtime.py")
+    init_data = _read("src/backend/zuno/platform/database/init_data.py")
+
+    assert "from zuno.api.dto.tool import (" in cli_tool_discovery
+    assert "from zuno.agent.core.models.manager import ModelManager" in simple_api_tool
+    assert "from zuno.api.dto.tool import (" in simple_api_tool
+    assert "from zuno.platform.common.model_output import normalize_messages_for_model, strip_think_tags" in simple_api_tool
+    assert "from zuno.api.dto.tool import SimpleApiConfig" in tool_creation_service
+    assert "from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter" in tool_creation_service
+    assert "from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter" in tool_creation_service
+    assert "from zuno.platform.database import ToolTable" in tool_creation_service
+    assert "from zuno.platform.services.simple_api_tool import build_openapi_schema_from_simple_config" in tool_creation_service
+    assert "from zuno.platform.services.user_defined_tool_runtime import build_stored_tool_auth_config" in tool_creation_service
+    assert "from zuno.api.dto.tool import ToolConnectivityReq, ToolConnectivityResp" in tool_connectivity_service
+    assert "from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter" in tool_connectivity_service
+    assert "from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter" in tool_connectivity_service
+    assert "from zuno.platform.database import ToolTable" in tool_connectivity_service
+    assert "from zuno.platform.services.simple_api_tool import normalize_remote_api_auth_config" in tool_connectivity_service
+    assert "from zuno.platform.services.tool_creation_service import ToolCreationService" in tool_connectivity_service
+    assert "from zuno.platform.services.user_defined_tool_runtime import get_cli_config_from_auth_config, get_user_defined_runtime_type" in tool_connectivity_service
+    assert "from zuno.platform.database import ToolTable" in user_defined_tool_runtime
+    assert "from zuno.platform.services.simple_api_tool import normalize_remote_api_auth_config" in user_defined_tool_runtime
+    assert "from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter" in user_defined_tool_runtime
+    assert "from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter" in user_defined_tool_runtime
+    assert "from zuno.platform.database import AgentTable, SystemUser, ToolTable, engine, ensure_database" in init_data
+    assert "from zuno.platform.services.mcp.manager import MCPManager" in init_data
+    assert "from zuno.platform.services.storage import storage_client" in init_data
+    assert "from zuno.platform.common.convert import convert_mcp_config" in init_data
+    assert "from zuno.platform.common.helpers import get_provider_from_model" in init_data
+
+    for content in [cli_tool_discovery, simple_api_tool, tool_creation_service, tool_connectivity_service, user_defined_tool_runtime, init_data]:
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.database." not in content
+        assert "from zuno.core." not in content
+        assert "from zuno.tools." not in content

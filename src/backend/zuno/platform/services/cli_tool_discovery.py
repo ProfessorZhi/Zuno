@@ -9,7 +9,7 @@ from typing import Optional
 
 import tomllib
 
-from zuno.schema.tool import (
+from zuno.api.dto.tool import (
     CLIToolCredentialModeSuggestion,
     CLIToolPreviewCommand,
     CLIToolPreviewReq,

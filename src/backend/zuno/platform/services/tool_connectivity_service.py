@@ -8,13 +8,13 @@ from typing import Any
 
 import httpx
 
-from zuno.database.models.tool import ToolTable
-from zuno.schema.tool import ToolConnectivityReq, ToolConnectivityResp
-from zuno.services.simple_api_tool import normalize_remote_api_auth_config
-from zuno.services.tool_creation_service import ToolCreationService
-from zuno.services.user_defined_tool_runtime import get_cli_config_from_auth_config, get_user_defined_runtime_type
-from zuno.tools.cli_tool.adapter import CLIToolAdapter
-from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.api.dto.tool import ToolConnectivityReq, ToolConnectivityResp
+from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter
+from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.platform.database import ToolTable
+from zuno.platform.services.simple_api_tool import normalize_remote_api_auth_config
+from zuno.platform.services.tool_creation_service import ToolCreationService
+from zuno.platform.services.user_defined_tool_runtime import get_cli_config_from_auth_config, get_user_defined_runtime_type
 
 
 class ToolConnectivityService:

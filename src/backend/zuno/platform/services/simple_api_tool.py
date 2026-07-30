@@ -10,14 +10,14 @@ import requests
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
-from zuno.core.models.manager import ModelManager
-from zuno.schema.tool import (
+from zuno.agent.core.models.manager import ModelManager
+from zuno.api.dto.tool import (
     RemoteApiAssistReq,
     RemoteApiAssistResp,
     SimpleApiConfig,
     SimpleApiParamConfig,
 )
-from zuno.utils.model_output import normalize_messages_for_model, strip_think_tags
+from zuno.platform.common.model_output import normalize_messages_for_model, strip_think_tags
 
 DOC_FETCH_TIMEOUT_SECONDS = 10
 DOC_BROWSER_RENDER_TIMEOUT_SECONDS = 12

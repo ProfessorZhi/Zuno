@@ -1,12 +1,12 @@
 from uuid import uuid4
 
 from zuno.api.services.tool import ToolService
-from zuno.database import ToolTable
-from zuno.schema.tool import SimpleApiConfig
-from zuno.services.simple_api_tool import build_openapi_schema_from_simple_config
-from zuno.services.user_defined_tool_runtime import build_stored_tool_auth_config
-from zuno.tools.cli_tool.adapter import CLIToolAdapter
-from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.api.dto.tool import SimpleApiConfig
+from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter
+from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.platform.database import ToolTable
+from zuno.platform.services.simple_api_tool import build_openapi_schema_from_simple_config
+from zuno.platform.services.user_defined_tool_runtime import build_stored_tool_auth_config
 
 
 class ToolCreationService:
