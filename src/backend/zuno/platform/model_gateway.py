@@ -2899,7 +2899,7 @@ class ModelGateway:
         """Return a LangChain chat model through the gateway boundary."""
         normalized_role = ModelRole(role)
         binding_payload = dict(binding or {})
-        from zuno.core.models.manager import ModelManager
+        from zuno.agent.core.models.manager import ModelManager
 
         if binding_payload.get("model") or binding_payload.get("model_name"):
             if "model" not in binding_payload and "model_name" in binding_payload:

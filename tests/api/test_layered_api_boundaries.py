@@ -779,3 +779,48 @@ def test_platform_application_exports_document_canonical_paths() -> None:
     assert "from zuno.platform.services.application.knowledge import KnowledgeService" in content
     assert "from zuno.platform.services.application.tool import ToolService" in content
     assert "zuno.services.application" not in content
+
+
+def test_platform_common_and_middleware_use_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/common/captcha.py",
+        "src/backend/zuno/platform/common/convert.py",
+        "src/backend/zuno/platform/common/file_utils.py",
+        "src/backend/zuno/platform/common/runtime_observability.py",
+        "src/backend/zuno/platform/middleware/trace_id_middleware.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.platform.common.runtime_observability import RedisKeys" in contents[paths[0]]
+    assert "from zuno.platform.services.redis import redis_client" in contents[paths[0]]
+    assert "from zuno.api.dto.mcp import MCPSSEConfig, MCPWebsocketConfig, MCPStreamableHttpConfig, MCPStdioConfig" in contents[paths[1]]
+    assert "from zuno.platform.common.date_utils import get_beijing_date_str" in contents[paths[2]]
+    assert "from zuno.platform.common.contexts import get_trace_id_context" in contents[paths[3]]
+    assert "from zuno.platform.common.contexts import set_trace_id_context" in contents[paths[4]]
+
+    for content in contents.values():
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.database" not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.tools" not in content
+
+
+def test_platform_model_gateway_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/model_gateway.py",
+        "src/backend/zuno/platform/model_gateway_adapters.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    for content in contents.values():
+        assert "from zuno.agent.core.models.manager import ModelManager" in content
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.database" not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.tools" not in content

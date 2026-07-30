@@ -46,6 +46,11 @@ PLATFORM_WORKSPACE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / 
 PLATFORM_DEEPSEARCH_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "deepsearch"
 PLATFORM_AUTOBUILD_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "autobuild"
 AGENT_RUNTIME_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime"
+PLATFORM_COMMON_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "common"
+PLATFORM_MIDDLEWARE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "middleware"
+PLATFORM_CONFIG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "config"
+PLATFORM_MODEL_GATEWAY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway.py"
+PLATFORM_MODEL_GATEWAY_ADAPTERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway_adapters.py"
 PLATFORM_APPLICATION_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "__init__.py"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
@@ -231,6 +236,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/deepsearch/",
             "src/backend/zuno/platform/services/autobuild/",
             "src/backend/zuno/agent/runtime/",
+            "src/backend/zuno/platform/common/",
+            "src/backend/zuno/platform/middleware/",
+            "src/backend/zuno/platform/model_gateway.py",
+            "src/backend/zuno/platform/model_gateway_adapters.py",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
@@ -421,6 +430,24 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"agent runtime {path.relative_to(AGENT_RUNTIME_ROOT)}", path)
         for path in sorted(AGENT_RUNTIME_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform common {path.relative_to(PLATFORM_COMMON_ROOT)}", path)
+        for path in sorted(PLATFORM_COMMON_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform middleware {path.relative_to(PLATFORM_MIDDLEWARE_ROOT)}", path)
+        for path in sorted(PLATFORM_MIDDLEWARE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform config {path.relative_to(PLATFORM_CONFIG_ROOT)}", path)
+        for path in sorted(PLATFORM_CONFIG_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        [
+            ("platform model gateway", PLATFORM_MODEL_GATEWAY),
+            ("platform model gateway adapters", PLATFORM_MODEL_GATEWAY_ADAPTERS),
+        ]
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))

@@ -3,7 +3,7 @@ import os
 from typing import Any, Iterable
 
 from zuno.settings import app_settings
-from zuno.utils.contexts import get_trace_id_context
+from zuno.platform.common.contexts import get_trace_id_context
 
 
 class RedisKeys:

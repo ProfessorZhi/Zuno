@@ -7,7 +7,7 @@ from langchain_core.messages import ToolCall
 from openai.types.chat import ChatCompletionMessageToolCall
 from pydantic import create_model
 
-from zuno.schema.mcp import MCPSSEConfig, MCPWebsocketConfig, MCPStreamableHttpConfig, MCPStdioConfig
+from zuno.api.dto.mcp import MCPSSEConfig, MCPWebsocketConfig, MCPStreamableHttpConfig, MCPStdioConfig
 
 
 def convert_langchain_tool_calls(tool_calls: List[ChatCompletionMessageToolCall]):
