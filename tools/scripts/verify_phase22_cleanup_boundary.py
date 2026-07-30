@@ -66,6 +66,7 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_knowledge_graphrag_runtime_contracts.py",
     REPO_ROOT / "tests" / "agent" / "test_memory_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_memory_layers.py",
+    REPO_ROOT / "tests" / "agent" / "test_workspace_project_query_runtime.py",
 ]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
@@ -270,6 +271,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_knowledge_graphrag_runtime_contracts.py",
             "tests/agent/test_memory_layer_surfaces.py",
             "tests/agent/test_memory_layers.py",
+            "tests/agent/test_workspace_project_query_runtime.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",

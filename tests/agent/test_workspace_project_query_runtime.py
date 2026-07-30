@@ -3,11 +3,11 @@ from types import SimpleNamespace
 
 
 def test_workspace_prefetch_uses_project_query_runtime_when_available(monkeypatch):
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -35,7 +35,7 @@ def test_workspace_prefetch_uses_project_query_runtime_when_available(monkeypatc
             trace_metadata={"resolved_query_method": "local"},
         )
 
-    monkeypatch.setattr("zuno.services.workspace.simple_agent.KnowledgeQueryService.query", fake_project_query)
+    monkeypatch.setattr("zuno.platform.services.workspace.simple_agent.KnowledgeQueryService.query", fake_project_query)
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -54,10 +54,10 @@ def test_workspace_prefetch_uses_project_query_runtime_when_available(monkeypatc
 
 
 def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -86,10 +86,10 @@ def test_workspace_retrieval_event_payload_exposes_domain_pack_failure(monkeypat
 
 
 def test_workspace_legacy_multi_agent_runtime_is_not_current_path(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
