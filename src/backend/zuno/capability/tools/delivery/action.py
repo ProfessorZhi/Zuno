@@ -7,7 +7,7 @@ from langchain.tools import tool
 from loguru import logger
 
 from zuno.platform.resources.prompts.tool import DELIVERY_PROMPT
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 @tool(parse_docstring=True)

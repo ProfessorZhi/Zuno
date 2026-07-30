@@ -8,7 +8,7 @@ from loguru import logger
 
 from zuno.agent.core.models.manager import ModelManager
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class MarkdownRewrite:

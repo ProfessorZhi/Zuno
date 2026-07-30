@@ -1,6 +1,6 @@
 import json
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 def get_queue_names() -> dict[str, str]:

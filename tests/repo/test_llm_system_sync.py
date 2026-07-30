@@ -1,10 +1,10 @@
-﻿import asyncio
+import asyncio
 from types import SimpleNamespace
 
 
 def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_rerank(monkeypatch):
     from zuno.platform.database.init_data import insert_llm_to_mysql
-    from zuno.settings import app_settings
+    from zuno.platform.settings import app_settings
 
     original_multi_models = app_settings.multi_models
     created_records = []
@@ -171,7 +171,7 @@ def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
     from types import SimpleNamespace
 
     from zuno.agent.core.models.manager import ModelManager
-    from zuno.settings import app_settings
+    from zuno.platform.settings import app_settings
 
     original_embedding = app_settings.multi_models.embedding
 

@@ -6,7 +6,7 @@ from typing import Any
 from zuno.api.services.knowledge import KnowledgeService
 from zuno.platform.services.graphrag.retriever import GraphRetriever
 from zuno.platform.services.rag.retrieval import MixRetrival
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 def _guess_keyword_heavy(query: str) -> bool:

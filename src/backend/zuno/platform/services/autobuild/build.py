@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketException
 from fastapi import status as http_status
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.compatibility.vendor.fastapi_jwt_auth import AuthJWT
 from loguru import logger
 
 from zuno.platform.services.autobuild.manager import AutoBuildManager

@@ -8,7 +8,7 @@ from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connec
 from zuno.api.dto.search import SearchModel
 from zuno.platform.services.rag.embedding import get_embedding
 from zuno.platform.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class MilvusLiteClient:

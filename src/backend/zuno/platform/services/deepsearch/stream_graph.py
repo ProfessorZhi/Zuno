@@ -27,7 +27,7 @@ from zuno.platform.services.deepsearch.prompts import (
     reflection_instructions,
     answer_instructions,
 )
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 # 初始化Tavily客户端
 def get_tavily_client() -> TavilyClient:

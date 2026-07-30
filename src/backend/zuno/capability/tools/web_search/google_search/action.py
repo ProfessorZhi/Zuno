@@ -1,7 +1,7 @@
 from langchain.tools import tool
 from langchain_community.utilities import SerpAPIWrapper
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 def _get_search_client() -> SerpAPIWrapper:

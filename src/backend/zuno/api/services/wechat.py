@@ -10,7 +10,7 @@ from loguru import logger
 
 from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.platform.services.redis import redis_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 from zuno.platform.common.runtime_observability import RedisKeys
 
 WECHAT_SYSTEM_PROMPT = """

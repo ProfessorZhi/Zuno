@@ -1,6 +1,6 @@
 import asyncio
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class Neo4jClient:

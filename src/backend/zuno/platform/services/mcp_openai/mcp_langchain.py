@@ -5,7 +5,7 @@ from langchain_core.tools import BaseTool, StructuredTool
 
 import logging
 import httpx
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 async def request_mcp_call_tools(mcp_tools_args):

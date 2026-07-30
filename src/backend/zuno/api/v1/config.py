@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.dto.schemas import UnifiedResponseModel, resp_200
-from zuno.settings import initialize_app_settings, resolve_app_config_path
+from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
 
 router = APIRouter(tags=["Config"])
 

@@ -13,7 +13,7 @@ import requests
 from zuno.api.dto.workspace import WorkspaceAttachment
 from zuno.knowledge.ingestion import parse_file_into_legacy_chunks
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 from zuno.capability.tools.image2text.action import _image_to_text
 
 IMAGE_SUFFIXES = {"jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff"}

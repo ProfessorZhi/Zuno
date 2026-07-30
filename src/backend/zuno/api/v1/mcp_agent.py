@@ -10,7 +10,7 @@ from loguru import logger
 from zuno.api.services.mcp_agent import MCPAgentService
 from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 router = APIRouter(tags=["MCP-Agent"])
 

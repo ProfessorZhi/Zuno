@@ -38,7 +38,7 @@ from zuno.platform.database.models.usage_stats import UsageStats
 from zuno.platform.database.models.user import SystemUser
 from zuno.platform.database.models.user_role import UserRole
 from zuno.platform.database.models.workspace_session import WorkSpaceSession
-from zuno.settings import app_settings, resolve_app_config_path
+from zuno.platform.settings import app_settings, resolve_app_config_path
 
 
 def _load_database_config() -> dict:

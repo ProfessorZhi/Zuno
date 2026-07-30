@@ -1,5 +1,5 @@
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 from zuno.platform.common.file_utils import get_object_storage_base_path
 
 

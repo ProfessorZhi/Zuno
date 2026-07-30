@@ -7,7 +7,7 @@ from loguru import logger
 from zuno.platform.config.es_index import ESIndex
 from zuno.api.dto.chunk import ChunkModel
 from zuno.api.dto.search import SearchModel
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class ESClient:

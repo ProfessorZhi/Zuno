@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import asyncio
@@ -18,7 +18,7 @@ from zuno.evals.rag_eval.metrics import compute_metrics
 from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.platform.common.runtime_observability import configure_langsmith
 from zuno.platform.services.rag.handler import RagHandler
-from zuno.settings import initialize_app_settings
+from zuno.platform.settings import initialize_app_settings
 
 NO_EVIDENCE_ANSWER = "NO_RELEVANT_EVIDENCE_FOUND"
 ANSWER_SYSTEM_PROMPT = (

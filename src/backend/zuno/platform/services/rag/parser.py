@@ -14,7 +14,7 @@ from zuno.platform.services.rag.doc_parser.pdf import pdf_parser
 from zuno.platform.services.rag.doc_parser.pptx import pptx_parser
 from zuno.platform.services.rag.doc_parser.text import text_parser
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 IMAGE_SUFFIXES = {"jpg", "jpeg", "png", "bmp", "webp", "tiff"}
 TEXT_LIKE_SUFFIXES = {"txt", "json", "html", "htm", "csv", "yml", "yaml"}

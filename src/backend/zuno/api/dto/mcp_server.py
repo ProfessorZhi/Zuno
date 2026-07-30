@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class MCPCreateReq(BaseModel):

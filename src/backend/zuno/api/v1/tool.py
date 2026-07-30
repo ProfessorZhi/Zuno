@@ -12,7 +12,7 @@ from zuno.api.dto.tool import (
     ToolDeleteReq,
     ToolUpdateReq,
 )
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 router = APIRouter(tags=["Tool"], prefix="/tool")
 

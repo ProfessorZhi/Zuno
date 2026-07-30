@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 from langchain.tools import tool
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 DEFAULT_MINIMAX_API_HOST = "https://api.minimaxi.com"
 

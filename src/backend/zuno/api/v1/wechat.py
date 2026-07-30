@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 
 from zuno.api.services.wechat import WeChatService
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 router = APIRouter(tags=["Wechat"])
 

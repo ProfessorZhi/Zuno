@@ -21,7 +21,7 @@ from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.database.models.user import AdminUser
 from zuno.platform.services.mcp.manager import MCPManager
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 from zuno.platform.common.convert import convert_mcp_config
 from zuno.platform.common.helpers import get_provider_from_model
 

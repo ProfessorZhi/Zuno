@@ -13,7 +13,7 @@ from zuno.platform.services.rag.doc_parser.markdown import markdown_parser
 from zuno.platform.services.rag.doc_parser.text import text_parser
 from zuno.platform.services.rewrite.markdown_rewrite import markdown_rewriter
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 from zuno.platform.common.file_utils import (
     generate_unique_filename,
     get_convert_markdown_images_dir,

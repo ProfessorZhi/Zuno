@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from zuno.api.dto.chunk import ChunkModel
 from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class TextParser:

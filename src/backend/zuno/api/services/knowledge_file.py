@@ -17,7 +17,7 @@ from zuno.platform.services.queue.client import QueueClient, get_queue_names
 from zuno.platform.services.queue.messages import build_task_message
 from zuno.platform.services.rag.handler import RagHandler
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class KnowledgeFileService:

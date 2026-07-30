@@ -7,7 +7,7 @@ import requests
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class ImportedConfigInfo(BaseModel):

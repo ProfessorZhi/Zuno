@@ -6,7 +6,7 @@ from typing import Optional
 
 import rsa
 from fastapi import Depends, HTTPException, Request
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.compatibility.vendor.fastapi_jwt_auth import AuthJWT
 from loguru import logger
 
 from zuno.api.errcode.user import UserNameAlreadyExistError
@@ -21,7 +21,7 @@ from zuno.platform.database.models.role import AdminRole
 from zuno.platform.database.models.user import AdminUser, UserTable
 from zuno.platform.services.redis import redis_client
 from zuno.platform.services.storage import storage_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 USER_AVATAR_ASSET_VERSION = "20260511-clean3"
 

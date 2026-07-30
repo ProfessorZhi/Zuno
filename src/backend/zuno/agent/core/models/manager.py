@@ -6,7 +6,7 @@ from zuno.api.dto.common import ModelConfig
 from zuno.platform.common.model_output import normalize_model_id_for_provider
 from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.model_gateway import build_openai_chat_gateway_model
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class ModelManager:

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 def _default_mcp_logo_url() -> str:
-    from zuno.settings import app_settings
+    from zuno.platform.settings import app_settings
 
     return app_settings.default_config.get("mcp_logo_url", "")
 

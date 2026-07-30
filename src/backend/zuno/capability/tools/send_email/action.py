@@ -7,7 +7,7 @@ from typing import Any
 from langchain.tools import tool
 from loguru import logger
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 def _normalize_email_accounts() -> list[dict[str, Any]]:

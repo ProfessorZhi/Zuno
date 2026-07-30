@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import asyncio
@@ -34,7 +34,7 @@ from zuno.platform.services.rag.handler import RagHandler
 from zuno.platform.services.rag.parser import doc_parser
 from zuno.platform.services.rag.vector_db import milvus_client
 from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
-from zuno.settings import initialize_app_settings, resolve_app_config_path
+from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
 
 
 def _resolve_prepared_path(manifest_path: Path, item: dict[str, Any]) -> Path:

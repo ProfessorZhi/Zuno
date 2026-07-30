@@ -3,7 +3,7 @@ from collections.abc import Callable
 
 from loguru import logger
 
-from zuno.settings import app_settings, initialize_app_settings
+from zuno.platform.settings import app_settings, initialize_app_settings
 
 
 async def initialize_worker_runtime():

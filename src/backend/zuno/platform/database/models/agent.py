@@ -6,7 +6,7 @@ from sqlalchemy import JSON, Column, DateTime, text
 from sqlmodel import Field
 
 from zuno.platform.database.models.base import SQLModelSerializable
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class AgentTable(SQLModelSerializable, table=True):

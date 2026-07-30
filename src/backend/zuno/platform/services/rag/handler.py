@@ -22,7 +22,7 @@ from zuno.api.services.knowledge import KnowledgeService
 from zuno.platform.services.rag.es_client import client as es_client
 from zuno.platform.services.rag.retrieval import MixRetrival
 from zuno.platform.services.rag.vector_db import milvus_client
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class RagHandler:

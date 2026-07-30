@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import os
 from collections import defaultdict
 from urllib.parse import urlparse
@@ -10,7 +10,7 @@ from zuno.platform.database.session import session_getter
 from zuno.platform.services.rag.handler import RagHandler
 from zuno.platform.services.rag.vector_db import milvus_client
 from zuno.platform.services.storage import storage_client
-from zuno.settings import initialize_app_settings
+from zuno.platform.settings import initialize_app_settings
 from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile
 
 

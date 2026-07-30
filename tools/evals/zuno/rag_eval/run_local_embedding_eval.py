@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import asyncio
@@ -19,7 +19,7 @@ from zuno.api.services.llm import LLMService
 from zuno.evals.rag_eval.paths import default_runs_root
 from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.database.models.user import SystemUser
-from zuno.settings import app_settings, initialize_app_settings
+from zuno.platform.settings import app_settings, initialize_app_settings
 
 
 LOCAL_MODEL_HOSTS = {

@@ -85,7 +85,7 @@ from zuno.platform.common.runtime_observability import (
     build_langsmith_metadata,
     get_active_trace_id,
 )
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 tool = lc_tool
 
