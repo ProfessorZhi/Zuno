@@ -19,9 +19,9 @@ def _ensure_runtime_paths() -> None:
 def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypatch):
     _ensure_runtime_paths()
 
-    workspace_module = importlib.import_module("zuno.services.workspace.simple_agent")
-    WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent
-    KnowledgeQueryResult = importlib.import_module("zuno.services.graphrag.query_service").KnowledgeQueryResult
+    workspace_module = importlib.import_module("zuno.platform.services.workspace.simple_agent")
+    WorkSpaceSimpleAgent = importlib.import_module("zuno.platform.services.workspace.simple_agent").WorkSpaceSimpleAgent
+    KnowledgeQueryResult = importlib.import_module("zuno.platform.services.graphrag.query_service").KnowledgeQueryResult
 
     monkeypatch.setattr(workspace_module.ModelManager, "get_user_model", lambda **_: SimpleNamespace())
 
@@ -88,9 +88,9 @@ def test_workspace_prefetch_exposes_supported_contract_review_evidence(monkeypat
 def test_workspace_prefetch_exposes_insufficient_contract_review_evidence(monkeypatch):
     _ensure_runtime_paths()
 
-    workspace_module = importlib.import_module("zuno.services.workspace.simple_agent")
-    WorkSpaceSimpleAgent = importlib.import_module("zuno.services.workspace.simple_agent").WorkSpaceSimpleAgent
-    KnowledgeQueryResult = importlib.import_module("zuno.services.graphrag.query_service").KnowledgeQueryResult
+    workspace_module = importlib.import_module("zuno.platform.services.workspace.simple_agent")
+    WorkSpaceSimpleAgent = importlib.import_module("zuno.platform.services.workspace.simple_agent").WorkSpaceSimpleAgent
+    KnowledgeQueryResult = importlib.import_module("zuno.platform.services.graphrag.query_service").KnowledgeQueryResult
 
     monkeypatch.setattr(workspace_module.ModelManager, "get_user_model", lambda **_: SimpleNamespace())
 
