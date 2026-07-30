@@ -55,6 +55,9 @@ MESSAGE_EVENTS_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "servi
 MCP_USER_CONFIG_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_user_config.py"
 MCP_STDIO_SERVER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_stdio_server.py"
 USAGE_STATS_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "usage_stats.py"
+MCP_AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_agent.py"
+CAPABILITY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "capability.py"
+AGENT_SKILL_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "agent_skill.py"
 CLI_TOOL_DISCOVERY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "cli_tool_discovery.py"
 SIMPLE_API_TOOL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "simple_api_tool.py"
 TOOL_CREATION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_creation_service.py"
@@ -122,6 +125,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/mcp_user_config.py",
             "src/backend/zuno/api/services/mcp_stdio_server.py",
             "src/backend/zuno/api/services/usage_stats.py",
+            "src/backend/zuno/api/services/mcp_agent.py",
+            "src/backend/zuno/api/services/capability.py",
+            "src/backend/zuno/api/services/agent_skill.py",
             "src/backend/zuno/platform/database/",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/platform/services/cli_tool_discovery.py",
@@ -204,6 +210,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("mcp user config service", MCP_USER_CONFIG_SERVICE),
         ("mcp stdio server service", MCP_STDIO_SERVER_SERVICE),
         ("usage stats service", USAGE_STATS_SERVICE),
+        ("mcp agent service", MCP_AGENT_SERVICE),
+        ("capability service", CAPABILITY_SERVICE),
+        ("agent skill service", AGENT_SKILL_SERVICE),
         ("cli tool discovery", CLI_TOOL_DISCOVERY),
         ("simple api tool", SIMPLE_API_TOOL),
         ("tool creation service", TOOL_CREATION_SERVICE),

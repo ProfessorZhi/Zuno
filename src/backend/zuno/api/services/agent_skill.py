@@ -8,16 +8,16 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from zuno.core.agents.structured_response_agent import StructuredResponseAgent
-from zuno.database.dao.agent_skill import AgentSkillDao
-from zuno.database.models.agent_skill import AgentSkill
-from zuno.resources.prompts.skill import AgentSkillAsToolPrompt
-from zuno.schema.agent_skill import (
+from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent
+from zuno.api.dto.agent_skill import (
     AgentSkillCreateReq,
     AgentSkillFile,
     AgentSkillFolder,
     AgentSkillResponseFormat,
 )
+from zuno.platform.database.dao.agent_skill import AgentSkillDao
+from zuno.platform.database.models.agent_skill import AgentSkill
+from zuno.platform.resources.prompts.skill import AgentSkillAsToolPrompt
 
 
 def default_agent_skill_folder(name: str, description: str) -> dict:

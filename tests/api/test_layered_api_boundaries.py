@@ -126,7 +126,8 @@ def test_capability_controller_routes_registry_search_through_service_layer() ->
     assert "from zuno.api.services.capability import CapabilityService" in controller
     assert "from zuno.services.capability_registry import CapabilityRegistryService" not in controller
     assert "await CapabilityService.search_capabilities(" in controller
-    assert "from zuno.services.capability_registry import CapabilityRegistryService" in service
+    assert "from zuno.platform.services.capability_registry import CapabilityRegistryService" in service
+    assert "from zuno.database import engine" not in service
 
 
 def test_tool_controller_routes_runtime_validation_and_connectivity_through_service_layer() -> None:
@@ -191,6 +192,9 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     mcp_user_config = _read("src/backend/zuno/api/services/mcp_user_config.py")
     mcp_stdio_server = _read("src/backend/zuno/api/services/mcp_stdio_server.py")
     usage_stats = _read("src/backend/zuno/api/services/usage_stats.py")
+    mcp_agent = _read("src/backend/zuno/api/services/mcp_agent.py")
+    capability = _read("src/backend/zuno/api/services/capability.py")
+    agent_skill = _read("src/backend/zuno/api/services/agent_skill.py")
 
     assert "from zuno.platform.services.storage import storage_client" in upload
     assert "from zuno.platform.common.file_utils import get_object_storage_base_path" in upload
@@ -263,12 +267,24 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.dao.mcp_stdio_server import MCPServerStdioDao" in mcp_stdio_server
     assert "from zuno.platform.database.models.user import AdminUser" in mcp_stdio_server
     assert "from zuno.platform.database.dao.usage_stats import UsageStats, UsageStatsDao" in usage_stats
+    assert "from zuno.api.dto.schemas import resp_200, resp_500" in mcp_agent
+    assert "from zuno.platform.database.dao.mcp_agent import MCPAgentDao" in mcp_agent
+    assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in mcp_agent
+    assert "from zuno.platform.services.capability_registry import CapabilityRegistryService" in capability
+    assert "from zuno.platform.database import engine" in capability
+    assert "from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent" in agent_skill
+    assert "from zuno.api.dto.agent_skill import (" in agent_skill
+    assert "from zuno.platform.database.dao.agent_skill import AgentSkillDao" in agent_skill
+    assert "from zuno.platform.database.models.agent_skill import AgentSkill" in agent_skill
+    assert "from zuno.platform.resources.prompts.skill import AgentSkillAsToolPrompt" in agent_skill
 
-    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats]:
+    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats, mcp_agent, capability, agent_skill]:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content
         assert "from zuno.database" not in content
+        assert "from zuno.core." not in content
+        assert "from zuno.resources." not in content
 
 
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:

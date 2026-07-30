@@ -8,7 +8,7 @@ from typing import Any
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.capability import CapabilityUnitOfWork
 from zuno.platform.database.foundation import InfrastructureRepository
-from zuno.services.capability_registry import CapabilityRegistryService
+from zuno.platform.services.capability_registry import CapabilityRegistryService
 
 
 CAPABILITY_TRANSITION_TOPIC = "capability.transition.committed"
@@ -69,7 +69,7 @@ class CapabilityService:
         limit: int,
         results: list[dict[str, Any]],
     ) -> None:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         tenant_id = f"user:{user_id}"
         workspace_id = "workspace:default"
@@ -138,7 +138,7 @@ class CapabilityService:
         engine: Any | None = None,
     ) -> CapabilityTransitionConsumeResult:
         if engine is None:
-            from zuno.database import engine as default_engine
+            from zuno.platform.database import engine as default_engine
 
             engine = default_engine
 
@@ -194,7 +194,7 @@ class CapabilityService:
         engine: Any | None = None,
     ) -> CapabilitySelectionConsumeResult:
         if engine is None:
-            from zuno.database import engine as default_engine
+            from zuno.platform.database import engine as default_engine
 
             engine = default_engine
 
