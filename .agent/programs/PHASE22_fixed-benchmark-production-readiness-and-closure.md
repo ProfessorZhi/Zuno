@@ -124,6 +124,6 @@ cd apps/web && npm run lint && npm run build
 - **Cleanup Slice**: Staged and safely committed (`refactor: retire legacy import aliases`).
 - **Benchmark Runner**: Completed implementation with atomic writeout and 26-field manifest generator.
 - **Dataset Contract & Validator**: Implemented schema checker, unique ID duplications validator, and missing types gap reporter.
-- **Dataset status**: Legitimate case count is 8 (from python_notes_eval.jsonl). Remaining gap is 72 cases. Declared as `measurement_blocked` due to insufficient frozen dataset.
-- **Verification status**: Pre-Verification Candidate achieved. Ready for final integrated check run.
+- **Dataset status**: 测试用例数量共 8 个，因全部没有 `reviewer_status: approved` 审核标记而不计入正式评测（指标口径：raw_case_count=8, schema_valid_case_count=8, reviewer_approved_case_count=0, benchmark_eligible_case_count=0, approved_case_gap=80）。当前评测降级进入 `measurement_blocked` 阻断分支，当前状态为 `implementation available, measurement blocked, quality not yet proven, production ready not established`。
+- **Verification status**: 11 个 Focused 单元测试与 4 个 Repository Gates 已完全通过，物理 Blocked Evidence 已于 `docs/evidence/` 目录成功生成，PR #52 保持 Draft 准备推送中。
 ```

@@ -596,6 +596,6 @@ git diff --check passed
 - **Benchmark Runner**: 完整实现了原子写入（atomic replace/rename）、checksum 校验侧车以及 26 字段严格元数据 Manifest 自动生成。
 - **Dataset Contract & Validator**: 完成了 Schema 校验器、去重与近重复检测器、以及 question_type 覆盖率检验逻辑。
 - **证据运行 (Evidence Run)**: 以 `--sample-size 80 --allow-blocked` 运行正式 Benchmark，生成证据记录在 `docs/evidence/goal05-phase22-blocked-benchmark` 目录。
-- **运行结果**: 数据集由于物理缺口（缺 72 个 case，仅 8 个 case 且缺少 `reviewer_status: approved` 与 `provenance`）而受控阻断。
-- **判定状态**: 正式宣告降级判定为 `measurement_blocked`，输出状态为 `"BLOCKED"` 的 Manifest 报告 `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`。
+- **运行结果**: 测试用例数量共 8 个，因全部没有 `reviewer_status: approved` 审核标记且无 `provenance` 数据而不计入正式评测（指标口径：raw_case_count=8, schema_valid_case_count=8, reviewer_approved_case_count=0, benchmark_eligible_case_count=0, approved_case_gap=80）。
+- **判定状态**: 正式宣告评测阻断（`measurement_blocked`），输出状态为 `"BLOCKED"`、`comparable` 为 `false` 的 Manifest 报告 `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`，当前状态为 `implementation available, measurement blocked, quality not yet proven, production ready not established`。
 - **测试覆盖**: 配套的 Focused 单元测试集 `test_enterprise_rag_paired_benchmark.py` 完整跑通（11 passed）。
