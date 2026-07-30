@@ -572,6 +572,15 @@ python tools/scripts/verify_phase22_cleanup_boundary.py passed
 pytest -q tests/repo/test_phase22_cleanup_boundary.py -p no:cacheprovider passed
 ```
 
+2026-07-30 source README owner wording cleanup:
+```text
+`src/backend/zuno/platform/services/README.md` describes `zuno.services.*` as a migration compatibility surface, not the default runtime owner.
+`src/backend/zuno/memory/README.md` describes `zuno.services.memory.layers` as a compatibility shell read path, not the current owner.
+rg found no remaining `当前 runtime 兼容面` or `legacy-compatible foundation` wording under src/backend/zuno.
+python tools/scripts/verify_phase22_cleanup_boundary.py passed
+git diff --check passed
+```
+
 ## Remaining
 
 - `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在旧 public import 行为尚未转换、显式版本化或 fail-closed 前直接删除。
