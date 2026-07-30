@@ -18,7 +18,7 @@ from zuno.api.v1.workspace import router as workspace_router
 from zuno.agent.contracts import CapabilityPlan
 from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
 from zuno.platform.security import SecurityProductActionDenied
-from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
+from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 
 
 _PRODUCT_RUNTIME_SUBMISSIONS: list[dict] = []

@@ -76,6 +76,8 @@ TESTS_AGENT_CANONICAL_FILES = [
 TESTS_API_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "api" / "test_completion_unified_runtime.py",
     REPO_ROOT / "tests" / "api" / "test_usage_stats_filters.py",
+    REPO_ROOT / "tests" / "api" / "test_workspace_runtime_recovery.py",
+    REPO_ROOT / "tests" / "api" / "test_workspace_task_runtime.py",
 ]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
@@ -288,6 +290,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_workspace_session_cleanup.py",
             "tests/api/test_completion_unified_runtime.py",
             "tests/api/test_usage_stats_filters.py",
+            "tests/api/test_workspace_runtime_recovery.py",
+            "tests/api/test_workspace_task_runtime.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
