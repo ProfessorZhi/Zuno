@@ -4,7 +4,7 @@ from typing import Dict, Optional
 
 from pydantic import BaseModel
 
-from zuno.services.memory.vector_stores.base import VectorStoreBase
+from zuno.platform.services.memory.vector_stores.base import VectorStoreBase
 
 try:
     import pymilvus  # noqa: F401

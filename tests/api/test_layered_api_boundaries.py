@@ -558,6 +558,31 @@ def test_platform_rag_uses_canonical_imports() -> None:
         assert "from zuno.utils." not in content
 
 
+def test_platform_memory_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/memory/client.py",
+        "src/backend/zuno/platform/services/memory/utils.py",
+        "src/backend/zuno/platform/services/memory/vector_stores/__init__.py",
+        "src/backend/zuno/platform/services/memory/vector_stores/chroma.py",
+        "src/backend/zuno/platform/services/memory/vector_stores/milvus.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.agent.core.models.manager import ModelManager" in contents[paths[0]]
+    assert "from zuno.platform.services.memory.config import MemoryItem" in contents[paths[0]]
+    assert "from zuno.platform.database.dao.memory_history import MemoryHistoryDao" in contents[paths[0]]
+    assert "from zuno.platform.services.memory.vector_stores import VectorStoreManager" in contents[paths[0]]
+    assert "from zuno.platform.services.memory.prompts import FACT_RETRIEVAL_PROMPT" in contents[paths[1]]
+    assert "from zuno.platform.services.memory.vector_stores.chroma import ChromaDB" in contents[paths[2]]
+    assert "from zuno.platform.services.memory.vector_stores.base import VectorStoreBase" in contents[paths[3]]
+    assert "from zuno.platform.services.memory.vector_stores.base import VectorStoreBase" in contents[paths[4]]
+
+    for content in contents.values():
+        assert "from zuno.services." not in content
+        assert "from zuno.database." not in content
+        assert "from zuno.core." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

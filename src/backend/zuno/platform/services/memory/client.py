@@ -10,15 +10,15 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 
-from zuno.core.models.manager import ModelManager
-from zuno.services.memory.config import MemoryItem
-from zuno.services.memory.prompts import (
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.services.memory.config import MemoryItem
+from zuno.platform.services.memory.prompts import (
     PROCEDURAL_MEMORY_SYSTEM_PROMPT,
     get_update_memory_messages,
 )
-from zuno.services.memory.base import MemoryBase
-from zuno.database.dao.memory_history import MemoryHistoryDao
-from zuno.services.memory.utils import (
+from zuno.platform.services.memory.base import MemoryBase
+from zuno.platform.database.dao.memory_history import MemoryHistoryDao
+from zuno.platform.services.memory.utils import (
     get_fact_retrieval_messages,
     parse_messages,
     parse_vision_messages,
@@ -26,7 +26,7 @@ from zuno.services.memory.utils import (
 )
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from zuno.services.memory.vector_stores import VectorStoreManager
+from zuno.platform.services.memory.vector_stores import VectorStoreManager
 
 
 class MemoryType(Enum):

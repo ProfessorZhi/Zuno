@@ -41,6 +41,7 @@ PLATFORM_GRAPHRAG_RETRIEVER = (
 )
 PLATFORM_RETRIEVAL_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "retrieval"
 PLATFORM_RAG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rag"
+PLATFORM_MEMORY_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "memory"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -206,6 +207,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/graphrag/retriever.py",
             "src/backend/zuno/platform/services/retrieval/",
             "src/backend/zuno/platform/services/rag/",
+            "src/backend/zuno/platform/services/memory/",
             "src/backend/zuno/platform/services/sandbox/__init__.py",
             "src/backend/zuno/platform/services/capability_registry.py",
             "src/backend/zuno/knowledge/ingestion/legacy_cutover.py",
@@ -386,6 +388,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"platform rag {path.relative_to(PLATFORM_RAG_ROOT)}", path)
         for path in sorted(PLATFORM_RAG_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform memory {path.relative_to(PLATFORM_MEMORY_ROOT)}", path)
+        for path in sorted(PLATFORM_MEMORY_ROOT.rglob("*.py"))
     )
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 

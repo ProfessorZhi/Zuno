@@ -1,7 +1,7 @@
 import hashlib
 import re
 
-from zuno.services.memory.prompts import FACT_RETRIEVAL_PROMPT
+from zuno.platform.services.memory.prompts import FACT_RETRIEVAL_PROMPT
 
 
 def get_fact_retrieval_messages(message):
