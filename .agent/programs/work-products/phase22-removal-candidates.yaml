@@ -619,6 +619,10 @@ resolved_this_slice:
     before: "UTF-8 BOM at byte 0 caused AST-based Model Gateway bypass verifier to report syntax-error provider bypass paths"
     after: "files are UTF-8 without BOM and parse under AST for strict Model Gateway bypass verification"
     evidence: "tools/scripts/verify_model_gateway_bypass.py --strict"
+  - path: "tools/scripts/check_model_registry_defaults.py; tools/scripts/cleanup_model_registry_defaults.py"
+    before: "model registry maintenance scripts imported LLMDao through zuno.database alias"
+    after: "model registry maintenance scripts import LLMDao through canonical zuno.platform.database path"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

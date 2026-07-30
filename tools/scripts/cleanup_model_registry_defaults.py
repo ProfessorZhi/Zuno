@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import asyncio
@@ -120,7 +120,7 @@ def build_target_plan(
 
 
 async def load_rows_from_database() -> list[dict[str, Any]]:
-    from zuno.database.dao.llm import LLMDao
+    from zuno.platform.database.dao.llm import LLMDao
 
     rows = await LLMDao.get_all_llm()
     payloads: list[dict[str, Any]] = []

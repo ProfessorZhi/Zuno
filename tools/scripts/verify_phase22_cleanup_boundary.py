@@ -53,6 +53,10 @@ PLATFORM_MODEL_GATEWAY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "
 PLATFORM_MODEL_GATEWAY_ADAPTERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway_adapters.py"
 PLATFORM_APPLICATION_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "__init__.py"
 TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
+TOOLS_SCRIPTS_CANONICAL_FILES = [
+    REPO_ROOT / "tools" / "scripts" / "check_model_registry_defaults.py",
+    REPO_ROOT / "tools" / "scripts" / "cleanup_model_registry_defaults.py",
+]
 TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
 TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
 TESTS_AGENT_CANONICAL_FILES = [
@@ -344,6 +348,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/model_gateway.py",
             "src/backend/zuno/platform/model_gateway_adapters.py",
             "tools/evals/zuno/",
+            "tools/scripts/check_model_registry_defaults.py",
+            "tools/scripts/cleanup_model_registry_defaults.py",
             "tests/tools/",
             "tests/storage/",
             "tests/agent/test_agent_api_project_contract.py",
@@ -638,6 +644,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tools evals zuno {path.relative_to(TOOLS_EVALS_ZUNO_ROOT)}", path)
         for path in sorted(TOOLS_EVALS_ZUNO_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"tools scripts canonical {path.name}", path)
+        for path in TOOLS_SCRIPTS_CANONICAL_FILES
     )
     checked_paths.extend(
         (f"tests tools {path.relative_to(TESTS_TOOLS_ROOT)}", path)
