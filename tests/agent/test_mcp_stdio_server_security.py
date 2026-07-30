@@ -16,7 +16,7 @@ class RecordingProductActionGuard:
 
 def test_mcp_stdio_admin_delete_reauthorizes_through_security_guard(monkeypatch):
     from zuno.api.services.mcp_stdio_server import MCPServerService
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     deleted = []
 
@@ -40,7 +40,7 @@ def test_mcp_stdio_admin_delete_reauthorizes_through_security_guard(monkeypatch)
 
 def test_mcp_stdio_admin_update_denial_blocks_dao_write(monkeypatch):
     from zuno.api.services.mcp_stdio_server import MCPServerService
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     updated = []
 
