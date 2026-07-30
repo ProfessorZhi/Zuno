@@ -663,6 +663,10 @@ resolved_this_slice:
     before: "workspace real runtime flow guard lived under tests/legacy_guards"
     after: "guard moved to canonical tests/repo/test_phase5_workspace_real_runtime_flow.py location and is scanned by PHASE22 cleanup verifier"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/legacy_guards/test_phase5_retrieval_modes.py"
+    before: "retrieval modes guard lived under tests/legacy_guards"
+    after: "guard moved to canonical tests/repo/test_phase5_retrieval_modes.py location and is scanned by PHASE22 cleanup verifier"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

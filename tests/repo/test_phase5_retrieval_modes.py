@@ -4,12 +4,10 @@ import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
-BACKEND_ROOT = REPO_ROOT / "src/backend"
-PLANNER_PATH = SERVICE_API_ROOT / "zuno/platform/services/retrieval/planner.py"
-RETRIEVAL_MODELS_PATH = SERVICE_API_ROOT / "zuno/platform/services/retrieval/models.py"
+BACKEND_ROOT = REPO_ROOT / "src" / "backend"
+PLANNER_PATH = BACKEND_ROOT / "zuno/platform/services/retrieval/planner.py"
+RETRIEVAL_MODELS_PATH = BACKEND_ROOT / "zuno/platform/services/retrieval/models.py"
 GRAPHRAG_MODELS_PATH = BACKEND_ROOT / "zuno/platform/services/graphrag/models.py"
-CORE_ROOT = SERVICE_API_ROOT / "zuno/core"
 
 
 def _load_module(module_name: str, path: Path):
@@ -22,23 +20,23 @@ def _load_module(module_name: str, path: Path):
 
 
 def _load_planner_runtime():
-    original_graphrag_models = sys.modules.get("zuno.services.graphrag.models")
-    original_retrieval_models = sys.modules.get("zuno.services.retrieval.models")
+    original_graphrag_models = sys.modules.get("zuno.platform.services.graphrag.models")
+    original_retrieval_models = sys.modules.get("zuno.platform.services.retrieval.models")
     graphrag_models = _load_module("phase5_graphrag_models", GRAPHRAG_MODELS_PATH)
     retrieval_models = _load_module("phase5_retrieval_models", RETRIEVAL_MODELS_PATH)
     try:
-        sys.modules["zuno.services.graphrag.models"] = graphrag_models
-        sys.modules["zuno.services.retrieval.models"] = retrieval_models
+        sys.modules["zuno.platform.services.graphrag.models"] = graphrag_models
+        sys.modules["zuno.platform.services.retrieval.models"] = retrieval_models
         planner_module = _load_module("phase5_retrieval_planner", PLANNER_PATH)
     finally:
         if original_graphrag_models is None:
-            sys.modules.pop("zuno.services.graphrag.models", None)
+            sys.modules.pop("zuno.platform.services.graphrag.models", None)
         else:
-            sys.modules["zuno.services.graphrag.models"] = original_graphrag_models
+            sys.modules["zuno.platform.services.graphrag.models"] = original_graphrag_models
         if original_retrieval_models is None:
-            sys.modules.pop("zuno.services.retrieval.models", None)
+            sys.modules.pop("zuno.platform.services.retrieval.models", None)
         else:
-            sys.modules["zuno.services.retrieval.models"] = original_retrieval_models
+            sys.modules["zuno.platform.services.retrieval.models"] = original_retrieval_models
     return planner_module.RetrievalPlanner, retrieval_models.ProcessedQuery, retrieval_models.RetrievalRequest
 
 
@@ -116,10 +114,10 @@ def test_enhanced_retrieval_mode_degrades_to_normal_when_graph_is_unavailable():
 
 def test_project_query_runtime_preserves_knowledge_default_mode_contract():
     query_service = (
-        SERVICE_API_ROOT / "zuno/platform/services/application/knowledge/query_service.py"
+        BACKEND_ROOT / "zuno/platform/services/application/knowledge/query_service.py"
     ).read_text(encoding="utf-8")
     graphrag_query_service = (
-        SERVICE_API_ROOT / "zuno/platform/services/graphrag/query_service.py"
+        BACKEND_ROOT / "zuno/platform/services/graphrag/query_service.py"
     ).read_text(encoding="utf-8")
     planner = PLANNER_PATH.read_text(encoding="utf-8")
 
@@ -130,7 +128,7 @@ def test_project_query_runtime_preserves_knowledge_default_mode_contract():
 
 
 def test_enhanced_orchestrator_contract_keeps_graph_path_and_trace_metadata():
-    orchestrator = (SERVICE_API_ROOT / "zuno/platform/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
+    orchestrator = (BACKEND_ROOT / "zuno/platform/services/retrieval/orchestrator.py").read_text(encoding="utf-8")
     frontend_utils = (REPO_ROOT / "apps/web/src/utils/retrieval.ts").read_text(encoding="utf-8")
 
     assert 'if "graph" in plan.enabled_retrievers:' in orchestrator

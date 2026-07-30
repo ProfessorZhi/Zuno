@@ -107,6 +107,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
         "tests/repo/test_phase11c_graph_public_export_retirement.py",
         "tests/repo/test_phase5_general_agent_real_runtime_flow.py",
         "tests/repo/test_phase5_workspace_real_runtime_flow.py",
+        "tests/repo/test_phase5_retrieval_modes.py",
     ]
     for relative_path in root_guard_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
@@ -132,6 +133,7 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert (REPO_ROOT / "tests/repo/test_phase11c_agent_runtime_retirement.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_general_agent_real_runtime_flow.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_workspace_real_runtime_flow.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_retrieval_modes.py").exists()
 
 
 def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:
