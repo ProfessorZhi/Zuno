@@ -23,7 +23,7 @@ def test_contract_review_assets_have_target_graphrag_project_copy() -> None:
 
 
 def test_contract_review_example_project_loads_with_prompt_manifest() -> None:
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     loaded = GraphRAGProjectLoader(projects_root=PROJECT_ROOT.parent).load("contract_review")
 
