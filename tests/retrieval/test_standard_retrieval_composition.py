@@ -1,9 +1,9 @@
 import asyncio
 
-from zuno.services.graphrag.models import normalize_retrieval_mode
-from zuno.services.retrieval.models import ProcessedQuery
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
-from zuno.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.graphrag.models import normalize_retrieval_mode
+from zuno.platform.services.retrieval.models import ProcessedQuery
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
 
 
 class _FakeRetriever:
