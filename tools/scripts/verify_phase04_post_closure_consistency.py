@@ -117,6 +117,8 @@ def verify_phase04_post_closure_consistency() -> list[str]:
             "current_phase: PHASE15",
             "current_phase: PHASE19",
             "current_phase: PHASE20",
+            "current_phase: PHASE21",
+            "current_phase: PHASE22",
         ],
     ):
         errors.append("program-manifest.yaml missing closure phrase: current phase at or after PHASE05")
@@ -146,6 +148,8 @@ def verify_phase04_post_closure_consistency() -> list[str]:
             "current_phase: PHASE15",
             "current_phase: PHASE19",
             "current_phase: PHASE20",
+            "current_phase: PHASE21",
+            "current_phase: PHASE22",
         ],
     ):
         errors.append("current.md missing closure phrase: current phase at or after PHASE05")

@@ -1,6 +1,6 @@
 # Production Readiness
 
-status: implementation_available_measurement_blocked
+status: implementation_available_measurement_in_progress
 
 本文只维护 Current、Gap、Measurement 和 Production Readiness 的状态事实源，不承担完整 Target 架构设计。完整产品与运行架构以 `docs/architecture/architecture.md` 和 `docs/modules/` 为准。
 
@@ -27,7 +27,8 @@ Zuno 当前前台定位是 Lean Complete Agentic GraphRAG Product：本地优先
 - PHASE10 completed：Goal04 PR A 已完成 Web/Desktop Product Adaptation Coordinator Closure；证据为 `docs/evidence/goal04-phase10-coordinator-closure.md` 和 `docs/evidence/goal04-phase10-startup-audit.md`；Web/Desktop Product Contract、Product API client、projection-first store、SSE resume/resync、multi interrupt / AvailableAction UI、Evidence/Citation/Artifact/Quality/Blocked view、Desktop versioned bridge、Browser cutover smoke、Desktop smoke、build/lint、legacy DTO/action/bridge removal、rollback fail-closed 和 Alembic clean upgrade 均有本地证据；不代表 production ready。
 - PHASE19 completed：Goal04 已完成 Final Synthesis, Publication and Reflexion 本地 Coordinator Closure；证据为 `docs/evidence/goal04-phase19-coordinator-closure.md`；Claim/Citation/Unsupported Claim、FinalCandidate、FinalGate、Publication、RunOutcome、BudgetSettlement、Product Delivery Projection 和 ReflexionCandidate 均有 focused unit/integration/fault 证据；不代表 PHASE20 quality gate 或 production readiness。
 - PHASE20 completed：Goal05 已完成 Eval Runtime、Query / Report surface、fault semantics、late revision、expired evidence、artifact hash readback 和 fixed profile replay；证据为 `docs/evidence/goal05-phase20-eval-runtime.md`。EvalDataset/Case/Run、RAG Core Five、GraphRAG diagnostics、Agent Efficiency、Benchmark Comparison、Release Gate、EvidenceRecord、Alembic `20260729_53` / `20260729_54` / `20260729_55` / `20260729_56`、Postgres integration、API route 和 fault tests 已有 focused 证据；固定生产 benchmark 属于 PHASE22，不代表 quality proven 或 production readiness。
-- current_phase = PHASE21；PHASE22 不得提前冒充 Current。
+- PHASE21 completed：Goal05 已完成 full Web / browser E2E、registry recovery、schema drift repair、runtime agent version bootstrap 和 default stack launch evidence；证据为 `docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md`。它不代表 production ready。
+- current_phase = PHASE22；PHASE21 不再是 Current。
 
 ## Goal05 Target Coverage Boundary
 
@@ -38,7 +39,7 @@ docs/evidence/goal05-target-coverage-audit.md
 .agent/programs/work-products/goal05-target-gap-ledger.yaml
 ```
 
-冻结结论：十一模块仍存在 Mandatory Gap，主要集中在 PHASE21–22 的 Fault / E2E / Cutover / Closure 范围。当前可以声明 PHASE15 sandbox contract 与真实 WASM/OCI runtime 已进入 `ToolInvocationGateway` 默认链；也可以声明 PHASE20 Eval Runtime completed。不能声明 quality proven、22/22 completed 或 production ready。
+冻结结论：十一模块仍存在 Mandatory Gap，主要集中在 PHASE22 的 Fixed Benchmark / Cleanup / Closure 范围。当前可以声明 PHASE15 sandbox contract 与真实 WASM/OCI runtime 已进入 `ToolInvocationGateway` 默认链；也可以声明 PHASE20 Eval Runtime completed 和 PHASE21 full Web / browser E2E / cutover completed。不能声明 quality proven、22/22 completed 或 production ready。
 
 不得声明完整 Zuno、quality proven、完整 CI 通过、not production ready 之外的生产可用状态，或 production ready。
 
@@ -52,7 +53,7 @@ Goal03 historical closure：PHASE09、PHASE12、PHASE13、PHASE14 的完成结�
 
 ## Goal04 PR A / D Boundary
 
-PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main。PHASE10 PR A 已由 merge commit `0351eab1c135601a7e1ac4406e967a4c7af07bc4` 合并到 main。PHASE19 已完成本地 Coordinator Closure；Goal05 已重新关闭 PHASE15 并完成 PHASE20 Eval Runtime；PHASE21 正在推进 Fault / E2E / Cutover。当前不得把 production readiness 写成 completed。
+PHASE16 Tool Side Effect and Reconciliation 已由 PR B 合并到 main。PHASE17 Dynamic Plan DAG and Parallel Control 已由 PR C 合并到 main。PHASE18 PR D 已由 merge commit `cbc04cb0be16c3915537b82a4f3f743cb7add963` 合并到 main。PHASE10 PR A 已由 merge commit `0351eab1c135601a7e1ac4406e967a4c7af07bc4` 合并到 main。PHASE19 已完成本地 Coordinator Closure；Goal05 已重新关闭 PHASE15，并完成 PHASE20 Eval Runtime 和 PHASE21 full Web / browser E2E / cutover；PHASE22 正在推进 Fixed Benchmark / Cleanup / Closure。当前不得把 production readiness 写成 completed。
 
 PHASE08 当前保留的部分证据：
 
@@ -84,13 +85,13 @@ PHASE11 当前证据不证明以下后续模块；该列表只约束 Goal02 / PH
 - PHASE09 / PHASE10 Product Backend、Web 或 Desktop 默认路径已完成。
 - 完整 release gate、fixed benchmark、quality measurement 或 production readiness 已通过。
 
-## Measurement Blocked
+## Measurement In Progress
 
 Agentic GraphRAG 当前不能写成 quality completed。
 
 ```text
 implementation available
-measurement blocked
+measurement in_progress
 quality not yet proven
 ```
 

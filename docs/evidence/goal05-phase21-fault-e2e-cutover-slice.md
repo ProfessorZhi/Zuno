@@ -1,6 +1,6 @@
 # Goal05 PHASE21 Fault / Recovery Slice Evidence
 
-status: in_progress
+status: completed
 date: 2026-07-29
 branch: codex/goal05-phase15-sandbox-repair
 
@@ -169,3 +169,24 @@ failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://
 - `python full_e2e.py` 以本机 Chrome 和自助登录态运行，输出 `full-e2e smoke passed`。
 
 当前 full Web stack / browser smoke 已通过，PHASE21 的 blocker 已由 registry 可达性和本地 schema 漂移修复为可验证完成状态。
+
+## PHASE21 Closure
+
+status: completed
+date: 2026-07-30
+branch: codex/goal05-phase15-sandbox-repair
+
+Verification:
+
+```text
+python -m alembic -c infra/db/alembic.ini upgrade head
+python full_e2e.py
+```
+
+Result:
+
+```text
+full-e2e smoke passed
+```
+
+PHASE21 已完成 full Web / browser E2E、registry recovery、schema drift repair、runtime agent version bootstrap 和 default stack launch evidence。PHASE22 继续负责 fixed benchmark、cleanup、production readiness truth 和 program closure。

@@ -1,7 +1,7 @@
 # zuno-canonical-architecture-runtime-realization-v1 实施路线
 
 state: active
-current_phase: PHASE21
+current_phase: PHASE22
 program_version: 2
 phase_count: 22
 execution_mode: full-scope / runtime-first / vertical-slice-checkpoints / evidence-gated
@@ -110,8 +110,8 @@ flowchart TB
 | 18 | Agentic GraphRAG Inner Loop | 03 | PHASE18 completed：RetrievalRound、Graph Route、EvidenceLedger、Corrective Retrieval、Proposal 已由 PR D 合并到 main |
 | 19 | Final Synthesis, Publication and Reflexion | 06/05/03/01 | PHASE19 completed：Claim/Citation、Final Gate、Publication、RunOutcome、Reflexion Candidate 已有本地 Coordinator Closure |
 | 20 | Observability Eval, Benchmark and Release Gate | 10 | PHASE20 completed：EvalDataset/Run、Core Five、GraphRAG diagnostic、Agent Efficiency、Benchmark Comparison、Release Gate、Evidence、Query API、fault/revision/replay evidence 已完成；不代表 production ready |
-| 21 | Fault Recovery, Full E2E and Cutover | 全部 | PHASE21 in_progress：Crash/Resume/Unknown/Revocation/Delete/Restore、Web E2E、切流演练 |
-| 22 | Fixed Benchmark, Production Readiness and Closure | 全部 | 同集对照、Legacy 删除、状态更新、归档 |
+| 21 | Fault Recovery, Full E2E and Cutover | 全部 | PHASE21 completed：Crash/Resume/Unknown/Revocation/Delete/Restore、Web E2E、切流演练已有 closure evidence |
+| 22 | Fixed Benchmark, Production Readiness and Closure | 全部 | PHASE22 in_progress：同集对照、Legacy 删除、状态更新、归档 |
 
 ## 5. 黄金脊柱
 

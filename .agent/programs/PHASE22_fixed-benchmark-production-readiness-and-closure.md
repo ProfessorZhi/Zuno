@@ -1,7 +1,7 @@
 # PHASE22 Fixed Benchmark, Clean Target Tree and Program Closure
 
 phase_id: PHASE22
-status: planned
+status: in_progress
 depends_on: PHASE21
 owner: Coordinator / Release Governance
 
