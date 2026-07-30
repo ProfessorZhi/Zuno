@@ -90,6 +90,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/legacy_guards/test_hardening01_community_runtime_contract.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_hardening01_community_runtime_contract.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase02_contract_review_asset_migration.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase02_contract_review_asset_migration.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase6_agent_graphrag_pluginization.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase6_agent_graphrag_pluginization.py` 位置，改为 canonical `zuno.agent.core` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `legacy_general_agent_completion_rollback` 退役：`CompletionService.resolve_cutover_mode()` 不再接受 `ZUNO_AGENT_RUNTIME=legacy_general_agent` 隐式回退，feature flag registry 默认状态改为 `RETIRED`，API compatibility matrix 不再把旧 env rollback 写成 current contract，PHASE22 cleanup verifier 新增机器检查；显式 `ZUNO_COMPLETION_CUTOVER_MODE=rollback` 只保留给受控 cutover drill。
 - `tests/legacy_guards/test_phase0_runtime_recovery.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase0_runtime_recovery.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_graphrag_index_filters.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_graphrag_index_filters.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_langgraph_runtime_imports.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_langgraph_runtime_imports.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -503,11 +504,16 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/repo/test_phase6_agent_graphrag_pluginization.py tests/repo/test_zuno_runtime_chain_guard.py passed
 13 passed in 19.93s
 PHASE22 cleanup boundary verification passed.
+
+python -m compileall -q src/backend/zuno/api/services/completion.py tools/scripts/phase02_compatibility_runtime.py tools/scripts/verify_phase22_cleanup_boundary.py tests/api/test_completion_unified_runtime.py tests/repo/test_phase02_compatibility_runtime.py tests/repo/test_phase22_cleanup_boundary.py passed
+PHASE02 executable compatibility controls passed.
+PHASE22 cleanup boundary verification passed.
+17 passed, 1 warning in 30.97s
 ```
 
 ## Remaining
 
 - `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在大量生产 import 仍依赖 `zuno.core` / `zuno.services` / `zuno.schema` / `zuno.database` / `zuno.tools` / `zuno.resources` 时直接删除。
-- `tests/legacy_guards/` 仍存在，后续必须迁移为 `tests/repo` canonical boundary guards。
-- `legacy_general_agent_completion_rollback` 仍是 PHASE22 cleanup candidate。
+- `tests/legacy_guards/` 已无 active guard 文件，目录缓存空壳已清理。
+- `legacy_general_agent_completion_rollback` 已退役；后续只保留显式 cutover drill mode 的失败证据与最终全量验证。
 - Fixed benchmark、full final verification、production readiness truth 和 Program archive 仍未完成。

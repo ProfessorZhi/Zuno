@@ -271,7 +271,7 @@ def test_completion_route_blocks_default_runtime_when_product_record_fails(tmp_p
     ]
 
 
-def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch) -> None:
+def test_completion_cutover_mode_resolution_supports_explicit_modes_and_ignores_retired_legacy_env(monkeypatch) -> None:
     monkeypatch.delenv("ZUNO_AGENT_RUNTIME", raising=False)
     monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
     assert CompletionService.resolve_cutover_mode() == "new_default"
@@ -284,7 +284,7 @@ def test_completion_cutover_mode_resolution_supports_explicit_modes(monkeypatch)
 
     monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
     monkeypatch.setenv("ZUNO_AGENT_RUNTIME", "legacy_general_agent")
-    assert CompletionService.resolve_cutover_mode() == "rollback"
+    assert CompletionService.resolve_cutover_mode() == "new_default"
 
 
 def test_completion_cutover_mode_resolution_rejects_unknown_mode(monkeypatch) -> None:

@@ -106,6 +106,13 @@ class FeatureFlagStateMachine:
         if flag not in self.flags:
             raise KeyError(f"unknown feature flag: {flag}")
         current = self.flags[flag]["default"]
+        if current == desired:
+            return FlagDecision(
+                flag=flag,
+                current=current,
+                desired=desired,
+                rollback_command=self.flags[flag]["rollback_command"],
+            )
         if desired not in ALLOWED_TRANSITIONS[current]:
             raise ValueError(f"illegal transition for {flag}: {current} -> {desired}")
         return FlagDecision(

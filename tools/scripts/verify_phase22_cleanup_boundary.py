@@ -530,6 +530,29 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             if phrase not in candidates:
                 errors.append(f"phase22 removal candidates missing phrase: {phrase}")
 
+    completion_service = _read(REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py")
+    if "ZUNO_AGENT_RUNTIME" in completion_service:
+        errors.append("completion service still accepts retired ZUNO_AGENT_RUNTIME rollback env")
+
+    feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")
+    if 'flag: "legacy_general_agent_completion_rollback"' not in feature_flags:
+        errors.append("feature flag registry missing legacy rollback retirement record")
+    else:
+        legacy_flag_block = feature_flags.split('  - flag: "legacy_general_agent_completion_rollback"', 1)[1]
+        legacy_flag_block = legacy_flag_block.split("\n  - flag:", 1)[0]
+        if 'default: "RETIRED"' not in legacy_flag_block:
+            errors.append("legacy completion rollback feature flag is not retired")
+        if "ZUNO_AGENT_RUNTIME=legacy_general_agent" in legacy_flag_block:
+            errors.append("feature flag registry still exposes legacy general agent runtime rollback command")
+
+    api_contract_matrix = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "api-contract-compatibility-matrix.yaml")
+    if "legacy completion SSE chunk stream with ZUNO_AGENT_RUNTIME rollback" in api_contract_matrix:
+        errors.append("API contract compatibility matrix still describes ZUNO_AGENT_RUNTIME rollback as current contract")
+    if "ZUNO_AGENT_RUNTIME=legacy_general_agent" in api_contract_matrix:
+        errors.append("API contract compatibility matrix still exposes legacy general agent runtime rollback command")
+    if "legacy_general_agent only during rollback window" in api_contract_matrix:
+        errors.append("API contract compatibility matrix still exposes legacy general agent rollback window")
+
     runtime_batch = _read(PRODUCT_RUNTIME_BATCH)
     if "from zuno.schema.workspace import" in runtime_batch:
         errors.append("product runtime batch still imports workspace DTO through zuno.schema alias")

@@ -116,8 +116,6 @@ class CompletionService:
             return configured_mode
         if configured_mode:
             raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
-        if os.getenv("ZUNO_AGENT_RUNTIME") == "legacy_general_agent":
-            return "rollback"
         return "new_default"
 
     @staticmethod
