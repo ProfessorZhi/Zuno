@@ -66,6 +66,7 @@ screenshots-redesign/
 apps/web/output/
 
 # generated RAG evaluation artifacts
+/rag_eval_dataset/
 .local/evals/zuno/rag_eval/corpus/
 .local/evals/zuno/rag_eval/runs/
 .local/evals/zuno/contract_review_eval/.tmp_test_reports/
