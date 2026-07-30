@@ -3,9 +3,9 @@ import asyncio
 from zuno.api.services.history import HistoryService
 from zuno.api.services.llm import LLMService
 from zuno.api.services.mcp_stdio_server import MCPServerService
-from zuno.core.models.anthropic import DeepAsyncAnthropic
-from zuno.services.mcp_openai.mcp_manager import MCPManager
-from zuno.services.rag.handler import RagHandler
+from zuno.agent.core.models.anthropic import DeepAsyncAnthropic
+from zuno.platform.services.mcp_openai.mcp_manager import MCPManager
+from zuno.platform.services.rag.handler import RagHandler
 
 
 class MCPChatAgent:

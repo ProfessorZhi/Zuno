@@ -65,6 +65,9 @@ USAGE_STATS_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services
 MCP_AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_agent.py"
 CAPABILITY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "capability.py"
 AGENT_SKILL_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "agent_skill.py"
+COMPLETION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py"
+WECHAT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "wechat.py"
+MCP_CHAT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_chat.py"
 CLI_TOOL_DISCOVERY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "cli_tool_discovery.py"
 SIMPLE_API_TOOL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "simple_api_tool.py"
 TOOL_CREATION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_creation_service.py"
@@ -135,6 +138,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/mcp_agent.py",
             "src/backend/zuno/api/services/capability.py",
             "src/backend/zuno/api/services/agent_skill.py",
+            "src/backend/zuno/api/services/completion.py",
+            "src/backend/zuno/api/services/wechat.py",
+            "src/backend/zuno/api/services/mcp_chat.py",
             "src/backend/zuno/platform/database/",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
@@ -225,6 +231,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("mcp agent service", MCP_AGENT_SERVICE),
         ("capability service", CAPABILITY_SERVICE),
         ("agent skill service", AGENT_SKILL_SERVICE),
+        ("completion service", COMPLETION_SERVICE),
+        ("wechat service", WECHAT_SERVICE),
+        ("mcp chat service", MCP_CHAT_SERVICE),
         ("main entrypoint", MAIN_ENTRYPOINT),
         ("memory feedback consumer", MEMORY_FEEDBACK_CONSUMER),
         ("agent product baseline", AGENT_PRODUCT_BASELINE),

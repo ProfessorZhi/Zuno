@@ -9,9 +9,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from zuno.api.services.workspace_session import WorkSpaceSessionService
-from zuno.services.redis import redis_client
+from zuno.platform.services.redis import redis_client
 from zuno.settings import app_settings
-from zuno.utils.runtime_observability import RedisKeys
+from zuno.platform.common.runtime_observability import RedisKeys
 
 WECHAT_SYSTEM_PROMPT = """
 浣犳槸涓€涓湡瀹炪€佽嚜鐒躲€佹湁娓╁害鐨勫井淇″姪鎵嬨€?璇风洿鎺ュ洖绛旂敤鎴烽棶棰橈紝浼樺厛绠€娲併€佸彲闈犮€佸儚鐪熷疄鍔╃悊涓€鏍蜂氦娴併€?涓嶈浣跨敤 Markdown銆?
@@ -54,7 +54,7 @@ class WeChatService:
         content: str,
         history_messages: str,
     ):
-        from zuno.services.workspace.wechat_agent import WeChatAgent
+        from zuno.platform.services.workspace.wechat_agent import WeChatAgent
 
         wechat_agent = WeChatAgent(
             user_id=from_user,

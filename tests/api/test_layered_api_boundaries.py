@@ -79,7 +79,10 @@ def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
     assert "from zuno.api.services.completion import CompletionService" in controller
     assert "from zuno.core.agents.general_agent import AgentConfig, GeneralAgent" not in controller
     assert "from zuno.services.memory.client import memory_client" not in controller
-    assert "from zuno.core.agents.general_agent import AgentConfig, GeneralAgent" in service
+    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" in service
+    assert "from zuno.platform.services.memory.client import memory_client" in service
+    assert "from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT" in service
+    assert "from zuno.api.dto.completion import CompletionReq" in service
 
 
 def test_wechat_controller_avoids_direct_redis_and_agent_imports() -> None:
@@ -89,8 +92,10 @@ def test_wechat_controller_avoids_direct_redis_and_agent_imports() -> None:
     assert "from zuno.services.redis import redis_client" not in controller
     assert "from zuno.services.workspace.wechat_agent import WeChatAgent" not in controller
     assert "from zuno.api.services.workspace_session import WorkSpaceSessionService" not in controller
-    assert "from zuno.services.redis import redis_client" in service
+    assert "from zuno.platform.services.redis import redis_client" in service
     assert "from zuno.api.services.workspace_session import WorkSpaceSessionService" in service
+    assert "from zuno.platform.services.workspace.wechat_agent import WeChatAgent" in service
+    assert "from zuno.platform.common.runtime_observability import RedisKeys" in service
 
 
 def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -> None:
@@ -195,6 +200,9 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     mcp_agent = _read("src/backend/zuno/api/services/mcp_agent.py")
     capability = _read("src/backend/zuno/api/services/capability.py")
     agent_skill = _read("src/backend/zuno/api/services/agent_skill.py")
+    completion = _read("src/backend/zuno/api/services/completion.py")
+    wechat = _read("src/backend/zuno/api/services/wechat.py")
+    mcp_chat = _read("src/backend/zuno/api/services/mcp_chat.py")
 
     assert "from zuno.platform.services.storage import storage_client" in upload
     assert "from zuno.platform.common.file_utils import get_object_storage_base_path" in upload
@@ -277,8 +285,15 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.dao.agent_skill import AgentSkillDao" in agent_skill
     assert "from zuno.platform.database.models.agent_skill import AgentSkill" in agent_skill
     assert "from zuno.platform.resources.prompts.skill import AgentSkillAsToolPrompt" in agent_skill
+    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" in completion
+    assert "from zuno.platform.services.memory.client import memory_client" in completion
+    assert "from zuno.platform.services.redis import redis_client" in wechat
+    assert "from zuno.platform.services.workspace.wechat_agent import WeChatAgent" in wechat
+    assert "from zuno.agent.core.models.anthropic import DeepAsyncAnthropic" in mcp_chat
+    assert "from zuno.platform.services.mcp_openai.mcp_manager import MCPManager" in mcp_chat
+    assert "from zuno.platform.services.rag.handler import RagHandler" in mcp_chat
 
-    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats, mcp_agent, capability, agent_skill]:
+    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats, mcp_agent, capability, agent_skill, completion, wechat, mcp_chat]:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content

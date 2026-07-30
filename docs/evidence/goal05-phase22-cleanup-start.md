@@ -27,6 +27,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/settings.py` 的配置 DTO 类型从 `zuno.schema.common` 改为 `zuno.api.dto.common`。
 - `src/backend/zuno/api/services/mcp_agent.py`、`src/backend/zuno/api/services/capability.py` 与 `src/backend/zuno/api/services/agent_skill.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.agent.core` / `zuno.platform.resources` / `zuno.api.dto` import。
 - `src/backend/zuno/main.py`、`src/backend/zuno/memory/feedback_consumer.py`、`src/backend/zuno/agent/product_baseline.py`、`src/backend/zuno/api/services/workspace_task_runtime.py` 与 `src/backend/zuno/api/dto/knowledge.py` 继续改为 canonical `zuno.platform.common` / `zuno.platform.database` / `zuno.api.dto` / `zuno.platform.services` import。
+- `src/backend/zuno/api/services/completion.py`、`src/backend/zuno/api/services/wechat.py` 与 `src/backend/zuno/api/services/mcp_chat.py` 继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.platform.resources` / `zuno.platform.common` / `zuno.api.dto` import。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
 - 新增 `tools/scripts/verify_phase22_cleanup_boundary.py` 和 `tests/repo/test_phase22_cleanup_boundary.py`，防止 Product Runtime 重新引入这两个 legacy alias import，并确保 removal candidates 文件存在。
 - 新增 `tests/api/test_layered_api_boundaries.py::test_capability_tool_actions_use_canonical_imports`，防止四个 capability tool action 回退到 `zuno.services` / `zuno.resources` / `zuno.utils`。
@@ -78,6 +79,9 @@ python -m compileall -q src/backend/zuno/api/services/mcp_agent.py src/backend/z
 PHASE22 cleanup boundary verification passed.
 17 passed in 0.33s
 python -m compileall -q src/backend/zuno/main.py src/backend/zuno/memory/feedback_consumer.py src/backend/zuno/agent/product_baseline.py src/backend/zuno/api/services/workspace_task_runtime.py src/backend/zuno/api/dto/knowledge.py passed
+PHASE22 cleanup boundary verification passed.
+17 passed in 0.43s
+python -m compileall -q src/backend/zuno/api/services/completion.py src/backend/zuno/api/services/wechat.py src/backend/zuno/api/services/mcp_chat.py passed
 ```
 
 ## Remaining
