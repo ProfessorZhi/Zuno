@@ -42,6 +42,7 @@ PLATFORM_GRAPHRAG_RETRIEVER = (
 PLATFORM_RETRIEVAL_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "retrieval"
 PLATFORM_RAG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rag"
 PLATFORM_MEMORY_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "memory"
+PLATFORM_WORKSPACE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "workspace"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -166,6 +167,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/product/command_service.py",
             "src/backend/zuno/api/services/workspace.py",
             "src/backend/zuno/platform/services/workspace/attachment_service.py",
+            "src/backend/zuno/platform/services/workspace/",
             "src/backend/zuno/capability/tools/convert_to_docx/action.py",
             "src/backend/zuno/capability/tools/convert_to_pdf/action.py",
             "src/backend/zuno/capability/tools/get_weather/action.py",
@@ -392,6 +394,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"platform memory {path.relative_to(PLATFORM_MEMORY_ROOT)}", path)
         for path in sorted(PLATFORM_MEMORY_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform workspace {path.relative_to(PLATFORM_WORKSPACE_ROOT)}", path)
+        for path in sorted(PLATFORM_WORKSPACE_ROOT.rglob("*.py"))
     )
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 

@@ -11,21 +11,21 @@ from langchain.agents.middleware import wrap_tool_call, ToolCallLimitMiddleware
 from langchain_core.messages import BaseMessage, AIMessage, ToolMessage, AIMessageChunk
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.core.callbacks import usage_metadata_callback
-from zuno.services.rag.handler import RagHandler
-from zuno.tools import WeChatTools
-from zuno.schema.usage_stats import UsageStatsAgentType
-from zuno.schema.workspace import WorkSpaceAgents
+from zuno.agent.core.callbacks import usage_metadata_callback
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.capability.tools import WeChatTools
+from zuno.api.dto.usage_stats import UsageStatsAgentType
+from zuno.api.dto.workspace import WorkSpaceAgents
 from zuno.api.services.user import UserService
-from zuno.services.mcp.manager import MCPManager
-from zuno.resources.prompts.completion import GenerateTitlePrompt
-from zuno.utils.convert import convert_mcp_config
-from zuno.core.models.manager import ModelManager
+from zuno.platform.services.mcp.manager import MCPManager
+from zuno.platform.resources.prompts.completion import GenerateTitlePrompt
+from zuno.platform.common.convert import convert_mcp_config
+from zuno.agent.core.models.manager import ModelManager
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
-from zuno.database.models.workspace_session import WorkSpaceSessionCreate, WorkSpaceSessionContext
-from zuno.utils.model_output import extract_visible_text_from_stream, is_minimax_model, normalize_messages_for_model, strip_model_wrapper_from_user_input, strip_think_tags
+from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate, WorkSpaceSessionContext
+from zuno.platform.common.model_output import extract_visible_text_from_stream, is_minimax_model, normalize_messages_for_model, strip_model_wrapper_from_user_input, strip_think_tags
 
 
 class MCPConfig(BaseModel):

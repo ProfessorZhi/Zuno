@@ -113,6 +113,8 @@ def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -
 def test_workspace_controller_routes_runtime_orchestration_through_service_layer() -> None:
     controller = _read("src/backend/zuno/api/v1/workspace.py")
     service = _read("src/backend/zuno/api/services/workspace.py")
+    simple_agent = _read("src/backend/zuno/platform/services/workspace/simple_agent.py")
+    wechat_agent = _read("src/backend/zuno/platform/services/workspace/wechat_agent.py")
 
     assert "from zuno.api.services.workspace import WorkspaceService" in controller
     assert "from zuno.services.execution_policy import (" not in controller
@@ -122,6 +124,25 @@ def test_workspace_controller_routes_runtime_orchestration_through_service_layer
     assert "from zuno.platform.services.execution_policy import (" in service
     assert "from zuno.platform.services.workspace.attachment_service import (" in service
     assert 'from zuno.platform.services.workspace.simple_agent import MCPConfig' in service or 'from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent' in service
+    assert "from zuno.agent.core.callbacks import usage_metadata_callback" in simple_agent
+    assert "from zuno.platform.services.application.knowledge import KnowledgeQueryService" in simple_agent
+    assert "from zuno.platform.database import AgentSkill" in simple_agent
+    assert "from zuno.api.dto.workspace import WorkSpaceAgents, WorkspaceAgentStreamEvent" in simple_agent
+    assert "from zuno.capability.tools import WorkSpacePlugins" in simple_agent
+    assert "from zuno.platform.common.runtime_observability import (" in simple_agent
+    assert "from zuno.agent.core.models.manager import ModelManager" in wechat_agent
+    assert "from zuno.capability.tools import WeChatTools" in wechat_agent
+    assert "from zuno.platform.services.mcp.manager import MCPManager" in wechat_agent
+    assert "from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate, WorkSpaceSessionContext" in wechat_agent
+
+    for content in [simple_agent, wechat_agent]:
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.database" not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.tools" not in content
 
 
 def test_capability_controller_routes_registry_search_through_service_layer() -> None:

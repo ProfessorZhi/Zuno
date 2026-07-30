@@ -16,6 +16,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/product/runtime_batch.py` 从 `zuno.schema.workspace` 改为 `zuno.api.dto.workspace`。
 - `src/backend/zuno/api/services/product/command_service.py` 从 `zuno.database import engine` 改为 `zuno.platform.database import engine`。
 - `src/backend/zuno/api/services/workspace.py`、`src/backend/zuno/platform/services/workspace/attachment_service.py`、`src/backend/zuno/platform/services/storage/__init__.py` 与 `src/backend/zuno/capability/tools/text2image/action.py` 的默认链 import 继续改为 canonical `zuno.api.dto` / `zuno.platform` / `zuno.capability`。
+- `src/backend/zuno/platform/services/workspace/` 默认 workspace simple/wechat agent 继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.api.dto` / `zuno.platform.database` / `zuno.platform.resources` / `zuno.capability` / `zuno.platform.common` import。
 - `src/backend/zuno/api/services/upload.py`、`src/backend/zuno/api/services/knowledge_file.py`、`src/backend/zuno/api/services/workspace_session.py` 与 `src/backend/zuno/api/services/user.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.platform.common` import。
 - `src/backend/zuno/api/services/tool.py`、`src/backend/zuno/api/services/knowledge.py`、`src/backend/zuno/api/services/agent.py`、`src/backend/zuno/api/services/history.py`、`src/backend/zuno/api/services/llm.py` 与 `src/backend/zuno/api/services/mcp_server.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/cli_tool_discovery.py`、`src/backend/zuno/platform/services/simple_api_tool.py`、`src/backend/zuno/platform/services/tool_creation_service.py`、`src/backend/zuno/platform/services/tool_connectivity_service.py`、`src/backend/zuno/platform/services/user_defined_tool_runtime.py` 与 `src/backend/zuno/platform/database/init_data.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.capability` / `zuno.platform.common` import。
@@ -118,6 +119,10 @@ PHASE22 cleanup boundary verification passed.
 24 passed in 0.54s
 python -m compileall -q src/backend/zuno/platform/services/memory passed
 rg no matches in src/backend/zuno/platform/services/memory for legacy alias imports
+PHASE22 cleanup boundary verification passed.
+24 passed in 0.87s
+python -m compileall -q src/backend/zuno/platform/services/workspace passed
+rg no matches in src/backend/zuno/platform/services/workspace for legacy alias imports
 ```
 
 ## Remaining
