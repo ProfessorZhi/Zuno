@@ -18,7 +18,7 @@ def _ensure_runtime_paths() -> None:
 
 
 def _agent_config():
-    AgentConfig = importlib.import_module("zuno.core.agents.general_agent").AgentConfig
+    AgentConfig = importlib.import_module("zuno.agent.core.agents").AgentConfig
     return AgentConfig(
         user_id="u_1",
         llm_id="",
@@ -37,11 +37,12 @@ def _agent_config():
 def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatch):
     _ensure_runtime_paths()
 
-    ga = importlib.import_module("zuno.core.agents.general_agent")
-    GeneralAgent = importlib.import_module("zuno.core.agents.general_agent").GeneralAgent
+    ga = importlib.import_module("zuno.agent.core.agents")
+    GeneralAgent = importlib.import_module("zuno.agent.core.agents").GeneralAgent
     KnowledgeQueryResult = importlib.import_module(
-        "zuno.services.graphrag.query_service"
+        "zuno.platform.services.graphrag.query_service"
     ).KnowledgeQueryResult
+    KnowledgeQueryService = importlib.import_module("zuno.knowledge.query_service").KnowledgeQueryService
 
     captured = {}
 
@@ -75,7 +76,7 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatc
             trace_metadata={"resolved_query_method": "local"},
         )
 
-    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
+    monkeypatch.setattr(KnowledgeQueryService, "query", fake_query)
 
     agent = GeneralAgent(_agent_config())
     asyncio.run(agent.setup_knowledge_tool())
@@ -92,7 +93,7 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatc
 def test_zuno_general_agent_astream_keeps_single_react_runtime_with_project_bound():
     _ensure_runtime_paths()
 
-    GeneralAgent = importlib.import_module("zuno.core.agents.general_agent").GeneralAgent
+    GeneralAgent = importlib.import_module("zuno.agent.core.agents").GeneralAgent
 
     class FakeReactAgent:
         async def astream(self, *args, **kwargs):
