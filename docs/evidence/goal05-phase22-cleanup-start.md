@@ -40,6 +40,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/model_gateway.py` 与 `src/backend/zuno/platform/model_gateway_adapters.py` lazy ModelManager factory 继续改为 canonical `zuno.agent.core.models.manager` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tools/evals/zuno/` fixed benchmark、contract review、stackless/local RAG eval 与 multihop runtime runner 继续改为 canonical `zuno.agent.core` / `zuno.platform` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tools/scripts/check_model_registry_defaults.py` 与 `tools/scripts/cleanup_model_registry_defaults.py` model registry maintenance 脚本继续改为 canonical `zuno.platform.database` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tools/scripts/rebuild_rag_indexes.py`、`tools/scripts/verify_phase04_minio_manifest_adoption.py` 与 `infra/db/alembic/env.py` 运维/迁移入口继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/tools/` active Tool Runtime 测试继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.capability` import；`src/backend/zuno/capability/tools/send_email/manifest.yaml` CLI entry 继续改为 canonical `zuno.capability.tools.send_email.cli`，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/storage/` active storage / pipeline / RAG / memory runtime 测试继续改为 canonical `zuno.platform.services` / `zuno.platform.database` / `zuno.api.dto` / `zuno.platform.common` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_agent_layer_surfaces.py`、`tests/agent/test_memory_layer_surfaces.py` 与 `tests/agent/test_memory_layers.py` 的 Agent / Memory layer active tests 继续改为 canonical `zuno.agent` / `zuno.memory` / `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -373,6 +374,9 @@ python tools/scripts/verify_model_gateway_bypass.py --strict passed
 PHASE22 cleanup boundary verification passed.
 python -m compileall -q tools/scripts/check_model_registry_defaults.py tools/scripts/cleanup_model_registry_defaults.py passed
 rg no matches in selected model registry scripts for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tools/scripts/rebuild_rag_indexes.py tools/scripts/verify_phase04_minio_manifest_adoption.py infra/db/alembic/env.py passed
+rg no matches in selected RAG rebuild / MinIO manifest / Alembic env entries for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

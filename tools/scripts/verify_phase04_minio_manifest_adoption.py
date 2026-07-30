@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import hashlib
 from uuid import uuid4
@@ -6,7 +6,7 @@ from uuid import uuid4
 from sqlalchemy import text
 from sqlmodel import select
 
-from zuno.database.models.knowledge_file import KnowledgeFileTable, Status
+from zuno.platform.database.models.knowledge_file import KnowledgeFileTable, Status
 from zuno.platform.database.foundation import create_foundation_engine
 from zuno.platform.database.session import domain_uow
 from zuno.platform.storage import (

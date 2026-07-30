@@ -56,7 +56,10 @@ TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
 TOOLS_SCRIPTS_CANONICAL_FILES = [
     REPO_ROOT / "tools" / "scripts" / "check_model_registry_defaults.py",
     REPO_ROOT / "tools" / "scripts" / "cleanup_model_registry_defaults.py",
+    REPO_ROOT / "tools" / "scripts" / "rebuild_rag_indexes.py",
+    REPO_ROOT / "tools" / "scripts" / "verify_phase04_minio_manifest_adoption.py",
 ]
+INFRA_ALEMBIC_ENV = REPO_ROOT / "infra" / "db" / "alembic" / "env.py"
 TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
 TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
 TESTS_AGENT_CANONICAL_FILES = [
@@ -350,6 +353,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tools/evals/zuno/",
             "tools/scripts/check_model_registry_defaults.py",
             "tools/scripts/cleanup_model_registry_defaults.py",
+            "tools/scripts/rebuild_rag_indexes.py",
+            "tools/scripts/verify_phase04_minio_manifest_adoption.py",
+            "infra/db/alembic/env.py",
             "tests/tools/",
             "tests/storage/",
             "tests/agent/test_agent_api_project_contract.py",
@@ -649,6 +655,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         (f"tools scripts canonical {path.name}", path)
         for path in TOOLS_SCRIPTS_CANONICAL_FILES
     )
+    checked_paths.append(("infra alembic env", INFRA_ALEMBIC_ENV))
     checked_paths.extend(
         (f"tests tools {path.relative_to(TESTS_TOOLS_ROOT)}", path)
         for path in sorted(TESTS_TOOLS_ROOT.rglob("*.py"))

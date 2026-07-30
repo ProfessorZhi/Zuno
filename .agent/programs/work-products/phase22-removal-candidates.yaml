@@ -623,6 +623,10 @@ resolved_this_slice:
     before: "model registry maintenance scripts imported LLMDao through zuno.database alias"
     after: "model registry maintenance scripts import LLMDao through canonical zuno.platform.database path"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tools/scripts/rebuild_rag_indexes.py; tools/scripts/verify_phase04_minio_manifest_adoption.py; infra/db/alembic/env.py"
+    before: "RAG index rebuild, MinIO manifest verifier and Alembic env imported database/RAG/storage/file utilities through zuno.database / zuno.services / zuno.utils aliases"
+    after: "operational scripts and Alembic env import canonical zuno.platform.database / zuno.platform.services / zuno.platform.common paths"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."
