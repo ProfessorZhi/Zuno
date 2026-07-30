@@ -1,4 +1,12 @@
 ﻿from __future__ import annotations
+import sys
+from pathlib import Path
+curr = Path(__file__).resolve()
+while curr.name != "Zuno" and curr.parent != curr:
+    curr = curr.parent
+ROOT_DIR = curr
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import asyncio
@@ -12,9 +20,9 @@ BACKEND_ROOT = Path(__file__).resolve().parents[4] / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from zuno.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
-from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.evals.rag_eval.summarize_eval_profiles import summarize as summarize_profiles
+from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from ..summarize_eval_profiles import summarize as summarize_profiles
 
 
 PROFILE_SETS = {

@@ -1,4 +1,12 @@
 from __future__ import annotations
+import sys
+from pathlib import Path
+curr = Path(__file__).resolve()
+while curr.name != "Zuno" and curr.parent != curr:
+    curr = curr.parent
+ROOT_DIR = curr
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import asyncio
@@ -11,23 +19,11 @@ import time
 from dataclasses import asdict, dataclass
 from collections import OrderedDict
 from pathlib import Path
-# Dynamic bridge to resolve zuno.evals namespace when running as standalone script
-import sys
-import types
-curr = Path(__file__).resolve()
-while curr.name != "Zuno" and curr.parent != curr:
-    curr = curr.parent
-ROOT_DIR = curr
-if "zuno.evals" not in sys.modules:
-    evals_module = types.ModuleType("zuno.evals")
-    evals_module.__path__ = [str(ROOT_DIR / "tools" / "evals" / "zuno")]
-    sys.modules["zuno.evals"] = evals_module
-
 from sqlalchemy.exc import SQLAlchemyError
 
-from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.evals.rag_eval.metrics import _is_context_relevant
-from zuno.evals.rag_eval.public_enterprise_datasets import (
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.metrics import _is_context_relevant
+from tools.evals.zuno.rag_eval.public_enterprise_datasets import (
     EnterpriseDocumentSchemaError,
     _as_string_list,
     _iter_enterprise_document_rows,
@@ -37,7 +33,7 @@ from zuno.evals.rag_eval.public_enterprise_datasets import (
     inspect_enterprise_document_schema,
     prepare_public_enterprise_eval,
 )
-from zuno.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
 
 
 PROFILE_ALIASES = {
@@ -296,7 +292,7 @@ def generate_blocked_gap_report(
     # 否则 (小样本单元测试/Smoke)，判定 blocked = False
     if expected_case_count >= 80:
         blocked = approved_count < 80
-        gap = max(0, expected_case_count - actual_count)
+        gap = max(0, 80 - approved_count)
     else:
         blocked = False
         gap = 0
@@ -311,9 +307,11 @@ def generate_blocked_gap_report(
     return {
         "blocked": blocked,
         "expected_case_count": expected_case_count,
-        "actual_case_count": actual_count,
-        "approved_case_count": approved_count,
-        "unapproved_case_count": unapproved,
+        "raw_case_count": dataset_validation.get("case_count", 0),
+        "schema_valid_case_count": actual_count,
+        "reviewer_approved_case_count": approved_count,
+        "benchmark_eligible_case_count": approved_count,
+        "approved_case_gap": gap,
         "gap": gap,
         "missing_question_types": missing_types,
         "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases" if blocked else None,
@@ -337,6 +335,7 @@ def _build_and_write_benchmark_manifest(
     metrics: dict[str, Any] | None,
     failure_fingerprint: str | None = None,
     incomparable_reason: str | None = None,
+    gap_report: dict[str, Any] | None = None,
 ) -> None:
     git_sha, git_dirty = _get_git_info()
     dataset_sha = _sha256_file(dataset_path) if dataset_path else None
@@ -465,6 +464,12 @@ def _build_and_write_benchmark_manifest(
         "expected_case_count": expected_case_count,
         "actual_case_count": actual_case_count,
         "profile_completeness": profile_completeness,
+
+        "raw_case_count": gap_report.get("raw_case_count", 0) if gap_report else actual_case_count,
+        "schema_valid_case_count": gap_report.get("schema_valid_case_count", 0) if gap_report else actual_case_count,
+        "reviewer_approved_case_count": gap_report.get("reviewer_approved_case_count", 0) if gap_report else 0,
+        "benchmark_eligible_case_count": gap_report.get("benchmark_eligible_case_count", 0) if gap_report else 0,
+        "approved_case_gap": gap_report.get("approved_case_gap", 80) if gap_report else (80 - (actual_case_count or 0)),
 
         "artifact_refs": output_artifacts,
         "release_gate": metrics.get("release_gate") if metrics else None,
@@ -1884,6 +1889,7 @@ async def run_enterprise_rag_paired_benchmark(
                 profile_completeness=None,
                 metrics=metrics,
                 incomparable_reason=incomp_reason,
+                gap_report=gap_report,
             )
             return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
 

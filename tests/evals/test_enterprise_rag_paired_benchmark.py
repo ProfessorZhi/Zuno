@@ -92,7 +92,7 @@ def _write_unsupported_documents(path: Path) -> None:
 
 
 def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         run_enterprise_rag_paired_benchmark,
     )
 
@@ -132,7 +132,7 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
 
 
 def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import inspect_documents_schema
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import inspect_documents_schema
 
     documents = tmp_path / "documents.parquet"
     output_root = tmp_path / "run"
@@ -154,7 +154,7 @@ def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> Non
 
 
 def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch, tmp_path: Path) -> None:
-    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+    from tools.evals.zuno.rag_eval import run_enterprise_rag_paired_benchmark as paired
 
     questions = tmp_path / "questions.jsonl"
     documents = tmp_path / "documents.parquet"
@@ -245,7 +245,7 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
 
 
 def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_unavailable(monkeypatch, tmp_path: Path) -> None:
-    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+    from tools.evals.zuno.rag_eval import run_enterprise_rag_paired_benchmark as paired
 
     questions = tmp_path / "questions.jsonl"
     documents = tmp_path / "documents.parquet"
@@ -287,7 +287,7 @@ def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_database_una
 ) -> None:
     from sqlalchemy.exc import SQLAlchemyError
 
-    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+    from tools.evals.zuno.rag_eval import run_enterprise_rag_paired_benchmark as paired
 
     questions = tmp_path / "questions.jsonl"
     documents = tmp_path / "documents.parquet"
@@ -325,7 +325,7 @@ def test_enterprise_rag_paired_benchmark_blocks_when_profile_runner_database_una
 
 
 def test_enterprise_rag_paired_benchmark_blocks_unsupported_document_schema(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         run_enterprise_rag_paired_benchmark,
     )
 
@@ -358,7 +358,7 @@ def test_enterprise_rag_paired_benchmark_blocks_unsupported_document_schema(tmp_
 
 
 def test_enterprise_rag_paired_benchmark_records_missing_docs_without_faking_measured(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         run_enterprise_rag_paired_benchmark,
     )
 
@@ -410,7 +410,7 @@ def test_enterprise_rag_paired_benchmark_records_missing_docs_without_faking_mea
 
 
 def test_enterprise_rag_phase01_failure_buckets_and_missing_trace_fields() -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         _build_evidence_conversion_diagnostics,
     )
 
@@ -517,7 +517,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     monkeypatch,
     tmp_path: Path,
 ) -> None:
-    from zuno.evals.rag_eval import run_enterprise_rag_paired_benchmark as paired
+    from tools.evals.zuno.rag_eval import run_enterprise_rag_paired_benchmark as paired
 
     questions = tmp_path / "questions.jsonl"
     documents = tmp_path / "documents.parquet"
@@ -835,7 +835,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
 
 
 def test_enterprise_rag_hard_negative_classifier_covers_phase08_taxonomy() -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         HARD_NEGATIVE_CATEGORIES,
         _classify_hard_negative,
     )
@@ -857,7 +857,7 @@ def test_enterprise_rag_hard_negative_classifier_covers_phase08_taxonomy() -> No
 
 
 def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.run_enterprise_rag_paired_benchmark import (
+    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
         validate_dataset,
         generate_blocked_gap_report,
         _build_and_write_benchmark_manifest,
@@ -911,7 +911,11 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
         expected_case_count=80,
     )
     assert gap_report["blocked"] is True
-    assert gap_report["gap"] == 75
+    assert gap_report["raw_case_count"] == 5
+    assert gap_report["schema_valid_case_count"] == 5
+    assert gap_report["reviewer_approved_case_count"] == 0
+    assert gap_report["benchmark_eligible_case_count"] == 0
+    assert gap_report["gap"] == 80
     assert "simple_retrieval" not in gap_report["missing_question_types"]
     assert "multi_hop" in gap_report["missing_question_types"]
 

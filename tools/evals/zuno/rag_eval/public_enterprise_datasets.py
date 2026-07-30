@@ -1,4 +1,12 @@
 from __future__ import annotations
+import sys
+from pathlib import Path
+curr = Path(__file__).resolve()
+while curr.name != "Zuno" and curr.parent != curr:
+    curr = curr.parent
+ROOT_DIR = curr
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import json
@@ -6,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from zuno.evals.rag_eval.paths import default_corpus_root
+from tools.evals.zuno.rag_eval.paths import default_corpus_root
 
 
 ENTERPRISE_DOCUMENT_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {

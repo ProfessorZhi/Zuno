@@ -1,4 +1,12 @@
 from __future__ import annotations
+import sys
+from pathlib import Path
+curr = Path(__file__).resolve()
+while curr.name != "Zuno" and curr.parent != curr:
+    curr = curr.parent
+ROOT_DIR = curr
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import asyncio
@@ -19,12 +27,12 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
-from zuno.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
-from zuno.evals.rag_eval.local_embedding_server import run_dev_server
-from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
-from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
-from zuno.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
+from tools.evals.zuno.rag_eval.local_embedding_server import run_dev_server
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
+from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
+from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
 from zuno.api.dto.chunk import ChunkModel
 from zuno.platform.services.graphrag.extractor import GraphExtractor
 from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
