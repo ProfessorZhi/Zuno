@@ -34,6 +34,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
 - `src/backend/zuno/platform/services/retrieval/` 默认检索编排、规划、融合和 adapter 入口继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` / `zuno.platform.services.rewrite` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/rag/` 默认 RAG handler、parser、rerank、vector DB 与 doc parser 入口继续改为 canonical `zuno.platform.services.rag` / `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.api.dto` / `zuno.agent.core` / `zuno.platform.common` import。
+- `src/backend/zuno/platform/services/sandbox/__init__.py`、`src/backend/zuno/platform/services/capability_registry.py`、`src/backend/zuno/knowledge/ingestion/legacy_cutover.py`、`src/backend/zuno/capability/mcp/servers/remote_proxy/main.py`、`src/backend/zuno/capability/tools/image2text/__init__.py`、`src/backend/zuno/capability/tools/text2image/__init__.py` 与 `src/backend/zuno/capability/tools/send_email/cli.py` 继续改为 canonical `zuno.platform.services` / `zuno.api.dto` / `zuno.capability` import。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
 - 新增 `tools/scripts/verify_phase22_cleanup_boundary.py` 和 `tests/repo/test_phase22_cleanup_boundary.py`，防止 Product Runtime 重新引入这两个 legacy alias import，并确保 removal candidates 文件存在。
 - 新增 `tests/api/test_layered_api_boundaries.py::test_capability_tool_actions_use_canonical_imports`，防止四个 capability tool action 回退到 `zuno.services` / `zuno.resources` / `zuno.utils`。
@@ -108,6 +109,10 @@ PHASE22 cleanup boundary verification passed.
 23 passed in 0.80s
 python -m compileall -q src/backend/zuno/platform/services/rag passed
 rg no matches in src/backend/zuno/platform/services/rag for legacy alias imports
+PHASE22 cleanup boundary verification passed.
+23 passed in 0.33s
+python -m compileall -q sandbox init, capability registry, knowledge legacy cutover, remote MCP proxy, image2text/text2image init and send_email cli passed
+rg no matches in entrypoint bridge cleanup files for legacy alias imports
 ```
 
 ## Remaining

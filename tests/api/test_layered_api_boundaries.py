@@ -164,6 +164,13 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
     convert_to_pdf = _read("src/backend/zuno/capability/tools/convert_to_pdf/action.py")
     get_weather = _read("src/backend/zuno/capability/tools/get_weather/action.py")
     delivery = _read("src/backend/zuno/capability/tools/delivery/action.py")
+    image2text_init = _read("src/backend/zuno/capability/tools/image2text/__init__.py")
+    text2image_init = _read("src/backend/zuno/capability/tools/text2image/__init__.py")
+    send_email_cli = _read("src/backend/zuno/capability/tools/send_email/cli.py")
+    remote_proxy_main = _read("src/backend/zuno/capability/mcp/servers/remote_proxy/main.py")
+    knowledge_legacy_cutover = _read("src/backend/zuno/knowledge/ingestion/legacy_cutover.py")
+    sandbox_init = _read("src/backend/zuno/platform/services/sandbox/__init__.py")
+    capability_registry = _read("src/backend/zuno/platform/services/capability_registry.py")
 
     assert "from zuno.platform.services.storage import storage_client" in convert_to_docx
     assert "from zuno.platform.common.file_utils import get_object_name_from_aliyun_url, get_save_tempfile" in convert_to_docx
@@ -173,11 +180,33 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
     assert "from zuno.platform.common.helpers import get_now_beijing_time" in convert_to_pdf
     assert "from zuno.platform.resources.prompts.tool import MESSAGE_PROMPT, WEATHER_PROMPT" in get_weather
     assert "from zuno.platform.resources.prompts.tool import DELIVERY_PROMPT" in delivery
+    assert "from zuno.capability.tools.image2text.action import _image_to_text, image_to_text" in image2text_init
+    assert "from zuno.capability.tools.text2image.action import _text_to_image" in text2image_init
+    assert "from zuno.capability.tools.send_email import action as email_action" in send_email_cli
+    assert "from zuno.platform.services.mcp.sessions import create_session" in remote_proxy_main
+    assert "from zuno.api.dto.chunk import ChunkModel" in knowledge_legacy_cutover
+    assert "from zuno.platform.services.sandbox.pyodide import (" in sandbox_init
+    assert "from zuno.platform.services.application.capabilities import (" in capability_registry
 
-    for content in [convert_to_docx, convert_to_pdf, get_weather, delivery]:
+    for content in [
+        convert_to_docx,
+        convert_to_pdf,
+        get_weather,
+        delivery,
+        image2text_init,
+        text2image_init,
+        send_email_cli,
+        remote_proxy_main,
+        knowledge_legacy_cutover,
+        sandbox_init,
+        capability_registry,
+    ]:
         assert "from zuno.services." not in content
         assert "from zuno.resources." not in content
         assert "from zuno.utils." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.core." not in content
+        assert "from zuno.tools" not in content
 
 
 def test_api_service_layer_uses_canonical_platform_imports() -> None:

@@ -1,4 +1,4 @@
-from zuno.services.sandbox.pyodide import (
+from zuno.platform.services.sandbox.pyodide import (
     PyodideSandbox,
     PyodideSandboxTool,
     SyncPyodideSandbox,

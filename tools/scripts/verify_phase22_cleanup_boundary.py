@@ -85,6 +85,15 @@ GET_WEATHER_ACTION = (
 DELIVERY_ACTION = (
     REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "delivery" / "action.py"
 )
+IMAGE2TEXT_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "image2text" / "__init__.py"
+TEXT2IMAGE_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "text2image" / "__init__.py"
+SEND_EMAIL_CLI = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "cli.py"
+REMOTE_PROXY_MAIN = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "mcp" / "servers" / "remote_proxy" / "main.py"
+)
+KNOWLEDGE_LEGACY_CUTOVER = REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "legacy_cutover.py"
+SANDBOX_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "sandbox" / "__init__.py"
+CAPABILITY_REGISTRY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "capability_registry.py"
 UPLOAD_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "upload.py"
 KNOWLEDGE_FILE_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "knowledge_file.py"
 WORKSPACE_SESSION_SERVICE = (
@@ -197,6 +206,13 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/graphrag/retriever.py",
             "src/backend/zuno/platform/services/retrieval/",
             "src/backend/zuno/platform/services/rag/",
+            "src/backend/zuno/platform/services/sandbox/__init__.py",
+            "src/backend/zuno/platform/services/capability_registry.py",
+            "src/backend/zuno/knowledge/ingestion/legacy_cutover.py",
+            "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
+            "src/backend/zuno/capability/tools/image2text/__init__.py",
+            "src/backend/zuno/capability/tools/text2image/__init__.py",
+            "src/backend/zuno/capability/tools/send_email/cli.py",
             "src/backend/zuno/platform/services/embedding/__init__.py",
             "src/backend/zuno/platform/services/llm/__init__.py",
             "src/backend/zuno/platform/services/convert_files/__init__.py",
@@ -272,6 +288,13 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("convert_to_pdf action", CONVERT_TO_PDF_ACTION),
         ("get_weather action", GET_WEATHER_ACTION),
         ("delivery action", DELIVERY_ACTION),
+        ("image2text init", IMAGE2TEXT_INIT),
+        ("text2image init", TEXT2IMAGE_INIT),
+        ("send email cli", SEND_EMAIL_CLI),
+        ("remote mcp proxy main", REMOTE_PROXY_MAIN),
+        ("knowledge legacy cutover", KNOWLEDGE_LEGACY_CUTOVER),
+        ("sandbox init", SANDBOX_INIT),
+        ("capability registry", CAPABILITY_REGISTRY),
         ("upload service", UPLOAD_SERVICE),
         ("knowledge file service", KNOWLEDGE_FILE_SERVICE),
         ("workspace session service", WORKSPACE_SESSION_SERVICE),

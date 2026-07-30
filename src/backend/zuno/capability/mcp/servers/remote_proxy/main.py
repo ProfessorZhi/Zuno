@@ -13,7 +13,7 @@ if str(BACKEND_ROOT) not in sys.path:
 
 from mcp.server.fastmcp import FastMCP
 
-from zuno.services.mcp.sessions import create_session
+from zuno.platform.services.mcp.sessions import create_session
 
 
 def _safe_identifier(name: str) -> str:

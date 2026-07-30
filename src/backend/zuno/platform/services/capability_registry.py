@@ -4,7 +4,7 @@ import re
 from difflib import SequenceMatcher
 from typing import Any, Literal
 
-from zuno.services.application.capabilities import (
+from zuno.platform.services.application.capabilities import (
     CapabilityCost,
     CapabilityHealth,
     CapabilityPermissions,
