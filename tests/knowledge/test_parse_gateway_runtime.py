@@ -874,7 +874,7 @@ def test_parse_gateway_uses_adapter_registry_for_runtime_dispatch() -> None:
 
 def test_legacy_chunks_normalize_to_ir_with_acl_source_span_provenance() -> None:
     from zuno.knowledge.ingestion import normalize_legacy_chunks_to_ir
-    from zuno.schema.chunk import ChunkModel
+    from zuno.api.dto.chunk import ChunkModel
 
     chunk = ChunkModel(
         chunk_id="legacy_chunk_1",
