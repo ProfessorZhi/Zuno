@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def _contract_review_query_policy() -> dict:
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
@@ -14,7 +14,7 @@ def _contract_review_query_policy() -> dict:
 
 def test_build_local_graph_retriever_uses_contract_graphrag_project_query_policy():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_graph_retriever
-    from zuno.schema.chunk import ChunkModel
+    from zuno.api.dto.chunk import ChunkModel
 
     chunk = ChunkModel(
         chunk_id="contract_chunk_1",

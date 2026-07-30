@@ -3,7 +3,7 @@
 
 def test_stackless_local_eval_uses_explicit_local_rerank_config():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_rerank_config
-    from zuno.services.rag.rerank import Reranker
+    from zuno.platform.services.rag.rerank import Reranker
 
     rerank_config = _build_local_rerank_config(
         model_name="zuno-local-rerank-dev",
@@ -14,7 +14,7 @@ def test_stackless_local_eval_uses_explicit_local_rerank_config():
 
 def test_stackless_local_eval_disabled_rerank_config_short_circuits():
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_disabled_rerank_config
-    from zuno.services.rag.rerank import Reranker
+    from zuno.platform.services.rag.rerank import Reranker
 
     rerank_config = _build_disabled_rerank_config()
     assert Reranker._is_configured(rerank_config) is False
@@ -23,7 +23,7 @@ def test_stackless_local_eval_disabled_rerank_config_short_circuits():
 def test_reranker_request_can_hit_local_rerank_dev_server():
     from zuno.evals.rag_eval.local_rerank_server import run_dev_server
     from zuno.evals.rag_eval.run_stackless_local_eval import _build_local_rerank_config
-    from zuno.services.rag.rerank import Reranker
+    from zuno.platform.services.rag.rerank import Reranker
 
     with run_dev_server(model_name="zuno-local-rerank-dev", port=0) as server:
         rerank_config = _build_local_rerank_config(

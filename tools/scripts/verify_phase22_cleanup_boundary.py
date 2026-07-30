@@ -98,6 +98,10 @@ TESTS_FRONTEND_CANONICAL_FILES = [
 ]
 TESTS_EVALS_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "evals" / "test_local_runtime_registry.py",
+    REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_contract_project_query_policy.py",
+    REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_project_assets.py",
+    REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_project_guard.py",
+    REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_rerank_runtime.py",
 ]
 TESTS_KNOWLEDGE_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "knowledge" / "test_parse_gateway_runtime.py",
@@ -364,6 +368,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/api/test_workspace_task_runtime.py",
             "tests/e2e/test_unified_agent_product_scenario.py",
             "tests/evals/test_local_runtime_registry.py",
+            "tests/evals/test_stackless_local_eval_contract_project_query_policy.py",
+            "tests/evals/test_stackless_local_eval_project_assets.py",
+            "tests/evals/test_stackless_local_eval_project_guard.py",
+            "tests/evals/test_stackless_local_eval_rerank_runtime.py",
             "tests/frontend/test_product_wiring_v1_api_contract.py",
             "tests/graphrag/test_contract_graph_query_routing.py",
             "tests/graphrag/test_contract_graph_retriever.py",
