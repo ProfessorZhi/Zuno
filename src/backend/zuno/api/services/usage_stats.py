@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import DefaultDict, Dict, List, Optional
 
-from zuno.database.dao.usage_stats import UsageStats, UsageStatsDao
+from zuno.platform.database.dao.usage_stats import UsageStats, UsageStatsDao
 
 
 class UsageStatsService:

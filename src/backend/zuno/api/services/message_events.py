@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from zuno.database.dao.message import MessageLikeDao
 from zuno.platform.contracts import (
     CrossModuleEnvelopeV1,
     ProductCommandV1,
     build_wave1_contract_registry,
     canonical_sha256,
 )
+from zuno.platform.database.dao.message import MessageLikeDao
 from zuno.platform.database.session import domain_uow
 from zuno.platform.queue.domain import SessionOutbox
 

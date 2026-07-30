@@ -185,6 +185,12 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     history = _read("src/backend/zuno/api/services/history.py")
     llm = _read("src/backend/zuno/api/services/llm.py")
     mcp_server = _read("src/backend/zuno/api/services/mcp_server.py")
+    message = _read("src/backend/zuno/api/services/message.py")
+    dialog = _read("src/backend/zuno/api/services/dialog.py")
+    message_events = _read("src/backend/zuno/api/services/message_events.py")
+    mcp_user_config = _read("src/backend/zuno/api/services/mcp_user_config.py")
+    mcp_stdio_server = _read("src/backend/zuno/api/services/mcp_stdio_server.py")
+    usage_stats = _read("src/backend/zuno/api/services/usage_stats.py")
 
     assert "from zuno.platform.services.storage import storage_client" in upload
     assert "from zuno.platform.common.file_utils import get_object_storage_base_path" in upload
@@ -248,11 +254,21 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in mcp_server
     assert "from zuno.platform.resources.prompts.mcp import McpAsToolPrompt" in mcp_server
     assert "from zuno.platform.services.mcp.manager import MCPManager" in mcp_server
+    assert "from zuno.platform.database.dao.message import MessageDownDao, MessageLikeDao" in message
+    assert "from zuno.platform.database.dao.dialog import DialogDao" in dialog
+    assert "from zuno.platform.database.dao.history import HistoryDao" in dialog
+    assert "from zuno.platform.database.models.user import AdminUser" in dialog
+    assert "from zuno.platform.database.dao.message import MessageLikeDao" in message_events
+    assert "from zuno.platform.database.dao.mcp_user_config import MCPUserConfigDao" in mcp_user_config
+    assert "from zuno.platform.database.dao.mcp_stdio_server import MCPServerStdioDao" in mcp_stdio_server
+    assert "from zuno.platform.database.models.user import AdminUser" in mcp_stdio_server
+    assert "from zuno.platform.database.dao.usage_stats import UsageStats, UsageStatsDao" in usage_stats
 
-    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server]:
+    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats]:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content
+        assert "from zuno.database" not in content
 
 
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:

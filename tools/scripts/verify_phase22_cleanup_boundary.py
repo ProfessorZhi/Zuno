@@ -47,6 +47,12 @@ AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "a
 HISTORY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "history.py"
 LLM_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "llm.py"
 MCP_SERVER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_server.py"
+MESSAGE_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "message.py"
+DIALOG_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "dialog.py"
+MESSAGE_EVENTS_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "message_events.py"
+MCP_USER_CONFIG_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_user_config.py"
+MCP_STDIO_SERVER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_stdio_server.py"
+USAGE_STATS_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "usage_stats.py"
 CLI_TOOL_DISCOVERY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "cli_tool_discovery.py"
 SIMPLE_API_TOOL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "simple_api_tool.py"
 TOOL_CREATION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "tool_creation_service.py"
@@ -108,6 +114,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/history.py",
             "src/backend/zuno/api/services/llm.py",
             "src/backend/zuno/api/services/mcp_server.py",
+            "src/backend/zuno/api/services/message.py",
+            "src/backend/zuno/api/services/dialog.py",
+            "src/backend/zuno/api/services/message_events.py",
+            "src/backend/zuno/api/services/mcp_user_config.py",
+            "src/backend/zuno/api/services/mcp_stdio_server.py",
+            "src/backend/zuno/api/services/usage_stats.py",
             "src/backend/zuno/platform/services/cli_tool_discovery.py",
             "src/backend/zuno/platform/services/simple_api_tool.py",
             "src/backend/zuno/platform/services/tool_creation_service.py",
@@ -182,6 +194,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("history service", HISTORY_SERVICE),
         ("llm service", LLM_SERVICE),
         ("mcp server service", MCP_SERVER_SERVICE),
+        ("message service", MESSAGE_SERVICE),
+        ("dialog service", DIALOG_SERVICE),
+        ("message events service", MESSAGE_EVENTS_SERVICE),
+        ("mcp user config service", MCP_USER_CONFIG_SERVICE),
+        ("mcp stdio server service", MCP_STDIO_SERVER_SERVICE),
+        ("usage stats service", USAGE_STATS_SERVICE),
         ("cli tool discovery", CLI_TOOL_DISCOVERY),
         ("simple api tool", SIMPLE_API_TOOL),
         ("tool creation service", TOOL_CREATION_SERVICE),

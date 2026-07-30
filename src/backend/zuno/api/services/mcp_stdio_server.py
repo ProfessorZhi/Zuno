@@ -1,7 +1,7 @@
 from loguru import logger
 
-from zuno.database.dao.mcp_stdio_server import MCPServerStdioDao
-from zuno.database.models.user import AdminUser
+from zuno.platform.database.dao.mcp_stdio_server import MCPServerStdioDao
+from zuno.platform.database.models.user import AdminUser
 from zuno.platform.security import (
     SecurityProductActionDenied,
     SecurityProductActionGuard,
