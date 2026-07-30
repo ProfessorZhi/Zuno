@@ -12,7 +12,7 @@
 
 目标状态下，Platform 层负责配置、数据库 wiring、外部 provider、存储、队列、MCP server、sandbox、vendor compatibility 和执行策略等底座能力。它支撑上层，不反向依赖 API 或 Agent 业务编排。
 
-`platform/vendor/` 是第三方 shim 的目标 owner；`platform/compatibility/` 是旧 import registry 和当前兼容路径。PHASE02 不移动 `fastapi_jwt_auth`，只固定两者的归属和 verifier guard。
+`platform/vendor/` 是第三方 shim 的目标 owner；`platform/compatibility/` 是旧 import registry 和迁移兼容面。PHASE02 不移动 `fastapi_jwt_auth`，只固定两者的归属和 verifier guard。
 
 ## 允许新增内容
 
@@ -25,7 +25,7 @@
 ## 禁止事项
 
 - 禁止直接迁移 DB schema、DAO、settings defaults、MCP server、queue worker、storage、model gateway、trace store、online eval platform 或 vendor compat 包。
-- 禁止破坏 `zuno.database.*`、`zuno.settings`、`zuno.services.execution_policy`、`zuno.mcp_servers.*` 或 `zuno.compatibility.vendor.fastapi_jwt_auth` 兼容 import path。
+- 禁止破坏 `zuno.database.*`、`zuno.settings`、`zuno.services.execution_policy`、`zuno.mcp_servers.*` 或 `zuno.compatibility.vendor.fastapi_jwt_auth` 的迁移兼容 import path。
 - 禁止在 platform 中承载 API route、GeneralAgent loop、GraphRAG query behavior 或 product use case 编排。
 
 ## Focused tests
