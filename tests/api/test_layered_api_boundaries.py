@@ -400,6 +400,42 @@ def test_platform_pipeline_and_provider_inits_use_canonical_imports() -> None:
         assert "from zuno.utils." not in content
 
 
+def test_platform_graphrag_lightweight_packages_use_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/graphrag/community/__init__.py",
+        "src/backend/zuno/platform/services/graphrag/community/service.py",
+        "src/backend/zuno/platform/services/graphrag/community/reporter.py",
+        "src/backend/zuno/platform/services/graphrag/community/detector.py",
+        "src/backend/zuno/platform/services/graphrag/extractors/__init__.py",
+        "src/backend/zuno/platform/services/graphrag/extractors/regex_extractor.py",
+        "src/backend/zuno/platform/services/graphrag/extractors/structured_extractor.py",
+        "src/backend/zuno/platform/services/graphrag/extractors/cached_extractor.py",
+        "src/backend/zuno/platform/services/graphrag/graph_store/__init__.py",
+        "src/backend/zuno/platform/services/graphrag/prompts/__init__.py",
+        "src/backend/zuno/platform/services/graphrag/retrievers/__init__.py",
+        "src/backend/zuno/platform/services/graphrag/retrievers/domain_graph_retriever.py",
+        "src/backend/zuno/platform/services/graphrag/project/loader.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.platform.services.graphrag.community.detector import CommunityDetector" in contents[paths[0]]
+    assert "from zuno.platform.services.graphrag.client import Neo4jClient" in contents[paths[1]]
+    assert "from zuno.platform.services.graphrag.community.models import GraphCommunity" in contents[paths[2]]
+    assert "from zuno.platform.services.graphrag.community.models import GraphCommunity" in contents[paths[3]]
+    assert "from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor" in contents[paths[4]]
+    assert "from zuno.platform.services.graphrag.extractor import GraphExtractor as RegexGraphExtractor" in contents[paths[5]]
+    assert "from zuno.platform.services.graphrag.extractor import GraphExtractor" in contents[paths[6]]
+    assert "from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor" in contents[paths[7]]
+    assert "from zuno.platform.services.graphrag.graph_store.entity_resolver import EntityResolver" in contents[paths[8]]
+    assert "from zuno.platform.services.graphrag.prompts.registry import (" in contents[paths[9]]
+    assert "from zuno.platform.services.graphrag.retrievers.domain_graph_retriever import DomainGraphRetriever" in contents[paths[10]]
+    assert "from zuno.platform.services.graphrag.retriever import GraphRetriever" in contents[paths[11]]
+    assert "from zuno.platform.services.graphrag.models import GraphRAGProjectContract" in contents[paths[12]]
+
+    for content in contents.values():
+        assert "from zuno.services." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

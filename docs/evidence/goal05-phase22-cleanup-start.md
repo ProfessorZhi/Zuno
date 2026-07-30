@@ -30,6 +30,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/api/services/completion.py`、`src/backend/zuno/api/services/wechat.py` 与 `src/backend/zuno/api/services/mcp_chat.py` 继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.platform.resources` / `zuno.platform.common` / `zuno.api.dto` import。
 - `src/backend/zuno/platform/services/application/knowledge/`、`src/backend/zuno/platform/services/rewrite/`、`src/backend/zuno/platform/services/queue/workers.py` 与 `src/backend/zuno/platform/services/queue/messages.py` 继续改为 canonical `zuno.platform.services` / `zuno.agent.core` / `zuno.platform.resources` import。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
+- `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
 - 新增 `tools/scripts/verify_phase22_cleanup_boundary.py` 和 `tests/repo/test_phase22_cleanup_boundary.py`，防止 Product Runtime 重新引入这两个 legacy alias import，并确保 removal candidates 文件存在。
 - 新增 `tests/api/test_layered_api_boundaries.py::test_capability_tool_actions_use_canonical_imports`，防止四个 capability tool action 回退到 `zuno.services` / `zuno.resources` / `zuno.utils`。
@@ -90,6 +91,9 @@ python -m compileall -q src/backend/zuno/platform/services/application/knowledge
 PHASE22 cleanup boundary verification passed.
 19 passed in 0.52s
 python -m compileall -q src/backend/zuno/platform/services/pipeline src/backend/zuno/platform/services/embedding/__init__.py src/backend/zuno/platform/services/llm/__init__.py src/backend/zuno/platform/services/convert_files/__init__.py passed
+PHASE22 cleanup boundary verification passed.
+20 passed in 0.60s
+python -m compileall -q src/backend/zuno/platform/services/graphrag/community src/backend/zuno/platform/services/graphrag/extractors src/backend/zuno/platform/services/graphrag/graph_store/__init__.py src/backend/zuno/platform/services/graphrag/prompts/__init__.py src/backend/zuno/platform/services/graphrag/retrievers src/backend/zuno/platform/services/graphrag/project/loader.py passed
 ```
 
 ## Remaining

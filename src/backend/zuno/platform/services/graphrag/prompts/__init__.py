@@ -1,4 +1,4 @@
-from zuno.services.graphrag.prompts.registry import (
+from zuno.platform.services.graphrag.prompts.registry import (
     GraphRAGPromptRegistry,
     PromptSpec,
 )

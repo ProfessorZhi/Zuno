@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import re
 
-from zuno.services.graphrag.client import Neo4jClient
-from zuno.services.graphrag.community.detector import CommunityDetector
-from zuno.services.graphrag.community.models import GraphCommunity
-from zuno.services.graphrag.community.reporter import CommunityReportBuilder
+from zuno.platform.services.graphrag.client import Neo4jClient
+from zuno.platform.services.graphrag.community.detector import CommunityDetector
+from zuno.platform.services.graphrag.community.models import GraphCommunity
+from zuno.platform.services.graphrag.community.reporter import CommunityReportBuilder
 
 
 class CommunityGraphService:

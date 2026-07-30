@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
 
 class CachedGraphExtractor:

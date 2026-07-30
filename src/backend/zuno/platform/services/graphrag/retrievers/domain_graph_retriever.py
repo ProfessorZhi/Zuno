@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.graphrag.retriever import GraphRetriever
 
 
 class DomainGraphRetriever(GraphRetriever):

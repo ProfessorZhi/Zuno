@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from zuno.services.graphrag.models import GraphRAGProjectContract
+from zuno.platform.services.graphrag.models import GraphRAGProjectContract
 
 
 def _find_repo_root(package_root: Path) -> Path:

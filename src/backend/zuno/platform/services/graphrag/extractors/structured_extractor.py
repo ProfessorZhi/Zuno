@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from zuno.services.graphrag.extractor import GraphExtractor
+from zuno.platform.services.graphrag.extractor import GraphExtractor
 
 
 class StructuredGraphExtractor(GraphExtractor):

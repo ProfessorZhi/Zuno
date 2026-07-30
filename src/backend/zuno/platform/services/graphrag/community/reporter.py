@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.services.graphrag.community.models import GraphCommunity
+from zuno.platform.services.graphrag.community.models import GraphCommunity
 
 
 class CommunityReportBuilder:

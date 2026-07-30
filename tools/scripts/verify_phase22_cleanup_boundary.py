@@ -12,6 +12,24 @@ PLATFORM_APPLICATION_KNOWLEDGE_ROOT = (
 )
 PLATFORM_REWRITE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rewrite"
 PLATFORM_PIPELINE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "pipeline"
+PLATFORM_GRAPHRAG_COMMUNITY_ROOT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "community"
+)
+PLATFORM_GRAPHRAG_EXTRACTORS_ROOT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "extractors"
+)
+PLATFORM_GRAPHRAG_GRAPH_STORE_INIT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "graph_store" / "__init__.py"
+)
+PLATFORM_GRAPHRAG_PROMPTS_INIT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "prompts" / "__init__.py"
+)
+PLATFORM_GRAPHRAG_RETRIEVERS_ROOT = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "retrievers"
+)
+PLATFORM_GRAPHRAG_PROJECT_LOADER = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "project" / "loader.py"
+)
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -157,6 +175,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/application/knowledge/",
             "src/backend/zuno/platform/services/rewrite/",
             "src/backend/zuno/platform/services/pipeline/",
+            "src/backend/zuno/platform/services/graphrag/community/",
+            "src/backend/zuno/platform/services/graphrag/extractors/",
+            "src/backend/zuno/platform/services/graphrag/graph_store/__init__.py",
+            "src/backend/zuno/platform/services/graphrag/prompts/__init__.py",
+            "src/backend/zuno/platform/services/graphrag/retrievers/",
+            "src/backend/zuno/platform/services/graphrag/project/loader.py",
             "src/backend/zuno/platform/services/embedding/__init__.py",
             "src/backend/zuno/platform/services/llm/__init__.py",
             "src/backend/zuno/platform/services/convert_files/__init__.py",
@@ -290,7 +314,22 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         for path in sorted(PLATFORM_PIPELINE_ROOT.rglob("*.py"))
     )
     checked_paths.extend(
+        (f"platform graphrag community {path.relative_to(PLATFORM_GRAPHRAG_COMMUNITY_ROOT)}", path)
+        for path in sorted(PLATFORM_GRAPHRAG_COMMUNITY_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform graphrag extractors {path.relative_to(PLATFORM_GRAPHRAG_EXTRACTORS_ROOT)}", path)
+        for path in sorted(PLATFORM_GRAPHRAG_EXTRACTORS_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform graphrag retrievers {path.relative_to(PLATFORM_GRAPHRAG_RETRIEVERS_ROOT)}", path)
+        for path in sorted(PLATFORM_GRAPHRAG_RETRIEVERS_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
         [
+            ("platform graphrag graph store init", PLATFORM_GRAPHRAG_GRAPH_STORE_INIT),
+            ("platform graphrag prompts init", PLATFORM_GRAPHRAG_PROMPTS_INIT),
+            ("platform graphrag project loader", PLATFORM_GRAPHRAG_PROJECT_LOADER),
             ("platform embedding init", EMBEDDING_INIT),
             ("platform llm init", LLM_INIT),
             ("platform convert files init", CONVERT_FILES_INIT),
