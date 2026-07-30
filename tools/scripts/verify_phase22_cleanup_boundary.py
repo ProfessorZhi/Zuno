@@ -33,6 +33,12 @@ GET_WEATHER_ACTION = (
 DELIVERY_ACTION = (
     REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "delivery" / "action.py"
 )
+UPLOAD_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "upload.py"
+KNOWLEDGE_FILE_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "knowledge_file.py"
+WORKSPACE_SESSION_SERVICE = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_session.py"
+)
+USER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "user.py"
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -61,6 +67,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/capability/tools/convert_to_pdf/action.py",
             "src/backend/zuno/capability/tools/get_weather/action.py",
             "src/backend/zuno/capability/tools/delivery/action.py",
+            "src/backend/zuno/api/services/upload.py",
+            "src/backend/zuno/api/services/knowledge_file.py",
+            "src/backend/zuno/api/services/workspace_session.py",
+            "src/backend/zuno/api/services/user.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -99,6 +109,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("convert_to_pdf action", CONVERT_TO_PDF_ACTION),
         ("get_weather action", GET_WEATHER_ACTION),
         ("delivery action", DELIVERY_ACTION),
+        ("upload service", UPLOAD_SERVICE),
+        ("knowledge file service", KNOWLEDGE_FILE_SERVICE),
+        ("workspace session service", WORKSPACE_SESSION_SERVICE),
+        ("user service", USER_SERVICE),
     ]:
         text = _read(path)
         for alias_import in alias_imports:

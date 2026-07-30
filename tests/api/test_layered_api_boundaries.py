@@ -55,8 +55,8 @@ def test_knowledge_file_controller_avoids_direct_storage_imports() -> None:
     assert "from zuno.services.storage import storage_client" not in controller
     assert "from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile" not in controller
     assert "KnowledgeFileService.prepare_uploaded_file(file_url)" in controller
-    assert "from zuno.services.storage import storage_client" in service
-    assert "from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile" in service
+    assert "from zuno.platform.services.storage import storage_client" in service
+    assert "from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile" in service
 
 
 def test_upload_controller_routes_storage_through_service_layer() -> None:
@@ -66,7 +66,7 @@ def test_upload_controller_routes_storage_through_service_layer() -> None:
     assert "from zuno.api.services.upload import UploadService" in controller
     assert "from zuno.services.storage import storage_client" not in controller
     assert "from zuno.settings import app_settings" not in controller
-    assert "from zuno.services.storage import storage_client" in service
+    assert "from zuno.platform.services.storage import storage_client" in service
 
 
 def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
@@ -168,4 +168,40 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
     for content in [convert_to_docx, convert_to_pdf, get_weather, delivery]:
         assert "from zuno.services." not in content
         assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+
+
+def test_api_service_layer_uses_canonical_platform_imports() -> None:
+    upload = _read("src/backend/zuno/api/services/upload.py")
+    knowledge_file = _read("src/backend/zuno/api/services/knowledge_file.py")
+    workspace_session = _read("src/backend/zuno/api/services/workspace_session.py")
+    user = _read("src/backend/zuno/api/services/user.py")
+
+    assert "from zuno.platform.services.storage import storage_client" in upload
+    assert "from zuno.platform.common.file_utils import get_object_storage_base_path" in upload
+    assert "from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao" in knowledge_file
+    assert "from zuno.platform.database.dao.knowledge_task import KnowledgeTaskDao" in knowledge_file
+    assert "from zuno.platform.services.pipeline.manager import KnowledgePipelineManager" in knowledge_file
+    assert "from zuno.platform.services.queue.client import QueueClient, get_queue_names" in knowledge_file
+    assert "from zuno.platform.services.rag.handler import RagHandler" in knowledge_file
+    assert "from zuno.platform.services.storage import storage_client" in knowledge_file
+    assert "from zuno.platform.common.runtime_observability import get_active_trace_id" in knowledge_file
+    assert "from zuno.platform.database.dao.workspace_session import WorkSpaceSession, WorkSpaceSessionDao" in workspace_session
+    assert "from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate" in workspace_session
+    assert "from zuno.platform.common.model_output import strip_model_wrapper_from_user_input, strip_think_tags" in workspace_session
+    assert "from zuno.platform.database.dao.user import UserDao" in user
+    assert "from zuno.platform.database.dao.user_role import UserRoleDao" in user
+    assert "from zuno.platform.database.models.role import AdminRole" in user
+    assert "from zuno.platform.database.models.user import AdminUser, UserTable" in user
+    assert "from zuno.platform.services.redis import redis_client" in user
+    assert "from zuno.platform.services.storage import storage_client" in user
+    assert "from zuno.api.dto.schemas import CreateUserReq" in user
+    assert "from zuno.platform.common.JWT import ACCESS_TOKEN_EXPIRE_TIME" in user
+    assert "from zuno.platform.common.constants import RSA_KEY" in user
+    assert "from zuno.platform.common.hash import md5_hash" in user
+    assert "from zuno.platform.common.runtime_observability import RedisKeys" in user
+
+    for content in [upload, knowledge_file, workspace_session, user]:
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content

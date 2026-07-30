@@ -16,9 +16,11 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/product/runtime_batch.py` 从 `zuno.schema.workspace` 改为 `zuno.api.dto.workspace`。
 - `src/backend/zuno/api/services/product/command_service.py` 从 `zuno.database import engine` 改为 `zuno.platform.database import engine`。
 - `src/backend/zuno/api/services/workspace.py`、`src/backend/zuno/platform/services/workspace/attachment_service.py`、`src/backend/zuno/platform/services/storage/__init__.py` 与 `src/backend/zuno/capability/tools/text2image/action.py` 的默认链 import 继续改为 canonical `zuno.api.dto` / `zuno.platform` / `zuno.capability`。
+- `src/backend/zuno/api/services/upload.py`、`src/backend/zuno/api/services/knowledge_file.py`、`src/backend/zuno/api/services/workspace_session.py` 与 `src/backend/zuno/api/services/user.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.platform.common` import。
 - `tools/scripts/verify_repo_structure.py` 的 active program 结构断言推进到 `current_phase: PHASE22`。
 - 新增 `tools/scripts/verify_phase22_cleanup_boundary.py` 和 `tests/repo/test_phase22_cleanup_boundary.py`，防止 Product Runtime 重新引入这两个 legacy alias import，并确保 removal candidates 文件存在。
 - 新增 `tests/api/test_layered_api_boundaries.py::test_capability_tool_actions_use_canonical_imports`，防止四个 capability tool action 回退到 `zuno.services` / `zuno.resources` / `zuno.utils`。
+- `tests/api/test_layered_api_boundaries.py::test_api_service_layer_uses_canonical_platform_imports` 覆盖 API service layer 的 storage、knowledge file、workspace session 和 user canonical import 收口。
 
 ## Verification
 
@@ -27,8 +29,10 @@ python tools/scripts/verify_phase22_cleanup_boundary.py
 python tools/scripts/verify_repo_structure.py
 pytest -q tests/repo/test_phase22_cleanup_boundary.py tests/repo/test_repo_structure_consistency.py tests/api/test_product_runtime_batch.py tests/api/test_goal03_product_route.py -p no:cacheprovider
 pytest -q tests/api/test_layered_api_boundaries.py tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py tests/agent/test_workspace_usage_agent_name.py -p no:cacheprovider
+pytest -q tests/api/test_layered_api_boundaries.py tests/repo/test_phase22_cleanup_boundary.py -p no:cacheprovider
 rg -n "from zuno\.schema\.workspace|from zuno\.database import engine" src/backend/zuno/product src/backend/zuno/api/services/product
 rg -n "from zuno\.(services|resources|utils)\.|import zuno\.(services|resources|utils)\." src/backend/zuno/capability/tools/convert_to_docx/action.py src/backend/zuno/capability/tools/convert_to_pdf/action.py src/backend/zuno/capability/tools/get_weather/action.py src/backend/zuno/capability/tools/delivery/action.py src/backend/zuno/api/services/workspace.py src/backend/zuno/platform/services/workspace/attachment_service.py src/backend/zuno/platform/services/storage/__init__.py src/backend/zuno/capability/tools/text2image/action.py
+rg -n "from zuno\.(services|schema|utils)\.|import zuno\.(services|schema|utils)\." src/backend/zuno/api/services/upload.py src/backend/zuno/api/services/knowledge_file.py src/backend/zuno/api/services/workspace_session.py src/backend/zuno/api/services/user.py
 ```
 
 ## Result
@@ -39,6 +43,8 @@ Repository structure verification passed.
 27 passed, 1 warning in 69.58s
 13 passed in 0.29s
 26 passed, 1 warning in 38.70s
+14 passed in 0.21s
+48 passed, 1 warning in 36.20s
 rg returned no matches
 ```
 
