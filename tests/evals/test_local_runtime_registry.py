@@ -3,7 +3,7 @@ import asyncio
 
 def test_knowledge_service_prefers_local_runtime_registry():
     from zuno.api.services.knowledge import KnowledgeService
-    from zuno.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
+    from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
 
     knowledge_id = "stackless_test_knowledge"
     register_local_runtime_settings(
@@ -33,7 +33,7 @@ def test_knowledge_service_prefers_local_runtime_registry():
 
 def test_knowledge_service_normalizes_local_project_payload_runtime_settings():
     from zuno.api.services.knowledge import KnowledgeService
-    from zuno.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
+    from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
 
     knowledge_id = "project_payload_runtime"
     project_payload = {
