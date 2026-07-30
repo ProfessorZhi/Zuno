@@ -61,7 +61,7 @@ def _sample_knowledge_config():
 
 
 def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_default_retrieval_mode():
-    from zuno.schema.knowledge import KnowledgeCreateRequest
+    from zuno.api.dto.knowledge import KnowledgeCreateRequest
 
     request = KnowledgeCreateRequest(
         knowledge_name="PyIndex",
@@ -80,7 +80,7 @@ def test_knowledge_create_request_accepts_knowledge_config_and_ignores_legacy_de
 
 def test_knowledge_config_prefers_graphrag_project_id_without_public_legacy_output():
     from zuno.api.services.knowledge import KnowledgeService
-    from zuno.schema.knowledge import KnowledgeConfig
+    from zuno.api.dto.knowledge import KnowledgeConfig
 
     request_config = KnowledgeConfig.model_validate(
         {
@@ -98,7 +98,7 @@ def test_knowledge_config_prefers_graphrag_project_id_without_public_legacy_outp
 
 def test_knowledge_config_preserves_llm_first_extractor_refs():
     from zuno.api.services.knowledge import KnowledgeService
-    from zuno.schema.knowledge import KnowledgeConfig
+    from zuno.api.dto.knowledge import KnowledgeConfig
 
     dumped = KnowledgeConfig.model_validate(_sample_knowledge_config()).model_dump()
     normalized = KnowledgeService._normalize_knowledge_config(dumped)
@@ -128,7 +128,7 @@ def test_legacy_domain_pack_id_is_bounded_migration_input_for_project_id():
 
 def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
     from zuno.api.v1.knowledge import upload_knowledge
-    from zuno.schema.knowledge import KnowledgeCreateRequest
+    from zuno.api.dto.knowledge import KnowledgeCreateRequest
 
     captured = {}
 
@@ -165,7 +165,7 @@ def test_create_knowledge_endpoint_passes_knowledge_config(monkeypatch):
 
 def test_update_knowledge_endpoint_passes_knowledge_config_patch(monkeypatch):
     from zuno.api.v1.knowledge import update_knowledge
-    from zuno.schema.knowledge import KnowledgeUpdateRequest
+    from zuno.api.dto.knowledge import KnowledgeUpdateRequest
 
     captured = {}
 
@@ -393,7 +393,7 @@ def test_reindex_knowledge_action_endpoint_passes_knowledge_id(monkeypatch):
 
 def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
     from zuno.api.v1.knowledge import search_knowledge
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     async def fake_verify_user_permission(knowledge_id, user_id):
         assert (knowledge_id, user_id) == ("k_test", "u_test")
@@ -486,11 +486,11 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "zuno.services.rag.handler.RagHandler.retrieve_ranked_documents_with_metadata",
+        "zuno.platform.services.rag.handler.RagHandler.retrieve_ranked_documents_with_metadata",
         fail_legacy_rag_handler,
     )
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService.query",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService.query",
         fake_project_query,
     )
 
