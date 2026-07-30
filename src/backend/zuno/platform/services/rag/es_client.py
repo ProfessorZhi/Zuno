@@ -5,8 +5,8 @@ from elasticsearch import Elasticsearch
 from loguru import logger
 
 from zuno.config.es_index import ESIndex
-from zuno.schema.chunk import ChunkModel
-from zuno.schema.search import SearchModel
+from zuno.api.dto.chunk import ChunkModel
+from zuno.api.dto.search import SearchModel
 from zuno.settings import app_settings
 
 

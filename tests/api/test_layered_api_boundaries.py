@@ -481,6 +481,54 @@ def test_platform_retrieval_uses_canonical_imports() -> None:
         assert "from zuno.utils." not in content
 
 
+def test_platform_rag_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/rag/handler.py",
+        "src/backend/zuno/platform/services/rag/parser.py",
+        "src/backend/zuno/platform/services/rag/es_client.py",
+        "src/backend/zuno/platform/services/rag/rerank.py",
+        "src/backend/zuno/platform/services/rag/retrieval.py",
+        "src/backend/zuno/platform/services/rag/vl_embedding.py",
+        "src/backend/zuno/platform/services/rag/vector_db/__init__.py",
+        "src/backend/zuno/platform/services/rag/vector_db/chroma_client.py",
+        "src/backend/zuno/platform/services/rag/vector_db/milvus_client.py",
+        "src/backend/zuno/platform/services/rag/vector_db/milvus_lite_client.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/__init__.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/docx.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/image.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/markdown.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/pdf.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/pptx.py",
+        "src/backend/zuno/platform/services/rag/doc_parser/text.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.platform.services.retrieval.orchestrator import (" in contents[paths[0]]
+    assert "from zuno.platform.services.rag.vector_db import milvus_client" in contents[paths[0]]
+    assert "from zuno.api.dto.chunk import ChunkModel" in contents[paths[1]]
+    assert "from zuno.api.dto.search import SearchModel" in contents[paths[2]]
+    assert "from zuno.api.dto.rerank import RerankResultModel" in contents[paths[3]]
+    assert "from zuno.platform.services.rag.es_client import client as es_client" in contents[paths[4]]
+    assert "from zuno.platform.services.storage import storage_client" in contents[paths[5]]
+    assert "from zuno.platform.services.rag.vector_db.chroma_client import ChromaClient" in contents[paths[6]]
+    assert "from zuno.platform.services.rag.embedding import get_embedding" in contents[paths[7]]
+    assert "from zuno.platform.services.rag.vector_db.milvus_lite_client import MilvusLiteClient" in contents[paths[8]]
+    assert "from zuno.platform.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding" in contents[paths[9]]
+    assert "from zuno.platform.services.rag.doc_parser.pdf import PDFParser, pdf_parser" in contents[paths[10]]
+    assert "from zuno.platform.services.convert_files.convert_pdf import convert_to_pdf" in contents[paths[11]]
+    assert "from zuno.agent.core.models.manager import ModelManager" in contents[paths[12]]
+    assert "from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id" in contents[paths[13]]
+    assert "from zuno.platform.services.storage import storage_client" in contents[paths[14]]
+    assert "from zuno.platform.services.convert_files.convert_pdf import convert_to_pdf" in contents[paths[15]]
+    assert "from zuno.api.dto.chunk import ChunkModel" in contents[paths[16]]
+
+    for content in contents.values():
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.core." not in content
+        assert "from zuno.utils." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

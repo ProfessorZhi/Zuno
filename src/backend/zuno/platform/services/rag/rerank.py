@@ -4,9 +4,9 @@ import json
 import aiohttp
 from loguru import logger
 
-from zuno.core.models.manager import ModelManager
+from zuno.agent.core.models.manager import ModelManager
 
-from zuno.schema.rerank import RerankResultModel
+from zuno.api.dto.rerank import RerankResultModel
 from zuno.settings import app_settings, initialize_app_settings
 
 

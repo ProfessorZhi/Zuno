@@ -1,6 +1,6 @@
-from zuno.services.convert_files.convert_pdf import convert_to_pdf
+from zuno.platform.services.convert_files.convert_pdf import convert_to_pdf
 
-from zuno.services.rag.doc_parser.pdf import pdf_parser
+from zuno.platform.services.rag.doc_parser.pdf import pdf_parser
 
 
 class PPTXParser:

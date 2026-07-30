@@ -40,6 +40,7 @@ PLATFORM_GRAPHRAG_RETRIEVER = (
     REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "retriever.py"
 )
 PLATFORM_RETRIEVAL_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "retrieval"
+PLATFORM_RAG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rag"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -195,6 +196,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/graphrag/orchestrator.py",
             "src/backend/zuno/platform/services/graphrag/retriever.py",
             "src/backend/zuno/platform/services/retrieval/",
+            "src/backend/zuno/platform/services/rag/",
             "src/backend/zuno/platform/services/embedding/__init__.py",
             "src/backend/zuno/platform/services/llm/__init__.py",
             "src/backend/zuno/platform/services/convert_files/__init__.py",
@@ -357,6 +359,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"platform retrieval {path.relative_to(PLATFORM_RETRIEVAL_ROOT)}", path)
         for path in sorted(PLATFORM_RETRIEVAL_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform rag {path.relative_to(PLATFORM_RAG_ROOT)}", path)
+        for path in sorted(PLATFORM_RAG_ROOT.rglob("*.py"))
     )
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 

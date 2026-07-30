@@ -4,10 +4,10 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from zuno.core.models.manager import ModelManager
-from zuno.services.storage import storage_client
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.services.storage import storage_client
 from zuno.settings import app_settings
-from zuno.utils.file_utils import get_object_key_from_public_url
+from zuno.platform.common.file_utils import get_object_key_from_public_url
 
 VL_EMBEDDING_ENDPOINT = "https://dashscope.aliyuncs.com/api/v1/services/embeddings/multimodal-embedding/multimodal-embedding"
 VL_EMBEDDING_DIMENSION = 1024
