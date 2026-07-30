@@ -2,7 +2,7 @@ import json
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
-from zuno.services.application.context import (
+from zuno.platform.services.application.context import (
     AgentExecutionContext,
     ContextItem,
     ContextOrchestrator,
@@ -11,7 +11,7 @@ from zuno.services.application.context import (
     ContextSource,
     TokenBudgetPolicy,
 )
-from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot
+from zuno.platform.services.graphrag.query_service import GraphRAGProjectSnapshot
 
 
 def _execution_context(
@@ -30,7 +30,7 @@ def _execution_context(
 
 
 def _prepare(**kwargs):
-    from zuno.services.application.context import ContextPreparationInput
+    from zuno.platform.services.application.context import ContextPreparationInput
 
     return ContextOrchestrator().prepare(
         ContextPreparationInput(

@@ -58,6 +58,8 @@ TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
 TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_agent_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_capability_registry.py",
+    REPO_ROOT / "tests" / "agent" / "test_context_contracts.py",
+    REPO_ROOT / "tests" / "agent" / "test_context_orchestrator.py",
     REPO_ROOT / "tests" / "agent" / "test_memory_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_memory_layers.py",
 ]
@@ -256,6 +258,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/storage/",
             "tests/agent/test_agent_layer_surfaces.py",
             "tests/agent/test_capability_registry.py",
+            "tests/agent/test_context_contracts.py",
+            "tests/agent/test_context_orchestrator.py",
             "tests/agent/test_memory_layer_surfaces.py",
             "tests/agent/test_memory_layers.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
