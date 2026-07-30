@@ -9,8 +9,8 @@ from langchain_core.tools import BaseTool
 from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage, AIMessageChunk, AIMessage, HumanMessage
 
-from zuno.core.callbacks import usage_metadata_callback
-from zuno.resources.prompts.completion import DEFAULT_CALL_PROMPT
+from zuno.agent.core.callbacks import usage_metadata_callback
+from zuno.platform.resources.prompts.completion import DEFAULT_CALL_PROMPT
 
 
 # 定义流式事件的负载结构，增强类型安全性

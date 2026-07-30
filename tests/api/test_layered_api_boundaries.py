@@ -98,7 +98,7 @@ def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -
     assert "from zuno.services.mcp.manager import MCPManager" not in controller
     assert "from zuno.utils.convert import convert_mcp_config" not in controller
     assert "from zuno.utils.helpers import parse_imported_config" not in controller
-    assert "from zuno.core.agents.structured_response_agent import StructuredResponseAgent" in service
+    assert "from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent" in service
     assert "from zuno.platform.services.mcp.manager import MCPManager" in service
 
 
@@ -312,3 +312,43 @@ def test_platform_tool_runtime_services_use_canonical_imports() -> None:
         assert "from zuno.database." not in content
         assert "from zuno.core." not in content
         assert "from zuno.tools." not in content
+
+
+def test_agent_core_uses_canonical_imports() -> None:
+    files = [
+        "src/backend/zuno/agent/core/agents/codeact_agent.py",
+        "src/backend/zuno/agent/core/agents/general_agent.py",
+        "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
+        "src/backend/zuno/agent/core/agents/react_agent.py",
+        "src/backend/zuno/agent/core/agents/structured_response_agent.py",
+        "src/backend/zuno/agent/core/callbacks/__init__.py",
+        "src/backend/zuno/agent/core/callbacks/usage_metadata.py",
+        "src/backend/zuno/agent/core/models/__init__.py",
+        "src/backend/zuno/agent/core/models/manager.py",
+        "src/backend/zuno/agent/core/models/usage_model.py",
+    ]
+    contents = {path: _read(path) for path in files}
+
+    assert "from zuno.agent.core.models.manager import ModelManager" in contents["src/backend/zuno/agent/core/agents/codeact_agent.py"]
+    assert "from zuno.platform.services.sandbox import PyodideSandbox" in contents["src/backend/zuno/agent/core/agents/codeact_agent.py"]
+    assert "from zuno.agent.core.callbacks import usage_metadata_callback" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
+    assert "from zuno.capability.tools import AgentToolsWithName" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
+    assert "from zuno.platform.services.mcp.manager import MCPManager" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
+    assert "from zuno.platform.services.user_defined_tool_runtime import build_user_defined_langchain_tools" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
+    assert "from zuno.api.dto.completion import PlanToolFlow" in contents["src/backend/zuno/agent/core/agents/plan_execute_agent.py"]
+    assert "from zuno.platform.resources.prompts.completion import DEFAULT_CALL_PROMPT" in contents["src/backend/zuno/agent/core/agents/react_agent.py"]
+    assert "from zuno.agent.core.callbacks.usage_metadata import UsageMetadataCallbackHandler" in contents["src/backend/zuno/agent/core/callbacks/__init__.py"]
+    assert "from zuno.platform.database import SystemUser" in contents["src/backend/zuno/agent/core/callbacks/usage_metadata.py"]
+    assert "from zuno.agent.core.models.embedding import EmbeddingModel" in contents["src/backend/zuno/agent/core/models/__init__.py"]
+    assert "from zuno.api.dto.common import ModelConfig" in contents["src/backend/zuno/agent/core/models/manager.py"]
+    assert "from zuno.platform.database.dao.llm import LLMDao" in contents["src/backend/zuno/agent/core/models/manager.py"]
+    assert "from zuno.platform.common.convert import convert_langchain_tool_calls" in contents["src/backend/zuno/agent/core/models/usage_model.py"]
+
+    for content in contents.values():
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.database" not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.tools" not in content

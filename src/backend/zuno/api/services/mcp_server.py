@@ -6,7 +6,7 @@ import pytz
 from loguru import logger
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
-from zuno.core.agents.structured_response_agent import StructuredResponseAgent
+from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent
 from zuno.api.dto.mcp import MCPResponseFormat
 from zuno.platform.common.convert import convert_mcp_config
 from zuno.platform.common.helpers import parse_imported_config

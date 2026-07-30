@@ -10,10 +10,10 @@ from langchain_core.outputs import ChatResult, ChatGeneration, ChatGenerationChu
 from langchain_core.callbacks import CallbackManagerForLLMRun, AsyncCallbackManagerForLLMRun
 from typing import Any, List, Optional, Iterator, AsyncIterator, Dict, Union, Sequence, Callable, Literal
 
-from zuno.platform.model_gateway import OpenAIUsageChatGatewayAdapter, is_openai_well_known_tool
-from zuno.utils.contexts import get_user_id_context, get_agent_name_context
-from zuno.utils.convert import convert_langchain_tool_calls
 from zuno.api.services.usage_stats import UsageStatsService
+from zuno.platform.common.contexts import get_user_id_context, get_agent_name_context
+from zuno.platform.common.convert import convert_langchain_tool_calls
+from zuno.platform.model_gateway import OpenAIUsageChatGatewayAdapter, is_openai_well_known_tool
 
 
 class ChatModelWithTokenUsage(BaseChatModel):

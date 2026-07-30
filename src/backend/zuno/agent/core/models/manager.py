@@ -1,12 +1,12 @@
 from langchain_core.language_models import BaseChatModel
 
-from zuno.core.models.embedding import EmbeddingModel
-from zuno.core.models.reason_model import ReasoningModel
-from zuno.database.dao.llm import LLMDao
+from zuno.agent.core.models.embedding import EmbeddingModel
+from zuno.agent.core.models.reason_model import ReasoningModel
+from zuno.api.dto.common import ModelConfig
+from zuno.platform.common.model_output import normalize_model_id_for_provider
+from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.model_gateway import build_openai_chat_gateway_model
-from zuno.schema.common import ModelConfig
 from zuno.settings import app_settings
-from zuno.utils.model_output import normalize_model_id_for_provider
 
 
 class ModelManager:

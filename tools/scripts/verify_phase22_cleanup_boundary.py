@@ -56,6 +56,18 @@ MCP_MULTI_CLIENT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "servic
 MCP_LOAD_TOOLS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp" / "load_mcp" / "tools.py"
 MCP_OPENAI_MANAGER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_manager.py"
 MCP_OPENAI_UTIL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_util.py"
+AGENT_CORE_FILES = [
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "codeact_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "plan_execute_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "react_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "structured_response_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "callbacks" / "__init__.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "callbacks" / "usage_metadata.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "__init__.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "manager.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "usage_model.py",
+]
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -105,6 +117,14 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/mcp/load_mcp/tools.py",
             "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
             "src/backend/zuno/platform/services/mcp_openai/mcp_util.py",
+            "src/backend/zuno/agent/core/agents/codeact_agent.py",
+            "src/backend/zuno/agent/core/agents/general_agent.py",
+            "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
+            "src/backend/zuno/agent/core/agents/react_agent.py",
+            "src/backend/zuno/agent/core/agents/structured_response_agent.py",
+            "src/backend/zuno/agent/core/callbacks/usage_metadata.py",
+            "src/backend/zuno/agent/core/models/manager.py",
+            "src/backend/zuno/agent/core/models/usage_model.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -125,8 +145,13 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     alias_imports = [
         "from zuno.schema.",
         "import zuno.schema.",
+        "from zuno.core.",
+        "import zuno.core.",
         "from zuno.services.",
         "import zuno.services.",
+        "from zuno.database import",
+        "from zuno.database.",
+        "import zuno.database.",
         "from zuno.tools.",
         "import zuno.tools.",
         "from zuno.utils.",
@@ -164,7 +189,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("mcp load tools", MCP_LOAD_TOOLS),
         ("mcp openai manager", MCP_OPENAI_MANAGER),
         ("mcp openai util", MCP_OPENAI_UTIL),
-    ]:
+    ] + [(f"agent core {path.name}", path) for path in AGENT_CORE_FILES]:
         text = _read(path)
         for alias_import in alias_imports:
             if alias_import in text:
