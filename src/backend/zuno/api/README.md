@@ -26,7 +26,7 @@
 
 ## Focused tests
 
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/api/**`
 - `tests/frontend/test_product_wiring_v1_api_contract.py`
 - `tests/repo/test_backend_facade_layers.py`

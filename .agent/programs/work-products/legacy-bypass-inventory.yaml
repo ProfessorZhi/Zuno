@@ -24,7 +24,7 @@ inventory:
     category: "root_alias"
     risk: "legacy root import registry keeps zuno.core/services/schema/database/tools/resources/config/mcp_servers aliases alive"
     target_gateway: "canonical module imports only"
-    current_callers: ["src/backend/zuno/__init__.py import hook", "tests/legacy_guards/test_zuno_alias_imports.py", "tools/scripts/verify_repo_structure.py"]
+    current_callers: ["src/backend/zuno/__init__.py import hook", "tests/repo/test_zuno_canonical_import_surfaces.py", "tools/scripts/verify_repo_structure.py"]
     temporary_allowlist: true
     migration_task: "PHASE02 legacy-runtime-compatibility-and-cutover-map"
     removal_task: "P22-T03 Legacy-free Canonical Directory Cleanup"
@@ -37,7 +37,7 @@ inventory:
     category: "root_alias"
     risk: "package import auto-registers legacy alias finder"
     target_gateway: "no implicit legacy import hook"
-    current_callers: ["import zuno package bootstrap", "tests/legacy_guards/test_zuno_alias_imports.py"]
+    current_callers: ["import zuno package bootstrap", "tests/repo/test_zuno_canonical_import_surfaces.py"]
     temporary_allowlist: true
     migration_task: "PHASE02 legacy alias cutover"
     removal_task: "P22-T03"

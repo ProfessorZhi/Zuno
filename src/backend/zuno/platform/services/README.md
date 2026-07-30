@@ -43,4 +43,4 @@ PHASE02 的当前 owner 入口是 `docs/architecture/repo-ownership-matrix.md`�
 - `tests/retrieval/`
 - `tests/storage/`
 - `tests/tools/`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

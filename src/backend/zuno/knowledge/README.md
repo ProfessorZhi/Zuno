@@ -35,5 +35,5 @@
 - `tests/graphrag/**`
 - `tests/retrieval/**`
 - `tests/agent/test_general_agent_project_query_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/repo/test_static_target_layer_imports.py`

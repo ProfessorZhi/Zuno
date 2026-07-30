@@ -536,6 +536,9 @@ pytest -q tests/repo/test_phase02_compatibility_runtime.py tests/repo/test_phase
 python tools/scripts/verify_repo_structure.py passed
 pytest -q tests/repo/test_repo_structure_consistency.py -p no:cacheprovider passed
 4 passed in 0.22s
+python .agent/scripts/verify_repo_hygiene.py passed
+pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider passed
+39 passed in 17.10s
 ```
 
 ## Remaining

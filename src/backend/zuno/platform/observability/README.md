@@ -26,5 +26,5 @@ PHASE10 status: contract-foundation
 ## Focused tests
 
 - `python tools/scripts/verify_repo_structure.py`
-- `pytest -q tests/repo/test_repo_structure_consistency.py tests/legacy_guards/test_zuno_alias_imports.py -p no:cacheprovider`
+- `pytest -q tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider`
 - `pytest -q tests/evals/test_observability_trace_contract.py tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider`

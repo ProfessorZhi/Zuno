@@ -25,4 +25,4 @@
 
 - `tests/agent/test_general_agent_project_query_runtime.py`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

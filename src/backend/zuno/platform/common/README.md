@@ -25,4 +25,4 @@
 
 - `tests/agent/test_runtime_observability.py`
 - `tests/storage/test_storage_utils.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

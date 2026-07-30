@@ -741,5 +741,5 @@ resolved_this_slice:
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
-  - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."
+  - "The alias registry cannot be deleted safely until protected old public imports are converted or explicitly versioned."
   - "PHASE22 fixed benchmark and full final verification are still pending."

@@ -32,5 +32,5 @@
 - `tests/memory/test_context_pack_engine.py`
 - `tests/agent/test_memory_system_contract.py`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/repo/test_static_target_layer_imports.py`

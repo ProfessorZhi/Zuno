@@ -89,7 +89,7 @@ legacy/removal task
 | transaction boundary | in-process stream; no canonical domain transaction |
 | external side effect | model/tool/search depending on selected mode and service path |
 | security gate | current `login_user` dependency and client token; no Target action token Current |
-| test evidence | `tests/api/test_workspace_product_loop_contract.py`, `tests/legacy_guards/test_phase5_workspace_real_runtime_flow.py` |
+| test evidence | `tests/api/test_workspace_product_loop_contract.py`, `tests/repo/test_phase5_workspace_real_runtime_flow.py` |
 | target phase | PHASE09, PHASE16 |
 | legacy/removal task | P01-T05 legacy workspace simple agent mapping |
 
@@ -215,7 +215,7 @@ legacy/removal task
 | transaction boundary | no canonical run transaction; local memory/raw event writes when enabled |
 | external side effect | model call, knowledge query, tool setup/execution candidates |
 | security gate | local tool approval/permissions surfaces; no full server security decision Current |
-| test evidence | `tests/agent/test_generalagent_context_memory_runtime.py`, `tests/legacy_guards/test_phase11b_single_generalagent_cutover.py` |
+| test evidence | `tests/agent/test_generalagent_context_memory_runtime.py`, `tests/repo/test_phase11b_single_generalagent_cutover.py` |
 | target phase | PHASE08, PHASE13, PHASE15 |
 | legacy/removal task | PHASE22 legacy alias/import retirement |
 
@@ -395,7 +395,7 @@ legacy/removal task
 | transaction boundary | import-time side effect only |
 | external side effect | mutates `sys.modules` alias registry |
 | security gate | none_current |
-| test evidence | `tests/legacy_guards/test_zuno_alias_imports.py`, `tests/repo/test_lazy_facade_static_exports.py` |
+| test evidence | `tests/repo/test_zuno_canonical_import_surfaces.py`, `tests/repo/test_lazy_facade_static_exports.py` |
 | target phase | PHASE02, PHASE22 |
 | legacy/removal task | PHASE22 alias removal; P01-T05 allowlist |
 

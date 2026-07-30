@@ -32,7 +32,7 @@
 
 - `tests/repo/test_backend_facade_layers.py`
 - `tests/agent/test_platform_layer_surfaces.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/api/test_fastapi_jwt_auth_compat.py`
 - policy / tool / storage / queue focused tests
 - `tests/repo/test_static_target_layer_imports.py`

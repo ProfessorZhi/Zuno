@@ -362,7 +362,7 @@ def test_root_runtime_tests_use_project_or_retirement_naming() -> None:
     project_names = [
         "tests/agent/test_completion_agent_config_compatibility.py",
         "tests/graphrag/test_contract_review_project_payload.py",
-        "tests/legacy_guards/test_project_query_compatibility_boundaries.py",
+        "tests/repo/test_project_query_compatibility_boundaries.py",
         "tests/agent/test_general_agent_project_query_runtime.py",
         "tests/agent/test_workspace_project_query_runtime.py",
     ]

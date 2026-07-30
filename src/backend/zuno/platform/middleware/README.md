@@ -16,5 +16,5 @@ Middleware 是 Platform 层的 HTTP 底座能力：它处理 trace id、白名�
 
 ## Focused tests
 
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - API startup/import focused tests
