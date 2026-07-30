@@ -1,3 +1,3 @@
-from zuno.services.retrieval.orchestrator import QueryExpanderAdapter, RagRetrieverAdapter, RetrievalOrchestrator
+from zuno.platform.services.retrieval.orchestrator import QueryExpanderAdapter, RagRetrieverAdapter, RetrievalOrchestrator
 
 __all__ = ["QueryExpanderAdapter", "RagRetrieverAdapter", "RetrievalOrchestrator"]

@@ -1,8 +1,8 @@
 import re
 
-from zuno.services.graphrag.client import Neo4jClient
-from zuno.services.graphrag.entity_alias import resolve_alias
-from zuno.services.rag.vector_db import milvus_client
+from zuno.platform.services.graphrag.client import Neo4jClient
+from zuno.platform.services.graphrag.entity_alias import resolve_alias
+from zuno.platform.services.rag.vector_db import milvus_client
 
 
 class GraphRetriever:

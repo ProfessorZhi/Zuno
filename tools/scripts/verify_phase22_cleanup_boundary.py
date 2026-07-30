@@ -30,6 +30,15 @@ PLATFORM_GRAPHRAG_RETRIEVERS_ROOT = (
 PLATFORM_GRAPHRAG_PROJECT_LOADER = (
     REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "project" / "loader.py"
 )
+PLATFORM_GRAPHRAG_QUERY_SERVICE = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "query_service.py"
+)
+PLATFORM_GRAPHRAG_ORCHESTRATOR = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "orchestrator.py"
+)
+PLATFORM_GRAPHRAG_RETRIEVER = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "graphrag" / "retriever.py"
+)
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -181,6 +190,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/graphrag/prompts/__init__.py",
             "src/backend/zuno/platform/services/graphrag/retrievers/",
             "src/backend/zuno/platform/services/graphrag/project/loader.py",
+            "src/backend/zuno/platform/services/graphrag/query_service.py",
+            "src/backend/zuno/platform/services/graphrag/orchestrator.py",
+            "src/backend/zuno/platform/services/graphrag/retriever.py",
             "src/backend/zuno/platform/services/embedding/__init__.py",
             "src/backend/zuno/platform/services/llm/__init__.py",
             "src/backend/zuno/platform/services/convert_files/__init__.py",
@@ -330,6 +342,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             ("platform graphrag graph store init", PLATFORM_GRAPHRAG_GRAPH_STORE_INIT),
             ("platform graphrag prompts init", PLATFORM_GRAPHRAG_PROMPTS_INIT),
             ("platform graphrag project loader", PLATFORM_GRAPHRAG_PROJECT_LOADER),
+            ("platform graphrag query service", PLATFORM_GRAPHRAG_QUERY_SERVICE),
+            ("platform graphrag orchestrator", PLATFORM_GRAPHRAG_ORCHESTRATOR),
+            ("platform graphrag retriever", PLATFORM_GRAPHRAG_RETRIEVER),
             ("platform embedding init", EMBEDDING_INIT),
             ("platform llm init", LLM_INIT),
             ("platform convert files init", CONVERT_FILES_INIT),

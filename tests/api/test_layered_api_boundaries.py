@@ -436,6 +436,23 @@ def test_platform_graphrag_lightweight_packages_use_canonical_imports() -> None:
         assert "from zuno.services." not in content
 
 
+def test_platform_graphrag_query_and_retriever_use_canonical_imports() -> None:
+    query_service = _read("src/backend/zuno/platform/services/graphrag/query_service.py")
+    orchestrator = _read("src/backend/zuno/platform/services/graphrag/orchestrator.py")
+    retriever = _read("src/backend/zuno/platform/services/graphrag/retriever.py")
+
+    assert "from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator" in query_service
+    assert "from zuno.platform.services.retrieval.models import normalize_product_mode" in query_service
+    assert "from zuno.platform.services.retrieval.planner import RetrievalPlanner" in query_service
+    assert "from zuno.platform.services.retrieval.orchestrator import QueryExpanderAdapter, RagRetrieverAdapter, RetrievalOrchestrator" in orchestrator
+    assert "from zuno.platform.services.graphrag.client import Neo4jClient" in retriever
+    assert "from zuno.platform.services.graphrag.entity_alias import resolve_alias" in retriever
+    assert "from zuno.platform.services.rag.vector_db import milvus_client" in retriever
+
+    for content in [query_service, orchestrator, retriever]:
+        assert "from zuno.services." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

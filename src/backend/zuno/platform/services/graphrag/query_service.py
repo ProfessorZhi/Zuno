@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from zuno.platform.services.retrieval.trace_artifacts import enrich_trace_metadata_with_artifacts
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
-from zuno.services.retrieval.models import normalize_product_mode
-from zuno.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.models import normalize_product_mode
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
 
 
 def _query_method_contract(
