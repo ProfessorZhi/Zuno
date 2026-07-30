@@ -117,6 +117,7 @@ exit /b 0
 
 :pull_image
 set "PULL_IMAGE=%~1"
+set "PULL_IMAGE_VAR=%~2"
 docker image inspect "!PULL_IMAGE!" >nul 2>nul
 if not errorlevel 1 exit /b 0
 for /L %%I in (1,1,3) do (
@@ -125,23 +126,30 @@ for /L %%I in (1,1,3) do (
   if not errorlevel 1 exit /b 0
   powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds (10 * %%I)"
 )
+echo.
+echo Failed to pull !PULL_IMAGE!.
+if defined PULL_IMAGE_VAR (
+  echo To use a reachable mirror, set !PULL_IMAGE_VAR! before starting Zuno Web.
+  echo Example:
+  echo   set "!PULL_IMAGE_VAR!=registry.example.com/library/image:tag"
+)
 exit /b 1
 
 :pull_infra_images
 call :default_compose_images
-call :pull_image "!POSTGRES_IMAGE!"
+call :pull_image "!POSTGRES_IMAGE!" "POSTGRES_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!REDIS_IMAGE!"
+call :pull_image "!REDIS_IMAGE!" "REDIS_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!RABBITMQ_IMAGE!"
+call :pull_image "!RABBITMQ_IMAGE!" "RABBITMQ_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!NEO4J_IMAGE!"
+call :pull_image "!NEO4J_IMAGE!" "NEO4J_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!MINIO_IMAGE!"
+call :pull_image "!MINIO_IMAGE!" "MINIO_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!ETCD_IMAGE!"
+call :pull_image "!ETCD_IMAGE!" "ETCD_IMAGE"
 if errorlevel 1 exit /b 1
-call :pull_image "!MILVUS_IMAGE!"
+call :pull_image "!MILVUS_IMAGE!" "MILVUS_IMAGE"
 if errorlevel 1 exit /b 1
 exit /b 0
 

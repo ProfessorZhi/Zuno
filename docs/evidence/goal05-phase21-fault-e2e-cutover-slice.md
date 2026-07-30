@@ -135,12 +135,13 @@ backend_import_ok
 - `elasticsearch` 改为可选 `profile`
 - `backend` / `worker` 不再默认等待 Elasticsearch 健康检查
 - Windows Web launcher 在 `docker compose up` 前串行预拉默认基础设施镜像，每个镜像重试 3 次，并尊重 `POSTGRES_IMAGE`、`REDIS_IMAGE`、`RABBITMQ_IMAGE`、`NEO4J_IMAGE`、`MINIO_IMAGE`、`ETCD_IMAGE` 与 `MILVUS_IMAGE` 覆盖，避免一次并发拉取失败中断整条启动链。
+- 当某个基础设施镜像仍无法拉取时，launcher 会打印失败镜像对应的覆盖变量和设置示例，便于在当前网络下切换到可达 registry 后复跑同一默认启动路径。
 
 静态验证通过：
 
 ```text
 pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
-26 passed
+44 passed
 ```
 
 但完整 Web stack 仍被外部 registry 阻塞。当前失败点已经从 Docker Desktop engine 转移为基础设施镜像拉取失败：
@@ -158,3 +159,13 @@ failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://
 ```
 
 这说明 full Web stack / browser smoke 现在仍未完成，但原因是 registry 可达性，不是 Docker engine 假死。
+
+后续已完成本地恢复与验证：
+
+- `docker pull postgres:16` 成功。
+- `docker compose -f infra/docker/docker-compose.yml down --remove-orphans; cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start` 成功启动默认 Web stack。
+- `docker ps` 显示 `zuno-backend`、`zuno-worker`、`zuno-frontend` 与所有基础设施容器均为 healthy / running。
+- `python -m alembic -c infra/db/alembic.ini upgrade head` 已将本地数据库迁移到 `20260729_56`，并补齐了当前数据库缺失的 `product_agent_drafts.draft_payload_json` 与 `product_agent_versions.configuration_json`。
+- `python full_e2e.py` 以本机 Chrome 和自助登录态运行，输出 `full-e2e smoke passed`。
+
+当前 full Web stack / browser smoke 已通过，PHASE21 的 blocker 已由 registry 可达性和本地 schema 漂移修复为可验证完成状态。

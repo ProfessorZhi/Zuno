@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sys
 import urllib.error
@@ -9,11 +10,17 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+import psycopg
+
 
 BASE_URL = os.getenv("ZUNO_FULL_E2E_BASE", "http://127.0.0.1:8090").rstrip("/")
 API_URL = os.getenv("ZUNO_FULL_E2E_API", "http://127.0.0.1:7860").rstrip("/")
 QA_API_URL = os.getenv("ZUNO_FULL_E2E_QA_API", "http://127.0.0.1:9101").rstrip("/")
 AUTH_PATH = Path(os.getenv("ZUNO_FULL_E2E_AUTH", "auth.json"))
+CHROME_PATH = os.getenv(
+    "ZUNO_FULL_E2E_CHROME",
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+)
 PRODUCT_CUTOVER_COMMANDS = {
     "shadow": "SHADOW_SUBMIT_USER_GOAL",
     "canary": "CANARY_SUBMIT_USER_GOAL",
@@ -29,15 +36,115 @@ def _read_json_url(url: str) -> dict[str, Any]:
         raise AssertionError(f"Failed to reach {url}: {exc}") from exc
 
 
-def _storage_token() -> str:
-    if not AUTH_PATH.exists():
-        raise AssertionError(f"Missing Playwright storage state: {AUTH_PATH}")
-    state = json.loads(AUTH_PATH.read_text(encoding="utf-8"))
-    for origin in state.get("origins", []):
-        for item in origin.get("localStorage", []):
-            if item.get("name") == "token" and item.get("value"):
-                return str(item["value"])
-    raise AssertionError("Playwright storage state does not contain localStorage.token")
+def _post_json_url(url: str, payload: dict[str, Any], *, token: str | None = None) -> dict[str, Any]:
+    data = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.URLError as exc:
+        raise AssertionError(f"Failed to reach {url}: {exc}") from exc
+
+
+def _canonical_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _create_runtime_login_state() -> dict[str, str]:
+    suffix = uuid4().hex[:8]
+    user_name = f"zuno-e2e-{suffix}"
+    password = f"Zuno!{uuid4().hex}"
+    register_response = _post_json_url(
+        f"{API_URL}/api/v1/user/register",
+        {
+            "user_name": user_name,
+            "user_email": "",
+            "user_password": password,
+        },
+    )
+    if register_response.get("status_code") != 200:
+        raise AssertionError(f"Failed to register runtime login user: {register_response}")
+    login_response = _post_json_url(
+        f"{API_URL}/api/v1/user/login",
+        {
+            "user_name": user_name,
+            "user_password": password,
+        },
+    )
+    if login_response.get("status_code") != 200:
+        raise AssertionError(f"Failed to login runtime user: {login_response}")
+    data = login_response.get("data") or {}
+    token = data.get("access_token")
+    user_id = data.get("user_id")
+    if not token or not user_id:
+        raise AssertionError(f"Login response missing token or user_id: {login_response}")
+    return {"token": str(token), "user_id": str(user_id), "user_name": user_name}
+
+
+def _bootstrap_runtime_agent_version(*, user_id: str) -> str:
+    tenant_id = "tenant:web"
+    workspace_id = "workspace:agent-studio:web"
+    agent_version_id = "agent-version:web-default"
+    agent_definition_id = f"agent-definition:{agent_version_id}"
+    with psycopg.connect("postgresql://postgres:postgres@127.0.0.1:5432/zuno") as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO product_agent_definitions (
+                    agent_definition_id, tenant_id, workspace_id, owner_principal_id,
+                    display_name, description, status, aggregate_version
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, 'ACTIVE', 1)
+                ON CONFLICT (agent_definition_id) DO NOTHING
+                """,
+                (
+                    agent_definition_id,
+                    tenant_id,
+                    workspace_id,
+                    user_id,
+                    "Zuno E2E Runtime",
+                    "runtime bootstrap for browser smoke",
+                ),
+            )
+            cur.execute(
+                """
+                INSERT INTO product_agent_versions (
+                    agent_version_id, tenant_id, agent_definition_id, version_no,
+                    config_hash, configuration_json, primary_agent_core_profile_ref, status
+                )
+                VALUES (
+                    %s, %s, %s, 1,
+                    %s, %s::json, %s, 'PUBLISHED'
+                )
+                ON CONFLICT (agent_version_id) DO NOTHING
+                """,
+                (
+                    agent_version_id,
+                    tenant_id,
+                    agent_definition_id,
+                    _canonical_sha256(
+                        {
+                            "agent_version_id": agent_version_id,
+                            "display_name": "Zuno E2E Runtime",
+                            "primary_agent_core_profile_ref": "agent-core-profile:product:unified-runtime",
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "agent_version_id": agent_version_id,
+                            "display_name": "Zuno E2E Runtime",
+                            "primary_agent_core_profile_ref": "agent-core-profile:product:unified-runtime",
+                        }
+                    ),
+                    "agent-core-profile:product:unified-runtime",
+                ),
+            )
+        conn.commit()
+    return agent_version_id
 
 
 def _runtime_request_body(mode: str, command_kind: str) -> dict[str, Any]:
@@ -66,15 +173,28 @@ def _run_browser_smoke() -> None:
     except Exception as exc:  # pragma: no cover - environment diagnostic path
         raise AssertionError("Python Playwright is required for browser full-e2e smoke") from exc
 
-    token = _storage_token()
+    if not Path(CHROME_PATH).exists():
+        raise AssertionError(
+            f"Browser executable not found: {CHROME_PATH}. "
+            "Set ZUNO_FULL_E2E_CHROME to a local Chrome/Chromium path."
+        )
+
+    login_state = _create_runtime_login_state()
+    token = login_state["token"]
+    runtime_agent_version_id = _bootstrap_runtime_agent_version(
+        user_id=login_state["user_id"],
+    )
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch(headless=True, executable_path=CHROME_PATH)
         try:
-            context = browser.new_context(storage_state=str(AUTH_PATH))
+            context = browser.new_context()
             page = context.new_page()
+            page.add_init_script(
+                f"window.localStorage.setItem('token', {json.dumps(token)});"
+                f"window.localStorage.setItem('userInfo', {json.dumps(json.dumps({'id': login_state['user_id'], 'username': login_state['user_name'], 'nickname': login_state['user_name']}))});"
+            )
             page.goto(f"{BASE_URL}/workspace", wait_until="domcontentloaded", timeout=30_000)
             page.wait_for_selector(".workspace-container", timeout=20_000)
-            page.wait_for_function("() => Boolean(window.localStorage.getItem('token'))", timeout=5_000)
             if "auth=login" in page.url or page.url.rstrip("/").endswith("/login"):
                 raise AssertionError(f"Workspace redirected to login: {page.url}")
 
@@ -126,13 +246,19 @@ def _run_browser_smoke() -> None:
                     "requests": [
                         {
                             "mode": mode,
-                            "body": _runtime_request_body(mode, command_kind),
+                            "body": {
+                                **_runtime_request_body(mode, command_kind),
+                                "active_agent_version_id": runtime_agent_version_id,
+                            },
                         }
                         for mode, command_kind in PRODUCT_CUTOVER_COMMANDS.items()
                     ] + [
                         {
                             "mode": "rollback",
-                            "body": _runtime_request_body("rollback", "SUBMIT_USER_GOAL"),
+                            "body": {
+                                **_runtime_request_body("rollback", "SUBMIT_USER_GOAL"),
+                                "active_agent_version_id": runtime_agent_version_id,
+                            },
                         }
                     ],
                 },

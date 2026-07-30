@@ -30,8 +30,18 @@ def test_web_launcher_prepulls_infra_images_with_retry_and_env_overrides():
     assert "docker image inspect \"!PULL_IMAGE!\"" in content
     assert "docker pull \"!PULL_IMAGE!\"" in content
     assert "for /L %%I in (1,1,3) do (" in content
-    assert "call :pull_image \"!POSTGRES_IMAGE!\"" in content
-    assert "call :pull_image \"!MILVUS_IMAGE!\"" in content
+    assert "call :pull_image \"!POSTGRES_IMAGE!\" \"POSTGRES_IMAGE\"" in content
+    assert "call :pull_image \"!MILVUS_IMAGE!\" \"MILVUS_IMAGE\"" in content
+    assert "set \"PULL_IMAGE_VAR=%~2\"" in content
+    assert "echo To use a reachable mirror, set !PULL_IMAGE_VAR! before starting Zuno Web." in content
+    assert 'echo   set "!PULL_IMAGE_VAR!=registry.example.com/library/image:tag"' in content
+
+
+def test_docker_worker_uses_canonical_queue_runner_module():
+    content = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert 'command: ["python", "-m", "zuno.platform.services.queue.runner"]' in content
+    assert 'command: ["python", "-m", "zuno.services.queue.runner"]' not in content
 
 
 def test_scripts_start_does_not_install_dependencies_by_default():
@@ -61,6 +71,13 @@ def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
 def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
     content = (REPO_ROOT / "tools" / "qa" / "full-e2e" / "full_e2e.py").read_text(encoding="utf-8")
 
+    assert "ZUNO_FULL_E2E_CHROME" in content
+    assert r"C:\Program Files\Google\Chrome\Application\chrome.exe" in content
+    assert "Set ZUNO_FULL_E2E_CHROME to a local Chrome/Chromium path." in content
+    assert "_bootstrap_runtime_agent_version" in content
+    assert "psycopg.connect" in content
+    assert "product_agent_definitions" in content
+    assert "product_agent_versions" in content
     assert "PRODUCT_CUTOVER_COMMANDS" in content
     assert '"shadow": "SHADOW_SUBMIT_USER_GOAL"' in content
     assert '"canary": "CANARY_SUBMIT_USER_GOAL"' in content
