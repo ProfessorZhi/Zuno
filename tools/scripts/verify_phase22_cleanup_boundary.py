@@ -74,6 +74,7 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_phase05_admin_action_reauthorization.py",
     REPO_ROOT / "tests" / "agent" / "test_runtime_observability.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_project_query_runtime.py",
+    REPO_ROOT / "tests" / "agent" / "test_workspace_usage_agent_name.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_session_api.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_session_cleanup.py",
 ]
@@ -296,6 +297,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_phase05_admin_action_reauthorization.py",
             "tests/agent/test_runtime_observability.py",
             "tests/agent/test_workspace_project_query_runtime.py",
+            "tests/agent/test_workspace_usage_agent_name.py",
             "tests/agent/test_workspace_session_api.py",
             "tests/agent/test_workspace_session_cleanup.py",
             "tests/api/test_completion_unified_runtime.py",

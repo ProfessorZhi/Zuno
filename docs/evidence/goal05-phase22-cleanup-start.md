@@ -56,6 +56,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/api/test_workspace_agentic_product_contract.py` 与 `tests/api/test_workspace_product_loop_contract.py` active Workspace product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_runtime_observability.py` active runtime observability 测试继续改为 canonical `zuno.platform.common.runtime_observability` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_mcp_server_service.py`、`tests/agent/test_mcp_stdio_server_security.py` 与 `tests/agent/test_phase05_admin_action_reauthorization.py` active MCP / admin reauthorization 测试继续改为 canonical `zuno.platform.database.models.user.AdminUser` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/agent/test_workspace_usage_agent_name.py` active Workspace usage / simple chat 测试继续改为 canonical `zuno.api.dto.workspace` import 和 `zuno.platform.services.workspace.simple_agent` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -242,6 +243,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/agent/test_mcp_server_service.py tests/agent/test_mcp_stdio_server_security.py tests/agent/test_phase05_admin_action_reauthorization.py passed
 14 passed in 32.64s
 rg no matches in selected MCP / admin reauthorization tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/agent/test_workspace_usage_agent_name.py passed
+5 passed in 28.51s
+rg no matches in tests/agent/test_workspace_usage_agent_name.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 
