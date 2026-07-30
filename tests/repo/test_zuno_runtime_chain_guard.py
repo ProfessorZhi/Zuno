@@ -132,7 +132,7 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
 
 def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:
     phase5_paths_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase5_domain_runtime_paths.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase5_domain_runtime_paths.py"
     ).read_text(encoding="utf-8")
 
     assert "KnowledgeQueryService" in phase5_paths_test

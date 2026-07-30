@@ -20,8 +20,8 @@ def test_zuno_agent_runtime_facade_is_removed_from_current_source():
     _ensure_runtime_paths()
 
     runtime_file = BACKEND_ROOT / "zuno" / "core" / "runtime" / "agent_runtime.py"
-    runtime_module = importlib.import_module("zuno.core.runtime")
-    core_module = importlib.import_module("zuno.core")
+    runtime_module = importlib.import_module("zuno.agent.core.runtime")
+    core_module = importlib.import_module("zuno.agent.core")
 
     assert not runtime_file.exists()
     assert "AgentRuntime" not in getattr(runtime_module, "__all__", [])
@@ -29,7 +29,7 @@ def test_zuno_agent_runtime_facade_is_removed_from_current_source():
 
 
 def _general_agent_config():
-    from zuno.core.agents.general_agent import AgentConfig
+    from zuno.agent.core.agents import AgentConfig
 
     return AgentConfig(
         user_id="u_1",
@@ -46,9 +46,10 @@ def _general_agent_config():
 
 
 def test_zuno_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.agent.core import agents as ga
+    from zuno.agent.core.agents import GeneralAgent
+    from zuno.knowledge.query_service import KnowledgeQueryService
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     captured = {}
 
@@ -91,7 +92,7 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatc
             trace_metadata={"resolved_query_method": "local"},
         )
 
-    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
+    monkeypatch.setattr(KnowledgeQueryService, "query", fake_query)
 
     agent = GeneralAgent(_general_agent_config())
     asyncio.run(agent.setup_knowledge_tool())
@@ -112,8 +113,8 @@ def test_zuno_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatc
 def test_zuno_general_agent_astream_uses_single_react_loop_when_project_is_bound():
     from langchain_core.messages import AIMessageChunk, HumanMessage
 
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core import agents as ga
+    from zuno.agent.core.agents import GeneralAgent
 
     class FakeReactAgent:
         async def astream(self, *args, **kwargs):
