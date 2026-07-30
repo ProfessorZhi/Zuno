@@ -82,7 +82,7 @@ def test_phase0_recovery_verifier_uses_project_query_runtime_truth() -> None:
 
 def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
     phase5_import_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase5_langgraph_runtime_imports.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase5_langgraph_runtime_imports.py"
     ).read_text(encoding="utf-8")
 
     assert "KnowledgeQueryService" in phase5_import_test
@@ -110,6 +110,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
         "tests/repo/test_phase11c_graph_public_export_retirement.py",
         "tests/repo/test_phase11c_workspace_project_query_cutover.py",
         "tests/repo/test_phase5_graphrag_index_filters.py",
+        "tests/repo/test_phase5_langgraph_runtime_imports.py",
         "tests/repo/test_phase5_general_agent_real_runtime_flow.py",
         "tests/repo/test_phase5_workspace_real_runtime_flow.py",
         "tests/repo/test_phase5_retrieval_modes.py",
@@ -141,6 +142,7 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert (REPO_ROOT / "tests/repo/test_phase11b_single_generalagent_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11c_workspace_project_query_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_graphrag_index_filters.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_langgraph_runtime_imports.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_general_agent_real_runtime_flow.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_workspace_real_runtime_flow.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_retrieval_modes.py").exists()
