@@ -56,6 +56,7 @@ TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
 TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
 TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
 TESTS_AGENT_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "agent" / "test_agent_api_project_contract.py",
     REPO_ROOT / "tests" / "agent" / "test_agent_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_capability_registry.py",
     REPO_ROOT / "tests" / "agent" / "test_context_contracts.py",
@@ -67,6 +68,8 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_memory_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_memory_layers.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_project_query_runtime.py",
+    REPO_ROOT / "tests" / "agent" / "test_workspace_session_api.py",
+    REPO_ROOT / "tests" / "agent" / "test_workspace_session_cleanup.py",
 ]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
@@ -261,6 +264,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tools/evals/zuno/",
             "tests/tools/",
             "tests/storage/",
+            "tests/agent/test_agent_api_project_contract.py",
             "tests/agent/test_agent_layer_surfaces.py",
             "tests/agent/test_capability_registry.py",
             "tests/agent/test_context_contracts.py",
@@ -272,6 +276,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_memory_layer_surfaces.py",
             "tests/agent/test_memory_layers.py",
             "tests/agent/test_workspace_project_query_runtime.py",
+            "tests/agent/test_workspace_session_api.py",
+            "tests/agent/test_workspace_session_cleanup.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",

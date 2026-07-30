@@ -3,7 +3,7 @@ import asyncio
 
 def test_create_workspace_session_prunes_empty_disposable_sessions_for_same_scope(monkeypatch):
     from zuno.api.services.workspace_session import WorkSpaceSessionService
-    from zuno.database.models.workspace_session import WorkSpaceSessionCreate
+    from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate
 
     captured = {"deleted": None, "created": None}
 
@@ -53,7 +53,7 @@ def test_create_workspace_session_prunes_empty_disposable_sessions_for_same_scop
 
 def test_create_workspace_session_keeps_nonempty_or_nondisposable_sessions(monkeypatch):
     from zuno.api.services.workspace_session import WorkSpaceSessionService
-    from zuno.database.models.workspace_session import WorkSpaceSessionCreate
+    from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate
 
     captured = {"deleted": None}
 

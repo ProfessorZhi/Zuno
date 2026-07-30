@@ -1,5 +1,5 @@
 def test_agent_create_request_uses_graphrag_project_id_as_public_field():
-    from zuno.schema.agent import AgentCreateReq
+    from zuno.api.dto.agent import AgentCreateReq
 
     request = AgentCreateReq(
         name="contract-agent",
@@ -16,7 +16,7 @@ def test_agent_create_request_uses_graphrag_project_id_as_public_field():
 
 
 def test_agent_create_request_accepts_legacy_domain_pack_id_as_migration_input():
-    from zuno.schema.agent import AgentCreateReq
+    from zuno.api.dto.agent import AgentCreateReq
 
     request = AgentCreateReq.model_validate(
         {
@@ -34,7 +34,7 @@ def test_agent_create_request_accepts_legacy_domain_pack_id_as_migration_input()
 
 def test_agent_service_maps_project_field_to_existing_database_column():
     from zuno.api.services.agent import AgentService
-    from zuno.schema.agent import AgentCreateReq
+    from zuno.api.dto.agent import AgentCreateReq
 
     request = AgentCreateReq(
         name="contract-agent",
@@ -51,7 +51,7 @@ def test_agent_service_maps_project_field_to_existing_database_column():
 
 
 def test_agent_update_request_prefers_graphrag_project_id_over_legacy_input():
-    from zuno.schema.agent import AgentUpdateReq
+    from zuno.api.dto.agent import AgentUpdateReq
 
     request = AgentUpdateReq.model_validate(
         {
