@@ -1,9 +1,9 @@
-import asyncio
+﻿import asyncio
 from types import SimpleNamespace
 
 
 def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_rerank(monkeypatch):
-    from zuno.database.init_data import insert_llm_to_mysql
+    from zuno.platform.database.init_data import insert_llm_to_mysql
     from zuno.settings import app_settings
 
     original_multi_models = app_settings.multi_models
@@ -16,7 +16,7 @@ def test_insert_llm_to_mysql_syncs_conversation_embedding_vl_embedding_and_reran
         created_records.append(kwargs)
 
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.get_llm_by_user",
+        "zuno.platform.database.dao.llm.LLMDao.get_llm_by_user",
         fake_get_llm_by_user,
     )
     monkeypatch.setattr(
@@ -118,7 +118,7 @@ def test_get_visible_llm_normalizes_legacy_reranker_type(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.get_llm_by_user",
+        "zuno.platform.database.dao.llm.LLMDao.get_llm_by_user",
         fake_get_llm_by_user,
     )
 
@@ -147,15 +147,15 @@ def test_activate_model_slot_replaces_previous_binding(monkeypatch):
         operations.append(("update", kwargs))
 
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.get_llm_by_id",
+        "zuno.platform.database.dao.llm.LLMDao.get_llm_by_id",
         fake_get_llm_by_id,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.clear_model_slot",
+        "zuno.platform.database.dao.llm.LLMDao.clear_model_slot",
         fake_clear_model_slot,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.update_llm",
+        "zuno.platform.database.dao.llm.LLMDao.update_llm",
         fake_update_llm,
     )
 
@@ -170,13 +170,13 @@ def test_activate_model_slot_replaces_previous_binding(monkeypatch):
 def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
     from types import SimpleNamespace
 
-    from zuno.core.models.manager import ModelManager
+    from zuno.agent.core.models.manager import ModelManager
     from zuno.settings import app_settings
 
     original_embedding = app_settings.multi_models.embedding
 
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.get_llm_by_slot",
+        "zuno.platform.database.dao.llm.LLMDao.get_llm_by_slot",
         lambda _slot: SimpleNamespace(
             model="active-embedding",
             provider="openai",
@@ -205,7 +205,7 @@ def test_model_manager_prefers_active_slot_over_yaml(monkeypatch):
 def test_model_manager_uses_active_tool_and_reasoning_slots(monkeypatch):
     from types import SimpleNamespace
 
-    from zuno.core.models.manager import ModelManager
+    from zuno.agent.core.models.manager import ModelManager
 
     slot_rows = {
         "tool_call_model": SimpleNamespace(
@@ -223,7 +223,7 @@ def test_model_manager_uses_active_tool_and_reasoning_slots(monkeypatch):
     }
 
     monkeypatch.setattr(
-        "zuno.database.dao.llm.LLMDao.get_llm_by_slot",
+        "zuno.platform.database.dao.llm.LLMDao.get_llm_by_slot",
         lambda slot: slot_rows.get(slot),
     )
 
