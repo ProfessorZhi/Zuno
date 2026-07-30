@@ -7,19 +7,19 @@ from loguru import logger
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.core.agents.structured_response_agent import StructuredResponseAgent
-from zuno.database.dao.mcp_server import MCPServerDao
-from zuno.database.models.user import AdminUser, SystemUser
-from zuno.resources.prompts.mcp import McpAsToolPrompt
-from zuno.schema.mcp import MCPResponseFormat
-from zuno.services.mcp.manager import MCPManager
+from zuno.api.dto.mcp import MCPResponseFormat
+from zuno.platform.common.convert import convert_mcp_config
+from zuno.platform.common.helpers import parse_imported_config
+from zuno.platform.database.dao.mcp_server import MCPServerDao
+from zuno.platform.database.models.user import AdminUser, SystemUser
+from zuno.platform.resources.prompts.mcp import McpAsToolPrompt
+from zuno.platform.services.mcp.manager import MCPManager
 from zuno.platform.security import (
     SecurityProductActionDenied,
     SecurityProductActionGuard,
     SecurityProductActionRequest,
     build_product_action_hash,
 )
-from zuno.utils.convert import convert_mcp_config
-from zuno.utils.helpers import parse_imported_config
 
 ADMIN_MCP_ACTIONS = {
     "config": "admin.mcp.config",

@@ -45,7 +45,7 @@ def test_knowledge_controller_routes_search_through_service_layer() -> None:
     assert "from zuno.services.rag.handler import RagHandler" not in controller
     assert "await KnowledgeService.search_knowledge(" in controller
     assert "from zuno.services.rag.handler import RagHandler" not in service
-    assert "from zuno.services.application.knowledge import KnowledgeQueryService" in service
+    assert "from zuno.platform.services.application.knowledge import KnowledgeQueryService" in service
 
 
 def test_knowledge_file_controller_avoids_direct_storage_imports() -> None:
@@ -99,7 +99,7 @@ def test_mcp_server_controller_avoids_direct_runtime_and_mcp_manager_imports() -
     assert "from zuno.utils.convert import convert_mcp_config" not in controller
     assert "from zuno.utils.helpers import parse_imported_config" not in controller
     assert "from zuno.core.agents.structured_response_agent import StructuredResponseAgent" in service
-    assert "from zuno.services.mcp.manager import MCPManager" in service
+    assert "from zuno.platform.services.mcp.manager import MCPManager" in service
 
 
 def test_workspace_controller_routes_runtime_orchestration_through_service_layer() -> None:
@@ -145,9 +145,9 @@ def test_tool_controller_routes_runtime_validation_and_connectivity_through_serv
     assert "await ToolRuntimeService.test_system_tool_connectivity(tool_name)" in controller
     assert "await ToolRuntimeService.test_saved_tool_connectivity(tool)" in controller
     assert "ToolRuntimeService.build_update_payload(req)" in controller
-    assert "from zuno.services.cli_tool_discovery import CliToolDiscoveryService" in service
-    assert "from zuno.services.simple_api_tool import (" in service
-    assert "from zuno.services.tool_connectivity_service import ToolConnectivityService" in service
+    assert "from zuno.platform.services.cli_tool_discovery import CliToolDiscoveryService" in service
+    assert "from zuno.platform.services.simple_api_tool import (" in service
+    assert "from zuno.platform.services.tool_connectivity_service import ToolConnectivityService" in service
 
 
 def test_capability_tool_actions_use_canonical_imports() -> None:
@@ -176,6 +176,12 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     knowledge_file = _read("src/backend/zuno/api/services/knowledge_file.py")
     workspace_session = _read("src/backend/zuno/api/services/workspace_session.py")
     user = _read("src/backend/zuno/api/services/user.py")
+    tool = _read("src/backend/zuno/api/services/tool.py")
+    knowledge = _read("src/backend/zuno/api/services/knowledge.py")
+    agent = _read("src/backend/zuno/api/services/agent.py")
+    history = _read("src/backend/zuno/api/services/history.py")
+    llm = _read("src/backend/zuno/api/services/llm.py")
+    mcp_server = _read("src/backend/zuno/api/services/mcp_server.py")
 
     assert "from zuno.platform.services.storage import storage_client" in upload
     assert "from zuno.platform.common.file_utils import get_object_storage_base_path" in upload
@@ -200,8 +206,47 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.common.constants import RSA_KEY" in user
     assert "from zuno.platform.common.hash import md5_hash" in user
     assert "from zuno.platform.common.runtime_observability import RedisKeys" in user
+    assert "from zuno.platform.database import SystemUser, ToolTable" in tool
+    assert "from zuno.api.dto.tool import (" in tool
+    assert "from zuno.platform.database.dao.tool import ToolDao" in tool
+    assert "from zuno.platform.database.models.user import AdminUser" in tool
+    assert "from zuno.platform.services.cli_tool_discovery import CliToolDiscoveryService" in tool
+    assert "from zuno.platform.services.simple_api_tool import (" in tool
+    assert "from zuno.platform.services.tool_connectivity_service import ToolConnectivityService" in tool
+    assert "from zuno.platform.services.tool_creation_service import ToolCreationService" in tool
+    assert "from zuno.platform.services.user_defined_tool_runtime import (" in tool
+    assert "from zuno.platform.common.file_utils import format_file_size" in knowledge
+    assert "from zuno.platform.database import engine" in knowledge
+    assert "from zuno.platform.database.dao.knowledge import KnowledgeDao" in knowledge
+    assert "from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao" in knowledge
+    assert "from zuno.platform.database.dao.llm import LLMDao" in knowledge
+    assert "from zuno.platform.database.models.user import AdminUser" in knowledge
+    assert "from zuno.platform.services.runtime_registry import get_local_runtime_settings" in knowledge
+    assert "from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader" in knowledge
+    assert "from zuno.platform.services.application.knowledge import KnowledgeQueryService" in knowledge
+    assert "from zuno.api.dto.agent import AgentCreateReq" in agent
+    assert "from zuno.platform.database import AgentTable" in agent
+    assert "from zuno.platform.database.dao.agent import AgentDao" in agent
+    assert "from zuno.platform.database.dao.dialog import DialogDao" in agent
+    assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in agent
+    assert "from zuno.api.dto.chunk import ChunkModel" in history
+    assert "from zuno.platform.common.helpers import get_now_beijing_time" in history
+    assert "from zuno.platform.common.model_output import strip_model_wrapper_from_user_input" in history
+    assert "from zuno.platform.database.dao.history import HistoryDao" in history
+    assert "from zuno.platform.services.rag.es_client import client as es_client" in history
+    assert "from zuno.platform.services.rag.vector_db import milvus_client" in history
+    assert "from zuno.platform.common.model_output import normalize_model_id_for_provider" in llm
+    assert "from zuno.platform.database.dao.llm import LLMDao" in llm
+    assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in llm
+    assert "from zuno.api.dto.mcp import MCPResponseFormat" in mcp_server
+    assert "from zuno.platform.common.convert import convert_mcp_config" in mcp_server
+    assert "from zuno.platform.common.helpers import parse_imported_config" in mcp_server
+    assert "from zuno.platform.database.dao.mcp_server import MCPServerDao" in mcp_server
+    assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in mcp_server
+    assert "from zuno.platform.resources.prompts.mcp import McpAsToolPrompt" in mcp_server
+    assert "from zuno.platform.services.mcp.manager import MCPManager" in mcp_server
 
-    for content in [upload, knowledge_file, workspace_session, user]:
+    for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server]:
         assert "from zuno.services." not in content
         assert "from zuno.schema." not in content
         assert "from zuno.utils." not in content

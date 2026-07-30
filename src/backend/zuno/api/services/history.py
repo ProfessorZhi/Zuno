@@ -5,12 +5,12 @@ from uuid import uuid4
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from zuno.api.services.dialog import DialogService
-from zuno.database.dao.history import HistoryDao
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.es_client import client as es_client
-from zuno.services.rag.vector_db import milvus_client
-from zuno.utils.helpers import get_now_beijing_time
-from zuno.utils.model_output import strip_model_wrapper_from_user_input
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.common.helpers import get_now_beijing_time
+from zuno.platform.common.model_output import strip_model_wrapper_from_user_input
+from zuno.platform.database.dao.history import HistoryDao
+from zuno.platform.services.rag.es_client import client as es_client
+from zuno.platform.services.rag.vector_db import milvus_client
 
 Assistant_Role = "assistant"
 User_Role = "user"

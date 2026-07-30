@@ -39,6 +39,12 @@ WORKSPACE_SESSION_SERVICE = (
     REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_session.py"
 )
 USER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "user.py"
+TOOL_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "tool.py"
+KNOWLEDGE_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "knowledge.py"
+AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "agent.py"
+HISTORY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "history.py"
+LLM_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "llm.py"
+MCP_SERVER_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_server.py"
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
 
@@ -71,6 +77,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/knowledge_file.py",
             "src/backend/zuno/api/services/workspace_session.py",
             "src/backend/zuno/api/services/user.py",
+            "src/backend/zuno/api/services/tool.py",
+            "src/backend/zuno/api/services/knowledge.py",
+            "src/backend/zuno/api/services/agent.py",
+            "src/backend/zuno/api/services/history.py",
+            "src/backend/zuno/api/services/llm.py",
+            "src/backend/zuno/api/services/mcp_server.py",
             "remaining_not_closed:",
         ]:
             if phrase not in candidates:
@@ -113,6 +125,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("knowledge file service", KNOWLEDGE_FILE_SERVICE),
         ("workspace session service", WORKSPACE_SESSION_SERVICE),
         ("user service", USER_SERVICE),
+        ("tool service", TOOL_SERVICE),
+        ("knowledge service", KNOWLEDGE_SERVICE),
+        ("agent service", AGENT_SERVICE),
+        ("history service", HISTORY_SERVICE),
+        ("llm service", LLM_SERVICE),
+        ("mcp server service", MCP_SERVER_SERVICE),
     ]:
         text = _read(path)
         for alias_import in alias_imports:
