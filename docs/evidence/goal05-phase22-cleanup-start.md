@@ -58,6 +58,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_mcp_server_service.py`、`tests/agent/test_mcp_stdio_server_security.py` 与 `tests/agent/test_phase05_admin_action_reauthorization.py` active MCP / admin reauthorization 测试继续改为 canonical `zuno.platform.database.models.user.AdminUser` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_workspace_usage_agent_name.py` active Workspace usage / simple chat 测试继续改为 canonical `zuno.api.dto.workspace` import 和 `zuno.platform.services.workspace.simple_agent` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/api/test_knowledge_api_contract.py` active Knowledge API contract 测试继续改为 canonical `zuno.api.dto.knowledge` 与 `zuno.platform.services` import / monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/api/test_goal03_knowledge_route.py` active Goal03 Knowledge route 测试继续改为 canonical `zuno.platform.services.application.knowledge` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/knowledge/test_parse_gateway_runtime.py` active parse gateway runtime 测试继续改为 canonical `zuno.api.dto.chunk` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -317,6 +318,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/retrieval/test_graph_retriever_local_runtime.py tests/retrieval/test_workspace_retrieval_trace.py passed
 3 passed in 15.52s
 rg no matches in selected retrieval local runtime / workspace trace tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/api/test_goal03_knowledge_route.py passed
+8 passed in 3.01s
+rg no matches in tests/api/test_goal03_knowledge_route.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

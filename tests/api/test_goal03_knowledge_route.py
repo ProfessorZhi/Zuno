@@ -63,7 +63,7 @@ def test_goal03_knowledge_search_records_query_run(monkeypatch) -> None:
             return _Result()
 
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService",
         _QueryService,
     )
     monkeypatch.setattr(
@@ -142,7 +142,7 @@ def test_goal03_knowledge_search_requires_active_snapshot_and_records_run(monkey
             return False
 
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService",
         _QueryService,
     )
     monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
@@ -207,7 +207,7 @@ def test_goal03_knowledge_query_run_records_partial_no_result_semantics(monkeypa
             return False
 
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService",
         _QueryService,
     )
     monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
@@ -269,7 +269,7 @@ def test_goal03_knowledge_query_run_records_timeout_no_result_semantics(monkeypa
             return False
 
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService",
         _QueryService,
     )
     monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
@@ -306,7 +306,7 @@ def test_goal03_knowledge_search_blocks_without_active_snapshot(monkeypatch) -> 
             return False
 
     monkeypatch.setattr(
-        "zuno.services.application.knowledge.KnowledgeQueryService",
+        "zuno.platform.services.application.knowledge.KnowledgeQueryService",
         _QueryService,
     )
     monkeypatch.setattr(knowledge_service_module, "KnowledgeUnitOfWork", lambda engine: _Uow())
