@@ -121,6 +121,7 @@ TESTS_INTEGRATION_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "integration" / "test_goal03_wave_a_persistence.py",
 ]
 TESTS_REPO_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "repo" / "test_zuno_canonical_import_surfaces.py",
     REPO_ROOT / "tests" / "repo" / "test_llm_system_sync.py",
     REPO_ROOT / "tests" / "repo" / "test_model_gateway_bypass.py",
 ]
@@ -424,6 +425,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/integration/test_goal03_wave_a_persistence.py",
             "tests/repo/test_llm_system_sync.py",
             "tests/repo/test_model_gateway_bypass.py",
+            "tests/repo/test_zuno_canonical_import_surfaces.py",
             "tests/retrieval/test_query_rewrite.py",
             "tests/retrieval/test_enhanced_requery_activation.py",
             "tests/retrieval/test_enhanced_requery_precision_gate.py",

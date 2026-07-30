@@ -627,6 +627,10 @@ resolved_this_slice:
     before: "RAG index rebuild, MinIO manifest verifier and Alembic env imported database/RAG/storage/file utilities through zuno.database / zuno.services / zuno.utils aliases"
     after: "operational scripts and Alembic env import canonical zuno.platform.database / zuno.platform.services / zuno.platform.common paths"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/legacy_guards/test_zuno_alias_imports.py; tests/legacy_guards/test_zuno_config_resource_aliases.py"
+    before: "legacy guard suite asserted old zuno.* alias imports and canonical config resources from tests/legacy_guards"
+    after: "pure alias import guard removed; canonical module spec and config resource guard lives in tests/repo/test_zuno_canonical_import_surfaces.py"
+    evidence: "tests/repo/test_zuno_canonical_import_surfaces.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

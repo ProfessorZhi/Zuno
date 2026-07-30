@@ -68,6 +68,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/integration/test_goal03_wave_a_persistence.py` active Goal03 Wave A persistence 集成测试继续改为 canonical `zuno.platform.database` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/repo/test_llm_system_sync.py` active LLM system sync repo 测试继续改为 canonical `zuno.platform.database` / `zuno.agent.core.models` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/repo/test_model_gateway_bypass.py` active Model Gateway bypass repo 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core.models` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_zuno_alias_imports.py` 与 `tests/legacy_guards/test_zuno_config_resource_aliases.py` 退出 legacy guard suite；新增 `tests/repo/test_zuno_canonical_import_surfaces.py`，用 canonical module spec 与 config resource guard 替代旧 alias import 证明，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/agent/core/agents/plan_execute_agent.py`、`src/backend/zuno/agent/core/agents/react_agent.py`、`src/backend/zuno/capability/tool_runtime/bypass_guard.py` 与 `src/backend/zuno/platform/services/mcp/manager.py` 移除 UTF-8 BOM，恢复 AST-based Model Gateway bypass verifier 的真实严格检查。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -377,6 +378,10 @@ rg no matches in selected model registry scripts for legacy alias references
 PHASE22 cleanup boundary verification passed.
 python -m compileall -q tools/scripts/rebuild_rag_indexes.py tools/scripts/verify_phase04_minio_manifest_adoption.py infra/db/alembic/env.py passed
 rg no matches in selected RAG rebuild / MinIO manifest / Alembic env entries for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/repo/test_zuno_canonical_import_surfaces.py passed
+45 passed in 15.78s
+rg no matches in tests/repo/test_zuno_canonical_import_surfaces.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 
