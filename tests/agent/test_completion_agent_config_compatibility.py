@@ -4,9 +4,10 @@ from types import SimpleNamespace
 
 def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
     from zuno.api.v1.completion import completion
-    from zuno.schema.completion import CompletionReq
+    from zuno.api.dto.completion import CompletionReq
 
     captured = {}
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
 
     class FakeAgent:
         def __init__(self, agent_config):
@@ -68,9 +69,10 @@ def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
 
 def test_completion_can_enable_multi_agent_runtime(monkeypatch):
     from zuno.api.v1.completion import completion
-    from zuno.schema.completion import CompletionReq
+    from zuno.api.dto.completion import CompletionReq
 
     captured = {}
+    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
 
     class FakeAgent:
         def __init__(self, agent_config):

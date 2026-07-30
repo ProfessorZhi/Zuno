@@ -59,6 +59,7 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_agent_api_project_contract.py",
     REPO_ROOT / "tests" / "agent" / "test_agent_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_capability_registry.py",
+    REPO_ROOT / "tests" / "agent" / "test_completion_agent_config_compatibility.py",
     REPO_ROOT / "tests" / "agent" / "test_context_contracts.py",
     REPO_ROOT / "tests" / "agent" / "test_context_orchestrator.py",
     REPO_ROOT / "tests" / "agent" / "test_general_agent_project_query_runtime.py",
@@ -70,6 +71,9 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_workspace_project_query_runtime.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_session_api.py",
     REPO_ROOT / "tests" / "agent" / "test_workspace_session_cleanup.py",
+]
+TESTS_API_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "api" / "test_completion_unified_runtime.py",
 ]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
@@ -267,6 +271,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_agent_api_project_contract.py",
             "tests/agent/test_agent_layer_surfaces.py",
             "tests/agent/test_capability_registry.py",
+            "tests/agent/test_completion_agent_config_compatibility.py",
             "tests/agent/test_context_contracts.py",
             "tests/agent/test_context_orchestrator.py",
             "tests/agent/test_general_agent_project_query_runtime.py",
@@ -278,6 +283,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/agent/test_workspace_project_query_runtime.py",
             "tests/agent/test_workspace_session_api.py",
             "tests/agent/test_workspace_session_cleanup.py",
+            "tests/api/test_completion_unified_runtime.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
@@ -504,6 +510,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tests agent canonical {path.name}", path)
         for path in TESTS_AGENT_CANONICAL_FILES
+    )
+    checked_paths.extend(
+        (f"tests api canonical {path.name}", path)
+        for path in TESTS_API_CANONICAL_FILES
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))

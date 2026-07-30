@@ -117,7 +117,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
 
     monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(fake_submit))
 
-    from zuno.schema.completion import CompletionReq
+    from zuno.api.dto.completion import CompletionReq
 
     result = CompletionService.record_product_runtime_request(
         req=CompletionReq(
@@ -159,7 +159,7 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
 
     monkeypatch.setattr(ProductService, "submit_runtime_request", staticmethod(fail_submit))
 
-    from zuno.schema.completion import CompletionReq
+    from zuno.api.dto.completion import CompletionReq
 
     result = CompletionService.record_product_runtime_request(
         req=CompletionReq(

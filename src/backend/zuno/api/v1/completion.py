@@ -28,8 +28,8 @@ class _LazyClassProxy:
         return klass(*args, **kwargs)
 
 
-AgentConfig = _LazyClassProxy("zuno.core.agents.general_agent", "AgentConfig")
-GeneralAgent = _LazyClassProxy("zuno.core.agents.general_agent", "GeneralAgent")
+AgentConfig = _LazyClassProxy("zuno.agent.core.agents.general_agent", "AgentConfig")
+GeneralAgent = _LazyClassProxy("zuno.agent.core.agents.general_agent", "GeneralAgent")
 
 
 class WatchedStreamingResponse(StreamingResponse):
