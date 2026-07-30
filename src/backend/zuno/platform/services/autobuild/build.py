@@ -6,7 +6,7 @@ from fastapi import status as http_status
 from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
 from loguru import logger
 
-from zuno.services.autobuild.manager import AutoBuildManager
+from zuno.platform.services.autobuild.manager import AutoBuildManager
 from zuno.api.services.user import UserPayload
 
 router = APIRouter()

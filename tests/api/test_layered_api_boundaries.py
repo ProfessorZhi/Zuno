@@ -627,6 +627,34 @@ def test_platform_deepsearch_uses_canonical_imports() -> None:
         assert "from zuno.services." not in content
 
 
+def test_platform_autobuild_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/autobuild/build.py",
+        "src/backend/zuno/platform/services/autobuild/manager.py",
+        "src/backend/zuno/platform/services/autobuild/client.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    assert "from zuno.platform.services.autobuild.manager import AutoBuildManager" in contents[paths[0]]
+    assert "from zuno.platform.services.autobuild.client import AutoBuildClient" in contents[paths[1]]
+    assert "from zuno.platform.common.helpers import get_cache_key" in contents[paths[1]]
+    assert "from zuno.capability.tools import AgentToolsWithName" in contents[paths[2]]
+    assert "from zuno.platform.resources.prompts.llm import" in contents[paths[2]]
+    assert "_tool_to_function_schema(key, func)" in contents[paths[2]]
+    assert "for key, func in AgentToolsWithName.items():" in contents[paths[2]]
+    assert "await self.base_agent.ainvoke" in contents[paths[2]]
+    assert "self.builder_graph.add_edge('auto_create_agent', END)" in contents[paths[2]]
+
+    for content in contents.values():
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+        assert "from zuno.schema." not in content
+        assert "from zuno.database." not in content
+        assert "from zuno.resources." not in content
+        assert "from zuno.utils." not in content
+        assert "from zuno.tools" not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")
@@ -648,6 +676,7 @@ def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     assert "from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter" in tool_creation_service
     assert "from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter" in tool_creation_service
     assert "from zuno.platform.database import ToolTable" in tool_creation_service
+    assert "from zuno.platform.database.dao.tool import ToolDao" in tool_creation_service
     assert "from zuno.platform.services.simple_api_tool import build_openapi_schema_from_simple_config" in tool_creation_service
     assert "from zuno.platform.services.user_defined_tool_runtime import build_stored_tool_auth_config" in tool_creation_service
     assert "from zuno.api.dto.tool import ToolConnectivityReq, ToolConnectivityResp" in tool_connectivity_service

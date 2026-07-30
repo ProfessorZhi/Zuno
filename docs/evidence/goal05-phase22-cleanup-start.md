@@ -20,6 +20,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/api/services/upload.py`、`src/backend/zuno/api/services/knowledge_file.py`、`src/backend/zuno/api/services/workspace_session.py` 与 `src/backend/zuno/api/services/user.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.platform.common` import。
 - `src/backend/zuno/api/services/tool.py`、`src/backend/zuno/api/services/knowledge.py`、`src/backend/zuno/api/services/agent.py`、`src/backend/zuno/api/services/history.py`、`src/backend/zuno/api/services/llm.py` 与 `src/backend/zuno/api/services/mcp_server.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/cli_tool_discovery.py`、`src/backend/zuno/platform/services/simple_api_tool.py`、`src/backend/zuno/platform/services/tool_creation_service.py`、`src/backend/zuno/platform/services/tool_connectivity_service.py`、`src/backend/zuno/platform/services/user_defined_tool_runtime.py` 与 `src/backend/zuno/platform/database/init_data.py` 继续改为 canonical `zuno.platform` / `zuno.api.dto` / `zuno.capability` / `zuno.platform.common` import。
+- `src/backend/zuno/platform/services/tool_creation_service.py` 创建用户工具时直接调用 canonical `zuno.platform.database.dao.tool.ToolDao`，拆除 `ToolService` 模块导入期间回跳 `ToolCreationService` 的循环依赖。
 - `src/backend/zuno/platform/services/mcp/manager.py`、`src/backend/zuno/platform/services/mcp/multi_client.py`、`src/backend/zuno/platform/services/mcp/load_mcp/tools.py`、`src/backend/zuno/platform/services/mcp_openai/mcp_manager.py` 与 `src/backend/zuno/platform/services/mcp_openai/mcp_util.py` 继续改为 canonical `zuno.platform.services.mcp` / `zuno.platform.services.mcp_openai` / `zuno.api.dto.mcp` import。
 - `src/backend/zuno/agent/core/agents/*`、`src/backend/zuno/agent/core/callbacks/*` 与 `src/backend/zuno/agent/core/models/*` 的默认链 import 继续改为 canonical `zuno.agent.core` / `zuno.platform` / `zuno.api.dto` / `zuno.capability` import。
 - `src/backend/zuno/api/v1/*` 与 `src/backend/zuno/api/errcode/*` 的控制器 DTO import 继续改为 canonical `zuno.api.dto`，并把 context helper 改为 `zuno.platform.common.contexts`。
@@ -32,6 +33,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/application/knowledge/`、`src/backend/zuno/platform/services/rewrite/`、`src/backend/zuno/platform/services/queue/workers.py` 与 `src/backend/zuno/platform/services/queue/messages.py` 继续改为 canonical `zuno.platform.services` / `zuno.agent.core` / `zuno.platform.resources` import。
 - `src/backend/zuno/platform/services/queue/runner.py` worker 启动入口继续改为 canonical `zuno.platform.database` / `zuno.platform.services.pipeline` / `zuno.platform.services.queue` import。
 - `src/backend/zuno/platform/services/deepsearch/` graph 与 streaming graph 入口继续改为 canonical `zuno.agent.core.models` / `zuno.platform.services.deepsearch` import。
+- `src/backend/zuno/platform/services/autobuild/` build、manager 与 client 默认入口继续改为 canonical `zuno.platform.services.autobuild` / `zuno.platform.common` / `zuno.platform.resources` / `zuno.capability` import，并用本地 function schema adapter 替代已消失的 legacy `ChatService.function_to_json` / `action_Function_call`。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -133,6 +135,12 @@ PHASE22 cleanup boundary verification passed.
 25 passed in 0.24s
 python -m compileall -q src/backend/zuno/platform/services/deepsearch passed
 rg no matches in src/backend/zuno/platform/services/deepsearch for legacy alias imports
+PHASE22 cleanup boundary verification passed.
+26 passed in 0.63s
+python -m compileall -q src/backend/zuno/platform/services/autobuild src/backend/zuno/platform/services/tool_creation_service.py src/backend/zuno/api/services/tool.py passed
+rg no matches in src/backend/zuno/platform/services/autobuild for legacy alias imports
+python -c "import zuno.api.services.tool as t; print(t.ToolService.__name__)" passed
+autobuild tool schema smoke passed: 14 schemas
 ```
 
 ## Remaining

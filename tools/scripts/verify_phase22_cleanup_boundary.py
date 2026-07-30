@@ -44,6 +44,7 @@ PLATFORM_RAG_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "servi
 PLATFORM_MEMORY_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "memory"
 PLATFORM_WORKSPACE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "workspace"
 PLATFORM_DEEPSEARCH_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "deepsearch"
+PLATFORM_AUTOBUILD_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "autobuild"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -226,6 +227,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/queue/messages.py",
             "src/backend/zuno/platform/services/queue/runner.py",
             "src/backend/zuno/platform/services/deepsearch/",
+            "src/backend/zuno/platform/services/autobuild/",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
             "src/backend/zuno/memory/feedback_consumer.py",
@@ -407,6 +409,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"platform deepsearch {path.relative_to(PLATFORM_DEEPSEARCH_ROOT)}", path)
         for path in sorted(PLATFORM_DEEPSEARCH_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"platform autobuild {path.relative_to(PLATFORM_AUTOBUILD_ROOT)}", path)
+        for path in sorted(PLATFORM_AUTOBUILD_ROOT.rglob("*.py"))
     )
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 
