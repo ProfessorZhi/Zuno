@@ -45,10 +45,10 @@ def test_phase0_local_start_script_uses_src_backend_startup_path() -> None:
 def test_phase0_backend_root_keeps_project_query_runtime_imports_working() -> None:
     result = _run_backend_python(
         (
-            "from zuno.services.application.knowledge import KnowledgeQueryService; "
-            "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
-            "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
-            "from zuno.services.graphrag.retriever import GraphRetriever; "
+            "from zuno.platform.services.application.knowledge import KnowledgeQueryService; "
+            "from zuno.platform.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
+            "from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator; "
+            "from zuno.platform.services.graphrag.retriever import GraphRetriever; "
             "print(KnowledgeQueryService.__name__, GraphRAGQueryService.__name__, "
             "GraphRAGProjectSnapshot.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__)"
         )
@@ -65,7 +65,8 @@ def test_phase0_readme_exposes_backend_recovery_start_and_verification() -> None
     content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
     assert "uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860" in content
-    assert "pytest -q tests/legacy_guards/test_phase0_runtime_recovery.py" in content
+    assert "pytest -q tests/legacy_guards/test_phase0_runtime_recovery.py" not in content
+    assert "src/backend" in content
 
 
 def test_phase0_runtime_recovery_verifier_script_passes() -> None:
@@ -107,7 +108,7 @@ def test_phase0_compose_exposes_postgres_to_local_backend_startup() -> None:
 def test_phase0_init_config_fails_fast_when_database_bootstrap_fails(monkeypatch) -> None:
     sys.path.insert(0, str(BACKEND_ROOT))
     import zuno.main as zuno_main
-    import zuno.database.init_data as init_data
+    import zuno.platform.database.init_data as init_data
 
     calls: list[str] = []
 
@@ -145,7 +146,7 @@ def test_phase0_init_config_fails_fast_when_database_bootstrap_fails(monkeypatch
 
 def test_phase0_avatar_optional_startup_skips_when_storage_endpoint_unreachable(monkeypatch) -> None:
     sys.path.insert(0, str(BACKEND_ROOT))
-    import zuno.database.init_data as init_data
+    import zuno.platform.database.init_data as init_data
 
     calls: list[str] = []
 

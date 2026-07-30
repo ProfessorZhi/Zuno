@@ -82,6 +82,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/legacy_guards/test_phase11a_knowledge_query_service.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase11a_knowledge_query_service.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase11b_single_generalagent_cutover.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase11b_single_generalagent_cutover.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase2_retrieval_strategy_program.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase2_retrieval_strategy_program.py` 位置，改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_phase0_runtime_recovery.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase0_runtime_recovery.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_graphrag_index_filters.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_graphrag_index_filters.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_langgraph_runtime_imports.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_langgraph_runtime_imports.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/agent/core/agents/plan_execute_agent.py`、`src/backend/zuno/agent/core/agents/react_agent.py`、`src/backend/zuno/capability/tool_runtime/bypass_guard.py` 与 `src/backend/zuno/platform/services/mcp/manager.py` 移除 UTF-8 BOM，恢复 AST-based Model Gateway bypass verifier 的真实严格检查。
@@ -415,7 +416,7 @@ python -m compileall -q tests/repo/test_phase5_docs_public_explanation_sync.py p
 rg no matches in tests/repo/test_phase5_docs_public_explanation_sync.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 
-python -m compileall -q tests/repo/test_phase11c_agent_runtime_retirement.py tests/repo/test_zuno_runtime_chain_guard.py tests/legacy_guards/test_phase5_langgraph_runtime_imports.py passed
+python -m compileall -q tests/repo/test_phase11c_agent_runtime_retirement.py tests/repo/test_zuno_runtime_chain_guard.py tests/repo/test_phase5_langgraph_runtime_imports.py passed
 16 passed in 4.34s
 PHASE22 cleanup boundary verification passed.
 
@@ -457,6 +458,10 @@ PHASE22 cleanup boundary verification passed.
 
 python -m compileall -q tests/repo/test_phase5_langgraph_runtime_imports.py tests/repo/test_zuno_runtime_chain_guard.py passed
 13 passed in 3.97s
+PHASE22 cleanup boundary verification passed.
+
+python -m compileall -q tests/repo/test_phase0_runtime_recovery.py tests/repo/test_zuno_runtime_chain_guard.py passed
+21 passed in 33.24s
 PHASE22 cleanup boundary verification passed.
 ```
 

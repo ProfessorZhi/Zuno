@@ -125,6 +125,7 @@ TESTS_INTEGRATION_CANONICAL_FILES = [
 TESTS_REPO_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "repo" / "test_graph_store_project_id_migration.py",
     REPO_ROOT / "tests" / "repo" / "test_hardening01_config_impact_contract.py",
+    REPO_ROOT / "tests" / "repo" / "test_phase0_runtime_recovery.py",
     REPO_ROOT / "tests" / "repo" / "test_phase2_retrieval_strategy_program.py",
     REPO_ROOT / "tests" / "repo" / "test_phase11a_knowledge_query_service.py",
     REPO_ROOT / "tests" / "repo" / "test_phase11b_single_generalagent_cutover.py",
@@ -448,6 +449,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/repo/test_llm_system_sync.py",
             "tests/repo/test_graph_store_project_id_migration.py",
             "tests/repo/test_hardening01_config_impact_contract.py",
+            "tests/repo/test_phase0_runtime_recovery.py",
             "tests/repo/test_phase2_retrieval_strategy_program.py",
             "tests/repo/test_phase11a_knowledge_query_service.py",
             "tests/repo/test_phase11b_single_generalagent_cutover.py",

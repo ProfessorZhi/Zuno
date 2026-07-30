@@ -46,7 +46,7 @@ def test_agent_runtime_facade_no_longer_part_of_current_runtime_truth() -> None:
 
 def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests() -> None:
     phase0_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase0_runtime_recovery.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase0_runtime_recovery.py"
     ).read_text(
         encoding="utf-8"
     )
@@ -57,7 +57,7 @@ def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests()
 
 def test_phase0_recovery_tests_use_project_query_runtime_truth() -> None:
     phase0_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase0_runtime_recovery.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase0_runtime_recovery.py"
     ).read_text(
         encoding="utf-8"
     )
@@ -103,6 +103,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
     assert not (REPO_ROOT / "tests/compat").exists()
 
     root_guard_tests = [
+        "tests/repo/test_phase0_runtime_recovery.py",
         "tests/repo/test_phase2_retrieval_strategy_program.py",
         "tests/repo/test_phase11a_knowledge_query_service.py",
         "tests/repo/test_phase11b_single_generalagent_cutover.py",
