@@ -671,6 +671,10 @@ resolved_this_slice:
     before: "workspace project query cutover guard lived under tests/legacy_guards"
     after: "guard moved to canonical tests/repo/test_phase11c_workspace_project_query_cutover.py location and is scanned by PHASE22 cleanup verifier"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/legacy_guards/test_phase11a_knowledge_query_service.py"
+    before: "knowledge query service guard lived under tests/legacy_guards"
+    after: "guard moved to canonical tests/repo/test_phase11a_knowledge_query_service.py location and is scanned by PHASE22 cleanup verifier"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

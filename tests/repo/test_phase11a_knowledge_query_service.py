@@ -115,9 +115,9 @@ def test_knowledge_query_service_uses_project_runtime_without_domain_pack_loader
             },
         }
 
-    from zuno.services.application.knowledge import KnowledgeQueryService
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-    from zuno.services.graphrag.query_service import GraphRAGQueryService
+    from zuno.platform.services.application.knowledge import KnowledgeQueryService
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.query_service import GraphRAGQueryService
 
     service = KnowledgeQueryService(
         config_loader=load_config,
@@ -162,7 +162,7 @@ def test_knowledge_query_service_uses_project_runtime_without_domain_pack_loader
 
 
 def test_graphrag_query_service_maps_runtime_result_to_single_result_model():
-    from zuno.services.graphrag.query_service import (
+    from zuno.platform.services.graphrag.query_service import (
         GraphRAGProjectSnapshot,
         GraphRAGQueryService,
     )
@@ -218,7 +218,7 @@ def test_graphrag_query_service_maps_runtime_result_to_single_result_model():
 
 
 def test_graphrag_query_service_keeps_normal_mode_as_router_input():
-    from zuno.services.graphrag.query_service import (
+    from zuno.platform.services.graphrag.query_service import (
         GraphRAGProjectSnapshot,
         GraphRAGQueryService,
     )

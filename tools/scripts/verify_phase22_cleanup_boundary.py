@@ -125,6 +125,7 @@ TESTS_INTEGRATION_CANONICAL_FILES = [
 TESTS_REPO_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "repo" / "test_graph_store_project_id_migration.py",
     REPO_ROOT / "tests" / "repo" / "test_hardening01_config_impact_contract.py",
+    REPO_ROOT / "tests" / "repo" / "test_phase11a_knowledge_query_service.py",
     REPO_ROOT / "tests" / "repo" / "test_phase11c_agent_runtime_retirement.py",
     REPO_ROOT / "tests" / "repo" / "test_phase11c_domain_pack_api_retirement.py",
     REPO_ROOT / "tests" / "repo" / "test_phase11c_graph_public_export_retirement.py",
@@ -443,6 +444,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/repo/test_llm_system_sync.py",
             "tests/repo/test_graph_store_project_id_migration.py",
             "tests/repo/test_hardening01_config_impact_contract.py",
+            "tests/repo/test_phase11a_knowledge_query_service.py",
             "tests/repo/test_model_gateway_bypass.py",
             "tests/repo/test_phase11c_domain_pack_api_retirement.py",
             "tests/repo/test_phase11c_graph_public_export_retirement.py",
