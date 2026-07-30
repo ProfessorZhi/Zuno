@@ -100,6 +100,9 @@ TESTS_KNOWLEDGE_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "knowledge" / "test_parse_gateway_runtime.py",
 ]
 TESTS_RETRIEVAL_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "retrieval" / "test_enhanced_requery_activation.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_enhanced_requery_precision_gate.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_enhanced_standard_floor_invariance.py",
     REPO_ROOT / "tests" / "retrieval" / "test_query_rewrite.py",
     REPO_ROOT / "tests" / "retrieval" / "test_rerank_fallback.py",
     REPO_ROOT / "tests" / "retrieval" / "test_retrieval_fusion.py",
@@ -331,6 +334,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/frontend/test_product_wiring_v1_api_contract.py",
             "tests/knowledge/test_parse_gateway_runtime.py",
             "tests/retrieval/test_query_rewrite.py",
+            "tests/retrieval/test_enhanced_requery_activation.py",
+            "tests/retrieval/test_enhanced_requery_precision_gate.py",
+            "tests/retrieval/test_enhanced_standard_floor_invariance.py",
             "tests/retrieval/test_rerank_fallback.py",
             "tests/retrieval/test_retrieval_fusion.py",
             "tests/retrieval/test_retrieval_planner.py",
