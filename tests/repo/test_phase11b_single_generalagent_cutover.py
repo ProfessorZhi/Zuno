@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessageChunk, HumanMessage
 
 
 def _agent_config():
-    from zuno.core.agents.general_agent import AgentConfig
+    from zuno.agent.core.agents import AgentConfig
 
     return AgentConfig(
         user_id="u_1",
@@ -22,9 +22,10 @@ def _agent_config():
 
 
 def test_general_agent_registers_search_knowledge_base_tool(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.agent.core import agents as ga
+    from zuno.agent.core.agents import GeneralAgent
+    from zuno.knowledge.query_service import KnowledgeQueryService
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     captured = {}
 
@@ -67,7 +68,7 @@ def test_general_agent_registers_search_knowledge_base_tool(monkeypatch):
             trace_metadata={"resolved_query_method": "local"},
         )
 
-    monkeypatch.setattr(ga.KnowledgeQueryService, "query", fake_query)
+    monkeypatch.setattr(KnowledgeQueryService, "query", fake_query)
 
     agent = GeneralAgent(_agent_config())
     asyncio.run(agent.setup_knowledge_tool())
@@ -86,8 +87,8 @@ def test_general_agent_registers_search_knowledge_base_tool(monkeypatch):
 
 
 def test_general_agent_astream_uses_single_react_loop_when_project_is_bound(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core import agents as ga
+    from zuno.agent.core.agents import GeneralAgent
 
     class FakeReactAgent:
         async def astream(self, *args, **kwargs):

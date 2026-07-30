@@ -438,6 +438,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/repo/test_phase11a_knowledge_query_service.py tests/repo/test_zuno_runtime_chain_guard.py passed
 14 passed in 3.37s
 PHASE22 cleanup boundary verification passed.
+
+python -m compileall -q tests/repo/test_phase11b_single_generalagent_cutover.py tests/repo/test_zuno_runtime_chain_guard.py passed
+13 passed in 16.85s
+PHASE22 cleanup boundary verification passed.
 ```
 
 ## Remaining
