@@ -47,6 +47,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_capability_system.py` 与 `tests/agent/test_capability_layer_surfaces.py` active Capability system / layer surface 测试继续改为 canonical `zuno.platform.services.application.capabilities` import，并把 layer surface 的 foundation 断言改为 canonical platform foundation objects，同时纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_context_orchestrator.py` 与 `tests/agent/test_context_contracts.py` active Agent Context Pack 测试继续改为 canonical `zuno.platform.services.application.context` / `zuno.platform.services.graphrag` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_knowledge_graphrag_runtime_contracts.py` 与 `tests/agent/test_hooks_evidence_trace_artifacts.py` active Knowledge GraphRAG runtime / hook trace 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core` import；tool middleware 测试补齐 `runtime.context` 合约输入，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/agent/test_knowledge_layer_surfaces.py` active Knowledge layer surface 测试继续改为 canonical `zuno.platform.services` foundation 断言，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_general_agent_project_query_runtime.py` 与 `tests/agent/test_generalagent_context_memory_runtime.py` active GeneralAgent project query / context / memory runtime 测试继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.memory` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_workspace_project_query_runtime.py` active Workspace project query runtime 测试继续改为 canonical `zuno.platform.services.workspace.simple_agent` / `zuno.platform.services.graphrag` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_agent_api_project_contract.py`、`tests/agent/test_workspace_session_cleanup.py` 与 `tests/agent/test_workspace_session_api.py` active Agent DTO / Workspace Session 测试继续改为 canonical `zuno.api.dto` / `zuno.platform.database` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -332,6 +333,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/evals/test_stackless_local_eval_contract_project_query_policy.py tests/evals/test_stackless_local_eval_project_assets.py tests/evals/test_stackless_local_eval_project_guard.py tests/evals/test_stackless_local_eval_rerank_runtime.py passed
 12 passed, 2 warnings in 16.57s
 rg no matches in selected stackless local eval tests for legacy import references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/agent/test_knowledge_layer_surfaces.py passed
+5 passed in 4.15s
+rg no matches in tests/agent/test_knowledge_layer_surfaces.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

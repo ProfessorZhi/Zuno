@@ -148,22 +148,22 @@ def test_knowledge_layer_modules_expose_target_boundaries() -> None:
         assert module.__all__ == expected_exports
 
 
-def test_knowledge_layer_modules_reuse_legacy_foundation_objects() -> None:
+def test_knowledge_layer_modules_reuse_canonical_platform_foundation_objects() -> None:
     from zuno.knowledge.contracts import GraphRAGExtractorConfig, GraphRAGProjectContract
     from zuno.knowledge.fusion import RetrievalFusion
     from zuno.knowledge.query_service import KnowledgeQueryService
     from zuno.knowledge.retrieval import RetrievalPlanner
-    from zuno.services.application.knowledge import KnowledgeQueryService as LegacyKnowledgeQueryService
-    from zuno.services.graphrag.models import GraphRAGExtractorConfig as LegacyExtractorConfig
-    from zuno.services.graphrag.models import GraphRAGProjectContract as LegacyContract
-    from zuno.services.retrieval.fusion import RetrievalFusion as LegacyFusion
-    from zuno.services.retrieval.planner import RetrievalPlanner as LegacyPlanner
+    from zuno.platform.services.application.knowledge import KnowledgeQueryService as PlatformKnowledgeQueryService
+    from zuno.platform.services.graphrag.models import GraphRAGExtractorConfig as PlatformExtractorConfig
+    from zuno.platform.services.graphrag.models import GraphRAGProjectContract as PlatformContract
+    from zuno.platform.services.retrieval.fusion import RetrievalFusion as PlatformFusion
+    from zuno.platform.services.retrieval.planner import RetrievalPlanner as PlatformPlanner
 
-    assert GraphRAGProjectContract is LegacyContract
-    assert GraphRAGExtractorConfig is LegacyExtractorConfig
-    assert KnowledgeQueryService is LegacyKnowledgeQueryService
-    assert RetrievalFusion is LegacyFusion
-    assert RetrievalPlanner is LegacyPlanner
+    assert GraphRAGProjectContract is PlatformContract
+    assert GraphRAGExtractorConfig is PlatformExtractorConfig
+    assert KnowledgeQueryService is PlatformKnowledgeQueryService
+    assert RetrievalFusion is PlatformFusion
+    assert RetrievalPlanner is PlatformPlanner
 
 
 def test_knowledge_package_facade_points_at_layer_modules() -> None:
@@ -197,11 +197,11 @@ for name in __MODULES__:
     importlib.import_module(name)
 
 prefixes = [
-    "zuno.database",
+    "zuno.platform.database",
     "zuno.api.services",
-    "zuno.services.rag.vector_db",
-    "zuno.services.rag.handler",
-    "zuno.services.retrieval.retrievers",
+    "zuno.platform.services.rag.vector_db",
+    "zuno.platform.services.rag.handler",
+    "zuno.platform.services.retrieval.retrievers",
 ]
 print(json.dumps({
     prefix: sorted(name for name in sys.modules if name == prefix or name.startswith(prefix + "."))
