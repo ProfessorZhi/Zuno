@@ -3,7 +3,7 @@ from sqlalchemy import Column, VARCHAR, JSON, text, DateTime
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 from uuid import uuid4, UUID
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 import pytz
 
 

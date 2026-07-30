@@ -2,7 +2,7 @@ from typing import List
 
 from sqlmodel import and_, delete, or_, select, update
 
-from zuno.database.models.tool import ToolTable
+from zuno.platform.database.models.tool import ToolTable
 from zuno.platform.database.session import async_session_getter, session_getter
 
 

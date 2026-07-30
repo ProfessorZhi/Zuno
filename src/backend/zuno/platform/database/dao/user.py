@@ -2,7 +2,7 @@ from typing import List
 
 from sqlmodel import func, select, update
 
-from zuno.database.models.user import UserTable
+from zuno.platform.database.models.user import UserTable
 from zuno.platform.database.session import session_getter
 
 

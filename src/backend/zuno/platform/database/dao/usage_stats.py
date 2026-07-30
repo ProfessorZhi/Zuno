@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlmodel import select
 
-from zuno.database.models.usage_stats import UsageStats
+from zuno.platform.database.models.usage_stats import UsageStats
 from zuno.platform.database.session import async_session_getter, session_getter
 
 

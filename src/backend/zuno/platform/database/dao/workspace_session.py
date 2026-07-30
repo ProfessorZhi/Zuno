@@ -3,7 +3,7 @@ import re
 
 from sqlmodel import and_, delete, or_, select
 
-from zuno.database.models.workspace_session import WorkSpaceSession
+from zuno.platform.database.models.workspace_session import WorkSpaceSession
 from zuno.platform.database.session import async_session_getter
 
 

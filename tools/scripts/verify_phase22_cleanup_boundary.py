@@ -6,6 +6,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 API_V1_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1"
 API_ERRCODE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "errcode"
+PLATFORM_DATABASE_ROOT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "database"
+PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
 WORK_PRODUCT = (
     REPO_ROOT / ".agent" / "programs" / "work-products" / "phase22-removal-candidates.yaml"
 )
@@ -120,6 +122,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/api/services/mcp_user_config.py",
             "src/backend/zuno/api/services/mcp_stdio_server.py",
             "src/backend/zuno/api/services/usage_stats.py",
+            "src/backend/zuno/platform/database/",
+            "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/platform/services/cli_tool_discovery.py",
             "src/backend/zuno/platform/services/simple_api_tool.py",
             "src/backend/zuno/platform/services/tool_creation_service.py",
@@ -214,6 +218,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     ] + [(f"agent core {path.name}", path) for path in AGENT_CORE_FILES]
     checked_paths.extend((f"api v1 {path.name}", path) for path in sorted(API_V1_ROOT.glob("*.py")))
     checked_paths.extend((f"api errcode {path.name}", path) for path in sorted(API_ERRCODE_ROOT.glob("*.py")))
+    checked_paths.extend(
+        (f"platform database {path.relative_to(PLATFORM_DATABASE_ROOT)}", path)
+        for path in sorted(PLATFORM_DATABASE_ROOT.rglob("*.py"))
+    )
+    checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 
     for label, path in checked_paths:
         text = _read(path)

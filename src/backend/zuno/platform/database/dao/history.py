@@ -2,7 +2,7 @@ from typing import List
 
 from sqlmodel import delete, select
 
-from zuno.database.models.history import HistoryTable
+from zuno.platform.database.models.history import HistoryTable
 from zuno.platform.database.session import session_getter
 
 

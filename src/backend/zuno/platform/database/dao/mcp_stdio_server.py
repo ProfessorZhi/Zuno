@@ -1,6 +1,6 @@
 from sqlmodel import delete, select, update
 
-from zuno.database.models.mcp_server import MCPServerStdioTable
+from zuno.platform.database.models.mcp_server import MCPServerStdioTable
 from zuno.platform.database.session import session_getter
 
 

@@ -4,7 +4,7 @@ from uuid import uuid4, UUID
 from sqlmodel import Field
 from sqlalchemy import Column, VARCHAR, JSON, text, DateTime
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 class MCPServerTable(SQLModelSerializable, table=True):

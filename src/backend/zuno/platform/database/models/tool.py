@@ -5,7 +5,7 @@ from typing import Optional
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, Text, DateTime, text, JSON
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 class ToolAuthType(str, Enum):

@@ -2,7 +2,7 @@ from typing import List
 
 from sqlmodel import and_, delete, func, select
 
-from zuno.database.models.role import AdminRole, Role, RoleBase, RoleCreate
+from zuno.platform.database.models.role import AdminRole, Role, RoleBase, RoleCreate
 from zuno.platform.database.session import session_getter
 
 
@@ -50,7 +50,7 @@ class RoleDao(RoleBase):
 
     @classmethod
     def delete_role_by_group_id(cls, group_id: int):
-        from zuno.database.models.user_role import UserRole
+        from zuno.platform.database.models.user_role import UserRole
 
         with session_getter() as session:
             all_user = select(UserRole, Role).join(

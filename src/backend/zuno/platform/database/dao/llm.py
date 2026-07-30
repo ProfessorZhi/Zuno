@@ -1,7 +1,7 @@
 from sqlmodel import and_, or_, select, update, delete
 
-from zuno.database.models.llm import LLMTable
-from zuno.database.models.user import SystemUser
+from zuno.platform.database.models.llm import LLMTable
+from zuno.platform.database.models.user import SystemUser
 from zuno.platform.database.session import async_session_getter, session_getter
 
 UNSET = object()

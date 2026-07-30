@@ -7,7 +7,7 @@ from uuid import uuid4
 from sqlalchemy import JSON, Column, DateTime, Text, text
 from sqlmodel import Field
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 class MemoryRawEventTable(SQLModelSerializable, table=True):
