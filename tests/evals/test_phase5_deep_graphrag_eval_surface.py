@@ -18,4 +18,5 @@ def test_public_eval_profile_set_resolves_to_phase5_compare_surface():
         "baseline_rag",
         "local_graphrag",
         "deep_graphrag",
+        "agentic_graphrag",
     ]

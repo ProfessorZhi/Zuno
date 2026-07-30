@@ -107,6 +107,7 @@ TESTS_FRONTEND_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "frontend" / "test_product_wiring_v1_api_contract.py",
 ]
 TESTS_EVALS_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "evals" / "test_phase5_deep_graphrag_eval_surface.py",
     REPO_ROOT / "tests" / "evals" / "test_local_runtime_registry.py",
     REPO_ROOT / "tests" / "evals" / "test_rag_eval_metrics.py",
     REPO_ROOT / "tests" / "evals" / "test_stackless_local_eval_contract_project_query_policy.py",
@@ -121,6 +122,7 @@ TESTS_INTEGRATION_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "integration" / "test_goal03_wave_a_persistence.py",
 ]
 TESTS_REPO_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "repo" / "test_phase11c_domain_pack_api_retirement.py",
     REPO_ROOT / "tests" / "repo" / "test_zuno_canonical_import_surfaces.py",
     REPO_ROOT / "tests" / "repo" / "test_llm_system_sync.py",
     REPO_ROOT / "tests" / "repo" / "test_model_gateway_bypass.py",
@@ -395,6 +397,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/api/test_workspace_task_runtime.py",
             "tests/e2e/test_unified_agent_product_scenario.py",
             "tests/evals/test_local_runtime_registry.py",
+            "tests/evals/test_phase5_deep_graphrag_eval_surface.py",
             "tests/evals/test_rag_eval_metrics.py",
             "tests/evals/test_stackless_local_eval_contract_project_query_policy.py",
             "tests/evals/test_stackless_local_eval_project_assets.py",
@@ -425,6 +428,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/integration/test_goal03_wave_a_persistence.py",
             "tests/repo/test_llm_system_sync.py",
             "tests/repo/test_model_gateway_bypass.py",
+            "tests/repo/test_phase11c_domain_pack_api_retirement.py",
             "tests/repo/test_zuno_canonical_import_surfaces.py",
             "tests/retrieval/test_query_rewrite.py",
             "tests/retrieval/test_enhanced_requery_activation.py",
