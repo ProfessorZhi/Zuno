@@ -18,7 +18,9 @@ def _ensure_runtime_paths() -> None:
 def _contract_review_query_policy() -> dict:
     _ensure_runtime_paths()
 
-    GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
+    GraphRAGProjectLoader = importlib.import_module(
+        "zuno.platform.services.graphrag.project.loader"
+    ).GraphRAGProjectLoader
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     return dict(project.settings["retrieval_policy"])
@@ -27,7 +29,9 @@ def _contract_review_query_policy() -> dict:
 def _contract_review_project_payload() -> dict:
     _ensure_runtime_paths()
 
-    GraphRAGProjectLoader = importlib.import_module("zuno.services.graphrag.project.loader").GraphRAGProjectLoader
+    GraphRAGProjectLoader = importlib.import_module(
+        "zuno.platform.services.graphrag.project.loader"
+    ).GraphRAGProjectLoader
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
     assert project is not None
@@ -48,7 +52,7 @@ def test_structured_graph_extractor_builds_contract_review_entities_and_relation
     _ensure_runtime_paths()
 
     StructuredGraphExtractor = importlib.import_module(
-        "zuno.services.graphrag.extractors.structured_extractor"
+        "zuno.platform.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
@@ -116,7 +120,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
     _ensure_runtime_paths()
 
     StructuredGraphExtractor = importlib.import_module(
-        "zuno.services.graphrag.extractors.structured_extractor"
+        "zuno.platform.services.graphrag.extractors.structured_extractor"
     ).StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
@@ -153,7 +157,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
 def test_graph_retriever_handles_contract_review_chinese_query():
     _ensure_runtime_paths()
 
-    GraphRetriever = importlib.import_module("zuno.services.graphrag.retriever").GraphRetriever
+    GraphRetriever = importlib.import_module("zuno.platform.services.graphrag.retriever").GraphRetriever
 
     class FakeClient:
         async def query_neighbors(

@@ -69,6 +69,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/graphrag/test_graphrag_baseline_preserving_fusion.py`、`tests/graphrag/test_graphrag_bridge_guardrail.py`、`tests/graphrag/test_graphrag_chain_aware_fusion.py`、`tests/graphrag/test_graphrag_comparison_guardrail.py` 与 `tests/graphrag/test_graphrag_genealogy_guardrail.py` active GraphRAG fusion guardrail 测试继续改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/graphrag/test_graphrag_entity_alias.py`、`tests/graphrag/test_graphrag_index_versioning.py`、`tests/graphrag/test_graphrag_path_ranking.py` 与 `tests/graphrag/test_graphrag_seed_expansion.py` active GraphRAG helper / versioning / ranking / seed 测试继续改为 canonical `zuno.platform.services.graphrag` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/graphrag/test_2wiki_missed_opportunity_activation.py`、`tests/graphrag/test_graphrag_genealogy_path_precision.py` 与 `tests/graphrag/test_graphrag_route_activation_calibration.py` active GraphRAG route activation / genealogy precision / missed-opportunity 测试继续改为 canonical `zuno.platform.services.graphrag` / `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/graphrag/test_contract_review_project_payload.py` 与 `tests/graphrag/test_structured_graph_extractor_contract.py` active GraphRAG contract review / structured extractor 测试继续改为 canonical `zuno.platform.services.graphrag` import 和 importlib 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -307,6 +308,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/graphrag/test_2wiki_missed_opportunity_activation.py tests/graphrag/test_graphrag_genealogy_path_precision.py tests/graphrag/test_graphrag_route_activation_calibration.py passed
 20 passed in 14.92s
 rg no matches in selected GraphRAG route activation / genealogy precision / missed-opportunity tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/graphrag/test_contract_review_project_payload.py tests/graphrag/test_structured_graph_extractor_contract.py passed
+10 passed in 1.14s
+rg no matches in selected GraphRAG contract review / structured extractor tests for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

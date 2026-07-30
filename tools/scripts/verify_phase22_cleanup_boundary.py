@@ -102,6 +102,7 @@ TESTS_KNOWLEDGE_CANONICAL_FILES = [
 TESTS_GRAPHRAG_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_query_routing.py",
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_retriever.py",
+    REPO_ROOT / "tests" / "graphrag" / "test_contract_review_project_payload.py",
     REPO_ROOT / "tests" / "graphrag" / "test_2wiki_missed_opportunity_activation.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_baseline_preserving_fusion.py",
@@ -118,6 +119,7 @@ TESTS_GRAPHRAG_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_prompt_registry.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_route_activation_calibration.py",
     REPO_ROOT / "tests" / "graphrag" / "test_graphrag_seed_expansion.py",
+    REPO_ROOT / "tests" / "graphrag" / "test_structured_graph_extractor_contract.py",
 ]
 TESTS_RETRIEVAL_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "retrieval" / "test_enhanced_requery_activation.py",
@@ -357,6 +359,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/frontend/test_product_wiring_v1_api_contract.py",
             "tests/graphrag/test_contract_graph_query_routing.py",
             "tests/graphrag/test_contract_graph_retriever.py",
+            "tests/graphrag/test_contract_review_project_payload.py",
             "tests/graphrag/test_2wiki_missed_opportunity_activation.py",
             "tests/graphrag/test_graphrag.py",
             "tests/graphrag/test_graphrag_baseline_preserving_fusion.py",
@@ -373,6 +376,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/graphrag/test_graphrag_prompt_registry.py",
             "tests/graphrag/test_graphrag_route_activation_calibration.py",
             "tests/graphrag/test_graphrag_seed_expansion.py",
+            "tests/graphrag/test_structured_graph_extractor_contract.py",
             "tests/knowledge/test_parse_gateway_runtime.py",
             "tests/retrieval/test_query_rewrite.py",
             "tests/retrieval/test_enhanced_requery_activation.py",
