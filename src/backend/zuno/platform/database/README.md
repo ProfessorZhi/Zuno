@@ -4,11 +4,11 @@
 
 ## 当前角色
 
-`src/backend/zuno/platform/database/` 保存数据库 Runtime Factory、Session/UoW、物理 Claim/Lease/Delivery/Migration receipt、metadata、初始化数据、DAO 和 models。旧 public import path `zuno.database.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里；它是持久化底座，不是业务用例层。
+`src/backend/zuno/platform/database/` 保存数据库 Runtime Factory、Session/UoW、物理 Claim/Lease/Delivery/Migration receipt、metadata、初始化数据、DAO 和 models。旧 public import path `zuno.database.*` 仅通过 `platform/compatibility/legacy_aliases.py` 作为迁移兼容面映射到这里；它是持久化底座，不是业务用例层。
 
 ## Target role
 
-目标状态下，数据库 wiring、sync/async Session Factory、显式事务边界、持久化模型和 migration/recovery control 属于 Platform 层支撑能力。短期内 `platform/database/` 保留为 infrastructure source，并继续保护 `zuno.database.*` alias，直到 import audit、默认路径 cutover、DB fault tests 和 rollback plan 能证明可以进一步收窄或重命名。
+目标状态下，数据库 wiring、sync/async Session Factory、显式事务边界、持久化模型和 migration/recovery control 属于 Platform 层支撑能力。短期内 `platform/database/` 保留为 infrastructure source，并继续作为 `zuno.database.*` 的迁移兼容面，直到 import audit、默认路径 cutover、DB fault tests 和 rollback plan 能证明可以进一步收窄或重命名。
 
 ## 允许新增内容
 

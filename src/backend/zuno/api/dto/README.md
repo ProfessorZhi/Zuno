@@ -4,11 +4,11 @@
 
 ## 当前角色
 
-`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。旧 public import path `zuno.schema.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里；它是兼容 alias，不是仍存在的物理目录。
+`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。旧 public import path `zuno.schema.*` 仅通过 `platform/compatibility/legacy_aliases.py` 作为迁移兼容面映射到这里；它是兼容 alias，不是仍存在的物理目录。
 
 ## Target role
 
-目标状态下，公开 HTTP DTO 应由 API 层拥有或通过 API 层清晰暴露；仍被旧路径消费的 `zuno.schema.*` 先通过 legacy alias 保留。是否整理 DTO 文件、字段或导出面，必须由 API contract tests 证明。
+目标状态下，公开 HTTP DTO 应由 API 层拥有或通过 API 层清晰暴露；仍被旧路径消费的 `zuno.schema.*` 先通过迁移兼容面保留。是否整理 DTO 文件、字段或导出面，必须由 API contract tests 证明。
 
 ## 允许新增内容
 
