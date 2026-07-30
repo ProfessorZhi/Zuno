@@ -19,7 +19,7 @@ def _community_row():
 
 
 def test_graph_community_can_be_restored_from_neo4j_row():
-    from zuno.services.graphrag.community.models import GraphCommunity
+    from zuno.platform.services.graphrag.community.models import GraphCommunity
 
     community = GraphCommunity.from_dict(_community_row())
 
@@ -30,8 +30,8 @@ def test_graph_community_can_be_restored_from_neo4j_row():
 
 
 def test_load_communities_converts_dict_rows_into_graph_community_objects():
-    from zuno.services.graphrag.community.models import GraphCommunity
-    from zuno.services.graphrag.community.service import CommunityGraphService
+    from zuno.platform.services.graphrag.community.models import GraphCommunity
+    from zuno.platform.services.graphrag.community.service import CommunityGraphService
 
     class FakeClient:
         async def fetch_communities(self, knowledge_id, *, status=None, community_version=None):
@@ -52,7 +52,7 @@ def test_load_communities_converts_dict_rows_into_graph_community_objects():
 
 
 def test_search_reports_accepts_loaded_graph_community_objects():
-    from zuno.services.graphrag.community.service import CommunityGraphService
+    from zuno.platform.services.graphrag.community.service import CommunityGraphService
 
     class FakeClient:
         async def fetch_communities(self, knowledge_id, *, status=None, community_version=None):
@@ -67,14 +67,14 @@ def test_search_reports_accepts_loaded_graph_community_objects():
 
 
 def test_community_global_path_runs_with_neo4j_style_rows():
-    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
 
     class FakeClient:
         async def fetch_communities(self, knowledge_id, *, status=None, community_version=None):
             return [_community_row()]
 
     orchestrator = RetrievalOrchestrator(community_service=__import__(
-        "zuno.services.graphrag.community.service",
+        "zuno.platform.services.graphrag.community.service",
         fromlist=["CommunityGraphService"],
     ).CommunityGraphService(client=FakeClient()))
 
@@ -91,7 +91,7 @@ def test_community_global_path_runs_with_neo4j_style_rows():
 
 
 def test_drift_like_path_runs_single_follow_up_with_neo4j_style_rows():
-    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
 
     class FakeClient:
         async def fetch_communities(self, knowledge_id, *, status=None, community_version=None):
@@ -117,7 +117,7 @@ def test_drift_like_path_runs_single_follow_up_with_neo4j_style_rows():
 
     orchestrator = RetrievalOrchestrator(
         community_service=__import__(
-            "zuno.services.graphrag.community.service",
+            "zuno.platform.services.graphrag.community.service",
             fromlist=["CommunityGraphService"],
         ).CommunityGraphService(client=FakeClient()),
         graph_retriever=FakeGraphRetriever(),
