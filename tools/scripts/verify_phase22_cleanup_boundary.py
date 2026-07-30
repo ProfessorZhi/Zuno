@@ -534,6 +534,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     if "ZUNO_AGENT_RUNTIME" in completion_service:
         errors.append("completion service still accepts retired ZUNO_AGENT_RUNTIME rollback env")
 
+    legacy_compatibility_package = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "legacy"
+    if legacy_compatibility_package.exists():
+        errors.append("legacy compatibility package directory still exists")
+
     feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")
     if 'flag: "legacy_general_agent_completion_rollback"' not in feature_flags:
         errors.append("feature flag registry missing legacy rollback retirement record")

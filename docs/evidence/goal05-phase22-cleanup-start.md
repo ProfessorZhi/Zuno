@@ -511,9 +511,21 @@ PHASE22 cleanup boundary verification passed.
 17 passed, 1 warning in 30.97s
 ```
 
+2026-07-30 cleanup follow-up:
+```text
+python tools/scripts/phase02_compatibility_runtime.py --check passed
+python tools/scripts/verify_phase22_cleanup_boundary.py passed
+python tools/scripts/verify_repo_structure.py passed
+pytest -q tests/repo/test_phase02_compatibility_runtime.py tests/repo/test_phase22_cleanup_boundary.py -p no:cacheprovider passed
+5 passed in 0.28s
+pytest -q tests/repo/test_phase02_compatibility_runtime.py tests/repo/test_phase22_cleanup_boundary.py tests/repo/test_repo_structure_consistency.py -p no:cacheprovider passed
+9 passed in 0.49s
+```
+
 ## Remaining
 
 - `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在大量生产 import 仍依赖 `zuno.core` / `zuno.services` / `zuno.schema` / `zuno.database` / `zuno.tools` / `zuno.resources` 时直接删除。
 - `tests/legacy_guards/` 已无 active guard 文件，目录缓存空壳已清理。
+- `src/backend/zuno/platform/compatibility/legacy/` 空 legacy 目录已删除；temporary allowlist 和 legacy bypass inventory 也移除了这条迁移期例外。
 - `legacy_general_agent_completion_rollback` 已退役；后续只保留显式 cutover drill mode 的失败证据与最终全量验证。
 - Fixed benchmark、full final verification、production readiness truth 和 Program archive 仍未完成。
