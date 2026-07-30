@@ -53,6 +53,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_agent_empty_workspace.py` active Agent empty workspace 测试继续改为 canonical `zuno.platform.database` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/api/test_usage_stats_filters.py` active Usage Stats API filter 测试继续改为 canonical `zuno.platform.database` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/api/test_workspace_task_runtime.py` 与 `tests/api/test_workspace_runtime_recovery.py` active Workspace runtime / recovery 测试继续改为 canonical `zuno.api.dto.workspace` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/api/test_workspace_agentic_product_contract.py` 与 `tests/api/test_workspace_product_loop_contract.py` active Workspace product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -227,6 +228,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py passed
 23 passed, 1 warning in 37.96s
 rg no matches in selected Workspace runtime / recovery API tests for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/api/test_workspace_agentic_product_contract.py tests/api/test_workspace_product_loop_contract.py passed
+11 passed, 1 warning in 23.91s
+rg no matches in selected Workspace product contract API tests for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

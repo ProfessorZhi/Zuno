@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 def test_workspace_product_object_contracts_cover_phase03_fields() -> None:
-    from zuno.schema import workspace
+    from zuno.api.dto import workspace
 
     expected_models = {
         "WorkspaceContract": {
@@ -100,7 +100,7 @@ def test_workspace_product_object_contracts_cover_phase03_fields() -> None:
 
 
 def test_workspace_task_state_machine_and_request_envelope_are_pinned() -> None:
-    from zuno.schema.workspace import (
+    from zuno.api.dto.workspace import (
         WORKSPACE_TASK_LIFECYCLE_FLOW,
         WORKSPACE_TASK_STATUS_FLOW,
         WorkSpaceSimpleTask,
@@ -161,7 +161,7 @@ def test_workspace_task_state_machine_and_request_envelope_are_pinned() -> None:
 
 
 def test_workspace_product_stream_event_contract_is_traceable() -> None:
-    from zuno.schema.workspace import WorkspaceProductStreamEvent
+    from zuno.api.dto.workspace import WorkspaceProductStreamEvent
 
     event = WorkspaceProductStreamEvent(
         event_id="event_1",
