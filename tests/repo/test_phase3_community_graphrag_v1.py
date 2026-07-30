@@ -26,7 +26,7 @@ def _edges():
 
 
 def test_phase3_detects_level0_communities_from_entity_relation_edges():
-    from zuno.services.graphrag.community.detector import CommunityDetector
+    from zuno.platform.services.graphrag.community.detector import CommunityDetector
 
     communities = CommunityDetector.detect_level0(knowledge_id="kb_1", edges=_edges(), community_version="v0")
 
@@ -41,8 +41,8 @@ def test_phase3_detects_level0_communities_from_entity_relation_edges():
 
 
 def test_phase3_generates_community_report_with_entities_relations_and_chunks():
-    from zuno.services.graphrag.community.models import GraphCommunity
-    from zuno.services.graphrag.community.reporter import CommunityReportBuilder
+    from zuno.platform.services.graphrag.community.models import GraphCommunity
+    from zuno.platform.services.graphrag.community.reporter import CommunityReportBuilder
 
     community = GraphCommunity(
         community_id="kb_1::community::0",
@@ -68,7 +68,7 @@ def test_phase3_generates_community_report_with_entities_relations_and_chunks():
 
 
 def test_phase3_service_builds_and_persists_communities(monkeypatch):
-    from zuno.services.graphrag.community.service import CommunityGraphService
+    from zuno.platform.services.graphrag.community.service import CommunityGraphService
 
     captured = {}
 
@@ -104,8 +104,8 @@ def test_phase3_service_builds_and_persists_communities(monkeypatch):
 
 
 def test_phase3_search_reports_returns_global_search_ready_metadata():
-    from zuno.services.graphrag.community.models import GraphCommunity
-    from zuno.services.graphrag.community.service import CommunityGraphService
+    from zuno.platform.services.graphrag.community.models import GraphCommunity
+    from zuno.platform.services.graphrag.community.service import CommunityGraphService
 
     service = CommunityGraphService(client=None)
     communities = [
@@ -188,7 +188,7 @@ def test_phase3_knowledge_service_marks_community_state_stale(monkeypatch):
 
 
 def test_phase3_pipeline_marks_community_stale_after_graph_refresh(monkeypatch):
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
 
     captured = {"stale": 0}
 
@@ -232,13 +232,13 @@ def test_phase3_pipeline_marks_community_stale_after_graph_refresh(monkeypatch):
     monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
     monkeypatch.setattr(KnowledgePipelineManager, "_parse_chunks", staticmethod(fake_parse_chunks))
     monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
-    monkeypatch.setattr("zuno.services.pipeline.manager.Neo4jClient.is_enabled", classmethod(lambda cls: False))
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.Neo4jClient.is_enabled", classmethod(lambda cls: False))
 
     manager = KnowledgePipelineManager(enable_graph_indexing=True, enable_elasticsearch=False)
     asyncio.run(manager.run_graph_stage("task_1"))
