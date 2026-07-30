@@ -65,6 +65,8 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/api/test_goal03_knowledge_route.py` active Goal03 Knowledge route 测试继续改为 canonical `zuno.platform.services.application.knowledge` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/integration/test_goal03_wave_a_persistence.py` active Goal03 Wave A persistence 集成测试继续改为 canonical `zuno.platform.database` monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/repo/test_llm_system_sync.py` active LLM system sync repo 测试继续改为 canonical `zuno.platform.database` / `zuno.agent.core.models` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/repo/test_model_gateway_bypass.py` active Model Gateway bypass repo 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core.models` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `src/backend/zuno/agent/core/agents/plan_execute_agent.py`、`src/backend/zuno/agent/core/agents/react_agent.py`、`src/backend/zuno/capability/tool_runtime/bypass_guard.py` 与 `src/backend/zuno/platform/services/mcp/manager.py` 移除 UTF-8 BOM，恢复 AST-based Model Gateway bypass verifier 的真实严格检查。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_rag_eval_metrics.py` active RAG eval metrics 测试继续改为 canonical `zuno.agent.core` / `zuno.api.dto` / `zuno.platform.services` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
@@ -362,6 +364,11 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/repo/test_llm_system_sync.py passed
 6 passed in 21.43s
 rg no matches in tests/repo/test_llm_system_sync.py for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/repo/test_model_gateway_bypass.py src/backend/zuno/agent/core/agents/plan_execute_agent.py src/backend/zuno/agent/core/agents/react_agent.py src/backend/zuno/capability/tool_runtime/bypass_guard.py src/backend/zuno/platform/services/mcp/manager.py passed
+20 passed in 40.37s
+rg no matches in tests/repo/test_model_gateway_bypass.py for legacy alias references
+python tools/scripts/verify_model_gateway_bypass.py --strict passed
 PHASE22 cleanup boundary verification passed.
 ```
 

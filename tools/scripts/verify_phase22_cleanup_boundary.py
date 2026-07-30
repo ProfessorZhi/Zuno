@@ -115,6 +115,7 @@ TESTS_INTEGRATION_CANONICAL_FILES = [
 ]
 TESTS_REPO_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "repo" / "test_llm_system_sync.py",
+    REPO_ROOT / "tests" / "repo" / "test_model_gateway_bypass.py",
 ]
 TESTS_GRAPHRAG_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_query_routing.py",
@@ -410,6 +411,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/knowledge/test_parse_gateway_runtime.py",
             "tests/integration/test_goal03_wave_a_persistence.py",
             "tests/repo/test_llm_system_sync.py",
+            "tests/repo/test_model_gateway_bypass.py",
             "tests/retrieval/test_query_rewrite.py",
             "tests/retrieval/test_enhanced_requery_activation.py",
             "tests/retrieval/test_enhanced_requery_precision_gate.py",
