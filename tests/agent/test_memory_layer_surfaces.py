@@ -88,30 +88,30 @@ def test_memory_layer_modules_expose_target_boundaries() -> None:
         assert set(module.__all__) == exports
 
 
-def test_memory_layer_modules_reuse_legacy_foundation_objects() -> None:
+def test_memory_layer_modules_reuse_canonical_foundation_objects() -> None:
     from zuno.memory.contracts import MemoryLayer, MemoryScope, RawMemoryEvent
     from zuno.memory.policy import MemoryProcessingPolicy, RetentionPolicy
     from zuno.memory.review import MemoryReviewDecision
     from zuno.memory.store import DatabaseMemoryStore, DurableMemoryStore, InMemoryLayerStore
-    from zuno.services.memory.layers import (
-        InMemoryLayerStore as LegacyStore,
-        MemoryLayer as LegacyLayer,
-        MemoryScope as LegacyScope,
-        RawMemoryEvent as LegacyRawEvent,
-        MemoryProcessingPolicy as LegacyProcessingPolicy,
-        MemoryReviewDecision as LegacyReviewDecision,
-        RetentionPolicy as LegacyPolicy,
+    from zuno.platform.services.memory.layers import (
+        InMemoryLayerStore as CanonicalStore,
+        MemoryLayer as CanonicalLayer,
+        MemoryScope as CanonicalScope,
+        RawMemoryEvent as CanonicalRawEvent,
+        MemoryProcessingPolicy as CanonicalProcessingPolicy,
+        MemoryReviewDecision as CanonicalReviewDecision,
+        RetentionPolicy as CanonicalPolicy,
     )
 
-    assert MemoryLayer is LegacyLayer
-    assert MemoryScope is LegacyScope
-    assert RawMemoryEvent is LegacyRawEvent
-    assert MemoryProcessingPolicy is LegacyProcessingPolicy
-    assert MemoryReviewDecision is LegacyReviewDecision
-    assert RetentionPolicy is LegacyPolicy
-    assert InMemoryLayerStore is LegacyStore
-    assert issubclass(DurableMemoryStore, LegacyStore)
-    assert issubclass(DatabaseMemoryStore, LegacyStore)
+    assert MemoryLayer is CanonicalLayer
+    assert MemoryScope is CanonicalScope
+    assert RawMemoryEvent is CanonicalRawEvent
+    assert MemoryProcessingPolicy is CanonicalProcessingPolicy
+    assert MemoryReviewDecision is CanonicalReviewDecision
+    assert RetentionPolicy is CanonicalPolicy
+    assert InMemoryLayerStore is CanonicalStore
+    assert issubclass(DurableMemoryStore, CanonicalStore)
+    assert issubclass(DatabaseMemoryStore, CanonicalStore)
 
 
 def test_memory_package_facade_points_at_layer_modules() -> None:

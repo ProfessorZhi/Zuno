@@ -55,6 +55,11 @@ PLATFORM_APPLICATION_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" 
 TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
 TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
 TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
+TESTS_AGENT_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "agent" / "test_agent_layer_surfaces.py",
+    REPO_ROOT / "tests" / "agent" / "test_memory_layer_surfaces.py",
+    REPO_ROOT / "tests" / "agent" / "test_memory_layers.py",
+]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
@@ -146,6 +151,7 @@ MCP_LOAD_TOOLS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services
 MCP_OPENAI_MANAGER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_manager.py"
 MCP_OPENAI_UTIL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_util.py"
 AGENT_CORE_FILES = [
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "__init__.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "codeact_agent.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "plan_execute_agent.py",
@@ -247,6 +253,9 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tools/evals/zuno/",
             "tests/tools/",
             "tests/storage/",
+            "tests/agent/test_agent_layer_surfaces.py",
+            "tests/agent/test_memory_layer_surfaces.py",
+            "tests/agent/test_memory_layers.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
@@ -267,6 +276,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
             "src/backend/zuno/platform/services/mcp_openai/mcp_util.py",
             "src/backend/zuno/agent/core/agents/codeact_agent.py",
+            "src/backend/zuno/agent/__init__.py",
             "src/backend/zuno/agent/core/agents/general_agent.py",
             "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
             "src/backend/zuno/agent/core/agents/react_agent.py",
@@ -468,6 +478,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tests storage {path.relative_to(TESTS_STORAGE_ROOT)}", path)
         for path in sorted(TESTS_STORAGE_ROOT.rglob("*.py"))
+    )
+    checked_paths.extend(
+        (f"tests agent canonical {path.name}", path)
+        for path in TESTS_AGENT_CANONICAL_FILES
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))

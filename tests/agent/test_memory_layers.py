@@ -1,5 +1,5 @@
 def test_memory_layer_store_preserves_raw_events_when_summary_is_written() -> None:
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         InMemoryLayerStore,
         MemoryLayer,
         MemoryScope,
@@ -33,7 +33,7 @@ def test_memory_layer_store_preserves_raw_events_when_summary_is_written() -> No
 
 
 def test_memory_candidate_requires_scope_confidence_and_source_events() -> None:
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryScope,
@@ -67,7 +67,7 @@ def test_memory_candidate_requires_scope_confidence_and_source_events() -> None:
 
 
 def test_external_knowledge_requires_explicit_promotion_before_memory_candidate() -> None:
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         ExternalKnowledgeRecord,
         MemoryCandidate,
         MemoryLayer,
@@ -109,7 +109,7 @@ def test_external_knowledge_requires_explicit_promotion_before_memory_candidate(
 
 
 def test_memory_layer_exports_do_not_import_live_memory_client() -> None:
-    import zuno.services.memory.layers as layers
+    import zuno.platform.services.memory.layers as layers
 
     assert "memory_client" not in layers.__dict__
     assert {
@@ -125,7 +125,7 @@ def test_memory_layer_exports_do_not_import_live_memory_client() -> None:
 
 
 def test_memory_taxonomy_separates_five_agent_memory_layers() -> None:
-    from zuno.services.memory.layers import MemoryLayer
+    from zuno.platform.services.memory.layers import MemoryLayer
 
     assert MemoryLayer.SHORT_TERM_STATE.value == "short_term_state"
     assert MemoryLayer.WORKING.value == "working_context"
@@ -136,7 +136,7 @@ def test_memory_taxonomy_separates_five_agent_memory_layers() -> None:
 
 
 def test_structured_memory_candidate_requires_review_and_source_events() -> None:
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewDecision,
@@ -172,7 +172,7 @@ def test_structured_memory_candidate_requires_review_and_source_events() -> None
 
 
 def test_memory_processing_policy_documents_summary_and_extraction_rules() -> None:
-    from zuno.services.memory.layers import MemoryProcessingPolicy
+    from zuno.platform.services.memory.layers import MemoryProcessingPolicy
 
     policy = MemoryProcessingPolicy(
         summary_strategy="summary_compression",
@@ -191,7 +191,7 @@ def test_memory_processing_policy_documents_summary_and_extraction_rules() -> No
 
 def test_semantic_memory_adapter_uses_local_deterministic_fallback_and_scope_filters() -> None:
     from zuno.memory.engine import MemoryEngine
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,
@@ -261,7 +261,7 @@ def test_semantic_memory_adapter_uses_local_deterministic_fallback_and_scope_fil
 
 def test_memory_privacy_delete_removes_scoped_content_and_preserves_redacted_audit_report() -> None:
     from zuno.memory.engine import MemoryEngine
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,
@@ -331,7 +331,7 @@ def test_memory_privacy_delete_removes_scoped_content_and_preserves_redacted_aud
 
 def test_memory_eval_baseline_reports_release_gate_for_relevance_privacy_and_budget() -> None:
     from zuno.memory.engine import MemoryEngine
-    from zuno.services.memory.layers import (
+    from zuno.platform.services.memory.layers import (
         MemoryCandidate,
         MemoryLayer,
         MemoryReviewStatus,
