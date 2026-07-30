@@ -565,6 +565,13 @@ pytest -q tests/repo/test_repo_hygiene.py tests/repo/test_phase22_cleanup_bounda
 rg -n "^\s*(from|import)\s+zuno\.(core|services|schema|database|tools|resources|config|mcp_servers)(\b|\.)" src tests tools apps -g '!docs/history/**' -g '!**/__pycache__/**' returned no matches after repair.
 ```
 
+2026-07-30 memory client fallback cleanup:
+```text
+`src/backend/zuno/platform/services/memory/__init__.py` now imports `zuno.platform.services.memory.client` for the lazy `client` export.
+python tools/scripts/verify_phase22_cleanup_boundary.py passed
+pytest -q tests/repo/test_phase22_cleanup_boundary.py -p no:cacheprovider passed
+```
+
 ## Remaining
 
 - `src/backend/zuno/platform/compatibility/legacy_aliases.py` 仍存在，不能在旧 public import 行为尚未转换、显式版本化或 fail-closed 前直接删除。
