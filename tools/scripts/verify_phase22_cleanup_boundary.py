@@ -57,6 +57,7 @@ TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
 TESTS_STORAGE_ROOT = REPO_ROOT / "tests" / "storage"
 TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_agent_api_project_contract.py",
+    REPO_ROOT / "tests" / "agent" / "test_agent_empty_workspace.py",
     REPO_ROOT / "tests" / "agent" / "test_agent_layer_surfaces.py",
     REPO_ROOT / "tests" / "agent" / "test_capability_registry.py",
     REPO_ROOT / "tests" / "agent" / "test_completion_agent_config_compatibility.py",
@@ -269,6 +270,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/tools/",
             "tests/storage/",
             "tests/agent/test_agent_api_project_contract.py",
+            "tests/agent/test_agent_empty_workspace.py",
             "tests/agent/test_agent_layer_surfaces.py",
             "tests/agent/test_capability_registry.py",
             "tests/agent/test_completion_agent_config_compatibility.py",

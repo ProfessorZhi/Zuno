@@ -15,7 +15,7 @@ def _agent(**overrides):
 
 
 def test_init_default_agent_does_not_seed_system_agents(monkeypatch):
-    from zuno.database.init_data import init_default_agent
+    from zuno.platform.database.init_data import init_default_agent
 
     calls = []
 
@@ -32,10 +32,10 @@ def test_init_default_agent_does_not_seed_system_agents(monkeypatch):
     async def fake_insert_agents():
         calls.append("agents")
 
-    monkeypatch.setattr("zuno.database.init_data.cleanup_duplicate_system_data", fake_cleanup)
-    monkeypatch.setattr("zuno.database.init_data.insert_tools_to_mysql", fake_insert_tools)
-    monkeypatch.setattr("zuno.database.init_data.insert_llm_to_mysql", fake_insert_llms)
-    monkeypatch.setattr("zuno.database.init_data.insert_agent_to_mysql", fake_insert_agents)
+    monkeypatch.setattr("zuno.platform.database.init_data.cleanup_duplicate_system_data", fake_cleanup)
+    monkeypatch.setattr("zuno.platform.database.init_data.insert_tools_to_mysql", fake_insert_tools)
+    monkeypatch.setattr("zuno.platform.database.init_data.insert_llm_to_mysql", fake_insert_llms)
+    monkeypatch.setattr("zuno.platform.database.init_data.insert_agent_to_mysql", fake_insert_agents)
 
     asyncio.run(init_default_agent())
 
@@ -53,7 +53,7 @@ def test_agent_list_returns_only_current_user_agents(monkeypatch):
         return []
 
     monkeypatch.setattr(
-        "zuno.database.dao.agent.AgentDao.get_agent_by_user_id",
+        "zuno.platform.database.dao.agent.AgentDao.get_agent_by_user_id",
         fake_get_agent_by_user_id,
     )
 
@@ -72,7 +72,7 @@ def test_agent_search_returns_only_current_user_agents(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "zuno.database.dao.agent.AgentDao.search_agent_name",
+        "zuno.platform.database.dao.agent.AgentDao.search_agent_name",
         fake_search_agent_name,
     )
 
@@ -82,7 +82,7 @@ def test_agent_search_returns_only_current_user_agents(monkeypatch):
 
 
 def test_cleanup_legacy_seeded_system_agents_deletes_only_builtin_agents(monkeypatch):
-    from zuno.database.init_data import cleanup_legacy_seeded_system_agents
+    from zuno.platform.database.init_data import cleanup_legacy_seeded_system_agents
 
     deleted_ids = []
 
@@ -101,7 +101,7 @@ def test_cleanup_legacy_seeded_system_agents_deletes_only_builtin_agents(monkeyp
         fake_get_personal_agent_by_user_id,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.agent.AgentDao.delete_agent_by_id",
+        "zuno.platform.database.dao.agent.AgentDao.delete_agent_by_id",
         fake_delete_agent_by_id,
     )
 
