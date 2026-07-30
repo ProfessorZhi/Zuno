@@ -70,6 +70,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/repo/test_model_gateway_bypass.py` active Model Gateway bypass repo 测试继续改为 canonical `zuno.platform.services` / `zuno.agent.core.models` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_zuno_alias_imports.py` 与 `tests/legacy_guards/test_zuno_config_resource_aliases.py` 退出 legacy guard suite；新增 `tests/repo/test_zuno_canonical_import_surfaces.py`，用 canonical module spec 与 config resource guard 替代旧 alias import 证明，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase11c_domain_pack_api_retirement.py` 与 `tests/legacy_guards/test_phase5_deep_graphrag_eval_surface.py` 迁出 legacy guard suite，分别进入 canonical `tests/repo` 与 `tests/evals` 位置，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_graph_store_project_id_migration.py` 与 `tests/legacy_guards/test_phase1_knowledge_product_skeleton.py` 迁出 legacy guard suite，分别进入 canonical `tests/repo` 与 `tests/frontend` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/agent/core/agents/plan_execute_agent.py`、`src/backend/zuno/agent/core/agents/react_agent.py`、`src/backend/zuno/capability/tool_runtime/bypass_guard.py` 与 `src/backend/zuno/platform/services/mcp/manager.py` 移除 UTF-8 BOM，恢复 AST-based Model Gateway bypass verifier 的真实严格检查。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -387,6 +388,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/repo/test_phase11c_domain_pack_api_retirement.py tests/evals/test_phase5_deep_graphrag_eval_surface.py passed
 6 passed in 12.99s
 rg no matches in selected migrated domain-pack / deep GraphRAG eval guards for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/repo/test_graph_store_project_id_migration.py tests/frontend/test_phase1_knowledge_product_skeleton.py passed
+6 passed in 0.29s
+rg no matches in selected migrated graph-store migration / frontend skeleton guards for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 

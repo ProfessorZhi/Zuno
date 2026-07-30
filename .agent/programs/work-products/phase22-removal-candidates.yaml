@@ -635,6 +635,10 @@ resolved_this_slice:
     before: "non-alias domain-pack API retirement and deep GraphRAG eval surface guards lived under tests/legacy_guards"
     after: "guards moved to canonical tests/repo/test_phase11c_domain_pack_api_retirement.py and tests/evals/test_phase5_deep_graphrag_eval_surface.py locations and are scanned by PHASE22 cleanup verifier"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/legacy_guards/test_graph_store_project_id_migration.py; tests/legacy_guards/test_phase1_knowledge_product_skeleton.py"
+    before: "Graph store project-id migration and Knowledge product frontend skeleton guards lived under tests/legacy_guards"
+    after: "guards moved to canonical tests/repo/test_graph_store_project_id_migration.py and tests/frontend/test_phase1_knowledge_product_skeleton.py locations and are scanned by PHASE22 cleanup verifier"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

@@ -59,7 +59,7 @@ def test_phase1_frontend_contract_keeps_only_two_product_modes() -> None:
     settings_page = _read("apps/web/src/pages/knowledge/knowledge-settings.vue")
 
     assert "standard" in create_page
-    assert "enhanced" in create_page
+    assert "deep" in create_page
     assert "rag" in retrieval_utils
     assert "rag_graph" in retrieval_utils
     assert "rag_graph_deep" not in create_page
