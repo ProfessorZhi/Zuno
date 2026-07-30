@@ -9,7 +9,7 @@ from zuno.settings import app_settings, initialize_app_settings
 async def initialize_worker_runtime():
     await initialize_app_settings()
 
-    from zuno.database.init_data import init_database
+    from zuno.platform.database.init_data import init_database
 
     await init_database()
 
@@ -20,7 +20,7 @@ async def consume_forever(
     handler: Callable[[dict], object],
     poll_interval: float = 1.0,
 ):
-    from zuno.services.queue.client import QueueClient
+    from zuno.platform.services.queue.client import QueueClient
 
     queue_client = QueueClient()
     logger.info(f"RabbitMQ worker listening on queue: {queue_name}")
@@ -112,9 +112,9 @@ async def main():
         await run_package_a_ingestion_worker_forever()
         return
 
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
-    from zuno.services.queue.client import QueueClient, get_queue_names
-    from zuno.services.queue.workers import GraphWorker, IndexWorker, ParseWorker
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.queue.client import QueueClient, get_queue_names
+    from zuno.platform.services.queue.workers import GraphWorker, IndexWorker, ParseWorker
 
     queue_client = QueueClient()
     pipeline_manager = KnowledgePipelineManager(

@@ -381,6 +381,7 @@ def test_platform_application_rewrite_and_queue_use_canonical_imports() -> None:
     rewrite_markdown = _read("src/backend/zuno/platform/services/rewrite/markdown_rewrite.py")
     queue_workers = _read("src/backend/zuno/platform/services/queue/workers.py")
     queue_messages = _read("src/backend/zuno/platform/services/queue/messages.py")
+    queue_runner = _read("src/backend/zuno/platform/services/queue/runner.py")
 
     assert "from zuno.platform.services.application.knowledge.query_service import KnowledgeQueryService" in app_knowledge_init
     assert "from zuno.platform.services.graphrag.models import GraphRAGExtractorConfig" in app_knowledge_query
@@ -396,6 +397,10 @@ def test_platform_application_rewrite_and_queue_use_canonical_imports() -> None:
     assert "from zuno.platform.services.queue.client import get_queue_names" in queue_workers
     assert "from zuno.platform.services.queue.messages import build_task_message" in queue_workers
     assert "from zuno.platform.services.pipeline.models import KnowledgeTaskStage" in queue_messages
+    assert "from zuno.platform.database.init_data import init_database" in queue_runner
+    assert "from zuno.platform.services.queue.client import QueueClient" in queue_runner
+    assert "from zuno.platform.services.pipeline.manager import KnowledgePipelineManager" in queue_runner
+    assert "from zuno.platform.services.queue.workers import GraphWorker, IndexWorker, ParseWorker" in queue_runner
 
     for content in [
         app_knowledge_init,
@@ -405,10 +410,12 @@ def test_platform_application_rewrite_and_queue_use_canonical_imports() -> None:
         rewrite_markdown,
         queue_workers,
         queue_messages,
+        queue_runner,
     ]:
         assert "from zuno.services." not in content
         assert "from zuno.core." not in content
         assert "from zuno.resources." not in content
+        assert "from zuno.database." not in content
 
 
 def test_platform_pipeline_and_provider_inits_use_canonical_imports() -> None:

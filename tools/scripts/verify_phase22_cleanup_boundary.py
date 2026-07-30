@@ -50,6 +50,7 @@ CONVERT_FILES_INIT = (
 )
 QUEUE_WORKERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "workers.py"
 QUEUE_MESSAGES = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "messages.py"
+QUEUE_RUNNER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "queue" / "runner.py"
 PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
 MAIN_ENTRYPOINT = REPO_ROOT / "src" / "backend" / "zuno" / "main.py"
 MEMORY_FEEDBACK_CONSUMER = REPO_ROOT / "src" / "backend" / "zuno" / "memory" / "feedback_consumer.py"
@@ -222,6 +223,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/convert_files/__init__.py",
             "src/backend/zuno/platform/services/queue/workers.py",
             "src/backend/zuno/platform/services/queue/messages.py",
+            "src/backend/zuno/platform/services/queue/runner.py",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
             "src/backend/zuno/memory/feedback_consumer.py",
@@ -381,6 +383,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             ("platform convert files init", CONVERT_FILES_INIT),
             ("platform queue workers", QUEUE_WORKERS),
             ("platform queue messages", QUEUE_MESSAGES),
+            ("platform queue runner", QUEUE_RUNNER),
         ]
     )
     checked_paths.extend(
