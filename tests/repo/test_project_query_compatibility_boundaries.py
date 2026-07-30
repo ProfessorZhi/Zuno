@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(monkeypatch):
-    from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
+    from zuno.platform.services.retrieval.retrievers import GraphRetrieverAdapter
 
     captured = {}
 
@@ -23,7 +23,7 @@ def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(mon
             }
 
     monkeypatch.setattr(
-        "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
+        "zuno.platform.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
 
@@ -37,7 +37,7 @@ def test_graph_retriever_adapter_does_not_fallback_to_runtime_domain_pack_id(mon
 
 
 def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypatch):
-    from zuno.services.retrieval.retrievers import GraphRetrieverAdapter
+    from zuno.platform.services.retrieval.retrievers import GraphRetrieverAdapter
 
     captured = {}
 
@@ -62,7 +62,7 @@ def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypat
             }
 
     monkeypatch.setattr(
-        "zuno.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
+        "zuno.platform.services.retrieval.retrievers.KnowledgeService.get_runtime_settings",
         fake_runtime_settings,
     )
 
@@ -78,8 +78,8 @@ def test_graph_retriever_adapter_uses_project_payload_runtime_settings(monkeypat
 
 
 def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
-    from zuno.services.retrieval.models import ProcessedQuery
-    from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.retrieval.models import ProcessedQuery
+    from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
 
     class FakePlanner:
         def __init__(self):
@@ -144,7 +144,7 @@ def test_retrieval_orchestrator_prefers_explicit_knowledge_capability():
 
 
 def test_agent_table_accepts_domain_pack_id():
-    from zuno.database.models.agent import AgentTable
+    from zuno.platform.database.models.agent import AgentTable
 
     agent = AgentTable(
         name="contract agent",

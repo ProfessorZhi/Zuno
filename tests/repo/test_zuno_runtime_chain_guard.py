@@ -114,6 +114,7 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
         "tests/repo/test_phase11c_agent_runtime_retirement.py",
         "tests/repo/test_phase11c_graph_public_export_retirement.py",
         "tests/repo/test_phase11c_workspace_project_query_cutover.py",
+        "tests/repo/test_project_query_compatibility_boundaries.py",
         "tests/repo/test_phase5_graphrag_index_filters.py",
         "tests/repo/test_phase5_langgraph_runtime_imports.py",
         "tests/repo/test_phase5_general_agent_real_runtime_flow.py",
@@ -149,6 +150,7 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert (REPO_ROOT / "tests/repo/test_phase11a_knowledge_query_service.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11b_single_generalagent_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11c_workspace_project_query_cutover.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_project_query_compatibility_boundaries.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_graphrag_index_filters.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_langgraph_runtime_imports.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_general_agent_real_runtime_flow.py").exists()
