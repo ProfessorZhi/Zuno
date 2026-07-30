@@ -99,6 +99,12 @@ TESTS_EVALS_CANONICAL_FILES = [
 TESTS_KNOWLEDGE_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "knowledge" / "test_parse_gateway_runtime.py",
 ]
+TESTS_RETRIEVAL_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "retrieval" / "test_query_rewrite.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_rerank_fallback.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_retrieval_fusion.py",
+    REPO_ROOT / "tests" / "retrieval" / "test_retrieval_planner.py",
+]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
@@ -324,6 +330,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/evals/test_local_runtime_registry.py",
             "tests/frontend/test_product_wiring_v1_api_contract.py",
             "tests/knowledge/test_parse_gateway_runtime.py",
+            "tests/retrieval/test_query_rewrite.py",
+            "tests/retrieval/test_rerank_fallback.py",
+            "tests/retrieval/test_retrieval_fusion.py",
+            "tests/retrieval/test_retrieval_planner.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
@@ -570,6 +580,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tests knowledge canonical {path.name}", path)
         for path in TESTS_KNOWLEDGE_CANONICAL_FILES
+    )
+    checked_paths.extend(
+        (f"tests retrieval canonical {path.name}", path)
+        for path in TESTS_RETRIEVAL_CANONICAL_FILES
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
