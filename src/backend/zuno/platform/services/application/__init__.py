@@ -2,8 +2,8 @@
 
 Import submodules directly, for example:
 
-- ``from zuno.services.application.knowledge import KnowledgeService``
-- ``from zuno.services.application.tool import ToolService``
+- ``from zuno.platform.services.application.knowledge import KnowledgeService``
+- ``from zuno.platform.services.application.tool import ToolService``
 
 This package intentionally avoids eager re-exports so lower-layer imports do not
 pull the whole API service graph into module initialization.

@@ -112,7 +112,7 @@ class RuntimeDependencyFactory:
         if not self.config.enable_local_tool_runtime:
             return None
         from zuno.capability.runtime import build_default_tool_control_plane_runtime
-        from zuno.database import engine
+        from zuno.platform.database import engine
         from zuno.platform.security import PostgresSecurityApprovalFactSink
 
         return build_default_tool_control_plane_runtime(

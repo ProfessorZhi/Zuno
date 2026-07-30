@@ -34,6 +34,8 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/platform/services/queue/runner.py` worker 启动入口继续改为 canonical `zuno.platform.database` / `zuno.platform.services.pipeline` / `zuno.platform.services.queue` import。
 - `src/backend/zuno/platform/services/deepsearch/` graph 与 streaming graph 入口继续改为 canonical `zuno.agent.core.models` / `zuno.platform.services.deepsearch` import。
 - `src/backend/zuno/platform/services/autobuild/` build、manager 与 client 默认入口继续改为 canonical `zuno.platform.services.autobuild` / `zuno.platform.common` / `zuno.platform.resources` / `zuno.capability` import，并用本地 function schema adapter 替代已消失的 legacy `ChatService.function_to_json` / `action_Function_call`。
+- `src/backend/zuno/agent/runtime/factory.py` 默认 local tool control plane assembly 继续改为 canonical `zuno.platform.database` engine import。
+- `src/backend/zuno/platform/services/application/__init__.py` 的 application service 入口示例继续改为 canonical `zuno.platform.services.application` 路径，避免文档入口继续引导 legacy alias。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -141,6 +143,10 @@ python -m compileall -q src/backend/zuno/platform/services/autobuild src/backend
 rg no matches in src/backend/zuno/platform/services/autobuild for legacy alias imports
 python -c "import zuno.api.services.tool as t; print(t.ToolService.__name__)" passed
 autobuild tool schema smoke passed: 14 schemas
+PHASE22 cleanup boundary verification passed.
+28 passed in 0.47s
+python -m compileall -q src/backend/zuno/agent/runtime/factory.py src/backend/zuno/platform/services/application/__init__.py passed
+rg no matches in src/backend/zuno/agent/runtime/factory.py src/backend/zuno/platform/services/application/__init__.py for legacy alias imports
 ```
 
 ## Remaining

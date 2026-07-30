@@ -756,3 +756,26 @@ def test_agent_core_uses_canonical_imports() -> None:
         assert "from zuno.resources." not in content
         assert "from zuno.utils." not in content
         assert "from zuno.tools" not in content
+
+
+def test_agent_runtime_factory_uses_canonical_imports() -> None:
+    content = _read("src/backend/zuno/agent/runtime/factory.py")
+
+    assert "from zuno.platform.database import engine" in content
+    assert "from zuno.capability.runtime import build_default_tool_control_plane_runtime" in content
+    assert "from zuno.platform.security import PostgresSecurityApprovalFactSink" in content
+    assert "from zuno.database import engine" not in content
+    assert "from zuno.services." not in content
+    assert "from zuno.schema." not in content
+    assert "from zuno.core." not in content
+    assert "from zuno.resources." not in content
+    assert "from zuno.utils." not in content
+    assert "from zuno.tools" not in content
+
+
+def test_platform_application_exports_document_canonical_paths() -> None:
+    content = _read("src/backend/zuno/platform/services/application/__init__.py")
+
+    assert "from zuno.platform.services.application.knowledge import KnowledgeService" in content
+    assert "from zuno.platform.services.application.tool import ToolService" in content
+    assert "zuno.services.application" not in content
