@@ -87,6 +87,12 @@ TESTS_API_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "api" / "test_workspace_runtime_recovery.py",
     REPO_ROOT / "tests" / "api" / "test_workspace_task_runtime.py",
 ]
+TESTS_E2E_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "e2e" / "test_unified_agent_product_scenario.py",
+]
+TESTS_FRONTEND_CANONICAL_FILES = [
+    REPO_ROOT / "tests" / "frontend" / "test_product_wiring_v1_api_contract.py",
+]
 SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
@@ -308,6 +314,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "tests/api/test_workspace_product_loop_contract.py",
             "tests/api/test_workspace_runtime_recovery.py",
             "tests/api/test_workspace_task_runtime.py",
+            "tests/e2e/test_unified_agent_product_scenario.py",
+            "tests/frontend/test_product_wiring_v1_api_contract.py",
             "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
@@ -538,6 +546,14 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     checked_paths.extend(
         (f"tests api canonical {path.name}", path)
         for path in TESTS_API_CANONICAL_FILES
+    )
+    checked_paths.extend(
+        (f"tests e2e canonical {path.name}", path)
+        for path in TESTS_E2E_CANONICAL_FILES
+    )
+    checked_paths.extend(
+        (f"tests frontend canonical {path.name}", path)
+        for path in TESTS_FRONTEND_CANONICAL_FILES
     )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
