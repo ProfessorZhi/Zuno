@@ -31,5 +31,5 @@ def test_project_query_runtime_modules_import_from_zuno_mainline():
 
 
 def test_legacy_runtime_import_coverage_lives_in_root_phase11c_tests():
-    assert (REPO_ROOT / "tests/legacy_guards/test_phase11c_agent_runtime_retirement.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11c_agent_runtime_retirement.py").exists()
     assert not (REPO_ROOT / "tests/compat").exists()
