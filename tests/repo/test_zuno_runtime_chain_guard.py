@@ -103,7 +103,9 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
     assert not (REPO_ROOT / "tests/compat").exists()
 
     root_guard_tests = [
+        "tests/repo/test_phase2_retrieval_strategy_program.py",
         "tests/repo/test_phase11a_knowledge_query_service.py",
+        "tests/repo/test_phase11b_single_generalagent_cutover.py",
         "tests/repo/test_phase11c_agent_runtime_retirement.py",
         "tests/repo/test_phase11c_graph_public_export_retirement.py",
         "tests/repo/test_phase11c_workspace_project_query_cutover.py",
@@ -133,7 +135,9 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
         assert (REPO_ROOT / relative_path).exists(), relative_path
 
     assert (REPO_ROOT / "tests/repo/test_phase11c_agent_runtime_retirement.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase2_retrieval_strategy_program.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11a_knowledge_query_service.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11b_single_generalagent_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase11c_workspace_project_query_cutover.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_general_agent_real_runtime_flow.py").exists()
     assert (REPO_ROOT / "tests/repo/test_phase5_workspace_real_runtime_flow.py").exists()
