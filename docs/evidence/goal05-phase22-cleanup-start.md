@@ -50,6 +50,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/agent/test_knowledge_layer_surfaces.py` active Knowledge layer surface 测试继续改为 canonical `zuno.platform.services` foundation 断言，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_general_agent_project_query_runtime.py` 与 `tests/agent/test_generalagent_context_memory_runtime.py` active GeneralAgent project query / context / memory runtime 测试继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.memory` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_workspace_project_query_runtime.py` active Workspace project query runtime 测试继续改为 canonical `zuno.platform.services.workspace.simple_agent` / `zuno.platform.services.graphrag` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/agent/test_workspace_simple_agent.py` active WorkspaceSimpleAgent 测试继续改为 canonical `zuno.platform.services.workspace.simple_agent` / `zuno.api.dto.tool` / `zuno.platform.services.graphrag` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_agent_api_project_contract.py`、`tests/agent/test_workspace_session_cleanup.py` 与 `tests/agent/test_workspace_session_api.py` active Agent DTO / Workspace Session 测试继续改为 canonical `zuno.api.dto` / `zuno.platform.database` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/api/v1/completion.py` rollback lazy proxy 继续改为 canonical `zuno.agent.core.agents.general_agent`；`tests/agent/test_completion_agent_config_compatibility.py` 与 `tests/api/test_completion_unified_runtime.py` active Completion 测试继续改为 canonical `zuno.api.dto.completion`，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/agent/test_agent_empty_workspace.py` active Agent empty workspace 测试继续改为 canonical `zuno.platform.database` import 和 monkeypatch 路径，并纳入 PHASE22 cleanup verifier 扫描。
@@ -342,6 +343,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/integration/test_goal03_wave_a_persistence.py passed
 2 passed in 16.18s
 rg no matches in tests/integration/test_goal03_wave_a_persistence.py for legacy import references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/agent/test_workspace_simple_agent.py passed
+27 passed, 5 warnings in 16.07s
+rg no matches in tests/agent/test_workspace_simple_agent.py for legacy import or monkeypatch references
 PHASE22 cleanup boundary verification passed.
 ```
 

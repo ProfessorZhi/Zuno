@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 from types import SimpleNamespace
 
 from langchain_core.messages import AIMessageChunk, HumanMessage
@@ -14,10 +14,10 @@ async def _collect_events_from_generator(generator):
 
 
 def test_astream_direct_routes_non_explicit_mcp_query(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -61,10 +61,10 @@ def test_astream_direct_routes_non_explicit_mcp_query(monkeypatch):
 
 
 def test_canonical_mcp_target_handles_custom_server_name_without_recursion(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -86,7 +86,7 @@ def test_canonical_mcp_target_handles_custom_server_name_without_recursion(monke
 
 
 def test_normalize_weekday_labels_corrects_model_generated_weekdays():
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     text = (
         "| 日期 | 收盘 |\n"
@@ -103,7 +103,7 @@ def test_normalize_weekday_labels_corrects_model_generated_weekdays():
 
 
 def test_tool_result_for_model_enriches_market_ohlc_payload():
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     raw_result = {
         "data": [
@@ -136,10 +136,10 @@ def test_tool_result_for_model_enriches_market_ohlc_payload():
 
 
 def test_guess_direct_mcp_call_extracts_clean_weather_city(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -172,10 +172,10 @@ def test_guess_direct_mcp_call_extracts_clean_weather_city(monkeypatch):
 
 
 def test_mcp_without_user_config_is_treated_as_platform_ready(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -201,10 +201,10 @@ def test_mcp_without_user_config_is_treated_as_platform_ready(monkeypatch):
 
 
 def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -238,11 +238,11 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
         return []
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
         fake_catalog,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
         fake_skills_by_ids,
     )
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_terminal_tools", noop)
@@ -273,10 +273,10 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
 
 
 def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -310,11 +310,11 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
         return []
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
         fake_catalog,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
         fake_skills_by_ids,
     )
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_terminal_tools", noop)
@@ -345,10 +345,10 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
 
 
 def test_extract_api_tool_creation_payload_keeps_docs_urls_and_does_not_treat_them_as_endpoint(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -370,10 +370,10 @@ def test_extract_api_tool_creation_payload_keeps_docs_urls_and_does_not_treat_th
 
 
 def test_extract_api_tool_creation_payload_recognizes_access_key_label(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -389,10 +389,10 @@ def test_extract_api_tool_creation_payload_recognizes_access_key_label(monkeypat
 
 
 def test_extract_api_tool_creation_payload_merges_docs_urls_across_turns(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -419,11 +419,11 @@ def test_extract_api_tool_creation_payload_merges_docs_urls_across_turns(monkeyp
 
 
 def test_plan_tool_creation_flow_normalizes_none_sample_curl(monkeypatch):
-    from zuno.schema.tool import RemoteApiAssistResp, SimpleApiConfig
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.api.dto.tool import RemoteApiAssistResp, SimpleApiConfig
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -468,7 +468,7 @@ def test_plan_tool_creation_flow_normalizes_none_sample_curl(monkeypatch):
             warnings=[],
         )
 
-    monkeypatch.setattr("zuno.services.workspace.simple_agent.build_remote_api_assist_draft", fake_assist)
+    monkeypatch.setattr("zuno.platform.services.workspace.simple_agent.build_remote_api_assist_draft", fake_assist)
 
     result = asyncio.run(agent._plan_tool_creation_flow("access_key：demo-key"))
 
@@ -478,10 +478,10 @@ def test_plan_tool_creation_flow_normalizes_none_sample_curl(monkeypatch):
 
 
 def test_prepare_explicit_skill_messages_injects_context(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -523,10 +523,10 @@ def test_prepare_explicit_skill_messages_injects_context(monkeypatch):
 
 
 def test_detect_route_hint_prefers_explicit_slash_skill_over_knowledge_keywords(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -544,11 +544,11 @@ def test_detect_route_hint_prefers_explicit_slash_skill_over_knowledge_keywords(
 
 
 def test_plan_tool_creation_flow_asks_for_api_key_when_docs_infer_query_auth(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
-    from zuno.schema.tool import RemoteApiAssistResp, SimpleApiConfig
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.api.dto.tool import RemoteApiAssistResp, SimpleApiConfig
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
     async def fake_get_session(*_args, **_kwargs):
@@ -573,11 +573,11 @@ def test_plan_tool_creation_flow_asks_for_api_key_when_docs_infer_query_auth(mon
         )
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.WorkSpaceSessionService.get_workspace_session_from_id",
+        "zuno.platform.services.workspace.simple_agent.WorkSpaceSessionService.get_workspace_session_from_id",
         fake_get_session,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.build_remote_api_assist_draft",
+        "zuno.platform.services.workspace.simple_agent.build_remote_api_assist_draft",
         fake_assist,
     )
 
@@ -592,11 +592,11 @@ def test_plan_tool_creation_flow_asks_for_api_key_when_docs_infer_query_auth(mon
 
 
 def test_plan_tool_creation_flow_uses_pending_state_to_finish_creation(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
-    from zuno.schema.tool import RemoteApiAssistResp, SimpleApiConfig
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.api.dto.tool import RemoteApiAssistResp, SimpleApiConfig
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -640,11 +640,11 @@ def test_plan_tool_creation_flow_uses_pending_state_to_finish_creation(monkeypat
         )
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.WorkSpaceSessionService.get_workspace_session_from_id",
+        "zuno.platform.services.workspace.simple_agent.WorkSpaceSessionService.get_workspace_session_from_id",
         fake_get_session,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.build_remote_api_assist_draft",
+        "zuno.platform.services.workspace.simple_agent.build_remote_api_assist_draft",
         fake_assist,
     )
 
@@ -659,10 +659,10 @@ def test_plan_tool_creation_flow_uses_pending_state_to_finish_creation(monkeypat
 
 
 def test_astream_slash_skill_uses_injected_context_and_continues(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -709,11 +709,11 @@ def test_astream_slash_skill_uses_injected_context_and_continues(monkeypatch):
         return None
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
         fake_catalog,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
+        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
         fake_skills_by_ids,
     )
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_terminal_tools", noop)
@@ -748,10 +748,10 @@ def test_astream_slash_skill_uses_injected_context_and_continues(monkeypatch):
 
 
 def test_astream_ignores_leading_blank_chunk_before_tool_events(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -816,14 +816,14 @@ def test_astream_ignores_leading_blank_chunk_before_tool_events(monkeypatch):
 
 
 def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.get_stream_writer",
+        "zuno.platform.services.workspace.simple_agent.get_stream_writer",
         lambda: (lambda _payload: None),
     )
 
@@ -878,11 +878,11 @@ def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
 
 
 def test_prefetched_knowledge_context_is_injected_into_messages(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -934,10 +934,10 @@ def test_prefetched_knowledge_context_is_injected_into_messages(monkeypatch):
 
 
 def test_prefetched_knowledge_disables_web_search_for_non_realtime_query(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -977,10 +977,10 @@ def test_prefetched_knowledge_disables_web_search_for_non_realtime_query(monkeyp
 
 
 def test_prefetched_knowledge_keeps_web_search_for_realtime_query(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -1012,10 +1012,10 @@ def test_prefetched_knowledge_keeps_web_search_for_realtime_query(monkeypatch):
 
 
 def test_direct_maps_weather_result_is_humanized_for_final_answer(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -1072,10 +1072,10 @@ def test_direct_maps_weather_result_is_humanized_for_final_answer(monkeypatch):
 
 
 def test_setup_plugin_tools_registers_tool_creation_helpers(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -1083,10 +1083,10 @@ def test_setup_plugin_tools_registers_tool_creation_helpers(monkeypatch):
         return []
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ToolService.get_tools_from_id",
+        "zuno.platform.services.workspace.simple_agent.ToolService.get_tools_from_id",
         fake_get_tools_from_id,
     )
-    monkeypatch.setattr("zuno.services.workspace.simple_agent.WorkSpacePlugins", {})
+    monkeypatch.setattr("zuno.platform.services.workspace.simple_agent.WorkSpacePlugins", {})
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -1103,10 +1103,10 @@ def test_setup_plugin_tools_registers_tool_creation_helpers(monkeypatch):
 
 
 def test_search_available_capabilities_uses_capability_service(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
@@ -1127,14 +1127,14 @@ def test_search_available_capabilities_uses_capability_service(monkeypatch):
         ]
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ToolService.get_tools_from_id",
+        "zuno.platform.services.workspace.simple_agent.ToolService.get_tools_from_id",
         fake_get_tools_from_id,
     )
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.CapabilityService.search_capabilities",
+        "zuno.platform.services.workspace.simple_agent.CapabilityService.search_capabilities",
         fake_search_capabilities,
     )
-    monkeypatch.setattr("zuno.services.workspace.simple_agent.WorkSpacePlugins", {})
+    monkeypatch.setattr("zuno.platform.services.workspace.simple_agent.WorkSpacePlugins", {})
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -1152,10 +1152,10 @@ def test_search_available_capabilities_uses_capability_service(monkeypatch):
 
 
 def test_direct_maps_weather_root_forecasts_are_humanized(monkeypatch):
-    from zuno.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
