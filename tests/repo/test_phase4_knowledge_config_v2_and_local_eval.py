@@ -73,6 +73,6 @@ def test_phase4_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatc
     assert runtime["knowledge_config"]["eval_profile_id"] is None
 
     importlib.import_module("zuno.api.services.knowledge_file")
-    importlib.import_module("zuno.services.rag.handler")
-    importlib.import_module("zuno.services.graphrag.retriever")
+    importlib.import_module("zuno.platform.services.rag.handler")
+    importlib.import_module("zuno.platform.services.graphrag.retriever")
     importlib.import_module("zuno.evals.rag_eval.ingest_prepared_corpus")

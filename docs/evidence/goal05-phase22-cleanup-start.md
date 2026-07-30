@@ -84,6 +84,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/legacy_guards/test_phase2_retrieval_strategy_program.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase2_retrieval_strategy_program.py` 位置，改为 canonical `zuno.platform.services.retrieval` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase2_graphrag_mainline_deepening.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase2_graphrag_mainline_deepening.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase3_community_graphrag_v1.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase3_community_graphrag_v1.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_phase4_knowledge_config_v2_and_local_eval.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py` 位置，改为 canonical `zuno.platform.services` / `zuno.evals` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase0_runtime_recovery.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase0_runtime_recovery.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_graphrag_index_filters.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_graphrag_index_filters.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_phase5_langgraph_runtime_imports.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_langgraph_runtime_imports.py` 位置，改为 canonical `zuno.platform.services` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -472,6 +473,10 @@ PHASE22 cleanup boundary verification passed.
 
 python -m compileall -q tests/repo/test_phase3_community_graphrag_v1.py tests/repo/test_zuno_runtime_chain_guard.py passed
 17 passed in 14.97s
+PHASE22 cleanup boundary verification passed.
+
+python -m compileall -q tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py tests/repo/test_zuno_runtime_chain_guard.py passed
+13 passed in 17.63s
 PHASE22 cleanup boundary verification passed.
 ```
 
