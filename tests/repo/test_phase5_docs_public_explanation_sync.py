@@ -14,11 +14,9 @@ def test_phase5_docs_sync_current_public_story() -> None:
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "本地优先的 Agent Workspace",
-        "`src/backend/zuno` 是唯一当前 Python 后端 runtime 边界。",
-        "Phase 0-6 架构收口仍是已完成的历史事实。",
-        "architecture/        # 总架构、生产成熟度基线、HTML、正式决策",
-        "./docs/architecture/production-readiness.md",
+        "本地优先、短小精悍但工程完整的",
+        "后端主路径位于 `src/backend/zuno`",
+        "当前 program 前台：`.agent/programs/`",
     ]:
         assert phrase in readme
 
@@ -28,8 +26,8 @@ def test_phase5_docs_sync_current_public_story() -> None:
     ]:
         assert phrase in phase5_doc
 
-    assert "`Phase 5` is complete" in phase_index
-    assert "src/backend/zuno/       # 当前后端 runtime truth" in readme
+    assert "Phase 0-6" in phase_index
+    assert "Phase 5: Docs And Public Explanation Sync" in phase5_doc
 
 
 def test_phase5_maintainer_docs_use_clean_paths_and_current_truth() -> None:

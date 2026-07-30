@@ -643,6 +643,10 @@ resolved_this_slice:
     before: "config impact, graph public export retirement, legacy boundary hardening and bundle scope guards lived under tests/legacy_guards"
     after: "guards moved to canonical tests/repo/test_hardening01_config_impact_contract.py, tests/repo/test_phase11c_graph_public_export_retirement.py, tests/repo/test_phase25_legacy_boundary_hardening.py and tests/repo/test_phase6_bundle_scope.py locations and are scanned by PHASE22 cleanup verifier"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
+  - path: "tests/legacy_guards/test_phase5_docs_public_explanation_sync.py"
+    before: "docs/public explanation sync guard lived under tests/legacy_guards"
+    after: "guard moved to canonical tests/repo/test_phase5_docs_public_explanation_sync.py location and is scanned by PHASE22 cleanup verifier"
+    evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 remaining_not_closed:
   - "Many non-product production modules still import through zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources and zuno.mcp_servers aliases."
   - "The alias registry and tests/legacy_guards cannot be deleted safely until those imports are converted or explicitly versioned."

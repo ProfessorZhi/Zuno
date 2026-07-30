@@ -72,6 +72,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `tests/legacy_guards/test_phase11c_domain_pack_api_retirement.py` 与 `tests/legacy_guards/test_phase5_deep_graphrag_eval_surface.py` 迁出 legacy guard suite，分别进入 canonical `tests/repo` 与 `tests/evals` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_graph_store_project_id_migration.py` 与 `tests/legacy_guards/test_phase1_knowledge_product_skeleton.py` 迁出 legacy guard suite，分别进入 canonical `tests/repo` 与 `tests/frontend` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/legacy_guards/test_hardening01_config_impact_contract.py`、`tests/legacy_guards/test_phase11c_graph_public_export_retirement.py`、`tests/legacy_guards/test_phase25_legacy_boundary_hardening.py` 与 `tests/legacy_guards/test_phase6_bundle_scope.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_hardening01_config_impact_contract.py`、`tests/repo/test_phase11c_graph_public_export_retirement.py`、`tests/repo/test_phase25_legacy_boundary_hardening.py` 与 `tests/repo/test_phase6_bundle_scope.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
+- `tests/legacy_guards/test_phase5_docs_public_explanation_sync.py` 迁出 legacy guard suite，进入 canonical `tests/repo/test_phase5_docs_public_explanation_sync.py` 位置，并纳入 PHASE22 cleanup verifier 扫描。
 - `src/backend/zuno/agent/core/agents/plan_execute_agent.py`、`src/backend/zuno/agent/core/agents/react_agent.py`、`src/backend/zuno/capability/tool_runtime/bypass_guard.py` 与 `src/backend/zuno/platform/services/mcp/manager.py` 移除 UTF-8 BOM，恢复 AST-based Model Gateway bypass verifier 的真实严格检查。
 - `tests/e2e/test_unified_agent_product_scenario.py` 与 `tests/frontend/test_product_wiring_v1_api_contract.py` active e2e / frontend product contract 测试继续改为 canonical `zuno.api.dto.workspace` / `zuno.api.dto.knowledge` import，并纳入 PHASE22 cleanup verifier 扫描。
 - `tests/evals/test_local_runtime_registry.py` active eval runtime registry 测试继续改为 canonical `zuno.platform.services.runtime_registry` import，并纳入 PHASE22 cleanup verifier 扫描。
@@ -397,6 +398,10 @@ PHASE22 cleanup boundary verification passed.
 python -m compileall -q tests/repo/test_hardening01_config_impact_contract.py tests/repo/test_phase11c_graph_public_export_retirement.py tests/repo/test_phase25_legacy_boundary_hardening.py tests/repo/test_phase6_bundle_scope.py passed
 37 passed in 10.05s
 rg no matches in selected migrated hardening / retirement / boundary / bundle guards for legacy alias references
+PHASE22 cleanup boundary verification passed.
+python -m compileall -q tests/repo/test_phase5_docs_public_explanation_sync.py passed
+2 passed in 0.10s
+rg no matches in tests/repo/test_phase5_docs_public_explanation_sync.py for legacy alias references
 PHASE22 cleanup boundary verification passed.
 ```
 
