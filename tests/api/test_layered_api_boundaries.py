@@ -611,6 +611,22 @@ def test_platform_memory_uses_canonical_imports() -> None:
         assert "from zuno.core." not in content
 
 
+def test_platform_deepsearch_uses_canonical_imports() -> None:
+    paths = [
+        "src/backend/zuno/platform/services/deepsearch/graph.py",
+        "src/backend/zuno/platform/services/deepsearch/stream_graph.py",
+    ]
+    contents = {path: _read(path) for path in paths}
+
+    for content in contents.values():
+        assert "from zuno.agent.core.models.manager import ModelManager" in content
+        assert "from zuno.platform.services.deepsearch.configuration import Configuration" in content
+        assert "from zuno.platform.services.deepsearch.prompts import (" in content
+        assert "from zuno.platform.services.deepsearch.state import (" in content
+        assert "from zuno.core." not in content
+        assert "from zuno.services." not in content
+
+
 def test_platform_tool_runtime_services_use_canonical_imports() -> None:
     cli_tool_discovery = _read("src/backend/zuno/platform/services/cli_tool_discovery.py")
     simple_api_tool = _read("src/backend/zuno/platform/services/simple_api_tool.py")

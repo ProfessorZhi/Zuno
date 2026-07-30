@@ -31,6 +31,7 @@ branch: codex/goal05-phase15-sandbox-repair
 - `src/backend/zuno/api/services/completion.py`、`src/backend/zuno/api/services/wechat.py` 与 `src/backend/zuno/api/services/mcp_chat.py` 继续改为 canonical `zuno.agent.core` / `zuno.platform.services` / `zuno.platform.resources` / `zuno.platform.common` / `zuno.api.dto` import。
 - `src/backend/zuno/platform/services/application/knowledge/`、`src/backend/zuno/platform/services/rewrite/`、`src/backend/zuno/platform/services/queue/workers.py` 与 `src/backend/zuno/platform/services/queue/messages.py` 继续改为 canonical `zuno.platform.services` / `zuno.agent.core` / `zuno.platform.resources` import。
 - `src/backend/zuno/platform/services/queue/runner.py` worker 启动入口继续改为 canonical `zuno.platform.database` / `zuno.platform.services.pipeline` / `zuno.platform.services.queue` import。
+- `src/backend/zuno/platform/services/deepsearch/` graph 与 streaming graph 入口继续改为 canonical `zuno.agent.core.models` / `zuno.platform.services.deepsearch` import。
 - `src/backend/zuno/platform/services/pipeline/`、`src/backend/zuno/platform/services/embedding/__init__.py`、`src/backend/zuno/platform/services/llm/__init__.py` 与 `src/backend/zuno/platform/services/convert_files/__init__.py` 继续改为 canonical `zuno.platform.database` / `zuno.platform.services` / `zuno.platform.common` import。
 - `src/backend/zuno/platform/services/graphrag/community/`、`src/backend/zuno/platform/services/graphrag/extractors/`、`src/backend/zuno/platform/services/graphrag/graph_store/__init__.py`、`src/backend/zuno/platform/services/graphrag/prompts/__init__.py`、`src/backend/zuno/platform/services/graphrag/retrievers/` 与 `src/backend/zuno/platform/services/graphrag/project/loader.py` 继续改为 canonical `zuno.platform.services.graphrag` import。
 - `src/backend/zuno/platform/services/graphrag/query_service.py`、`src/backend/zuno/platform/services/graphrag/orchestrator.py` 与 `src/backend/zuno/platform/services/graphrag/retriever.py` 继续改为 canonical `zuno.platform.services.retrieval` / `zuno.platform.services.graphrag` / `zuno.platform.services.rag` import。
@@ -128,6 +129,10 @@ PHASE22 cleanup boundary verification passed.
 24 passed in 0.56s
 python -m compileall -q src/backend/zuno/platform/services/queue/runner.py passed
 rg no matches in src/backend/zuno/platform/services/queue/runner.py for legacy alias imports
+PHASE22 cleanup boundary verification passed.
+25 passed in 0.24s
+python -m compileall -q src/backend/zuno/platform/services/deepsearch passed
+rg no matches in src/backend/zuno/platform/services/deepsearch for legacy alias imports
 ```
 
 ## Remaining
