@@ -53,6 +53,8 @@ PLATFORM_MODEL_GATEWAY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "
 PLATFORM_MODEL_GATEWAY_ADAPTERS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "model_gateway_adapters.py"
 PLATFORM_APPLICATION_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "application" / "__init__.py"
 TOOLS_EVALS_ZUNO_ROOT = REPO_ROOT / "tools" / "evals" / "zuno"
+TESTS_TOOLS_ROOT = REPO_ROOT / "tests" / "tools"
+SEND_EMAIL_MANIFEST = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools" / "send_email" / "manifest.yaml"
 EMBEDDING_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "embedding" / "__init__.py"
 LLM_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "llm" / "__init__.py"
 CONVERT_FILES_INIT = (
@@ -242,6 +244,8 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/model_gateway.py",
             "src/backend/zuno/platform/model_gateway_adapters.py",
             "tools/evals/zuno/",
+            "tests/tools/",
+            "src/backend/zuno/capability/tools/send_email/manifest.yaml",
             "src/backend/zuno/platform/services/application/__init__.py",
             "src/backend/zuno/platform/settings.py",
             "src/backend/zuno/main.py",
@@ -455,6 +459,10 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         (f"tools evals zuno {path.relative_to(TOOLS_EVALS_ZUNO_ROOT)}", path)
         for path in sorted(TOOLS_EVALS_ZUNO_ROOT.rglob("*.py"))
     )
+    checked_paths.extend(
+        (f"tests tools {path.relative_to(TESTS_TOOLS_ROOT)}", path)
+        for path in sorted(TESTS_TOOLS_ROOT.rglob("*.py"))
+    )
     checked_paths.append(("platform application init", PLATFORM_APPLICATION_INIT))
     checked_paths.append(("platform settings", PLATFORM_SETTINGS))
 
@@ -463,6 +471,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         for alias_import in alias_imports:
             if alias_import in text:
                 errors.append(f"{label} still imports through legacy alias: {alias_import}")
+
+    send_email_manifest = _read(SEND_EMAIL_MANIFEST)
+    if "zuno.tools.send_email" in send_email_manifest or "src/backend/zuno/tools/send_email" in send_email_manifest:
+        errors.append("send email manifest still points at legacy zuno.tools path")
+    if "zuno.capability.tools.send_email.cli" not in send_email_manifest:
+        errors.append("send email manifest missing canonical capability tool entry module")
 
     current = _read(CURRENT_PROGRAM)
     manifest = _read(MANIFEST)

@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 
 def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
-    from zuno.schema.tool import SimpleApiConfig, ToolConnectivityReq
-    from zuno.services.tool_connectivity_service import ToolConnectivityService
+    from zuno.api.dto.tool import SimpleApiConfig, ToolConnectivityReq
+    from zuno.platform.services.tool_connectivity_service import ToolConnectivityService
 
     captured = {}
 
@@ -29,8 +29,8 @@ def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
                 "tested_url": "https://example.com/check",
             }
 
-    monkeypatch.setattr("zuno.services.tool_connectivity_service.ToolCreationService.validate_and_resolve", fake_validate_and_resolve)
-    monkeypatch.setattr("zuno.services.tool_connectivity_service.OpenAPIToolAdapter", FakeAdapter)
+    monkeypatch.setattr("zuno.platform.services.tool_connectivity_service.ToolCreationService.validate_and_resolve", fake_validate_and_resolve)
+    monkeypatch.setattr("zuno.platform.services.tool_connectivity_service.OpenAPIToolAdapter", FakeAdapter)
 
     req = ToolConnectivityReq(
         runtime_type="remote_api",
@@ -53,7 +53,7 @@ def test_tool_connectivity_service_dispatches_remote_api(monkeypatch):
 
 def test_tool_connectivity_route_returns_resp_200(monkeypatch):
     from zuno.api.v1.tool import test_tool_connectivity
-    from zuno.schema.tool import ToolConnectivityReq
+    from zuno.api.dto.tool import ToolConnectivityReq
 
     async def fake_test(_req):
         return SimpleNamespace(
@@ -85,7 +85,8 @@ def test_tool_connectivity_route_returns_resp_200(monkeypatch):
 def test_saved_tool_connectivity_route_returns_status(monkeypatch):
     from zuno.api.v1.tool import test_saved_tool_connectivity
 
-    async def fake_verify(_tool_id, _user_id):
+    async def fake_verify(_tool_id, _user_id, *, action="access"):
+        assert action == "test"
         return None
 
     async def fake_get_tool(_tool_id):
@@ -137,8 +138,8 @@ def test_saved_tool_connectivity_route_returns_status(monkeypatch):
 
 
 def test_connectivity_status_for_missing_cli_healthcheck_is_runtime_input():
-    from zuno.schema.tool import ToolConnectivityResp
-    from zuno.services.tool_connectivity_service import ToolConnectivityService
+    from zuno.api.dto.tool import ToolConnectivityResp
+    from zuno.platform.services.tool_connectivity_service import ToolConnectivityService
 
     status = ToolConnectivityService.to_runtime_status(
         ToolConnectivityResp(
