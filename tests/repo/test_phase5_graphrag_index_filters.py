@@ -1,22 +1,19 @@
 import asyncio
-import importlib.util
 import sys
 import tempfile
-import types
 from pathlib import Path
 from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SERVICE_API_ROOT = REPO_ROOT / "src" / "backend"
-BACKEND_ROOT = REPO_ROOT / "src/backend"
+BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 for runtime_root in (str(BACKEND_ROOT),):
     if runtime_root not in sys.path:
         sys.path.insert(0, runtime_root)
 
 
 def test_graph_writer_attaches_runtime_metadata_fields():
-    from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+    from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 
     writer = GraphWriter()
 
@@ -42,7 +39,7 @@ def test_graph_writer_attaches_runtime_metadata_fields():
 
 
 def test_graph_writer_attaches_project_id_as_primary_graph_scope():
-    from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+    from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 
     writer = GraphWriter()
 
@@ -73,6 +70,8 @@ def test_neo4j_client_uses_project_id_property_as_primary_graph_scope():
 
 
 def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(monkeypatch):
+    from zuno.platform.services.retrieval.retrievers import GraphRetrieverAdapter, KnowledgeService
+
     captured = {}
 
     class FakeGraphRetriever:
@@ -82,31 +81,12 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
             captured["kwargs"] = kwargs
             return {"content": "", "documents": []}
 
-    fake_api_package = types.ModuleType("zuno.api")
-    fake_api_package.__path__ = []  # type: ignore[attr-defined]
-    fake_api_services_package = types.ModuleType("zuno.api.services")
-    fake_api_services_package.__path__ = []  # type: ignore[attr-defined]
-    fake_knowledge_module = types.ModuleType("zuno.api.services.knowledge")
+    async def fake_runtime_settings(_knowledge_id):
+        return {
+            "graph_retriever": FakeGraphRetriever(),
+        }
 
-    class FakeKnowledgeService:
-        @staticmethod
-        async def get_runtime_settings(_knowledge_id):
-            return {
-                "graph_retriever": FakeGraphRetriever(),
-            }
-
-    fake_knowledge_module.KnowledgeService = FakeKnowledgeService
-
-    monkeypatch.setitem(sys.modules, "zuno.api", fake_api_package)
-    monkeypatch.setitem(sys.modules, "zuno.api.services", fake_api_services_package)
-    monkeypatch.setitem(sys.modules, "zuno.api.services.knowledge", fake_knowledge_module)
-
-    module_path = BACKEND_ROOT / "zuno/platform/services/retrieval/retrievers.py"
-    spec = importlib.util.spec_from_file_location("phase5_test_retrievers", module_path)
-    retrievers_module = importlib.util.module_from_spec(spec)
-    assert spec is not None and spec.loader is not None
-    spec.loader.exec_module(retrievers_module)
-    GraphRetrieverAdapter = retrievers_module.GraphRetrieverAdapter
+    monkeypatch.setattr(KnowledgeService, "get_runtime_settings", staticmethod(fake_runtime_settings))
 
     asyncio.run(
         GraphRetrieverAdapter().retrieve(
@@ -132,6 +112,8 @@ def test_graph_retriever_adapter_forwards_scope_status_and_graph_index_version(m
 
 
 def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(monkeypatch):
+    from zuno.platform.services.retrieval.retrievers import GraphRetrieverAdapter, KnowledgeService
+
     captured = {}
 
     class FakeGraphRetriever:
@@ -141,31 +123,12 @@ def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(mon
             captured["kwargs"] = kwargs
             return {"content": "", "documents": []}
 
-    fake_api_package = types.ModuleType("zuno.api")
-    fake_api_package.__path__ = []  # type: ignore[attr-defined]
-    fake_api_services_package = types.ModuleType("zuno.api.services")
-    fake_api_services_package.__path__ = []  # type: ignore[attr-defined]
-    fake_knowledge_module = types.ModuleType("zuno.api.services.knowledge")
+    async def fake_runtime_settings(_knowledge_id):
+        return {
+            "graph_retriever": FakeGraphRetriever(),
+        }
 
-    class FakeKnowledgeService:
-        @staticmethod
-        async def get_runtime_settings(_knowledge_id):
-            return {
-                "graph_retriever": FakeGraphRetriever(),
-            }
-
-    fake_knowledge_module.KnowledgeService = FakeKnowledgeService
-
-    monkeypatch.setitem(sys.modules, "zuno.api", fake_api_package)
-    monkeypatch.setitem(sys.modules, "zuno.api.services", fake_api_services_package)
-    monkeypatch.setitem(sys.modules, "zuno.api.services.knowledge", fake_knowledge_module)
-
-    module_path = BACKEND_ROOT / "zuno/platform/services/retrieval/retrievers.py"
-    spec = importlib.util.spec_from_file_location("phase5_project_scope_retrievers", module_path)
-    retrievers_module = importlib.util.module_from_spec(spec)
-    assert spec is not None and spec.loader is not None
-    spec.loader.exec_module(retrievers_module)
-    GraphRetrieverAdapter = retrievers_module.GraphRetrieverAdapter
+    monkeypatch.setattr(KnowledgeService, "get_runtime_settings", staticmethod(fake_runtime_settings))
 
     asyncio.run(
         GraphRetrieverAdapter().retrieve(
@@ -187,7 +150,7 @@ def test_graph_retriever_adapter_maps_project_scope_to_legacy_storage_filter(mon
 
 
 def test_graph_retriever_passes_status_and_graph_index_version_to_client():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     captured = []
 
@@ -239,7 +202,7 @@ def test_graph_pipeline_passes_index_version_and_status_into_writer():
 
 
 def test_graph_writer_attaches_source_file_metadata():
-    from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+    from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 
     writer = GraphWriter()
 
@@ -272,7 +235,7 @@ def test_dynamic_reindex_pipeline_clears_old_file_documents_before_rebuild():
 
 
 def test_chunk_model_exposes_document_hash_and_chunk_hash():
-    from zuno.schema.chunk import ChunkModel
+    from zuno.api.dto.chunk import ChunkModel
 
     chunk = ChunkModel(
         chunk_id="chunk_1",
@@ -315,7 +278,7 @@ def test_hash_fields_flow_through_vector_and_graph_runtime_contracts():
 
 
 def test_chunk_hash_is_deterministic_and_changes_with_content():
-    from zuno.schema.chunk import ChunkModel
+    from zuno.api.dto.chunk import ChunkModel
 
     base = dict(
         file_id="file_1",
@@ -336,7 +299,7 @@ def test_chunk_hash_is_deterministic_and_changes_with_content():
 
 
 def test_text_parser_generated_chunks_include_hash_identity():
-    from zuno.services.rag.doc_parser.text import TextParser
+    from zuno.platform.services.rag.doc_parser.text import TextParser
 
     parser = TextParser()
     parser.chunk_size = 32
@@ -357,7 +320,7 @@ def test_text_parser_generated_chunks_include_hash_identity():
 
 
 def test_source_chunk_id_is_stable_when_content_changes():
-    from zuno.schema.chunk import ChunkModel
+    from zuno.api.dto.chunk import ChunkModel
 
     base = dict(
         file_id="file_1",
