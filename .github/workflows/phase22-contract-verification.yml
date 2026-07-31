@@ -76,7 +76,12 @@ jobs:
               echo "Event: pull_request, using PR base SHA: ${SHA}" >&2
             elif [ "${EVENT_NAME}" = "push" ]; then
               SHA="${PUSH_BEFORE_SHA}"
-              echo "Event: push, using github.event.before SHA: ${SHA}" >&2
+              if [ -z "${SHA}" ] || [ "${SHA}" = "${ZERO_SHA}" ]; then
+                echo "Event: push, before SHA is all-zeros (new branch); falling back to merge-base." >&2
+                git fetch origin codex/goal05-phase15-sandbox-repair >&2
+                SHA="$(git merge-base HEAD origin/codex/goal05-phase15-sandbox-repair)"
+              fi
+              echo "Event: push, using SHA: ${SHA}" >&2
             elif [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
               git fetch origin codex/goal05-phase15-sandbox-repair >&2
               SHA="$(git merge-base HEAD origin/codex/goal05-phase15-sandbox-repair)"
@@ -184,6 +189,7 @@ jobs:
             tests/repo/test_phase22_eval_package_contract.py \
             tests/evals/test_enterprise_rag_paired_benchmark.py \
             tests/evals/test_profile_runners.py \
+            tests/evals/test_canonical_profile_runners.py \
             tests/repo/test_phase22_cleanup_boundary.py \
             tests/repo/test_static_target_layer_imports.py \
             tests/repo/test_repo_structure_consistency.py \
