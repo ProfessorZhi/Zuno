@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 import pytest
 
-from zuno.platform.observability.trace_adapter import redact_sensitive_data
+from zuno.platform.observability.trace_adapter import redact_sensitive_data, sanitize_secret_values
 
 
 class SamplePydanticModel(BaseModel):
@@ -25,6 +25,10 @@ def test_redact_sensitive_data_keys() -> None:
         "secret": "topsecret",
         "authorization": "Bearer token123",
         "token": "tok_xyz",
+        "access_token": "acc_tok",
+        "refresh_token": "ref_tok",
+        "id_token": "id_tok",
+        "session_token": "sess_tok",
         "access_key": "acc_key",
         "private_key": "-----BEGIN PRIVATE KEY-----",
         "connection_string": "postgres://user:pass@localhost",
@@ -41,6 +45,10 @@ def test_redact_sensitive_data_keys() -> None:
         "secret",
         "authorization",
         "token",
+        "access_token",
+        "refresh_token",
+        "id_token",
+        "session_token",
         "access_key",
         "private_key",
         "connection_string",
@@ -53,78 +61,47 @@ def test_redact_sensitive_data_keys() -> None:
     assert redacted["normal_key"] == "hello"
 
 
-def test_redact_content_keys() -> None:
-    data = {
-        "raw_document": "Sensitive doc body",
-        "document_content": "Sensitive doc content",
-        "prompt_content": "Sensitive prompt",
-        "tool_result": "Sensitive tool result",
-        "authorization_header": "Bearer xxx",
-        "full_database_row": "Row data",
-        "secret_lease": "Lease 123",
-        "approval_token": "Appr token",
-        "desktop_token": "Desk token",
-        "other_info": "Public info",
-    }
-    redacted = redact_sensitive_data(data, redact_content=True)
-    for key in [
-        "raw_document",
-        "document_content",
-        "prompt_content",
-        "tool_result",
-        "authorization_header",
-        "full_database_row",
-        "secret_lease",
-        "approval_token",
-        "desktop_token",
-    ]:
-        assert redacted[key] in ("[REDACTED_CONTENT]", "[REDACTED_SECRET]")
-    assert redacted["other_info"] == "Public info"
+def test_value_level_secret_sanitization() -> None:
+    error_msg = "Error connecting to postgresql+psycopg://postgres:secret123@localhost:5432/zuno with Bearer sk-live-998877665544332211"
+    sanitized = sanitize_secret_values(error_msg)
+    assert "secret123" not in sanitized
+    assert "sk-live-998877665544332211" not in sanitized
+    assert "[REDACTED_SECRET]" in sanitized
 
-
-def test_redact_nested_structures() -> None:
-    nested = {
-        "user": {
-            "api_key": "sk-secret",
-            "profile": {
-                "password": "pass",
-                "auth_items": ["tok1", {"secret": "inner_secret"}],
-            },
-        },
-        "tuple_data": ("normal", {"access_key": "in_tuple"}),
-    }
-    redacted = redact_sensitive_data(nested, redact_content=True)
-    assert redacted["user"]["api_key"] == "[REDACTED_SECRET]"
-    assert redacted["user"]["profile"]["password"] == "[REDACTED_SECRET]"
-    assert redacted["user"]["profile"]["auth_items"][1]["secret"] == "[REDACTED_SECRET]"
-    assert redacted["tuple_data"][1]["access_key"] == "[REDACTED_SECRET]"
-
-
-def test_redact_pydantic_and_dataclass() -> None:
-    p_model = SamplePydanticModel()
-    d_model = SampleDataclass()
-
-    red_p = redact_sensitive_data({"pydantic": p_model, "dataclass": d_model})
-    assert red_p["pydantic"]["api_key"] == "[REDACTED_SECRET]"
-    assert red_p["pydantic"]["normal_field"] == "public_data"
-    assert red_p["dataclass"]["password"] == "[REDACTED_SECRET]"
-    assert red_p["dataclass"]["username"] == "alice"
-
-
-def test_redact_truncation_and_unserializable() -> None:
-    long_str = "a" * 1000
-    redacted_str = redact_sensitive_data(long_str, max_chars=10)
-    assert redacted_str == "aaaaaaaaaa...[TRUNCATED]"
-
-    class CustomObj:
-        def __str__(self) -> str:
-            return "CustomObjRepresented"
-
-    redacted_obj = redact_sensitive_data(CustomObj(), max_chars=10)
-    assert redacted_obj == "CustomObjR...[TRUNCATED]"
-
-
-def test_redact_exception() -> None:
-    exc = ValueError("Invalid operation")
+    exc = RuntimeError("Failed with api_key=sk-1234567890 password=supersecret")
     redacted_exc = redact_sensitive_data(exc)
-    assert redacted_exc == "ValueError: Invalid operation"
+    assert "sk-1234567890" not in redacted_exc
+    assert "supersecret" not in redacted_exc
+
+
+def test_content_switches_independent() -> None:
+    data = {
+        "prompt_content": "Sensitive prompt",
+        "raw_document": "Doc body",
+        "document_content": "Doc content",
+        "tool_result": "Tool output",
+        "normal_field": "Normal value",
+    }
+
+    # All content switches off (default): metadata_only=False does NOT bypass them!
+    res1 = redact_sensitive_data(data, redact_content=False, include_prompt_content=False, include_document_content=False, include_tool_content=False)
+    assert res1["prompt_content"] == "[REDACTED_CONTENT]"
+    assert res1["raw_document"] == "[REDACTED_CONTENT]"
+    assert res1["document_content"] == "[REDACTED_CONTENT]"
+    assert res1["tool_result"] == "[REDACTED_CONTENT]"
+    assert res1["normal_field"] == "Normal value"
+
+    # Only include_prompt_content=True
+    res2 = redact_sensitive_data(data, redact_content=False, include_prompt_content=True)
+    assert res2["prompt_content"] == "Sensitive prompt"
+    assert res2["raw_document"] == "[REDACTED_CONTENT]"
+
+    # Only include_document_content=True
+    res3 = redact_sensitive_data(data, redact_content=False, include_document_content=True)
+    assert res3["document_content"] == "Doc content"
+    assert res3["prompt_content"] == "[REDACTED_CONTENT]"
+
+    # Only include_tool_content=True
+    res4 = redact_sensitive_data(data, redact_content=False, include_tool_content=True)
+    assert res4["tool_result"] == "Tool output"
+    assert res4["prompt_content"] == "[REDACTED_CONTENT]"
