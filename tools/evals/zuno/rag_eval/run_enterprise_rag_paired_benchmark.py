@@ -2154,7 +2154,36 @@ def main() -> None:
     parser.add_argument("--rerank-score-threshold-override", type=float, default=0.0)
     parser.add_argument("--chunk-size-override", type=int, default=ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE)
     parser.add_argument("--overlap-override", type=int, default=ENTERPRISE_RAG_DEFAULT_OVERLAP)
+    parser.add_argument(
+        "--runtime-mode",
+        choices=["prepare-only", "contract-smoke", "canonical"],
+        default="contract-smoke",
+        help=(
+            "Benchmark runtime execution mode. "
+            "'prepare-only': sample and validate questions without executing any profile runner. "
+            "'contract-smoke': execute using local test-double profile runners (no production deps). "
+            "'canonical': execute using canonical profile runners backed by production Knowledge "
+            "Runtime. Requires a formal CanonicalRuntimeDependencies bundle from a Composition Root. "
+            "Formal measurement is only permitted in canonical mode. "
+            "This flag is recorded in the run manifest."
+        ),
+    )
     args = parser.parse_args()
+    # canonical mode guard: fail closed if canonical mode requested without
+    # explicit Composition Root support. The CLI currently has no mechanism to
+    # inject CanonicalRuntimeDependencies from the command line; callers must
+    # use the Python API or extend this with a config-driven Composition Root.
+    if args.runtime_mode == "canonical":
+        import sys
+        print(
+            "ERROR: --runtime-mode=canonical requires an explicit CanonicalRuntimeDependencies "
+            "bundle from a Composition Root. The CLI does not yet support automatic construction "
+            "of canonical dependencies. Use the Python API directly or implement a "
+            "config-driven Composition Root. Aborting (fail closed).",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
 
     output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
     result = asyncio.run(
