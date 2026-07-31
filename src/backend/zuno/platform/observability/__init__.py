@@ -8,9 +8,15 @@ from zuno.platform.common.runtime_observability import (
     get_active_trace_id,
 )
 from zuno.platform.observability.trace_adapter import (
+    InMemoryTraceAdapter,
     LangSmithTraceAdapter,
     NoopTraceAdapter,
+    ObservabilityConfigError,
+    ObservabilityDependencyError,
+    ObservabilityError,
+    ObservabilityTraceError,
     ObservabilityTracePort,
+    TraceSpanHandle,
     get_observability_adapter,
 )
 from zuno.platform.observability.trace_eval import (
@@ -224,6 +230,12 @@ __all__ = [
     "create_eval_result_revision",
     "ObservabilityTracePort",
     "NoopTraceAdapter",
+    "InMemoryTraceAdapter",
     "LangSmithTraceAdapter",
+    "TraceSpanHandle",
+    "ObservabilityError",
+    "ObservabilityConfigError",
+    "ObservabilityDependencyError",
+    "ObservabilityTraceError",
     "get_observability_adapter",
 ]

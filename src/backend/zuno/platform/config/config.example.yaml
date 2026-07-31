@@ -148,5 +148,14 @@ langsmith:
   project: "Zuno"
   endpoint: "https://api.smith.langchain.com"
   api_key: ""
+  sample_rate: 0.0
+  error_sample_rate: 1.0
+  eval_sample_rate: 1.0
+  include_prompt_content: false
+  include_document_content: false
+  include_tool_content: false
+  metadata_only: true
+  max_field_chars: 512
+  fail_open: true
 
 whitelist_paths: ["/api/v1/login"]

@@ -85,6 +85,7 @@ from zuno.platform.common.runtime_observability import (
     build_langsmith_metadata,
     get_active_trace_id,
 )
+from zuno.platform.observability import get_observability_adapter
 from zuno.platform.settings import app_settings
 
 tool = lc_tool
@@ -176,6 +177,7 @@ class WorkSpaceSimpleAgent:
             else None
         )
 
+        self.trace_adapter = get_observability_adapter(getattr(app_settings, "langsmith", {}))
         self.server_dict: dict[str, Any] = {}
         self.route_hint = self._detect_route_hint(self.original_query)
         self.knowledge_query_service = KnowledgeQueryService()
