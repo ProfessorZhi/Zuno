@@ -4,6 +4,11 @@ version = "2.2.0"
 description = "A personal agent workspace platform for MCP, skills, knowledge and desktop execution"
 authors = ["ProfessorZhi"]
 readme = "README.md"
+packages = [
+    { include = "zuno", from = "src/backend" },
+    { include = "tools" }
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
