@@ -76,7 +76,7 @@ jobs:
             poetry run python .agent/scripts/verify_agent_system.py && \
             poetry run python .agent/scripts/verify_doc_boundaries.py && \
             poetry run python tools/scripts/verify_current_program.py && \
-            poetry run python tools/scripts/verify_agent_commit_attribution.py --allow-human-only && \
+            poetry run python tools/scripts/verify_agent_commit_attribution.py --base ${{ github.event.pull_request.base.sha || 'origin/codex/goal05-phase15-sandbox-repair' }} --allow-human-only && \
             poetry run python -m compileall -q src/backend && \
             poetry run python -m compileall -q tools/evals/zuno && \
             poetry run python -m compileall -q tools/scripts
