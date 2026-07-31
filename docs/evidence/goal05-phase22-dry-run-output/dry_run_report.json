@@ -1,0 +1,7 @@
+{
+  "status": "dry_run_completed_blocked_as_expected",
+  "output_dir": "docs\\evidence\\goal05-phase22-dry-run-output",
+  "candidates_count": 6,
+  "measurement_state": "BLOCKED",
+  "blocked_reason": "blocked_not_measured"
+}
