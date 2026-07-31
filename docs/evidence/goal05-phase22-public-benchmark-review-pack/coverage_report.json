@@ -1,9 +1,10 @@
 {
-  "raw_upstream_count": 80,
-  "schema_valid_count": 80,
-  "selection_candidate_count": 80,
+  "raw_question_candidate_count": 80,
+  "schema_valid_question_count": 80,
+  "evidence_complete_count": 20,
   "reviewer_approved_count": 0,
   "benchmark_eligible_count": 0,
+  "rejected_or_incomplete_count": 60,
   "slices": {
     "multihop_fact_slice": 32,
     "graph_reasoning_slice": 24,

@@ -1,11 +1,15 @@
 {
   "total_cases": 80,
+  "raw_question_candidate_count": 80,
+  "schema_valid_question_count": 80,
+  "evidence_complete_count": 20,
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "rejected_or_incomplete_count": 60,
   "reviewer_status_breakdown": {
     "pending": 80,
     "approved": 0,
     "rejected": 0
   },
-  "reviewer_approved_count": 0,
-  "benchmark_eligible_count": 0,
   "measurement_state": "blocked_pending_human_review"
 }

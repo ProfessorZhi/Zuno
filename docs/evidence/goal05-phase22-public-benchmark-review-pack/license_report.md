@@ -1,7 +1,7 @@
 # Public Benchmark Candidate Review Pack License Report
 
-- **HotpotQA**: CC-BY-SA 4.0 (Attribution-ShareAlike 4.0 International)
-- **MultiHop-RAG**: Apache 2.0 / MIT License
-- **Microsoft GraphRAG**: MIT License
+- **HotpotQA** (`hotpotqa/hotpot_qa`): CC-BY-SA-4.0
+- **MultiHop-RAG** (`yixuantt/MultiHopRAG`): Apache-2.0
+- **GraphRAG-Bench** (`Awesome-GraphRAG/GraphRAG-Bench`): MIT
 
-All candidate cases are sourced directly from upstream official open benchmark datasets.
+All candidate cases are sourced directly from upstream official open benchmark datasets. No gold evidence fields are synthesized.

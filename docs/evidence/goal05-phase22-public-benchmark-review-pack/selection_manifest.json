@@ -1,10 +1,9 @@
 {
   "total_cases": 80,
-  "seed": 42,
-  "selection_strategy": "stratified_public_dataset_sample",
+  "selection_strategy": "first_n_valid_upstream_records",
   "distribution": {
-    "hotpot_qa": 32,
-    "multihop_rag": 24,
-    "microsoft_graphrag_benchmarking": 24
+    "hotpotqa/hotpot_qa": 32,
+    "yixuantt/MultiHopRAG": 24,
+    "Awesome-GraphRAG/GraphRAG-Bench": 24
   }
 }

@@ -1,27 +1,34 @@
 {
-  "pack_version": "2.2.0",
+  "pack_version": "2.3.0",
   "generated_from": "real_public_official_datasets",
+  "evidence_synthesis": "none_strictly_parsed_from_upstream",
   "sources": [
     {
-      "source_id": "hotpot_qa",
+      "source_id": "hotpotqa",
       "name": "HotpotQA",
+      "upstream_repository": "hotpotqa/hotpot_qa",
       "url": "https://huggingface.co/datasets/hotpotqa/hotpot_qa",
       "license": "CC-BY-SA-4.0",
-      "sampled_count": 32
+      "sampled_count": 32,
+      "evidence_complete_count": 0
     },
     {
       "source_id": "multihop_rag",
       "name": "MultiHop-RAG",
+      "upstream_repository": "yixuantt/MultiHopRAG",
       "url": "https://huggingface.co/datasets/yixuantt/MultiHopRAG",
       "license": "Apache-2.0",
-      "sampled_count": 24
+      "sampled_count": 24,
+      "evidence_complete_count": 20
     },
     {
-      "source_id": "microsoft_graphrag_benchmarking",
-      "name": "Microsoft GraphRAG Benchmarking",
+      "source_id": "awesome_graphrag_bench",
+      "name": "Awesome-GraphRAG/GraphRAG-Bench",
+      "upstream_repository": "Awesome-GraphRAG/GraphRAG-Bench",
       "url": "https://huggingface.co/datasets/Awesome-GraphRAG/GraphRAG-Bench",
       "license": "MIT",
-      "sampled_count": 24
+      "sampled_count": 24,
+      "evidence_complete_count": 0
     }
   ]
 }
