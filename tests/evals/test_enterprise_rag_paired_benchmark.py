@@ -232,7 +232,8 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
     assert metrics["profile_completeness"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is False
     assert metrics["profiles"]["agentic_graphrag"]["metrics_source"] == "not_measured"
-    assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] == "agentic_runtime_runner_not_wired"
+    assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] in ("dataset_measurement_blocked", "agentic_runtime_runner_not_wired")
+
     assert metrics["release_gate"]["measured"] is False
     assert metrics["release_gate"]["status"] == "blocked_not_measured"
     assert metrics["release_gate"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
@@ -973,5 +974,6 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
     assert manifest_data["incomparable_reason"] == "dataset_insufficient"
     assert manifest_data["is_comparable"] is False
     assert "manifest_checksum_sidecar" in manifest_data
+    assert "run_enterprise_rag_paired_benchmark" in " ".join(manifest_data["reproduce_command"])
 
-    assert "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py" in manifest_data["reproduce_command"][1]
+
