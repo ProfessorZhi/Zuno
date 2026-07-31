@@ -184,6 +184,7 @@ jobs:
             tests/repo/test_phase22_eval_package_contract.py \
             tests/evals/test_enterprise_rag_paired_benchmark.py \
             tests/evals/test_profile_runners.py \
+            tests/evals/test_canonical_profile_runners.py \
             tests/repo/test_phase22_cleanup_boundary.py \
             tests/repo/test_static_target_layer_imports.py \
             tests/repo/test_repo_structure_consistency.py \
