@@ -153,6 +153,7 @@ TESTS_REPO_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "repo" / "test_zuno_canonical_import_surfaces.py",
     REPO_ROOT / "tests" / "repo" / "test_llm_system_sync.py",
     REPO_ROOT / "tests" / "repo" / "test_model_gateway_bypass.py",
+    REPO_ROOT / "tests" / "repo" / "test_phase22_eval_package_contract.py",
 ]
 TESTS_GRAPHRAG_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "graphrag" / "test_contract_graph_query_routing.py",
