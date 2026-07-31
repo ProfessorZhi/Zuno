@@ -6,7 +6,22 @@ PHASE10 status: contract-foundation
 
 ## 当前角色
 
-`platform/observability/` 当前提供 LangSmith-compatible metadata、trace helper、OTel / LangSmith-compatible span schema、`trace_adapter.py` (`ObservabilityTracePort`, `NoopTraceAdapter`, `LangSmithTraceAdapter`)、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge。真实 trace storage、在线 eval、LangSmith 产品化写入和可视化平台仍未形成完整平台能力。
+`platform/observability/` 当前提供 LangSmith-compatible metadata、trace helper、OTel / LangSmith-compatible span schema、`trace_adapter.py` (`ObservabilityTracePort`, `NoopTraceAdapter`, `InMemoryTraceAdapter`, `LangSmithTraceAdapter`)、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge。
+
+本工作包 (AG-PHASE22-LANGSMITH-SDK-ADAPTER) 完成状态：
+- ObservabilityTracePort available
+- NoopTraceAdapter available
+- InMemoryTraceAdapter available
+- LangSmith SDK Adapter implementation available
+- Adapter focused tests passed
+
+Target 待完成项：
+- AgentRunGraph full-chain span wiring
+- StepExecutionGraph span wiring
+- Retrieval Round span wiring
+- Tool Gateway span wiring
+- Final Gate span wiring
+- LangSmith Experiment integration
 
 ## Target role
 
