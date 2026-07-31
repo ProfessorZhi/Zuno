@@ -6,7 +6,7 @@ on:
       - codex/goal05-phase15-sandbox-repair
   pull_request:
     branches:
-      - codex/goal05-phase15-sandbox-repair
+      - codex/goal05-target-coverage-audit
       - main
   workflow_dispatch:
 
@@ -48,52 +48,36 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root
+        run: |
+          poetry install --no-interaction --no-root
+          poetry run pip install --disable-pip-version-check pytest
+
+      - name: Prepare log directory
+        run: mkdir -p artifacts/phase22-verification
 
       - name: Verify Git formatting
-        run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' || git diff --check HEAD~1...HEAD -- '*.py' '*.yml' '*.yaml' || true
+        run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' || git diff --check HEAD~1...HEAD -- '*.py' '*.yml' '*.yaml'
 
-      - name: Verify Architecture rendering and mirrors
-        run: poetry run python tools/agent/render_architecture.py --check
-
-      - name: Verify Docs entrypoints
-        run: poetry run python tools/scripts/verify_docs_entrypoints.py
-
-      - name: Verify Repository structure
-        run: poetry run python tools/scripts/verify_repo_structure.py
-
-      - name: Verify Agent Core target protocols
-        run: poetry run python tools/scripts/verify_agent_core_target_protocols.py
-
-      - name: Verify PHASE22 cleanup boundary
-        run: poetry run python tools/scripts/verify_phase22_cleanup_boundary.py
-
-      - name: Verify Phase 0 runtime recovery
-        run: poetry run python tools/scripts/verify_phase0_runtime_recovery.py
-
-      - name: Verify Agent system
-        run: poetry run python .agent/scripts/verify_agent_system.py
-
-      - name: Verify Doc boundaries
-        run: poetry run python .agent/scripts/verify_doc_boundaries.py
-
-      - name: Verify Current program
-        run: poetry run python tools/scripts/verify_current_program.py
-
-      - name: Verify Agent commit attribution
-        run: poetry run python tools/scripts/verify_agent_commit_attribution.py --allow-human-only || true
-
-      - name: Compile backend modules
-        run: poetry run python -m compileall -q src/backend
-
-      - name: Compile evals tools
-        run: poetry run python -m compileall -q tools/evals/zuno
-
-      - name: Compile scripts tools
-        run: poetry run python -m compileall -q tools/scripts
+      - name: Run all repository gate verifiers
+        run: |
+          {
+            poetry run python tools/agent/render_architecture.py --check && \
+            poetry run python tools/scripts/verify_docs_entrypoints.py && \
+            poetry run python tools/scripts/verify_repo_structure.py && \
+            poetry run python tools/scripts/verify_agent_core_target_protocols.py && \
+            poetry run python tools/scripts/verify_phase22_cleanup_boundary.py && \
+            poetry run python tools/scripts/verify_phase0_runtime_recovery.py && \
+            poetry run python .agent/scripts/verify_agent_system.py && \
+            poetry run python .agent/scripts/verify_doc_boundaries.py && \
+            poetry run python tools/scripts/verify_current_program.py && \
+            poetry run python tools/scripts/verify_agent_commit_attribution.py --allow-human-only && \
+            poetry run python -m compileall -q src/backend && \
+            poetry run python -m compileall -q tools/evals/zuno && \
+            poetry run python -m compileall -q tools/scripts
+          } 2>&1 | tee artifacts/phase22-verification/repository-gates.log
 
   phase22-focused-tests:
     name: PHASE22 Focused Test Suite
@@ -122,10 +106,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root
+        run: |
+          poetry install --no-interaction --no-root
+          poetry run pip install --disable-pip-version-check pytest
+
+      - name: Prepare log directory
+        run: mkdir -p artifacts/phase22-verification
 
       - name: Run PHASE22 focused test suite
         run: |
@@ -143,7 +132,9 @@ jobs:
             tests/api/test_fastapi_jwt_auth_compat.py \
             tests/repo/test_agent_commit_attribution.py \
             tests/repo/test_agent_pr_body.py \
-            -p no:cacheprovider
+            tests/repo/test_phase22_verification_truth.py \
+            --junitxml=artifacts/phase22-verification/pytest-results.xml \
+            -p no:cacheprovider 2>&1 | tee artifacts/phase22-verification/pytest.log
 
   verification-evidence:
     name: Generate Verification Evidence & Summary
@@ -151,6 +142,10 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    env:
+      REPO_GATES_RESULT: ${{ needs.repository-gates.result }}
+      FOCUSED_TESTS_RESULT: ${{ needs.phase22-focused-tests.result }}
 
     steps:
       - name: Checkout repository
@@ -174,10 +169,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root
+        run: |
+          poetry install --no-interaction --no-root
+          poetry run pip install --disable-pip-version-check pytest
 
       - name: Generate evidence artifacts and step summary
         run: |
