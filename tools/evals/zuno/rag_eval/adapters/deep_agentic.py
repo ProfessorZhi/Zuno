@@ -104,7 +104,7 @@ def validate_canonical_receipt(
 
 class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
     """Deep GraphRAG Canonical Execution Adapter.
-    
+
     Delegates multi-round retrieval to formal Knowledge Runtime Port.
     Gold document refs are NEVER passed into retrieval requests.
     """
@@ -232,7 +232,7 @@ class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
 
 class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
     """Agentic GraphRAG Canonical Execution Adapter.
-    
+
     Delegates agent execution to formal Agent Run Runtime Port (deps.agent_run_runtime).
     Zero synthetic local composition roots inside the eval layer.
     """
