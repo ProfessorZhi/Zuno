@@ -1,12 +1,4 @@
 from __future__ import annotations
-import sys
-from pathlib import Path
-curr = Path(__file__).resolve()
-while curr.name != "Zuno" and curr.parent != curr:
-    curr = curr.parent
-ROOT_DIR = curr
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import asyncio
@@ -355,7 +347,7 @@ async def _run_stackless_fallback(
     rerank_model_id: str | None,
 ) -> dict[str, Any]:
     from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
-    from ..summarize_eval_profiles import summarize, write_markdown
+    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     result = await run_stackless_local_eval(
         manifest_path=manifest_path,
@@ -411,7 +403,7 @@ async def run_local_embedding_eval(
 ) -> dict[str, Any]:
     from tools.evals.zuno.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
     from tools.evals.zuno.rag_eval.run_eval import resolve_profiles, run_eval
-    from ..summarize_eval_profiles import summarize, write_markdown
+    from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
 
     try:
         preflight = await preflight_local_embedding_eval(
