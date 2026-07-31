@@ -1,11 +1,15 @@
-﻿# Goal05 Phase22 Canonical Four-Profile Benchmark Runtime — Implementation Evidence
+# Goal05 Phase22 Canonical Four-Profile Benchmark Runtime — Implementation Evidence
 
 ## Status & Attestations
 
 - **Canonical Contract**: implementation available
+- **Canonical Python API Guard**: implementation available
+- **Empty Dependency Fail-Closed**: implementation available
 - **Dependency Preflight**: implementation available
 - **Measurement Truth Gate**: implementation available
 - **CLI Runtime Mode Guard**: implementation available
+- **Portable Reproduce Command**: implementation available
+- **Formal Execution Adapters**: not implemented
 - **CLI Canonical Execution**: blocked
 - **Standard Runtime Execution**: blocked
 - **Local Runtime Execution**: blocked
@@ -44,8 +48,16 @@
 - **Implementer Agent**: Antigravity
 - **Implementation Model**: Gemini 3.6 Flash
 - **Reasoning Mode**: not recorded
-- **Commit Range**: current commits
+- **Commit Range**: `8b896031` through `0efe65ca`
 - **Work Package**: `AG-PR55-GEMINI-3-6-FLASH-FINAL-CONTRACT-CLOSURE`
+
+### Round 4 — Pre-Merge Hardening
+
+- **Implementer Agent**: Antigravity
+- **Implementation Model**: Gemini 3.6 Flash
+- **Reasoning Mode**: not recorded
+- **Commit Range**: current commits
+- **Work Package**: `AG-PR55-GEMINI-3-6-FLASH-PREMERGE-HARDENING`
 
 ### Attribution Exception
 
@@ -57,6 +69,6 @@ The historical commits are not rewritten. This Contribution Ledger is the author
 
 ## Verification & Test Results
 
-- **Truth enforcement test suite**: 18/18 passing (`tests/evals/test_canonical_profile_runners.py`)
-- **Focused test suite**: 33/33 passing (`test_canonical_profile_runners.py`, `test_enterprise_rag_paired_benchmark.py`, `test_profile_runners.py`)
-- **All Verifiers**: `verify_repo_structure`, `verify_agent_system`, `verify_doc_boundaries`, `verify_docs_entrypoints` passed cleanly.
+- **Behavioral contract test suite**: 22/22 passing (`tests/evals/test_canonical_profile_runners.py`)
+- **Full eval test suite**: 37/37 passing (`test_canonical_profile_runners.py`, `test_enterprise_rag_paired_benchmark.py`, `test_profile_runners.py`)
+- **All Verifiers**: `verify_repo_structure`, `verify_observability_eval_target_protocols`, `verify_phase22_cleanup_boundary`, `verify_agent_system`, `verify_doc_boundaries`, `verify_current_program` passed cleanly.
