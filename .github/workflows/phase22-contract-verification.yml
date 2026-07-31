@@ -6,6 +6,7 @@ on:
       - codex/goal05-phase15-sandbox-repair
   pull_request:
     branches:
+      - codex/goal05-phase15-sandbox-repair
       - codex/goal05-target-coverage-audit
       - main
   workflow_dispatch:
@@ -33,6 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python 3.12
+        id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -48,21 +50,69 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
+          git diff --exit-code -- poetry.lock pyproject.toml
 
       - name: Prepare log directory
         run: mkdir -p artifacts/phase22-verification
 
-      - name: Verify Git formatting
-        run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' || git diff --check HEAD~1...HEAD -- '*.py' '*.yml' '*.yaml'
+      - name: Resolve Base SHA and verify Git formatting
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          ZERO_SHA="0000000000000000000000000000000000000000"
+
+          resolve_base_sha() {
+            if [ "${EVENT_NAME}" = "pull_request" ]; then
+              SHA="${PR_BASE_SHA}"
+              echo "Event: pull_request, using PR base SHA: ${SHA}" >&2
+            elif [ "${EVENT_NAME}" = "push" ]; then
+              SHA="${PUSH_BEFORE_SHA}"
+              echo "Event: push, using github.event.before SHA: ${SHA}" >&2
+            elif [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+              git fetch origin codex/goal05-phase15-sandbox-repair >&2
+              SHA="$(git merge-base HEAD origin/codex/goal05-phase15-sandbox-repair)"
+              echo "Event: workflow_dispatch, using merge-base SHA: ${SHA}" >&2
+            else
+              echo "ERROR: Unknown event name: ${EVENT_NAME}" >&2
+              exit 1
+            fi
+
+            if [ -z "${SHA}" ]; then
+              echo "ERROR: Resolved base SHA is empty." >&2
+              exit 1
+            fi
+
+            if [ "${SHA}" = "${ZERO_SHA}" ]; then
+              echo "ERROR: Resolved base SHA is all-zeros (initial push with no history)." >&2
+              exit 1
+            fi
+
+            if ! git cat-file -e "${SHA}^{commit}" 2>/dev/null; then
+              echo "ERROR: Resolved base SHA '${SHA}' is not a valid commit." >&2
+              exit 1
+            fi
+
+            echo "${SHA}"
+          }
+
+          RESOLVED_BASE_SHA="$(resolve_base_sha)"
+          echo "RESOLVED_BASE_SHA=${RESOLVED_BASE_SHA}" >> "$GITHUB_ENV"
+          echo "Resolved base SHA: ${RESOLVED_BASE_SHA}"
+
+          git diff --check "${RESOLVED_BASE_SHA}...HEAD" -- '*.py' '*.yml' '*.yaml'
 
       - name: Run all repository gate verifiers
         run: |
+          set -o pipefail
           {
             poetry run python tools/agent/render_architecture.py --check && \
             poetry run python tools/scripts/verify_docs_entrypoints.py && \
@@ -73,7 +123,7 @@ jobs:
             poetry run python .agent/scripts/verify_agent_system.py && \
             poetry run python .agent/scripts/verify_doc_boundaries.py && \
             poetry run python tools/scripts/verify_current_program.py && \
-            poetry run python tools/scripts/verify_agent_commit_attribution.py --allow-human-only && \
+            poetry run python tools/scripts/verify_agent_commit_attribution.py --base ${{ github.event.pull_request.base.sha || 'origin/codex/goal05-phase15-sandbox-repair' }} --allow-human-only && \
             poetry run python -m compileall -q src/backend && \
             poetry run python -m compileall -q tools/evals/zuno && \
             poetry run python -m compileall -q tools/scripts
@@ -98,6 +148,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python 3.12
+        id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -113,18 +164,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
+          git diff --exit-code -- poetry.lock pyproject.toml
 
       - name: Prepare log directory
         run: mkdir -p artifacts/phase22-verification
 
       - name: Run PHASE22 focused test suite
         run: |
+          set -o pipefail
           poetry run python -m pytest -q \
             tests/platform/test_langsmith_trace_adapter.py \
             tests/platform/test_langsmith_adapter_factory.py \
@@ -170,6 +222,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python 3.12
+        id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -185,12 +238,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
 
       - name: Download job artifacts
         uses: actions/download-artifact@v4
