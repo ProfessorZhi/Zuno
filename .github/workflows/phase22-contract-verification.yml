@@ -79,6 +79,13 @@ jobs:
             poetry run python -m compileall -q tools/scripts
           } 2>&1 | tee artifacts/phase22-verification/repository-gates.log
 
+      - name: Upload repository gates logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-gates-logs
+          path: artifacts/phase22-verification/repository-gates.log
+
   phase22-focused-tests:
     name: PHASE22 Focused Test Suite
     runs-on: ubuntu-latest
@@ -136,6 +143,15 @@ jobs:
             --junitxml=artifacts/phase22-verification/pytest-results.xml \
             -p no:cacheprovider 2>&1 | tee artifacts/phase22-verification/pytest.log
 
+      - name: Upload focused tests logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-tests-logs
+          path: |
+            artifacts/phase22-verification/pytest-results.xml
+            artifacts/phase22-verification/pytest.log
+
   verification-evidence:
     name: Generate Verification Evidence & Summary
     needs: [repository-gates, phase22-focused-tests]
@@ -176,9 +192,14 @@ jobs:
           poetry install --no-interaction --no-root
           poetry run pip install --disable-pip-version-check pytest
 
+      - name: Download job artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/phase22-verification
+          merge-multiple: true
+
       - name: Generate evidence artifacts and step summary
         run: |
-          mkdir -p artifacts/phase22-verification
           poetry run python tools/scripts/generate_phase22_evidence.py artifacts/phase22-verification
 
       - name: Upload verification evidence artifact
