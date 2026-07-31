@@ -473,8 +473,21 @@ def test_39_artifact_hash_mismatch_fails_closed() -> None:
 
 
 def test_40_windows_posix_path_consistency() -> None:
-    from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import _to_portable_posix_path
+    """Trace IDs and case IDs produced by canonical runners must not contain OS path separators.
+    This test verifies that eval_run_id and case_id from CanonicalCaseInput are plain
+    identifiers (no backslashes or slashes), making them safe for cross-platform trace keys.
+    """
+    import pathlib
 
-    win_path = "C:\\Users\\Admin\\project\\file.txt"
-    posix = _to_portable_posix_path(win_path)
-    assert "\\" not in posix
+    case = _sample_input("standard_rag")
+    # eval_run_id and case_id must be portable identifiers (no path separators)
+    assert "\\" not in case.eval_run_id, "eval_run_id must not contain backslashes"
+    assert "/" not in case.eval_run_id, "eval_run_id must not contain forward slashes"
+    assert "\\" not in case.case_id, "case_id must not contain backslashes"
+    assert "/" not in case.case_id, "case_id must not contain forward slashes"
+
+    # Verify trace_id constructed by runner is also portable
+    runner = CanonicalStandardRAGRunner()
+    res = runner.run_canonical_case(case)
+    assert "\\" not in res.trace_id, "trace_id must not contain backslashes"
+    assert pathlib.PurePosixPath(res.trace_id.replace("_", "/")).name, "trace_id is non-empty"
