@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - codex/goal05-phase15-sandbox-repair
+      - agent/antigravity/phase22-authoritative-remote-test-gate
   pull_request:
     branches:
+      - codex/goal05-phase15-sandbox-repair
       - codex/goal05-target-coverage-audit
       - main
   workflow_dispatch:
@@ -48,12 +50,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
+          git diff --exit-code -- poetry.lock pyproject.toml
 
       - name: Prepare log directory
         run: mkdir -p artifacts/phase22-verification
@@ -63,6 +65,7 @@ jobs:
 
       - name: Run all repository gate verifiers
         run: |
+          set -o pipefail
           {
             poetry run python tools/agent/render_architecture.py --check && \
             poetry run python tools/scripts/verify_docs_entrypoints.py && \
@@ -113,18 +116,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
+          git diff --exit-code -- poetry.lock pyproject.toml
 
       - name: Prepare log directory
         run: mkdir -p artifacts/phase22-verification
 
       - name: Run PHASE22 focused test suite
         run: |
+          set -o pipefail
           poetry run python -m pytest -q \
             tests/platform/test_langsmith_trace_adapter.py \
             tests/platform/test_langsmith_adapter_factory.py \
@@ -185,12 +189,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock', '**/pyproject.toml') }}
 
-      - name: Install dependencies
+      - name: Install dependencies from lock file
         run: |
-          poetry install --no-interaction --no-root
-          poetry run pip install --disable-pip-version-check pytest
+          poetry install --with test --sync --no-interaction --no-root
 
       - name: Download job artifacts
         uses: actions/download-artifact@v4

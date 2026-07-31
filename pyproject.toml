@@ -54,6 +54,13 @@ pyfiglet = "^1.0.4"
 minio = "^7.2.20"
 
 
+# Test Dependency Group: strictly used for evaluation fixtures (Parquet Eval Fixture) and test execution gates
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.4"
+pyarrow = "^18.1.0"
+
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
