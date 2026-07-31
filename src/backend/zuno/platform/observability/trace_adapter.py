@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import os
 import re
-from typing import Any, dict, list, Optional
+from typing import Any, Dict, List, Optional
 
 
 SENSITIVE_KEY_PATTERNS = [
@@ -15,6 +15,28 @@ SENSITIVE_KEY_PATTERNS = [
     r"access_key",
     r"private_key",
     r"connection_string",
+]
+
+CANONICAL_NODE_TYPES = [
+    "AgentRun",
+    "PlanCreation",
+    "PlanValidation",
+    "StepExecution",
+    "RetrievalRound",
+    "QueryRewrite",
+    "BM25",
+    "Vector",
+    "Graph",
+    "Fusion",
+    "Rerank",
+    "EvidenceAcceptance",
+    "ToolInvocation",
+    "StepAcceptance",
+    "Replan",
+    "FinalSynthesis",
+    "CitationValidation",
+    "FinalGate",
+    "RunOutcome",
 ]
 
 
@@ -41,6 +63,8 @@ def redact_sensitive_data(
             is_sensitive = any(re.search(pat, key_str, re.IGNORECASE) for pat in SENSITIVE_KEY_PATTERNS)
             if is_sensitive:
                 cleaned[key_str] = "[REDACTED_SECRET]"
+            elif redact_content and key_str in ("raw_document", "prompt_content", "tool_result", "document_content"):
+                cleaned[key_str] = "[REDACTED_CONTENT]"
             else:
                 cleaned[key_str] = redact_sensitive_data(val, max_chars=max_chars, redact_content=redact_content)
         return cleaned
@@ -99,6 +123,7 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
     def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
         self.enabled = bool(self.config.get("enabled", False))
+        self.tenant_tracing_enabled = bool(self.config.get("tenant_tracing_enabled", True))
         self.project = str(self.config.get("project", "Zuno"))
         self.endpoint = str(self.config.get("endpoint", "https://api.smith.langchain.com"))
         self.api_key = str(self.config.get("api_key", ""))
@@ -106,11 +131,15 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
         self.error_sample_rate = float(self.config.get("error_sample_rate", 1.0))
         self.eval_sample_rate = float(self.config.get("eval_sample_rate", 1.0))
         self.metadata_only = bool(self.config.get("metadata_only", True))
+        self.include_prompt_content = bool(self.config.get("include_prompt_content", False))
+        self.include_document_content = bool(self.config.get("include_document_content", False))
+        self.include_tool_content = bool(self.config.get("include_tool_content", False))
         self.max_field_chars = int(self.config.get("max_field_chars", 512))
         self.fail_open = bool(self.config.get("fail_open", True))
+        self._active_spans: dict[str, dict[str, Any]] = {}
 
     def _should_sample(self, is_error: bool = False, is_eval: bool = False) -> bool:
-        if not self.enabled:
+        if not self.enabled or not self.tenant_tracing_enabled:
             return False
         if is_eval:
             return self.eval_sample_rate > 0.0
@@ -127,17 +156,33 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
         parent_span_id: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
     ) -> Optional[str]:
-        if not self._should_sample():
+        if not self._should_sample(is_error=False, is_eval=(span_type == "eval")):
             return None
         try:
+            meta = metadata or {}
+            correlation_ids = {
+                "agent_run_id": meta.get("agent_run_id"),
+                "plan_version_id": meta.get("plan_version_id"),
+                "step_run_id": meta.get("step_run_id"),
+                "retrieval_round_id": meta.get("retrieval_round_id"),
+                "tool_attempt_id": meta.get("tool_attempt_id"),
+                "trace_id": trace_id or meta.get("trace_id"),
+                "tenant_ref": meta.get("tenant_ref", "default_tenant"),
+                "workspace_ref": meta.get("workspace_ref", "default_workspace"),
+            }
             cleaned_metadata = redact_sensitive_data(
-                metadata or {},
+                {**meta, **correlation_ids},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
             )
-            # In a real setup, calls Client().create_run(...)
-            # Fail-open returns generated span id
-            return f"ls_span_{span_name}_{hash(trace_id or span_name) & 0xffffffff}"
+            span_id = f"ls_{span_name}_{len(self._active_spans) + 1}_{hash(trace_id or span_name) & 0xffff}"
+            self._active_spans[span_id] = {
+                "span_name": span_name,
+                "span_type": span_type,
+                "parent_span_id": parent_span_id,
+                "metadata": cleaned_metadata,
+            }
+            return span_id
         except Exception:
             if self.fail_open:
                 return None
@@ -151,7 +196,7 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
         error: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
     ) -> None:
-        if not span_id or not self.enabled:
+        if not span_id or span_id not in self._active_spans:
             return
         try:
             cleaned_outputs = redact_sensitive_data(
@@ -159,7 +204,11 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
             )
-            _ = cleaned_outputs
+            span_data = self._active_spans.pop(span_id, {})
+            span_data["status"] = "error" if error else "ok"
+            span_data["outputs"] = cleaned_outputs
+            if error:
+                span_data["error"] = str(error)
         except Exception:
             if not self.fail_open:
                 raise
@@ -178,4 +227,5 @@ __all__ = [
     "LangSmithTraceAdapter",
     "get_observability_adapter",
     "redact_sensitive_data",
+    "CANONICAL_NODE_TYPES",
 ]
