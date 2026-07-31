@@ -1,0 +1,13 @@
+{
+  "suite_id": "public_benchmark_suite_v1_candidate",
+  "raw_candidate_count": 80,
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "approval_required": true,
+  "status": "reviewer_approval_pending",
+  "slice_distribution": {
+    "multihop_fact_slice": 32,
+    "graph_reasoning_slice": 24,
+    "global_summary_slice": 24
+  }
+}

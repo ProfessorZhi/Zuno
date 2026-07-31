@@ -1,0 +1,24 @@
+{
+  "benchmark_suite": "PublicBenchmarkSuiteV1",
+  "candidate_count": 80,
+  "sources": [
+    {
+      "source_id": "hotpot_qa",
+      "slice": "multihop_fact_slice",
+      "candidate_count": 32,
+      "license": "CC-BY-SA-4.0"
+    },
+    {
+      "source_id": "multihop_rag",
+      "slice": "graph_reasoning_slice",
+      "candidate_count": 24,
+      "license": "Apache-2.0"
+    },
+    {
+      "source_id": "microsoft_graphrag_benchmarking",
+      "slice": "global_summary_slice",
+      "candidate_count": 24,
+      "license": "MIT"
+    }
+  ]
+}

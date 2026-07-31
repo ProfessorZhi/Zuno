@@ -1,0 +1,17 @@
+{
+  "total_candidates": 80,
+  "question_type_coverage": {
+    "multihop_fact": 32,
+    "multihop_reasoning": 24,
+    "global_summary": 24
+  },
+  "hard_negative_categories_covered": [
+    "same_document_neighbor_wrong_chunk",
+    "same_topic_different_document",
+    "table_vs_body",
+    "multi_document_conflict",
+    "graph_summary_requires_source_citation"
+  ],
+  "provenance_coverage_rate": 1.0,
+  "license_compliance": "verified_open_source"
+}
