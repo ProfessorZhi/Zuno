@@ -34,6 +34,10 @@ SENSITIVE_KEY_PATTERNS = [
     r"secret",
     r"authorization",
     r"\btoken\b",
+    r"access_token",
+    r"refresh_token",
+    r"id_token",
+    r"session_token",
     r"access_key",
     r"private_key",
     r"connection_string",
@@ -41,6 +45,18 @@ SENSITIVE_KEY_PATTERNS = [
     r"set_cookie",
     r"database_url",
     r"bearer",
+]
+
+VALUE_SECRET_PATTERNS = [
+    (r"(sk-[a-zA-Z0-9_\-]{8,})", r"[REDACTED_SECRET]"),
+    (r"(bearer\s+)[a-zA-Z0-9_\-\.=]+", r"\1[REDACTED_SECRET]"),
+    (r"(postgres(?:ql)?(?:\+[a-z]+)?://[^:\s]+:)[^@\s]+(@)", r"\1[REDACTED_SECRET]\2"),
+    (r"(mysql(?:\+[a-z]+)?://[^:\s]+:)[^@\s]+(@)", r"\1[REDACTED_SECRET]\2"),
+    (r"(password=)[^\s&'\"]+", r"\1[REDACTED_SECRET]"),
+    (r"(api_key=)[^\s&'\"]+", r"\1[REDACTED_SECRET]"),
+    (r"(access_token=)[^\s&'\"]+", r"\1[REDACTED_SECRET]"),
+    (r"(refresh_token=)[^\s&'\"]+", r"\1[REDACTED_SECRET]"),
+    (r"(token=)[^\s&'\"]+", r"\1[REDACTED_SECRET]"),
 ]
 
 FORBIDDEN_CONTENT_KEYS = {
@@ -90,11 +106,33 @@ NODE_TYPE_TO_LANGSMITH_RUN_TYPE = {
 }
 
 
+def sanitize_secret_values(text: str) -> str:
+    if not text:
+        return text
+    res = str(text)
+    for pat, repl in VALUE_SECRET_PATTERNS:
+        res = re.sub(pat, repl, res, flags=re.IGNORECASE)
+    return res
+
+
+def is_valid_uuid(val: Any) -> bool:
+    if not val or not isinstance(val, str):
+        return False
+    try:
+        uuid.UUID(val)
+        return True
+    except (ValueError, AttributeError, TypeError):
+        return False
+
+
 def redact_sensitive_data(
     data: Any,
     *,
     max_chars: int = 512,
     redact_content: bool = True,
+    include_prompt_content: bool = False,
+    include_document_content: bool = False,
+    include_tool_content: bool = False,
     seen: Optional[Set[int]] = None,
 ) -> Any:
     if data is None:
@@ -102,14 +140,16 @@ def redact_sensitive_data(
     if isinstance(data, (int, float, bool)):
         return data
     if isinstance(data, str):
-        if len(data) > max_chars:
-            return data[:max_chars] + "...[TRUNCATED]"
-        return data
+        sanitized = sanitize_secret_values(data)
+        if len(sanitized) > max_chars:
+            return sanitized[:max_chars] + "...[TRUNCATED]"
+        return sanitized
     if isinstance(data, Exception):
         err_msg = f"{type(data).__name__}: {str(data)}"
-        if len(err_msg) > max_chars:
-            return err_msg[:max_chars] + "...[TRUNCATED]"
-        return err_msg
+        sanitized_err = sanitize_secret_values(err_msg)
+        if len(sanitized_err) > max_chars:
+            return sanitized_err[:max_chars] + "...[TRUNCATED]"
+        return sanitized_err
 
     if seen is None:
         seen = set()
@@ -121,7 +161,15 @@ def redact_sensitive_data(
     try:
         if isinstance(data, (list, tuple, set)):
             res = [
-                redact_sensitive_data(item, max_chars=max_chars, redact_content=redact_content, seen=seen)
+                redact_sensitive_data(
+                    item,
+                    max_chars=max_chars,
+                    redact_content=redact_content,
+                    include_prompt_content=include_prompt_content,
+                    include_document_content=include_document_content,
+                    include_tool_content=include_tool_content,
+                    seen=seen,
+                )
                 for item in data
             ]
             return tuple(res) if isinstance(data, tuple) else res
@@ -141,20 +189,65 @@ def redact_sensitive_data(
                 is_sensitive = any(re.search(pat, key_str, re.IGNORECASE) for pat in SENSITIVE_KEY_PATTERNS)
                 if is_sensitive:
                     cleaned[key_str] = "[REDACTED_SECRET]"
+                elif key_str == "prompt_content":
+                    if not include_prompt_content:
+                        cleaned[key_str] = "[REDACTED_CONTENT]"
+                    else:
+                        cleaned[key_str] = redact_sensitive_data(
+                            val,
+                            max_chars=max_chars,
+                            redact_content=redact_content,
+                            include_prompt_content=include_prompt_content,
+                            include_document_content=include_document_content,
+                            include_tool_content=include_tool_content,
+                            seen=seen,
+                        )
+                elif key_str in ("document_content", "raw_document"):
+                    if not include_document_content:
+                        cleaned[key_str] = "[REDACTED_CONTENT]"
+                    else:
+                        cleaned[key_str] = redact_sensitive_data(
+                            val,
+                            max_chars=max_chars,
+                            redact_content=redact_content,
+                            include_prompt_content=include_prompt_content,
+                            include_document_content=include_document_content,
+                            include_tool_content=include_tool_content,
+                            seen=seen,
+                        )
+                elif key_str == "tool_result":
+                    if not include_tool_content:
+                        cleaned[key_str] = "[REDACTED_CONTENT]"
+                    else:
+                        cleaned[key_str] = redact_sensitive_data(
+                            val,
+                            max_chars=max_chars,
+                            redact_content=redact_content,
+                            include_prompt_content=include_prompt_content,
+                            include_document_content=include_document_content,
+                            include_tool_content=include_tool_content,
+                            seen=seen,
+                        )
                 elif redact_content and key_str in FORBIDDEN_CONTENT_KEYS:
                     cleaned[key_str] = "[REDACTED_CONTENT]"
                 else:
                     cleaned[key_str] = redact_sensitive_data(
-                        val, max_chars=max_chars, redact_content=redact_content, seen=seen
+                        val,
+                        max_chars=max_chars,
+                        redact_content=redact_content,
+                        include_prompt_content=include_prompt_content,
+                        include_document_content=include_document_content,
+                        include_tool_content=include_tool_content,
+                        seen=seen,
                     )
             return cleaned
 
-        str_val = str(data)
+        str_val = sanitize_secret_values(str(data))
         if len(str_val) > max_chars:
             return str_val[:max_chars] + "...[TRUNCATED]"
         return str_val
     except Exception:
-        str_val = str(data)
+        str_val = sanitize_secret_values(str(data))
         if len(str_val) > max_chars:
             return str_val[:max_chars] + "...[TRUNCATED]"
         return str_val
@@ -272,6 +365,7 @@ class InMemoryTraceAdapter(ObservabilityTracePort):
         self._random_fn = random_fn or random.random
         self._active_spans: dict[str, dict[str, Any]] = {}
         self._ended_spans: set[str] = set()
+        self.delivery_failures = 0
 
     def _should_sample(
         self,
@@ -334,11 +428,17 @@ class InMemoryTraceAdapter(ObservabilityTracePort):
                 {**meta, **correlation_ids},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             cleaned_inputs = redact_sensitive_data(
                 inputs or {},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             run_id = f"ls_{span_name}_{len(self._active_spans) + 1}_{hash(trace_id or span_name) & 0xffff}"
             handle = TraceSpanHandle(
@@ -393,6 +493,9 @@ class InMemoryTraceAdapter(ObservabilityTracePort):
                 outputs or {},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             span_data = self._active_spans.pop(ext_id)
             self._ended_spans.add(ext_id)
@@ -434,6 +537,7 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
         self._client_initialized = client is not None
         self._active_spans: dict[str, dict[str, Any]] = {}
         self._ended_spans: set[str] = set()
+        self.delivery_failures = 0
 
     def _get_client(self) -> Any:
         if self._client_initialized:
@@ -499,6 +603,23 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
             return True
         return self._random_fn() < rate
 
+    def _call_with_retry(self, fn: Callable[[], Any], action_name: str) -> Any:
+        max_attempts = 3 if not self.fail_open else 1
+        last_exc = None
+        for attempt in range(max_attempts):
+            try:
+                return fn()
+            except Exception as exc:
+                last_exc = exc
+                self.delivery_failures += 1
+                if attempt < max_attempts - 1 and not self.fail_open:
+                    continue
+        if last_exc is not None:
+            logger.error(f"LangSmith {action_name} failed: {last_exc}")
+            if not self.fail_open:
+                raise ObservabilityTraceError(f"LangSmith {action_name} failed: {last_exc}") from last_exc
+        return None
+
     def start_span(
         self,
         span_name: str,
@@ -527,13 +648,19 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
 
         try:
             meta = metadata or {}
+            raw_zuno_trace_id = trace_id or meta.get("trace_id")
+
+            # Format trace_id: LangSmith requires UUID string
+            ls_trace_id = raw_zuno_trace_id if is_valid_uuid(raw_zuno_trace_id) else None
+            zuno_trace_id_meta = str(raw_zuno_trace_id) if raw_zuno_trace_id else None
+
             correlation_ids = {
                 "agent_run_id": meta.get("agent_run_id"),
                 "plan_version_id": meta.get("plan_version_id"),
                 "step_run_id": meta.get("step_run_id"),
                 "retrieval_round_id": meta.get("retrieval_round_id"),
                 "tool_attempt_id": meta.get("tool_attempt_id"),
-                "trace_id": trace_id or meta.get("trace_id"),
+                "zuno_trace_id": zuno_trace_id_meta,
                 "tenant_ref": meta.get("tenant_ref", "default_tenant"),
                 "workspace_ref": meta.get("workspace_ref", "default_workspace"),
             }
@@ -541,16 +668,25 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 {**meta, **correlation_ids},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             cleaned_inputs = redact_sensitive_data(
                 inputs or {},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             cleaned_tags = redact_sensitive_data(
                 tags or [span_type],
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
 
             external_run_id = str(uuid.uuid4())
@@ -568,15 +704,17 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
             }
             if parent_id_str:
                 run_kwargs["parent_run_id"] = parent_id_str
-            if trace_id:
-                run_kwargs["trace_id"] = trace_id
+            if ls_trace_id:
+                run_kwargs["trace_id"] = ls_trace_id
 
-            client.create_run(**run_kwargs)
+            res = self._call_with_retry(lambda: client.create_run(**run_kwargs), "create_run")
+            if res is None and self.fail_open and self.delivery_failures > 0 and not client.create_run:
+                pass  # Swallow in fail_open mode if exception occurred
 
             handle = TraceSpanHandle(
                 provider="langsmith",
                 external_run_id=external_run_id,
-                trace_id=trace_id or external_run_id,
+                trace_id=ls_trace_id or external_run_id,
                 parent_external_run_id=parent_id_str,
                 span_name=span_name,
                 span_type=span_type,
@@ -590,7 +728,10 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 "parent_span_id": parent_id_str,
             }
             return handle
+        except ObservabilityError:
+            raise
         except Exception as exc:
+            self.delivery_failures += 1
             logger.error(f"LangSmith create_run failed: {exc}")
             if not self.fail_open:
                 raise ObservabilityTraceError(f"LangSmith start_span failed: {exc}") from exc
@@ -604,8 +745,43 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
         error: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
     ) -> None:
+        # Handling unsampled root error summary if span_id is None and error is provided
         if not span_id:
+            if error and self._should_sample(is_error=True):
+                client = self._get_client()
+                if client is not None:
+                    err_run_id = str(uuid.uuid4())
+                    redacted_err = redact_sensitive_data(
+                        error,
+                        max_chars=self.max_field_chars,
+                        redact_content=self.metadata_only,
+                        include_prompt_content=self.include_prompt_content,
+                        include_document_content=self.include_document_content,
+                        include_tool_content=self.include_tool_content,
+                    )
+                    cleaned_meta = redact_sensitive_data(
+                        metadata or {},
+                        max_chars=self.max_field_chars,
+                        redact_content=self.metadata_only,
+                        include_prompt_content=self.include_prompt_content,
+                        include_document_content=self.include_document_content,
+                        include_tool_content=self.include_tool_content,
+                    )
+                    err_kwargs = {
+                        "id": err_run_id,
+                        "name": "UnsampledTrace:ErrorSummary",
+                        "run_type": "chain",
+                        "project_name": self.project,
+                        "inputs": {"error_summary": str(redacted_err)},
+                        "start_time": datetime.now(timezone.utc),
+                        "end_time": datetime.now(timezone.utc),
+                        "error": str(redacted_err),
+                        "extra": {"metadata": {**(cleaned_meta or {}), "error_sampled": True}},
+                        "tags": ["error_summary"],
+                    }
+                    self._call_with_retry(lambda: client.create_run(**err_kwargs), "create_run_error_summary")
             return
+
         ext_id = span_id.external_run_id if isinstance(span_id, TraceSpanHandle) else span_id
 
         if ext_id in self._ended_spans:
@@ -629,14 +805,18 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 outputs or {},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
             cleaned_meta = redact_sensitive_data(
                 metadata or {},
                 max_chars=self.max_field_chars,
                 redact_content=self.metadata_only,
+                include_prompt_content=self.include_prompt_content,
+                include_document_content=self.include_document_content,
+                include_tool_content=self.include_tool_content,
             )
-            self._active_spans.pop(ext_id, None)
-            self._ended_spans.add(ext_id)
 
             update_kwargs: dict[str, Any] = {
                 "run_id": ext_id,
@@ -644,13 +824,26 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 "end_time": datetime.now(timezone.utc),
             }
             if error:
-                redacted_err = redact_sensitive_data(error, max_chars=self.max_field_chars)
+                redacted_err = redact_sensitive_data(
+                    error,
+                    max_chars=self.max_field_chars,
+                    redact_content=self.metadata_only,
+                    include_prompt_content=self.include_prompt_content,
+                    include_document_content=self.include_document_content,
+                    include_tool_content=self.include_tool_content,
+                )
                 update_kwargs["error"] = str(redacted_err)
             if cleaned_meta:
                 update_kwargs["extra"] = {"metadata": cleaned_meta}
 
-            client.update_run(**update_kwargs)
+            # Only enter _ended_spans after update_run succeeds!
+            self._call_with_retry(lambda: client.update_run(**update_kwargs), "update_run")
+            self._active_spans.pop(ext_id, None)
+            self._ended_spans.add(ext_id)
+        except ObservabilityError:
+            raise
         except Exception as exc:
+            self.delivery_failures += 1
             logger.error(f"LangSmith update_run failed: {exc}")
             if not self.fail_open:
                 raise ObservabilityTraceError(f"LangSmith end_span failed: {exc}") from exc
@@ -679,5 +872,7 @@ __all__ = [
     "LangSmithTraceAdapter",
     "get_observability_adapter",
     "redact_sensitive_data",
+    "sanitize_secret_values",
+    "is_valid_uuid",
     "CANONICAL_NODE_TYPES",
 ]

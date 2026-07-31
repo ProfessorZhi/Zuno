@@ -8,12 +8,22 @@ PHASE10 status: contract-foundation
 
 `platform/observability/` 当前提供 LangSmith-compatible metadata、trace helper、OTel / LangSmith-compatible span schema、`trace_adapter.py` (`ObservabilityTracePort`, `NoopTraceAdapter`, `InMemoryTraceAdapter`, `LangSmithTraceAdapter`)、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge。
 
-本工作包 (AG-PHASE22-LANGSMITH-SDK-ADAPTER) 完成状态：
+本工作包 (AG-PHASE22-LANGSMITH-ADAPTER-CORRECTION) 完成状态：
 - ObservabilityTracePort available
 - NoopTraceAdapter available
 - InMemoryTraceAdapter available
-- LangSmith SDK Adapter implementation available
+- LangSmith SDK Adapter corrected security, trace_id, content switches & delivery retry semantics available
 - Adapter focused tests passed
+
+LangChain 自动 Tracing 与手工 Adapter 边界：
+- 自动 Tracing (`configure_langsmith()`): 负责原生 LangChain / LangGraph 模型的调用链追踪；
+- 手工 Adapter (`LangSmithTraceAdapter`): 负责自定义平台/工作区/任务非原生节点，通过 `zuno_trace_id` 与 `correlation_refs` 关联；
+- 不在手工 Adapter 中重复构建第二棵独立的 AgentRun 根 Trace 树。
+
+Error 采样与 Delivery 语义：
+- 已采样的 Trace 完整保留内部 Error Span；
+- 未采样 Trace 在 `end_span` 出现异常且 `error_sample_rate > 0.0` 时触发产生 `UnsampledTrace:ErrorSummary` 记录；
+- `end_span` 仅在 SDK `update_run` 成功后进入 ended 状态，失败记录 `delivery_failures` 并支持受控重试（上限 3 次）。
 
 Target 待完成项：
 - AgentRunGraph full-chain span wiring
