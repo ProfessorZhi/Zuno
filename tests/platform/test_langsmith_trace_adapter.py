@@ -94,9 +94,10 @@ def test_fail_open_on_exception() -> None:
     assert span_id is not None or span_id is None
 
 
-def test_all_18_canonical_node_types_supported() -> None:
+def test_canonical_node_type_names_defined() -> None:
     adapter = LangSmithTraceAdapter({"enabled": True, "sample_rate": 1.0})
     for node in CANONICAL_NODE_TYPES:
         sid = adapter.start_span(node, span_type=node)
         assert sid is not None
         adapter.end_span(sid, outputs={"status": "completed"})
+

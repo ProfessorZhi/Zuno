@@ -119,7 +119,15 @@ class NoopTraceAdapter(ObservabilityTracePort):
         pass
 
 
-class LangSmithTraceAdapter(ObservabilityTracePort):
+class InMemoryTraceAdapter(ObservabilityTracePort):
+    """In-memory trace prototype adapter for ObservabilityTracePort.
+
+    NOTE:
+    - LangSmith SDK integration (langsmith.Client) = NOT IMPLEMENTED
+    - Canonical runtime trace wiring = NOT IMPLEMENTED
+    - This adapter stores spans in-memory for testing port contracts and redaction logic.
+    """
+
     def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
         self.enabled = bool(self.config.get("enabled", False))
@@ -214,16 +222,21 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
                 raise
 
 
+# Alias for backward compatibility while clearly documenting prototype status
+LangSmithTraceAdapter = InMemoryTraceAdapter
+
+
 def get_observability_adapter(config: Optional[dict[str, Any]] = None) -> ObservabilityTracePort:
     cfg = config or {}
     if cfg.get("enabled"):
-        return LangSmithTraceAdapter(cfg)
+        return InMemoryTraceAdapter(cfg)
     return NoopTraceAdapter()
 
 
 __all__ = [
     "ObservabilityTracePort",
     "NoopTraceAdapter",
+    "InMemoryTraceAdapter",
     "LangSmithTraceAdapter",
     "get_observability_adapter",
     "redact_sensitive_data",

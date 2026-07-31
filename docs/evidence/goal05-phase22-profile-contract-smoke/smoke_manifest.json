@@ -1,0 +1,20 @@
+{
+  "benchmark_type": "profile_contract_smoke_run",
+  "runner_type": "deterministic_test_doubles",
+  "measurement_state": "MEASUREMENT_BLOCKED",
+  "blocked_reason": "not_measured_test_double_runner",
+  "status": "CONTRACT_SMOKE_COMPLETED",
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "candidate_cases_evaluated": 6,
+  "case_set_hash": "c197515a3933ca0c7fed91902040e7808165273a6358365c7026c141055e0605",
+  "profiles_evaluated": [
+    "standard_rag",
+    "graphrag_local",
+    "graphrag_global",
+    "agentic_graphrag"
+  ],
+  "langsmith_tracing": "noop_disabled",
+  "paid_llm_invoked": false,
+  "reproduce_command": "python -m tools.evals.zuno.rag_eval.run_dry_run_benchmark"
+}
