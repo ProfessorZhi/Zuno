@@ -1,10 +1,11 @@
 """Repository AST and Boundary Bypass Guard Tests for Deep and Agentic Adapters.
 
-AG-PHASE22-DEEP-AGENTIC-CANONICAL-ADAPTERS
+AG-PR56-GEMINI-3-6-FLASH-HIGH-RUNTIME-TRUTH-REBUILD
 
 Ensures:
 1. No direct_answer shortcut bypasses plan, trace, budget, or final gate in adapter code.
-2. No frozen shared files were modified.
+2. Synthetic benchmark_deep_agentic.py file was deleted and does not exist.
+3. No frozen shared files were modified.
 """
 
 from __future__ import annotations
@@ -35,7 +36,6 @@ def test_01_no_direct_answer_shortcut_in_deep_agentic_adapter_ast() -> None:
     code_text = adapter_path.read_text(encoding="utf-8")
     tree = ast.parse(code_text)
 
-    # Check string constants in AST for 'direct_answer' bypass flags
     string_constants = [
         node.value
         for node in ast.walk(tree)
@@ -46,7 +46,13 @@ def test_01_no_direct_answer_shortcut_in_deep_agentic_adapter_ast() -> None:
     assert "bypass_plan_and_trace" not in string_constants
 
 
-def test_02_frozen_files_unmodified_in_git_diff() -> None:
+def test_02_synthetic_benchmark_deep_agentic_composition_root_deleted() -> None:
+    """Ensures synthetic local composition root src/backend/zuno/agent/benchmark_deep_agentic.py does not exist."""
+    synthetic_path = Path("src/backend/zuno/agent/benchmark_deep_agentic.py")
+    assert synthetic_path.exists() is False, "Synthetic composition root benchmark_deep_agentic.py MUST be deleted!"
+
+
+def test_03_frozen_files_unmodified_in_git_diff() -> None:
     """Git check: None of the 7 frozen contract files are modified relative to Base."""
     res = subprocess.run(
         ["git", "diff", "--name-only", "origin/codex/goal05-phase15-sandbox-repair"],
