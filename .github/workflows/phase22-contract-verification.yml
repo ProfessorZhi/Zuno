@@ -13,6 +13,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONPATH: src/backend
+
 concurrency:
   group: phase22-verification-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -126,7 +129,7 @@ jobs:
 
       - name: Run PHASE22 focused test suite
         run: |
-          poetry run pytest -q \
+          poetry run python -m pytest -q \
             tests/platform/test_langsmith_trace_adapter.py \
             tests/platform/test_langsmith_adapter_factory.py \
             tests/platform/test_langsmith_redaction.py \
