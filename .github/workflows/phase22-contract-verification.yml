@@ -73,14 +73,14 @@ jobs:
           resolve_base_sha() {
             if [ "${EVENT_NAME}" = "pull_request" ]; then
               SHA="${PR_BASE_SHA}"
-              echo "Event: pull_request, using PR base SHA: ${SHA}"
+              echo "Event: pull_request, using PR base SHA: ${SHA}" >&2
             elif [ "${EVENT_NAME}" = "push" ]; then
               SHA="${PUSH_BEFORE_SHA}"
-              echo "Event: push, using github.event.before SHA: ${SHA}"
+              echo "Event: push, using github.event.before SHA: ${SHA}" >&2
             elif [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
-              git fetch origin codex/goal05-phase15-sandbox-repair
+              git fetch origin codex/goal05-phase15-sandbox-repair >&2
               SHA="$(git merge-base HEAD origin/codex/goal05-phase15-sandbox-repair)"
-              echo "Event: workflow_dispatch, using merge-base SHA: ${SHA}"
+              echo "Event: workflow_dispatch, using merge-base SHA: ${SHA}" >&2
             else
               echo "ERROR: Unknown event name: ${EVENT_NAME}" >&2
               exit 1
