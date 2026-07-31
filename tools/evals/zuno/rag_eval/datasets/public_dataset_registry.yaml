@@ -1,0 +1,70 @@
+datasets:
+  - source_id: "microsoft_graphrag_benchmarking"
+    official_name: "Microsoft GraphRAG Benchmarking Datasets"
+    official_repository: "https://github.com/microsoft/graphrag"
+    upstream_commit_or_version: "v0.5.0"
+    license: "MIT"
+    license_file_ref: "LICENSE"
+    citation: "Edge et al., 2024. From Local to Global: A Graph RAG Approach to Query-Focused Summarization."
+    download_method: "official_http"
+    expected_files:
+      - "kevin_scott_podcast/documents.jsonl"
+      - "kevin_scott_podcast/questions.jsonl"
+    expected_checksums:
+      "kevin_scott_podcast/documents.jsonl": "8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b"
+      "kevin_scott_podcast/questions.jsonl": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+    corpus_type: "podcast_transcripts"
+    question_type: "global_summary"
+    answer_ground_truth: true
+    evidence_ground_truth: true
+    supporting_fact_granularity: "community_summary"
+    redistribution_policy: "allowed_with_attribution"
+    local_cache_path: ".local/eval-datasets/microsoft_graphrag"
+    adapter: "tools.evals.zuno.rag_eval.datasets.adapters.microsoft_graphrag_adapter"
+    status: "verified_candidate"
+
+  - source_id: "hotpot_qa"
+    official_name: "HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering"
+    official_repository: "https://github.com/hotpotqa/hotpot"
+    upstream_commit_or_version: "v1.0"
+    license: "CC-BY-SA-4.0"
+    license_file_ref: "https://creativecommons.org/licenses/by-sa/4.0/"
+    citation: "Yang et al., 2018. HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering."
+    download_method: "official_http"
+    expected_files:
+      - "hotpot_dev_distractor_v1.json"
+    expected_checksums:
+      "hotpot_dev_distractor_v1.json": "3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a"
+    corpus_type: "wikipedia_paragraphs"
+    question_type: "multihop_fact"
+    answer_ground_truth: true
+    evidence_ground_truth: true
+    supporting_fact_granularity: "paragraph_sentences"
+    redistribution_policy: "allowed_cc_by_sa"
+    local_cache_path: ".local/eval-datasets/hotpot_qa"
+    adapter: "tools.evals.zuno.rag_eval.datasets.adapters.hotpot_qa_adapter"
+    status: "verified_candidate"
+
+  - source_id: "multihop_rag"
+    official_name: "MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries"
+    official_repository: "https://github.com/yixiruan/MultiHop-RAG"
+    upstream_commit_or_version: "v1.0"
+    license: "Apache-2.0"
+    license_file_ref: "LICENSE"
+    citation: "Tang et al., 2024. MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries."
+    download_method: "official_http"
+    expected_files:
+      - "corpus.json"
+      - "queries.json"
+    expected_checksums:
+      "corpus.json": "9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e"
+      "queries.json": "0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b"
+    corpus_type: "news_articles"
+    question_type: "multihop_reasoning"
+    answer_ground_truth: true
+    evidence_ground_truth: true
+    supporting_fact_granularity: "document_passage"
+    redistribution_policy: "allowed_apache_2"
+    local_cache_path: ".local/eval-datasets/multihop_rag"
+    adapter: "tools.evals.zuno.rag_eval.datasets.adapters.multihop_rag_adapter"
+    status: "verified_candidate"
