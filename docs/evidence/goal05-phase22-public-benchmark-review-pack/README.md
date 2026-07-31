@@ -1,19 +1,10 @@
-# Public Benchmark 80-Case Candidate Review Pack
+# Goal05 Phase22 Public Benchmark Review Pack
 
-This review pack contains 80 candidate dataset cases selected from official public evaluation datasets (HotpotQA, MultiHop-RAG, Microsoft GraphRAG Benchmarking).
-
-## Review Status
-
-- **raw_candidate_count**: 80
-- **reviewer_approved_count**: 0
-- **benchmark_eligible_count**: 0
-- **approval_required**: true
-- **status**: reviewer_approval_pending
-
-## Slice Breakdown
-
-- `multihop_fact_slice`: 32 cases (HotpotQA)
-- `graph_reasoning_slice`: 24 cases (MultiHop-RAG)
-- `global_summary_slice`: 24 cases (Microsoft GraphRAG)
-
-All candidates remain in `reviewer_status: pending` until human reviewer approval.
+- **Status**: Candidate Review Pack Generated (Pending Human Reviewer Approval)
+- **Total Cases**: 80 real upstream cases
+- **Sources**:
+  - HotpotQA: 32 cases (CC-BY-SA-4.0)
+  - MultiHop-RAG: 24 cases (Apache-2.0)
+  - Microsoft GraphRAG Benchmarking: 24 cases (MIT)
+- **Reviewer Approval**: `reviewer_approved_count=0`, `benchmark_eligible_count=0`
+- **Measurement State**: `BLOCKED` pending human review and formal model credentials.

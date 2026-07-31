@@ -1,17 +1,12 @@
 {
-  "total_candidates": 80,
-  "question_type_coverage": {
-    "multihop_fact": 32,
-    "multihop_reasoning": 24,
-    "global_summary": 24
-  },
-  "hard_negative_categories_covered": [
-    "same_document_neighbor_wrong_chunk",
-    "same_topic_different_document",
-    "table_vs_body",
-    "multi_document_conflict",
-    "graph_summary_requires_source_citation"
-  ],
-  "provenance_coverage_rate": 1.0,
-  "license_compliance": "verified_open_source"
+  "raw_upstream_count": 80,
+  "schema_valid_count": 80,
+  "selection_candidate_count": 80,
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "slices": {
+    "multihop_fact_slice": 32,
+    "graph_reasoning_slice": 24,
+    "global_summary_slice": 24
+  }
 }

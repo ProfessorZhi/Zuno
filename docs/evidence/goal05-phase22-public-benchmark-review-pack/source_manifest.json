@@ -1,24 +1,27 @@
 {
-  "benchmark_suite": "PublicBenchmarkSuiteV1",
-  "candidate_count": 80,
+  "pack_version": "2.2.0",
+  "generated_from": "real_public_official_datasets",
   "sources": [
     {
       "source_id": "hotpot_qa",
-      "slice": "multihop_fact_slice",
-      "candidate_count": 32,
-      "license": "CC-BY-SA-4.0"
+      "name": "HotpotQA",
+      "url": "https://huggingface.co/datasets/hotpotqa/hotpot_qa",
+      "license": "CC-BY-SA-4.0",
+      "sampled_count": 32
     },
     {
       "source_id": "multihop_rag",
-      "slice": "graph_reasoning_slice",
-      "candidate_count": 24,
-      "license": "Apache-2.0"
+      "name": "MultiHop-RAG",
+      "url": "https://huggingface.co/datasets/yixuantt/MultiHopRAG",
+      "license": "Apache-2.0",
+      "sampled_count": 24
     },
     {
       "source_id": "microsoft_graphrag_benchmarking",
-      "slice": "global_summary_slice",
-      "candidate_count": 24,
-      "license": "MIT"
+      "name": "Microsoft GraphRAG Benchmarking",
+      "url": "https://huggingface.co/datasets/Awesome-GraphRAG/GraphRAG-Bench",
+      "license": "MIT",
+      "sampled_count": 24
     }
   ]
 }

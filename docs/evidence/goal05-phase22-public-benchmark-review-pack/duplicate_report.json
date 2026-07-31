@@ -1,7 +1,5 @@
 {
-  "scanned_cases": 80,
   "exact_duplicates": 0,
   "near_duplicates": 0,
-  "cross_dataset_overlap": 0,
-  "status": "clean_no_duplicates_found"
+  "status": "clean"
 }

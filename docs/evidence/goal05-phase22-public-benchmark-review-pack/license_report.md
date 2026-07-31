@@ -1,13 +1,7 @@
-# Public Benchmark Suite Candidate License Report
+# Public Benchmark Candidate Review Pack License Report
 
-- Total Sources: 3
-- Compliance Status: All sources verified against open source / permissive evaluation licenses.
+- **HotpotQA**: CC-BY-SA 4.0 (Attribution-ShareAlike 4.0 International)
+- **MultiHop-RAG**: Apache 2.0 / MIT License
+- **Microsoft GraphRAG**: MIT License
 
-## Source Licenses
-
-1. **HotpotQA**: CC-BY-SA-4.0
-   - Redistribution: Allowed with attribution and SA terms.
-2. **MultiHop-RAG**: Apache-2.0
-   - Redistribution: Permissive, open source evaluation license.
-3. **Microsoft GraphRAG Benchmarking**: MIT
-   - Redistribution: Permissive MIT License.
+All candidate cases are sourced directly from upstream official open benchmark datasets.
