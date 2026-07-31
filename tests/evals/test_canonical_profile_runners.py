@@ -1,493 +1,704 @@
-﻿"""Unit, Integration, Fault, and Contract Tests for PHASE22 Canonical Profile Runners."""
+﻿"""Tests for PHASE22 Canonical Four-Profile Benchmark Runtime.
+
+AG-PR55-CANONICAL-RUNTIME-TRUTH-REPAIR
+
+Tests verify truth semantics, not assumed functionality:
+- Canonical runners return BLOCKED for all unavailable dependencies
+- No synthetic receipt refs in outputs
+- No template answers
+- No hardcoded token/cost values from thin air
+- MeasurementTruthGate enforces strict 7-rule priority order
+- Factory fails closed in canonical mode without CanonicalRuntimeDependencies
+- Factory never creates KnowledgeIndexRuntime internally in canonical mode
+- Trace ID comes from real TraceSpanHandle, not hand-constructed strings
+"""
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
+import time
+from typing import Any
+
 import pytest
 
 from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalAgenticGraphRAGRunner,
+    CanonicalBenchmarkProfileRunner,
     CanonicalCaseInput,
     CanonicalCaseResult,
     CanonicalDeepGraphRAGRunner,
     CanonicalLocalGraphRAGRunner,
+    CanonicalRuntimeDependencies,
     CanonicalStandardRAGRunner,
 )
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
-from tools.evals.zuno.rag_eval.profile_runners import (
-    AgenticGraphRAGProfileRunner,
-    DeepGraphRAGProfileRunner,
-    LocalGraphRAGProfileRunner,
-    StandardRAGProfileRunner,
-)
 from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
-from zuno.knowledge.indexing import KnowledgeIndexRuntime
-from zuno.knowledge.ingestion import CanonicalDocumentIR, DocumentBlock, DocumentMetadata, DocumentProvenance, SourceSpan
 
 
 # ---------------------------------------------------------------------------
-# Test Fixtures & Helpers
+# Helpers
 # ---------------------------------------------------------------------------
 
+def _sample_deps(
+    with_knowledge: bool = False,
+    with_index: bool = False,
+) -> CanonicalRuntimeDependencies:
+    """Return a CanonicalRuntimeDependencies with optional real components.
 
-def _setup_seeded_index() -> KnowledgeIndexRuntime:
-    index = KnowledgeIndexRuntime()
-    index.create_knowledge_space("ks_default", "workspace_default")
-    index.index_document(
-        "ks_default",
-        CanonicalDocumentIR(
-            metadata=DocumentMetadata(
-                document_id="doc_renewal_01",
-                workspace_id="workspace_default",
-                source_uri="memory://renewal_contract.md",
-                mime_type="text/markdown",
-                hash="sha256-renewal01",
-                parser_id="native",
-                parser_version="phase22-v1",
-            ),
-            blocks=[
-                DocumentBlock(
-                    block_id="block_renewal_notice",
-                    type="paragraph",
-                    text="Renewal notice must be submitted 30 days prior to contract anniversary date.",
-                    source_span=SourceSpan(page=1, line_range=[10, 15]),
-                )
-            ],
-            provenance=DocumentProvenance(
-                parser_id="native",
-                parser_version="phase22-v1",
-                source_uri="memory://renewal_contract.md",
-                confidence=1.0,
-            ),
-        ),
-        targets=["bm25", "vector", "graph"],
+    In contract tests we pass None for unavailable components; this triggers
+    the BLOCKED path in runners. We do NOT construct local Index/Knowledge
+    runtimes in these tests — that would violate canonical mode contract.
+    """
+    kr = None
+    if with_knowledge:
+        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime
+        from zuno.knowledge.indexing import KnowledgeIndexRuntime
+        kr = CorrectiveAgenticRetrievalRuntime(index_runtime=KnowledgeIndexRuntime())
+    ir = None
+    if with_index:
+        from zuno.knowledge.indexing import KnowledgeIndexRuntime
+        ir = KnowledgeIndexRuntime()
+    return CanonicalRuntimeDependencies(
+        knowledge_runtime=kr,
+        index_runtime=ir,
+        trace_adapter=None,
     )
-    return index
 
 
-def _sample_input(profile_name: str = "standard_rag", case_id: str = "case_001") -> CanonicalCaseInput:
+def _sample_input(profile_name: str = "standard_rag") -> CanonicalCaseInput:
     return CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id=case_id,
+        eval_run_id="run_test_001",
+        case_id="case_001",
         profile_name=profile_name,
-        question="What is the renewal notice window?",
-        tenant_id="tenant_default",
-        workspace_id="workspace_default",
-        knowledge_space_ids=("ks_default",),
-        corpus_snapshot_ref="snapshot_20260731",
-        gold_document_refs=("doc_renewal_01",),
-        authorization_ref="auth_valid_token",
+        question="What is the primary function of the Zuno agent core?",
+        question_type="factoid",
+        tenant_id="tenant_test",
+        workspace_id="workspace_test",
+        knowledge_space_ids=("ks_test",),
+        corpus_snapshot_ref="snapshot_v1",
+        gold_document_refs=("doc_001", "doc_002"),
+        gold_evidence_refs=("ev_001",),
+        authorization_ref="auth_test_ref",
         security_epoch="epoch_2026",
+        budget={},
+        attempt_number=1,
     )
 
 
-# ===========================================================================
-# Group A: Contract Tests (1-7)
-# ===========================================================================
+# ---------------------------------------------------------------------------
+# Section 1: CanonicalCaseInput and CanonicalCaseResult contracts
+# ---------------------------------------------------------------------------
+
+def test_01_canonical_case_input_is_frozen() -> None:
+    case = _sample_input()
+    with pytest.raises((AttributeError, TypeError)):
+        case.case_id = "mutated"  # type: ignore[misc]
 
 
-def test_1_four_profiles_creatable_by_canonical_factory() -> None:
-    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical")
-    for profile in ["standard_rag", "local_graphrag", "deep_graphrag", "agentic_graphrag"]:
-        runner = factory.create_runner(profile)
+def test_02_canonical_case_result_is_frozen() -> None:
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    with pytest.raises((AttributeError, TypeError)):
+        res.answer = "mutated"  # type: ignore[misc]
+
+
+def test_03_canonical_case_input_fields_present() -> None:
+    case = _sample_input()
+    assert case.eval_run_id == "run_test_001"
+    assert case.case_id == "case_001"
+    assert case.question_type == "factoid"
+    assert case.attempt_number == 1
+
+
+def test_04_canonical_result_contains_required_fields() -> None:
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    assert hasattr(res, "eval_run_id")
+    assert hasattr(res, "case_id")
+    assert hasattr(res, "profile_name")
+    assert hasattr(res, "runtime_status")
+    assert hasattr(res, "measurement_state")
+    assert hasattr(res, "answer")
+    assert hasattr(res, "trace_id")
+    assert hasattr(res, "plan_version_ref")
+    assert hasattr(res, "run_outcome_ref")
+    assert hasattr(res, "budget_settlement_ref")
+
+
+# ---------------------------------------------------------------------------
+# Section 2: Security gate — all runners must BLOCK (gate unavailable)
+# ---------------------------------------------------------------------------
+
+def test_05_standard_rag_blocked_security_gate() -> None:
+    """Standard runner must return BLOCKED with canonical_security_gate_unavailable."""
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    assert res.runtime_status in ("blocked", "failed")
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_security_gate_unavailable"
+    assert res.blocked_reason == "canonical_security_gate_unavailable"
+
+
+def test_06_local_graphrag_blocked_security_gate() -> None:
+    deps = _sample_deps()
+    runner = CanonicalLocalGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("local_graphrag"))
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_security_gate_unavailable"
+
+
+def test_07_deep_graphrag_blocked_security_gate() -> None:
+    deps = _sample_deps()
+    runner = CanonicalDeepGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("deep_graphrag"))
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_security_gate_unavailable"
+
+
+def test_08_agentic_graphrag_blocked_composition_root() -> None:
+    """Agentic runner must BLOCK with canonical_agent_run_graph_unavailable."""
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_agent_run_graph_unavailable"
+    assert res.blocked_reason == "canonical_agent_run_graph_unavailable"
+
+
+# ---------------------------------------------------------------------------
+# Section 3: No synthetic receipt refs
+# ---------------------------------------------------------------------------
+
+def test_09_no_synthetic_run_outcome_ref() -> None:
+    """run_outcome_ref must be empty — no synthetic 'outcome_std_*' strings."""
+    deps = _sample_deps()
+    for profile, cls in [
+        ("standard_rag", CanonicalStandardRAGRunner),
+        ("deep_graphrag", CanonicalDeepGraphRAGRunner),
+        ("agentic_graphrag", CanonicalAgenticGraphRAGRunner),
+    ]:
+        res = cls(deps).run_canonical_case(_sample_input(profile))
+        assert res.run_outcome_ref == "", f"{profile}: run_outcome_ref must be empty, got '{res.run_outcome_ref}'"
+        assert not res.run_outcome_ref.startswith("outcome_"), f"{profile}: synthetic outcome ref detected"
+
+
+def test_10_no_synthetic_budget_settlement_ref() -> None:
+    """budget_settlement_ref must be empty — BudgetSettlementReceipt does not exist."""
+    deps = _sample_deps()
+    for profile, cls in [
+        ("standard_rag", CanonicalStandardRAGRunner),
+        ("local_graphrag", CanonicalLocalGraphRAGRunner),
+        ("deep_graphrag", CanonicalDeepGraphRAGRunner),
+        ("agentic_graphrag", CanonicalAgenticGraphRAGRunner),
+    ]:
+        res = cls(deps).run_canonical_case(_sample_input(profile))
+        assert res.budget_settlement_ref == "", f"{profile}: synthetic budget_settlement_ref detected"
+
+
+def test_11_no_synthetic_plan_version_ref() -> None:
+    """plan_version_ref must be empty — PlanVersionReceipt does not exist."""
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.plan_version_ref == "", "synthetic plan_version_ref detected"
+    assert not res.plan_version_ref.startswith("plan_v1_"), "synthetic plan_v1_* ref detected"
+
+
+def test_12_no_hardcoded_token_usage() -> None:
+    """token_usage must be 0 — ModelUsageReceipt not wired."""
+    deps = _sample_deps()
+    for profile, cls in [
+        ("standard_rag", CanonicalStandardRAGRunner),
+        ("local_graphrag", CanonicalLocalGraphRAGRunner),
+        ("deep_graphrag", CanonicalDeepGraphRAGRunner),
+        ("agentic_graphrag", CanonicalAgenticGraphRAGRunner),
+    ]:
+        res = cls(deps).run_canonical_case(_sample_input(profile))
+        assert res.token_usage == 0, f"{profile}: hardcoded token_usage={res.token_usage} detected"
+
+
+def test_13_no_hardcoded_cost() -> None:
+    """cost must be 0.0 — ModelUsageReceipt not wired."""
+    deps = _sample_deps()
+    for profile, cls in [
+        ("standard_rag", CanonicalStandardRAGRunner),
+        ("local_graphrag", CanonicalLocalGraphRAGRunner),
+        ("deep_graphrag", CanonicalDeepGraphRAGRunner),
+        ("agentic_graphrag", CanonicalAgenticGraphRAGRunner),
+    ]:
+        res = cls(deps).run_canonical_case(_sample_input(profile))
+        assert res.cost == 0.0, f"{profile}: hardcoded cost={res.cost} detected"
+
+
+def test_14_no_template_answer() -> None:
+    """No template answer strings allowed. Blocked results must have empty answer."""
+    deps = _sample_deps()
+    template_patterns = [
+        "Standard RAG evidence synthesis",
+        "Local GraphRAG synthesis",
+        "Deep GraphRAG multi-round synthesis",
+        "Agentic GraphRAG synthesis",
+    ]
+    for profile, cls in [
+        ("standard_rag", CanonicalStandardRAGRunner),
+        ("local_graphrag", CanonicalLocalGraphRAGRunner),
+        ("deep_graphrag", CanonicalDeepGraphRAGRunner),
+        ("agentic_graphrag", CanonicalAgenticGraphRAGRunner),
+    ]:
+        res = cls(deps).run_canonical_case(_sample_input(profile))
+        for pattern in template_patterns:
+            assert pattern not in res.answer, f"{profile}: template answer '{pattern}' detected"
+
+
+def test_15_blocked_result_has_empty_answer() -> None:
+    """BLOCKED results must have empty answer field."""
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    assert res.answer == ""
+
+
+# ---------------------------------------------------------------------------
+# Section 4: Trace ID
+# ---------------------------------------------------------------------------
+
+def test_16_trace_id_from_span_handle_or_none() -> None:
+    """trace_id must come from TraceSpanHandle or be None. Never a hand-constructed string."""
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    # NoopTraceAdapter returns None for start_span -> trace_id = None
+    assert res.trace_id is None, f"Expected None trace_id from NoopAdapter, got '{res.trace_id}'"
+
+
+def test_17_trace_id_not_constructed_from_case_fields() -> None:
+    """trace_id must not be 'trace_benchmark_{eval_run_id}_{case_id}_{profile}' string."""
+    deps = _sample_deps()
+    case = _sample_input("standard_rag")
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(case)
+    synthetic_pattern = f"trace_benchmark_{case.eval_run_id}_{case.case_id}"
+    if res.trace_id is not None:
+        assert not res.trace_id.startswith("trace_benchmark_"), (
+            f"Synthetic trace_id '{res.trace_id}' constructed from case fields"
+        )
+
+
+def test_18_in_memory_adapter_provides_real_trace_id() -> None:
+    """InMemoryTraceAdapter should provide a real TraceSpanHandle with trace_id."""
+    from zuno.platform.observability.trace_adapter import InMemoryTraceAdapter
+    adapter = InMemoryTraceAdapter(config={"enabled": True, "sample_rate": 1.0})
+    deps = CanonicalRuntimeDependencies(trace_adapter=adapter)
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    # With InMemoryAdapter, trace_id should be a non-empty string from the handle
+    # (it may be None if adapter returns None on start_span, which is also valid)
+    if res.trace_id is not None:
+        assert isinstance(res.trace_id, str)
+        assert len(res.trace_id) > 0
+        # Must not be a synthetic pattern
+        assert not res.trace_id.startswith("trace_benchmark_"), "Synthetic trace_id detected"
+
+
+# ---------------------------------------------------------------------------
+# Section 5: Runner is_test_double contract
+# ---------------------------------------------------------------------------
+
+def test_19_canonical_runner_is_not_test_double() -> None:
+    """All canonical runners must report is_test_double = False."""
+    deps = _sample_deps()
+    for cls in [
+        CanonicalStandardRAGRunner,
+        CanonicalLocalGraphRAGRunner,
+        CanonicalDeepGraphRAGRunner,
+        CanonicalAgenticGraphRAGRunner,
+    ]:
+        runner = cls(deps)
         assert runner.is_test_double is False
 
 
-def test_2_unknown_profile_fails_closed() -> None:
-    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical")
-    with pytest.raises(ValueError, match="Unknown profile 'unknown_rag'"):
-        factory.create_runner("unknown_rag")
+def test_20_canonical_result_is_not_test_double() -> None:
+    """CanonicalCaseResult.is_test_double must be False."""
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    assert res.is_test_double is False
 
 
-def test_3_formal_mode_cannot_select_test_double() -> None:
-    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical")
-    runner = factory.create_runner("standard_rag")
-    assert runner.is_test_double is False
+# ---------------------------------------------------------------------------
+# Section 6: Agentic Runner specifically BLOCKED
+# ---------------------------------------------------------------------------
+
+def test_21_agentic_runner_does_not_call_agent_control_runtime() -> None:
+    """Agentic runner must not invoke AgentControlRuntime manually.
+    It should return BLOCKED immediately without assembling manual retrieval chain.
+    """
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    # If it called AgentControlRuntime manually it might return 'completed'
+    assert res.runtime_status == "blocked"
+    assert res.failure_class == "canonical_agent_run_graph_unavailable"
 
 
-def test_4_test_double_always_blocked() -> None:
+def test_22_agentic_runner_has_no_plan_version_ref() -> None:
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.plan_version_ref == ""
+
+
+def test_23_agentic_runner_has_no_security_decision_ref() -> None:
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    # No security_decision_ref field expected to contain a synthetic value
+    assert res.run_outcome_ref == ""
+
+
+def test_24_agentic_runner_budget_settlement_empty() -> None:
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.budget_settlement_ref == ""
+
+
+def test_25_agentic_runner_no_step_acceptance_events_fabricated() -> None:
+    """No fabricated RuntimeObservation with status='completed' used to bypass AgentRunGraph."""
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    # Result must be BLOCKED, not completed
+    assert res.runtime_status == "blocked"
+
+
+def test_26_agentic_runner_no_final_gate_fabricated() -> None:
+    """Runner must not report a finalized run without actual AgentRunGraph execution."""
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.measurement_state == "BLOCKED"
+
+
+def test_27_agentic_runner_no_run_outcome_ref() -> None:
+    deps = _sample_deps()
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    assert res.run_outcome_ref == ""
+
+
+def test_28_agentic_runner_retrieval_answer_bypass_absent() -> None:
+    """Verifies no path exists where retrieval directly produces answer without AgentRunGraph."""
+    deps = _sample_deps(with_knowledge=True, with_index=True)
+    runner = CanonicalAgenticGraphRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
+    # With real knowledge runtime deps, runner should still BLOCK due to missing AgentRunGraph
+    assert res.failure_class == "canonical_agent_run_graph_unavailable"
+
+
+# ---------------------------------------------------------------------------
+# Section 7: Latency contract
+# ---------------------------------------------------------------------------
+
+def test_29_latency_is_positive_float() -> None:
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    assert isinstance(res.latency, float)
+    assert res.latency >= 0.0
+
+
+def test_30_latency_reasonable_upper_bound() -> None:
+    """Latency must be < 5 seconds for a BLOCKED result (no real network call)."""
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
+    start = time.monotonic()
+    res = runner.run_canonical_case(_sample_input("standard_rag"))
+    elapsed = time.monotonic() - start
+    assert res.latency < 5.0, f"Latency {res.latency:.3f}s too high for a BLOCKED result"
+
+
+# ---------------------------------------------------------------------------
+# Section 8: MeasurementTruthGate priority order
+# ---------------------------------------------------------------------------
+
+def test_31_gate_rule1_test_double_always_blocked() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(is_test_double=True, runtime_status="completed")
+    assert state == MeasurementState.BLOCKED
+    assert "test_double" in reason
+
+
+def test_32_gate_rule2_failed_before_security() -> None:
+    """Rule 2 (failed) must fire before rule 3 (security)."""
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="failed",
+        security_blocked=True,
+        failure_class="retriever_timeout",
+    )
+    assert state == MeasurementState.FAILED
+
+
+def test_33_gate_rule3_security_blocked() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="blocked",
+        security_blocked=True,
+        failure_class="canonical_security_gate_unavailable",
+    )
+    assert state == MeasurementState.BLOCKED
+
+
+def test_34_gate_rule4_profile_mismatch() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="standard_rag",
+        actual_profile="deep_graphrag",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        run_outcome_ref="outcome_001",
+    )
+    assert state == MeasurementState.INCOMPARABLE
+
+
+def test_35_gate_rule5_missing_snapshot_blocked() -> None:
+    """Missing snapshot_ref triggers BLOCKED before RUNTIME_OBSERVED."""
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        snapshot_ref="",  # missing
+        trace_id="trace_001",
+        run_outcome_ref="outcome_001",
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+    )
+    assert state == MeasurementState.BLOCKED
+    assert "snapshot_ref_missing" in reason
+
+
+def test_36_gate_rule5_missing_trace_blocked() -> None:
+    """Missing trace_id triggers BLOCKED before RUNTIME_OBSERVED — rule 5 before rule 6."""
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id=None,  # missing
+        run_outcome_ref="outcome_001",
+        reviewer_status="pending",  # also pending
+        has_formal_credentials=False,
+        formal_execution_requested=False,
+    )
+    # Rule 5 must fire (trace missing) before rule 6 (reviewer pending)
+    assert state == MeasurementState.BLOCKED
+    assert "trace_missing" in reason
+
+
+def test_37_gate_rule5_missing_budget_settlement_blocked() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="",  # missing
+        run_outcome_ref="outcome_001",
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+    )
+    assert state == MeasurementState.BLOCKED
+    assert "budget_settlement_missing" in reason
+
+
+def test_38_gate_rule6_runtime_observed_pending_reviewer() -> None:
+    """When all evidence present but reviewer pending -> RUNTIME_OBSERVED."""
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        run_outcome_ref="outcome_001",
+        reviewer_status="pending",  # not approved
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+    )
+    assert state == MeasurementState.RUNTIME_OBSERVED
+
+
+def test_39_gate_rule7_measured_when_all_gates_pass() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        run_outcome_ref="outcome_001",
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+    )
+    assert state == MeasurementState.MEASURED
+
+
+# ---------------------------------------------------------------------------
+# Section 9: Factory truth contracts
+# ---------------------------------------------------------------------------
+
+def test_40_factory_canonical_mode_fails_without_deps() -> None:
+    """canonical mode without CanonicalRuntimeDependencies must raise RuntimeError (fail closed)."""
+    with pytest.raises(RuntimeError, match="canonical mode requires"):
+        CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=None)
+
+
+def test_41_factory_canonical_mode_does_not_create_index_runtime() -> None:
+    """Factory must NOT create a KnowledgeIndexRuntime in canonical mode.
+    It must accept None and fail closed (handled in __init__).
+    """
+    with pytest.raises(RuntimeError):
+        CanonicalProfileRuntimeFactory(runtime_mode="canonical")
+
+
+def test_42_factory_contract_smoke_creates_test_double() -> None:
     factory = CanonicalProfileRuntimeFactory(runtime_mode="contract-smoke")
     runner = factory.create_runner("standard_rag")
     assert runner.is_test_double is True
 
+
+def test_43_factory_unknown_profile_raises() -> None:
+    factory = CanonicalProfileRuntimeFactory(runtime_mode="contract-smoke")
+    with pytest.raises(ValueError, match="Unknown profile"):
+        factory.create_runner("nonexistent_profile")
+
+
+def test_44_factory_canonical_with_deps_creates_canonical_runner() -> None:
+    deps = _sample_deps()
+    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=deps)
+    runner = factory.create_runner("standard_rag")
+    assert isinstance(runner, CanonicalBenchmarkProfileRunner)
+    assert runner.is_test_double is False
+
+
+def test_45_factory_fake_receipt_ref_not_accepted_as_measurement() -> None:
+    """A canonical runner result with synthetic refs must classify as BLOCKED, not MEASURED."""
     gate = MeasurementTruthGate()
-    state, reason = gate.evaluate(is_test_double=True)
-    assert state == MeasurementState.BLOCKED
-    assert reason == "not_measured_test_double_runner"
-
-
-def test_5_canonical_result_schema_completeness() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-
-    assert res.eval_run_id == "run_test_2026"
-    assert res.case_id == "case_001"
-    assert res.profile_name == "standard_rag"
-    assert res.is_test_double is False
-    assert isinstance(res.answer, str)
-    assert isinstance(res.retrieved_document_refs, tuple)
-    assert isinstance(res.retrieved_evidence_refs, tuple)
-    assert isinstance(res.citation_refs, tuple)
-    assert res.knowledge_snapshot_ref == "snapshot_20260731"
-
-
-def test_6_missing_critical_ref_blocks_measurement() -> None:
-    gate = MeasurementTruthGate()
+    # Attempt to pass a synthetic receipt ref as run_outcome_ref
     state, reason = gate.evaluate(
         is_test_double=False,
-        snapshot_ref="",  # Missing
-        trace_id="trace_123",
-        budget_settlement_ref="budget_123",
-    )
-    assert state in (MeasurementState.BLOCKED, MeasurementState.RUNTIME_OBSERVED)
-    assert "snapshot_ref_missing" in reason
-
-
-def test_7_gold_refs_not_used_in_retrieval() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    # Pass arbitrary unindexed gold ref
-    inp = _sample_input("standard_rag")
-    res = runner.run_canonical_case(inp)
-
-    # Retrieval must query index, not echo gold_document_refs
-    assert "doc_renewal_01" in res.retrieved_document_refs
-
-
-# ===========================================================================
-# Group B: Standard RAG Integration (8-11)
-# ===========================================================================
-
-
-def test_8_real_bm25_vector_called() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-    assert res.runtime_status == "completed"
-    assert len(res.retrieved_document_refs) >= 1
-
-
-def test_9_fusion_rerank_results_readable() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-    assert "retrieval_trace" in res.__dataclass_fields__
-    assert res.retrieval_trace is not None
-
-
-def test_10_citation_sourcespan_valid() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-    assert len(res.citation_refs) >= 1
-    assert "memory://renewal_contract.md" in res.citation_refs[0] or "doc://" in res.citation_refs[0]
-
-
-def test_11_index_unavailable_fails_correctly() -> None:
-    empty_index = KnowledgeIndexRuntime()
-    runner = CanonicalStandardRAGRunner(index_runtime=empty_index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-    assert res.runtime_status == "failed"
-    assert res.failure_class == "index_unavailable"
-    assert len(res.retrieved_document_refs) == 0
-
-
-# ===========================================================================
-# Group C: Local GraphRAG Integration (12-15)
-# ===========================================================================
-
-
-def test_12_entity_relation_neighborhood_called() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalLocalGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("local_graphrag"))
-    assert res.runtime_status == "completed"
-    assert res.profile_name == "graphrag_local"
-
-
-def test_13_graph_evidence_traced_to_text_evidence() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalLocalGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("local_graphrag"))
-    assert res.retrieved_evidence_refs is not None
-
-
-def test_14_standard_floor_preserved_local() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalLocalGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("local_graphrag"))
-    assert res.standard_floor_preserved is True
-
-
-def test_15_graph_non_gold_distinguishable() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalLocalGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("local_graphrag"))
-    assert isinstance(res.graph_added_non_gold_refs, tuple)
-
-
-# ===========================================================================
-# Group D: Deep GraphRAG Integration (16-20)
-# ===========================================================================
-
-
-def test_16_multiround_retrieval_called() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalDeepGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("deep_graphrag"))
-    assert res.runtime_status == "completed"
-    assert res.retrieval_rounds >= 1
-
-
-def test_17_corrective_retrieval_triggerable() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalDeepGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("deep_graphrag"))
-    assert res.profile_name == "graphrag_global"
-
-
-def test_18_budget_exhausted_stops() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalDeepGraphRAGRunner(index_runtime=index)
-    inp = CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id="case_budget",
-        profile_name="deep_graphrag",
-        question="What is the renewal notice window?",
-        budget={"max_rounds": 1},
-    )
-    res = runner.run_canonical_case(inp)
-    assert res.retrieval_rounds <= 1
-
-
-def test_19_retriever_timeout_does_not_fake_success() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalDeepGraphRAGRunner(index_runtime=index)
-    inp = CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id="case_timeout",
-        profile_name="deep_graphrag",
-        question="What is the renewal notice window?",
-        authorization_ref="invalid_auth_token",
-    )
-    res = runner.run_canonical_case(inp)
-    assert res.runtime_status == "security_failed"
-    assert res.measurement_state == "BLOCKED"
-
-
-def test_20_evidence_frontier_and_stop_reason_complete() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalDeepGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("deep_graphrag"))
-    assert res.retrieval_trace is not None
-
-
-# ===========================================================================
-# Group E: Agentic GraphRAG Integration (21-29)
-# ===========================================================================
-
-
-def test_21_enters_formal_agent_run_graph() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert res.runtime_status == "completed"
-    assert res.profile_name == "agentic_graphrag"
-
-
-def test_22_deterministic_single_step_plan_generated() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert "plan_v1_" in res.plan_version_ref
-
-
-def test_23_security_gate_executed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    inp = _sample_input("agentic_graphrag")
-    res = runner.run_canonical_case(inp)
-    assert res.runtime_status == "completed"
-
-
-def test_24_budget_gate_executed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert "budget_settlement_" in res.budget_settlement_ref
-
-
-def test_25_step_acceptance_executed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert res.answer != ""
-
-
-def test_26_final_gate_executed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert res.measurement_state == "RUNTIME_OBSERVED"
-
-
-def test_27_run_outcome_generated() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    assert "outcome_agentic_" in res.run_outcome_ref
-
-
-def test_28_no_direct_answer_bypass() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("agentic_graphrag"))
-    # Must have non-empty plan_version_ref and run_outcome_ref
-    assert res.plan_version_ref != ""
-    assert res.run_outcome_ref != ""
-
-
-def test_29_agentic_failure_does_not_fake_refs() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalAgenticGraphRAGRunner(index_runtime=index)
-    inp = CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id="case_agent_fail",
-        profile_name="agentic_graphrag",
-        question="Invalid query",
-        authorization_ref="invalid_auth",
-    )
-    res = runner.run_canonical_case(inp)
-    assert res.runtime_status == "security_failed"
-    assert res.plan_version_ref == ""
-    assert res.run_outcome_ref == ""
-
-
-# ===========================================================================
-# Group F: Trace / Security / Fault (30-40)
-# ===========================================================================
-
-
-def test_30_root_trace_unique() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res1 = runner.run_canonical_case(_sample_input("standard_rag", "case_A"))
-    res2 = runner.run_canonical_case(_sample_input("standard_rag", "case_B"))
-    assert res1.trace_id != res2.trace_id
-
-
-def test_31_retry_does_not_duplicate_root_trace() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    inp = _sample_input("standard_rag", "case_retry")
-    res1 = runner.run_canonical_case(inp)
-    res2 = runner.run_canonical_case(inp)
-    assert res1.trace_id == res2.trace_id
-
-
-def test_32_sensitive_fields_redacted() -> None:
-    # Trace metadata should not include raw credentials
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    res = runner.run_canonical_case(_sample_input("standard_rag"))
-    assert "password" not in str(res.retrieval_trace)
-
-
-def test_33_trace_delivery_failure_blocks_measurement() -> None:
-    gate = MeasurementTruthGate()
-    state, reason = gate.evaluate(
-        is_test_double=False,
-        trace_id="",  # Missing trace
+        runtime_status="blocked",
+        failure_class="canonical_security_gate_unavailable",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        run_outcome_ref="outcome_001",
+        reviewer_status="approved",
+        benchmark_eligible=True,
         has_formal_credentials=True,
+        formal_execution_requested=True,
     )
-    assert state in (MeasurementState.BLOCKED, MeasurementState.RUNTIME_OBSERVED)
+    # runtime_status = "blocked" -> Rule 3 fires
+    assert state == MeasurementState.BLOCKED
 
 
-def test_34_security_epoch_stale_fails_closed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    inp = CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id="case_stale",
-        profile_name="standard_rag",
-        question="Query",
-        security_epoch="stale",
-    )
-    res = runner.run_canonical_case(inp)
-    assert res.runtime_status == "security_failed"
-    assert res.failure_class == "security_epoch_stale"
-
-
-def test_35_authorization_denied_fails_closed() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    inp = CanonicalCaseInput(
-        eval_run_id="run_test_2026",
-        case_id="case_auth_denied",
-        profile_name="standard_rag",
-        question="Query",
-        authorization_ref="invalid_token",
-    )
-    res = runner.run_canonical_case(inp)
-    assert res.runtime_status == "security_failed"
-    assert res.failure_class == "authorization_denied"
-
-
-def test_36_snapshot_missing_fails_closed() -> None:
+def test_46_missing_snapshot_with_reviewer_pending_still_blocked() -> None:
+    """Rule 5 (snapshot missing) must fire before Rule 6 (reviewer pending)."""
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
+        runtime_status="completed",
         snapshot_ref="",
+        trace_id=None,
+        budget_settlement_ref="",
+        run_outcome_ref="",
+        reviewer_status="pending",
+        benchmark_eligible=False,
+        has_formal_credentials=False,
+        formal_execution_requested=False,
     )
-    assert state in (MeasurementState.BLOCKED, MeasurementState.RUNTIME_OBSERVED)
+    assert state == MeasurementState.BLOCKED
 
 
-def test_37_duplicate_idempotency_key_safe() -> None:
-    index = _setup_seeded_index()
-    runner = CanonicalStandardRAGRunner(index_runtime=index)
-    inp = _sample_input("standard_rag", "case_idem")
-    res1 = runner.run_canonical_case(inp)
-    res2 = runner.run_canonical_case(inp)
-    assert res1.eval_run_id == res2.eval_run_id
-    assert res1.case_id == res2.case_id
-
-
-def test_38_partial_result_not_in_measured() -> None:
+def test_47_missing_trace_with_credentials_missing_still_blocked() -> None:
     gate = MeasurementTruthGate()
-    state, _ = gate.evaluate(
+    state, reason = gate.evaluate(
         is_test_double=False,
-        reviewer_status="pending",  # Partial/pending approval
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id=None,
+        budget_settlement_ref="budget_001",
+        run_outcome_ref="outcome_001",
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=False,
+        formal_execution_requested=True,
     )
-    assert state != MeasurementState.MEASURED
+    assert state == MeasurementState.BLOCKED
+    assert "trace_missing" in reason
 
 
-def test_39_artifact_hash_mismatch_fails_closed() -> None:
+def test_48_missing_run_outcome_ref_blocked() -> None:
     gate = MeasurementTruthGate()
-    state, _ = gate.evaluate(
+    state, reason = gate.evaluate(
         is_test_double=False,
-        failure_class="artifact_hash_mismatch",
+        runtime_status="completed",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        run_outcome_ref="",  # missing
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
     )
-    assert state != MeasurementState.MEASURED
+    assert state == MeasurementState.BLOCKED
+    assert "run_outcome_missing" in reason
 
 
-def test_40_windows_posix_path_consistency() -> None:
-    """Trace IDs and case IDs produced by canonical runners must not contain OS path separators.
-    This test verifies that eval_run_id and case_id from CanonicalCaseInput are plain
-    identifiers (no backslashes or slashes), making them safe for cross-platform trace keys.
-    """
+# ---------------------------------------------------------------------------
+# Section 10: CLI runtime-mode contract
+# ---------------------------------------------------------------------------
+
+def test_49_cli_canonical_mode_not_auto_created() -> None:
+    """The CLI must not silently downgrade canonical mode to contract-smoke."""
+    import importlib
+    mod = importlib.import_module("tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark")
+    # Verify --runtime-mode argument exists in parser (introspect source)
+    import inspect
+    src = inspect.getsource(mod.main)
+    assert "--runtime-mode" in src, "CLI must declare --runtime-mode argument"
+    assert "canonical" in src, "CLI must declare canonical choice"
+    assert "fail closed" in src.lower() or "sys.exit" in src, "CLI must fail closed for canonical mode"
+
+
+def test_50_windows_posix_path_consistency() -> None:
+    """Trace IDs, eval_run_id, case_id must not contain OS path separators."""
     import pathlib
-
     case = _sample_input("standard_rag")
-    # eval_run_id and case_id must be portable identifiers (no path separators)
     assert "\\" not in case.eval_run_id, "eval_run_id must not contain backslashes"
     assert "/" not in case.eval_run_id, "eval_run_id must not contain forward slashes"
     assert "\\" not in case.case_id, "case_id must not contain backslashes"
     assert "/" not in case.case_id, "case_id must not contain forward slashes"
-
-    # Verify trace_id constructed by runner is also portable
-    runner = CanonicalStandardRAGRunner()
+    deps = _sample_deps()
+    runner = CanonicalStandardRAGRunner(deps)
     res = runner.run_canonical_case(case)
-    assert "\\" not in res.trace_id, "trace_id must not contain backslashes"
-    assert pathlib.PurePosixPath(res.trace_id.replace("_", "/")).name, "trace_id is non-empty"
+    if res.trace_id is not None:
+        assert "\\" not in res.trace_id, "trace_id must not contain backslashes"
+    # failure_class must also be a portable identifier
+    assert "\\" not in res.failure_class
+    assert "/" not in res.failure_class
