@@ -2,7 +2,8 @@
 
 phase_id: PHASE22
 status: in_progress
-readiness: MACHINE_EXECUTABLE_PREPARATION_COMPLETE
+readiness: PREPARATION_AND_CONTRACT_SMOKE_AVAILABLE
+
 
 depends_on: PHASE21
 owner: Coordinator / Release Governance
@@ -123,9 +124,11 @@ cd apps/web && npm run lint && npm run build
 # browser E2E, desktop build/smoke, migrations, infra fault/load/DR, fixed benchmark commands from evidence manifest
 
 ## Current Status & Draft Updates (Pre-Verification Candidate)
-- **Cleanup Slice**: Staged and safely committed (`refactor: retire legacy import aliases`).
-- **Benchmark Runner**: Completed implementation with atomic writeout and 26-field manifest generator.
-- **Dataset Contract & Validator**: Implemented schema checker, unique ID duplications validator, and missing types gap reporter.
-- **Dataset status**: 测试用例数量共 8 个，因全部没有 `reviewer_status: approved` 审核标记而不计入正式评测（指标口径：raw_case_count=8, schema_valid_case_count=8, reviewer_approved_case_count=0, benchmark_eligible_case_count=0, approved_case_gap=80）。当前评测降级进入 `measurement_blocked` 阻断分支，当前状态为 `implementation available, measurement blocked, quality not yet proven, production ready not established`。
-- **Verification status**: 11 个 Focused 单元测试与 4 个 Repository Gates 已完全通过，物理 Blocked Evidence 已于 `docs/evidence/` 目录成功生成，PR #52 保持 Draft 准备推送中。
+- **Cleanup Slice**: Pending P22-T03 cleanup.
+- **Benchmark Runner**: Contract test doubles implemented (StandardRAGProfileRunner, LocalGraphRAGProfileRunner, DeepGraphRAGProfileRunner, AgenticGraphRAGProfileRunner).
+- **Observability Adapter**: Port contract and in-memory trace prototype available. LangSmith SDK integration and runtime trace wiring not implemented.
+- **Dataset Contract & Candidate Pack**: Generated 80 public candidate cases (raw_question_candidate_count=80, evidence_complete_count=20, rejected_or_incomplete_count=60, reviewer_approved_count=0, benchmark_eligible_count=0).
+- **Smoke status**: Profile Contract Smoke completed (CONTRACT_SMOKE_COMPLETED / MEASUREMENT_BLOCKED / not_measured_test_double_runner).
+- **Verification status**: Unit test suites and Repository Gates passed. PR #52 Draft mode.
+
 ```

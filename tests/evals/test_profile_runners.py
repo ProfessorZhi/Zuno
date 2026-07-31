@@ -75,4 +75,3 @@ def test_agentic_graphrag_profile_runner_standard_floor() -> None:
     # Verify standard candidate is preserved in final candidate refs
     assert "doc_swap_c" in res.final_candidate_refs
     assert len(res.graph_added_refs) > 0
-

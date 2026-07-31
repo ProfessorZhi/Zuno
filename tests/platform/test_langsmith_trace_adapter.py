@@ -100,4 +100,3 @@ def test_canonical_node_type_names_defined() -> None:
         sid = adapter.start_span(node, span_type=node)
         assert sid is not None
         adapter.end_span(sid, outputs={"status": "completed"})
-

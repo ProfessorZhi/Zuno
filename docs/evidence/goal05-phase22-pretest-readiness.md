@@ -1,66 +1,66 @@
-# Goal05 / PHASE22 Machine-Executable Preparation & Dry Run Report
+# Goal05 / PHASE22 Truthful Status and Implementation Gaps Report
 
-- **Current State**: `MACHINE_EXECUTABLE_PREPARATION_COMPLETE` (Measurement Blocked)
+- **Current State**: `PREPARATION_AND_CONTRACT_SMOKE_AVAILABLE` (Measurement Blocked)
 - **Branch**: `codex/goal05-phase15-sandbox-repair`
-- **Base SHA**: `269bb0b935ab68a02b206c3c77802390e25c1fe0`
 - **PHASE22 Status**: `in_progress`
-- **Production Readiness**: `implementation available, machine prep complete, measurement blocked, quality not yet proven, production ready not established`
+- **Program Status**: `active`
+- **Quality**: `not_yet_proven`
+- **Production Readiness**: `not_established`
 
 ---
 
-## Machine-Executable Preparation & Engineering Summary
+## Technical Implementation Status & Truthful Boundaries
 
 1. **Eval Package Contract**:
-   - Cleaned all repetitive `sys.path.insert`, `curr.name != "Zuno"`, and dynamic alias injections from `tools/evals/zuno/rag_eval/*.py`.
-   - Formed explicit package hierarchy and pyproject packages configuration: `tools`, `src/backend`.
-   - CLI Entry module run command: `python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark --help` verified.
-   - Verified clean import without global `.pth` files or `PYTHONPATH` injections.
+   - Status: `implementation_available`
+   - Cleaned repetitive `sys.path.insert` and dynamic alias injections from `tools/evals/zuno/rag_eval/*.py`.
+   - Explicit package hierarchy configured in `pyproject.toml` (`tools`, `src/backend`).
+   - Module CLI entry verified: `python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark --help`.
 
-2. **LangSmith Observability Adapter & Tracing**:
-   - Implemented `ObservabilityTracePort`, `NoopTraceAdapter`, and `LangSmithTraceAdapter` in `src/backend/zuno/platform/observability/trace_adapter.py`.
-   - Wired 18 canonical node types (`AgentRun`, `PlanCreation`, `PlanValidation`, `StepExecution`, `RetrievalRound`, `QueryRewrite`, `BM25`, `Vector`, `Graph`, `Fusion`, `Rerank`, `EvidenceAcceptance`, `ToolInvocation`, `StepAcceptance`, `Replan`, `FinalSynthesis`, `CitationValidation`, `FinalGate`, `RunOutcome`).
-   - Enabled fail-open exception handling (`fail_open: true`), sensitive key redaction (`redact_sensitive_data`), field character limits, and configurable sampling.
-   - Added unit test suite in `tests/platform/test_langsmith_trace_adapter.py`.
+2. **Observability Port & LangSmith Prototype**:
+   - Status: `prototype_available`
+   - `ObservabilityTracePort`, `NoopTraceAdapter`, and `InMemoryTraceAdapter` (`LangSmithTraceAdapter` prototype alias) implemented in `src/backend/zuno/platform/observability/trace_adapter.py`.
+   - **LangSmith SDK Integration**: `not_implemented` (no `langsmith.Client` SDK calls).
+   - **Canonical Runtime Wiring**: `not_implemented` (AgentRunGraph and runtime execution nodes are not wired).
+   - In-memory lifecycle, redaction helper (`redact_sensitive_data`), and sampling policy prototype tested in `tests/platform/test_langsmith_trace_adapter.py`.
 
-3. **Public Dataset Registry & Real Data Ingestion**:
-   - Verified official dataset registry at `tools/evals/zuno/rag_eval/datasets/public_dataset_registry.yaml` with official URLs, licenses (CC-BY-SA 4.0, Apache-2.0, MIT), versions, and checksums.
-   - Downloaded real upstream datasets into `.local/eval-datasets/`:
-     - HotpotQA (`hotpot_dev_distractor_v1.json`)
-     - MultiHop-RAG (`queries.json`, `corpus.json`)
-     - Microsoft GraphRAG Benchmarking (`questions.jsonl`)
-   - Verification via `verify_public_dataset_cache.py` passed with 0 missing datasets.
-
-4. **Real 80-Case Candidate Review Pack**:
-   - Created candidate pack at `docs/evidence/goal05-phase22-public-benchmark-review-pack/` containing 80 real public dataset cases:
-     - 32 HotpotQA cases (CC-BY-SA-4.0)
-     - 24 MultiHop-RAG cases (Apache-2.0)
-     - 24 Microsoft GraphRAG Benchmarking cases (MIT)
-   - Zero placeholder questions ("Sample question...") remain.
-   - Status tracking:
-     - `raw_candidate_count = 80`
+3. **Public Dataset Ingestion & Evidence Integrity**:
+   - Status: `candidate_questions_available`
+   - Downloaded official upstream datasets into `.local/eval-datasets/`:
+     - HotpotQA (`hotpotqa/hotpot_qa`)
+     - MultiHop-RAG (`yixuantt/MultiHopRAG`)
+     - GraphRAG-Bench (`Awesome-GraphRAG/GraphRAG-Bench`)
+   - Candidate Review Pack generated at `docs/evidence/goal05-phase22-public-benchmark-review-pack/`:
+     - `raw_question_candidate_count = 80`
+     - `schema_valid_question_count = 80`
+     - `evidence_complete_count = 20` (HotpotQA & MultiHop-RAG cases with parsed gold evidence)
+     - `rejected_or_incomplete_count = 60` (including 24 GraphRAG-Bench cases lacking sentence-level gold evidence in upstream `questions.jsonl`)
      - `reviewer_approved_count = 0`
      - `benchmark_eligible_count = 0`
-     - `reviewer_status = pending` for all 80 cases.
+     - `reviewer_status = pending`
 
-5. **Four Profile Runner Wiring & Standard Retrieval Floor**:
-   - Implemented profile runners in `tools/evals/zuno/rag_eval/profile_runners.py`: `StandardRAGProfileRunner`, `LocalGraphRAGProfileRunner`, `DeepGraphRAGProfileRunner`, `AgenticGraphRAGProfileRunner`.
-   - Wired Standard Retrieval Floor (`agentic_candidates = standard_candidates + graph_candidates + deep_candidates`) with preservation tracking.
-   - Added unit test suite in `tests/evals/test_profile_runners.py`.
+4. **Profile Runner Contract & Test Doubles**:
+   - Status: `test_doubles_available`
+   - `StandardRAGProfileRunner`, `LocalGraphRAGProfileRunner`, `DeepGraphRAGProfileRunner`, and `AgenticGraphRAGProfileRunner` in `tools/evals/zuno/rag_eval/profile_runners.py` are explicitly defined as **Deterministic Profile Test Doubles** (`BenchmarkProfileContractDouble`).
+   - **Canonical Four Profile Runtime**: `not_implemented` (real Retrievers, AgentRunGraph, planning/security/budget gates are not wired in these runners).
+   - Standard Floor preservation algorithm tested on test doubles in `tests/evals/test_profile_runners.py`.
 
-6. **No-Paid-Model Dry Run**:
-   - Implemented and executed `run_dry_run_benchmark.py` on real candidate subset.
-   - Output recorded in `docs/evidence/goal05-phase22-dry-run-output/`.
-   - Status confirmed: `BLOCKED` (`blocked_not_measured`).
+5. **Profile Contract Smoke Run**:
+   - Status: `CONTRACT_SMOKE_COMPLETED`
+   - Executed via `run_dry_run_benchmark.py` on candidate subset.
+   - Output recorded in `docs/evidence/goal05-phase22-profile-contract-smoke/`.
+   - `measurement_state`: `MEASUREMENT_BLOCKED`
+   - `blocked_reason`: `not_measured_test_double_runner`
 
-7. **Automated Testing & Repository Gates**:
-   - Layer 1 pytest (35 tests) PASSED.
-   - Layer 2 pytest (37 tests) PASSED.
-   - Layer 3 Repository Gate Verifiers PASSED.
+6. **Automated Validation**:
+   - Pytest suites for Eval Package contracts, profile test doubles, and trace adapter prototype PASSED.
+   - Repository Gate Verifiers PASSED.
 
 ---
 
-## Remaining Blocker for Formal Benchmark
+## Remaining Work & Blockers
 
-Formal measurement is blocked strictly on:
-1. Human Reviewer Approval of 80 real candidate cases (`reviewer_approved_count=0`).
-2. Paid Model Credentials & Budget Authorization.
+1. **Human Reviewer Approval**: Review 80 candidate cases (`reviewer_approved_count=0`).
+2. **Canonical Four Profile Runtime Wiring**: Connect real Retrievers and AgentRunGraph to profile runners.
+3. **LangSmith SDK Integration**: Wire real `langsmith.Client` SDK into ObservabilityTracePort.
+4. **Paid Model Budget & Credentials**: User approval and API key configuration for formal measurement.
