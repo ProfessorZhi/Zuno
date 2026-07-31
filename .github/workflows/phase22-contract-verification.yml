@@ -34,50 +34,63 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install verification dependencies
-        run: python -m pip install --disable-pip-version-check pytest pyyaml loguru pydantic
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
 
       - name: Verify Git formatting
         run: git diff --check origin/main...HEAD -- '*.py' '*.yml' '*.yaml' || git diff --check HEAD~1...HEAD -- '*.py' '*.yml' '*.yaml' || true
 
       - name: Verify Architecture rendering and mirrors
-        run: python tools/agent/render_architecture.py --check
+        run: poetry run python tools/agent/render_architecture.py --check
 
       - name: Verify Docs entrypoints
-        run: python tools/scripts/verify_docs_entrypoints.py
+        run: poetry run python tools/scripts/verify_docs_entrypoints.py
 
       - name: Verify Repository structure
-        run: python tools/scripts/verify_repo_structure.py
+        run: poetry run python tools/scripts/verify_repo_structure.py
 
       - name: Verify Agent Core target protocols
-        run: python tools/scripts/verify_agent_core_target_protocols.py
+        run: poetry run python tools/scripts/verify_agent_core_target_protocols.py
 
       - name: Verify PHASE22 cleanup boundary
-        run: python tools/scripts/verify_phase22_cleanup_boundary.py
+        run: poetry run python tools/scripts/verify_phase22_cleanup_boundary.py
 
       - name: Verify Phase 0 runtime recovery
-        run: python tools/scripts/verify_phase0_runtime_recovery.py
+        run: poetry run python tools/scripts/verify_phase0_runtime_recovery.py
 
       - name: Verify Agent system
-        run: python .agent/scripts/verify_agent_system.py
+        run: poetry run python .agent/scripts/verify_agent_system.py
 
       - name: Verify Doc boundaries
-        run: python .agent/scripts/verify_doc_boundaries.py
+        run: poetry run python .agent/scripts/verify_doc_boundaries.py
 
       - name: Verify Current program
-        run: python tools/scripts/verify_current_program.py
+        run: poetry run python tools/scripts/verify_current_program.py
 
       - name: Verify Agent commit attribution
-        run: python tools/scripts/verify_agent_commit_attribution.py --allow-human-only || true
+        run: poetry run python tools/scripts/verify_agent_commit_attribution.py --allow-human-only || true
 
       - name: Compile backend modules
-        run: python -m compileall -q src/backend
+        run: poetry run python -m compileall -q src/backend
 
       - name: Compile evals tools
-        run: python -m compileall -q tools/evals/zuno
+        run: poetry run python -m compileall -q tools/evals/zuno
 
       - name: Compile scripts tools
-        run: python -m compileall -q tools/scripts
+        run: poetry run python -m compileall -q tools/scripts
 
   phase22-focused-tests:
     name: PHASE22 Focused Test Suite
@@ -95,12 +108,25 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install test dependencies
-        run: python -m pip install --disable-pip-version-check pytest pyyaml loguru pydantic requests
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
 
       - name: Run PHASE22 focused test suite
         run: |
-          pytest -q \
+          poetry run pytest -q \
             tests/platform/test_langsmith_trace_adapter.py \
             tests/platform/test_langsmith_adapter_factory.py \
             tests/platform/test_langsmith_redaction.py \
@@ -134,10 +160,26 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
       - name: Generate evidence artifacts and step summary
         run: |
           mkdir -p artifacts/phase22-verification
-          python tools/scripts/generate_phase22_evidence.py artifacts/phase22-verification
+          poetry run python tools/scripts/generate_phase22_evidence.py artifacts/phase22-verification
 
       - name: Upload verification evidence artifact
         uses: actions/upload-artifact@v4
