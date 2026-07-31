@@ -1,12 +1,4 @@
 from __future__ import annotations
-import sys
-from pathlib import Path
-curr = Path(__file__).resolve()
-while curr.name != "Zuno" and curr.parent != curr:
-    curr = curr.parent
-ROOT_DIR = curr
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
 
 import argparse
 import asyncio
@@ -123,19 +115,38 @@ def _sha256_file(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+def _to_portable_posix_path(path: Any) -> str:
+    if path is None:
+        return ""
+    p = Path(path)
+    repo_root = Path(__file__).resolve().parents[4]
+    try:
+        if p.is_absolute():
+            rel = p.relative_to(repo_root)
+            return rel.as_posix()
+        return p.as_posix()
+    except ValueError:
+        p_str = p.as_posix()
+        if "goal05-phase22-blocked-benchmark" in p_str:
+            idx = p_str.find("goal05-phase22-blocked-benchmark")
+            return "docs/evidence/" + p_str[idx:]
+        return p_str
+
+
 def _render_reproduce_command(**kwargs: Any) -> list[str]:
     command = [
         "python",
-        "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
+        "-m",
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
         "--questions-file",
-        str(kwargs["questions_file"]),
+        _to_portable_posix_path(kwargs["questions_file"]),
         "--output-root",
-        str(kwargs["output_root"]),
+        _to_portable_posix_path(kwargs["output_root"]),
     ]
     if kwargs.get("documents_file") is not None:
-        command.extend(["--documents-file", str(kwargs["documents_file"])])
+        command.extend(["--documents-file", _to_portable_posix_path(kwargs["documents_file"])])
     if kwargs.get("source_root") is not None:
-        command.extend(["--source-root", str(kwargs["source_root"])])
+        command.extend(["--source-root", _to_portable_posix_path(kwargs["source_root"])])
     command.extend(["--sample-size", str(kwargs["sample_size"])])
     if not kwargs["stratify_by_question_type"]:
         command.append("--no-stratify-by-question-type")
@@ -377,8 +388,8 @@ def _build_and_write_benchmark_manifest(
         "chat_model": "gpt-4o"
     }
 
-    dataset_ref_str = str(dataset_path.relative_to(output_root.parent) if dataset_path and dataset_path.is_relative_to(output_root.parent) else str(dataset_path)) if dataset_path else None
-    corpus_ref_str = str(corpus_manifest_path.relative_to(output_root.parent) if corpus_manifest_path and corpus_manifest_path.is_relative_to(output_root.parent) else str(corpus_manifest_path)) if corpus_manifest_path else None
+    dataset_ref_str = _to_portable_posix_path(dataset_path) if dataset_path else None
+    corpus_ref_str = _to_portable_posix_path(corpus_manifest_path) if corpus_manifest_path else None
 
     config_file_path = Path("tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py")
     config_sha = _sha256_file(config_file_path) if config_file_path.exists() else None
@@ -451,13 +462,13 @@ def _build_and_write_benchmark_manifest(
         "dataset_sha256": dataset_sha,
         "corpus_manifest_ref": corpus_ref_str,
         "corpus_manifest_sha256": corpus_sha,
-        "benchmark_config_ref": str(config_file_path),
+        "benchmark_config_ref": config_file_path.as_posix(),
         "benchmark_config_sha256": config_sha,
         "profile_set_ref": "PROFILE_ALIASES_IN_RUNNER",
         "profile_set_sha256": profile_set_hash,
         "threshold_set_ref": "RELEASE_GATE_THRESHOLDS_IN_RUNNER",
         "threshold_set_sha256": threshold_set_hash,
-        "model_manifest_ref": str(model_manifest_file) if model_manifest_file.exists() else None,
+        "model_manifest_ref": model_manifest_file.as_posix() if model_manifest_file.exists() else None,
         "model_manifest_sha256": model_sha,
 
         "case_set_hash": (profile_completeness or {}).get("expected_case_ids_hash"),
@@ -721,7 +732,7 @@ def _build_profile_summary(*, run_root: Path, run_report: dict[str, Any]) -> tup
         }
         if public_name == "agentic_graphrag" and not aggregate:
             profiles[public_name]["metrics_source"] = "not_measured"
-            profiles[public_name]["blocked_reason"] = "agentic_runtime_runner_not_wired"
+            profiles[public_name]["blocked_reason"] = "dataset_measurement_blocked"
     return profiles, cost_latency, per_samples
 
 
@@ -1702,7 +1713,7 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
             "agentic_graphrag": {
                 "measured": False,
                 "metrics_source": "blocked_not_measured",
-                "blocked_reason": "agentic_runtime_runner_not_wired",
+                "blocked_reason": "dataset_measurement_blocked",
                 "aggregate": {},
             },
         },
