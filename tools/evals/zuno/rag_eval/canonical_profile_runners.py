@@ -1,4 +1,4 @@
-"""Zuno PHASE22 Canonical Four-Profile Benchmark Runtime.
+﻿"""Zuno PHASE22 Canonical Four-Profile Benchmark Runtime.
 
 This module provides the canonical, non-double profile runners for Zuno benchmark evaluation.
 Each runner connects directly to Zuno's production-grade Knowledge Runtime, Index Runtime,
@@ -158,7 +158,7 @@ class CanonicalStandardRAGRunner(CanonicalBenchmarkProfileRunner):
     def run_canonical_case(self, case_input: CanonicalCaseInput) -> CanonicalCaseResult:
         start_time = time.monotonic()
         root_trace_id = f"trace_benchmark_{case_input.eval_run_id}_{case_input.case_id}_{case_input.profile_name}"
-        
+
         span_id = self.trace_adapter.start_span(
             "benchmark_case",
             span_type="RetrievalRound",
@@ -352,7 +352,7 @@ class CanonicalLocalGraphRAGRunner(CanonicalBenchmarkProfileRunner):
             )
 
             std_docs = tuple(dict.fromkeys(r.document_id for r in std_res.ledger.records() if r.document_id))
-            
+
             # Retrieve entity/graph neighborhood from index via query()
             graph_neighborhood: list[str] = []
             for space_id in case_input.knowledge_space_ids:

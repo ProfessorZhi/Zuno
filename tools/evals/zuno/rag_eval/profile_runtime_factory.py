@@ -1,4 +1,4 @@
-"""Zuno Benchmark Profile Runtime Factory.
+﻿"""Zuno Benchmark Profile Runtime Factory.
 
 Enforces strict separation between Contract Test Doubles ('contract-smoke')
 and Production-Grade Canonical Profile Runners ('canonical').

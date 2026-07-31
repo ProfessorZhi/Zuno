@@ -1,4 +1,4 @@
-"""Unit, Integration, Fault, and Contract Tests for PHASE22 Canonical Profile Runners."""
+﻿"""Unit, Integration, Fault, and Contract Tests for PHASE22 Canonical Profile Runners."""
 
 from __future__ import annotations
 
