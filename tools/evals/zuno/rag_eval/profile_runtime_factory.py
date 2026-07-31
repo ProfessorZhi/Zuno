@@ -7,7 +7,7 @@ canonical mode rules:
 - Requires an explicit CanonicalRuntimeDependencies bundle from Composition Root.
 - MUST NOT create KnowledgeIndexRuntime, AgentControlRuntime, or any other
   infrastructure object internally.
-- Missing required dependency -> raises RuntimeError (fail closed). No fallback.
+- Empty or missing dependencies -> RuntimeError (fail closed). No fallback.
 
 contract-smoke mode rules:
 - Uses local Test Double runners (BenchmarkProfileRunner subclasses).
@@ -50,7 +50,7 @@ class CanonicalProfileRuntimeFactory:
 
     In canonical mode the factory requires an explicit CanonicalRuntimeDependencies
     bundle. It will never create KnowledgeIndexRuntime or other infrastructure itself.
-    Missing deps -> RuntimeError (fail closed, no silent downgrade).
+    Missing or empty deps -> RuntimeError (fail closed, no silent downgrade).
     """
 
     def __init__(
@@ -67,12 +67,13 @@ class CanonicalProfileRuntimeFactory:
         self._canonical_deps = canonical_deps
         self._trace_adapter = trace_adapter
 
-        if runtime_mode == "canonical" and canonical_deps is None:
-            raise RuntimeError(
-                "canonical mode requires an explicit CanonicalRuntimeDependencies bundle. "
-                "No auto-creation of infrastructure is permitted. "
-                "Provide deps from a Composition Root."
-            )
+        if runtime_mode == "canonical":
+            if canonical_deps is None:
+                raise RuntimeError(
+                    "canonical mode requires an explicit CanonicalRuntimeDependencies bundle. "
+                    "No auto-creation of infrastructure is permitted. "
+                    "Provide deps from a Composition Root."
+                )
 
     def create_runner(self, profile_name: str) -> BenchmarkProfileRunner | CanonicalBenchmarkProfileRunner:
         if profile_name not in VALID_PROFILES:
@@ -99,15 +100,19 @@ class CanonicalProfileRuntimeFactory:
         return cls()
 
     def _create_canonical_runner(self, profile_name: str) -> CanonicalBenchmarkProfileRunner:
-        # deps was validated non-None in __init__; assert for type checker
         assert self._canonical_deps is not None
-        # Inject trace_adapter override into deps if provided
         deps = self._canonical_deps
         if self._trace_adapter is not None and deps.trace_adapter is None:
             deps = CanonicalRuntimeDependencies(
                 knowledge_runtime=deps.knowledge_runtime,
                 index_runtime=deps.index_runtime,
+                security_gate=deps.security_gate,
+                agent_run_runtime=deps.agent_run_runtime,
                 trace_adapter=self._trace_adapter,
+                result_store=deps.result_store,
+                artifact_store=deps.artifact_store,
+                usage_receipt_provider=deps.usage_receipt_provider,
+                budget_settlement_provider=deps.budget_settlement_provider,
             )
 
         runners = {

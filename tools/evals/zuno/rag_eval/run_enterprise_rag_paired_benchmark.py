@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import argparse
 import asyncio
@@ -1440,14 +1440,18 @@ def _write_failure_cases(
 
 
 def _write_report(path: Path, metrics: dict[str, Any]) -> None:
+    runtime_config = metrics.get("runtime_config") or {}
     lines = [
         "# EnterpriseRAG Paired Benchmark",
         "",
         f"- status: `{metrics['status']}`",
         f"- measurement_status: `{metrics['measurement_status']}`",
+        f"- runtime_mode: `{runtime_config.get('runtime_mode')}`",
+        f"- is_test_double: `{str(bool(runtime_config.get('is_test_double'))).lower()}`",
+        f"- reproduce_command: `{runtime_config.get('reproduce_command')}`",
         f"- selected_case_count: `{metrics['case_set']['selected_case_count']}`",
         f"- measured_case_count: `{metrics['case_set']['measured_case_count']}`",
-        f"- chunk_size_override: `{(metrics.get('runtime_config') or {}).get('chunk_size_override')}`",
+        f"- chunk_size_override: `{runtime_config.get('chunk_size_override')}`",
         f"- overlap_override: `{(metrics.get('runtime_config') or {}).get('overlap_override')}`",
         f"- citation_chunking_strategy: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('strategy')}`",
         f"- citation_chunk_char_limit: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('citation_chunk_char_limit')}`",
@@ -1695,7 +1699,13 @@ def _fmt(value: Any) -> str:
         return str(value)
 
 
-def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str, Any]) -> dict[str, Any]:
+def _blocked_metrics(
+    *,
+    selected_rows: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    runtime_mode: str = "contract-smoke",
+    reproduce_command: str = "",
+) -> dict[str, Any]:
     metrics = {
         "status": "blocked",
         "measurement_status": "blocked_not_measured",
@@ -1733,6 +1743,9 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         },
         "gated_agentic_simulation": {},
         "runtime_config": {
+            "runtime_mode": runtime_mode,
+            "is_test_double": (runtime_mode == "contract-smoke"),
+            "reproduce_command": reproduce_command,
             "chunk_size_override": None,
             "overlap_override": None,
             "rerank_score_threshold_override": None,
@@ -1791,16 +1804,22 @@ async def run_enterprise_rag_paired_benchmark(
     rerank_score_threshold_override: float | None = 0.0,
     chunk_size_override: int | None = ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE,
     overlap_override: int | None = ENTERPRISE_RAG_DEFAULT_OVERLAP,
+    runtime_mode: str = "contract-smoke",
 ) -> dict[str, Any]:
     import traceback
     created_at = time.time()
     output_root.mkdir(parents=True, exist_ok=True)
 
+    reproduce_cmd = (
+        f"poetry run python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark "
+        f"--questions-file {questions_file} --runtime-mode {runtime_mode} --sample-size {sample_size}"
+    )
+
     arguments = {
-        "questions_file": questions_file,
-        "documents_file": documents_file,
-        "source_root": source_root,
-        "output_root": output_root,
+        "questions_file": str(questions_file),
+        "documents_file": str(documents_file) if documents_file else None,
+        "source_root": str(source_root) if source_root else None,
+        "output_root": str(output_root),
         "sample_size": sample_size,
         "stratify_by_question_type": stratify_by_question_type,
         "hard_negative_count": hard_negative_count,
@@ -1811,6 +1830,8 @@ async def run_enterprise_rag_paired_benchmark(
         "rerank_score_threshold_override": rerank_score_threshold_override,
         "chunk_size_override": chunk_size_override,
         "overlap_override": overlap_override,
+        "runtime_mode": runtime_mode,
+        "reproduce_command": reproduce_cmd,
     }
 
     dataset_path = None
@@ -1881,7 +1902,12 @@ async def run_enterprise_rag_paired_benchmark(
             else:
                 manifest["blocked_reason"] = "external_documents_required"
 
-            metrics = _blocked_metrics(selected_rows=selected_rows, manifest=manifest)
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=manifest,
+                runtime_mode=runtime_mode,
+                reproduce_command=reproduce_cmd,
+            )
             _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
             _write_failure_cases(output_root / "failure_cases.md", [])
             _write_report(output_root / "report.md", metrics)
@@ -1905,7 +1931,12 @@ async def run_enterprise_rag_paired_benchmark(
             return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
 
         if not run_profiles:
-            metrics = _blocked_metrics(selected_rows=selected_rows, manifest=manifest)
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=manifest,
+                runtime_mode=runtime_mode,
+                reproduce_command=reproduce_cmd,
+            )
             metrics["status"] = "prepared"
             metrics["measurement_status"] = "prepared_not_measured"
             metrics["metrics_source"] = "prepared_not_measured"
@@ -1953,7 +1984,12 @@ async def run_enterprise_rag_paired_benchmark(
             blocked_manifest["blocked_reason"] = _profile_runner_blocked_reason(exc)
             blocked_manifest["profile_runner_error"] = str(exc)
 
-            metrics = _blocked_metrics(selected_rows=selected_rows, manifest=blocked_manifest)
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=blocked_manifest,
+                runtime_mode=runtime_mode,
+                reproduce_command=reproduce_cmd,
+            )
             metrics["runtime_config"]["chunk_size_override"] = chunk_size_override
             metrics["runtime_config"]["overlap_override"] = overlap_override
             metrics["runtime_config"]["rerank_score_threshold_override"] = rerank_score_threshold_override
@@ -2056,6 +2092,9 @@ async def run_enterprise_rag_paired_benchmark(
             },
             "corpus": manifest,
             "runtime_config": {
+                "runtime_mode": runtime_mode,
+                "is_test_double": (runtime_mode == "contract-smoke"),
+                "reproduce_command": reproduce_cmd,
                 "chunk_size_override": chunk_size_override,
                 "overlap_override": overlap_override,
                 "rerank_score_threshold_override": rerank_score_threshold_override,
@@ -2169,11 +2208,23 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
+    runtime_mode = args.runtime_mode
+
+    if args.prepare_only:
+        if args.runtime_mode == "canonical":
+            import sys
+            print(
+                "ERROR: --prepare-only conflicts with --runtime-mode=canonical. Aborting (fail closed).",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        runtime_mode = "prepare-only"
+
     # canonical mode guard: fail closed if canonical mode requested without
     # explicit Composition Root support. The CLI currently has no mechanism to
     # inject CanonicalRuntimeDependencies from the command line; callers must
     # use the Python API or extend this with a config-driven Composition Root.
-    if args.runtime_mode == "canonical":
+    if runtime_mode == "canonical":
         import sys
         print(
             "ERROR: --runtime-mode=canonical requires an explicit CanonicalRuntimeDependencies "
@@ -2183,7 +2234,6 @@ def main() -> None:
             file=sys.stderr,
         )
         sys.exit(2)
-
 
     output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
     result = asyncio.run(
@@ -2196,12 +2246,13 @@ def main() -> None:
             stratify_by_question_type=not args.no_stratify_by_question_type,
             hard_negative_count=max(args.hard_negative_count, 0),
             allow_blocked=args.allow_blocked,
-            run_profiles=not args.prepare_only,
+            run_profiles=(runtime_mode != "prepare-only"),
             inspect_schema=args.inspect_documents_schema,
             spawn_dev_embedding_server=not args.no_spawn_dev_embedding_server,
             rerank_score_threshold_override=args.rerank_score_threshold_override,
             chunk_size_override=args.chunk_size_override,
             overlap_override=args.overlap_override,
+            runtime_mode=runtime_mode,
         )
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))

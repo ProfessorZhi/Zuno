@@ -7,14 +7,16 @@ measurement status. Priority order is contractual and must not be changed:
 2. Runtime Failed        -> FAILED
 3. Security Denied/Stale -> BLOCKED
 4. Profile Mismatch      -> INCOMPARABLE
-5. Runtime Evidence Incomplete (snapshot/trace/budget/artifact/run_outcome missing,
+5. Runtime Evidence Incomplete / Invalid Receipts
+   (snapshot missing, trace missing, budget settlement missing/invalid,
+   artifact receipt missing/invalid, run outcome missing/invalid,
    unresolved failure, invalid hash) -> BLOCKED
 6. Runtime Evidence Complete but formal gates pending
    (reviewer pending, benchmark_eligible false, credentials missing,
    formal execution not requested) -> RUNTIME_OBSERVED
 7. All gates satisfied   -> MEASURED
 
-Rule 6 must NEVER mask a prior failure from rules 1-5.
+Rule 6 (RUNTIME_OBSERVED) must NEVER mask missing or invalid receipts from Rule 5.
 """
 
 from __future__ import annotations
@@ -53,12 +55,15 @@ class MeasurementTruthGate:
         # Rule 4
         requested_profile: str = "",
         actual_profile: str = "",
-        # Rule 5 — Runtime Evidence completeness
+        # Rule 5 — Runtime Evidence completeness & receipt validation
         snapshot_ref: str = "",
         trace_id: Optional[str] = None,
         budget_settlement_ref: str = "",
+        budget_settlement_valid: bool = False,
         artifact_receipt_ref: str = "",
+        artifact_receipt_valid: bool = False,
         run_outcome_ref: str = "",
+        run_outcome_valid: bool = False,
         # Rule 6 — Formal gate eligibility
         reviewer_status: str = "pending",
         benchmark_eligible: bool = False,
@@ -73,7 +78,7 @@ class MeasurementTruthGate:
         if runtime_status == "failed":
             return MeasurementState.FAILED, f"runtime_execution_failed:{failure_class or 'unknown'}"
 
-        # ── Rule 3: Security Denied / Stale ──────────────────────────────────
+        # ── Rule 3: Security Denied / Stale / Dependency Blocked ────────────
         if security_blocked or runtime_status == "security_failed" or runtime_status == "blocked":
             return MeasurementState.BLOCKED, f"security_or_dependency_blocked:{failure_class or 'unknown'}"
 
@@ -84,16 +89,31 @@ class MeasurementTruthGate:
                 f"profile_mismatch:{requested_profile}_vs_{actual_profile}",
             )
 
-        # ── Rule 5: Runtime Evidence Completeness ────────────────────────────
+        # ── Rule 5: Runtime Evidence & Receipt Validation ────────────────────
         evidence_gaps: list[str] = []
         if not snapshot_ref:
             evidence_gaps.append("snapshot_ref_missing")
         if not trace_id:
             evidence_gaps.append("trace_missing")
+
+        # Budget settlement validation
         if not budget_settlement_ref:
             evidence_gaps.append("budget_settlement_missing")
+        elif not budget_settlement_valid:
+            evidence_gaps.append("budget_settlement_invalid")
+
+        # Artifact receipt validation
+        if not artifact_receipt_ref:
+            evidence_gaps.append("artifact_receipt_missing")
+        elif not artifact_receipt_valid:
+            evidence_gaps.append("artifact_receipt_invalid")
+
+        # Run outcome validation
         if not run_outcome_ref:
             evidence_gaps.append("run_outcome_missing")
+        elif not run_outcome_valid:
+            evidence_gaps.append("run_outcome_invalid")
+
         if failure_class:
             evidence_gaps.append(f"unresolved_failure:{failure_class}")
 
