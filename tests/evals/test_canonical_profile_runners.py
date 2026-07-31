@@ -1,20 +1,20 @@
 """Tests for PHASE22 Canonical Four-Profile Benchmark Runtime.
 
-AG-PR55-GEMINI-3-6-FLASH-PREMERGE-HARDENING
+AG-PR55-GEMINI-3-6-FLASH-TRUE-PREMERGE-CLOSURE
 
-Pre-merge hardening tests:
-- Python API canonical mode fail-closed guard (CanonicalRuntimeUnavailableError)
-- Python API canonical mode does not invoke smoke runners or fabricate is_test_double=False
-- Factory fail-closed on None and empty CanonicalRuntimeDependencies
-- Non-empty incomplete bundle produces boundary runner with exact dependency_gaps
-- All-dependencies bundle produces canonical_<profile>_execution_adapter_unavailable
-- blocked_reason is ALWAYS non-empty and contains no generic fallbacks when gaps is empty
-- Portable reproduce command builder: argv list, POSIX paths, space-quoting, runtime-mode & output-root
-- Receipt validation, MeasurementTruthGate 7-rule priority, and path portability
+True pre-merge closure tests:
+- Canonical mode unconditionally fails closed with CanonicalRuntimeUnavailableError
+- Fail-closed occurs BEFORE directory creation, file reading, dataset prep, or stackless runner invocation
+- Full dependency bundle, empty dependency bundle, or valid factory cannot bypass canonical fail-closed guard
+- No manifest, metrics, or false is_test_double=False output is generated in canonical mode
+- AST test: _render_reproduce_command has exactly 1 FunctionDef in run_enterprise_rag_paired_benchmark.py
+- Contract-smoke and prepare-only modes preserve their existing behavior
 """
 
 from __future__ import annotations
 
+import ast
+import asyncio
 from pathlib import Path, PurePosixPath
 import time
 from typing import Any
@@ -101,56 +101,136 @@ def _sample_input(profile_name: str = "standard_rag") -> CanonicalCaseInput:
 
 
 # ---------------------------------------------------------------------------
-# Section 1: Python API Canonical Guard Tests (Section 三)
+# Section 1: Canonical Mode Unconditional Fail-Closed Tests (Section 三)
 # ---------------------------------------------------------------------------
 
-import asyncio
-
-def test_01_python_api_canonical_mode_without_deps_raises_unavailable() -> None:
-    """Python API call with runtime_mode='canonical' and no deps raises CanonicalRuntimeUnavailableError."""
-    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical runtime mode requires"):
+def test_01_canonical_mode_without_deps_fails_closed(tmp_path: Path) -> None:
+    """canonical mode + canonical_deps=None fails closed with CanonicalRuntimeUnavailableError."""
+    out_dir = tmp_path / "canonical_out_01"
+    q_file = tmp_path / "non_existent_q.jsonl"
+    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
         asyncio.run(
             run_enterprise_rag_paired_benchmark(
-                questions_file=Path("test_q.jsonl"),
-                output_root=Path("test_out"),
+                questions_file=q_file,
+                output_root=out_dir,
                 runtime_mode="canonical",
                 canonical_deps=None,
                 profile_runtime_factory=None,
             )
         )
+    assert out_dir.exists() is False
 
 
-def test_02_python_api_canonical_mode_with_empty_deps_raises_unavailable() -> None:
-    """Python API call with runtime_mode='canonical' and empty deps raises CanonicalRuntimeUnavailableError."""
+def test_02_canonical_mode_with_empty_deps_fails_closed(tmp_path: Path) -> None:
+    """canonical mode + empty CanonicalRuntimeDependencies fails closed."""
+    out_dir = tmp_path / "canonical_out_02"
+    q_file = tmp_path / "non_existent_q.jsonl"
     empty_deps = CanonicalRuntimeDependencies()
-    with pytest.raises(CanonicalRuntimeUnavailableError):
+    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
         asyncio.run(
             run_enterprise_rag_paired_benchmark(
-                questions_file=Path("test_q.jsonl"),
-                output_root=Path("test_out"),
+                questions_file=q_file,
+                output_root=out_dir,
                 runtime_mode="canonical",
                 canonical_deps=empty_deps,
             )
         )
+    assert out_dir.exists() is False
 
 
-def test_03_validate_canonical_runtime_config_helper_raises() -> None:
-    """validate_canonical_runtime_config helper raises CanonicalRuntimeUnavailableError."""
+def test_03_canonical_mode_with_full_deps_still_fails_closed(tmp_path: Path) -> None:
+    """canonical mode + FULL dependency bundle STILL fails closed (adapters not implemented)."""
+    out_dir = tmp_path / "canonical_out_03"
+    q_file = tmp_path / "non_existent_q.jsonl"
+    full_deps = _full_deps()
+    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
+        asyncio.run(
+            run_enterprise_rag_paired_benchmark(
+                questions_file=q_file,
+                output_root=out_dir,
+                runtime_mode="canonical",
+                canonical_deps=full_deps,
+            )
+        )
+    assert out_dir.exists() is False
+
+
+def test_04_canonical_mode_with_dummy_factory_fails_closed(tmp_path: Path) -> None:
+    """canonical mode + profile_runtime_factory=object() fails closed."""
+    out_dir = tmp_path / "canonical_out_04"
+    q_file = tmp_path / "non_existent_q.jsonl"
+    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
+        asyncio.run(
+            run_enterprise_rag_paired_benchmark(
+                questions_file=q_file,
+                output_root=out_dir,
+                runtime_mode="canonical",
+                profile_runtime_factory=object(),
+            )
+        )
+    assert out_dir.exists() is False
+
+
+def test_05_canonical_mode_with_valid_factory_fails_closed(tmp_path: Path) -> None:
+    """canonical mode + valid CanonicalProfileRuntimeFactory STILL fails closed."""
+    out_dir = tmp_path / "canonical_out_05"
+    q_file = tmp_path / "non_existent_q.jsonl"
+    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=_full_deps())
+    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
+        asyncio.run(
+            run_enterprise_rag_paired_benchmark(
+                questions_file=q_file,
+                output_root=out_dir,
+                runtime_mode="canonical",
+                profile_runtime_factory=factory,
+            )
+        )
+    assert out_dir.exists() is False
+
+
+def test_06_canonical_fails_before_questions_file_read_or_stackless_call(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """canonical mode fails BEFORE reading questions_file and stackless runner call count is 0."""
+    out_dir = tmp_path / "canonical_out_06"
+    q_file = tmp_path / "questions_06.jsonl"
+    q_file.write_text('{"id":"q1","question":"test"}', encoding="utf-8")
+
+    stackless_calls = 0
+    async def mock_stackless(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        nonlocal stackless_calls
+        stackless_calls += 1
+        return {}
+
+    monkeypatch.setattr(
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark.run_stackless_local_eval",
+        mock_stackless,
+    )
+
     with pytest.raises(CanonicalRuntimeUnavailableError):
-        validate_canonical_runtime_config(runtime_mode="canonical")
+        asyncio.run(
+            run_enterprise_rag_paired_benchmark(
+                questions_file=q_file,
+                output_root=out_dir,
+                runtime_mode="canonical",
+                canonical_deps=_full_deps(),
+            )
+        )
+
+    assert stackless_calls == 0
+    assert (out_dir / "benchmark_manifest.json").exists() is False
+    assert (out_dir / "metrics.json").exists() is False
 
 
 # ---------------------------------------------------------------------------
 # Section 2: Factory Empty Dependency Guard Tests (Section 四)
 # ---------------------------------------------------------------------------
 
-def test_04_factory_canonical_mode_none_bundle_raises() -> None:
+def test_07_factory_canonical_mode_none_bundle_raises() -> None:
     """Factory raises RuntimeError when canonical_deps is None."""
     with pytest.raises(RuntimeError, match="canonical mode requires"):
         CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=None)
 
 
-def test_05_factory_canonical_mode_empty_bundle_raises() -> None:
+def test_08_factory_canonical_mode_empty_bundle_raises() -> None:
     """Factory raises RuntimeError when canonical_deps is empty (all fields None)."""
     empty_deps = CanonicalRuntimeDependencies()
     assert empty_deps.is_empty() is True
@@ -158,7 +238,7 @@ def test_05_factory_canonical_mode_empty_bundle_raises() -> None:
         CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=empty_deps)
 
 
-def test_06_factory_non_empty_incomplete_bundle_creates_boundary_runner() -> None:
+def test_09_factory_non_empty_incomplete_bundle_creates_boundary_runner() -> None:
     """Factory accepts non-empty incomplete bundle and creates boundary runner."""
     deps = _sample_deps(with_trace=True)
     assert deps.is_empty() is False
@@ -172,10 +252,10 @@ def test_06_factory_non_empty_incomplete_bundle_creates_boundary_runner() -> Non
 
 
 # ---------------------------------------------------------------------------
-# Section 3: Execution Adapter Boundary Status Tests (Section 五)
+# Section 3: Execution Adapter Boundary Status Tests
 # ---------------------------------------------------------------------------
 
-def test_07_all_dependencies_present_returns_execution_adapter_unavailable() -> None:
+def test_10_all_dependencies_present_returns_execution_adapter_unavailable() -> None:
     """When all dependency ports are populated, runners return canonical_<profile>_execution_adapter_unavailable."""
     deps = _full_deps()
     expected_failures = {
@@ -198,7 +278,7 @@ def test_07_all_dependencies_present_returns_execution_adapter_unavailable() -> 
         assert res.dependency_gaps == (), f"{profile}: dependency_gaps must be empty tuple"
 
 
-def test_08_blocked_reason_is_always_non_empty() -> None:
+def test_11_blocked_reason_is_always_non_empty() -> None:
     """blocked_reason must NEVER be empty for any runner result."""
     deps_incomplete = _sample_deps(with_trace=True)
     deps_full = _full_deps()
@@ -214,7 +294,7 @@ def test_08_blocked_reason_is_always_non_empty() -> None:
             assert res.failure_class != "", f"{profile}: failure_class must be non-empty"
 
 
-def test_09_no_generic_dependency_blocked_fallback_when_gaps_empty() -> None:
+def test_12_no_generic_dependency_blocked_fallback_when_gaps_empty() -> None:
     """When dependency_gaps is empty, failure_class must NOT be generic 'canonical_dependency_blocked'."""
     deps = _full_deps()
     runner = CanonicalStandardRAGRunner(deps)
@@ -224,10 +304,10 @@ def test_09_no_generic_dependency_blocked_fallback_when_gaps_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Section 4: Portable Reproduce Command Tests (Section 六)
+# Section 4: Portable Reproduce Command & AST Single Definition Tests
 # ---------------------------------------------------------------------------
 
-def test_10_render_reproduce_command_contains_runtime_mode_and_output_root() -> None:
+def test_13_render_reproduce_command_contains_runtime_mode_and_output_root() -> None:
     """_render_reproduce_command returns argv containing --runtime-mode and --output-root."""
     argv, cmd_str = _render_reproduce_command(
         questions_file=Path("data/questions.jsonl"),
@@ -243,7 +323,7 @@ def test_10_render_reproduce_command_contains_runtime_mode_and_output_root() -> 
     assert "data/questions.jsonl" in argv
 
 
-def test_11_render_reproduce_command_windows_path_to_posix() -> None:
+def test_14_render_reproduce_command_windows_path_to_posix() -> None:
     """_to_portable_posix_path converts backslashes to forward slashes."""
     win_path = "data\\questions\\set_a.jsonl"
     posix = _to_portable_posix_path(win_path)
@@ -251,7 +331,7 @@ def test_11_render_reproduce_command_windows_path_to_posix() -> None:
     assert "/" in posix or posix == "data/questions/set_a.jsonl"
 
 
-def test_12_render_reproduce_command_space_quoting() -> None:
+def test_15_render_reproduce_command_space_quoting() -> None:
     """_render_reproduce_command quotes path arguments containing spaces."""
     argv, cmd_str = _render_reproduce_command(
         questions_file=Path("data/my questions/set_a.jsonl"),
@@ -262,11 +342,23 @@ def test_12_render_reproduce_command_space_quoting() -> None:
     assert "'runs/my output'" in cmd_str or '"runs/my output"' in cmd_str
 
 
+def test_16_single_definition_of_render_reproduce_command_in_ast() -> None:
+    """AST check: run_enterprise_rag_paired_benchmark.py contains EXACTLY ONE FunctionDef named _render_reproduce_command."""
+    script_path = Path("tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py")
+    tree = ast.parse(script_path.read_text(encoding="utf-8"))
+    functions = [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "_render_reproduce_command"
+    ]
+    assert len(functions) == 1, f"Expected exactly 1 definition of _render_reproduce_command, found {len(functions)}"
+
+
 # ---------------------------------------------------------------------------
 # Section 5: Receipt Validation & Gate Priority Tests
 # ---------------------------------------------------------------------------
 
-def test_13_artifact_receipt_missing_blocked() -> None:
+def test_17_artifact_receipt_missing_blocked() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -284,7 +376,7 @@ def test_13_artifact_receipt_missing_blocked() -> None:
     assert "artifact_receipt_missing" in reason
 
 
-def test_14_artifact_receipt_invalid_blocked() -> None:
+def test_18_artifact_receipt_invalid_blocked() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -302,7 +394,7 @@ def test_14_artifact_receipt_invalid_blocked() -> None:
     assert "artifact_receipt_invalid" in reason
 
 
-def test_15_budget_settlement_invalid_blocked() -> None:
+def test_19_budget_settlement_invalid_blocked() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -320,7 +412,7 @@ def test_15_budget_settlement_invalid_blocked() -> None:
     assert "budget_settlement_invalid" in reason
 
 
-def test_16_run_outcome_invalid_blocked() -> None:
+def test_20_run_outcome_invalid_blocked() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -338,7 +430,7 @@ def test_16_run_outcome_invalid_blocked() -> None:
     assert "run_outcome_invalid" in reason
 
 
-def test_17_all_receipts_valid_reaches_rule6() -> None:
+def test_21_all_receipts_valid_reaches_rule6() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -357,7 +449,7 @@ def test_17_all_receipts_valid_reaches_rule6() -> None:
     assert "reviewer_pending" in reason
 
 
-def test_18_fake_receipt_strings_cannot_reach_measured() -> None:
+def test_22_fake_receipt_strings_cannot_reach_measured() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
         is_test_double=False,
@@ -379,7 +471,7 @@ def test_18_fake_receipt_strings_cannot_reach_measured() -> None:
     assert "invalid" in reason
 
 
-def test_19_canonical_trace_adapter_unavailable() -> None:
+def test_23_canonical_trace_adapter_unavailable() -> None:
     deps = CanonicalRuntimeDependencies(trace_adapter=None)
     runner = CanonicalStandardRAGRunner(deps)
     res = runner.run_canonical_case(_sample_input("standard_rag"))
@@ -387,7 +479,7 @@ def test_19_canonical_trace_adapter_unavailable() -> None:
     assert "canonical_trace_adapter_unavailable" in res.dependency_gaps
 
 
-def test_20_canonical_mode_does_not_call_global_trace_adapter() -> None:
+def test_24_canonical_mode_does_not_call_global_trace_adapter() -> None:
     deps = CanonicalRuntimeDependencies(trace_adapter=None)
     runner = CanonicalStandardRAGRunner(deps)
     assert runner._trace_adapter is None
@@ -395,14 +487,14 @@ def test_20_canonical_mode_does_not_call_global_trace_adapter() -> None:
     assert res.trace_id is None
 
 
-def test_21_blocked_result_standard_floor_preserved_is_none() -> None:
+def test_25_blocked_result_standard_floor_preserved_is_none() -> None:
     deps = _sample_deps(with_trace=True)
     runner = CanonicalStandardRAGRunner(deps)
     res = runner.run_canonical_case(_sample_input("standard_rag"))
     assert res.standard_floor_preserved is None
 
 
-def test_22_path_portability_with_real_path_objects() -> None:
+def test_26_path_portability_with_real_path_objects() -> None:
     run_dir = Path("artifacts") / "runs" / "eval_001"
     posix_str = PurePosixPath(run_dir).as_posix()
     assert "\\" not in posix_str

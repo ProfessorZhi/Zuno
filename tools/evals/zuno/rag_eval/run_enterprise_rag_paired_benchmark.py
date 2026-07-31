@@ -40,50 +40,9 @@ def validate_canonical_runtime_config(
     profile_runtime_factory: Any | None = None,
 ) -> None:
     if runtime_mode == "canonical":
-        if profile_runtime_factory is None:
-            if canonical_deps is None or (hasattr(canonical_deps, "is_empty") and canonical_deps.is_empty()):
-                raise CanonicalRuntimeUnavailableError(
-                    "canonical runtime mode requires an explicit CanonicalRuntimeDependencies bundle "
-                    "or CanonicalProfileRuntimeFactory from a Composition Root. "
-                    "Canonical Python API also requires an explicit Dependency Bundle or Runtime Factory."
-                )
-
-
-def _render_reproduce_command(
-    *,
-    questions_file: Path | str,
-    output_root: Path | str,
-    runtime_mode: str = "contract-smoke",
-    sample_size: int = 80,
-    documents_file: Path | str | None = None,
-    source_root: Path | str | None = None,
-    prepare_only: bool = False,
-) -> tuple[list[str], str]:
-    argv: list[str] = [
-        "poetry",
-        "run",
-        "python",
-        "-m",
-        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
-        "--questions-file",
-        _to_portable_posix_path(questions_file) or str(questions_file),
-        "--runtime-mode",
-        runtime_mode,
-        "--sample-size",
-        str(sample_size),
-        "--output-root",
-        _to_portable_posix_path(output_root) or str(output_root),
-    ]
-    if documents_file:
-        argv.extend(["--documents-file", _to_portable_posix_path(documents_file) or str(documents_file)])
-    if source_root:
-        argv.extend(["--source-root", _to_portable_posix_path(source_root) or str(source_root)])
-    if prepare_only:
-        argv.append("--prepare-only")
-
-    quoted_parts = [shlex.quote(part) if " " in part else part for part in argv]
-    command_str = " ".join(quoted_parts)
-    return argv, command_str
+        raise CanonicalRuntimeUnavailableError(
+            "canonical benchmark execution adapters are not implemented"
+        )
 
 
 PROFILE_ALIASES = {
