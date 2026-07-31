@@ -1,10 +1,10 @@
-﻿"""Zuno Benchmark Profile Runtime Factory.
+"""Zuno Benchmark Profile Runtime Factory.
 
 Enforces strict separation between Contract Test Doubles ('contract-smoke')
 and Production-Grade Canonical Profile Runners ('canonical').
 
 canonical mode rules:
-- Requires an explicit CanonicalRuntimeDependencies bundle from Composition Root.
+- Requires a non-empty CanonicalRuntimeDependencies bundle from Composition Root.
 - MUST NOT create KnowledgeIndexRuntime, AgentControlRuntime, or any other
   infrastructure object internally.
 - Empty or missing dependencies -> RuntimeError (fail closed). No fallback.
@@ -48,7 +48,7 @@ VALID_PROFILES = frozenset({
 class CanonicalProfileRuntimeFactory:
     """Factory for creating benchmark profile runners.
 
-    In canonical mode the factory requires an explicit CanonicalRuntimeDependencies
+    In canonical mode the factory requires a non-empty CanonicalRuntimeDependencies
     bundle. It will never create KnowledgeIndexRuntime or other infrastructure itself.
     Missing or empty deps -> RuntimeError (fail closed, no silent downgrade).
     """
@@ -68,9 +68,9 @@ class CanonicalProfileRuntimeFactory:
         self._trace_adapter = trace_adapter
 
         if runtime_mode == "canonical":
-            if canonical_deps is None:
+            if canonical_deps is None or canonical_deps.is_empty():
                 raise RuntimeError(
-                    "canonical mode requires an explicit CanonicalRuntimeDependencies bundle. "
+                    "canonical mode requires a non-empty CanonicalRuntimeDependencies bundle. "
                     "No auto-creation of infrastructure is permitted. "
                     "Provide deps from a Composition Root."
                 )

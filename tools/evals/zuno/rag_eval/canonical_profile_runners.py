@@ -1,23 +1,17 @@
-﻿"""Zuno PHASE22 Canonical Four-Profile Benchmark Runtime.
+"""Zuno PHASE22 Canonical Four-Profile Benchmark Runtime.
 
-This module provides canonical, non-double profile runners for Zuno benchmark
-evaluation. Each runner connects directly to Zuno's production Knowledge Runtime
-and Index Runtime via explicit Dependency Injection.
+These runners define fail-closed canonical benchmark adapter boundaries.
+Formal execution adapters are not yet implemented.
 
-Truth Contract (AG-PR55-GEMINI-3-6-FLASH-FINAL-CONTRACT-CLOSURE):
-- Expanded CanonicalRuntimeDependencies bundle with explicit Optional ports for:
-  knowledge_runtime, index_runtime, security_gate, agent_run_runtime,
-  trace_adapter, result_store, artifact_store, usage_receipt_provider,
-  budget_settlement_provider.
-- No global get_observability_adapter() fallback in canonical mode. If trace_adapter
-  is missing from deps, preflight reports canonical_trace_adapter_unavailable.
-- Deterministic dependency preflight check validate_dependencies(profile_name)
-  identifies all missing dependency gap codes.
+Truth Contract (AG-PR55-GEMINI-3-6-FLASH-PREMERGE-HARDENING):
+- Explicit CanonicalRuntimeDependencies bundle required.
+- Preflight gap validation returns precise dependency gap codes when ports are missing.
+- When all dependency ports are present but formal execution adapter is not yet wired,
+  runners return canonical_<profile>_execution_adapter_unavailable.
+- blocked_reason is ALWAYS non-empty. No generic fallback when dependency_gaps is empty.
 - Standard floor preserved: None when retrieval is not executed (blocked result).
-- Receipt fields (plan_version_ref, run_outcome_ref, budget_settlement_ref,
-  artifact_receipt_ref) are empty strings pending formal Receipt types in repository.
+- Receipt fields are empty strings pending formal Receipt types in repository.
 - token_usage / cost set to 0.0 until ModelUsageReceipt is wired.
-- All runners return BLOCKED with truthful failure_class and dependency_gaps.
 """
 
 from __future__ import annotations
@@ -175,7 +169,23 @@ def _blocked_result(
     latency: float,
     trace_id: Optional[str] = None,
 ) -> CanonicalCaseResult:
-    primary_blocker = gaps[0] if gaps else "canonical_dependency_blocked"
+    if gaps:
+        primary_blocker = gaps[0]
+        blocked_reason = ",".join(gaps)
+        dep_gaps = tuple(gaps)
+    else:
+        execution_adapter_blockers = {
+            "standard_rag": "canonical_standard_execution_adapter_unavailable",
+            "local_graphrag": "canonical_local_execution_adapter_unavailable",
+            "deep_graphrag": "canonical_deep_execution_adapter_unavailable",
+            "agentic_graphrag": "canonical_agentic_execution_adapter_unavailable",
+        }
+        primary_blocker = execution_adapter_blockers.get(
+            profile_name, f"canonical_{profile_name}_execution_adapter_unavailable"
+        )
+        blocked_reason = primary_blocker
+        dep_gaps = ()
+
     return CanonicalCaseResult(
         eval_run_id=case_input.eval_run_id,
         case_id=case_input.case_id,
@@ -200,8 +210,8 @@ def _blocked_result(
         retry_count=0,
         standard_floor_preserved=None,
         is_test_double=False,
-        blocked_reason=",".join(gaps),
-        dependency_gaps=tuple(gaps),
+        blocked_reason=blocked_reason,
+        dependency_gaps=dep_gaps,
     )
 
 

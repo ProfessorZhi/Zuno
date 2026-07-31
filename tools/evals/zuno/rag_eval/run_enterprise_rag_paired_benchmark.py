@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import asyncio
@@ -13,6 +13,7 @@ from collections import OrderedDict
 from pathlib import Path
 from sqlalchemy.exc import SQLAlchemyError
 
+import shlex
 from tools.evals.zuno.rag_eval.paths import default_runs_root
 from tools.evals.zuno.rag_eval.metrics import _is_context_relevant
 from tools.evals.zuno.rag_eval.public_enterprise_datasets import (
@@ -26,6 +27,63 @@ from tools.evals.zuno.rag_eval.public_enterprise_datasets import (
     prepare_public_enterprise_eval,
 )
 from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+
+
+class CanonicalRuntimeUnavailableError(RuntimeError):
+    """Raised when canonical runtime mode is requested without an explicit Dependency Bundle or Runtime Factory."""
+
+
+def validate_canonical_runtime_config(
+    *,
+    runtime_mode: str,
+    canonical_deps: Any | None = None,
+    profile_runtime_factory: Any | None = None,
+) -> None:
+    if runtime_mode == "canonical":
+        if profile_runtime_factory is None:
+            if canonical_deps is None or (hasattr(canonical_deps, "is_empty") and canonical_deps.is_empty()):
+                raise CanonicalRuntimeUnavailableError(
+                    "canonical runtime mode requires an explicit CanonicalRuntimeDependencies bundle "
+                    "or CanonicalProfileRuntimeFactory from a Composition Root. "
+                    "Canonical Python API also requires an explicit Dependency Bundle or Runtime Factory."
+                )
+
+
+def _render_reproduce_command(
+    *,
+    questions_file: Path | str,
+    output_root: Path | str,
+    runtime_mode: str = "contract-smoke",
+    sample_size: int = 80,
+    documents_file: Path | str | None = None,
+    source_root: Path | str | None = None,
+    prepare_only: bool = False,
+) -> tuple[list[str], str]:
+    argv: list[str] = [
+        "poetry",
+        "run",
+        "python",
+        "-m",
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
+        "--questions-file",
+        _to_portable_posix_path(questions_file) or str(questions_file),
+        "--runtime-mode",
+        runtime_mode,
+        "--sample-size",
+        str(sample_size),
+        "--output-root",
+        _to_portable_posix_path(output_root) or str(output_root),
+    ]
+    if documents_file:
+        argv.extend(["--documents-file", _to_portable_posix_path(documents_file) or str(documents_file)])
+    if source_root:
+        argv.extend(["--source-root", _to_portable_posix_path(source_root) or str(source_root)])
+    if prepare_only:
+        argv.append("--prepare-only")
+
+    quoted_parts = [shlex.quote(part) if " " in part else part for part in argv]
+    command_str = " ".join(quoted_parts)
+    return argv, command_str
 
 
 PROFILE_ALIASES = {
@@ -118,51 +176,70 @@ def _sha256_file(path: Path) -> str | None:
 def _to_portable_posix_path(path: Any) -> str:
     if path is None:
         return ""
-    p = Path(path)
+    p_str = str(path).replace("\\", "/")
+    p = Path(p_str)
     repo_root = Path(__file__).resolve().parents[4]
     try:
         if p.is_absolute():
             rel = p.relative_to(repo_root)
-            return rel.as_posix()
-        return p.as_posix()
+            res = rel.as_posix()
+        else:
+            res = p.as_posix()
     except ValueError:
-        p_str = p.as_posix()
-        if "goal05-phase22-blocked-benchmark" in p_str:
-            idx = p_str.find("goal05-phase22-blocked-benchmark")
-            return "docs/evidence/" + p_str[idx:]
-        return p_str
+        res = p.as_posix()
+        if "goal05-phase22-blocked-benchmark" in res:
+            idx = res.find("goal05-phase22-blocked-benchmark")
+            res = "docs/evidence/" + res[idx:]
+    return res.replace("\\", "/")
 
 
-def _render_reproduce_command(**kwargs: Any) -> list[str]:
+def _render_reproduce_command(**kwargs: Any) -> tuple[list[str], str]:
+    questions_file = kwargs.get("questions_file", "")
+    output_root = kwargs.get("output_root", "")
+    runtime_mode = str(kwargs.get("runtime_mode") or "contract-smoke")
+    sample_size = kwargs.get("sample_size", 80)
+
     command = [
+        "poetry",
+        "run",
         "python",
         "-m",
         "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
         "--questions-file",
-        _to_portable_posix_path(kwargs["questions_file"]),
+        _to_portable_posix_path(questions_file) or str(questions_file),
+        "--runtime-mode",
+        runtime_mode,
+        "--sample-size",
+        str(sample_size),
         "--output-root",
-        _to_portable_posix_path(kwargs["output_root"]),
+        _to_portable_posix_path(output_root) or str(output_root),
     ]
     if kwargs.get("documents_file") is not None:
-        command.extend(["--documents-file", _to_portable_posix_path(kwargs["documents_file"])])
+        command.extend(["--documents-file", _to_portable_posix_path(kwargs["documents_file"]) or str(kwargs["documents_file"])])
     if kwargs.get("source_root") is not None:
-        command.extend(["--source-root", _to_portable_posix_path(kwargs["source_root"])])
-    command.extend(["--sample-size", str(kwargs["sample_size"])])
-    if not kwargs["stratify_by_question_type"]:
+        command.extend(["--source-root", _to_portable_posix_path(kwargs["source_root"]) or str(kwargs["source_root"])])
+    if kwargs.get("stratify_by_question_type") is False:
         command.append("--no-stratify-by-question-type")
-    command.extend(["--hard-negative-count", str(kwargs["hard_negative_count"])])
-    if kwargs["allow_blocked"]:
+    if kwargs.get("hard_negative_count") is not None and kwargs.get("hard_negative_count") != 0:
+        command.extend(["--hard-negative-count", str(kwargs["hard_negative_count"])])
+    if kwargs.get("allow_blocked"):
         command.append("--allow-blocked")
-    if not kwargs["run_profiles"]:
+    if kwargs.get("prepare_only") or kwargs.get("run_profiles") is False or runtime_mode == "prepare-only":
         command.append("--prepare-only")
-    if kwargs["inspect_schema"]:
+    if kwargs.get("inspect_schema"):
         command.append("--inspect-documents-schema")
-    if not kwargs["spawn_dev_embedding_server"]:
+    if kwargs.get("spawn_dev_embedding_server") is False:
         command.append("--no-spawn-dev-embedding-server")
-    command.extend(["--rerank-score-threshold-override", str(kwargs["rerank_score_threshold_override"])])
-    command.extend(["--chunk-size-override", str(kwargs["chunk_size_override"])])
-    command.extend(["--overlap-override", str(kwargs["overlap_override"])])
-    return command
+    if kwargs.get("rerank_score_threshold_override") is not None and kwargs.get("rerank_score_threshold_override") != 0.0:
+        command.extend(["--rerank-score-threshold-override", str(kwargs["rerank_score_threshold_override"])])
+    if kwargs.get("chunk_size_override") is not None and kwargs.get("chunk_size_override") != ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE:
+        command.extend(["--chunk-size-override", str(kwargs["chunk_size_override"])])
+    if kwargs.get("overlap_override") is not None and kwargs.get("overlap_override") != ENTERPRISE_RAG_DEFAULT_OVERLAP:
+        command.extend(["--overlap-override", str(kwargs["overlap_override"])])
+
+    quoted_parts = [shlex.quote(part) if " " in part else part for part in command]
+    command_str = " ".join(quoted_parts)
+    return command, command_str
 
 
 def _get_git_info() -> tuple[str, bool]:
@@ -444,6 +521,8 @@ def _build_and_write_benchmark_manifest(
         }
     }
 
+    reproduce_argv, reproduce_cmd_str = _render_reproduce_command(**arguments)
+
     manifest_payload = {
         "schema_version": "1.0.0",
         "benchmark_id": "enterprise_rag_paired_benchmark",
@@ -452,7 +531,8 @@ def _build_and_write_benchmark_manifest(
         "measurement_status": measurement_status,
         "created_at": created_at,
         "completed_at": completed_at,
-        "reproduce_command": _render_reproduce_command(**arguments),
+        "reproduce_command": reproduce_argv,
+        "reproduce_command_str": reproduce_cmd_str,
         "git_commit_sha": git_sha,
         "working_tree_dirty": git_dirty,
         "python_version": platform.python_version(),
@@ -1704,6 +1784,7 @@ def _blocked_metrics(
     selected_rows: list[dict[str, Any]],
     manifest: dict[str, Any],
     runtime_mode: str = "contract-smoke",
+    reproduce_argv: list[str] | None = None,
     reproduce_command: str = "",
 ) -> dict[str, Any]:
     metrics = {
@@ -1745,6 +1826,7 @@ def _blocked_metrics(
         "runtime_config": {
             "runtime_mode": runtime_mode,
             "is_test_double": (runtime_mode == "contract-smoke"),
+            "reproduce_argv": reproduce_argv or [],
             "reproduce_command": reproduce_command,
             "chunk_size_override": None,
             "overlap_override": None,
@@ -1805,21 +1887,36 @@ async def run_enterprise_rag_paired_benchmark(
     chunk_size_override: int | None = ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE,
     overlap_override: int | None = ENTERPRISE_RAG_DEFAULT_OVERLAP,
     runtime_mode: str = "contract-smoke",
+    canonical_deps: Any | None = None,
+    profile_runtime_factory: Any | None = None,
 ) -> dict[str, Any]:
+    # Validate canonical runtime configuration BEFORE creating directories or reading dataset!
+    validate_canonical_runtime_config(
+        runtime_mode=runtime_mode,
+        canonical_deps=canonical_deps,
+        profile_runtime_factory=profile_runtime_factory,
+    )
+
     import traceback
     created_at = time.time()
     output_root.mkdir(parents=True, exist_ok=True)
 
-    reproduce_cmd = (
-        f"poetry run python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark "
-        f"--questions-file {questions_file} --runtime-mode {runtime_mode} --sample-size {sample_size}"
+    reproduce_argv, reproduce_cmd = _render_reproduce_command(
+        questions_file=questions_file,
+        output_root=output_root,
+        runtime_mode=runtime_mode,
+        sample_size=sample_size,
+        documents_file=documents_file,
+        source_root=source_root,
+        prepare_only=not run_profiles,
     )
+    is_test_double = (runtime_mode == "contract-smoke")
 
     arguments = {
-        "questions_file": str(questions_file),
-        "documents_file": str(documents_file) if documents_file else None,
-        "source_root": str(source_root) if source_root else None,
-        "output_root": str(output_root),
+        "questions_file": _to_portable_posix_path(questions_file),
+        "documents_file": _to_portable_posix_path(documents_file) if documents_file else None,
+        "source_root": _to_portable_posix_path(source_root) if source_root else None,
+        "output_root": _to_portable_posix_path(output_root),
         "sample_size": sample_size,
         "stratify_by_question_type": stratify_by_question_type,
         "hard_negative_count": hard_negative_count,
@@ -1831,6 +1928,8 @@ async def run_enterprise_rag_paired_benchmark(
         "chunk_size_override": chunk_size_override,
         "overlap_override": overlap_override,
         "runtime_mode": runtime_mode,
+        "is_test_double": is_test_double,
+        "reproduce_argv": reproduce_argv,
         "reproduce_command": reproduce_cmd,
     }
 
@@ -1906,6 +2005,7 @@ async def run_enterprise_rag_paired_benchmark(
                 selected_rows=selected_rows,
                 manifest=manifest,
                 runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
                 reproduce_command=reproduce_cmd,
             )
             _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
@@ -1935,6 +2035,7 @@ async def run_enterprise_rag_paired_benchmark(
                 selected_rows=selected_rows,
                 manifest=manifest,
                 runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
                 reproduce_command=reproduce_cmd,
             )
             metrics["status"] = "prepared"
@@ -1988,6 +2089,7 @@ async def run_enterprise_rag_paired_benchmark(
                 selected_rows=selected_rows,
                 manifest=blocked_manifest,
                 runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
                 reproduce_command=reproduce_cmd,
             )
             metrics["runtime_config"]["chunk_size_override"] = chunk_size_override
@@ -2220,19 +2322,11 @@ def main() -> None:
             sys.exit(2)
         runtime_mode = "prepare-only"
 
-    # canonical mode guard: fail closed if canonical mode requested without
-    # explicit Composition Root support. The CLI currently has no mechanism to
-    # inject CanonicalRuntimeDependencies from the command line; callers must
-    # use the Python API or extend this with a config-driven Composition Root.
-    if runtime_mode == "canonical":
+    try:
+        validate_canonical_runtime_config(runtime_mode=runtime_mode)
+    except CanonicalRuntimeUnavailableError as err:
         import sys
-        print(
-            "ERROR: --runtime-mode=canonical requires an explicit CanonicalRuntimeDependencies "
-            "bundle from a Composition Root. The CLI does not yet support automatic construction "
-            "of canonical dependencies. Use the Python API directly or implement a "
-            "config-driven Composition Root. Aborting (fail closed).",
-            file=sys.stderr,
-        )
+        print(f"ERROR: {err}", file=sys.stderr)
         sys.exit(2)
 
     output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
