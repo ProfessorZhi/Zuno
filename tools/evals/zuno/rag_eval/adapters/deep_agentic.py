@@ -60,6 +60,15 @@ EXPECTED_RECEIPT_OWNERS = {
 }
 
 
+def _get_receipt_field(receipt: Any, field_name: str) -> str:
+    """Safely extract string field from dict or object receipt."""
+    if receipt is None:
+        return ""
+    if isinstance(receipt, dict):
+        return str(receipt.get(field_name, ""))
+    return str(getattr(receipt, field_name, ""))
+
+
 def validate_canonical_receipt(
     receipt: Any,
     expected_type: str,
@@ -67,27 +76,19 @@ def validate_canonical_receipt(
     tenant_id: str,
     workspace_id: str,
 ) -> bool:
-    """Validate authentic receipt object structure, owner, status, and payload hash."""
+    """Validate authentic receipt object structure, owner, status, runtime_version, snapshot_ref, and payload hash."""
     if receipt is None:
         return False
-    if isinstance(receipt, dict):
-        r_type = receipt.get("receipt_type", "")
-        r_ref = receipt.get("receipt_ref", "")
-        r_owner = receipt.get("owner", "")
-        r_status = receipt.get("status", "")
-        r_tenant = receipt.get("tenant_id", "")
-        r_workspace = receipt.get("workspace_id", "")
-        r_hash = receipt.get("payload_hash", "")
-    elif hasattr(receipt, "receipt_type"):
-        r_type = getattr(receipt, "receipt_type", "")
-        r_ref = getattr(receipt, "receipt_ref", "")
-        r_owner = getattr(receipt, "owner", "")
-        r_status = getattr(receipt, "status", "")
-        r_tenant = getattr(receipt, "tenant_id", "")
-        r_workspace = getattr(receipt, "workspace_id", "")
-        r_hash = getattr(receipt, "payload_hash", "")
-    else:
-        return False
+
+    r_type = _get_receipt_field(receipt, "receipt_type")
+    r_ref = _get_receipt_field(receipt, "receipt_ref")
+    r_owner = _get_receipt_field(receipt, "owner")
+    r_status = _get_receipt_field(receipt, "status")
+    r_tenant = _get_receipt_field(receipt, "tenant_id")
+    r_workspace = _get_receipt_field(receipt, "workspace_id")
+    r_version = _get_receipt_field(receipt, "runtime_version")
+    r_snapshot = _get_receipt_field(receipt, "snapshot_ref")
+    r_hash = _get_receipt_field(receipt, "payload_hash")
 
     if r_type != expected_type:
         return False
@@ -97,9 +98,24 @@ def validate_canonical_receipt(
         return False
     if r_tenant != tenant_id or r_workspace != workspace_id:
         return False
-    if not r_ref or not r_hash:
+    if not r_ref or not r_hash or not r_version or not r_snapshot:
         return False
     return True
+
+
+def _is_authentic_product_runtime(runtime: Any) -> bool:
+    """Determine whether runtime object possesses verifiable external Product Runtime Authority.
+
+    Runtime authenticity CANNOT be self-declared by the object under test (e.g. setting
+    is_test_double=False). Without trusted external Product Runtime Authority attestation,
+    any runtime object is treated as a test double (is_test_double=True).
+    """
+    if runtime is None:
+        return False
+    if getattr(runtime, "is_test_double", True) is True:
+        return False
+    authority = getattr(runtime, "__zuno_product_authority__", None)
+    return authority == "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
 
 
 class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
@@ -167,7 +183,7 @@ class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
             )
 
         start_t = time.monotonic()
-        # CRITICAL SAFETY: gold_document_refs MUST NEVER enter retrieval request!
+        # CRITICAL SAFETY: gold_document_refs & gold evidence MUST NEVER enter retrieval request!
         res_obj = retrieval_func(
             question=case_input.question,
             corpus_snapshot_ref=case_input.corpus_snapshot_ref,
@@ -185,8 +201,9 @@ class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
                 trace_id=trace_id,
             )
 
-        is_test_double = getattr(k_runtime, "is_test_double", True)
-        meas_state = "runtime_observed" if not is_test_double else "blocked_not_measured"
+        is_authentic = _is_authentic_product_runtime(k_runtime)
+        is_test_double = not is_authentic
+        meas_state = "runtime_observed" if is_authentic else "blocked_not_measured"
 
         answer = res_obj.get("answer", "")
         evidence_refs = tuple(res_obj.get("evidence_refs", ()))
@@ -203,7 +220,7 @@ class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
             eval_run_id=case_input.eval_run_id,
             case_id=case_input.case_id,
             profile_name="deep_graphrag",
-            runtime_status="completed" if not is_test_double else "completed_test_double",
+            runtime_status="completed" if is_authentic else "completed_test_double",
             measurement_state=meas_state,
             answer=answer,
             retrieved_document_refs=retrieved_docs,
@@ -325,6 +342,7 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         outcome_receipt = run_res.get("run_outcome_receipt")
         usage_receipt = run_res.get("usage_receipt")
         budget_receipt = run_res.get("budget_settlement_receipt")
+        artifact_receipt = run_res.get("artifact_receipt")
 
         valid_sec = validate_canonical_receipt(sec_receipt, "SecurityDecision", "security", case_input.tenant_id, case_input.workspace_id)
         valid_plan = validate_canonical_receipt(plan_receipt, "PlanVersion", "agent_core", case_input.tenant_id, case_input.workspace_id)
@@ -332,7 +350,12 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         valid_usage = validate_canonical_receipt(usage_receipt, "UsageReceipt", "model_gateway", case_input.tenant_id, case_input.workspace_id)
         valid_budget = validate_canonical_receipt(budget_receipt, "BudgetSettlement", "budget", case_input.tenant_id, case_input.workspace_id)
 
-        if not (valid_sec and valid_plan and valid_outcome and valid_usage and valid_budget):
+        valid_artifact = True
+        artifact_ref = str(run_res.get("artifact_receipt_ref", ""))
+        if artifact_receipt is not None or artifact_ref:
+            valid_artifact = validate_canonical_receipt(artifact_receipt, "ArtifactReceipt", "artifact_store", case_input.tenant_id, case_input.workspace_id)
+
+        if not (valid_sec and valid_plan and valid_outcome and valid_usage and valid_budget and valid_artifact):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
             return _blocked_result(
@@ -343,27 +366,59 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
                 trace_id=trace_id,
             )
 
-        is_test_double = getattr(agent_runtime, "is_test_double", True)
-        meas_state = "runtime_observed" if not is_test_double else "blocked_not_measured"
+        # Receipt reference binding checks
+        plan_ref = str(run_res.get("plan_version_ref", ""))
+        outcome_ref = str(run_res.get("run_outcome_ref", ""))
+        budget_ref = str(run_res.get("budget_settlement_ref", ""))
+
+        if (
+            plan_ref != _get_receipt_field(plan_receipt, "receipt_ref")
+            or outcome_ref != _get_receipt_field(outcome_receipt, "receipt_ref")
+            or budget_ref != _get_receipt_field(budget_receipt, "receipt_ref")
+        ):
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
+            return _blocked_result(
+                case_input=case_input,
+                profile_name="agentic_graphrag",
+                gaps=["runtime_contract_incomplete"],
+                latency=latency_ms,
+                trace_id=trace_id,
+            )
+
+        if artifact_ref and artifact_ref != _get_receipt_field(artifact_receipt, "receipt_ref"):
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
+            return _blocked_result(
+                case_input=case_input,
+                profile_name="agentic_graphrag",
+                gaps=["runtime_contract_incomplete"],
+                latency=latency_ms,
+                trace_id=trace_id,
+            )
+
+        is_authentic = _is_authentic_product_runtime(agent_runtime)
+        is_test_double = not is_authentic
+        meas_state = "runtime_observed" if is_authentic else "blocked_not_measured"
 
         if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
-            adapter.end_span(span_handle, outputs={"status": "completed", "outcome": run_res.get("run_outcome_ref")})
+            adapter.end_span(span_handle, outputs={"status": "completed", "outcome": outcome_ref})
 
         return CanonicalCaseResult(
             eval_run_id=case_input.eval_run_id,
             case_id=case_input.case_id,
             profile_name="agentic_graphrag",
-            runtime_status="completed" if not is_test_double else "completed_test_double",
+            runtime_status="completed" if is_authentic else "completed_test_double",
             measurement_state=meas_state,
             answer=run_res.get("answer", ""),
             retrieved_document_refs=tuple(run_res.get("retrieved_document_refs", ())),
             retrieved_evidence_refs=tuple(run_res.get("evidence_refs", ())),
             citation_refs=tuple(run_res.get("evidence_refs", ())),
             knowledge_snapshot_ref=run_res.get("knowledge_snapshot_ref", case_input.corpus_snapshot_ref),
-            plan_version_ref=run_res.get("plan_version_ref", ""),
-            run_outcome_ref=run_res.get("run_outcome_ref", ""),
-            budget_settlement_ref=run_res.get("budget_settlement_ref", ""),
-            artifact_receipt_ref=run_res.get("artifact_receipt_ref", ""),
+            plan_version_ref=plan_ref,
+            run_outcome_ref=outcome_ref,
+            budget_settlement_ref=budget_ref,
+            artifact_receipt_ref=artifact_ref,
             trace_id=trace_id or run_res.get("trace_id"),
             retrieval_rounds=int(run_res.get("retrieval_rounds", 0)),
             latency=latency_ms,

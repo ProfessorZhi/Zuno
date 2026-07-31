@@ -87,10 +87,10 @@ class ContractTestDoubleAgentRuntime:
             "retrieval_rounds": 1,
             "token_usage": 200,
             "cost": 0.002,
-            "plan_version_ref": "plan_real_001",
-            "run_outcome_ref": "outcome_real_001",
-            "budget_settlement_ref": "budget_real_001",
-            "artifact_receipt_ref": "art_real_001",
+            "plan_version_ref": "plan_01",
+            "run_outcome_ref": "outcome_01",
+            "budget_settlement_ref": "budget_01",
+            "artifact_receipt_ref": "art_01",
             "trace_id": "trace_real_001",
             "security_decision_receipt": {
                 "receipt_type": "SecurityDecision",
@@ -147,6 +147,17 @@ class ContractTestDoubleAgentRuntime:
                 "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
                 "payload_hash": "hash_budget_01",
             },
+            "artifact_receipt": {
+                "receipt_type": "ArtifactReceipt",
+                "receipt_ref": "art_01",
+                "owner": "artifact_store",
+                "status": "valid",
+                "tenant_id": kwargs.get("tenant_id"),
+                "workspace_id": kwargs.get("workspace_id"),
+                "runtime_version": "2.0.0",
+                "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
+                "payload_hash": "hash_art_01",
+            },
         }
 
 
@@ -184,6 +195,10 @@ def test_unit_contract_deep_gold_refs_not_in_retrieval_request() -> None:
 
     assert "gold_doc_refs" not in k_runtime.last_query_params
     assert "gold_document_refs" not in k_runtime.last_query_params
+    assert "gold_evidence_refs" not in k_runtime.last_query_params
+    assert "supporting_fact_refs" not in k_runtime.last_query_params
+    assert "citation_ground_truth" not in k_runtime.last_query_params
+    assert "expected_answer" not in k_runtime.last_query_params
     assert k_runtime.last_query_params["question"] == "What is the unit test behavior of deep graphrag?"
     assert k_runtime.last_query_params["corpus_snapshot_ref"] == "snapshot_unit_v1"
 
@@ -225,9 +240,11 @@ def test_unit_contract_agentic_test_double_runtime_execution() -> None:
     res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
 
     assert agent_runtime.last_execute_params.get("question") == "What is the unit test behavior of deep graphrag?"
+    assert "gold_document_refs" not in agent_runtime.last_execute_params
+    assert "gold_evidence_refs" not in agent_runtime.last_execute_params
     assert res.is_test_double is True
     assert res.measurement_state == "blocked_not_measured"
-    assert res.plan_version_ref == "plan_real_001"
+    assert res.plan_version_ref == "plan_01"
 
 
 def test_unit_contract_receipt_validation_owner_mismatch_fails_closed() -> None:
@@ -260,3 +277,47 @@ def test_unit_contract_receipt_validation_missing_hash_fails_closed() -> None:
         "payload_hash": "",
     }
     assert validate_canonical_receipt(bad_receipt, "PlanVersion", "agent_core", "t1", "w1") is False
+
+
+def test_unit_contract_receipt_validation_missing_version_or_snapshot_fails_closed() -> None:
+    """Receipt validation fails when runtime_version or snapshot_ref is missing."""
+    no_version = {
+        "receipt_type": "UsageReceipt",
+        "receipt_ref": "u01",
+        "owner": "model_gateway",
+        "status": "valid",
+        "tenant_id": "t1",
+        "workspace_id": "w1",
+        "runtime_version": "",
+        "snapshot_ref": "s1",
+        "payload_hash": "h1",
+    }
+    no_snapshot = {
+        "receipt_type": "BudgetSettlement",
+        "receipt_ref": "b01",
+        "owner": "budget",
+        "status": "valid",
+        "tenant_id": "t1",
+        "workspace_id": "w1",
+        "runtime_version": "2.0.0",
+        "snapshot_ref": "",
+        "payload_hash": "h1",
+    }
+    assert validate_canonical_receipt(no_version, "UsageReceipt", "model_gateway", "t1", "w1") is False
+    assert validate_canonical_receipt(no_snapshot, "BudgetSettlement", "budget", "t1", "w1") is False
+
+
+def test_unit_contract_agentic_receipt_binding_mismatch_fails_closed() -> None:
+    """Agentic adapter returns BLOCKED when plan_version_ref does not match receipt_ref."""
+    class MismatchedRefAgentRuntime(ContractTestDoubleAgentRuntime):
+        def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
+            res = super().execute_agent_run(**kwargs)
+            res["plan_version_ref"] = "mismatched_plan_ref"
+            return res
+
+    deps = _full_preflight_deps(agent_run_runtime=MismatchedRefAgentRuntime())
+    adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
+
+    res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
+    assert res.runtime_status == "blocked"
+    assert res.failure_class == "runtime_contract_incomplete"
