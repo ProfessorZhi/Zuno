@@ -7,6 +7,12 @@ from zuno.platform.common.runtime_observability import (
     configure_langsmith,
     get_active_trace_id,
 )
+from zuno.platform.observability.trace_adapter import (
+    LangSmithTraceAdapter,
+    NoopTraceAdapter,
+    ObservabilityTracePort,
+    get_observability_adapter,
+)
 from zuno.platform.observability.trace_eval import (
     AgentEfficiencySnapshot,
     AgenticLoopTrace,
@@ -216,4 +222,8 @@ __all__ = [
     "ReleaseGateReport",
     "ReleaseGateStatus",
     "create_eval_result_revision",
+    "ObservabilityTracePort",
+    "NoopTraceAdapter",
+    "LangSmithTraceAdapter",
+    "get_observability_adapter",
 ]
