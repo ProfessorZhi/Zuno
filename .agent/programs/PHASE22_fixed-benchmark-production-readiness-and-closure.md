@@ -2,6 +2,7 @@
 
 phase_id: PHASE22
 status: in_progress
+readiness: PRE_TEST_READY
 depends_on: PHASE21
 owner: Coordinator / Release Governance
 
