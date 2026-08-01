@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
+from mimetypes import guess_type
 from pathlib import Path
 from typing import Iterable
 from urllib.parse import unquote, urlparse
@@ -11,7 +12,7 @@ from uuid import uuid4
 import requests
 
 from zuno.api.dto.workspace import WorkspaceAttachment
-from zuno.knowledge.ingestion import parse_file_into_chunk_model_projection
+from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseDocumentRequest, ParseGateway
 from zuno.platform.services.storage import storage_client
 from zuno.platform.settings import app_settings
 from zuno.capability.tools.image2text.action import _image_to_text
@@ -92,18 +93,52 @@ def _download_attachment(attachment: WorkspaceAttachment) -> str:
     return local_path
 
 
+def _parse_attachment_to_canonical_ir(
+    *,
+    attachment: WorkspaceAttachment,
+    local_path: str,
+    session_id: str,
+) -> CanonicalDocumentIR:
+    path = Path(local_path)
+    file_id = f"workspace_attachment_{uuid4().hex}"
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id=file_id,
+            source_id=file_id,
+            workspace_id=f"workspace_attachment:{session_id or 'default'}",
+            source_uri=attachment.url or path.resolve().as_uri(),
+            mime_type=attachment.mime_type or guess_type(attachment.name or path.name)[0] or "text/plain",
+            source_bytes=path.read_bytes(),
+            parser_config={
+                "adapter": "product.workspace_attachment.canonical_ir",
+                "owner": "Product Surface / Input Parser Adapter Owner",
+                "consumer": "workspace_attachment_prompt",
+                "projection": "canonical_document_ir_blocks",
+            },
+        )
+    )
+    if result.status != "succeeded" or result.document is None:
+        reason = result.failure.reason if result.failure else result.status
+        raise ValueError(f"workspace attachment parse failed through ParseGateway: {reason}")
+    return result.document
+
+
+def _canonical_document_text(document: CanonicalDocumentIR) -> str:
+    return "\n\n".join(block.text.strip() for block in document.blocks if block.text.strip()).strip()
+
+
 async def _extract_attachment_text(attachment: WorkspaceAttachment, session_id: str) -> tuple[str, str]:
     kind = classify_attachment(attachment)
     local_path = _download_attachment(attachment)
     try:
         if kind == "image":
             return kind, await asyncio.to_thread(_image_to_text, local_path)
-        chunks = await parse_file_into_chunk_model_projection(
-            file_id=f"workspace_attachment_{uuid4().hex}",
-            file_path=local_path,
-            knowledge_id=session_id or "workspace_attachment",
+        document = _parse_attachment_to_canonical_ir(
+            attachment=attachment,
+            local_path=local_path,
+            session_id=session_id,
         )
-        content = "\n\n".join(chunk.content for chunk in chunks if chunk.content).strip()
+        content = _canonical_document_text(document)
         if not content:
             raise ValueError(f"闄勪欢 {attachment.name} 娌℃湁鎻愬彇鍒板彲璇诲唴瀹广€?")
         return kind, content
