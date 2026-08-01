@@ -120,6 +120,14 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert metrics["case_set"]["measured_case_count"] == 0
     assert metrics["release_gate"]["measured"] is False
     assert metrics["release_gate"]["status"] == "blocked_not_measured"
+    assert set(metrics["profiles"]) == {
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    }
+    assert metrics["profiles"]["local_graphrag"]["measured"] is False
+    assert metrics["profiles"]["local_graphrag"]["blocked_reason"] == "dataset_measurement_blocked"
     assert metrics["corpus"]["external_documents_required"] is True
     assert metrics["corpus"]["blocked_reason"] == "enterprise_rag_bench_documents_required"
     assert metrics["runtime_config"]["citation_chunking"]["strategy"] == "citation_sized_with_parent_context"
@@ -225,11 +233,19 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
     assert metrics["metrics_source"] == "blocked_not_measured"
     assert metrics["case_set"]["measured_case_count"] == 0
     assert metrics["case_set"]["profile_case_counts"]["standard_rag"] == 2
+    assert metrics["case_set"]["profile_case_counts"]["local_graphrag"] == 2
     assert metrics["case_set"]["profile_case_counts"]["deep_graphrag"] == 2
     assert metrics["case_set"]["profile_case_counts"]["agentic_graphrag"] == 0
     assert metrics["profile_completeness"]["complete"] is False
+    assert metrics["profile_completeness"]["required_profiles"] == [
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    ]
     assert metrics["profile_completeness"]["missing_profiles"] == ["agentic_graphrag"]
     assert metrics["profile_completeness"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
+    assert metrics["profiles"]["local_graphrag"]["measured"] is True
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is False
     assert metrics["profiles"]["agentic_graphrag"]["metrics_source"] == "not_measured"
     assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] in ("dataset_measurement_blocked", "agentic_runtime_runner_not_wired")
@@ -741,6 +757,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["runtime_config"]["chunk_size_override"] == 1800
     assert metrics["runtime_config"]["overlap_override"] == 240
     assert metrics["profiles"]["standard_rag"]["underlying_profile"] == "baseline_rag"
+    assert metrics["profiles"]["local_graphrag"]["underlying_profile"] == "local_graphrag"
     assert metrics["profiles"]["deep_graphrag"]["underlying_profile"] == "deep_graphrag"
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is True
     assert metrics["profiles"]["agentic_graphrag"]["underlying_profile"] == "agentic_graphrag"
