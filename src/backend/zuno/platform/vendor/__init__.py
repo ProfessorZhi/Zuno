@@ -1,3 +1,3 @@
-"""Reserved import guard for third-party platform vendor shims."""
+"""Canonical import guard for third-party platform vendor shims."""
 
-__all__: list[str] = []
+__all__: list[str] = ["fastapi_jwt_auth"]

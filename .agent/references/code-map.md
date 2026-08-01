@@ -57,7 +57,7 @@ Completion API
 api / agent / memory / capability / knowledge / platform
 ```
 
-旧入口不允许继续以根级 `.py` alias 文件留在顶层；`zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.compatibility`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals` 由 `platform/compatibility/legacy_aliases.py` 注册兼容。
+旧入口不允许继续以根级 `.py` alias 文件留在顶层；`zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals` 由当前 canonical owner 暴露，旧 `platform/compatibility/legacy_aliases.py` 与 `platform/compatibility/` 目录已在 PHASE22 Wave 1 退役。
 
 后端实现规则：
 
