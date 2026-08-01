@@ -998,6 +998,16 @@ def verify_current_program() -> list[str]:
     ]:
         if phrase not in phase11_readiness:
             errors.append(f"PHASE11 repair readiness missing phrase: {phrase}")
+    errors.extend(
+        _load_verifier(
+            REPO_ROOT
+            / "tools"
+            / "scripts"
+            / "verify_phase22_completion_blockers.py",
+            "verify_phase22_completion_blockers",
+            "verify_phase22_completion_blockers",
+        )
+    )
     return errors
 
 
