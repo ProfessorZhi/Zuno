@@ -1,10 +1,11 @@
 """Fault Injection Tests for Deep and Agentic GraphRAG Canonical Adapters.
 
-AG-PR56-GEMINI-3-6-FLASH-HIGH-RUNTIME-TRUTH-REBUILD
+AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
 
-Truthful Fault Verification:
+Fail-Closed Fault Verification:
 - Tests exact mapping of failure_class when runtime ports return blocked status.
 - Verifies invalid receipt owner, missing receipt hash, and unpopulated ports fail closed.
+- Asserts measurement_state is strictly BLOCKED.
 """
 
 from __future__ import annotations
@@ -99,6 +100,7 @@ def test_fault_injection_agentic_adapter_mapped_failure_class(expected_fault: st
 
     res = adapter.run_canonical_case(_fault_case("agentic_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == expected_fault
 
 
@@ -127,6 +129,7 @@ def test_fault_injection_missing_receipt_hash_fails_closed() -> None:
 
     res = adapter.run_canonical_case(_fault_case("agentic_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "runtime_contract_incomplete"
 
 
@@ -202,4 +205,5 @@ def test_fault_injection_receipt_reference_binding_mismatch_fails_closed() -> No
 
     res = adapter.run_canonical_case(_fault_case("agentic_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "runtime_contract_incomplete"

@@ -2,11 +2,12 @@
 
 ## Status & Attestations
 
-- **Deep GraphRAG Canonical Adapter**: contract boundary available (`tools/evals/zuno/rag_eval/adapters/deep_agentic.py`)
-- **Agentic GraphRAG Canonical Adapter**: contract boundary available (`tools/evals/zuno/rag_eval/adapters/deep_agentic.py`)
+- **Deep GraphRAG Canonical Adapter**: fail-closed contract boundary available (`tools/evals/zuno/rag_eval/adapters/deep_agentic.py`)
+- **Agentic GraphRAG Canonical Adapter**: fail-closed contract boundary available (`tools/evals/zuno/rag_eval/adapters/deep_agentic.py`)
 - **Formal Product Runtime Wiring**: blocked (`canonical_agentic_product_runtime_unavailable`)
 - **Synthetic Local Composition Root**: deleted (`benchmark_deep_agentic.py` removed)
-- **Authentic Receipt Validation**: contract boundary available (validates receipt_type, owner, status, payload_hash)
+- **Product Runtime Authority**: unavailable in eval layer; all injected objects fail closed (`is_test_double=True`, `runtime_status="blocked"`, `measurement_state="BLOCKED"`)
+- **Authentic Receipt Validation**: contract boundary helper available (validates receipt_type, owner, status, payload_hash)
 - **Gold Refs Protection**: contract verified (gold_document_refs NEVER enter retrieval request)
 - **Standard RAG Adapter**: not implemented (out of scope for this PR)
 - **Local GraphRAG Adapter**: not implemented (out of scope for this PR)
@@ -40,17 +41,26 @@
 - **Reasoning Effort**: not reported
 - **Work Package**: `AG-PR56-BOUNDARY-TRUTH-CLOSURE`
 
+### Round 4 — Fail-Closed Boundary Repair
+
+- **Implementer Agent**: Antigravity
+- **Visible Model**: Gemini 3.6 Flash
+- **Actual Model**: not reported
+- **Reasoning Effort**: not reported
+- **Work Package**: `AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR`
+
 #### Architectural & Truth Attestations
-1. **Product Runtime Attestation Requirement**: `_is_authentic_product_runtime` requires explicit external Product Runtime Authority attestation (`__zuno_product_authority__`). Runtime authenticity CANNOT be self-declared by arbitrary objects setting `is_test_double=False`. Un-attested test double runtimes are strictly identified as `is_test_double=True` and CANNOT claim `measurement_state="runtime_observed"`.
-2. **Receipt Binding & Completeness**: `validate_canonical_receipt` requires non-empty `runtime_version` and `snapshot_ref`. `AgenticGraphRAGCanonicalAdapter` verifies exact reference binding between receipt objects and result references (`plan_version_ref`, `run_outcome_ref`, `budget_settlement_ref`, `artifact_receipt_ref`). Mismatched or missing receipt bindings return `runtime_status = blocked` and `measurement_state = BLOCKED`.
-3. **Integration Boundary Truth**: Tests in `test_canonical_deep_agentic_integration.py` reflect truthful boundary contract integration with explicit test doubles (`is_test_double=True`) returning `completed_test_double` and `blocked_not_measured`. Zero fake product runtime integration claims.
-4. **Gold Evidence Leakage Protection**: Gold document refs, gold evidence refs, supporting fact refs, citation ground truths, and expected answers are strictly excluded from runtime execution calls.
+1. **Self-Attestation Removal & Fail-Closed Boundary**: `__zuno_product_authority__` self-attestation is completely removed. Without a formal external Product Runtime Authority port, all injected objects fail closed (`runtime_status="blocked"`, `measurement_state="BLOCKED"`, `is_test_double=True`, `failure_class="canonical_product_runtime_attestation_unavailable"`).
+2. **Safe Empty Evidence Fields**: Blocked adapter outputs keep formal receipt and metrics fields empty (`plan_version_ref=""`, `run_outcome_ref=""`, `budget_settlement_ref=""`, `artifact_receipt_ref=""`, `token_usage=0`, `cost=0.0`). Non-authoritative answers and retrieved refs are preserved solely for boundary test double observation.
+3. **Latency Unit Alignment**: Adapter latency is measured in seconds (`time.monotonic()` delta), matching `canonical_profile_runners.py`.
+4. **Receipt Validation Helper**: `validate_canonical_receipt` verifies structural validity, owner mapping, and non-empty hash/version/snapshot. Structural receipt failures or binding mismatches return `runtime_status="blocked"`, `measurement_state="BLOCKED"`, and `failure_class="runtime_contract_incomplete"`.
+5. **Gold Evidence Leakage Protection**: Gold document refs, gold evidence refs, supporting fact refs, citation ground truths, and expected answers are strictly excluded from runtime execution calls.
 
 ---
 
 ## Verification & Test Results
 
-- **Unit Contract Tests**: 8/8 passing (`tests/evals/test_canonical_deep_agentic_runtime.py`)
+- **Unit Contract Tests**: 11/11 passing (`tests/evals/test_canonical_deep_agentic_runtime.py`)
 - **Boundary Integration Contract Tests**: 4/4 passing (`tests/integration/evals/test_canonical_deep_agentic_integration.py`)
 - **Fault Injection Tests**: 20/20 passing (`tests/fault/evals/test_canonical_deep_agentic_faults.py`)
 - **Repository Bypass Guard Tests**: 3/3 passing (`tests/repo/test_canonical_agentic_bypass_guard.py`)

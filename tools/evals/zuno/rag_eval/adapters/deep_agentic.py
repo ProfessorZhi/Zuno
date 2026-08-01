@@ -1,21 +1,20 @@
 """Canonical Execution Adapters for Deep GraphRAG and Agentic GraphRAG.
 
-AG-PR56-GEMINI-3-6-FLASH-HIGH-RUNTIME-TRUTH-REBUILD
+AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
 
-Truthful Boundary Contract:
+Fail-Closed Boundary Contract:
 1. Deep GraphRAG Canonical Adapter:
    - Connects to formal Knowledge Runtime Port (deps.knowledge_runtime).
    - Gold document refs MUST NEVER enter the retrieval request.
    - Zero synthetic fallback answers or artificial token/cost/latency generation.
    - When Knowledge Runtime Port or execute_deep_retrieval method is absent, returns BLOCKED with failure_class="canonical_knowledge_runtime_unavailable".
-   - Test doubles / fake runtimes MUST set is_test_double=True and CANNOT claim measurement_state="runtime_observed".
+   - Without formal external Product Runtime Authority binding, all injected objects fail closed (runtime_status="blocked", measurement_state="BLOCKED", is_test_double=True).
 
 2. Agentic GraphRAG Canonical Adapter:
    - Connects to formal Agent Run Runtime Port (deps.agent_run_runtime).
    - Zero local synthetic AgentRunGraph composition roots inside eval layer.
    - When formal product runtime is absent or unwired, returns BLOCKED with failure_class="canonical_agentic_product_runtime_unavailable".
-   - Validates authentic receipt fields: receipt_type, receipt_ref, owner, status, tenant_id, workspace_id, runtime_version, snapshot_ref, payload_hash.
-   - Validates receipt owners: SecurityDecision (security), PlanVersion/RunOutcome (agent_core), UsageReceipt (model_gateway), BudgetSettlement (budget), Trace (observability), ArtifactReceipt (artifact_store).
+   - Without formal external Product Runtime Authority binding, all injected objects fail closed (runtime_status="blocked", measurement_state="BLOCKED", is_test_double=True).
 """
 
 from __future__ import annotations
@@ -103,26 +102,12 @@ def validate_canonical_receipt(
     return True
 
 
-def _is_authentic_product_runtime(runtime: Any) -> bool:
-    """Determine whether runtime object possesses verifiable external Product Runtime Authority.
-
-    Runtime authenticity CANNOT be self-declared by the object under test (e.g. setting
-    is_test_double=False). Without trusted external Product Runtime Authority attestation,
-    any runtime object is treated as a test double (is_test_double=True).
-    """
-    if runtime is None:
-        return False
-    if getattr(runtime, "is_test_double", True) is True:
-        return False
-    authority = getattr(runtime, "__zuno_product_authority__", None)
-    return authority == "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
-
-
 class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
     """Deep GraphRAG Canonical Execution Adapter.
 
     Delegates multi-round retrieval to formal Knowledge Runtime Port.
     Gold document refs are NEVER passed into retrieval requests.
+    Fails closed when formal external Product Runtime Authority is unavailable.
     """
 
     def __init__(self, deps: CanonicalRuntimeDependencies) -> None:
@@ -150,98 +135,238 @@ class DeepGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         if gaps:
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": gaps})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="deep_graphrag",
                 gaps=gaps,
                 latency=0.0,
                 trace_id=trace_id,
             )
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
+            )
 
         k_runtime = self._deps.knowledge_runtime
         if k_runtime is None:
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_knowledge_runtime_unavailable"]})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="deep_graphrag",
                 gaps=["canonical_knowledge_runtime_unavailable"],
                 latency=0.0,
                 trace_id=trace_id,
+            )
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
             )
 
         retrieval_func = getattr(k_runtime, "execute_deep_retrieval", None)
         if not callable(retrieval_func):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_knowledge_runtime_unavailable"]})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="deep_graphrag",
                 gaps=["canonical_knowledge_runtime_unavailable"],
                 latency=0.0,
                 trace_id=trace_id,
             )
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
+            )
 
         start_t = time.monotonic()
-        # CRITICAL SAFETY: gold_document_refs & gold evidence MUST NEVER enter retrieval request!
-        res_obj = retrieval_func(
-            question=case_input.question,
-            corpus_snapshot_ref=case_input.corpus_snapshot_ref,
-        )
-        latency_ms = (time.monotonic() - start_t) * 1000.0
+        try:
+            # CRITICAL SAFETY: gold_document_refs & gold evidence MUST NEVER enter retrieval request!
+            res_obj = retrieval_func(
+                question=case_input.question,
+                corpus_snapshot_ref=case_input.corpus_snapshot_ref,
+            )
+        except Exception:
+            latency_sec = time.monotonic() - start_t
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_knowledge_runtime_exception"]})
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                profile_name="deep_graphrag",
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
+                trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="canonical_knowledge_runtime_exception",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="canonical_knowledge_runtime_exception",
+                dependency_gaps=("canonical_knowledge_runtime_exception",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "exception_raised"},
+            )
+
+        latency_sec = time.monotonic() - start_t
 
         if not isinstance(res_obj, dict):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
-            return _blocked_result(
-                case_input=case_input,
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
                 profile_name="deep_graphrag",
-                gaps=["runtime_contract_incomplete"],
-                latency=latency_ms,
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
                 trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="runtime_contract_incomplete",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="runtime_contract_incomplete",
+                dependency_gaps=("runtime_contract_incomplete",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "invalid_return_type"},
             )
 
-        is_authentic = _is_authentic_product_runtime(k_runtime)
-        is_test_double = not is_authentic
-        meas_state = "runtime_observed" if is_authentic else "blocked_not_measured"
-
-        answer = res_obj.get("answer", "")
+        # Boundary test double observation data
+        answer = str(res_obj.get("answer", ""))
         evidence_refs = tuple(res_obj.get("evidence_refs", ()))
         retrieved_docs = tuple(res_obj.get("retrieved_document_refs", ()))
         retrieval_rounds = int(res_obj.get("retrieval_rounds", 0))
-        token_usage = int(res_obj.get("token_usage", 0))
-        cost = float(res_obj.get("cost", 0.0))
         stop_reason = str(res_obj.get("stop_reason", ""))
 
         if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
-            adapter.end_span(span_handle, outputs={"status": "completed", "rounds": retrieval_rounds})
+            adapter.end_span(span_handle, outputs={"status": "blocked", "rounds": retrieval_rounds})
 
+        # FAIL CLOSED: Product Runtime Attestation is unavailable in PR #56
         return CanonicalCaseResult(
             eval_run_id=case_input.eval_run_id,
             case_id=case_input.case_id,
             profile_name="deep_graphrag",
-            runtime_status="completed" if is_authentic else "completed_test_double",
-            measurement_state=meas_state,
+            runtime_status="blocked",
+            measurement_state="BLOCKED",
             answer=answer,
             retrieved_document_refs=retrieved_docs,
             retrieved_evidence_refs=evidence_refs,
             citation_refs=evidence_refs,
             knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
-            plan_version_ref=res_obj.get("plan_version_ref", ""),
-            run_outcome_ref=res_obj.get("run_outcome_ref", ""),
-            budget_settlement_ref=res_obj.get("budget_settlement_ref", ""),
-            artifact_receipt_ref=res_obj.get("artifact_receipt_ref", ""),
-            trace_id=trace_id or res_obj.get("trace_id"),
+            plan_version_ref="",
+            run_outcome_ref="",
+            budget_settlement_ref="",
+            artifact_receipt_ref="",
+            trace_id=trace_id,
             retrieval_rounds=retrieval_rounds,
-            latency=latency_ms,
-            token_usage=token_usage,
-            cost=cost,
-            failure_class="",
+            latency=latency_sec,
+            token_usage=0,
+            cost=0.0,
+            failure_class="canonical_product_runtime_attestation_unavailable",
             retry_count=0,
             standard_floor_preserved=None,
-            is_test_double=is_test_double,
-            blocked_reason="",
-            dependency_gaps=(),
+            is_test_double=True,
+            blocked_reason="canonical_product_runtime_attestation_unavailable",
+            dependency_gaps=("canonical_product_runtime_attestation_unavailable",),
             evidence_refs=evidence_refs,
             retrieval_trace={"stop_reason": stop_reason},
         )
@@ -252,6 +377,7 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
 
     Delegates agent execution to formal Agent Run Runtime Port (deps.agent_run_runtime).
     Zero synthetic local composition roots inside the eval layer.
+    Fails closed when formal external Product Runtime Authority is unavailable.
     """
 
     def __init__(self, deps: CanonicalRuntimeDependencies) -> None:
@@ -279,64 +405,242 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         if gaps:
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": gaps})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="agentic_graphrag",
                 gaps=gaps,
                 latency=0.0,
                 trace_id=trace_id,
             )
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
+            )
 
         agent_runtime = self._deps.agent_run_runtime
         if agent_runtime is None:
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_agent_run_graph_unavailable"]})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="agentic_graphrag",
                 gaps=["canonical_agent_run_graph_unavailable"],
                 latency=0.0,
                 trace_id=trace_id,
             )
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
+            )
 
         exec_func = getattr(agent_runtime, "execute_agent_run", None)
         if not callable(exec_func):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_agentic_product_runtime_unavailable"]})
-            return _blocked_result(
+            res = _blocked_result(
                 case_input=case_input,
                 profile_name="agentic_graphrag",
                 gaps=["canonical_agentic_product_runtime_unavailable"],
                 latency=0.0,
                 trace_id=trace_id,
             )
-
-        start_t = time.monotonic()
-        run_res = exec_func(
-            eval_run_id=case_input.eval_run_id,
-            case_id=case_input.case_id,
-            question=case_input.question,
-            corpus_snapshot_ref=case_input.corpus_snapshot_ref,
-            tenant_id=case_input.tenant_id,
-            workspace_id=case_input.workspace_id,
-            authorization_ref=case_input.authorization_ref,
-            security_epoch=case_input.security_epoch,
-            attempt_number=case_input.attempt_number,
-        )
-        latency_ms = (time.monotonic() - start_t) * 1000.0
-
-        if not isinstance(run_res, dict) or run_res.get("status") == "blocked":
-            failure_class = run_res.get("failure_class", "canonical_agentic_product_runtime_unavailable") if isinstance(run_res, dict) else "canonical_agentic_product_runtime_unavailable"
-            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
-                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": [failure_class]})
-            return _blocked_result(
-                case_input=case_input,
-                profile_name="agentic_graphrag",
-                gaps=[failure_class],
-                latency=latency_ms,
-                trace_id=trace_id,
+            return CanonicalCaseResult(
+                eval_run_id=res.eval_run_id,
+                case_id=res.case_id,
+                profile_name=res.profile_name,
+                runtime_status=res.runtime_status,
+                measurement_state=res.measurement_state,
+                answer=res.answer,
+                retrieved_document_refs=res.retrieved_document_refs,
+                retrieved_evidence_refs=res.retrieved_evidence_refs,
+                citation_refs=res.citation_refs,
+                knowledge_snapshot_ref=res.knowledge_snapshot_ref,
+                plan_version_ref=res.plan_version_ref,
+                run_outcome_ref=res.run_outcome_ref,
+                budget_settlement_ref=res.budget_settlement_ref,
+                artifact_receipt_ref=res.artifact_receipt_ref,
+                trace_id=res.trace_id,
+                retrieval_rounds=res.retrieval_rounds,
+                latency=res.latency,
+                token_usage=res.token_usage,
+                cost=res.cost,
+                failure_class=res.failure_class,
+                retry_count=res.retry_count,
+                standard_floor_preserved=res.standard_floor_preserved,
+                is_test_double=True,
+                blocked_reason=res.blocked_reason,
+                dependency_gaps=res.dependency_gaps,
+                evidence_refs=res.evidence_refs,
+                retrieval_trace=res.retrieval_trace,
             )
 
+        start_t = time.monotonic()
+        try:
+            run_res = exec_func(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                question=case_input.question,
+                corpus_snapshot_ref=case_input.corpus_snapshot_ref,
+                tenant_id=case_input.tenant_id,
+                workspace_id=case_input.workspace_id,
+                authorization_ref=case_input.authorization_ref,
+                security_epoch=case_input.security_epoch,
+                attempt_number=case_input.attempt_number,
+            )
+        except Exception:
+            latency_sec = time.monotonic() - start_t
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["canonical_agentic_runtime_exception"]})
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                profile_name="agentic_graphrag",
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
+                trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="canonical_agentic_runtime_exception",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="canonical_agentic_runtime_exception",
+                dependency_gaps=("canonical_agentic_runtime_exception",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "exception_raised"},
+            )
+
+        latency_sec = time.monotonic() - start_t
+
+        if not isinstance(run_res, dict):
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                profile_name="agentic_graphrag",
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
+                trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="runtime_contract_incomplete",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="runtime_contract_incomplete",
+                dependency_gaps=("runtime_contract_incomplete",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "invalid_return_type"},
+            )
+
+        if run_res.get("status") == "blocked":
+            failure_class = run_res.get("failure_class", "canonical_agentic_product_runtime_unavailable")
+            if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
+                adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": [failure_class]})
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                profile_name="agentic_graphrag",
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
+                trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class=failure_class,
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason=failure_class,
+                dependency_gaps=(failure_class,),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "runtime_blocked"},
+            )
+
+        # Receipt structural validation for contract checking
         sec_receipt = run_res.get("security_decision_receipt")
         plan_receipt = run_res.get("plan_version_receipt")
         outcome_receipt = run_res.get("run_outcome_receipt")
@@ -358,12 +662,34 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         if not (valid_sec and valid_plan and valid_outcome and valid_usage and valid_budget and valid_artifact):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
-            return _blocked_result(
-                case_input=case_input,
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
                 profile_name="agentic_graphrag",
-                gaps=["runtime_contract_incomplete"],
-                latency=latency_ms,
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
                 trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="runtime_contract_incomplete",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="runtime_contract_incomplete",
+                dependency_gaps=("runtime_contract_incomplete",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "receipt_validation_failed"},
             )
 
         # Receipt reference binding checks
@@ -378,58 +704,106 @@ class AgenticGraphRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
         ):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
-            return _blocked_result(
-                case_input=case_input,
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
                 profile_name="agentic_graphrag",
-                gaps=["runtime_contract_incomplete"],
-                latency=latency_ms,
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
                 trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="runtime_contract_incomplete",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="runtime_contract_incomplete",
+                dependency_gaps=("runtime_contract_incomplete",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "receipt_binding_mismatch"},
             )
 
         if artifact_ref and artifact_ref != _get_receipt_field(artifact_receipt, "receipt_ref"):
             if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
                 adapter.end_span(span_handle, outputs={"status": "blocked", "gaps": ["runtime_contract_incomplete"]})
-            return _blocked_result(
-                case_input=case_input,
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
                 profile_name="agentic_graphrag",
-                gaps=["runtime_contract_incomplete"],
-                latency=latency_ms,
+                runtime_status="blocked",
+                measurement_state="BLOCKED",
+                answer="",
+                retrieved_document_refs=(),
+                retrieved_evidence_refs=(),
+                citation_refs=(),
+                knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+                plan_version_ref="",
+                run_outcome_ref="",
+                budget_settlement_ref="",
+                artifact_receipt_ref="",
                 trace_id=trace_id,
+                retrieval_rounds=0,
+                latency=latency_sec,
+                token_usage=0,
+                cost=0.0,
+                failure_class="runtime_contract_incomplete",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=True,
+                blocked_reason="runtime_contract_incomplete",
+                dependency_gaps=("runtime_contract_incomplete",),
+                evidence_refs=(),
+                retrieval_trace={"stop_reason": "artifact_receipt_mismatch"},
             )
 
-        is_authentic = _is_authentic_product_runtime(agent_runtime)
-        is_test_double = not is_authentic
-        meas_state = "runtime_observed" if is_authentic else "blocked_not_measured"
+        # Boundary test double observation answer and refs
+        answer = str(run_res.get("answer", ""))
+        retrieved_docs = tuple(run_res.get("retrieved_document_refs", ()))
+        evidence_refs = tuple(run_res.get("evidence_refs", ()))
+        retrieval_rounds = int(run_res.get("retrieval_rounds", 0))
 
         if adapter is not None and hasattr(adapter, "end_span") and span_handle is not None:
-            adapter.end_span(span_handle, outputs={"status": "completed", "outcome": outcome_ref})
+            adapter.end_span(span_handle, outputs={"status": "blocked", "outcome": outcome_ref})
 
+        # FAIL CLOSED: Formal Product Runtime Authority is unavailable in PR #56.
+        # Formal evidence fields MUST remain empty.
         return CanonicalCaseResult(
             eval_run_id=case_input.eval_run_id,
             case_id=case_input.case_id,
             profile_name="agentic_graphrag",
-            runtime_status="completed" if is_authentic else "completed_test_double",
-            measurement_state=meas_state,
-            answer=run_res.get("answer", ""),
-            retrieved_document_refs=tuple(run_res.get("retrieved_document_refs", ())),
-            retrieved_evidence_refs=tuple(run_res.get("evidence_refs", ())),
-            citation_refs=tuple(run_res.get("evidence_refs", ())),
-            knowledge_snapshot_ref=run_res.get("knowledge_snapshot_ref", case_input.corpus_snapshot_ref),
-            plan_version_ref=plan_ref,
-            run_outcome_ref=outcome_ref,
-            budget_settlement_ref=budget_ref,
-            artifact_receipt_ref=artifact_ref,
-            trace_id=trace_id or run_res.get("trace_id"),
-            retrieval_rounds=int(run_res.get("retrieval_rounds", 0)),
-            latency=latency_ms,
-            token_usage=int(run_res.get("token_usage", 0)),
-            cost=float(run_res.get("cost", 0.0)),
-            failure_class="",
+            runtime_status="blocked",
+            measurement_state="BLOCKED",
+            answer=answer,
+            retrieved_document_refs=retrieved_docs,
+            retrieved_evidence_refs=evidence_refs,
+            citation_refs=evidence_refs,
+            knowledge_snapshot_ref=case_input.corpus_snapshot_ref,
+            plan_version_ref="",
+            run_outcome_ref="",
+            budget_settlement_ref="",
+            artifact_receipt_ref="",
+            trace_id=trace_id,
+            retrieval_rounds=retrieval_rounds,
+            latency=latency_sec,
+            token_usage=0,
+            cost=0.0,
+            failure_class="canonical_product_runtime_attestation_unavailable",
             retry_count=0,
             standard_floor_preserved=None,
-            is_test_double=is_test_double,
-            blocked_reason="",
-            dependency_gaps=(),
-            evidence_refs=tuple(run_res.get("evidence_refs", ())),
+            is_test_double=True,
+            blocked_reason="canonical_product_runtime_attestation_unavailable",
+            dependency_gaps=("canonical_product_runtime_attestation_unavailable",),
+            evidence_refs=evidence_refs,
             retrieval_trace={"stop_reason": "agent_run_final_gate_passed"},
         )

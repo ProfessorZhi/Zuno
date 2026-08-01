@@ -1,14 +1,15 @@
 """Unit Contract Tests for Deep and Agentic GraphRAG Canonical Execution Adapters.
 
-AG-PR56-GEMINI-3-6-FLASH-HIGH-RUNTIME-TRUTH-REBUILD
+AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
 
-Truthful Boundary Verification:
+Fail-Closed Boundary Verification:
 - Injected Runtime ports are invoked with exact parameters.
 - Gold document refs are NEVER passed into Deep retrieval request.
-- Local synthetic BenchmarkAgentRunGraph is NOT used (deleted).
-- Test doubles must set is_test_double=True and measurement_state="blocked_not_measured".
-- Missing product runtime returns BLOCKED.
-- Zero direct_answer shortcuts or template answers.
+- Self-attestation is completely removed; fake objects CANNOT declare Product Runtime.
+- All injected objects fail closed (runtime_status="blocked", measurement_state="BLOCKED", is_test_double=True).
+- Formal evidence fields (token_usage, cost, receipts) remain empty on blocked results.
+- Latency is reported in seconds (matching Canonical Runner).
+- Missing product runtime, exceptions, non-dict returns, or invalid receipts return BLOCKED.
 """
 
 from __future__ import annotations
@@ -203,7 +204,9 @@ def test_unit_contract_deep_gold_refs_not_in_retrieval_request() -> None:
     assert k_runtime.last_query_params["corpus_snapshot_ref"] == "snapshot_unit_v1"
 
     assert res.is_test_double is True
-    assert res.measurement_state == "blocked_not_measured"
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
 
 
 def test_unit_contract_deep_unpopulated_port_fails_closed() -> None:
@@ -213,7 +216,31 @@ def test_unit_contract_deep_unpopulated_port_fails_closed() -> None:
 
     res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_knowledge_runtime_unavailable"
+
+
+def test_unit_contract_fake_authority_cannot_impersonate_product_runtime() -> None:
+    """Regression test proving fake runtime setting is_test_double=False or magic authority still fails closed."""
+    class FakeAuthorityRuntime:
+        is_test_double = False
+        __zuno_product_authority__ = "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
+
+        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+            return {"answer": "Fake authority answer", "token_usage": 999, "cost": 9.99}
+
+    deps = _full_preflight_deps(knowledge_runtime=FakeAuthorityRuntime())
+    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+
+    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
+
+    assert res.is_test_double is True
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.measurement_state != "RUNTIME_OBSERVED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.token_usage == 0
+    assert res.cost == 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -228,11 +255,12 @@ def test_unit_contract_agentic_unwired_product_runtime_fails_closed() -> None:
 
     res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_agentic_product_runtime_unavailable"
 
 
-def test_unit_contract_agentic_test_double_runtime_execution() -> None:
-    """Agentic adapter calls execute_agent_run and sets is_test_double=True for test doubles."""
+def test_unit_contract_agentic_test_double_runtime_execution_fails_closed() -> None:
+    """Agentic adapter invokes test double but fails closed with BLOCKED state and empty evidence refs."""
     agent_runtime = ContractTestDoubleAgentRuntime()
     deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
     adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
@@ -242,9 +270,58 @@ def test_unit_contract_agentic_test_double_runtime_execution() -> None:
     assert agent_runtime.last_execute_params.get("question") == "What is the unit test behavior of deep graphrag?"
     assert "gold_document_refs" not in agent_runtime.last_execute_params
     assert "gold_evidence_refs" not in agent_runtime.last_execute_params
+
     assert res.is_test_double is True
-    assert res.measurement_state == "blocked_not_measured"
-    assert res.plan_version_ref == "plan_01"
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.plan_version_ref == ""
+    assert res.run_outcome_ref == ""
+    assert res.budget_settlement_ref == ""
+    assert res.artifact_receipt_ref == ""
+    assert res.token_usage == 0
+    assert res.cost == 0.0
+
+
+def test_unit_contract_latency_unit_in_seconds() -> None:
+    """Adapters output latency in seconds (not milliseconds)."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime()
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
+    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+
+    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
+    assert isinstance(res.latency, float)
+    assert res.latency < 5.0  # Should be fraction of a second, not 5000ms!
+
+
+def test_unit_contract_exception_in_runtime_fails_closed() -> None:
+    """Adapters return BLOCKED with deterministic gap when runtime raises exception."""
+    class ExceptionKnowledgeRuntime:
+        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+            raise RuntimeError("Database connection lost")
+
+    deps = _full_preflight_deps(knowledge_runtime=ExceptionKnowledgeRuntime())
+    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+
+    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_knowledge_runtime_exception"
+
+
+def test_unit_contract_non_dict_return_fails_closed() -> None:
+    """Adapters return BLOCKED with runtime_contract_incomplete when runtime returns non-dict."""
+    class InvalidReturnKnowledgeRuntime:
+        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> str:
+            return "Just a raw string instead of a dict"
+
+    deps = _full_preflight_deps(knowledge_runtime=InvalidReturnKnowledgeRuntime())
+    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+
+    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "runtime_contract_incomplete"
 
 
 def test_unit_contract_receipt_validation_owner_mismatch_fails_closed() -> None:
@@ -320,4 +397,5 @@ def test_unit_contract_agentic_receipt_binding_mismatch_fails_closed() -> None:
 
     res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
     assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "runtime_contract_incomplete"

@@ -1,11 +1,11 @@
 """Boundary Integration Contract Tests for Deep and Agentic GraphRAG Adapters.
 
-AG-PR56-BOUNDARY-TRUTH-CLOSURE
+AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
 
-Truthful Integration Verification:
+Fail-Closed Integration Verification:
 - Tests execution behavior when test double runtime ports are injected into adapter boundaries.
 - Validates fail-closed handling when formal product runtime ports are unwired or absent.
-- Ensures test double runtimes NEVER produce measurement_state="runtime_observed".
+- Ensures test double runtimes NEVER produce measurement_state="RUNTIME_OBSERVED".
 """
 
 from __future__ import annotations
@@ -128,8 +128,9 @@ class BoundaryTestDoubleAgentPort:
 
 
 class MaliciousFakeAgentPort:
-    """Fake Agent Port that attempts to impersonate product runtime by declaring is_test_double=False."""
+    """Fake Agent Port that attempts to impersonate product runtime by declaring is_test_double=False and magic authority."""
     is_test_double = False
+    __zuno_product_authority__ = "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
 
     def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
         return {
@@ -138,6 +139,7 @@ class MaliciousFakeAgentPort:
             "plan_version_ref": "plan_fake_01",
             "run_outcome_ref": "outcome_fake_01",
             "budget_settlement_ref": "budget_fake_01",
+            "artifact_receipt_ref": "art_fake_01",
             "security_decision_receipt": {
                 "receipt_type": "SecurityDecision",
                 "receipt_ref": "sec_fake_01",
@@ -193,6 +195,17 @@ class MaliciousFakeAgentPort:
                 "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
                 "payload_hash": "hash_budget_fake",
             },
+            "artifact_receipt": {
+                "receipt_type": "ArtifactReceipt",
+                "receipt_ref": "art_fake_01",
+                "owner": "artifact_store",
+                "status": "valid",
+                "tenant_id": kwargs.get("tenant_id"),
+                "workspace_id": kwargs.get("workspace_id"),
+                "runtime_version": "2.0.0",
+                "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
+                "payload_hash": "hash_art_fake",
+            },
         }
 
 
@@ -239,9 +252,10 @@ def test_boundary_integration_deep_adapter_flow() -> None:
 
     res = adapter.run_canonical_case(_integration_case("deep_graphrag"))
 
-    assert res.runtime_status == "completed_test_double"
+    assert res.runtime_status == "blocked"
     assert res.is_test_double is True
-    assert res.measurement_state == "blocked_not_measured"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
     assert "Boundary Test Double answer" in res.answer
 
 
@@ -252,9 +266,10 @@ def test_boundary_integration_agentic_adapter_flow() -> None:
 
     res = adapter.run_canonical_case(_integration_case("agentic_graphrag"))
 
-    assert res.runtime_status == "completed_test_double"
+    assert res.runtime_status == "blocked"
     assert res.is_test_double is True
-    assert res.measurement_state == "blocked_not_measured"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
     assert res.answer == "Boundary Test Double Agent Core answer"
 
 
@@ -271,13 +286,14 @@ def test_boundary_integration_unwired_product_runtime_fails_closed() -> None:
 
 
 def test_boundary_integration_malicious_fake_cannot_impersonate_product_runtime() -> None:
-    """Regression test proving fake runtime declaring is_test_double=False cannot produce runtime_observed."""
+    """Regression test proving fake runtime declaring is_test_double=False cannot produce RUNTIME_OBSERVED."""
     deps = _full_integration_deps(agent_run_runtime=MaliciousFakeAgentPort())
     adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_integration_case("agentic_graphrag"))
 
     assert res.is_test_double is True
-    assert res.runtime_status == "completed_test_double"
-    assert res.measurement_state == "blocked_not_measured"
-    assert res.measurement_state != "runtime_observed"
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.measurement_state != "RUNTIME_OBSERVED"
+    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
