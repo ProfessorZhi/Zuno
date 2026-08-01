@@ -7,9 +7,9 @@ audit_rule: one_full_target_coverage_audit_only
 current_decision:
   phase15: completed
   phase20: completed
-  phase21: in_progress
-  phase22: planned
-  reason: "PHASE20 Eval Runtime has been completed with query, fault, revision, evidence and replay evidence; PHASE21 Fault / E2E / Cutover is now active."
+  phase21: completed
+  phase22: in_progress
+  reason: "PHASE15 sandbox repair, PHASE20 Eval Runtime and PHASE21 full Web / browser E2E / cutover evidence are completed; PHASE22 Fixed Benchmark / Cleanup / Closure remains active and production readiness is not established."
 known_environment_blockers:
   deno:
     command: "deno --version"
@@ -106,14 +106,14 @@ requirements:
     current_code: "PHASE17 dynamic DAG and PHASE19 finalization exist."
     default_entry: "Single Controller default path exists."
     persistence_migration: "Agent migrations through PHASE17 exist."
-    state_transition: "Full fault/cutover pending."
-    failure_retry_recovery_idempotency: "PHASE21 crash matrix evaluator now covers domain/checkpoint reconcile, dispatch outbox resend, result-before-reducer and late epoch fencing; full product E2E/cutover/load evidence still pending."
-    security_approval_audit: "Epoch during wait and approval replay E2E pending."
+    state_transition: "PHASE21 completed; PHASE22 cleanup remains."
+    failure_retry_recovery_idempotency: "PHASE21 crash matrix evaluator covers domain/checkpoint reconcile, dispatch outbox resend, result-before-reducer and late epoch fencing; default Web stack / browser E2E and cutover recovery evidence now recorded."
+    security_approval_audit: "Workspace approval replay is rejected on stale binding; default stack/browser E2E evidence recorded; PHASE22 cleanup remains."
     evidence: "docs/evidence/goal04-phase17-coordinator-closure.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
-    verdict: GAP
+    verdict: CURRENT
     repair_pr: "PR C"
-    closure_evidence: "partial: docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
+    closure_evidence: "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure"
   - requirement_id: ARCH-CAPABILITY-MANDATORY-GOAL05
     owner_module: "07 Capability / Skill"
     owner_phase: PHASE21
@@ -121,14 +121,14 @@ requirements:
     current_code: "PHASE14 runtime exists."
     default_entry: "Capability selection/planner snapshot exists."
     persistence_migration: "Capability persistence exists."
-    state_transition: "Full attack/cutover pending."
-    failure_retry_recovery_idempotency: "Capability planner exposure conformance now runs on the default route; full cross-module E2E/cutover/load evidence still pending."
-    security_approval_audit: "Prompt injection, denied capability hiding and cross-workspace exposure attacks now have fault evidence; broader PHASE21 attack suite still pending."
+    state_transition: "PHASE21 completed; PHASE22 cleanup remains."
+    failure_retry_recovery_idempotency: "Capability planner exposure conformance runs on the default route and participates in the PHASE21 default stack/browser E2E evidence; PHASE22 cleanup remains."
+    security_approval_audit: "Prompt injection, denied capability hiding, cross-workspace exposure and approval replay attacks have PHASE21 evidence; production readiness remains unproven."
     evidence: "docs/status/production-readiness.md; docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
     legacy_bypass_status: "PHASE22 cleanup pending."
-    verdict: GAP
+    verdict: CURRENT
     repair_pr: "PR C / PR D"
-    closure_evidence: "partial: docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md"
+    closure_evidence: "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure"
   - requirement_id: ARCH-TOOL-070
     owner_module: "08 Tool Runtime"
     owner_phase: PHASE15

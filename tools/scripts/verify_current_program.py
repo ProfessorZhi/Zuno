@@ -181,6 +181,60 @@ def _verify_requirement_ledger() -> list[str]:
     return errors
 
 
+def _verify_goal05_gap_ledger_repair_state() -> list[str]:
+    errors: list[str] = []
+    ledger_path = WORK_PRODUCTS / "goal05-target-gap-ledger.yaml"
+    if not ledger_path.exists():
+        return [
+            "missing Goal05 target gap ledger: .agent/programs/work-products/goal05-target-gap-ledger.yaml"
+        ]
+    text = _read(ledger_path)
+    for phrase in [
+        "status: frozen",
+        "phase15: completed",
+        "phase20: completed",
+        "phase21: completed",
+        "phase22: in_progress",
+        "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure",
+    ]:
+        if phrase not in text:
+            errors.append(f"goal05-target-gap-ledger.yaml missing repair phrase: {phrase}")
+
+    current_id: str | None = None
+    current_phase: str | None = None
+    current_verdict: str | None = None
+    completed_repair_phases = {"PHASE15", "PHASE20", "PHASE21"}
+    stale_completed_gaps: list[str] = []
+
+    def flush() -> None:
+        if (
+            current_id
+            and current_phase in completed_repair_phases
+            and current_verdict == "GAP"
+        ):
+            stale_completed_gaps.append(f"{current_id}:{current_phase}")
+
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("- requirement_id: "):
+            flush()
+            current_id = stripped.split(": ", 1)[1]
+            current_phase = None
+            current_verdict = None
+        elif stripped.startswith("owner_phase: "):
+            current_phase = stripped.split(": ", 1)[1]
+        elif stripped.startswith("verdict: "):
+            current_verdict = stripped.split(": ", 1)[1]
+    flush()
+
+    if stale_completed_gaps:
+        errors.append(
+            "goal05-target-gap-ledger.yaml has GAP verdicts in completed repair phases: "
+            + ", ".join(stale_completed_gaps)
+        )
+    return errors
+
+
 def _verify_phase22_status_block(phase22: str) -> list[str]:
     errors: list[str] = []
     in_fence = False
@@ -768,6 +822,7 @@ def verify_current_program() -> list[str]:
 
     errors.extend(_verify_correction_states())
     errors.extend(_verify_requirement_ledger())
+    errors.extend(_verify_goal05_gap_ledger_repair_state())
     errors.extend(
         _load_verifier(
             REPO_ROOT
