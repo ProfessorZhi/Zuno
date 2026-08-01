@@ -36,18 +36,18 @@ EXPECTED_ROWS = {
 
 SOURCE_EXPECTATIONS = {
     "src/backend/zuno/platform/services/workspace/attachment_service.py": [
-        "parse_file_into_legacy_chunks",
+        "parse_file_into_chunk_model_projection",
         "_image_to_text",
     ],
     "src/backend/zuno/platform/services/pipeline/manager.py": [
-        "parse_file_into_legacy_chunks",
+        "parse_file_into_chunk_model_projection",
         "run_rag_index_stage",
         "run_graph_stage",
     ],
-    "src/backend/zuno/knowledge/ingestion/legacy_cutover.py": [
+    "src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py": [
         "ParseGateway",
         "CanonicalDocumentIR",
-        "temporary.adapter.phase11.legacy_chunk_projection",
+        "versioned.adapter.phase22.chunk_model_projection",
         "PHASE16",
     ],
     "src/backend/zuno/platform/services/rag/parser.py": [

@@ -10,9 +10,9 @@ from .contracts import CanonicalDocumentIR, ParseDocumentRequest
 from .gateway import ParseGateway
 
 
-LEGACY_ADAPTER_ID = "temporary.adapter.phase11.legacy_chunk_projection"
-LEGACY_ADAPTER_OWNER = "Input Parser Adapter Owner"
-LEGACY_ADAPTER_REMOVAL_PHASE = "PHASE16"
+CHUNK_PROJECTION_ADAPTER_ID = "versioned.adapter.phase22.chunk_model_projection"
+CHUNK_PROJECTION_ADAPTER_OWNER = "Input Parser Adapter Owner"
+CHUNK_PROJECTION_ADAPTER_REMOVAL_PHASE = "PHASE16"
 
 
 def parse_file_to_canonical_ir(
@@ -36,20 +36,20 @@ def parse_file_to_canonical_ir(
             mime_type=mime_type,
             source_bytes=source_bytes,
             parser_config={
-                "legacy_adapter": LEGACY_ADAPTER_ID,
+                "adapter": CHUNK_PROJECTION_ADAPTER_ID,
                 "knowledge_config": knowledge_config or {},
-                "owner": LEGACY_ADAPTER_OWNER,
-                "removal_phase": LEGACY_ADAPTER_REMOVAL_PHASE,
+                "owner": CHUNK_PROJECTION_ADAPTER_OWNER,
+                "removal_phase": CHUNK_PROJECTION_ADAPTER_REMOVAL_PHASE,
             },
         )
     )
     if result.status != "succeeded" or result.document is None:
         reason = result.failure.reason if result.failure else result.status
-        raise ValueError(f"legacy parser adapter failed through ParseGateway: {reason}")
+        raise ValueError(f"chunk projection adapter failed through ParseGateway: {reason}")
     return result.document
 
 
-async def parse_file_into_legacy_chunks(
+async def parse_file_into_chunk_model_projection(
     *,
     file_id: str,
     file_path: str,
@@ -64,7 +64,7 @@ async def parse_file_into_legacy_chunks(
         source_url=source_url,
         knowledge_config=knowledge_config,
     )
-    return canonical_ir_to_legacy_chunks(
+    return canonical_ir_to_chunk_models(
         document=document,
         file_id=file_id,
         file_name=Path(file_path).name,
@@ -73,7 +73,7 @@ async def parse_file_into_legacy_chunks(
     )
 
 
-def canonical_ir_to_legacy_chunks(
+def canonical_ir_to_chunk_models(
     *,
     document: CanonicalDocumentIR,
     file_id: str,
@@ -105,10 +105,10 @@ def canonical_ir_to_legacy_chunks(
 
 
 __all__ = [
-    "LEGACY_ADAPTER_ID",
-    "LEGACY_ADAPTER_OWNER",
-    "LEGACY_ADAPTER_REMOVAL_PHASE",
-    "canonical_ir_to_legacy_chunks",
-    "parse_file_into_legacy_chunks",
+    "CHUNK_PROJECTION_ADAPTER_ID",
+    "CHUNK_PROJECTION_ADAPTER_OWNER",
+    "CHUNK_PROJECTION_ADAPTER_REMOVAL_PHASE",
+    "canonical_ir_to_chunk_models",
+    "parse_file_into_chunk_model_projection",
     "parse_file_to_canonical_ir",
 ]

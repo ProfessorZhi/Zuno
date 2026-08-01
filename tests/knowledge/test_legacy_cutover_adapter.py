@@ -3,11 +3,11 @@ from __future__ import annotations
 import asyncio
 
 
-def test_legacy_cutover_adapter_projects_parse_gateway_ir_to_chunks(tmp_path) -> None:
+def test_chunk_projection_adapter_projects_parse_gateway_ir_to_chunks(tmp_path) -> None:
     from zuno.knowledge.ingestion import (
-        LEGACY_ADAPTER_ID,
-        LEGACY_ADAPTER_REMOVAL_PHASE,
-        parse_file_into_legacy_chunks,
+        CHUNK_PROJECTION_ADAPTER_ID,
+        CHUNK_PROJECTION_ADAPTER_REMOVAL_PHASE,
+        parse_file_into_chunk_model_projection,
         parse_file_to_canonical_ir,
     )
 
@@ -21,7 +21,7 @@ def test_legacy_cutover_adapter_projects_parse_gateway_ir_to_chunks(tmp_path) ->
         knowledge_config={"index_capability": "rag"},
     )
     chunks = asyncio.run(
-        parse_file_into_legacy_chunks(
+        parse_file_into_chunk_model_projection(
             file_id="file_policy",
             file_path=str(source),
             knowledge_id="knowledge_policy",
@@ -39,5 +39,5 @@ def test_legacy_cutover_adapter_projects_parse_gateway_ir_to_chunks(tmp_path) ->
     assert chunks[0].document_hash == document.metadata.source_sha256
     assert chunks[0].source_chunk_id.startswith("file_policy:")
     assert document.metadata.source_sha256 in chunks[0].source_chunk_id
-    assert LEGACY_ADAPTER_ID == "temporary.adapter.phase11.legacy_chunk_projection"
-    assert LEGACY_ADAPTER_REMOVAL_PHASE == "PHASE16"
+    assert CHUNK_PROJECTION_ADAPTER_ID == "versioned.adapter.phase22.chunk_model_projection"
+    assert CHUNK_PROJECTION_ADAPTER_REMOVAL_PHASE == "PHASE16"
