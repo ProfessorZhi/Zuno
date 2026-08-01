@@ -139,6 +139,30 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert "citation_chunking_strategy" in report
 
 
+def test_goal05_blocked_benchmark_evidence_records_four_profiles() -> None:
+    evidence_root = Path("docs/evidence/goal05-phase22-blocked-benchmark")
+    metrics = _read_json(evidence_root / "metrics.json")
+    manifest = _read_json(evidence_root / "benchmark_manifest.json")
+    report = (evidence_root / "report.md").read_text(encoding="utf-8")
+
+    expected_profiles = {
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    }
+    assert set(metrics["profiles"]) == expected_profiles
+    for profile in expected_profiles:
+        assert metrics["profiles"][profile]["measured"] is False
+        assert metrics["profiles"][profile]["metrics_source"] == "blocked_not_measured"
+        assert f"| {profile} | false |" in report
+    assert manifest["status"] == "BLOCKED"
+    assert manifest["measurement_status"] == "blocked_not_measured"
+    assert manifest["working_tree_dirty"] is False
+    assert manifest["git_commit_sha"]
+    assert "docs/evidence/goal05-phase22-blocked-benchmark" in manifest["reproduce_command_str"]
+
+
 def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> None:
     from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import inspect_documents_schema
 

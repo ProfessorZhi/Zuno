@@ -2,6 +2,9 @@
 
 - status: `blocked`
 - measurement_status: `blocked_not_measured`
+- runtime_mode: `contract-smoke`
+- is_test_double: `true`
+- reproduce_command: `poetry run python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark --questions-file tools/evals/zuno/rag_eval/python_notes_eval.jsonl --runtime-mode contract-smoke --sample-size 80 --output-root docs/evidence/goal05-phase22-blocked-benchmark`
 - selected_case_count: `8`
 - measured_case_count: `0`
 - chunk_size_override: `None`
@@ -13,6 +16,7 @@
 | Profile | Measured | Recall@5 | MRR@5 | Answer Correctness | Citation Accuracy | Source Doc Citation | Evidence Text Available | Latency p95 ms | Cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | standard_rag | false | - | - | - | - | - | - | - | - |
+| local_graphrag | false | - | - | - | - | - | - | - | - |
 | deep_graphrag | false | - | - | - | - | - | - | - | - |
 | agentic_graphrag | false | - | - | - | - | - | - | - | - |
 
@@ -55,7 +59,7 @@
 ## Agentic GraphRAG
 
 - measured: `false`
-- blocked_reason: `agentic_runtime_runner_not_wired`
+- blocked_reason: `dataset_measurement_blocked`
 
 ## Failure Tag Limitations
 
