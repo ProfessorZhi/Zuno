@@ -1,10 +1,9 @@
 """Fault Injection Tests for Deep and Agentic GraphRAG Canonical Adapters.
 
-AG-PR56-FAIL-CLOSED-PAYLOAD-HARDENING
+AG-PR56-FINAL-BOUNDARY-HARDENING-AND-PERFORMANCE-RECORD
 
 Fail-Closed Fault Verification:
 - Tests exact mapping of failure_class when runtime ports return blocked status.
-- Verifies invalid receipt owner, missing receipt hash, and unpopulated ports fail closed.
 - Asserts measurement_state is strictly BLOCKED and trace_id is None.
 """
 
@@ -16,7 +15,6 @@ import pytest
 from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
     AgenticGraphRAGCanonicalAdapter,
     DeepGraphRAGCanonicalAdapter,
-    validate_structural_canonical_receipt,
 )
 from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseInput,
@@ -103,111 +101,4 @@ def test_fault_injection_agentic_adapter_mapped_failure_class(expected_fault: st
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == expected_fault
-    assert res.trace_id is None
-
-
-def test_fault_injection_missing_receipt_hash_fails_closed() -> None:
-    """Agentic adapter returns BLOCKED when receipt hash is missing."""
-    class BadHashAgentPort:
-        def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
-            return {
-                "status": "completed",
-                "answer": "ok",
-                "security_decision_receipt": {
-                    "receipt_type": "SecurityDecision",
-                    "receipt_ref": "sec_01",
-                    "owner": "security",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "",  # Missing hash
-                },
-            }
-
-    deps = _full_fault_deps(agent_run_runtime=BadHashAgentPort())
-    adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
-
-    res = adapter.run_canonical_case(_fault_case("agentic_graphrag"))
-    assert res.runtime_status == "blocked"
-    assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "runtime_contract_incomplete"
-    assert res.trace_id is None
-
-
-def test_fault_injection_receipt_reference_binding_mismatch_fails_closed() -> None:
-    """Agentic adapter returns BLOCKED when outcome_ref does not match run_outcome_receipt."""
-    class MismatchedOutcomePort:
-        def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
-            return {
-                "status": "completed",
-                "answer": "ok",
-                "plan_version_ref": "plan_01",
-                "run_outcome_ref": "outcome_mismatched",
-                "budget_settlement_ref": "budget_01",
-                "security_decision_receipt": {
-                    "receipt_type": "SecurityDecision",
-                    "receipt_ref": "sec_01",
-                    "owner": "security",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "hash_sec",
-                },
-                "plan_version_receipt": {
-                    "receipt_type": "PlanVersion",
-                    "receipt_ref": "plan_01",
-                    "owner": "agent_core",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "hash_plan",
-                },
-                "run_outcome_receipt": {
-                    "receipt_type": "RunOutcome",
-                    "receipt_ref": "outcome_01",
-                    "owner": "agent_core",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "hash_outcome",
-                },
-                "usage_receipt": {
-                    "receipt_type": "UsageReceipt",
-                    "receipt_ref": "usage_01",
-                    "owner": "model_gateway",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "hash_usage",
-                },
-                "budget_settlement_receipt": {
-                    "receipt_type": "BudgetSettlement",
-                    "receipt_ref": "budget_01",
-                    "owner": "budget",
-                    "status": "valid",
-                    "tenant_id": kwargs.get("tenant_id"),
-                    "workspace_id": kwargs.get("workspace_id"),
-                    "runtime_version": "2.0.0",
-                    "snapshot_ref": kwargs.get("corpus_snapshot_ref"),
-                    "payload_hash": "hash_budget",
-                },
-            }
-
-    deps = _full_fault_deps(agent_run_runtime=MismatchedOutcomePort())
-    adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
-
-    res = adapter.run_canonical_case(_fault_case("agentic_graphrag"))
-    assert res.runtime_status == "blocked"
-    assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "runtime_contract_incomplete"
     assert res.trace_id is None
