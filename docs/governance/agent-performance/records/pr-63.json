@@ -6,7 +6,7 @@
   "branch": "agent/minimax/phase22-release-decision-engine",
   "base_branch": "docs/phase22-agent-performance-governance",
   "base_sha": "3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1",
-  "head_sha": "163447bd12778b854fe2b5d328fe7674016bed2f",
+  "head_sha": "723748b328a613faf57a6da9a15de9aec68df721",
   "status": "draft",
   "is_draft": true,
   "merge_ready": false,
