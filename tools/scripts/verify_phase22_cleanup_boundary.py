@@ -542,6 +542,111 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     if legacy_guard_suite.exists():
         errors.append("legacy guard suite directory still exists")
 
+    # P22-T03 / P22-T04 Wave 1 hard boundary: forbid re-introducing legacy paths
+    # or the platform/compatibility shell at any production or test root.
+    production_roots = [
+        REPO_ROOT / "src" / "backend" / "zuno",
+        REPO_ROOT / "apps" / "web" / "src",
+        REPO_ROOT / "apps" / "desktop" / "src",
+    ]
+    forbidden_segments = ("legacy",)
+    forbidden_filenames = ("legacy_aliases.py",)
+    forbidden_roots = [
+        REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility",
+        REPO_ROOT / "tests" / "legacy_guards",
+        REPO_ROOT / "src" / "backend" / "fastapi_jwt_auth",
+    ]
+    legacy_alias_module = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "legacy_aliases.py"
+
+    for forbidden_root in forbidden_roots:
+        if forbidden_root.exists():
+            errors.append(
+                f"forbidden root re-introduced: {forbidden_root.relative_to(REPO_ROOT)}"
+            )
+
+    if legacy_alias_module.exists():
+        errors.append("legacy_aliases.py re-introduced in production source tree")
+
+    # Allowed set: legacy segments that are explicitly tracked in the work product
+    # as active removal candidates (i.e., fixed blockers awaiting a future wave).
+    # Anything not in this set is treated as a fresh re-introduction.
+    tracked_active_candidates: set[str] = set()
+    if WORK_PRODUCT.exists():
+        for line in _read(WORK_PRODUCT).splitlines():
+            stripped = line.strip()
+            if stripped.startswith("- path:"):
+                tracked_active_candidates.add(stripped.split(":", 1)[1].strip().strip('"'))
+
+    for production_root in production_roots:
+        if not production_root.exists():
+            continue
+        for path in sorted(production_root.rglob("*")):
+            if not path.is_file():
+                continue
+            rel = path.relative_to(production_root)
+            full_rel = production_root.relative_to(REPO_ROOT) / rel
+            full_rel_str = full_rel.as_posix()
+            parts = rel.parts
+            for forbidden in forbidden_segments:
+                if any(part == forbidden or part.startswith(f"{forbidden}_") or part.endswith(f"_{forbidden}") for part in parts):
+                    if full_rel_str not in tracked_active_candidates:
+                        errors.append(
+                            f"forbidden legacy segment in production path: {full_rel_str}"
+                        )
+                    break
+            if path.name in forbidden_filenames:
+                if full_rel_str not in tracked_active_candidates:
+                    errors.append(
+                        f"forbidden legacy file in production path: {full_rel_str}"
+                    )
+
+    # Ownerless compatibility alias: forbid any import path that still routes
+    # through zuno.platform.compatibility.* (the compatibility shell was retired
+    # in Wave 1; vendor shims now live under zuno.platform.vendor.*).
+    forbidden_compatibility_imports = [
+        "from zuno.platform.compatibility",
+        "import zuno.platform.compatibility",
+    ]
+    for production_root in production_roots:
+        if not production_root.exists():
+            continue
+        for path in sorted(production_root.rglob("*.py")):
+            text = path.read_text(encoding="utf-8")
+            for forbidden in forbidden_compatibility_imports:
+                if forbidden in text:
+                    rel = path.relative_to(production_root)
+                    errors.append(
+                        f"ownerless compatibility alias import: {production_root.name}/{rel.as_posix()} -> {forbidden}"
+                    )
+
+    # Permanent dual read/write is forbidden: any path that branches on
+    # ZUNO_AGENT_RUNTIME legacy_general_agent, or imports through zuno.platform.compatibility
+    # dual routes, must be absent in production source.
+    forbidden_dual_write_markers = [
+        "zuno.platform.compatibility.vendor.fastapi_jwt_auth",
+        "ZUNO_AGENT_RUNTIME=legacy_general_agent",
+    ]
+    for production_root in production_roots:
+        if not production_root.exists():
+            continue
+        for path in sorted(production_root.rglob("*.py")):
+            text = path.read_text(encoding="utf-8")
+            for marker in forbidden_dual_write_markers:
+                if marker in text:
+                    rel = path.relative_to(production_root)
+                    errors.append(
+                        f"permanent dual read/write or ownerless compatibility alias: {production_root.name}/{rel.as_posix()} -> {marker}"
+                    )
+
+    # Canonical owner requirement: fastapi_jwt_auth vendor shim MUST live under
+    # src/backend/zuno/platform/vendor/fastapi_jwt_auth (not under compatibility/).
+    canonical_vendor_shim = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "vendor" / "fastapi_jwt_auth"
+    retired_vendor_shim = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "vendor" / "fastapi_jwt_auth"
+    if not canonical_vendor_shim.is_dir():
+        errors.append("canonical vendor shim missing: src/backend/zuno/platform/vendor/fastapi_jwt_auth")
+    if retired_vendor_shim.exists():
+        errors.append("retired vendor shim still present under platform/compatibility/vendor/fastapi_jwt_auth")
+
     feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")
     if 'flag: "legacy_general_agent_completion_rollback"' not in feature_flags:
         errors.append("feature flag registry missing legacy rollback retirement record")
