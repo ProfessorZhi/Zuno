@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "pr_number": 61,
+  "pr_url": "https://github.com/ProfessorZhi/Zuno/pull/61",
+  "work_package": "MM-PHASE22-BENCHMARK-PREFLIGHT-CONTRACT-V2",
+  "agent": {
+    "shell": "Claude Code",
+    "provider": "MiniMax",
+    "visible_model": "MiniMax-M3",
+    "actual_model": "not reported",
+    "reasoning_effort": "not reported",
+    "permission_mode": "bypassPermissions",
+    "usage_source": "CLI"
+  },
+  "git": {
+    "base_branch": "docs/phase22-agent-performance-governance",
+    "base_sha": "3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1",
+    "initial_head_sha": "3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1",
+    "current_head_sha": "7ee1606fe418e6f2b737cae3d2a4a27b11b2cd96",
+    "final_approved_head_sha": null,
+    "reset_used": false,
+    "rebase_used": false,
+    "force_push_used": false
+  },
+  "rounds": [
+    {
+      "round_number": 1,
+      "implementation_seconds": "not reported",
+      "implementation_active_seconds": "not reported",
+      "tokens": {
+        "input": "not reported",
+        "output": "not reported",
+        "cache_read": "not reported",
+        "cache_write": "not reported",
+        "total": "not reported"
+      },
+      "provider_cost": "not reported",
+      "cli_estimated_cost": "not reported",
+      "commits": 1,
+      "tests_run": 89,
+      "tests_failed": 0,
+      "ci_run_id": "not reported",
+      "ci_result": "not reported"
+    }
+  ],
+  "reviews": [],
+  "aggregate": {
+    "implementation_rounds": 1,
+    "repair_rounds": 0,
+    "total_wall_clock_seconds": "not reported",
+    "total_tokens": "not reported",
+    "provider_reported_cost": "not reported",
+    "current_score": null,
+    "final_score": null
+  },
+  "status": "SUBMITTED_FOR_REVIEW",
+  "source_pr_number": 57,
+  "source_pr_url": "https://github.com/ProfessorZhi/Zuno/pull/57",
+  "source_branch": "agent/minimax/phase22-benchmark-preflight-contract",
+  "merge": {
+    "merged_at": null,
+    "merge_commit_sha": null
+  }
+}

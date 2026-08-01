@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "pr_number": 57,
+  "pr_url": "https://github.com/ProfessorZhi/Zuno/pull/57",
+  "work_package": "MM-PHASE22-BENCHMARK-PREFLIGHT-CONTRACT",
+  "agent": {
+    "shell": "Claude Code",
+    "provider": "MiniMax",
+    "visible_model": "MiniMax-M3",
+    "actual_model": "not reported",
+    "reasoning_effort": "not reported",
+    "permission_mode": "bypassPermissions",
+    "usage_source": "CLI"
+  },
+  "git": {
+    "base_branch": "codex/goal05-phase15-sandbox-repair",
+    "base_sha": "09dc44164bfe6ca47afcbe655985ba76013b4387",
+    "initial_head_sha": "09dc44164bfe6ca47afcbe655985ba76013b4387",
+    "current_head_sha": "e7e007d47f471610966201394b84ddc118814aff",
+    "final_approved_head_sha": null,
+    "reset_used": false,
+    "rebase_used": false,
+    "force_push_used": false
+  },
+  "rounds": [
+    {
+      "round_number": 1,
+      "implementation_seconds": 509,
+      "implementation_active_seconds": "not reported",
+      "tokens": {
+        "input": "not reported",
+        "output": "not reported",
+        "cache_read": "not reported",
+        "cache_write": "not reported",
+        "total": "not reported"
+      },
+      "provider_cost": "not reported",
+      "cli_estimated_cost": "not reported",
+      "commits": 1,
+      "tests_run": 71,
+      "tests_failed": 0,
+      "ci_run_id": "not reported",
+      "ci_result": "not reported"
+    }
+  ],
+  "reviews": [
+    {
+      "reviewed_head_sha": "e7e007d47f471610966201394b84ddc118814aff",
+      "decision": "REQUEST_CHANGES",
+      "review_round": 1,
+      "severity": {
+        "p0": 0,
+        "p1": 3,
+        "p2": 2
+      },
+      "scores": {
+        "architecture_alignment": 78,
+        "correctness": 74,
+        "failure_semantics": 72,
+        "security_trust_boundary": 82,
+        "test_quality": 86,
+        "scope_discipline": 95,
+        "git_governance": 82,
+        "reporting_truthfulness": 82,
+        "maintainability": 68,
+        "execution_efficiency": 97,
+        "overall": 80
+      },
+      "strengths": [
+        "极高的首轮交付速度",
+        "严格遵守文件 Scope",
+        "CLI 与测试矩阵覆盖完整",
+        "没有 Reset、Rebase 或 Force Push"
+      ],
+      "required_changes": [
+        "input_fingerprint 必须始终绑定完整输入",
+        "Gate Ownership 和状态语义必须修正",
+        "输出写入失败必须返回 Exit Code 4",
+        "严格 JSON 必须拒绝 NaN 和 Infinity",
+        "替代 PR 的每个 Commit 必须有真实 Attribution"
+      ],
+      "recommended_task_types": [
+        "确定性 CLI",
+        "Schema Validator",
+        "大规模测试矩阵",
+        "边界清晰的新模块"
+      ],
+      "unsuitable_task_types": [
+        "无人审核的复杂状态语义设计",
+        "安全 Authority 设计",
+        "以测试数量代替 Contract 校验"
+      ]
+    }
+  ],
+  "aggregate": {
+    "implementation_rounds": 1,
+    "repair_rounds": 0,
+    "total_wall_clock_seconds": 509,
+    "total_tokens": "not reported",
+    "provider_reported_cost": "not reported",
+    "current_score": 80,
+    "final_score": null
+  },
+  "status": "SUPERSEDED",
+  "replacement_pr_number": 61,
+  "replacement_pr_url": "https://github.com/ProfessorZhi/Zuno/pull/61",
+  "replacement_branch": "agent/minimax/phase22-benchmark-preflight-contract-v2",
+  "supersede_reason": "Replacement PR (PR #61) created because the original first commit lacked attribution trailers required by the governance base. Code contract review identified 3 P1 and 2 P2 issues that the v2 commit resolves.",
+  "merge": {
+    "merged_at": null,
+    "merge_commit_sha": null
+  }
+}
