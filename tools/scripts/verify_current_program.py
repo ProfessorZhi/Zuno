@@ -181,6 +181,38 @@ def _verify_requirement_ledger() -> list[str]:
     return errors
 
 
+def _verify_phase22_status_block(phase22: str) -> list[str]:
+    errors: list[str] = []
+    in_fence = False
+    current_status_seen = False
+    for lineno, line in enumerate(phase22.splitlines(), start=1):
+        if line.startswith("```"):
+            in_fence = not in_fence
+        if line == "## Current Status":
+            current_status_seen = True
+            if in_fence:
+                errors.append("PHASE22 Current Status heading must not be inside a code fence")
+        if "Draft mode" in line or "Pre-Verification Candidate" in line:
+            errors.append(
+                f"PHASE22 contains stale pre-merge status phrase at line {lineno}: {line}"
+            )
+    if in_fence:
+        errors.append("PHASE22 markdown code fence is not closed")
+    if not current_status_seen:
+        errors.append("PHASE22 missing Current Status section")
+    for phrase in [
+        "PR #52 merged into `main`",
+        "PHASE22 remains `in_progress`",
+        "fixed benchmark measurement",
+        "formal four-profile runtime",
+        "production readiness decision",
+        "program archive are not complete",
+    ]:
+        if phrase not in phase22:
+            errors.append(f"PHASE22 Current Status missing phrase: {phrase}")
+    return errors
+
+
 def _verify_correction_states() -> list[str]:
     errors: list[str] = []
     expected_phase_states = {
@@ -812,6 +844,7 @@ def verify_current_program() -> list[str]:
     ]:
         if phrase not in phase22:
             errors.append(f"PHASE22 missing final cleanup phrase: {phrase}")
+    errors.extend(_verify_phase22_status_block(phase22))
 
     errors.extend(
         _load_verifier(

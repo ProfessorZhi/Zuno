@@ -75,6 +75,28 @@ def test_phase_states_reflect_goal05_target_coverage_audit() -> None:
     assert "id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: in_progress" in manifest
 
 
+def test_phase22_current_status_is_machine_guarded() -> None:
+    verifier = _load_verifier()
+    phase22 = (
+        REPO_ROOT
+        / ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md"
+    ).read_text(encoding="utf-8")
+
+    assert verifier._verify_phase22_status_block(phase22) == []
+
+    broken = """## Validation
+```bash
+git diff --check
+
+## Current Status
+- **Verification status**: PR #52 Draft mode.
+```
+"""
+    errors = verifier._verify_phase22_status_block(broken)
+    assert "PHASE22 Current Status heading must not be inside a code fence" in errors
+    assert any("stale pre-merge status phrase" in error for error in errors)
+
+
 def test_goal05_audit_reopens_phase15_without_production_ready() -> None:
     readiness = (
         REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
