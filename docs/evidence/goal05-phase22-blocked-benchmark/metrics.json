@@ -12,7 +12,7 @@
   },
   "corpus": {
     "source": "EnterpriseRAG-Bench",
-    "output_dir": "F:\\internship-work\\resume&resume project\\02_projects\\Zuno\\docs\\evidence\\goal05-phase22-blocked-benchmark\\corpus",
+    "output_dir": "docs\\evidence\\goal05-phase22-blocked-benchmark\\corpus",
     "file_count": 0,
     "external_documents_required": false,
     "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
@@ -27,17 +27,25 @@
     "standard_rag": {
       "measured": false,
       "metrics_source": "blocked_not_measured",
+      "blocked_reason": "dataset_measurement_blocked",
+      "aggregate": {}
+    },
+    "local_graphrag": {
+      "measured": false,
+      "metrics_source": "blocked_not_measured",
+      "blocked_reason": "dataset_measurement_blocked",
       "aggregate": {}
     },
     "deep_graphrag": {
       "measured": false,
       "metrics_source": "blocked_not_measured",
+      "blocked_reason": "dataset_measurement_blocked",
       "aggregate": {}
     },
     "agentic_graphrag": {
       "measured": false,
       "metrics_source": "blocked_not_measured",
-      "blocked_reason": "agentic_runtime_runner_not_wired",
+      "blocked_reason": "dataset_measurement_blocked",
       "aggregate": {}
     }
   },
@@ -71,6 +79,24 @@
   },
   "gated_agentic_simulation": {},
   "runtime_config": {
+    "runtime_mode": "contract-smoke",
+    "is_test_double": true,
+    "reproduce_argv": [
+      "poetry",
+      "run",
+      "python",
+      "-m",
+      "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
+      "--questions-file",
+      "tools/evals/zuno/rag_eval/python_notes_eval.jsonl",
+      "--runtime-mode",
+      "contract-smoke",
+      "--sample-size",
+      "80",
+      "--output-root",
+      "docs/evidence/goal05-phase22-blocked-benchmark"
+    ],
+    "reproduce_command": "poetry run python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark --questions-file tools/evals/zuno/rag_eval/python_notes_eval.jsonl --runtime-mode contract-smoke --sample-size 80 --output-root docs/evidence/goal05-phase22-blocked-benchmark",
     "chunk_size_override": null,
     "overlap_override": null,
     "rerank_score_threshold_override": null,

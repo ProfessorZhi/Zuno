@@ -120,6 +120,14 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert metrics["case_set"]["measured_case_count"] == 0
     assert metrics["release_gate"]["measured"] is False
     assert metrics["release_gate"]["status"] == "blocked_not_measured"
+    assert set(metrics["profiles"]) == {
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    }
+    assert metrics["profiles"]["local_graphrag"]["measured"] is False
+    assert metrics["profiles"]["local_graphrag"]["blocked_reason"] == "dataset_measurement_blocked"
     assert metrics["corpus"]["external_documents_required"] is True
     assert metrics["corpus"]["blocked_reason"] == "enterprise_rag_bench_documents_required"
     assert metrics["runtime_config"]["citation_chunking"]["strategy"] == "citation_sized_with_parent_context"
@@ -129,6 +137,30 @@ def test_enterprise_rag_paired_benchmark_blocks_without_documents(tmp_path: Path
     assert "blocked_not_measured" in report
     assert "enterprise_rag_bench_documents_required" in report
     assert "citation_chunking_strategy" in report
+
+
+def test_goal05_blocked_benchmark_evidence_records_four_profiles() -> None:
+    evidence_root = Path("docs/evidence/goal05-phase22-blocked-benchmark")
+    metrics = _read_json(evidence_root / "metrics.json")
+    manifest = _read_json(evidence_root / "benchmark_manifest.json")
+    report = (evidence_root / "report.md").read_text(encoding="utf-8")
+
+    expected_profiles = {
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    }
+    assert set(metrics["profiles"]) == expected_profiles
+    for profile in expected_profiles:
+        assert metrics["profiles"][profile]["measured"] is False
+        assert metrics["profiles"][profile]["metrics_source"] == "blocked_not_measured"
+        assert f"| {profile} | false |" in report
+    assert manifest["status"] == "BLOCKED"
+    assert manifest["measurement_status"] == "blocked_not_measured"
+    assert manifest["working_tree_dirty"] is False
+    assert manifest["git_commit_sha"]
+    assert "docs/evidence/goal05-phase22-blocked-benchmark" in manifest["reproduce_command_str"]
 
 
 def test_enterprise_rag_schema_probe_writes_alias_preview(tmp_path: Path) -> None:
@@ -225,11 +257,19 @@ def test_enterprise_rag_paired_benchmark_reads_alias_document_schema(monkeypatch
     assert metrics["metrics_source"] == "blocked_not_measured"
     assert metrics["case_set"]["measured_case_count"] == 0
     assert metrics["case_set"]["profile_case_counts"]["standard_rag"] == 2
+    assert metrics["case_set"]["profile_case_counts"]["local_graphrag"] == 2
     assert metrics["case_set"]["profile_case_counts"]["deep_graphrag"] == 2
     assert metrics["case_set"]["profile_case_counts"]["agentic_graphrag"] == 0
     assert metrics["profile_completeness"]["complete"] is False
+    assert metrics["profile_completeness"]["required_profiles"] == [
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    ]
     assert metrics["profile_completeness"]["missing_profiles"] == ["agentic_graphrag"]
     assert metrics["profile_completeness"]["blocked_reason"] == "incomplete_profile_measurement:agentic_graphrag"
+    assert metrics["profiles"]["local_graphrag"]["measured"] is True
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is False
     assert metrics["profiles"]["agentic_graphrag"]["metrics_source"] == "not_measured"
     assert metrics["profiles"]["agentic_graphrag"]["blocked_reason"] in ("dataset_measurement_blocked", "agentic_runtime_runner_not_wired")
@@ -741,6 +781,7 @@ def test_enterprise_rag_paired_benchmark_runs_same_cases_with_deltas_and_negativ
     assert metrics["runtime_config"]["chunk_size_override"] == 1800
     assert metrics["runtime_config"]["overlap_override"] == 240
     assert metrics["profiles"]["standard_rag"]["underlying_profile"] == "baseline_rag"
+    assert metrics["profiles"]["local_graphrag"]["underlying_profile"] == "local_graphrag"
     assert metrics["profiles"]["deep_graphrag"]["underlying_profile"] == "deep_graphrag"
     assert metrics["profiles"]["agentic_graphrag"]["measured"] is True
     assert metrics["profiles"]["agentic_graphrag"]["underlying_profile"] == "agentic_graphrag"
@@ -960,6 +1001,7 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
         metrics=None,
         failure_fingerprint="Mock Fingerprint",
         incomparable_reason="dataset_insufficient",
+        git_info=("clean-run-sha", False),
     )
 
     manifest_file = tmp_path / "benchmark_manifest.json"
@@ -970,6 +1012,8 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
     assert manifest_data["benchmark_id"] == "enterprise_rag_paired_benchmark"
     assert manifest_data["status"] == "BLOCKED"
     assert manifest_data["measurement_status"] == "blocked_not_measured"
+    assert manifest_data["git_commit_sha"] == "clean-run-sha"
+    assert manifest_data["working_tree_dirty"] is False
     assert manifest_data["failure_fingerprint"] == "Mock Fingerprint"
     assert manifest_data["incomparable_reason"] == "dataset_insufficient"
     assert manifest_data["is_comparable"] is False

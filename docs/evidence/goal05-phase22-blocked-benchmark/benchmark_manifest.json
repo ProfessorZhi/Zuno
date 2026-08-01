@@ -1,46 +1,46 @@
 {
   "schema_version": "1.0.0",
   "benchmark_id": "enterprise_rag_paired_benchmark",
-  "benchmark_run_id": "run_1785425635",
+  "benchmark_run_id": "run_1785583500",
   "status": "BLOCKED",
   "measurement_status": "blocked_not_measured",
-  "created_at": 1785425635.297647,
-  "completed_at": 1785425635.379019,
+  "created_at": 1785583500.1104503,
+  "completed_at": 1785583500.3969293,
   "reproduce_command": [
+    "poetry",
+    "run",
     "python",
-    "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
+    "-m",
+    "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
     "--questions-file",
-    "tools\\evals\\zuno\\rag_eval\\python_notes_eval.jsonl",
-    "--output-root",
-    "F:\\internship-work\\resume&resume project\\02_projects\\Zuno\\docs\\evidence\\goal05-phase22-blocked-benchmark",
+    "tools/evals/zuno/rag_eval/python_notes_eval.jsonl",
+    "--runtime-mode",
+    "contract-smoke",
     "--sample-size",
     "80",
+    "--output-root",
+    "docs/evidence/goal05-phase22-blocked-benchmark",
     "--hard-negative-count",
     "20",
-    "--allow-blocked",
-    "--rerank-score-threshold-override",
-    "0.0",
-    "--chunk-size-override",
-    "1800",
-    "--overlap-override",
-    "240"
+    "--allow-blocked"
   ],
-  "git_commit_sha": "2c6925f18f51238fc7323299353a922848947f6e",
-  "working_tree_dirty": true,
+  "reproduce_command_str": "poetry run python -m tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark --questions-file tools/evals/zuno/rag_eval/python_notes_eval.jsonl --runtime-mode contract-smoke --sample-size 80 --output-root docs/evidence/goal05-phase22-blocked-benchmark --hard-negative-count 20 --allow-blocked",
+  "git_commit_sha": "1b172a34a94b8681821f6bc4f7e4323f8659a612",
+  "working_tree_dirty": false,
   "python_version": "3.12.10",
   "platform": "Windows-11-10.0.26200-SP0",
-  "dataset_ref": "goal05-phase22-blocked-benchmark\\corpus\\enterprise_rag_bench_eval.jsonl",
+  "dataset_ref": "docs/evidence/goal05-phase22-blocked-benchmark/corpus/enterprise_rag_bench_eval.jsonl",
   "dataset_sha256": "48ab6c2aa8541db0de5dc58f391f71ce3b02996904e421ac6d3cc2f447cd56d2",
-  "corpus_manifest_ref": "goal05-phase22-blocked-benchmark\\corpus\\manifest.json",
-  "corpus_manifest_sha256": "5c62b824e85dce5cc683d1513acd7f975b6dee194c7a25682f1135f8386999df",
-  "benchmark_config_ref": "tools\\evals\\zuno\\rag_eval\\run_enterprise_rag_paired_benchmark.py",
-  "benchmark_config_sha256": "f688ca9d7a7353eb03b953b02a6daba6993ff172303e638e080b9b80c627589e",
+  "corpus_manifest_ref": "docs/evidence/goal05-phase22-blocked-benchmark/corpus/manifest.json",
+  "corpus_manifest_sha256": "4ee485bb9395a65711f3154c258165e73fe23520740370a1f94e4745433626a9",
+  "benchmark_config_ref": "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
+  "benchmark_config_sha256": "5cd68109b157b1fe5c93d53d428bbd1beeaeed64bfd3b023f0f2f183c87ff917",
   "profile_set_ref": "PROFILE_ALIASES_IN_RUNNER",
   "profile_set_sha256": "14e49e2fce70f7fa11ab4ef63ab98d2b91a300768382fea133e13e2bafbe27ee",
   "threshold_set_ref": "RELEASE_GATE_THRESHOLDS_IN_RUNNER",
   "threshold_set_sha256": "3e59cf10fffd7e34c8de1ef15eee12b6a0243aff9fa75bd7c84dd55903c4c163",
-  "model_manifest_ref": "src\\backend\\zuno\\agent\\core\\models\\manager.py",
-  "model_manifest_sha256": "93780c56d0ae345cfbe0a3f56993f610fb4f19f1779440ed43d679f1b2529863",
+  "model_manifest_ref": "src/backend/zuno/agent/core/models/manager.py",
+  "model_manifest_sha256": "bdb419065b0d15c43d2fff5030f66fd90691202d6c48c8cd468098d4d4222a1a",
   "case_set_hash": null,
   "expected_case_count": 80,
   "actual_case_count": 0,
@@ -53,11 +53,11 @@
   "artifact_refs": {
     "metrics_json": {
       "path": "metrics.json",
-      "sha256": "dafaaf314ac0f790f95a1665181e304345d21c1682ed85fc18ac2c6da15dc6e8"
+      "sha256": "591b672758246515baac04de30ad92aeeb2dece6ddd4e01f874fc94953d1b605"
     },
     "report_md": {
       "path": "report.md",
-      "sha256": "15c5cec00046617d0f8510ad1ad76c85bcdf7d80f1e29e9dd2cc2a3586136bf9"
+      "sha256": "8d5288df5da348bc8656084b4035a4c824c7eadaf34661bb397109fdee4ff35e"
     },
     "failure_cases_md": {
       "path": "failure_cases.md",
@@ -96,5 +96,5 @@
   "comparable": false,
   "is_comparable": false,
   "incomparable_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
-  "manifest_checksum_sidecar": "79dd847d56464a643d4c6951e8d4b766a44e06d315cd8733a27d67648d948b26"
+  "manifest_checksum_sidecar": "b4232d84121c73c289d4207a54b40ba5303a26d96c636170a2e70c1a04d9080e"
 }
