@@ -128,7 +128,7 @@ class ReadyContractTests(unittest.TestCase):
         for pr in report.profile_results:
             self.assertEqual(pr.state, STATE_READY)
             self.assertEqual(pr.gap_codes, ())
-        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v2")
+        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v3")
         self.assertEqual(len(report.input_fingerprint), 64)
 
     def test_02_profile_input_order_does_not_change_state(self) -> None:
@@ -1089,6 +1089,395 @@ class CliOutputDeterminismTests(unittest.TestCase):
 
 
 import unittest.mock  # noqa: F401  (kept for any future patch usage)
+
+
+# ---------------------------------------------------------------------------
+# v3 Review Block Tests
+# ---------------------------------------------------------------------------
+
+
+class V3MissingProfilesFailClosedTests(unittest.TestCase):
+    def test_84_top_level_profiles_missing_is_invalid(self) -> None:
+        payload = _valid_payload()
+        del payload["profiles"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("profiles_missing", report.gap_codes)
+
+    def test_85_top_level_profiles_missing_does_not_raise(self) -> None:
+        payload = _valid_payload()
+        del payload["profiles"]
+        try:
+            report = _evaluate(payload)
+        except Exception as exc:
+            self.fail(f"evaluate raised an exception: {exc!r}")
+        self.assertEqual(report.state, STATE_INVALID)
+
+
+class V3ProfileFieldOwnershipTests(unittest.TestCase):
+    def test_86_profile_runtime_name_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["runtime_name"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("runtime_name_missing", report.gap_codes)
+
+    def test_87_profile_runtime_version_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["runtime_version"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("runtime_version_missing", report.gap_codes)
+
+    def test_88_profile_corpus_snapshot_ref_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["corpus_snapshot_ref"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("corpus_snapshot_missing", report.gap_codes)
+
+    def test_89_profile_product_runtime_attested_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["product_runtime_attested"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("product_runtime_not_attested", report.gap_codes)
+
+    def test_90_profile_artifact_store_available_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["artifact_store_available"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("artifact_store_unavailable", report.gap_codes)
+
+    def test_91_profile_field_type_error_is_invalid(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            profile["runtime_name"] = 123
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("profile_string_field_type_invalid", report.gap_codes)
+
+
+class V3BooleanNumericRejectionTests(unittest.TestCase):
+    def test_92_candidate_count_true_is_invalid(self) -> None:
+        payload = _valid_payload()
+        payload["candidate_count"] = True
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("input_type_invalid_candidate_count", report.gap_codes)
+
+    def test_93_token_limit_true_is_invalid(self) -> None:
+        payload = _valid_payload()
+        payload["token_limit"] = True
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("input_type_invalid_token_limit", report.gap_codes)
+
+    def test_94_provider_cost_limit_true_is_invalid(self) -> None:
+        payload = _valid_payload()
+        payload["provider_cost_limit"] = True
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("input_type_invalid_provider_cost_limit", report.gap_codes)
+
+
+class V3EvalRunIdentityTests(unittest.TestCase):
+    def test_95_eval_run_id_missing_is_blocked(self) -> None:
+        payload = _valid_payload()
+        del payload["eval_run_id"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("eval_run_id_missing", report.gap_codes)
+
+    def test_96_eval_run_id_empty_is_blocked(self) -> None:
+        payload = _valid_payload()
+        payload["eval_run_id"] = ""
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("eval_run_id_missing", report.gap_codes)
+
+    def test_97_eval_run_id_whitespace_only_is_blocked(self) -> None:
+        payload = _valid_payload()
+        payload["eval_run_id"] = "   \t \n "
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("eval_run_id_missing", report.gap_codes)
+
+
+class V3GapCodeVocabularyTests(unittest.TestCase):
+    def test_98_unknown_profile_name_with_secret_token(self) -> None:
+        payload = _valid_payload()
+        payload["profiles"][0] = _valid_profile("sk-prod-secret-token")
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("profile_unknown", report.gap_codes)
+        # Gap code must not leak the raw profile name.
+        for code in report.gap_codes:
+            self.assertNotIn("sk-prod-secret-token", code)
+
+    def test_99_unknown_profile_name_with_newline(self) -> None:
+        payload = _valid_payload()
+        payload["profiles"][0] = _valid_profile("mystery\nname")
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_INVALID)
+        self.assertIn("profile_unknown", report.gap_codes)
+        for code in report.gap_codes:
+            self.assertNotIn("\n", code)
+
+    def test_100_gap_codes_do_not_include_raw_profile_name(self) -> None:
+        payload = _valid_payload()
+        payload["profiles"][0] = _valid_profile("totally-secret")
+        report = _evaluate(payload)
+        for code in report.gap_codes:
+            self.assertNotIn("totally-secret", code)
+
+    def test_101_all_gap_codes_match_fixed_vocabulary(self) -> None:
+        from tools.evals.zuno.rag_eval.benchmark_preflight import (
+            validate_gap_code,
+        )
+
+        # Ready case
+        report = _evaluate(_valid_payload())
+        for code in report.gap_codes:
+            self.assertTrue(validate_gap_code(code), f"not valid: {code}")
+
+        # Blocked case
+        for profile in _valid_payload()["profiles"]:
+            profile["product_runtime_attested"] = False
+        report = _evaluate(_valid_payload())
+        for code in report.gap_codes:
+            self.assertTrue(validate_gap_code(code), f"not valid: {code}")
+
+        # INVALID case
+        payload = _valid_payload()
+        del payload["profiles"]
+        report = _evaluate(payload)
+        for code in report.gap_codes:
+            self.assertTrue(validate_gap_code(code), f"not valid: {code}")
+
+
+class V3CliInputFailClosedTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.mkdtemp()
+        self.cli = os.path.join(
+            "tools", "evals", "zuno", "rag_eval", "run_phase22_preflight.py"
+        )
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_102_input_path_is_directory_exit_four(self) -> None:
+        proc = subprocess.run(
+            [
+                sys.executable,
+                self.cli,
+                "--input",
+                self.tmp,
+                "--output",
+                os.path.join(self.tmp, "out.json"),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 4)
+        self.assertNotIn("Traceback", proc.stderr)
+        # On Windows, opening a directory raises PermissionError; on
+        # POSIX it raises IsADirectoryError. Accept either fixed code.
+        self.assertTrue(
+            "input_path_is_directory" in proc.stderr
+            or "input_file_not_readable" in proc.stderr,
+            f"unexpected stderr: {proc.stderr!r}",
+        )
+
+    def test_103_input_os_error_exit_four(self) -> None:
+        # Use a wrapper that patches builtins.open to raise OSError for
+        # read-only paths.
+        target = os.path.join(self.tmp, "in.json")
+        with open(target, "w", encoding="utf-8") as handle:
+            handle.write("{}")
+        wrapper = (
+            "import sys, builtins, os\n"
+            f"sys.path.insert(0, {_RAG_EVAL_DIR!r})\n"
+            "import run_phase22_preflight\n"
+            "_real_open = builtins.open\n"
+            "def _patched_open(path, *a, **k):\n"
+            "    mode = k.get('mode', None)\n"
+            "    if mode is None and len(a) > 0:\n"
+            "        mode = a[0]\n"
+            "    if mode is not None and 'r' in mode:\n"
+            "        raise OSError('simulated read failure')\n"
+            "    return _real_open(path, *a, **k)\n"
+            "builtins.open = _patched_open\n"
+            f"sys.argv = ['run_phase22_preflight.py', '--input', {target!r}, '--output', {os.path.join(self.tmp, 'out.json')!r}]\n"
+            "raise SystemExit(run_phase22_preflight.main())\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, "-c", wrapper],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 4)
+        self.assertNotIn("Traceback", proc.stderr)
+        self.assertIn("input_file_not_readable", proc.stderr)
+
+
+class V3CliOutputNoPathLeakTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.mkdtemp()
+        self.cli = os.path.join(
+            "tools", "evals", "zuno", "rag_eval", "run_phase22_preflight.py"
+        )
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_104_output_dir_creation_error_no_raw_exception(self) -> None:
+        target_in = os.path.join(self.tmp, "in.json")
+        with open(target_in, "w", encoding="utf-8") as f:
+            json.dump(_valid_payload(), f)
+        wrapper = (
+            "import sys, os\n"
+            f"sys.path.insert(0, {_RAG_EVAL_DIR!r})\n"
+            "import run_phase22_preflight\n"
+            "os.makedirs = lambda *a, **k: (_ for _ in ()).throw(OSError('C:\\\\Users\\\\Administrator\\\\secret_dir: simulated mkdir failure'))\n"
+            f"sys.argv = ['run_phase22_preflight.py', '--input', {target_in!r}, '--output', {os.path.join(self.tmp, 'out.json')!r}]\n"
+            "raise SystemExit(run_phase22_preflight.main())\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, "-c", wrapper],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 4)
+        self.assertNotIn("Traceback", proc.stderr)
+        self.assertEqual(proc.stderr.strip(), "preflight: output_dir_creation_failed")
+        # No path leaks.
+        self.assertNotIn("C:\\Users", proc.stderr)
+        self.assertNotIn("Administrator", proc.stderr)
+        self.assertNotIn("secret_dir", proc.stderr)
+
+    def test_105_output_write_error_no_absolute_path(self) -> None:
+        target_in = os.path.join(self.tmp, "in.json")
+        with open(target_in, "w", encoding="utf-8") as f:
+            json.dump(_valid_payload(), f)
+        wrapper = (
+            "import sys, builtins, os\n"
+            f"sys.path.insert(0, {_RAG_EVAL_DIR!r})\n"
+            "import run_phase22_preflight\n"
+            "_real_open = builtins.open\n"
+            "def _patched_open(path, *a, **k):\n"
+            "    mode = k.get('mode', None)\n"
+            "    if mode is None and len(a) > 0:\n"
+            "        mode = a[0]\n"
+            "    if mode is not None and 'w' in mode:\n"
+            "        raise PermissionError('C:\\\\Users\\\\Admin\\\\out.json: simulated write denied')\n"
+            "    return _real_open(path, *a, **k)\n"
+            "builtins.open = _patched_open\n"
+            f"sys.argv = ['run_phase22_preflight.py', '--input', {target_in!r}, '--output', {os.path.join(self.tmp, 'out.json')!r}]\n"
+            "raise SystemExit(run_phase22_preflight.main())\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, "-c", wrapper],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 4)
+        self.assertNotIn("Traceback", proc.stderr)
+        self.assertEqual(proc.stderr.strip(), "preflight: output_write_failed")
+        self.assertNotIn("C:\\Users", proc.stderr)
+        self.assertNotIn("Admin", proc.stderr)
+        self.assertNotIn("out.json", proc.stderr)
+
+
+class V3CliArgparseExitTests(unittest.TestCase):
+    def test_106_missing_required_arg_exit_four(self) -> None:
+        cli = os.path.join(
+            "tools", "evals", "zuno", "rag_eval", "run_phase22_preflight.py"
+        )
+        proc = subprocess.run(
+            [sys.executable, cli],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 4)
+        self.assertNotIn("Traceback", proc.stderr)
+
+
+class V3GateCountTests(unittest.TestCase):
+    def test_107_eleven_gates_documented_and_implemented(self) -> None:
+        from tools.evals.zuno.rag_eval.benchmark_preflight import (
+            BenchmarkPreflightEvaluator,
+        )
+
+        evaluator = BenchmarkPreflightEvaluator()
+        gate_methods = [
+            "_gate_input_structure",
+            "_gate_profile_set",
+            "_gate_comparability",
+            "_gate_governance",
+            "_gate_dataset",
+            "_gate_gold_firewall",
+            "_gate_runtime",
+            "_gate_security",
+            "_gate_budget",
+            "_gate_credentials",
+            "_gate_output_contract",
+        ]
+        for g in gate_methods:
+            self.assertTrue(
+                hasattr(evaluator, g),
+                f"missing gate method: {g}",
+            )
+
+        # Evidence doc must list all 11 gates.
+        doc_path = os.path.join(
+            "docs", "evidence", "goal05-phase22-benchmark-preflight.md"
+        )
+        with open(doc_path, "r", encoding="utf-8") as handle:
+            doc_text = handle.read()
+        for label in (
+            "Input Structure",
+            "Profile Set",
+            "Comparability",
+            "Governance",
+            "Dataset and Snapshot",
+            "Gold Evidence Firewall",
+            "Runtime",
+            "Security",
+            "Budget",
+            "Credentials and Formal Execution",
+            "Output Contract",
+        ):
+            self.assertIn(label, doc_text, f"missing gate label: {label}")
+
+
+class V3BytewiseOutputTests(unittest.TestCase):
+    def test_108_same_input_byte_identical_output(self) -> None:
+        cli = os.path.join(
+            "tools", "evals", "zuno", "rag_eval", "run_phase22_preflight.py"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            target_in = os.path.join(tmp, "in.json")
+            with open(target_in, "w", encoding="utf-8") as handle:
+                json.dump(_valid_payload(), handle, sort_keys=True)
+            out_a = os.path.join(tmp, "a.json")
+            out_b = os.path.join(tmp, "b.json")
+            for out in (out_a, out_b):
+                subprocess.run(
+                    [sys.executable, cli, "--input", target_in, "--output", out],
+                    check=True,
+                )
+            with open(out_a, "rb") as handle:
+                a = handle.read()
+            with open(out_b, "rb") as handle:
+                b = handle.read()
+            self.assertEqual(a, b)
 
 
 if __name__ == "__main__":

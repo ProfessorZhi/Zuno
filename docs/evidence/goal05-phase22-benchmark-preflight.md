@@ -1,6 +1,6 @@
-# Goal05 PHASE22 Benchmark Preflight Contract (v2)
+# Goal05 PHASE22 Benchmark Preflight Contract (v3)
 
-status: contract_v2_complete
+status: contract_v3_complete
 date: 2026-08-01
 branch: agent/minimax/phase22-benchmark-preflight-contract-v2
 base_branch: docs/phase22-agent-performance-governance
@@ -101,18 +101,20 @@ check so the missing-surface gap code is not preempted.
 ## Gate Priority
 
 The evaluator enforces the gate order strictly. Lower-numbered gates
-short-circuit; later successes never mask earlier failures.
+short-circuit; later successes never mask earlier failures. Eleven
+gates are defined; the fixed order is:
 
 1. Input Structure
-2. Comparability
-3. Governance
-4. Dataset and Snapshot
-5. Gold Evidence Firewall
-6. Runtime
-7. Security
-8. Budget
-9. Credentials and Formal Execution
-10. Output Contract
+2. Profile Set
+3. Comparability
+4. Governance
+5. Dataset and Snapshot
+6. Gold Evidence Firewall
+7. Runtime
+8. Security
+9. Budget
+10. Credentials and Formal Execution
+11. Output Contract
 
 ## Comparability Contract
 
@@ -166,9 +168,14 @@ Exit codes:
 | 0    | ``READY``       |
 | 2    | ``BLOCKED``     |
 | 3    | ``INCOMPARABLE``|
-| 4    | ``INVALID`` (or input / parse / write failure) |
+| 4    | ``INVALID`` (or input / parse / write / CLI usage failure) |
 
-The CLI never runs the benchmark itself.
+The CLI never runs the benchmark itself. Argparse errors map to exit
+code 4 (not the argparse default of 2) and never print a Python
+traceback. Output write failures (directory creation, open, write) all
+map to exit code 4 with a fixed error code (``output_dir_creation_failed``
+or ``output_write_failed``); the absolute path, Windows user name, and
+raw OS exception are never copied into stderr.
 
 ## Input Fingerprint
 
@@ -185,6 +192,16 @@ structurally identical inputs always produce the same fingerprint.
 No real credentials are included in the fingerprint;
 ``credential_ref`` is treated as a plain non-secret reference.
 
+## Gap Code Vocabulary
+
+Every gap code emitted by the contract matches the fixed regular
+expression ``^[a-z][a-z0-9_]*$``. No gap code embeds the raw profile
+name, a secret, a ref, a hash, a runtime name, user input, a newline,
+or any other arbitrary substring. All profile set errors share the
+fixed code ``profile_unknown``; profile string-field type errors share
+``profile_string_field_type_invalid``; profile boolean-field type
+errors share ``profile_boolean_field_type_invalid``.
+
 ## Current
 
 This PR provides:
@@ -193,11 +210,14 @@ This PR provides:
   with frozen dataclasses for ``BenchmarkPreflightInput``,
   ``ProfilePreflightInput``, ``BenchmarkPreflightReport``,
   ``ProfilePreflightResult``, and the ``BenchmarkPreflightEvaluator``
+  enforcing eleven gates in fixed order
 * ``tools/evals/zuno/rag_eval/run_phase22_preflight.py`` -- the CLI
-  entry point with strict JSON parsing and write-failure handling
-* ``tests/evals/test_phase22_benchmark_preflight.py`` -- 89 deterministic
-  unit tests covering all gates, the CLI, the fingerprint invariants,
-  and the state-ownership rules
+  entry point with strict JSON parsing, argparse exit-4 handling, and
+  write-failure handling
+* ``tests/evals/test_phase22_benchmark_preflight.py`` -- 114
+  deterministic unit tests covering all eleven gates, the CLI, the
+  fingerprint invariants, the state-ownership rules, the gap-code
+  vocabulary, and the I/O fail-closed behaviour
 * this evidence document
 
 ## Target
