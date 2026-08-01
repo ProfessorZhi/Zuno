@@ -975,5 +975,3 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
     assert manifest_data["is_comparable"] is False
     assert "manifest_checksum_sidecar" in manifest_data
     assert "run_enterprise_rag_paired_benchmark" in " ".join(manifest_data["reproduce_command"])
-
-

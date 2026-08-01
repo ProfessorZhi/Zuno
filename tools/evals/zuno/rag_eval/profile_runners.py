@@ -79,7 +79,7 @@ class StandardRAGProfileRunner(BenchmarkProfileRunner):
 
     def run_case(self, case_input: BenchmarkCaseInput) -> BenchmarkCaseResult:
         span_id = self.trace_adapter.start_span("StandardRAGRun", span_type="RetrievalRound", metadata={"case_id": case_input.case_id})
-        
+
         # Test Double candidate synthesis for contract verification
         bm25_refs = [f"bm25_{doc}" for doc in case_input.gold_document_refs] or ["doc_std_001"]
         vector_refs = list(case_input.gold_document_refs) or ["doc_std_001"]
@@ -109,7 +109,7 @@ class LocalGraphRAGProfileRunner(BenchmarkProfileRunner):
 
     def run_case(self, case_input: BenchmarkCaseInput) -> BenchmarkCaseResult:
         span_id = self.trace_adapter.start_span("LocalGraphRAGRun", span_type="Graph", metadata={"case_id": case_input.case_id})
-        
+
         local_entity_refs = list(case_input.gold_document_refs) or ["doc_graph_local_001"]
         graph_neighborhood = [f"neighborhood_{ref}" for ref in local_entity_refs]
         all_refs = list(dict.fromkeys(local_entity_refs + graph_neighborhood))
@@ -142,7 +142,7 @@ class DeepGraphRAGProfileRunner(BenchmarkProfileRunner):
 
         decomposed_queries = [f"subquery_{i+1}_for_{case_input.case_id}" for i in range(2)]
         deep_refs = list(case_input.gold_document_refs) or ["doc_deep_001"]
-        
+
         self.trace_adapter.end_span(span_id, outputs={"decomposed_queries": len(decomposed_queries)})
         return BenchmarkCaseResult(
             case_id=case_input.case_id,
@@ -173,13 +173,13 @@ class AgenticGraphRAGProfileRunner(BenchmarkProfileRunner):
         # 2. Graph & Deep additions
         graph_added = [f"graph_node_{doc}" for doc in std_candidates]
         deep_added = [f"deep_node_{doc}" for doc in std_candidates]
-        
+
         # 3. Standard Floor Fusion
         all_candidates = std_candidates + graph_added + deep_added
         dedup_candidates = list(dict.fromkeys(all_candidates))
-        
+
         floor_preserved = all(ref in dedup_candidates for ref in std_candidates)
-        
+
         graph_gold = [g for g in graph_added if any(gold in g for gold in case_input.gold_document_refs)]
         graph_non_gold = [g for g in graph_added if g not in graph_gold]
 

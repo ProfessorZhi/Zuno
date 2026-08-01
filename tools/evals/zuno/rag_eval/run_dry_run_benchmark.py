@@ -24,7 +24,7 @@ LEGACY_DRY_RUN_DIR = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-dry-run-o
 def load_subset_candidates() -> list[dict[str, Any]]:
     lines = CANDIDATE_PACK_FILE.read_text(encoding="utf-8").splitlines()
     cases = [json.loads(line) for line in lines if line.strip()]
-    
+
     # Pick 2 per slice
     by_slice: dict[str, list[dict[str, Any]]] = {}
     for c in cases:
