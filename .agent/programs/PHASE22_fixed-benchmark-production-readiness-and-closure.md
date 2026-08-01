@@ -113,6 +113,7 @@ docs/evidence/**
 ```bash
 git diff --check
 python tools/scripts/verify_current_program.py
+python tools/scripts/verify_phase22_completion_blockers.py
 python tools/scripts/verify_phase22_cleanup_boundary.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
@@ -132,4 +133,4 @@ cd apps/web && npm run lint && npm run build
 - **Dataset Contract & Candidate Pack**: Generated 80 public candidate cases (raw_question_candidate_count=80, evidence_complete_count=20, rejected_or_incomplete_count=60, reviewer_approved_count=0, benchmark_eligible_count=0).
 - **Smoke status**: Profile Contract Smoke completed (CONTRACT_SMOKE_COMPLETED / MEASUREMENT_BLOCKED / not_measured_test_double_runner).
 - **Verification status**: PR #52 merged into `main` as merge commit `14ab8d99c38ca6e23124a02c6f8ac71fd2602bac`; focused unit suites and repository gates passed for the merged PHASE22 preparation slice. Chunk projection cleanup evidence is recorded in `docs/evidence/goal05-phase22-chunk-projection-cleanup.md`; completion rollback retirement evidence is recorded in `docs/evidence/goal05-phase22-completion-rollback-retirement.md`.
-- **Completion status**: PHASE22 remains `in_progress`; fixed benchmark measurement, formal four-profile runtime, production readiness decision, full final verification and program archive are not complete.
+- **Completion status**: PHASE22 remains `in_progress`; fixed benchmark measurement, formal four-profile runtime, production readiness decision, full final verification and program archive are not complete. Completion blocker evidence is recorded in `docs/evidence/goal05-phase22-completion-blockers.md`, and `tools/scripts/verify_phase22_completion_blockers.py` is wired into current Program verification to prevent premature PHASE22 completion or no-active reset while benchmark/review evidence remains blocked.
