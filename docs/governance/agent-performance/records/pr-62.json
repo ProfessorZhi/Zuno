@@ -1,0 +1,47 @@
+{
+  "pr_number": 62,
+  "work_package": "MM-PHASE22-BENCHMARK-RELEASE-DECISION",
+  "title": "PHASE22 Release Decision Engine",
+  "branch": "agent/minimax/phase22-release-decision-engine",
+  "base_branch": "docs/phase22-agent-performance-governance",
+  "base_sha_expected": "3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1",
+  "status": "draft",
+  "merge_ready": false,
+  "agent": "Claude-Code",
+  "provider": "MiniMax",
+  "model": "MiniMax-M3",
+  "agent_mode": "Goal",
+  "human_owner": "ProfessorZhi",
+  "architecture_reviewer": "ChatGPT",
+  "evidence_doc": "docs/evidence/goal05-phase22-release-decision-engine.md",
+  "files_added_or_modified": [
+    "tools/evals/zuno/rag_eval/release_decision.py",
+    "tools/evals/zuno/rag_eval/run_phase22_release_decision.py",
+    "tools/evals/zuno/rag_eval/__init__.py",
+    "tests/evals/test_phase22_release_decision.py",
+    "docs/evidence/goal05-phase22-release-decision-engine.md",
+    "docs/governance/agent-performance/records/pr-62.json"
+  ],
+  "tests_run": [
+    "tests/evals/test_phase22_release_decision.py"
+  ],
+  "verifiers_run": [
+    "verify_repo_structure.py",
+    "verify_current_program.py"
+  ],
+  "items_intentionally_not_run": [
+    "real_model_calls",
+    "real_benchmark_runs",
+    "docker",
+    "paid_provider_traffic",
+    "full_frontend_build",
+    "full_repo_pytest",
+    "phase22_full_e2e"
+  ],
+  "not_claimed": [
+    "real_release_readiness",
+    "production_ready_status",
+    "supplant_pr60_pr61"
+  ],
+  "boundary_accepted_not_merge_ready": true
+}
