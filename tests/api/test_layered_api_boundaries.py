@@ -233,6 +233,18 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
         assert "from zuno.tools" not in content
 
 
+def test_workspace_attachment_uses_canonical_ir_without_chunk_projection_default() -> None:
+    attachment_service = _read("src/backend/zuno/platform/services/workspace/attachment_service.py")
+
+    assert "ParseGateway" in attachment_service
+    assert "ParseDocumentRequest" in attachment_service
+    assert "CanonicalDocumentIR" in attachment_service
+    assert "product.workspace_attachment.canonical_ir" in attachment_service
+    assert "parse_file_into_chunk_model_projection" not in attachment_service
+    assert "chunk_projection_adapter" not in attachment_service
+    assert "ChunkModel" not in attachment_service
+
+
 def test_api_service_layer_uses_canonical_platform_imports() -> None:
     upload = _read("src/backend/zuno/api/services/upload.py")
     knowledge_file = _read("src/backend/zuno/api/services/knowledge_file.py")

@@ -14,7 +14,7 @@ EXPECTED_ROWS = {
     },
     "P11-LC-02": {
         "path": "src/backend/zuno/platform/services/workspace/attachment_service.py",
-        "status": "versioned_adapter_required",
+        "status": "canonical_ir_default_no_chunk_projection",
     },
     "P11-LC-03": {
         "path": "src/backend/zuno/platform/services/pipeline/manager.py",
@@ -36,7 +36,10 @@ EXPECTED_ROWS = {
 
 SOURCE_EXPECTATIONS = {
     "src/backend/zuno/platform/services/workspace/attachment_service.py": [
-        "parse_file_into_chunk_model_projection",
+        "ParseGateway",
+        "ParseDocumentRequest",
+        "CanonicalDocumentIR",
+        "product.workspace_attachment.canonical_ir",
         "_image_to_text",
     ],
     "src/backend/zuno/platform/services/pipeline/manager.py": [
