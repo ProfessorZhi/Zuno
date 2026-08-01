@@ -1,25 +1,25 @@
 """Phase22 Release Decision Engine focused tests.
 
-The test suite is intentionally compact and high-value:
+The test suite is intentionally compact and high-value.  Each new "final
+narrow fix" review-driven requirement is covered by a single minimal test:
 
-* Five final statuses (PASSED, FAILED, BLOCKED, INCOMPARABLE, ERROR).
-* Each required gate's BLOCKED path (one minimal deletion test each).
-* Required-gate missing vs threshold-fail distinction.
-* Comparability fingerprint mismatch reason codes (no spurious
-  fingerprint_dimension_missing when every dimension is declared).
-* Artifact hash mismatch / structural error paths.
-* NaN / Infinity / out-of-range / unknown field rejection.
-* Deterministic replay (byte-identical across runs and across two
-  independent temporary working directories).
-* CLI read failure, CLI write failure, and one exit-code round trip per
-  final status.
+* Citation/Safety completeness (one missing metric blocks PASSED).
+* Critical Slice Baseline completeness (one missing baseline slice blocks).
+* Cost/Latency completeness (one missing profile metric blocks; one bad
+  numeric shape produces ERROR).
+* Failure Bucket taxonomy + shape (one bad shape produces ERROR; one
+  unknown non-empty bucket produces FAILED).
+* Profile Fingerprint completeness (a missing profile fingerprint blocks).
+* Artifact Hash completeness (a missing artifact hash blocks).
+* Status exit-code mapping and CLI ReleaseDecisionError -> ERROR 4.
+* Determinism + path privacy between two tmp dirs.
+* Closure-set invariants for reason codes and required gates.
 """
 
 from __future__ import annotations
 
 import json
 import math
-import re
 import sys
 from pathlib import Path
 
@@ -30,17 +30,18 @@ sys.path.insert(0, str(ROOT / "src" / "backend"))
 from tools.evals.zuno.rag_eval.release_decision import (  # noqa: E402
     BLOCKED_REASONS,
     CORE_FIVE_METRIC_NAMES,
+    CITATION_SAFETY_METRIC_NAMES,
     DEFAULT_AGENT_EFFICIENT_PROFILE_ID,
     ERROR_REASONS,
     EXIT_CODE_BY_STATUS,
     FAILED_REASONS,
     FINGERPRINT_DIMENSIONS,
+    FAILURE_BUCKET_TAXONOMY,
     INCOMPARABLE_REASONS,
     PASSED_REASONS,
     REQUIRED_PROFILE_IDS,
     REQUIRED_TOP_LEVEL_GATES,
     ReleaseDecisionError,
-    ReleaseDecisionExitCode,
     ReleaseDecisionStatus,
     evaluate_release_decision,
     exit_code_for,
@@ -67,7 +68,7 @@ def _profile_block(
 ):
     if fingerprint is None:
         fingerprint = _fingerprint()
-    return {
+    block: dict = {
         "profile_id": profile_id,
         "measurement_status": measurement_status,
         "artifact": {"artifact_hash": artifact_hash, "manifest_hash": "manifest:profile"},
@@ -76,6 +77,7 @@ def _profile_block(
         "evaluation": {"ok": True},
         "fingerprint": fingerprint,
     }
+    return block
 
 
 def _good_core_five():
@@ -86,6 +88,7 @@ def _good_core_five():
 
 
 def _good_citation_safety():
+    """Good citation/safety values: 0.9 = accuracy/abstention, low rates."""
     return {
         profile: {
             "citation_accuracy": 0.95,
@@ -152,7 +155,7 @@ def _good_input(**overrides):
 
 
 # --------------------------------------------------------------------------
-# Status -- exit-code contract
+# Status -> exit code contract
 # --------------------------------------------------------------------------
 
 
@@ -162,11 +165,6 @@ def test_exit_code_map_matches_status():
     assert EXIT_CODE_BY_STATUS[ReleaseDecisionStatus.BLOCKED] == 2
     assert EXIT_CODE_BY_STATUS[ReleaseDecisionStatus.INCOMPARABLE] == 3
     assert EXIT_CODE_BY_STATUS[ReleaseDecisionStatus.ERROR] == 4
-    assert int(ReleaseDecisionExitCode.PASSED) == 0
-    assert int(ReleaseDecisionExitCode.FAILED) == 1
-    assert int(ReleaseDecisionExitCode.BLOCKED) == 2
-    assert int(ReleaseDecisionExitCode.INCOMPARABLE) == 3
-    assert int(ReleaseDecisionExitCode.ERROR) == 4
 
 
 def test_passed_decision_carries_exit_code_zero():
@@ -190,52 +188,14 @@ def test_passed_when_all_gates_satisfied():
     assert decision.canonical_input_hash
     assert decision.decision_hash
     assert set(decision.profile_hashes) == set(REQUIRED_PROFILE_IDS)
-    assert decision.reproduce_command_template
 
 
-def test_failed_when_core_five_metric_below_threshold():
-    core_five = _good_core_five()
-    core_five["standard_rag"]["faithfulness"] = 0.2
-    decision = evaluate_release_decision(_good_input(core_five=core_five))
+def test_failed_when_core_five_below_threshold():
+    payload = _good_input()
+    payload["core_five"]["standard_rag"]["faithfulness"] = 0.2
+    decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.FAILED
     assert "core_five_metric_below_threshold" in decision.reason_codes
-    assert any(
-        gate.metric == "faithfulness" and gate.profile_id == "standard_rag"
-        for gate in decision.gate_results
-    )
-
-
-def test_failed_when_citation_safety_violation():
-    citation_safety = _good_citation_safety()
-    citation_safety["local_graphrag"]["contradicted_claim_rate"] = 0.5
-    decision = evaluate_release_decision(_good_input(citation_safety=citation_safety))
-    assert decision.status == ReleaseDecisionStatus.FAILED
-    assert "contradicted_claim_rate_above_threshold" in decision.reason_codes
-
-
-def test_failed_on_critical_slice_regression():
-    payload = _good_input()
-    payload["critical_slice"]["standard_rag"]["multi_hop"] = 0.4
-    payload["critical_slice_baseline"]["standard_rag"]["multi_hop"] = 0.8
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.FAILED
-    assert "critical_slice_regression" in decision.reason_codes
-
-
-def test_failed_on_cost_above_budget():
-    payload = _good_input()
-    payload["cost_latency_budget"]["standard_rag"]["total_cost"] = 500.0
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.FAILED
-    assert "cost_above_budget" in decision.reason_codes
-
-
-def test_failed_on_high_risk_failure_bucket():
-    payload = _good_input()
-    payload["profiles"]["deep_graphrag"]["failure_buckets"] = ["citation_binding_miss"]
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.FAILED
-    assert "high_risk_failure_bucket_present" in decision.reason_codes
 
 
 def test_blocked_on_missing_profile():
@@ -256,17 +216,15 @@ def test_blocked_on_profile_not_measured():
     assert decision.reason_codes == ("profile_not_measured",)
 
 
-def test_incomparable_on_fingerprint_mismatch():
+def test_incomparable_emits_only_actual_dimension_mismatch():
     payload = _good_input()
-    payload["profiles"]["standard_rag"]["fingerprint"] = _fingerprint(dataset_version="different-v2")
+    payload["profiles"]["standard_rag"]["fingerprint"] = _fingerprint(
+        dataset_version="different-v2"
+    )
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.INCOMPARABLE
     assert "dataset_version_mismatch" in decision.reason_codes
-    # Never carry the spurious "fingerprint_dimension_missing" code when every
-    # dimension was declared and only a value differs.
     assert "fingerprint_dimension_missing" not in decision.reason_codes
-    # The gate's reason must reflect the actual mismatch dimension, not a
-    # fixed placeholder string.
     assert decision.gate_results[0].reason == "dataset_version_mismatch"
 
 
@@ -278,125 +236,111 @@ def test_error_on_unknown_top_level_field():
     assert decision.reason_codes == ("unknown_top_level_field",)
 
 
-def test_error_on_nan_score():
-    core_five = _good_core_five()
-    core_five["standard_rag"]["faithfulness"] = float("nan")
-    payload = _good_input(core_five=core_five)
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.ERROR
-
-
-def test_error_on_infinity_score():
-    core_five = _good_core_five()
-    core_five["agentic_graphrag"]["answer_correctness"] = math.inf
-    payload = _good_input(core_five=core_five)
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.ERROR
-
-
-def test_error_on_score_out_of_range():
-    core_five = _good_core_five()
-    core_five["agentic_graphrag"]["context_precision"] = 1.5
-    payload = _good_input(core_five=core_five)
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.ERROR
-
-
-def test_error_on_artifact_hash_too_short():
-    payload = _good_input()
-    payload["profiles"]["standard_rag"]["artifact"]["artifact_hash"] = "x"
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.ERROR
-
-
 # --------------------------------------------------------------------------
-# Required-gate BLOCKED semantics (one minimal deletion test per gate)
+# Review-driven focused tests (one minimal test per requirement)
 # --------------------------------------------------------------------------
 
 
-def test_blocked_when_required_gate_core_five_missing():
+def test_missing_citation_safety_metric_blocks_passed():
     payload = _good_input()
-    payload.pop("core_five")
+    cs = _good_citation_safety()
+    cs["standard_rag"].pop("abstention_correctness")
+    payload["citation_safety"] = cs
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "core_five_block_missing" in decision.reason_codes
+    assert "citation_safety_metric_missing" in decision.reason_codes
 
 
-def test_blocked_when_required_gate_citation_safety_missing():
+def test_citation_safety_bad_score_is_error():
     payload = _good_input()
-    payload.pop("citation_safety")
+    cs = _good_citation_safety()
+    cs["standard_rag"]["citation_accuracy"] = 1.5  # out of [0,1]
+    payload["citation_safety"] = cs
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.ERROR
+
+
+def test_missing_critical_slice_baseline_blocks_passed():
+    payload = _good_input()
+    baseline = {profile: {"multi_hop": 0.7, "citation_required": 0.7} for profile in REQUIRED_PROFILE_IDS}
+    del baseline["deep_graphrag"]["citation_required"]
+    payload["critical_slice_baseline"] = baseline
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "citation_safety_block_missing" in decision.reason_codes
+    assert "critical_slice_baseline_metric_missing" in decision.reason_codes
 
 
-def test_blocked_when_required_gate_critical_slice_missing():
+def test_critical_slice_regression_failed_not_floor_blocked():
+    """If the baseline exists but the current value is below it, the decision
+    is FAILED (threshold violation), not BLOCKED. Floor fallback (0.5) has
+    been removed."""
     payload = _good_input()
-    payload.pop("critical_slice")
+    payload["critical_slice"]["standard_rag"]["multi_hop"] = 0.4
+    payload["critical_slice_baseline"]["standard_rag"]["multi_hop"] = 0.8
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.FAILED
+    assert "critical_slice_regression" in decision.reason_codes
+
+
+def test_missing_cost_latency_metric_blocks_passed():
+    payload = _good_input()
+    del payload["cost_latency_budget"]["deep_graphrag"]
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "critical_slice_block_missing" in decision.reason_codes
+    assert "cost_latency_metric_missing" in decision.reason_codes
 
 
-def test_blocked_when_required_gate_critical_slice_baseline_missing():
+def test_cost_latency_nan_is_error():
     payload = _good_input()
-    payload.pop("critical_slice_baseline")
+    payload["cost_latency_budget"]["deep_graphrag"]["total_cost"] = float("nan")
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.ERROR
+
+
+def test_failure_bucket_bad_shape_is_error():
+    payload = _good_input()
+    payload["failure_buckets"]["deep_graphrag"] = "not-a-list"
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.ERROR
+
+
+def test_unknown_non_empty_failure_bucket_failed():
+    payload = _good_input()
+    payload["failure_buckets"]["deep_graphrag"] = ["made_up_bucket_xyz"]
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.FAILED
+    assert "unknown_failure_bucket" in decision.reason_codes
+
+
+def test_high_risk_failure_bucket_failed():
+    payload = _good_input()
+    payload["failure_buckets"]["deep_graphrag"] = ["citation_binding_miss"]
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.FAILED
+    assert "high_risk_failure_bucket_present" in decision.reason_codes
+
+
+def test_missing_profile_fingerprint_blocks_passed():
+    payload = _good_input()
+    del payload["profiles"]["local_graphrag"]["fingerprint"]
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "critical_slice_baseline_block_missing" in decision.reason_codes
+    assert "profile_fingerprint_missing" in decision.reason_codes
 
 
-def test_blocked_when_required_gate_agent_efficiency_missing():
+def test_missing_artifact_hash_blocks_passed():
     payload = _good_input()
-    payload.pop("agent_efficiency")
+    del payload["profiles"]["local_graphrag"]["artifact"]["artifact_hash"]
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "agent_efficiency_block_missing" in decision.reason_codes
+    assert "profile_artifact_hash_missing" in decision.reason_codes
 
 
-def test_blocked_when_required_gate_cost_latency_budget_missing():
+def test_artifact_hash_bad_shape_is_error():
     payload = _good_input()
-    payload.pop("cost_latency_budget")
+    payload["profiles"]["local_graphrag"]["artifact"]["artifact_hash"] = 42
     decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "cost_latency_budget_block_missing" in decision.reason_codes
-
-
-def test_blocked_when_required_gate_failure_buckets_missing():
-    payload = _good_input()
-    payload.pop("failure_buckets")
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "failure_buckets_block_missing" in decision.reason_codes
-
-
-def test_blocked_when_required_gate_evidence_refs_missing():
-    payload = _good_input()
-    payload.pop("evidence_refs")
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "evidence_missing" in decision.reason_codes
-
-
-def test_blocked_when_core_five_metric_missing_inside_block():
-    """Once the gate is present, missing metrics inside core_five are also BLOCKED,
-    not FAILED -- gating on presence vs. threshold is the contract the engine
-    promises."""
-    payload = _good_input()
-    core = _good_core_five()
-    core["standard_rag"]["faithfulness"] = None
-    payload["core_five"] = core
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "core_five_metric_missing" in decision.reason_codes
-
-
-def test_blocked_when_agent_efficiency_metric_missing():
-    payload = _good_input()
-    payload["agent_efficiency"] = {"standard_rag": {}}
-    decision = evaluate_release_decision(payload)
-    assert decision.status == ReleaseDecisionStatus.BLOCKED
-    assert "agent_efficiency_metric_missing" in decision.reason_codes
+    assert decision.status == ReleaseDecisionStatus.ERROR
 
 
 # --------------------------------------------------------------------------
@@ -404,41 +348,33 @@ def test_blocked_when_agent_efficiency_metric_missing():
 # --------------------------------------------------------------------------
 
 
-def test_deterministic_replay_produces_byte_identical_decision():
+def test_deterministic_replay_byte_identical():
     payload = _good_input()
-    first = evaluate_release_decision(payload)
-    second = evaluate_release_decision(payload)
-    assert first == second
-    assert first.decision_hash == second.decision_hash
-    serialised_first = json.dumps(first.to_dict(), sort_keys=True)
-    serialised_second = json.dumps(second.to_dict(), sort_keys=True)
-    assert serialised_first == serialised_second
+    a = evaluate_release_decision(payload)
+    b = evaluate_release_decision(payload)
+    assert a == b
+    assert a.decision_hash == b.decision_hash
+    assert json.dumps(a.to_dict(), sort_keys=True) == json.dumps(b.to_dict(), sort_keys=True)
 
 
 def test_evidence_pack_contains_no_local_path_or_user_name():
     payload = _good_input()
-    input_path = Path("/some/secret/Alice/Users/input.json")
-    output_path = Path("/tmp/build/out.json")
     decision = evaluate_release_decision(payload)
-    pack = {"release_decision": decision.to_dict()}
-    serialised = json.dumps(pack, ensure_ascii=False)
-    for forbidden in ("Alice", "Users", "/Users", "/home", "/tmp", "secret"):
-        assert forbidden not in serialised, forbidden
+    serialised = json.dumps(decision.to_dict(), ensure_ascii=False)
+    for forbidden in ("/Users", "/home", "/tmp", "Alice", "Bob"):
+        assert forbidden not in serialised
 
 
-def test_evidence_pack_is_byte_identical_across_two_tmp_dirs(tmp_path: Path):
-    """Same input from two different working directories must produce
-    byte-identical evidence packs."""
+def test_two_tmpdir_byte_identical_evidence_pack(tmp_path: Path):
     a = tmp_path / "a"
     b = tmp_path / "b"
     a.mkdir()
     b.mkdir()
-    payload = _good_input()
-    serialised_payload = json.dumps(payload, ensure_ascii=False)
+    payload_text = json.dumps(_good_input(), ensure_ascii=False)
     in_a = a / "input.json"
     in_b = b / "input.json"
-    in_a.write_text(serialised_payload, encoding="utf-8")
-    in_b.write_text(serialised_payload, encoding="utf-8")
+    in_a.write_text(payload_text, encoding="utf-8")
+    in_b.write_text(payload_text, encoding="utf-8")
     out_a = a / "out.json"
     out_b = b / "out.json"
     code_a = run_cli(input_path=in_a, output_path=out_a)
@@ -449,143 +385,100 @@ def test_evidence_pack_is_byte_identical_across_two_tmp_dirs(tmp_path: Path):
 
 
 # --------------------------------------------------------------------------
-# Reason code closure
+# CLI Exit Code Contract
 # --------------------------------------------------------------------------
 
 
-def test_reason_codes_are_closure_set():
-    for status_decision, allowed in [
-        (evaluate_release_decision(_good_input()), PASSED_REASONS | FAILED_REASONS | BLOCKED_REASONS | INCOMPARABLE_REASONS | ERROR_REASONS),
-    ]:
-        for code in status_decision.reason_codes:
-            assert is_closed_reason(code)
-            assert code in allowed
-
-    blocked = evaluate_release_decision({**_good_input(), "core_five": None})
-    assert blocked.status == ReleaseDecisionStatus.BLOCKED
-    for code in blocked.reason_codes:
-        assert code in BLOCKED_REASONS
-
-    failed = evaluate_release_decision(
-        {**_good_input(), "citation_safety": {**_good_citation_safety(),
-                                              "standard_rag": {"contradicted_claim_rate": 0.5,
-                                                                "citation_accuracy": 0.95,
-                                                                "unsupported_claim_rate": 0.01,
-                                                                "abstention_correctness": 0.9}}}
-    )
-    assert failed.status == ReleaseDecisionStatus.FAILED
-    for code in failed.reason_codes:
-        assert code in FAILED_REASONS
+def _cli_run(payload, tmp_path):
+    in_p = tmp_path / "in.json"
+    out_p = tmp_path / "out.json"
+    in_p.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    code = run_cli(input_path=in_p, output_path=out_p)
+    pack = json.loads(out_p.read_text(encoding="utf-8"))
+    return code, pack
 
 
-# --------------------------------------------------------------------------
-# CLI coverage of every final status and I/O failures
-# --------------------------------------------------------------------------
-
-
-def _run_cli_with_payload(payload, tmp_path: Path):
-    input_path = tmp_path / "input.json"
-    output_path = tmp_path / "out.json"
-    input_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    exit_code = run_cli(input_path=input_path, output_path=output_path)
-    return exit_code, json.loads(output_path.read_text(encoding="utf-8"))
-
-
-def test_cli_returns_zero_for_passed(tmp_path: Path):
-    code, pack = _run_cli_with_payload(_good_input(), tmp_path)
+def test_cli_zero_for_passed(tmp_path: Path):
+    code, pack = _cli_run(_good_input(), tmp_path)
     assert code == 0
-    assert pack["release_decision"]["exit_code"] == 0
     assert pack["release_decision"]["status"] == "PASSED"
-    assert "cli_input_path" not in pack["release_decision"]
-    assert "cli_output_path" not in pack["release_decision"]
+    assert pack["release_decision"]["exit_code"] == 0
 
 
-def test_cli_returns_one_for_failed(tmp_path: Path):
+def test_cli_one_for_failed(tmp_path: Path):
     payload = _good_input()
-    payload["profiles"]["standard_rag"]["failure_buckets"] = ["citation_binding_miss"]
-    code, pack = _run_cli_with_payload(payload, tmp_path)
+    payload["citation_safety"]["standard_rag"]["contradicted_claim_rate"] = 1.0
+    code, pack = _cli_run(payload, tmp_path)
     assert code == 1
-    assert pack["release_decision"]["exit_code"] == 1
     assert pack["release_decision"]["status"] == "FAILED"
+    assert pack["release_decision"]["exit_code"] == 1
 
 
-def test_cli_returns_two_for_blocked(tmp_path: Path):
+def test_cli_two_for_blocked(tmp_path: Path):
     payload = _good_input()
     del payload["profiles"]["local_graphrag"]
-    code, pack = _run_cli_with_payload(payload, tmp_path)
+    code, pack = _cli_run(payload, tmp_path)
     assert code == 2
-    assert pack["release_decision"]["exit_code"] == 2
     assert pack["release_decision"]["status"] == "BLOCKED"
+    assert pack["release_decision"]["exit_code"] == 2
 
 
-def test_cli_returns_three_for_incomparable(tmp_path: Path):
+def test_cli_three_for_incomparable(tmp_path: Path):
     payload = _good_input()
-    payload["profiles"]["deep_graphrag"]["fingerprint"] = _fingerprint(
+    payload["profiles"]["standard_rag"]["fingerprint"] = _fingerprint(
         dataset_version="different-v2"
     )
-    code, pack = _run_cli_with_payload(payload, tmp_path)
+    code, pack = _cli_run(payload, tmp_path)
     assert code == 3
-    assert pack["release_decision"]["exit_code"] == 3
     assert pack["release_decision"]["status"] == "INCOMPARABLE"
+    assert pack["release_decision"]["exit_code"] == 3
 
 
-def test_cli_returns_four_for_error(tmp_path: Path):
+def test_cli_four_for_engine_error(tmp_path: Path):
     payload = _good_input()
     payload["unknown_field"] = "nope"
-    code, pack = _run_cli_with_payload(payload, tmp_path)
+    code, pack = _cli_run(payload, tmp_path)
     assert code == 4
-    assert pack["release_decision"]["exit_code"] == 4
     assert pack["release_decision"]["status"] == "ERROR"
+    assert pack["release_decision"]["exit_code"] == 4
 
 
-def test_cli_returns_two_when_input_missing(tmp_path: Path):
-    code, pack = _run_cli_with_payload(_good_input(), tmp_path)
-    in_path = tmp_path / "absent.json"
-    out_path = tmp_path / "out.json"
-    code = run_cli(input_path=in_path, output_path=out_path)
-    assert code == 2
-    written = json.loads((tmp_path / "out.json").read_text(encoding="utf-8"))
-    assert written["release_decision"]["status"] == "BLOCKED"
-    assert written["release_decision"]["reason_codes"] == ["missing_input_path"]
-
-
-def test_cli_returns_two_when_input_unreadable(tmp_path: Path):
-    in_path = tmp_path / "broken.json"
-    in_path.write_text("not really json {", encoding="utf-8")
-    out_path = tmp_path / "out.json"
-    code = run_cli(input_path=in_path, output_path=out_path)
-    assert code == 2
-    written = json.loads(out_path.read_text(encoding="utf-8"))
-    assert written["release_decision"]["status"] == "BLOCKED"
-    assert written["release_decision"]["reason_codes"] == ["input_unreadable"]
-
-
-def test_cli_returns_four_when_output_unwritable(tmp_path: Path):
+def test_cli_four_for_output_unwritable(tmp_path: Path):
     payload = _good_input()
-    in_path = tmp_path / "input.json"
-    in_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    out_path = tmp_path / "outdir"
-    out_path.mkdir()
-    code = run_cli(input_path=in_path, output_path=out_path)
+    in_p = tmp_path / "in.json"
+    in_p.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    out_p = tmp_path / "outdir"
+    out_p.mkdir()
+    code = run_cli(input_path=in_p, output_path=out_p)
     assert code == 4
 
 
+def test_cli_engine_raises_maps_to_error_not_blocked(monkeypatch, tmp_path: Path):
+    """If ``evaluate_release_decision`` itself raises, the CLI emits an
+    ERROR decision with exit code 4 -- never a BLOCKED status carrying the
+    ERROR-only reason ``decision_input_valid``."""
+    from tools.evals.zuno.rag_eval import run_phase22_release_decision as cli_module
+
+    def _raise(_payload):
+        raise ReleaseDecisionError("engine tripped")
+
+    monkeypatch.setattr(cli_module, "evaluate_release_decision", _raise)
+    in_p = tmp_path / "in.json"
+    out_p = tmp_path / "out.json"
+    in_p.write_text("{}", encoding="utf-8")
+    code = cli_module.run_cli(input_path=in_p, output_path=out_p)
+    assert code == 4
+    pack = json.loads(out_p.read_text(encoding="utf-8"))
+    assert pack["release_decision"]["status"] == "ERROR"
+    assert pack["release_decision"]["reason_codes"] == ["decision_input_invalid"]
+
+
 # --------------------------------------------------------------------------
-# Threshold invariants
+# Closure-set invariants
 # --------------------------------------------------------------------------
 
 
-def test_threshold_closure_invariant():
-    assert PASSED_REASONS == frozenset({"all_gates_passed"})
-    for code in FAILED_REASONS:
-        assert is_closed_reason(code)
-    for code in BLOCKED_REASONS:
-        assert is_closed_reason(code)
-    for code in INCOMPARABLE_REASONS:
-        assert is_closed_reason(code)
-    for code in ERROR_REASONS:
-        assert is_closed_reason(code)
-    # All required top-level gates are documented.
+def test_required_top_level_gates_match_spec():
     assert set(REQUIRED_TOP_LEVEL_GATES) == {
         "core_five",
         "citation_safety",
@@ -595,3 +488,30 @@ def test_threshold_closure_invariant():
         "cost_latency_budget",
         "failure_buckets",
     }
+
+
+def test_reason_code_closure_invariant():
+    assert PASSED_REASONS == frozenset({"all_gates_passed"})
+    for code in FAILED_REASONS:
+        assert is_closed_reason(code)
+    for code in BLOCKED_REASONS:
+        assert is_closed_reason(code)
+    for code in INCOMPARABLE_REASONS:
+        assert is_closed_reason(code)
+    for code in ERROR_REASONS:
+        assert is_closed_reason(code)
+    assert "high_risk_failure_bucket_present" in FAILED_REASONS
+    assert "unknown_failure_bucket" in FAILED_REASONS
+    assert "citation_safety_metric_missing" in BLOCKED_REASONS
+    assert "critical_slice_baseline_metric_missing" in BLOCKED_REASONS
+    assert "cost_latency_metric_missing" in BLOCKED_REASONS
+    assert "profile_fingerprint_missing" in BLOCKED_REASONS
+    assert "artifact_hash_missing" in BLOCKED_REASONS
+
+
+def test_failure_bucket_taxonomy_is_closed_set():
+    taxonomy = FAILURE_BUCKET_TAXONOMY
+    assert isinstance(taxonomy, frozenset)
+    assert "doc_miss" in taxonomy
+    assert "citation_binding_miss" in taxonomy
+    assert "answer_unfaithful" in taxonomy

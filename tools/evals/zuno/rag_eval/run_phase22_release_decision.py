@@ -6,20 +6,17 @@ The CLI is intentionally minimal and fail-closed:
   Release Decision, and writes the JSON output file.
 * It does not import ``runtime_evidence_binding`` or ``benchmark_preflight``.
 * It never prints tracebacks, raw OS errors, or absolute paths to the user.
-* Failures are reported as a deterministic ``ReleaseDecision`` with status
-  ``BLOCKED`` or ``ERROR`` along with a closed-set reason code. The exit
-  code matches the documented Exit Code Contract:
+* Exit code mapping is fixed:
 
-  * 0 -- PASSED
-  * 1 -- FAILED
-  * 2 -- BLOCKED
-  * 3 -- INCOMPARABLE
-  * 4 -- ERROR or CLI read/write/parse failure
+    * 0 -- PASSED
+    * 1 -- FAILED
+    * 2 -- BLOCKED
+    * 3 -- INCOMPARABLE
+    * 4 -- ERROR or CLI read/write/parse failure
 
-  The output JSON contains the canonical input hash, decision hash, profile
-  hashes, gate results, evidence refs, reproduce command template and the
-  computed ``exit_code`` so that downstream tools can rely on either the
-  numeric exit code or the value in the evidence pack.
+  When the engine itself raises ``ReleaseDecisionError`` the CLI emits an
+  ``ERROR`` decision (exit code 4); it does not wrap the error inside a
+  ``BLOCKED`` status.
 """
 
 from __future__ import annotations
@@ -30,23 +27,27 @@ from pathlib import Path
 from typing import Any
 
 from tools.evals.zuno.rag_eval.release_decision import (
+    CLOSED_SET_VERSION,
     DECISION_ENGINE_VERSION,
+    ERROR_REASONS,
     EXIT_CODE_BY_STATUS,
+    BLOCKED_REASONS,
+    GateFailure,
     ReleaseDecision,
     ReleaseDecisionError,
     ReleaseDecisionStatus,
     REPRODUCE_COMMAND_TEMPLATE,
+    canonical_sha256,
     evaluate_release_decision,
     exit_code_for,
 )
 
 
 class _CliReadFailure(LookupError):
-    """Raised internally by ``run_cli`` when the input JSON cannot be read."""
+    """Raised internally when the input JSON cannot be loaded."""
 
 
 def _read_input(path: Path) -> Any:
-    """Return the parsed JSON input, or raise ``_CliReadFailure``."""
     if not path.exists() or not path.is_file():
         raise _CliReadFailure("missing_input_path")
     try:
@@ -70,40 +71,43 @@ def _write_output(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
-def _blocked_decision_for(reason: str, decision_engine_version: str) -> ReleaseDecision:
-    """Build a small BLOCKED decision for CLI I/O failures without invoking
-    the full evaluation.  The decision uses the same version / closed-set
-    contract but is byte-deterministic given the same reason code."""
-    from tools.evals.zuno.rag_eval.release_decision import (  # local import to avoid cycles
-        CLOSED_SET_VERSION,
-        GateFailure,
-        canonical_sha256,
+def _build_decision_with_status(
+    status: ReleaseDecisionStatus,
+    reason: str,
+    reason_set: frozenset[str],
+) -> ReleaseDecision:
+    """Build a small deterministic decision for CLI I/O or engine-failure paths."""
+    if reason not in reason_set:
+        # Closed-set invariant: any CLI-produced reason must live inside the
+        # corresponding reason set for its target status.
+        raise ReleaseDecisionError(
+            f"cli reason not in closed set for {status.value}: {reason!r}"
+        )
+    canonical_input_hash = canonical_sha256(
+        {"cli_failure_reason": reason, "cli_target_status": status.value}
     )
-
-    canonical_input_hash = canonical_sha256({"cli_blocked_reason": reason})
-    payload = {
+    decision_payload = {
         "canonical_input_hash": canonical_input_hash,
-        "decision_engine_version": decision_engine_version,
-        "closed_set_version": CLOSED_SET_VERSION,
-        "status": ReleaseDecisionStatus.BLOCKED.value,
+        "decision_engine_version": DECISION_ENGINE_VERSION,
+        "status": status.value,
         "reason_codes": [reason],
         "profile_hashes": {},
         "comparability_fingerprint_hash": canonical_sha256({}),
         "gate_results": [
             GateFailure(
-                gate="cli_io",
+                gate="cli_io" if status != ReleaseDecisionStatus.ERROR else "cli_engine",
                 reason=reason,
                 profile_id=None,
                 metric=None,
-                detail_kind="cli_io",
+                detail_kind="cli_io" if status != ReleaseDecisionStatus.ERROR else "cli_engine",
             ).to_dict(),
         ],
         "evidence_refs": [],
-        "exit_code": EXIT_CODE_BY_STATUS[ReleaseDecisionStatus.BLOCKED],
+        "exit_code": EXIT_CODE_BY_STATUS[status],
     }
-    decision_hash = canonical_sha256(payload)
+    decision_hash = canonical_sha256(decision_payload)
     return ReleaseDecision(
-        status=ReleaseDecisionStatus.BLOCKED,
+        status=status,
         reason_codes=(reason,),
         canonical_input_hash=canonical_input_hash,
         decision_hash=decision_hash,
@@ -111,16 +115,16 @@ def _blocked_decision_for(reason: str, decision_engine_version: str) -> ReleaseD
         comparability_fingerprint_hash=canonical_sha256({}),
         gate_results=(
             GateFailure(
-                gate="cli_io",
+                gate="cli_io" if status != ReleaseDecisionStatus.ERROR else "cli_engine",
                 reason=reason,
                 profile_id=None,
                 metric=None,
-                detail_kind="cli_io",
+                detail_kind="cli_io" if status != ReleaseDecisionStatus.ERROR else "cli_engine",
             ),
         ),
         evidence_refs=(),
         reproduce_command_template=REPRODUCE_COMMAND_TEMPLATE,
-        decision_engine_version=decision_engine_version,
+        decision_engine_version=DECISION_ENGINE_VERSION,
         closed_set_version=CLOSED_SET_VERSION,
     )
 
@@ -139,7 +143,9 @@ def run_cli(
         raw = _read_input(input_path)
     except _CliReadFailure as failure:
         reason = str(failure)
-        decision = _blocked_decision_for(reason, DECISION_ENGINE_VERSION)
+        decision = _build_decision_with_status(
+            ReleaseDecisionStatus.BLOCKED, reason, BLOCKED_REASONS
+        )
         pack = _to_evidence_pack(decision)
         try:
             _write_output(output_path, pack)
@@ -150,8 +156,11 @@ def run_cli(
     try:
         decision = evaluate_release_decision(raw)
     except ReleaseDecisionError:
-        decision = _blocked_decision_for(
-            "decision_input_invalid", DECISION_ENGINE_VERSION
+        # Engine itself failed: emit ERROR + exit 4, not BLOCKED.
+        decision = _build_decision_with_status(
+            ReleaseDecisionStatus.ERROR,
+            "decision_input_invalid",
+            ERROR_REASONS,
         )
 
     pack = _to_evidence_pack(decision)
