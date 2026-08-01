@@ -1,4 +1,5 @@
 import os
+from mimetypes import guess_type
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -21,6 +22,7 @@ from zuno.platform.common.runtime_observability import RedisKeys
 from zuno.platform.services.graphrag.client import Neo4jClient
 from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
 from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
+from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseDocumentRequest, ParseGateway
 from zuno.knowledge.ingestion import parse_file_into_chunk_model_projection
 from zuno.platform.services.redis import redis_client
 
@@ -130,6 +132,39 @@ class KnowledgePipelineManager:
             if cleanup and os.path.exists(file_path):
                 os.remove(file_path)
 
+    async def _parse_document(self, task) -> CanonicalDocumentIR:
+        file_path, cleanup = await self._resolve_file_path(task)
+        try:
+            payload = task.payload or {}
+            knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
+            path = Path(file_path)
+            source_uri = payload.get("oss_url") or path.resolve().as_uri()
+            result = ParseGateway.parse_document(
+                ParseDocumentRequest(
+                    document_id=task.knowledge_file_id,
+                    source_id=task.knowledge_file_id,
+                    workspace_id=f"knowledge:{task.knowledge_id}",
+                    source_uri=source_uri,
+                    mime_type=guess_type(payload.get("file_name") or path.name)[0] or "text/plain",
+                    source_bytes=path.read_bytes(),
+                    parse_idempotency_key=f"knowledge-pipeline-parse:{task.id}:{task.knowledge_file_id}",
+                    parser_config={
+                        "adapter": "knowledge.pipeline.parse_stage.canonical_ir",
+                        "knowledge_config": knowledge_config,
+                        "owner": "Input / Knowledge Runtime",
+                        "consumer": "knowledge_pipeline_parse_stage",
+                        "projection": "canonical_document_ir_blocks",
+                    },
+                )
+            )
+            if result.status != "succeeded" or result.document is None:
+                reason = result.failure.reason if result.failure else result.status
+                raise ValueError(f"knowledge pipeline parse stage failed through ParseGateway: {reason}")
+            return result.document
+        finally:
+            if cleanup and os.path.exists(file_path):
+                os.remove(file_path)
+
     async def mark_queued(self, task_id: str):
         task = await self._load_task(task_id)
         await self._record_stage(
@@ -153,14 +188,20 @@ class KnowledgePipelineManager:
                 knowledge_file_id=task.knowledge_file_id,
                 file_patch=build_running_file_patch(KnowledgeTaskStage.parsing, task_id),
             )
-            chunks = await self._parse_chunks(task)
-            await KnowledgeTaskDao.update_task(task_id, result_summary={"chunk_count": len(chunks)})
+            document = await self._parse_document(task)
+            block_count = len([block for block in document.blocks if block.text.strip()])
+            await KnowledgeTaskDao.update_task(task_id, result_summary={"chunk_count": block_count})
             await self._record_stage(
                 task_id,
                 KnowledgeTaskStage.parsing,
                 KnowledgeTaskStatus.running,
                 "parsing completed",
-                detail={"chunk_count": len(chunks)},
+                detail={
+                    "chunk_count": block_count,
+                    "document_version_id": document.metadata.document_version_id,
+                    "parser_id": document.metadata.parser_id,
+                    "projection": "canonical_document_ir_blocks",
+                },
                 knowledge_file_id=task.knowledge_file_id,
                 file_patch=build_success_file_patch(KnowledgeTaskStage.parsing, task_id),
             )
@@ -169,7 +210,7 @@ class KnowledgePipelineManager:
                 KnowledgeTaskStage.splitting,
                 KnowledgeTaskStatus.running,
                 "splitting chunks",
-                detail={"chunk_count": len(chunks)},
+                detail={"chunk_count": block_count, "projection": "canonical_document_ir_blocks"},
             )
         except Exception as err:
             await self._fail_task(task, KnowledgeTaskStage.parsing, err)

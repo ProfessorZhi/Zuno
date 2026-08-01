@@ -16,7 +16,7 @@ def test_pipeline_stage_flow():
     assert "graph_indexing" in PIPELINE_STAGES
 
 
-def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
+def test_pipeline_manager_updates_task_and_file_state(monkeypatch, tmp_path):
     from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
     from zuno.platform.services.pipeline.models import (
         KnowledgeTaskStage,
@@ -53,6 +53,9 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     async def fake_update_pipeline_fields(knowledge_file_id, **kwargs):
         file_updates.append((knowledge_file_id, kwargs))
 
+    source = tmp_path / "demo.txt"
+    source.write_text("hello from canonical parse stage", encoding="utf-8")
+
     async def fake_parse_file_into_chunk_model_projection(
         *,
         file_id,
@@ -62,7 +65,7 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
         knowledge_config=None,
     ):
         assert file_id == "f_1"
-        assert file_path == "demo.txt"
+        assert file_path == str(source)
         assert knowledge_id == "k_1"
         assert source_url is None
         assert knowledge_config == {"index_capability": "rag"}
@@ -139,7 +142,7 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     asyncio.run(
         KnowledgePipelineManager(enable_graph_indexing=True, enable_elasticsearch=True).run_sync(
             "task_1",
-            file_path="demo.txt",
+            file_path=str(source),
         )
     )
 
@@ -151,6 +154,91 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
     assert any(update[1].get("parse_status") == "success" for update in file_updates)
     assert any(update[1].get("rag_index_status") == "success" for update in file_updates)
     assert any(update[1].get("graph_index_status") == "success" for update in file_updates)
+
+
+def test_pipeline_parse_stage_uses_canonical_ir_without_chunk_projection(monkeypatch, tmp_path):
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.models import (
+        KnowledgeTaskStage,
+        KnowledgeTaskStatus,
+    )
+
+    source = tmp_path / "policy.md"
+    source.write_text("# Policy\nRenewal notice is required.", encoding="utf-8")
+    task = SimpleNamespace(
+        id="task_parse",
+        knowledge_id="k_parse",
+        knowledge_file_id="f_parse",
+        task_type="ingest",
+        payload={"file_path": str(source), "file_name": "policy.md"},
+        result_summary={},
+    )
+    task_updates = []
+    task_events = []
+
+    async def fake_select_task_by_id(task_id):
+        assert task_id == "task_parse"
+        return task
+
+    async def fake_update_task(task_id, **kwargs):
+        task_updates.append((task_id, kwargs))
+        for key, value in kwargs.items():
+            setattr(task, key, value)
+
+    async def fake_create_task_event(task_id, stage, status, message, detail=None):
+        task_events.append((task_id, stage, status, message, detail or {}))
+
+    async def fake_update_pipeline_fields(_knowledge_file_id, **_kwargs):
+        return None
+
+    async def fail_chunk_projection(**kwargs):
+        raise AssertionError(f"parse stage should not project ChunkModel: {kwargs}")
+
+    async def fake_get_knowledge_config(knowledge_id):
+        assert knowledge_id == "k_parse"
+        return {"index_capability": "rag"}
+
+    monkeypatch.setattr(
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        fake_select_task_by_id,
+    )
+    monkeypatch.setattr(
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.update_task",
+        fake_update_task,
+    )
+    monkeypatch.setattr(
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.create_task_event",
+        fake_create_task_event,
+    )
+    monkeypatch.setattr(
+        "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        fake_update_pipeline_fields,
+    )
+    monkeypatch.setattr(
+        "zuno.platform.services.pipeline.manager.parse_file_into_chunk_model_projection",
+        fail_chunk_projection,
+    )
+    monkeypatch.setattr(
+        "zuno.api.services.knowledge.KnowledgeService.get_knowledge_config",
+        fake_get_knowledge_config,
+    )
+
+    asyncio.run(KnowledgePipelineManager().run_parse_stage("task_parse"))
+
+    parsing_completed = [
+        event
+        for event in task_events
+        if event[1] == KnowledgeTaskStage.parsing
+        and event[2] == KnowledgeTaskStatus.running
+        and event[3] == "parsing completed"
+    ][0]
+    assert parsing_completed[4]["projection"] == "canonical_document_ir_blocks"
+    assert parsing_completed[4]["chunk_count"] >= 1
+    assert any(
+        update[1].get("result_summary", {}).get("chunk_count")
+        == parsing_completed[4]["chunk_count"]
+        for update in task_updates
+    )
 
 
 def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
