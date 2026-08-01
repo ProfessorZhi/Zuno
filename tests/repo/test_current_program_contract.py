@@ -97,6 +97,19 @@ git diff --check
     assert any("stale pre-merge status phrase" in error for error in errors)
 
 
+def test_goal05_gap_ledger_matches_repaired_phase_state() -> None:
+    verifier = _load_verifier()
+    assert verifier._verify_goal05_gap_ledger_repair_state() == []
+
+    ledger = (
+        REPO_ROOT / ".agent/programs/work-products/goal05-target-gap-ledger.yaml"
+    ).read_text(encoding="utf-8")
+    assert "phase21: completed" in ledger
+    assert "phase22: in_progress" in ledger
+    assert "ARCH-AGENT-MANDATORY-GOAL05" in ledger
+    assert "ARCH-CAPABILITY-MANDATORY-GOAL05" in ledger
+    assert "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure" in ledger
+
 def test_goal05_audit_reopens_phase15_without_production_ready() -> None:
     readiness = (
         REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
