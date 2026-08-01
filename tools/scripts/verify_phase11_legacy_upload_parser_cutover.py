@@ -43,6 +43,11 @@ SOURCE_EXPECTATIONS = {
         "_image_to_text",
     ],
     "src/backend/zuno/platform/services/pipeline/manager.py": [
+        "_parse_document",
+        "ParseGateway",
+        "ParseDocumentRequest",
+        "knowledge.pipeline.parse_stage.canonical_ir",
+        "canonical_document_ir_blocks",
         "parse_file_into_chunk_model_projection",
         "run_rag_index_stage",
         "run_graph_stage",

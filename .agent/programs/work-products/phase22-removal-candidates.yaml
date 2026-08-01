@@ -799,10 +799,10 @@ wave1_resolved:
     after: "platform/vendor/ is the active canonical owner for fastapi_jwt_auth; README documents Wave 1 cutover; __all__ exposes the fastapi_jwt_auth subpackage"
     evidence: "tools/scripts/verify_phase22_cleanup_boundary.py"
 fixed_blockers:
-  - "ChunkModel projection remains a PHASE16 fixed blocker even after legacy_cutover.py is retired: src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py still projects CanonicalDocumentIR to ChunkModel for knowledge pipeline RAG/Graph consumers until those consumers retire ChunkModel. Workspace attachment default path no longer uses this projection after docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md."
+  - "ChunkModel projection remains a PHASE16 fixed blocker even after legacy_cutover.py is retired: src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py still projects CanonicalDocumentIR to ChunkModel for knowledge pipeline RAG/Graph indexing consumers until those consumers retire ChunkModel. Workspace attachment default path no longer uses this projection after docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md; Knowledge pipeline parse stage no longer uses it after docs/evidence/goal05-phase22-pipeline-parse-ir-cutover.md."
   - "The cleanup boundary verifier now allows only production paths explicitly listed in mandatory_removal_candidates with current_status: active_candidate; after completion rollback retirement there are no PHASE22-known active path candidates in mandatory_removal_candidates."
 remaining_not_closed:
   - "Production source import scan no longer finds zuno.core, zuno.services, zuno.schema, zuno.database, zuno.tools, zuno.resources, zuno.config or zuno.mcp_servers alias imports."
   - "The alias registry and package bootstrap have retired from tracked source; any local ignored platform/compatibility artifact is cleanup residue, not Git current state."
   - "PHASE22 fixed benchmark and full final verification are still pending."
-  - "ChunkModel projection remains a PHASE16 blocker, but it no longer requires a production file with a legacy path segment."
+  - "ChunkModel projection remains a PHASE16 blocker for Knowledge pipeline RAG/Graph indexing, but it no longer covers workspace attachment or pipeline parse stage and no longer requires a production file with a legacy path segment."

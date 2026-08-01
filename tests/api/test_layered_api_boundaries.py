@@ -245,6 +245,19 @@ def test_workspace_attachment_uses_canonical_ir_without_chunk_projection_default
     assert "ChunkModel" not in attachment_service
 
 
+def test_knowledge_pipeline_parse_stage_uses_canonical_ir_before_chunk_projection() -> None:
+    manager = _read("src/backend/zuno/platform/services/pipeline/manager.py")
+
+    assert "def _parse_document" in manager
+    assert "knowledge.pipeline.parse_stage.canonical_ir" in manager
+    assert "ParseGateway" in manager
+    assert "ParseDocumentRequest" in manager
+    assert "canonical_document_ir_blocks" in manager
+    assert "parse_file_into_chunk_model_projection" in manager
+    assert "run_rag_index_stage" in manager
+    assert "run_graph_stage" in manager
+
+
 def test_api_service_layer_uses_canonical_platform_imports() -> None:
     upload = _read("src/backend/zuno/api/services/upload.py")
     knowledge_file = _read("src/backend/zuno/api/services/knowledge_file.py")
