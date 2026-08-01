@@ -3,7 +3,7 @@ from typing import Literal, Optional
 from langchain.tools import tool
 from tavily import TavilyClient
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 def _get_tavily_client() -> TavilyClient | None:

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from mimetypes import guess_type
 from pathlib import Path
 
-from zuno.schema.chunk import ChunkModel
+from zuno.api.dto.chunk import ChunkModel
 
 from .contracts import CanonicalDocumentIR, ParseDocumentRequest
 from .gateway import ParseGateway

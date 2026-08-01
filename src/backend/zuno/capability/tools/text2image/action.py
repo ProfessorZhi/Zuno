@@ -9,9 +9,9 @@ import requests
 from langchain.tools import tool
 from loguru import logger
 
-from zuno.services.storage import storage_client
-from zuno.settings import app_settings
-from zuno.tools.image2text.action import _image_to_text
+from zuno.platform.services.storage import storage_client
+from zuno.platform.settings import app_settings
+from zuno.capability.tools.image2text.action import _image_to_text
 
 DEFAULT_MINIMAX_BASE_URL = "https://api.minimaxi.com/v1"
 DEFAULT_MINIMAX_IMAGE_MODEL = "image-01"

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import asyncio
@@ -19,22 +19,22 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
-from zuno.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
-from zuno.evals.rag_eval.local_embedding_server import run_dev_server
-from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.evals.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
-from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
-from zuno.evals.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
-from zuno.schema.chunk import ChunkModel
-from zuno.services.graphrag.extractor import GraphExtractor
-from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
-from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-from zuno.services.graphrag.retriever import GraphRetriever
-from zuno.services.rag.handler import RagHandler
-from zuno.services.rag.parser import doc_parser
-from zuno.services.rag.vector_db import milvus_client
-from zuno.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
-from zuno.settings import initialize_app_settings, resolve_app_config_path
+from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
+from tools.evals.zuno.rag_eval.local_embedding_server import run_dev_server
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
+from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
+from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.graphrag.extractor import GraphExtractor
+from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
+from zuno.platform.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.platform.services.rag.parser import doc_parser
+from zuno.platform.services.rag.vector_db import milvus_client
+from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
+from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
 
 
 def _resolve_prepared_path(manifest_path: Path, item: dict[str, Any]) -> Path:

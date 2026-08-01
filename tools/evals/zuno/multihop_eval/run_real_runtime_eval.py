@@ -22,12 +22,12 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
-from zuno.database.dao.llm import LLMDao
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.handler import RagHandler
-from zuno.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
-from zuno.settings import initialize_app_settings, resolve_app_config_path
-from zuno.utils.helpers import get_provider_from_model
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.common.helpers import get_provider_from_model
+from zuno.platform.database.dao.llm import LLMDao
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
+from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
 
 from tools.evals.zuno.multihop_eval.metrics import aggregate_question_metrics, compute_question_metrics
 from tools.evals.zuno.rag_eval.run_stackless_local_eval import _build_local_graph_retriever

@@ -61,7 +61,7 @@ def test_get_mcp_tools_info_tolerates_null_params(monkeypatch):
 
 def test_mcp_admin_override_reauthorizes_through_security_guard(monkeypatch):
     from zuno.api.services.mcp_server import MCPService
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     class FakeServer:
         user_id = "ordinary-owner"
@@ -89,7 +89,7 @@ def test_mcp_admin_override_reauthorizes_through_security_guard(monkeypatch):
 
 def test_mcp_admin_override_denial_blocks_before_permission_success(monkeypatch):
     from zuno.api.services.mcp_server import MCPService
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     async def fake_get_server(server_id):
         return SimpleNamespace(user_id="ordinary-owner")

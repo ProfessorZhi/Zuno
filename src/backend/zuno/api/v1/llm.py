@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from zuno.api.services.llm import LLMService, LLM_Types
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.llm import LLMActivateReq, LLMCreateReq, LLMDeleteReq, LLMSearchReq, LLMUpdateReq
-from zuno.schema.schemas import resp_200, resp_500
+from zuno.api.dto.llm import LLMActivateReq, LLMCreateReq, LLMDeleteReq, LLMSearchReq, LLMUpdateReq
+from zuno.api.dto.schemas import resp_200, resp_500
 
 router = APIRouter(tags=["LLM"], prefix="/llm")
 

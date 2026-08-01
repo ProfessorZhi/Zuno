@@ -12,22 +12,22 @@ from loguru import logger
 import json
 from dataclasses import dataclass
 
-from zuno.core.models.manager import ModelManager
-from zuno.services.deepsearch.state import (
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.services.deepsearch.state import (
     OverallState,
     QueryGenerationState,
     ReflectionState,
     WebSearchState,
 )
-from zuno.services.deepsearch.configuration import Configuration
-from zuno.services.deepsearch.prompts import (
+from zuno.platform.services.deepsearch.configuration import Configuration
+from zuno.platform.services.deepsearch.prompts import (
     get_current_date,
     query_writer_instructions,
     web_searcher_instructions,
     reflection_instructions,
     answer_instructions,
 )
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 # 初始化Tavily客户端
 def get_tavily_client() -> TavilyClient:

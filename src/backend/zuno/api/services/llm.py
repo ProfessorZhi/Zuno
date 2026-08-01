@@ -1,7 +1,7 @@
-from zuno.database.dao.llm import LLMDao
-from zuno.database.models.user import AdminUser, SystemUser
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
-from zuno.utils.model_output import normalize_model_id_for_provider
+from zuno.platform.common.model_output import normalize_model_id_for_provider
+from zuno.platform.database.dao.llm import LLMDao
+from zuno.platform.database.models.user import AdminUser, SystemUser
 
 LLM_Types = ["LLM", "Embedding", "Rerank"]
 MODEL_SLOTS = {

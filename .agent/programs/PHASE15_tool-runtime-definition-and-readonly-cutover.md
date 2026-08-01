@@ -1,7 +1,7 @@
 # PHASE15 Tool Runtime Definition and Read-only Cutover
 
 phase_id: PHASE15
-status: blocked
+status: completed
 depends_on: PHASE08, PHASE14
 owner: Module 08 Tool Runtime
 
@@ -105,18 +105,31 @@ evidence_ref: docs/evidence/goal03-wave-b-gate-review.md
 
 ## Goal05 Reopen
 
-status: blocked
+status: completed
 evidence_ref: docs/evidence/goal05-target-coverage-audit.md
 gap_ledger: .agent/programs/work-products/goal05-target-gap-ledger.yaml
 
-Goal05 一次性 Target Coverage Audit 发现 PHASE15 的 Agent Sandbox Closure 过早：当前主线已有 Gateway、Security、Effect 和 Reconciliation 证据，但没有真实 Deno + Pyodide/WASM 与 OCI Process Sandbox 默认执行证据。Goal05 已把 sandbox profile resolution、session isolation、limits/allowlist hash 和 `tool_sandbox_receipts` 接入 `ToolInvocationGateway` 默认链；该修复仍只是 contract + persistence + fail-closed gate，不足以关闭 PHASE15。
+Goal05 一次性 Target Coverage Audit 发现 PHASE15 的 Agent Sandbox Closure 过早：当前主线已有 Gateway、Security、Effect 和 Reconciliation 证据，但没有真实 Deno + Pyodide/WASM 与 OCI Process Sandbox 默认执行证据。Goal05 已把 sandbox profile resolution、session isolation、limits/allowlist hash 和 `tool_sandbox_receipts` 接入 `ToolInvocationGateway` 默认链；随后补齐真实 Deno + Pyodide/WASM、真实 OCI Process Sandbox 和 PostgreSQL integration 证据，PHASE15 现已关闭。
 
-关闭 PHASE15 前必须补齐：
+已补齐：
 
 - Deno + Pyodide/WASM 真实执行证据；
 - OCI short-lived container 真实执行证据；
 - Postgres integration 通过；
 - sandbox failure/recovery/security/concurrency/idempotency evidence。
+
+PHASE15 关闭后，PHASE20 可进入评测实现阶段；PHASE21、PHASE22 仍需按各自 Phase 文档继续推进，不代表 production ready。
+
+## PHASE15 Closure
+
+status: completed
+evidence_ref: docs/evidence/goal05-phase15-sandbox-repair.md
+
+PHASE15 Tool Runtime Definition and Read-only Cutover 已完成真实 sandbox runtime closure：
+
+- 本地 Deno 2.9.4 与 Pyodide 314.0.3 可执行 `DenoPyodideWasmRunner`；
+- `OciProcessSandboxRunner` 通过真实 Docker 容器执行并满足 non-root / read-only rootfs / tmpfs workspace / default no-network 约束；
+- `ToolInvocationGateway` 的 sandbox receipt、session、attempt、observation、receipt/effect/reconciliation 默认链已通过 PostgreSQL integration 证据复现。
 
 ## Validation
 

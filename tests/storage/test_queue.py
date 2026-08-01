@@ -7,8 +7,8 @@ sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 
 def test_queue_message_contains_task_refs():
-    from zuno.services.queue.messages import build_task_message
-    from zuno.services.pipeline.models import KnowledgeTaskStage
+    from zuno.platform.services.queue.messages import build_task_message
+    from zuno.platform.services.pipeline.models import KnowledgeTaskStage
 
     payload = build_task_message(
         task_id="task_1",
@@ -25,8 +25,8 @@ def test_queue_message_contains_task_refs():
 
 
 def test_queue_workers_chain_stages():
-    from zuno.services.pipeline.models import KnowledgeTaskStage
-    from zuno.services.queue.workers import GraphWorker, IndexWorker, ParseWorker
+    from zuno.platform.services.pipeline.models import KnowledgeTaskStage
+    from zuno.platform.services.queue.workers import GraphWorker, IndexWorker, ParseWorker
 
     published_messages = []
     stage_calls = []

@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/platform/services/` 当前仍承载 application services、GraphRAG / retrieval、memory foundation、capability foundation、storage、queue、MCP、pipeline 和 workspace runtime 实现。旧 public import path `zuno.services.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里。它是最大旧 runtime 来源，不能用一次性目录移动替代架构切片。
+`src/backend/zuno/platform/services/` 当前仍承载 application services、GraphRAG / retrieval、memory foundation、capability foundation、storage、queue、MCP、pipeline 和 workspace runtime 实现。旧 public import path `zuno.services.*` 不再由 `platform/compatibility/legacy_aliases.py` 承接，不是默认 runtime owner。它是最大旧 runtime 来源，不能用一次性目录移动替代架构切片。
 
 PHASE02 的当前 owner 入口是 `docs/architecture/repo-ownership-matrix.md`。新增 `platform/services/*` 子目录前，必须先在 `PLATFORM_SERVICES_TARGET_OWNERS` 和 ownership matrix 中声明 target owner、compat path、测试和 verifier；否则 repo structure verifier 会失败。
 
@@ -28,7 +28,7 @@ PHASE02 的当前 owner 入口是 `docs/architecture/repo-ownership-matrix.md`�
 
 ## 允许新增内容
 
-- 允许保留旧 `zuno.services.*` import path 作为当前 runtime 兼容面。
+- 允许保留已登记的 `platform/services/*` migration source，不允许把旧 `zuno.services.*` 重新作为默认 runtime import 面。
 - 允许把小型 contract、selector、retrieval helper 或 platform helper 迁到目标层，并保留旧路径 re-export。
 
 ## 禁止事项
@@ -43,4 +43,4 @@ PHASE02 的当前 owner 入口是 `docs/architecture/repo-ownership-matrix.md`�
 - `tests/retrieval/`
 - `tests/storage/`
 - `tests/tools/`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

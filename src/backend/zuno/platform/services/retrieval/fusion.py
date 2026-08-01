@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from zuno.services.retrieval.models import FusionResult, RetrievedDocument
+from zuno.platform.services.retrieval.models import FusionResult, RetrievedDocument
 
 
 class RetrievalFusion:
@@ -232,7 +232,7 @@ class RetrievalFusion:
 
     @classmethod
     def _extract_comparison_seeds(cls, query: str, items: list[RetrievedDocument]) -> list[str]:
-        from zuno.services.graphrag.retriever import GraphRetriever
+        from zuno.platform.services.graphrag.retriever import GraphRetriever
 
         ordered: list[str] = []
         for phrase in cls.QUERY_ENTITY_PHRASE_PATTERN.findall(str(query or "")):
@@ -319,7 +319,7 @@ class RetrievalFusion:
         query: str,
         items: list[RetrievedDocument],
     ) -> dict[str, object]:
-        from zuno.services.graphrag.retriever import GraphRetriever
+        from zuno.platform.services.graphrag.retriever import GraphRetriever
 
         comparison_question = GraphRetriever._is_comparison_query(query)
         seeds = cls._extract_comparison_seeds(query, items) if comparison_question else []
@@ -393,7 +393,7 @@ class RetrievalFusion:
         query: str,
         items: list[RetrievedDocument],
     ) -> dict[str, object]:
-        from zuno.services.graphrag.retriever import GraphRetriever
+        from zuno.platform.services.graphrag.retriever import GraphRetriever
 
         bridge_question = GraphRetriever._is_bridge_relation_query(query)
         bridge_seeds = cls._extract_bridge_seeds(query, items) if bridge_question else []
@@ -950,7 +950,7 @@ class RetrievalFusion:
 
     @classmethod
     def _rank_key(cls, query: str, item: RetrievedDocument) -> tuple[int, int, int, int, int, float]:
-        from zuno.services.rag.handler import RagHandler
+        from zuno.platform.services.rag.handler import RagHandler
 
         class Proxy:
             pass

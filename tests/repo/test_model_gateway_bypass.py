@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import ast
 import asyncio
@@ -198,7 +198,7 @@ def test_mcp_manager_uses_local_invoke_boundary_without_provider_imports() -> No
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.services.mcp_openai.mcp_manager import MCPManager
+    from zuno.platform.services.mcp_openai.mcp_manager import MCPManager
 
     class AsyncClient:
         async def ainvoke(self, messages, available_tools):
@@ -213,7 +213,7 @@ def test_mcp_manager_uses_local_invoke_boundary_without_provider_imports() -> No
 
 
 def test_mcp_manager_preserves_openai_not_implemented_semantics() -> None:
-    from zuno.services.mcp_openai.mcp_manager import MCPManager
+    from zuno.platform.services.mcp_openai.mcp_manager import MCPManager
 
     OpenAIClient = type("OpenAIClient", (), {"__module__": "openai"})
     manager = MCPManager(OpenAIClient())
@@ -228,7 +228,7 @@ def test_core_embedding_model_uses_gateway_owned_provider_adapter(monkeypatch) -
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.core.models import embedding as embedding_module
+    from zuno.agent.core.models import embedding as embedding_module
 
     class FakeEmbeddingAdapter:
         def __init__(self, *, api_key, base_url, model):
@@ -258,7 +258,7 @@ def test_rag_embedding_uses_gateway_owned_provider_adapter(monkeypatch) -> None:
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.services.rag import embedding as rag_embedding_module
+    from zuno.platform.services.rag import embedding as rag_embedding_module
 
     class FakeEmbeddingAdapter:
         async def embed_async(self, query):
@@ -293,7 +293,7 @@ def test_model_manager_uses_gateway_chat_model_builder(monkeypatch) -> None:
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.core.models import manager as manager_module
+    from zuno.agent.core.models import manager as manager_module
 
     calls = []
 
@@ -362,7 +362,7 @@ def test_reasoning_model_uses_gateway_chat_completions_adapter(monkeypatch) -> N
     assert relative_path not in verifier.current_bypass_inventory()
 
     from langchain_core.messages import HumanMessage
-    from zuno.core.models import reason_model as reason_model_module
+    from zuno.agent.core.models import reason_model as reason_model_module
 
     calls = []
 
@@ -400,7 +400,7 @@ def test_tool_call_model_uses_gateway_chat_completions_adapter(monkeypatch) -> N
     assert relative_path not in verifier.current_bypass_inventory()
 
     from langchain_core.messages import HumanMessage
-    from zuno.core.models import tool_call as tool_call_module
+    from zuno.agent.core.models import tool_call as tool_call_module
 
     calls = []
 
@@ -449,7 +449,7 @@ def test_usage_model_uses_gateway_usage_adapter(monkeypatch) -> None:
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.core.models import usage_model as usage_model_module
+    from zuno.agent.core.models import usage_model as usage_model_module
 
     calls = []
 
@@ -477,7 +477,7 @@ def test_anthropic_wrappers_use_gateway_adapters(monkeypatch) -> None:
 
     assert relative_path not in verifier.current_bypass_inventory()
 
-    from zuno.core.models import anthropic as anthropic_module
+    from zuno.agent.core.models import anthropic as anthropic_module
 
     calls = []
 
@@ -511,7 +511,7 @@ def test_anthropic_wrappers_use_gateway_adapters(monkeypatch) -> None:
 
 
 def test_async_anthropic_wrapper_uses_gateway_adapter(monkeypatch) -> None:
-    from zuno.core.models import anthropic as anthropic_module
+    from zuno.agent.core.models import anthropic as anthropic_module
 
     calls = []
 

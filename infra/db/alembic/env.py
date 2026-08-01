@@ -8,7 +8,7 @@ import yaml
 from alembic import context
 from sqlalchemy import engine_from_config, pool, text
 
-from zuno.database.metadata import metadata
+from zuno.platform.database.metadata import metadata
 from zuno.settings import resolve_app_config_path
 
 config = context.config

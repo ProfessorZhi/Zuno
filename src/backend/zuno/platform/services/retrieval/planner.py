@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from zuno.services.graphrag.models import normalize_retrieval_mode
-from zuno.services.retrieval.models import (
+from zuno.platform.services.graphrag.models import normalize_retrieval_mode
+from zuno.platform.services.retrieval.models import (
     QUERY_METHODS,
     ProcessedQuery,
     RetrievalPlan,

@@ -1,5 +1,5 @@
-from zuno.database.models.knowledge_file import Status as KnowledgeFileStatus
-from zuno.services.pipeline.models import KnowledgeTaskStage
+from zuno.platform.database.models.knowledge_file import Status as KnowledgeFileStatus
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage
 
 
 def build_running_file_patch(stage: str, task_id: str) -> dict:

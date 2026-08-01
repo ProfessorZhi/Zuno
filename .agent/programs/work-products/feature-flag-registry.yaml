@@ -35,9 +35,9 @@ flags:
   - flag: "legacy_general_agent_completion_rollback"
     owner: "06 Agent Core"
     scope: "completion route rollback"
-    default: "ROLLBACK_WINDOW"
+    default: "RETIRED"
     metric: ["legacy_completion_invocation_count", "missing_trace_count"]
-    rollback_command: "ZUNO_AGENT_RUNTIME=legacy_general_agent"
+    rollback_command: "retired; use ZUNO_COMPLETION_CUTOVER_MODE=rollback only for explicit controlled cutover drills"
     expires_at_phase: "PHASE08"
     retire_task: "P22-T03"
     domain_fact_owner: "unchanged"

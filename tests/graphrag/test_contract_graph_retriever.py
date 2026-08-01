@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def _contract_review_query_policy() -> dict:
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     projects_root = Path(__file__).resolve().parents[2] / "examples" / "graphrag-projects"
     project = GraphRAGProjectLoader(projects_root=projects_root).load("contract_review")
@@ -11,7 +11,7 @@ def _contract_review_query_policy() -> dict:
 
 
 def test_graph_retriever_handles_contract_review_chinese_query():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(

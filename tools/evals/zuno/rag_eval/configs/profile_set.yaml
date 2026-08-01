@@ -1,0 +1,22 @@
+profiles:
+  standard_rag:
+    underlying: "baseline_rag"
+    retriever: "hybrid_bm25_vector"
+    reranker: "bge-reranker-large"
+    graph_expansion: false
+  local_graphrag:
+    underlying: "local_graphrag"
+    retriever: "entity_neighborhood_graph"
+    reranker: "bge-reranker-large"
+    graph_expansion: true
+  deep_graphrag:
+    underlying: "deep_graphrag"
+    retriever: "multi_round_query_decomposition"
+    reranker: "bge-reranker-large"
+    graph_expansion: true
+  agentic_graphrag:
+    underlying: "agentic_graphrag"
+    retriever: "agent_core_run_graph"
+    reranker: "bge-reranker-large"
+    graph_expansion: true
+    replan_enabled: true

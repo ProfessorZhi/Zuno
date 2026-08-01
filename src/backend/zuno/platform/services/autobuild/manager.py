@@ -5,9 +5,9 @@ from typing import Dict
 
 from loguru import logger
 
-from zuno.services.autobuild.client import AutoBuildClient
 from zuno.api.services.user import UserPayload
-from zuno.utils.helpers import get_cache_key
+from zuno.platform.common.helpers import get_cache_key
+from zuno.platform.services.autobuild.client import AutoBuildClient
 
 
 class AutoBuildManager:

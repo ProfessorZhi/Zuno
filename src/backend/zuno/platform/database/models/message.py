@@ -6,7 +6,7 @@ from uuid import uuid4
 from sqlalchemy import Text, Column, DateTime, text
 import pytz
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 # 拉踩的信息

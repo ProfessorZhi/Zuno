@@ -10,8 +10,8 @@ from zuno.api.services.completion import CompletionService
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.completion import CompletionReq
-from zuno.utils.contexts import set_agent_name_context, set_user_id_context
+from zuno.api.dto.completion import CompletionReq
+from zuno.platform.common.contexts import set_agent_name_context, set_user_id_context
 
 router = APIRouter(tags=["Completion"])
 
@@ -28,8 +28,8 @@ class _LazyClassProxy:
         return klass(*args, **kwargs)
 
 
-AgentConfig = _LazyClassProxy("zuno.core.agents.general_agent", "AgentConfig")
-GeneralAgent = _LazyClassProxy("zuno.core.agents.general_agent", "GeneralAgent")
+AgentConfig = _LazyClassProxy("zuno.agent.core.agents.general_agent", "AgentConfig")
+GeneralAgent = _LazyClassProxy("zuno.agent.core.agents.general_agent", "GeneralAgent")
 
 
 class WatchedStreamingResponse(StreamingResponse):

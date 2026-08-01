@@ -2,26 +2,26 @@ from __future__ import annotations
 import re
 import time
 
-from zuno.services.graphrag.retriever import GraphRetriever
-from zuno.services.graphrag.models import normalize_retrieval_mode
-from zuno.services.graphrag.versioning import detect_stale_index_reasons
-from zuno.services.graphrag.community.service import CommunityGraphService
-from zuno.services.retrieval.fusion import RetrievalFusion
-from zuno.services.retrieval.models import ProcessedQuery, RetrievalRequest, RetrievedDocument
-from zuno.services.retrieval.planner import RetrievalPlanner
-from zuno.services.retrieval.retrievers import (
+from zuno.platform.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.graphrag.models import normalize_retrieval_mode
+from zuno.platform.services.graphrag.versioning import detect_stale_index_reasons
+from zuno.platform.services.graphrag.community.service import CommunityGraphService
+from zuno.platform.services.retrieval.fusion import RetrievalFusion
+from zuno.platform.services.retrieval.models import ProcessedQuery, RetrievalRequest, RetrievedDocument
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.retrieval.retrievers import (
     BM25RetrieverAdapter,
     GraphRetrieverAdapter,
     QueryProcessor,
     RagRetrieverAdapter,
     VectorRetrieverAdapter,
 )
-from zuno.utils.runtime_observability import get_active_trace_id
+from zuno.platform.common.runtime_observability import get_active_trace_id
 
 
 class QueryExpanderAdapter:
     async def expand(self, query: str) -> list[str]:
-        from zuno.services.rewrite.query_write import query_rewriter
+        from zuno.platform.services.rewrite.query_write import query_rewriter
 
         variations = await query_rewriter.rewrite(query)
         ordered = [query]

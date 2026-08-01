@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def _agent_config(**overrides):
-    from zuno.core.agents.general_agent import AgentConfig
+    from zuno.agent.core.agents.general_agent import AgentConfig
 
     data = dict(
         user_id="u_1",
@@ -22,7 +22,7 @@ def _agent_config(**overrides):
 
 
 def test_general_agent_legacy_runtime_symbols_are_retired():
-    from zuno.core.agents import general_agent as ga
+    from zuno.agent.core.agents import general_agent as ga
 
     assert "AgentRuntime" not in vars(ga)
     assert "KnowledgeService" not in vars(ga)
@@ -30,9 +30,9 @@ def test_general_agent_legacy_runtime_symbols_are_retired():
 
 
 def test_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.agent.core.agents import general_agent as ga
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     captured = {}
 
@@ -84,9 +84,9 @@ def test_general_agent_knowledge_tool_uses_project_query_runtime(monkeypatch):
 
 
 def test_general_agent_forwards_product_mode_and_query_method(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.agent.core.agents import general_agent as ga
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     captured = {}
 
@@ -137,9 +137,9 @@ def test_general_agent_forwards_product_mode_and_query_method(monkeypatch):
 
 
 def test_general_agent_knowledge_tool_emits_trace_artifact_event(monkeypatch):
-    from zuno.core.agents import general_agent as ga
-    from zuno.core.agents.general_agent import GeneralAgent
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.agent.core.agents import general_agent as ga
+    from zuno.agent.core.agents.general_agent import GeneralAgent
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     emitted = []
 
@@ -220,7 +220,7 @@ def test_general_agent_knowledge_tool_emits_trace_artifact_event(monkeypatch):
 def test_general_agent_astream_uses_single_react_loop_when_project_is_bound():
     from langchain_core.messages import AIMessageChunk, HumanMessage
 
-    from zuno.core.agents.general_agent import GeneralAgent
+    from zuno.agent.core.agents.general_agent import GeneralAgent
 
     class FakeReactAgent:
         async def astream(self, *args, **kwargs):

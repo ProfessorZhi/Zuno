@@ -1,6 +1,6 @@
-from zuno.services.pipeline.models import KnowledgeTaskStage
-from zuno.services.queue.client import get_queue_names
-from zuno.services.queue.messages import build_task_message
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage
+from zuno.platform.services.queue.client import get_queue_names
+from zuno.platform.services.queue.messages import build_task_message
 
 
 class ParseWorker:

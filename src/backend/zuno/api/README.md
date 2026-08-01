@@ -6,7 +6,7 @@
 
 `src/backend/zuno/api/` 是当前 HTTP 边界，承载 route、DTO、auth、response envelope、SSE 和 API 兼容入口。它已经属于六层目标里的 `api` 层，但目录内仍有过渡期 service import，不能把它误读成业务实现已经全部下沉完成。
 
-`src/backend/zuno/api/dto/` 是 API DTO / Pydantic schema 的当前物理 owner。旧 public import path `zuno.schema.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里；它是兼容 alias，不是仍存在的 root-level schema 目录。
+`src/backend/zuno/api/dto/` 是 API DTO / Pydantic schema 的当前物理 owner。旧 public import path `zuno.schema.*` 不再由 `platform/compatibility/legacy_aliases.py` 承接；它不是默认路径，也不是仍存在的 root-level schema 目录。
 
 ## Target role
 
@@ -26,7 +26,7 @@
 
 ## Focused tests
 
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/api/**`
 - `tests/frontend/test_product_wiring_v1_api_contract.py`
 - `tests/repo/test_backend_facade_layers.py`

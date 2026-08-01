@@ -7,11 +7,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src" / "backend"))
 
-from zuno.services.graphrag.retriever import GraphRetriever
-from zuno.services.retrieval.models import FusionResult, RetrievedDocument
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
-from zuno.services.retrieval.planner import RetrievalPlanner
-from zuno.services.retrieval.retrievers import QueryProcessor
+from zuno.platform.services.graphrag.retriever import GraphRetriever
+from zuno.platform.services.retrieval.models import FusionResult, RetrievedDocument
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.retrieval.retrievers import QueryProcessor
 
 
 def _doc(

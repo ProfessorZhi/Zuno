@@ -2,16 +2,16 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, List
 
-from zuno.platform.contracts import canonical_sha256
-from zuno.platform.database.knowledge import KnowledgeUnitOfWork, KnowledgeVersionDraft
-from zuno.database import engine
-from zuno.database.dao.knowledge import KnowledgeDao
-from zuno.database.dao.knowledge_file import KnowledgeFileDao
-from zuno.database.dao.llm import LLMDao
-from zuno.database.models.user import AdminUser
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
-from zuno.services.runtime_registry import get_local_runtime_settings
-from zuno.utils.file_utils import format_file_size
+from zuno.platform.common.file_utils import format_file_size
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.database import engine
+from zuno.platform.database.dao.knowledge import KnowledgeDao
+from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao
+from zuno.platform.database.dao.llm import LLMDao
+from zuno.platform.database.knowledge import KnowledgeUnitOfWork, KnowledgeVersionDraft
+from zuno.platform.database.models.user import AdminUser
+from zuno.platform.services.runtime_registry import get_local_runtime_settings
 
 DEFAULT_KNOWLEDGE_CONFIG = {
     "index_capability": "rag",
@@ -98,7 +98,7 @@ class KnowledgeService:
         *,
         projects_root: Path | None = None,
     ) -> dict[str, Any]:
-        from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+        from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
         normalized = cls._normalize_knowledge_config(knowledge_config)
         project_id = normalized.get("graphrag_project_id")
@@ -849,7 +849,7 @@ class KnowledgeService:
         query_method: str | None = None,
         top_k: int = 5,
     ):
-        from zuno.services.application.knowledge import KnowledgeQueryService
+        from zuno.platform.services.application.knowledge import KnowledgeQueryService
 
         result = await KnowledgeQueryService().query(
             user_id=user_id,
@@ -889,7 +889,7 @@ class KnowledgeService:
         top_k: int,
         result: Any,
     ) -> None:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         tenant_id = f"user:{user_id}"
         workspace_id = "workspace:default"

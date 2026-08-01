@@ -1,0 +1,9 @@
+{
+  "total_cases": 80,
+  "selection_strategy": "first_n_valid_upstream_records",
+  "distribution": {
+    "hotpotqa/hotpot_qa": 32,
+    "yixuantt/MultiHopRAG": 24,
+    "Awesome-GraphRAG/GraphRAG-Bench": 24
+  }
+}

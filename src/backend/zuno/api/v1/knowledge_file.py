@@ -3,7 +3,7 @@ from fastapi import APIRouter, Body, Depends, Query
 from zuno.api.services.knowledge import KnowledgeService
 from zuno.api.services.knowledge_file import KnowledgeFileService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["Knowledge-File"])
 

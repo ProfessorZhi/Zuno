@@ -7,7 +7,7 @@ import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PROGRAM = "zuno-canonical-architecture-runtime-realization-v1"
-CURRENT_PHASE = "PHASE15"
+CURRENT_PHASE = "PHASE22"
 PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
@@ -198,12 +198,14 @@ def _verify_correction_states() -> list[str]:
         PHASE_FILES[11]: "completed",
         PHASE_FILES[12]: "completed",
         PHASE_FILES[13]: "completed",
-        PHASE_FILES[14]: "blocked",
+        PHASE_FILES[14]: "completed",
         PHASE_FILES[15]: "completed",
         PHASE_FILES[16]: "completed",
         PHASE_FILES[17]: "completed",
         PHASE_FILES[18]: "completed",
-        PHASE_FILES[19]: "blocked",
+        PHASE_FILES[19]: "completed",
+        PHASE_FILES[20]: "completed",
+        PHASE_FILES[21]: "in_progress",
     }
     for filename, expected in expected_phase_states.items():
         text = _read(PROGRAM_ROOT / filename)
@@ -270,7 +272,7 @@ def load_manifest() -> dict[str, object]:
         "atomic_task_count": ATOMIC_TASK_COUNT,
         "architecture_baseline_commit": "249f1c95855043627cedd289a5de1fd3719f6cd0",
         "correction_baseline_commit": "49a6aec8392bfa4be8e0662f98b9d1ef6a65960a",
-        "measurement_status": "measurement_blocked",
+        "measurement_status": "measurement_in_progress",
         "quality_gate_status": "quality_not_proven",
     }
 
@@ -378,7 +380,7 @@ def verify_current_program() -> list[str]:
             [
                 "state: active",
                 f"active_program: {PROGRAM}",
-                "current_phase: PHASE15",
+                "current_phase: PHASE22",
                 "program_version: 2",
                 "PHASE01–04 订正决定",
                 "PHASE05 completed",
@@ -390,7 +392,7 @@ def verify_current_program() -> list[str]:
                 "PHASE12 completed",
                 "PHASE13 completed",
                 "PHASE14 completed",
-                "PHASE15 blocked",
+                "PHASE15 completed",
                 "PHASE10 completed",
                 "PHASE16 completed",
                 "PHASE17 completed",
@@ -400,11 +402,13 @@ def verify_current_program() -> list[str]:
                 "goal04-phase10-coordinator-closure.md",
                 "PHASE19 completed",
                 "goal04-phase19-coordinator-closure.md",
-                "PHASE20 blocked",
+                "PHASE20 completed",
+                "PHASE21 completed",
+                "PHASE22 in progress",
                 "Goal05 一次性 Target Coverage Audit",
                 "最小 Vertical Slice 只能作为阶段中的中间检查点",
                 "implementation available",
-                "measurement blocked",
+                "measurement in_progress",
                 "production readiness not established",
             ],
             "current.md",
@@ -415,8 +419,10 @@ def verify_current_program() -> list[str]:
             roadmap + manifest + closure + readme + reference,
             [
                 PROGRAM,
-                "current_phase: PHASE15",
-                "PHASE20 blocked",
+                "current_phase: PHASE22",
+                "PHASE20 completed",
+                "PHASE21 completed",
+                "PHASE22 in_progress",
                 "program_version: 2",
                 "reopen_phase01_through_phase04",
                 "implementation available",
@@ -447,12 +453,14 @@ def verify_current_program() -> list[str]:
                 "id: PHASE12, file: .agent/programs/PHASE12_knowledge-version-and-standard-rag.md, state: completed",
                 "id: PHASE13, file: .agent/programs/PHASE13_memory-context-governance-runtime.md, state: completed",
                 "id: PHASE14, file: .agent/programs/PHASE14_capability-skill-control-plane.md, state: completed",
-                "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: blocked",
+                "id: PHASE15, file: .agent/programs/PHASE15_tool-runtime-definition-and-readonly-cutover.md, state: completed",
                 "id: PHASE16, file: .agent/programs/PHASE16_tool-side-effect-and-reconciliation.md, state: completed",
                 "id: PHASE17, file: .agent/programs/PHASE17_dynamic-plan-dag-parallel-control.md, state: completed",
                 "id: PHASE18, file: .agent/programs/PHASE18_agentic-graphrag-inner-loop.md, state: completed",
                 "id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: completed",
-                "id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: blocked",
+                "id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: completed",
+                "id: PHASE21, file: .agent/programs/PHASE21_fault-recovery-full-e2e-and-cutover.md, state: completed",
+                "id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: in_progress",
             ],
             "program-manifest.yaml",
         )

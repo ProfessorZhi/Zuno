@@ -70,7 +70,7 @@ def _profile_runtime(*, targets):
 
 
 def test_knowledge_project_snapshot_carries_extractor_config() -> None:
-    from zuno.services.application.knowledge import KnowledgeQueryService
+    from zuno.platform.services.application.knowledge import KnowledgeQueryService
 
     async def fake_config_loader(_knowledge_id: str) -> dict:
         return {
@@ -118,7 +118,7 @@ def test_knowledge_project_snapshot_carries_extractor_config() -> None:
 
 
 def test_query_result_trace_exposes_method_citation_and_fusion_contracts() -> None:
-    from zuno.services.graphrag.query_service import (
+    from zuno.platform.services.graphrag.query_service import (
         GraphRAGProjectSnapshot,
         GraphRAGQueryService,
     )
@@ -198,8 +198,8 @@ def test_query_result_trace_exposes_method_citation_and_fusion_contracts() -> No
 
 
 def test_application_knowledge_query_service_emits_phase18_graph_metadata() -> None:
-    from zuno.services.application.knowledge import KnowledgeQueryService
-    from zuno.services.graphrag.query_service import KnowledgeQueryResult
+    from zuno.platform.services.application.knowledge import KnowledgeQueryService
+    from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 
     async def fake_config_loader(_knowledge_id: str) -> dict:
         return {

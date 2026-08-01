@@ -1,7 +1,7 @@
 import asyncio
 
-from zuno.services.retrieval.models import FusionResult, ProcessedQuery, RetrievedDocument
-from zuno.services.retrieval.orchestrator import RetrievalOrchestrator
+from zuno.platform.services.retrieval.models import FusionResult, ProcessedQuery, RetrievedDocument
+from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator
 
 
 class _FakeQueryExpander:

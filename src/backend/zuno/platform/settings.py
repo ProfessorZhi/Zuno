@@ -6,7 +6,7 @@ import yaml
 from loguru import logger
 from pydantic.v1 import BaseSettings, Field
 
-from zuno.schema.common import MultiModels, ModelConfig, Rag, StorageConfig, Tools
+from zuno.api.dto.common import MultiModels, ModelConfig, Rag, StorageConfig, Tools
 
 
 class Settings(BaseSettings):

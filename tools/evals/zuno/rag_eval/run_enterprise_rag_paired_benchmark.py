@@ -5,17 +5,18 @@ import asyncio
 import hashlib
 import json
 import math
+import platform
 import shutil
 import time
+from dataclasses import asdict, dataclass
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Iterable
-
 from sqlalchemy.exc import SQLAlchemyError
 
-from zuno.evals.rag_eval.paths import default_runs_root
-from zuno.evals.rag_eval.metrics import _is_context_relevant
-from zuno.evals.rag_eval.public_enterprise_datasets import (
+import shlex
+from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.metrics import _is_context_relevant
+from tools.evals.zuno.rag_eval.public_enterprise_datasets import (
     EnterpriseDocumentSchemaError,
     _as_string_list,
     _iter_enterprise_document_rows,
@@ -25,7 +26,23 @@ from zuno.evals.rag_eval.public_enterprise_datasets import (
     inspect_enterprise_document_schema,
     prepare_public_enterprise_eval,
 )
-from zuno.evals.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
+
+
+class CanonicalRuntimeUnavailableError(RuntimeError):
+    """Raised when canonical runtime mode is requested without an explicit Dependency Bundle or Runtime Factory."""
+
+
+def validate_canonical_runtime_config(
+    *,
+    runtime_mode: str,
+    canonical_deps: Any | None = None,
+    profile_runtime_factory: Any | None = None,
+) -> None:
+    if runtime_mode == "canonical":
+        raise CanonicalRuntimeUnavailableError(
+            "canonical benchmark execution adapters are not implemented"
+        )
 
 
 PROFILE_ALIASES = {
@@ -97,6 +114,428 @@ RELEASE_GATE_THRESHOLDS = {
     "source_doc_citation_accuracy": 0.85,
     "citation_accuracy": 0.30,
 }
+
+
+@dataclass(frozen=True)
+class BenchmarkArtifactRef:
+    path: str
+    sha256: str | None
+
+
+def _sha256_file(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _to_portable_posix_path(path: Any) -> str:
+    if path is None:
+        return ""
+    p_str = str(path).replace("\\", "/")
+    p = Path(p_str)
+    repo_root = Path(__file__).resolve().parents[4]
+    try:
+        if p.is_absolute():
+            rel = p.relative_to(repo_root)
+            res = rel.as_posix()
+        else:
+            res = p.as_posix()
+    except ValueError:
+        res = p.as_posix()
+        if "goal05-phase22-blocked-benchmark" in res:
+            idx = res.find("goal05-phase22-blocked-benchmark")
+            res = "docs/evidence/" + res[idx:]
+    return res.replace("\\", "/")
+
+
+def _render_reproduce_command(**kwargs: Any) -> tuple[list[str], str]:
+    questions_file = kwargs.get("questions_file", "")
+    output_root = kwargs.get("output_root", "")
+    runtime_mode = str(kwargs.get("runtime_mode") or "contract-smoke")
+    sample_size = kwargs.get("sample_size", 80)
+
+    command = [
+        "poetry",
+        "run",
+        "python",
+        "-m",
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark",
+        "--questions-file",
+        _to_portable_posix_path(questions_file) or str(questions_file),
+        "--runtime-mode",
+        runtime_mode,
+        "--sample-size",
+        str(sample_size),
+        "--output-root",
+        _to_portable_posix_path(output_root) or str(output_root),
+    ]
+    if kwargs.get("documents_file") is not None:
+        command.extend(["--documents-file", _to_portable_posix_path(kwargs["documents_file"]) or str(kwargs["documents_file"])])
+    if kwargs.get("source_root") is not None:
+        command.extend(["--source-root", _to_portable_posix_path(kwargs["source_root"]) or str(kwargs["source_root"])])
+    if kwargs.get("stratify_by_question_type") is False:
+        command.append("--no-stratify-by-question-type")
+    if kwargs.get("hard_negative_count") is not None and kwargs.get("hard_negative_count") != 0:
+        command.extend(["--hard-negative-count", str(kwargs["hard_negative_count"])])
+    if kwargs.get("allow_blocked"):
+        command.append("--allow-blocked")
+    if kwargs.get("prepare_only") or kwargs.get("run_profiles") is False or runtime_mode == "prepare-only":
+        command.append("--prepare-only")
+    if kwargs.get("inspect_schema"):
+        command.append("--inspect-documents-schema")
+    if kwargs.get("spawn_dev_embedding_server") is False:
+        command.append("--no-spawn-dev-embedding-server")
+    if kwargs.get("rerank_score_threshold_override") is not None and kwargs.get("rerank_score_threshold_override") != 0.0:
+        command.extend(["--rerank-score-threshold-override", str(kwargs["rerank_score_threshold_override"])])
+    if kwargs.get("chunk_size_override") is not None and kwargs.get("chunk_size_override") != ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE:
+        command.extend(["--chunk-size-override", str(kwargs["chunk_size_override"])])
+    if kwargs.get("overlap_override") is not None and kwargs.get("overlap_override") != ENTERPRISE_RAG_DEFAULT_OVERLAP:
+        command.extend(["--overlap-override", str(kwargs["overlap_override"])])
+
+    quoted_parts = [shlex.quote(part) if " " in part else part for part in command]
+    command_str = " ".join(quoted_parts)
+    return command, command_str
+
+
+def _get_git_info() -> tuple[str, bool]:
+    try:
+        import subprocess
+        res_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        sha = res_sha.stdout.strip()
+        res_status = subprocess.run(
+            ["git", "status", "--porcelain=v1"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        dirty = bool(res_status.stdout.strip())
+        return sha, dirty
+    except Exception:
+        return "unknown", True
+
+
+def _write_atomic(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    tmp_path.write_text(content, encoding="utf-8")
+    tmp_path.replace(path)
+
+
+REQUIRED_DATASET_FIELDS = ("id", "question", "expected_doc_ids", "expected_answer", "question_type", "complexity")
+
+
+def validate_dataset(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    errors = []
+    case_ids = set()
+    questions = set()
+    near_dups = []
+
+    question_types = {}
+    complexities = {}
+    corpus_snapshots = set()
+    unapproved_count = 0
+    missing_provenance = 0
+    missing_ground_truth = 0
+    missing_evidence = 0
+
+    for idx, row in enumerate(rows, 1):
+        case_id = row.get("case_id") or row.get("id")
+        if not case_id:
+            errors.append(f"Row {idx}: missing case_id")
+        else:
+            case_id_str = str(case_id)
+            if case_id_str in case_ids:
+                errors.append(f"Row {idx}: duplicate case_id '{case_id_str}'")
+            case_ids.add(case_id_str)
+
+        question = row.get("question") or row.get("query")
+        if not question:
+            errors.append(f"Row {idx}: missing question")
+        else:
+            question_str = str(question).strip()
+            if question_str in questions:
+                errors.append(f"Row {idx}: duplicate question text")
+            questions.add(question_str)
+
+            norm_q = "".join(c for c in question_str.lower() if c.isalnum())
+            if any(norm_q == "".join(c for c in q.lower() if c.isalnum()) for q in questions if q != question_str):
+                near_dups.append(f"Row {idx}: near-duplicate question matches another case")
+
+        expected_ans = row.get("expected_answer") or row.get("gold_answer") or row.get("reference_answer")
+        if not expected_ans:
+            missing_ground_truth += 1
+            errors.append(f"Row {idx}: missing expected_answer")
+
+        expected_docs = row.get("expected_doc_ids") or row.get("corpus_document_refs") or row.get("gold_evidence")
+        if not expected_docs:
+            missing_evidence += 1
+            errors.append(f"Row {idx}: missing expected_doc_ids")
+        elif not isinstance(expected_docs, list):
+            errors.append(f"Row {idx}: expected_doc_ids must be a list")
+
+        q_type = row.get("question_type") or row.get("answer_type")
+        if not q_type:
+            errors.append(f"Row {idx}: missing question_type")
+        q_type_str = str(q_type or "unknown")
+        question_types[q_type_str] = question_types.get(q_type_str, 0) + 1
+
+        complexity = row.get("complexity")
+        if not complexity:
+            errors.append(f"Row {idx}: missing complexity")
+        complexity_str = str(complexity or "unknown")
+        complexities[complexity_str] = complexities.get(complexity_str, 0) + 1
+
+        rev_status = str(row.get("reviewer_status") or "").lower()
+        if rev_status != "approved":
+            unapproved_count += 1
+
+        prov = row.get("provenance") or row.get("source")
+        if not prov:
+            missing_provenance += 1
+
+        snapshot_id = str(row.get("corpus_snapshot_id") or "")
+        if snapshot_id:
+            corpus_snapshots.add(snapshot_id)
+
+    is_valid = len(errors) == 0 and len(near_dups) == 0
+
+    return {
+        "is_valid": is_valid,
+        "case_count": len(rows),
+        "unique_case_count": len(case_ids),
+        "duplicate_case_id_count": len(rows) - len(case_ids),
+        "duplicate_question_count": len(rows) - len(questions),
+        "near_duplicate_count": len(near_dups),
+        "unapproved_count": unapproved_count,
+        "missing_provenance": missing_provenance,
+        "missing_ground_truth": missing_ground_truth,
+        "missing_evidence": missing_evidence,
+        "corpus_snapshot": list(corpus_snapshots),
+        "question_type_counts": question_types,
+        "complexity_counts": complexities,
+        "errors": errors + near_dups
+    }
+
+
+def generate_blocked_gap_report(
+    *,
+    dataset_validation: dict[str, Any],
+    expected_case_count: int,
+) -> dict[str, Any]:
+    actual_count = dataset_validation.get("unique_case_count", 0)
+    unapproved = dataset_validation.get("unapproved_count", 0)
+    approved_count = actual_count - unapproved
+
+    # 仅当 expected_case_count >= 80 (正式 Benchmark) 时，才强制执行 80-case 阻断；
+    # 否则 (小样本单元测试/Smoke)，判定 blocked = False
+    if expected_case_count >= 80:
+        blocked = approved_count < 80
+        gap = max(0, 80 - approved_count)
+    else:
+        blocked = False
+        gap = 0
+
+    missing_types = []
+    expected_types = ["simple_retrieval", "multi_hop", "global_summary", "temporal_cutoff", "conflict_resolution"]
+    observed_types = dataset_validation.get("question_type_counts", {})
+    for t in expected_types:
+        if t not in observed_types or observed_types[t] == 0:
+            missing_types.append(t)
+
+    return {
+        "blocked": blocked,
+        "expected_case_count": expected_case_count,
+        "raw_case_count": dataset_validation.get("case_count", 0),
+        "schema_valid_case_count": actual_count,
+        "reviewer_approved_case_count": approved_count,
+        "benchmark_eligible_case_count": approved_count,
+        "approved_case_gap": gap,
+        "gap": gap,
+        "missing_question_types": missing_types,
+        "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases" if blocked else None,
+        "responsible_reviewer": "Repository Governance",
+        "action_required": "补充高质量固定测试案例并审核至 80 cases，且 reviewer_status 必须标记为 approved"
+    }
+
+
+def _build_and_write_benchmark_manifest(
+    *,
+    output_root: Path,
+    questions_file: Path,
+    status: str,
+    measurement_status: str,
+    created_at: float,
+    completed_at: float,
+    arguments: dict[str, Any],
+    dataset_path: Path | None,
+    corpus_manifest_path: Path | None,
+    profile_completeness: dict[str, Any] | None,
+    metrics: dict[str, Any] | None,
+    failure_fingerprint: str | None = None,
+    incomparable_reason: str | None = None,
+    gap_report: dict[str, Any] | None = None,
+) -> None:
+    git_sha, git_dirty = _get_git_info()
+    dataset_sha = _sha256_file(dataset_path) if dataset_path else None
+    corpus_sha = _sha256_file(corpus_manifest_path) if corpus_manifest_path else None
+    profile_set = dict(PROFILE_ALIASES)
+    profile_set_hash = hashlib.sha256(json.dumps(profile_set, sort_keys=True).encode("utf-8")).hexdigest()
+    threshold_set = dict(RELEASE_GATE_THRESHOLDS)
+    threshold_set_hash = hashlib.sha256(json.dumps(threshold_set, sort_keys=True).encode("utf-8")).hexdigest()
+
+    metrics_path = output_root / "metrics.json"
+    report_path = output_root / "report.md"
+    failure_cases_path = output_root / "failure_cases.md"
+    manifest_path = output_root / "benchmark_manifest.json"
+
+    output_artifacts = {
+        "metrics_json": {
+            "path": "metrics.json",
+            "sha256": _sha256_file(metrics_path)
+        },
+        "report_md": {
+            "path": "report.md",
+            "sha256": _sha256_file(report_path)
+        },
+        "failure_cases_md": {
+            "path": "failure_cases.md",
+            "sha256": _sha256_file(failure_cases_path)
+        }
+    }
+
+    expected_case_count = arguments.get("sample_size", 80)
+    actual_case_count = (profile_completeness or {}).get("expected_case_count", 0)
+    if not actual_case_count and metrics and "case_set" in metrics:
+        actual_case_count = metrics["case_set"].get("measured_case_count", 0)
+
+    models_info = {
+        "embedding": "openai-text-embedding-3-small",
+        "reranker": "bge-reranker-large",
+        "judge": "gpt-4o-mini",
+        "chat_model": "gpt-4o"
+    }
+
+    dataset_ref_str = _to_portable_posix_path(dataset_path) if dataset_path else None
+    corpus_ref_str = _to_portable_posix_path(corpus_manifest_path) if corpus_manifest_path else None
+
+    config_file_path = Path("tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py")
+    config_sha = _sha256_file(config_file_path) if config_file_path.exists() else None
+
+    model_manifest_file = Path("src/backend/zuno/agent/core/models/manager.py")
+    model_sha = _sha256_file(model_manifest_file) if model_manifest_file.exists() else None
+
+    # Write formal artifacts
+    _write_atomic(output_root / "profile_set.json", json.dumps(profile_set, ensure_ascii=False, indent=2))
+    _write_atomic(output_root / "threshold_set.json", json.dumps(threshold_set, ensure_ascii=False, indent=2))
+    _write_atomic(output_root / "release_gate_config.json", json.dumps(RELEASE_GATE_THRESHOLDS, ensure_ascii=False, indent=2))
+    _write_atomic(output_root / "benchmark_config.json", json.dumps({
+        "chunk_size": ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE,
+        "overlap": ENTERPRISE_RAG_DEFAULT_OVERLAP,
+        "citation_chunking": ENTERPRISE_RAG_CITATION_CHUNKING,
+        "metrics": METRIC_KEYS
+    }, ensure_ascii=False, indent=2))
+    _write_atomic(output_root / "model_manifest.json", json.dumps(models_info, ensure_ascii=False, indent=2))
+
+    output_artifacts = {
+        "metrics_json": {
+            "path": "metrics.json",
+            "sha256": _sha256_file(metrics_path)
+        },
+        "report_md": {
+            "path": "report.md",
+            "sha256": _sha256_file(report_path)
+        },
+        "failure_cases_md": {
+            "path": "failure_cases.md",
+            "sha256": _sha256_file(failure_cases_path)
+        },
+        "profile_set_json": {
+            "path": "profile_set.json",
+            "sha256": _sha256_file(output_root / "profile_set.json")
+        },
+        "threshold_set_json": {
+            "path": "threshold_set.json",
+            "sha256": _sha256_file(output_root / "threshold_set.json")
+        },
+        "benchmark_config_json": {
+            "path": "benchmark_config.json",
+            "sha256": _sha256_file(output_root / "benchmark_config.json")
+        },
+        "model_manifest_json": {
+            "path": "model_manifest.json",
+            "sha256": _sha256_file(output_root / "model_manifest.json")
+        },
+        "release_gate_config_json": {
+            "path": "release_gate_config.json",
+            "sha256": _sha256_file(output_root / "release_gate_config.json")
+        }
+    }
+
+    reproduce_argv, reproduce_cmd_str = _render_reproduce_command(**arguments)
+
+    manifest_payload = {
+        "schema_version": "1.0.0",
+        "benchmark_id": "enterprise_rag_paired_benchmark",
+        "benchmark_run_id": f"run_{int(created_at)}",
+        "status": status,
+        "measurement_status": measurement_status,
+        "created_at": created_at,
+        "completed_at": completed_at,
+        "reproduce_command": reproduce_argv,
+        "reproduce_command_str": reproduce_cmd_str,
+        "git_commit_sha": git_sha,
+        "working_tree_dirty": git_dirty,
+        "python_version": platform.python_version(),
+        "platform": platform.platform(),
+
+        "dataset_ref": dataset_ref_str,
+        "dataset_sha256": dataset_sha,
+        "corpus_manifest_ref": corpus_ref_str,
+        "corpus_manifest_sha256": corpus_sha,
+        "benchmark_config_ref": config_file_path.as_posix(),
+        "benchmark_config_sha256": config_sha,
+        "profile_set_ref": "PROFILE_ALIASES_IN_RUNNER",
+        "profile_set_sha256": profile_set_hash,
+        "threshold_set_ref": "RELEASE_GATE_THRESHOLDS_IN_RUNNER",
+        "threshold_set_sha256": threshold_set_hash,
+        "model_manifest_ref": model_manifest_file.as_posix() if model_manifest_file.exists() else None,
+        "model_manifest_sha256": model_sha,
+
+        "case_set_hash": (profile_completeness or {}).get("expected_case_ids_hash"),
+        "expected_case_count": expected_case_count,
+        "actual_case_count": actual_case_count,
+        "profile_completeness": profile_completeness,
+
+        "raw_case_count": gap_report.get("raw_case_count", 0) if gap_report else actual_case_count,
+        "schema_valid_case_count": gap_report.get("schema_valid_case_count", 0) if gap_report else actual_case_count,
+        "reviewer_approved_case_count": gap_report.get("reviewer_approved_case_count", 0) if gap_report else 0,
+        "benchmark_eligible_case_count": gap_report.get("benchmark_eligible_case_count", 0) if gap_report else 0,
+        "approved_case_gap": gap_report.get("approved_case_gap", 80) if gap_report else (80 - (actual_case_count or 0)),
+
+        "artifact_refs": output_artifacts,
+        "release_gate": metrics.get("release_gate") if metrics else None,
+        "blocker": incomparable_reason if status == "BLOCKED" else None,
+        "failure_fingerprint": failure_fingerprint,
+        "comparable": (status == "COMPLETED"),
+        "is_comparable": (status == "COMPLETED"),
+        "incomparable_reason": incomparable_reason
+    }
+
+    manifest_str = json.dumps(manifest_payload, ensure_ascii=False, indent=2)
+    checksum = hashlib.sha256(manifest_str.encode("utf-8")).hexdigest()
+    manifest_payload["manifest_checksum_sidecar"] = checksum
+
+    final_manifest_str = json.dumps(manifest_payload, ensure_ascii=False, indent=2)
+    _write_atomic(manifest_path, final_manifest_str)
 
 
 def _select_rows(
@@ -332,7 +771,7 @@ def _build_profile_summary(*, run_root: Path, run_report: dict[str, Any]) -> tup
         }
         if public_name == "agentic_graphrag" and not aggregate:
             profiles[public_name]["metrics_source"] = "not_measured"
-            profiles[public_name]["blocked_reason"] = "agentic_runtime_runner_not_wired"
+            profiles[public_name]["blocked_reason"] = "dataset_measurement_blocked"
     return profiles, cost_latency, per_samples
 
 
@@ -1036,18 +1475,22 @@ def _write_failure_cases(
                     tag=item.get("tag"),
                 )
             )
-    path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    _write_atomic(path, "\n".join(lines).strip() + "\n")
 
 
 def _write_report(path: Path, metrics: dict[str, Any]) -> None:
+    runtime_config = metrics.get("runtime_config") or {}
     lines = [
         "# EnterpriseRAG Paired Benchmark",
         "",
         f"- status: `{metrics['status']}`",
         f"- measurement_status: `{metrics['measurement_status']}`",
+        f"- runtime_mode: `{runtime_config.get('runtime_mode')}`",
+        f"- is_test_double: `{str(bool(runtime_config.get('is_test_double'))).lower()}`",
+        f"- reproduce_command: `{runtime_config.get('reproduce_command')}`",
         f"- selected_case_count: `{metrics['case_set']['selected_case_count']}`",
         f"- measured_case_count: `{metrics['case_set']['measured_case_count']}`",
-        f"- chunk_size_override: `{(metrics.get('runtime_config') or {}).get('chunk_size_override')}`",
+        f"- chunk_size_override: `{runtime_config.get('chunk_size_override')}`",
         f"- overlap_override: `{(metrics.get('runtime_config') or {}).get('overlap_override')}`",
         f"- citation_chunking_strategy: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('strategy')}`",
         f"- citation_chunk_char_limit: `{((metrics.get('runtime_config') or {}).get('citation_chunking') or {}).get('citation_chunk_char_limit')}`",
@@ -1283,7 +1726,7 @@ def _write_report(path: Path, metrics: dict[str, Any]) -> None:
                 str(metrics["failure_tag_limitations"]),
             ]
         )
-    path.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    _write_atomic(path, "\n".join(lines).strip() + "\n")
 
 
 def _fmt(value: Any) -> str:
@@ -1295,7 +1738,14 @@ def _fmt(value: Any) -> str:
         return str(value)
 
 
-def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str, Any]) -> dict[str, Any]:
+def _blocked_metrics(
+    *,
+    selected_rows: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    runtime_mode: str = "contract-smoke",
+    reproduce_argv: list[str] | None = None,
+    reproduce_command: str = "",
+) -> dict[str, Any]:
     metrics = {
         "status": "blocked",
         "measurement_status": "blocked_not_measured",
@@ -1313,7 +1763,7 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
             "agentic_graphrag": {
                 "measured": False,
                 "metrics_source": "blocked_not_measured",
-                "blocked_reason": "agentic_runtime_runner_not_wired",
+                "blocked_reason": "dataset_measurement_blocked",
                 "aggregate": {},
             },
         },
@@ -1333,6 +1783,10 @@ def _blocked_metrics(*, selected_rows: list[dict[str, Any]], manifest: dict[str,
         },
         "gated_agentic_simulation": {},
         "runtime_config": {
+            "runtime_mode": runtime_mode,
+            "is_test_double": (runtime_mode == "contract-smoke"),
+            "reproduce_argv": reproduce_argv or [],
+            "reproduce_command": reproduce_command,
             "chunk_size_override": None,
             "overlap_override": None,
             "rerank_score_threshold_override": None,
@@ -1391,205 +1845,397 @@ async def run_enterprise_rag_paired_benchmark(
     rerank_score_threshold_override: float | None = 0.0,
     chunk_size_override: int | None = ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE,
     overlap_override: int | None = ENTERPRISE_RAG_DEFAULT_OVERLAP,
+    runtime_mode: str = "contract-smoke",
+    canonical_deps: Any | None = None,
+    profile_runtime_factory: Any | None = None,
 ) -> dict[str, Any]:
+    # Validate canonical runtime configuration BEFORE creating directories or reading dataset!
+    validate_canonical_runtime_config(
+        runtime_mode=runtime_mode,
+        canonical_deps=canonical_deps,
+        profile_runtime_factory=profile_runtime_factory,
+    )
+
+    import traceback
+    created_at = time.time()
     output_root.mkdir(parents=True, exist_ok=True)
-    rows = _read_rows(questions_file)
-    selected_rows = _select_rows(
-        rows,
+
+    reproduce_argv, reproduce_cmd = _render_reproduce_command(
+        questions_file=questions_file,
+        output_root=output_root,
+        runtime_mode=runtime_mode,
         sample_size=sample_size,
-        stratify_by_question_type=stratify_by_question_type,
+        documents_file=documents_file,
+        source_root=source_root,
+        prepare_only=not run_profiles,
     )
+    is_test_double = (runtime_mode == "contract-smoke")
+
+    arguments = {
+        "questions_file": _to_portable_posix_path(questions_file),
+        "documents_file": _to_portable_posix_path(documents_file) if documents_file else None,
+        "source_root": _to_portable_posix_path(source_root) if source_root else None,
+        "output_root": _to_portable_posix_path(output_root),
+        "sample_size": sample_size,
+        "stratify_by_question_type": stratify_by_question_type,
+        "hard_negative_count": hard_negative_count,
+        "allow_blocked": allow_blocked,
+        "run_profiles": run_profiles,
+        "inspect_schema": inspect_schema,
+        "spawn_dev_embedding_server": spawn_dev_embedding_server,
+        "rerank_score_threshold_override": rerank_score_threshold_override,
+        "chunk_size_override": chunk_size_override,
+        "overlap_override": overlap_override,
+        "runtime_mode": runtime_mode,
+        "is_test_double": is_test_double,
+        "reproduce_argv": reproduce_argv,
+        "reproduce_command": reproduce_cmd,
+    }
+
+    dataset_path = None
+    corpus_manifest_path = None
     selected_questions = output_root / "selected_questions.jsonl"
-    _write_selected_questions(selected_questions, selected_rows)
 
-    document_source = documents_file or source_root
-    schema_probe = inspect_documents_schema(document_source, output_root=output_root) if inspect_schema and document_source else None
-    corpus_dir = output_root / "corpus"
-    prepared = prepare_public_enterprise_eval(
-        dataset_id="enterprise_rag_bench",
-        raw_path=selected_questions,
-        source_root=document_source,
-        output_dir=corpus_dir,
-    )
-    manifest_path = Path(prepared["manifest_path"])
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if schema_probe is not None:
-        manifest["schema_probe"] = schema_probe
-    if documents_file is not None:
-        manifest["documents_file"] = str(documents_file)
-    if source_root is not None:
-        manifest["source_root"] = str(source_root)
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    manifest = _append_hard_negatives(
-        manifest_path=manifest_path,
-        source_root=document_source,
-        excluded_doc_ids=_expected_doc_ids(selected_rows),
-        hard_negative_count=hard_negative_count,
-    )
-    _copy_artifacts(corpus_dir=corpus_dir, output_root=output_root)
-
-    if prepared["external_documents_required"] or prepared["case_count"] == 0:
-        if not allow_blocked:
-            raise RuntimeError("EnterpriseRAG-Bench documents are required before running measured benchmark profiles")
-        metrics = _blocked_metrics(selected_rows=selected_rows, manifest=manifest)
-        (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-        _write_failure_cases(output_root / "failure_cases.md", [])
-        _write_report(output_root / "report.md", metrics)
-        return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
-
-    if not run_profiles:
-        metrics = _blocked_metrics(selected_rows=selected_rows, manifest=manifest)
-        metrics["status"] = "prepared"
-        metrics["measurement_status"] = "prepared_not_measured"
-        metrics["metrics_source"] = "prepared_not_measured"
-        metrics["evidence_conversion_diagnostics"]["measurement_status"] = "prepared_not_measured"
-        metrics["release_gate"] = _build_release_gate(metrics)
-        (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-        _write_failure_cases(output_root / "failure_cases.md", [])
-        _write_report(output_root / "report.md", metrics)
-        return {"status": "prepared", "metrics_source": "prepared_not_measured", "output_root": str(output_root)}
-
-    dataset_path = Path(prepared["dataset_path"])
-    stackless_root = output_root / "stackless_profiles"
     try:
-        run_report = await run_stackless_local_eval(
+        rows = _read_rows(questions_file)
+        dataset_validation = validate_dataset(rows)
+
+        selected_rows = _select_rows(
+            rows,
+            sample_size=sample_size,
+            stratify_by_question_type=stratify_by_question_type,
+        )
+        _write_selected_questions(selected_questions, selected_rows)
+
+        document_source = documents_file or source_root
+        schema_probe = inspect_documents_schema(document_source, output_root=output_root) if inspect_schema and document_source else None
+        corpus_dir = output_root / "corpus"
+        prepared = prepare_public_enterprise_eval(
+            dataset_id="enterprise_rag_bench",
+            raw_path=selected_questions,
+            source_root=document_source,
+            output_dir=corpus_dir,
+        )
+
+        manifest_path = Path(prepared["manifest_path"])
+        corpus_manifest_path = manifest_path
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if schema_probe is not None:
+            manifest["schema_probe"] = schema_probe
+        if documents_file is not None:
+            manifest["documents_file"] = str(documents_file)
+        if source_root is not None:
+            manifest["source_root"] = str(source_root)
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+        manifest = _append_hard_negatives(
             manifest_path=manifest_path,
-            dataset_path=dataset_path,
-            output_root=stackless_root,
-            profile_set="deep_graphrag_compare",
-            sample_limit=prepared["case_count"],
-            spawn_dev_embedding_server=spawn_dev_embedding_server,
-            rerank_score_threshold_override=rerank_score_threshold_override,
-            chunk_size_override=chunk_size_override,
-            overlap_override=overlap_override,
+            source_root=document_source,
+            excluded_doc_ids=_expected_doc_ids(selected_rows),
+            hard_negative_count=hard_negative_count,
         )
-    except (RuntimeError, TimeoutError, ValueError, SQLAlchemyError) as exc:
-        if not allow_blocked:
-            raise
-        blocked_manifest = dict(manifest)
-        blocked_manifest["blocked_reason"] = _profile_runner_blocked_reason(exc)
-        blocked_manifest["profile_runner_error"] = str(exc)
-        metrics = _blocked_metrics(selected_rows=selected_rows, manifest=blocked_manifest)
-        metrics["runtime_config"]["chunk_size_override"] = chunk_size_override
-        metrics["runtime_config"]["overlap_override"] = overlap_override
-        metrics["runtime_config"]["rerank_score_threshold_override"] = rerank_score_threshold_override
+        _copy_artifacts(corpus_dir=corpus_dir, output_root=output_root)
+        dataset_path = Path(prepared["dataset_path"])
+
+        gap_report = generate_blocked_gap_report(
+            dataset_validation=dataset_validation,
+            expected_case_count=sample_size,
+        )
+        doc_required_blocked = prepared["external_documents_required"] or prepared["case_count"] == 0
+
+        if gap_report["blocked"] or doc_required_blocked:
+            if not allow_blocked:
+                raise RuntimeError("EnterpriseRAG-Bench dataset gap or documents are required")
+
+            measurement_status = "blocked_not_measured"
+            incomp_reason = "measurement_blocked: dataset gap or missing external documents"
+            if gap_report["blocked"]:
+                manifest["blocked_reason"] = gap_report["blocked_reason"]
+                incomp_reason = gap_report["blocked_reason"]
+            elif schema_probe and "blocked_reason" in schema_probe:
+                manifest["blocked_reason"] = schema_probe["blocked_reason"]
+                incomp_reason = schema_probe["blocked_reason"]
+            elif documents_file is None and source_root is None:
+                manifest["blocked_reason"] = "enterprise_rag_bench_documents_required"
+                incomp_reason = "enterprise_rag_bench_documents_required"
+            else:
+                manifest["blocked_reason"] = "external_documents_required"
+
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=manifest,
+                runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
+                reproduce_command=reproduce_cmd,
+            )
+            _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
+            _write_failure_cases(output_root / "failure_cases.md", [])
+            _write_report(output_root / "report.md", metrics)
+
+            completed_at = time.time()
+            _build_and_write_benchmark_manifest(
+                output_root=output_root,
+                questions_file=questions_file,
+                status="BLOCKED",
+                measurement_status=measurement_status,
+                created_at=created_at,
+                completed_at=completed_at,
+                arguments=arguments,
+                dataset_path=dataset_path,
+                corpus_manifest_path=corpus_manifest_path,
+                profile_completeness=None,
+                metrics=metrics,
+                incomparable_reason=incomp_reason,
+                gap_report=gap_report,
+            )
+            return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
+
+        if not run_profiles:
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=manifest,
+                runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
+                reproduce_command=reproduce_cmd,
+            )
+            metrics["status"] = "prepared"
+            metrics["measurement_status"] = "prepared_not_measured"
+            metrics["metrics_source"] = "prepared_not_measured"
+            metrics["evidence_conversion_diagnostics"]["measurement_status"] = "prepared_not_measured"
+            metrics["release_gate"] = _build_release_gate(metrics)
+
+            _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
+            _write_failure_cases(output_root / "failure_cases.md", [])
+            _write_report(output_root / "report.md", metrics)
+
+            completed_at = time.time()
+            _build_and_write_benchmark_manifest(
+                output_root=output_root,
+                questions_file=questions_file,
+                status="PREPARED",
+                measurement_status="prepared_not_measured",
+                created_at=created_at,
+                completed_at=completed_at,
+                arguments=arguments,
+                dataset_path=dataset_path,
+                corpus_manifest_path=corpus_manifest_path,
+                profile_completeness=None,
+                metrics=metrics,
+                incomparable_reason="prepared_only_no_metrics"
+            )
+            return {"status": "prepared", "metrics_source": "prepared_not_measured", "output_root": str(output_root)}
+
+        stackless_root = output_root / "stackless_profiles"
+        try:
+            run_report = await run_stackless_local_eval(
+                manifest_path=manifest_path,
+                dataset_path=dataset_path,
+                output_root=stackless_root,
+                profile_set="deep_graphrag_compare",
+                sample_limit=prepared["case_count"],
+                spawn_dev_embedding_server=spawn_dev_embedding_server,
+                rerank_score_threshold_override=rerank_score_threshold_override,
+                chunk_size_override=chunk_size_override,
+                overlap_override=overlap_override,
+            )
+        except (RuntimeError, TimeoutError, ValueError, SQLAlchemyError) as exc:
+            if not allow_blocked:
+                raise
+            blocked_manifest = dict(manifest)
+            blocked_manifest["blocked_reason"] = _profile_runner_blocked_reason(exc)
+            blocked_manifest["profile_runner_error"] = str(exc)
+
+            metrics = _blocked_metrics(
+                selected_rows=selected_rows,
+                manifest=blocked_manifest,
+                runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
+                reproduce_command=reproduce_cmd,
+            )
+            metrics["runtime_config"]["chunk_size_override"] = chunk_size_override
+            metrics["runtime_config"]["overlap_override"] = overlap_override
+            metrics["runtime_config"]["rerank_score_threshold_override"] = rerank_score_threshold_override
+            metrics["release_gate"] = _build_release_gate(metrics)
+
+            _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
+            _write_failure_cases(output_root / "failure_cases.md", [])
+            _write_report(output_root / "report.md", metrics)
+
+            completed_at = time.time()
+            _build_and_write_benchmark_manifest(
+                output_root=output_root,
+                questions_file=questions_file,
+                status="FAILED",
+                measurement_status="blocked_not_measured",
+                created_at=created_at,
+                completed_at=completed_at,
+                arguments=arguments,
+                dataset_path=dataset_path,
+                corpus_manifest_path=corpus_manifest_path,
+                profile_completeness=None,
+                metrics=metrics,
+                failure_fingerprint=str(exc),
+                incomparable_reason=f"profile_runner_failed_with_exception: {exc}",
+            )
+            return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
+
+        profiles, cost_latency, per_samples = _build_profile_summary(run_root=stackless_root, run_report=run_report)
+        cases = _read_jsonl(dataset_path)
+        retrieval_rows = _profile_retrieval_rows(stackless_root)
+        common_case_ids = [str(row.get("id")) for row in cases]
+        profile_completeness = _build_profile_completeness(
+            expected_case_ids=common_case_ids,
+            profiles=profiles,
+            per_samples=per_samples,
+        )
+
+        measurement_status = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
+        metrics_source = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
+        run_status = "measured" if profile_completeness["complete"] else "blocked"
+        manifest_status = "COMPLETED" if profile_completeness["complete"] else "INCOMPARABLE"
+        incomp_reason = None if profile_completeness["complete"] else profile_completeness.get("blocked_reason")
+
+        measured_case_count = len(cases) if profile_completeness["complete"] else 0
+        standard = profiles["standard_rag"].get("aggregate") or {}
+        deep = profiles["deep_graphrag"].get("aggregate") or {}
+        agentic = profiles["agentic_graphrag"].get("aggregate") or {}
+        deep_vs_standard = _delta(deep, standard)
+        agentic_vs_standard = _delta(agentic, standard) if agentic else {}
+        agentic_vs_deep = _delta(agentic, deep) if agentic else {}
+
+        failures = _build_failure_cases(per_samples)
+        evidence_conversion_diagnostics = _build_evidence_conversion_diagnostics(
+            cases=cases,
+            per_samples=per_samples,
+            retrieval_rows=retrieval_rows,
+        )
+        evidence_conversion_diagnostics["measurement_status"] = measurement_status
+        failure_tag_limitations = _failure_tag_limitations()
+        replan_success_rate = (
+            _replan_success_rate(
+                run_root=stackless_root,
+                agentic_underlying_profile=str(profiles["agentic_graphrag"].get("underlying_profile") or "agentic_graphrag"),
+                standard_rows=per_samples.get("standard_rag") or [],
+                agentic_rows=per_samples.get("agentic_graphrag") or [],
+            )
+            if agentic
+            else None
+        )
+        graph_usage_gain = (
+            agentic_vs_standard.get("retrieval_recall_at_k")
+            if agentic_vs_standard
+            else deep_vs_standard.get("retrieval_recall_at_k")
+        )
+        question_type_metrics = _question_type_metrics(
+            cases=cases,
+            per_samples=per_samples,
+            retrieval_rows=retrieval_rows,
+        )
+        gated_agentic_simulation = _build_gated_agentic_simulation(
+            cases=cases,
+            profiles=profiles,
+            per_samples=per_samples,
+            retrieval_rows=retrieval_rows,
+            question_type_metrics=question_type_metrics,
+        )
+
+        metrics = {
+            "status": run_status,
+            "measurement_status": measurement_status,
+            "metrics_source": metrics_source,
+            "case_set": {
+                "selected_case_count": len(selected_rows),
+                "measured_case_count": measured_case_count,
+                "common_case_ids": common_case_ids,
+                "common_case_ids_hash": profile_completeness["expected_case_ids_hash"],
+                "profile_case_counts": profile_completeness["profile_case_counts"],
+                "profile_case_ids_hash": profile_completeness["profile_case_ids_hash"],
+                "question_type_counts": _question_type_counts(cases),
+            },
+            "corpus": manifest,
+            "runtime_config": {
+                "runtime_mode": runtime_mode,
+                "is_test_double": (runtime_mode == "contract-smoke"),
+                "reproduce_command": reproduce_cmd,
+                "chunk_size_override": chunk_size_override,
+                "overlap_override": overlap_override,
+                "rerank_score_threshold_override": rerank_score_threshold_override,
+                "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
+            },
+            "profiles": profiles,
+            "profile_completeness": profile_completeness,
+            "deltas": {
+                "deep_vs_standard": deep_vs_standard,
+                "agentic_vs_standard": agentic_vs_standard,
+                "agentic_vs_deep": agentic_vs_deep,
+            },
+            "question_type_metrics": question_type_metrics,
+            "agentic_metrics": {
+                "graph_usage_gain": graph_usage_gain,
+                "replan_success_rate": replan_success_rate,
+                "cost_quality_ratio": _cost_quality_ratio(
+                    quality_delta=agentic_vs_standard.get("answer_correctness") if agentic_vs_standard else None,
+                    standard_latency=cost_latency.get("standard_rag") or {},
+                    agentic_latency=cost_latency.get("agentic_graphrag") or {},
+                ),
+            },
+            "evidence_conversion_diagnostics": evidence_conversion_diagnostics,
+            "gated_agentic_simulation": gated_agentic_simulation,
+            "hard_negative_coverage": _hard_negative_coverage(manifest),
+            "cost_latency": cost_latency,
+            "failure_count": len(failures),
+            "failure_tag_limitations": failure_tag_limitations,
+        }
         metrics["release_gate"] = _build_release_gate(metrics)
-        (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-        _write_failure_cases(output_root / "failure_cases.md", [])
-        _write_report(output_root / "report.md", metrics)
-        return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
-    profiles, cost_latency, per_samples = _build_profile_summary(run_root=stackless_root, run_report=run_report)
-    cases = _read_jsonl(dataset_path)
-    retrieval_rows = _profile_retrieval_rows(stackless_root)
-    common_case_ids = [str(row.get("id")) for row in cases]
-    profile_completeness = _build_profile_completeness(
-        expected_case_ids=common_case_ids,
-        profiles=profiles,
-        per_samples=per_samples,
-    )
-    measurement_status = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
-    metrics_source = "fixed_benchmark" if profile_completeness["complete"] else "blocked_not_measured"
-    run_status = "measured" if profile_completeness["complete"] else "blocked"
-    measured_case_count = len(cases) if profile_completeness["complete"] else 0
-    standard = profiles["standard_rag"].get("aggregate") or {}
-    deep = profiles["deep_graphrag"].get("aggregate") or {}
-    agentic = profiles["agentic_graphrag"].get("aggregate") or {}
-    deep_vs_standard = _delta(deep, standard)
-    agentic_vs_standard = _delta(agentic, standard) if agentic else {}
-    agentic_vs_deep = _delta(agentic, deep) if agentic else {}
-    failures = _build_failure_cases(per_samples)
-    evidence_conversion_diagnostics = _build_evidence_conversion_diagnostics(
-        cases=cases,
-        per_samples=per_samples,
-        retrieval_rows=retrieval_rows,
-    )
-    evidence_conversion_diagnostics["measurement_status"] = measurement_status
-    failure_tag_limitations = _failure_tag_limitations()
-    replan_success_rate = (
-        _replan_success_rate(
-            run_root=stackless_root,
-            agentic_underlying_profile=str(profiles["agentic_graphrag"].get("underlying_profile") or "agentic_graphrag"),
-            standard_rows=per_samples.get("standard_rag") or [],
-            agentic_rows=per_samples.get("agentic_graphrag") or [],
+
+        _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
+        _write_failure_cases(
+            output_root / "failure_cases.md",
+            failures,
+            diagnostics=evidence_conversion_diagnostics,
         )
-        if agentic
-        else None
-    )
-    graph_usage_gain = (
-        agentic_vs_standard.get("retrieval_recall_at_k")
-        if agentic_vs_standard
-        else deep_vs_standard.get("retrieval_recall_at_k")
-    )
-    question_type_metrics = _question_type_metrics(
-        cases=cases,
-        per_samples=per_samples,
-        retrieval_rows=retrieval_rows,
-    )
-    gated_agentic_simulation = _build_gated_agentic_simulation(
-        cases=cases,
-        profiles=profiles,
-        per_samples=per_samples,
-        retrieval_rows=retrieval_rows,
-        question_type_metrics=question_type_metrics,
-    )
-    metrics = {
-        "status": run_status,
-        "measurement_status": measurement_status,
-        "metrics_source": metrics_source,
-        "case_set": {
-            "selected_case_count": len(selected_rows),
+        _write_report(output_root / "report.md", metrics)
+
+        completed_at = time.time()
+        _build_and_write_benchmark_manifest(
+            output_root=output_root,
+            questions_file=questions_file,
+            status=manifest_status,
+            measurement_status=measurement_status,
+            created_at=created_at,
+            completed_at=completed_at,
+            arguments=arguments,
+            dataset_path=dataset_path,
+            corpus_manifest_path=corpus_manifest_path,
+            profile_completeness=profile_completeness,
+            metrics=metrics,
+            incomparable_reason=incomp_reason,
+        )
+
+        return {
+            "status": run_status,
+            "metrics_source": metrics_source,
+            "output_root": str(output_root),
             "measured_case_count": measured_case_count,
-            "common_case_ids": common_case_ids,
-            "common_case_ids_hash": profile_completeness["expected_case_ids_hash"],
-            "profile_case_counts": profile_completeness["profile_case_counts"],
-            "profile_case_ids_hash": profile_completeness["profile_case_ids_hash"],
-            "question_type_counts": _question_type_counts(cases),
-        },
-        "corpus": manifest,
-        "runtime_config": {
-            "chunk_size_override": chunk_size_override,
-            "overlap_override": overlap_override,
-            "rerank_score_threshold_override": rerank_score_threshold_override,
-            "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
-        },
-        "profiles": profiles,
-        "profile_completeness": profile_completeness,
-        "deltas": {
-            "deep_vs_standard": deep_vs_standard,
-            "agentic_vs_standard": agentic_vs_standard,
-            "agentic_vs_deep": agentic_vs_deep,
-        },
-        "question_type_metrics": question_type_metrics,
-        "agentic_metrics": {
-            "graph_usage_gain": graph_usage_gain,
-            "replan_success_rate": replan_success_rate,
-            "cost_quality_ratio": _cost_quality_ratio(
-                quality_delta=agentic_vs_standard.get("answer_correctness") if agentic_vs_standard else None,
-                standard_latency=cost_latency.get("standard_rag") or {},
-                agentic_latency=cost_latency.get("agentic_graphrag") or {},
-            ),
-        },
-        "evidence_conversion_diagnostics": evidence_conversion_diagnostics,
-        "gated_agentic_simulation": gated_agentic_simulation,
-        "hard_negative_coverage": _hard_negative_coverage(manifest),
-        "cost_latency": cost_latency,
-        "failure_count": len(failures),
-        "failure_tag_limitations": failure_tag_limitations,
-    }
-    metrics["release_gate"] = _build_release_gate(metrics)
-    (output_root / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
-    _write_failure_cases(
-        output_root / "failure_cases.md",
-        failures,
-        diagnostics=evidence_conversion_diagnostics,
-    )
-    _write_report(output_root / "report.md", metrics)
-    return {
-        "status": run_status,
-        "metrics_source": metrics_source,
-        "output_root": str(output_root),
-        "measured_case_count": measured_case_count,
-    }
+        }
+
+    except Exception as err:
+        completed_at = time.time()
+        _build_and_write_benchmark_manifest(
+            output_root=output_root,
+            questions_file=questions_file,
+            status="ERROR",
+            measurement_status="blocked_not_measured",
+            created_at=created_at,
+            completed_at=completed_at,
+            arguments=arguments,
+            dataset_path=dataset_path,
+            corpus_manifest_path=corpus_manifest_path,
+            profile_completeness=None,
+            metrics=None,
+            failure_fingerprint=traceback.format_exc(),
+            incomparable_reason=f"runtime_unhandled_exception: {err}"
+        )
+        raise
 
 
 def main() -> None:
@@ -1608,7 +2254,39 @@ def main() -> None:
     parser.add_argument("--rerank-score-threshold-override", type=float, default=0.0)
     parser.add_argument("--chunk-size-override", type=int, default=ENTERPRISE_RAG_DEFAULT_CHUNK_SIZE)
     parser.add_argument("--overlap-override", type=int, default=ENTERPRISE_RAG_DEFAULT_OVERLAP)
+    parser.add_argument(
+        "--runtime-mode",
+        choices=["prepare-only", "contract-smoke", "canonical"],
+        default="contract-smoke",
+        help=(
+            "Benchmark runtime execution mode. "
+            "'prepare-only': sample and validate questions without executing any profile runner. "
+            "'contract-smoke': execute using local test-double profile runners (no production deps). "
+            "'canonical': execute using canonical profile runners backed by production Knowledge "
+            "Runtime. Requires a formal CanonicalRuntimeDependencies bundle from a Composition Root. "
+            "Formal measurement is only permitted in canonical mode. "
+            "This flag is recorded in the run manifest."
+        ),
+    )
     args = parser.parse_args()
+    runtime_mode = args.runtime_mode
+
+    if args.prepare_only:
+        if args.runtime_mode == "canonical":
+            import sys
+            print(
+                "ERROR: --prepare-only conflicts with --runtime-mode=canonical. Aborting (fail closed).",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        runtime_mode = "prepare-only"
+
+    try:
+        validate_canonical_runtime_config(runtime_mode=runtime_mode)
+    except CanonicalRuntimeUnavailableError as err:
+        import sys
+        print(f"ERROR: {err}", file=sys.stderr)
+        sys.exit(2)
 
     output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
     result = asyncio.run(
@@ -1621,12 +2299,13 @@ def main() -> None:
             stratify_by_question_type=not args.no_stratify_by_question_type,
             hard_negative_count=max(args.hard_negative_count, 0),
             allow_blocked=args.allow_blocked,
-            run_profiles=not args.prepare_only,
+            run_profiles=(runtime_mode != "prepare-only"),
             inspect_schema=args.inspect_documents_schema,
             spawn_dev_embedding_server=not args.no_spawn_dev_embedding_server,
             rerank_score_threshold_override=args.rerank_score_threshold_override,
             chunk_size_override=args.chunk_size_override,
             overlap_override=args.overlap_override,
+            runtime_mode=runtime_mode,
         )
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -1,6 +1,6 @@
 from sqlmodel import and_, delete, desc, select, update
 
-from zuno.database.models.agent import AgentTable
+from zuno.platform.database.models.agent import AgentTable
 from zuno.platform.database.session import session_getter
 
 

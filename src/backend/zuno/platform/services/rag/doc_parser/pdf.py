@@ -8,13 +8,13 @@ import pymupdf
 import pymupdf4llm
 from loguru import logger
 
-from zuno.services.rag.doc_parser.image import build_image_chunk
-from zuno.services.rag.doc_parser.markdown import markdown_parser
-from zuno.services.rag.doc_parser.text import text_parser
-from zuno.services.rewrite.markdown_rewrite import markdown_rewriter
-from zuno.services.storage import storage_client
-from zuno.settings import app_settings
-from zuno.utils.file_utils import (
+from zuno.platform.services.rag.doc_parser.image import build_image_chunk
+from zuno.platform.services.rag.doc_parser.markdown import markdown_parser
+from zuno.platform.services.rag.doc_parser.text import text_parser
+from zuno.platform.services.rewrite.markdown_rewrite import markdown_rewriter
+from zuno.platform.services.storage import storage_client
+from zuno.platform.settings import app_settings
+from zuno.platform.common.file_utils import (
     generate_unique_filename,
     get_convert_markdown_images_dir,
     get_object_storage_base_path,

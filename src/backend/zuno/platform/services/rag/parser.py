@@ -2,19 +2,19 @@ import asyncio
 import os
 from datetime import datetime, timedelta, timezone
 
-from zuno.core.models.manager import ModelManager
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id
-from zuno.services.rag.doc_parser.docx import docx_parser
-from zuno.services.rag.doc_parser.excel import excel_to_txt
-from zuno.services.rag.doc_parser.image import build_image_chunk, describe_image
-from zuno.services.rag.doc_parser.markdown import markdown_parser
-from zuno.services.rag.doc_parser.other_file import other_file_to_txt
-from zuno.services.rag.doc_parser.pdf import pdf_parser
-from zuno.services.rag.doc_parser.pptx import pptx_parser
-from zuno.services.rag.doc_parser.text import text_parser
+from zuno.agent.core.models.manager import ModelManager
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id
+from zuno.platform.services.rag.doc_parser.docx import docx_parser
+from zuno.platform.services.rag.doc_parser.excel import excel_to_txt
+from zuno.platform.services.rag.doc_parser.image import build_image_chunk, describe_image
+from zuno.platform.services.rag.doc_parser.markdown import markdown_parser
+from zuno.platform.services.rag.doc_parser.other_file import other_file_to_txt
+from zuno.platform.services.rag.doc_parser.pdf import pdf_parser
+from zuno.platform.services.rag.doc_parser.pptx import pptx_parser
+from zuno.platform.services.rag.doc_parser.text import text_parser
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 IMAGE_SUFFIXES = {"jpg", "jpeg", "png", "bmp", "webp", "tiff"}
 TEXT_LIKE_SUFFIXES = {"txt", "json", "html", "htm", "csv", "yml", "yaml"}

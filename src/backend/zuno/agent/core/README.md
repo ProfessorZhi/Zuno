@@ -13,7 +13,7 @@
 ## 允许新增内容
 
 - 只允许为现有 runtime 添加低风险兼容 facade 或测试保护。
-- 允许按小切片把明确归属的 helper 迁入 `agent/` 或 `platform/`，前提是旧 import path 有兼容层。
+- 允许按小切片把明确归属的 helper 迁入 `agent/` 或 `platform/`，前提是旧 import path 有迁移兼容层。
 
 ## 禁止事项
 
@@ -25,4 +25,4 @@
 
 - `tests/agent/test_general_agent_project_query_runtime.py`
 - `tests/agent/test_generalagent_context_memory_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

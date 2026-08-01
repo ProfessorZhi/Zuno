@@ -1,7 +1,10 @@
 # PHASE22 Fixed Benchmark, Clean Target Tree and Program Closure
 
 phase_id: PHASE22
-status: planned
+status: in_progress
+readiness: PREPARATION_AND_CONTRACT_SMOKE_AVAILABLE
+
+
 depends_on: PHASE21
 owner: Coordinator / Release Governance
 
@@ -110,6 +113,7 @@ docs/evidence/**
 ```bash
 git diff --check
 python tools/scripts/verify_current_program.py
+python tools/scripts/verify_phase22_cleanup_boundary.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python tools/scripts/verify_architecture_document_set.py
@@ -118,4 +122,13 @@ python tools/scripts/verify_wave1_contract_freeze.py
 pytest -q -p no:cacheprovider
 cd apps/web && npm run lint && npm run build
 # browser E2E, desktop build/smoke, migrations, infra fault/load/DR, fixed benchmark commands from evidence manifest
+
+## Current Status & Draft Updates (Pre-Verification Candidate)
+- **Cleanup Slice**: Pending P22-T03 cleanup.
+- **Benchmark Runner**: Contract test doubles implemented (StandardRAGProfileRunner, LocalGraphRAGProfileRunner, DeepGraphRAGProfileRunner, AgenticGraphRAGProfileRunner).
+- **Observability Adapter**: Port contract and in-memory trace prototype available. LangSmith SDK integration and runtime trace wiring not implemented.
+- **Dataset Contract & Candidate Pack**: Generated 80 public candidate cases (raw_question_candidate_count=80, evidence_complete_count=20, rejected_or_incomplete_count=60, reviewer_approved_count=0, benchmark_eligible_count=0).
+- **Smoke status**: Profile Contract Smoke completed (CONTRACT_SMOKE_COMPLETED / MEASUREMENT_BLOCKED / not_measured_test_double_runner).
+- **Verification status**: Unit test suites and Repository Gates passed. PR #52 Draft mode.
+
 ```

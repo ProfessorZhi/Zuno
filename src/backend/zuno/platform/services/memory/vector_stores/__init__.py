@@ -1,5 +1,5 @@
-from zuno.settings import app_settings
-from zuno.services.memory.vector_stores.chroma import ChromaDB
+from zuno.platform.settings import app_settings
+from zuno.platform.services.memory.vector_stores.chroma import ChromaDB
 
 class VectorStoreManager:
 

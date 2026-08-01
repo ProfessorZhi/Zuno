@@ -1,5 +1,5 @@
 def test_graphrag_version_state_records_hashes_and_versions():
-    from zuno.services.graphrag.versioning import GraphRAGVersionState
+    from zuno.platform.services.graphrag.versioning import GraphRAGVersionState
 
     state = GraphRAGVersionState(
         index_version="graph-v2",
@@ -19,7 +19,7 @@ def test_graphrag_version_state_records_hashes_and_versions():
 
 
 def test_graphrag_version_state_detects_stale_index_use():
-    from zuno.services.graphrag.versioning import detect_stale_index_reasons
+    from zuno.platform.services.graphrag.versioning import detect_stale_index_reasons
 
     assert detect_stale_index_reasons(
         index_health={"vector": "ready", "graph": "stale", "community": "ready"},
@@ -32,7 +32,7 @@ def test_graphrag_version_state_detects_stale_index_use():
 
 
 def test_graph_writer_preserves_version_and_hash_metadata():
-    from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+    from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 
     payload = GraphWriter().build_entity_payload(
         {

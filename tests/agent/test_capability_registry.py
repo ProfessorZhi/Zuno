@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 
 def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
-    from zuno.services.capability_registry import CapabilityRegistryService
+    from zuno.platform.services.capability_registry import CapabilityRegistryService
 
     async def fake_tools(user_id):
         return [
@@ -49,9 +49,9 @@ def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
             }
         ]
 
-    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
-    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
-    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.MCPService.get_all_servers", fake_mcps)
 
     results = asyncio.run(CapabilityRegistryService.search("飞书 发消息", user_id="u1"))
 
@@ -76,7 +76,7 @@ def test_capability_registry_searches_tools_skills_and_mcp(monkeypatch):
 
 
 def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
-    from zuno.services.capability_registry import CapabilityRegistryService
+    from zuno.platform.services.capability_registry import CapabilityRegistryService
 
     async def fake_tools(user_id):
         return []
@@ -96,9 +96,9 @@ def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
             }
         ]
 
-    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
-    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
-    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.MCPService.get_all_servers", fake_mcps)
 
     results = asyncio.run(CapabilityRegistryService.search("飞书", user_id="u1"))
 
@@ -107,7 +107,7 @@ def test_capability_registry_reports_unconfigured_mcp(monkeypatch):
 
 
 def test_capability_registry_can_build_toolcards_without_changing_search_shape(monkeypatch):
-    from zuno.services.capability_registry import CapabilityRegistryService
+    from zuno.platform.services.capability_registry import CapabilityRegistryService
 
     async def fake_tools(user_id):
         return [
@@ -145,9 +145,9 @@ def test_capability_registry_can_build_toolcards_without_changing_search_shape(m
             }
         ]
 
-    monkeypatch.setattr("zuno.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
-    monkeypatch.setattr("zuno.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
-    monkeypatch.setattr("zuno.services.capability_registry.MCPService.get_all_servers", fake_mcps)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.ToolService.get_visible_tool_by_user", fake_tools)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.AgentSkillService.get_agent_skills", fake_skills)
+    monkeypatch.setattr("zuno.platform.services.capability_registry.MCPService.get_all_servers", fake_mcps)
 
     search_results = asyncio.run(CapabilityRegistryService.search("飞书 发消息", user_id="u1"))
     cards = asyncio.run(CapabilityRegistryService.list_tool_cards("u1"))
@@ -165,7 +165,7 @@ def test_capability_registry_can_build_toolcards_without_changing_search_shape(m
 
 def test_capability_search_route_uses_login_user(monkeypatch):
     from zuno.api.v1.capability import search_capabilities
-    from zuno.schema.capability import CapabilitySearchReq
+    from zuno.api.dto.capability import CapabilitySearchReq
 
     captured = {}
 

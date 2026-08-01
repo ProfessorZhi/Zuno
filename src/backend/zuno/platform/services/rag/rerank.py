@@ -4,10 +4,10 @@ import json
 import aiohttp
 from loguru import logger
 
-from zuno.core.models.manager import ModelManager
+from zuno.agent.core.models.manager import ModelManager
 
-from zuno.schema.rerank import RerankResultModel
-from zuno.settings import app_settings, initialize_app_settings
+from zuno.api.dto.rerank import RerankResultModel
+from zuno.platform.settings import app_settings, initialize_app_settings
 
 
 def _normalize_model_config(config_override):

@@ -1,0 +1,142 @@
+{
+  "status": "blocked",
+  "measurement_status": "blocked_not_measured",
+  "metrics_source": "blocked_not_measured",
+  "case_set": {
+    "selected_case_count": 8,
+    "measured_case_count": 0,
+    "common_case_ids": [],
+    "question_type_counts": {
+      "unknown": 8
+    }
+  },
+  "corpus": {
+    "source": "EnterpriseRAG-Bench",
+    "output_dir": "F:\\internship-work\\resume&resume project\\02_projects\\Zuno\\docs\\evidence\\goal05-phase22-blocked-benchmark\\corpus",
+    "file_count": 0,
+    "external_documents_required": false,
+    "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
+    "files": [],
+    "selected_question_count": 8,
+    "skipped_case_count": 0,
+    "document_source_status": "missing_source_root",
+    "missing_doc_ids": [],
+    "hard_negative_count": 0
+  },
+  "profiles": {
+    "standard_rag": {
+      "measured": false,
+      "metrics_source": "blocked_not_measured",
+      "aggregate": {}
+    },
+    "deep_graphrag": {
+      "measured": false,
+      "metrics_source": "blocked_not_measured",
+      "aggregate": {}
+    },
+    "agentic_graphrag": {
+      "measured": false,
+      "metrics_source": "blocked_not_measured",
+      "blocked_reason": "agentic_runtime_runner_not_wired",
+      "aggregate": {}
+    }
+  },
+  "deltas": {},
+  "agentic_metrics": {
+    "graph_usage_gain": null,
+    "replan_success_rate": null,
+    "cost_quality_ratio": null
+  },
+  "question_type_metrics": {},
+  "evidence_conversion_diagnostics": {
+    "measurement_status": "blocked_not_measured",
+    "bucket_taxonomy": [
+      "doc_miss",
+      "doc_hit_text_miss",
+      "text_hit_citation_miss",
+      "citation_hit_answer_wrong"
+    ],
+    "failure_buckets": {
+      "doc_miss": 0,
+      "doc_hit_text_miss": 0,
+      "text_hit_citation_miss": 0,
+      "citation_hit_answer_wrong": 0
+    },
+    "bucket_items": [],
+    "unavailable_items": [],
+    "unavailable_reason": null,
+    "measured_failure_bucket_count": 0,
+    "items": [],
+    "tag_counts": {}
+  },
+  "gated_agentic_simulation": {},
+  "runtime_config": {
+    "chunk_size_override": null,
+    "overlap_override": null,
+    "rerank_score_threshold_override": null,
+    "citation_chunking": {
+      "strategy": "citation_sized_with_parent_context",
+      "citation_chunk_char_limit": 240,
+      "parent_context_char_limit": 1200,
+      "boundary_priority": [
+        "section",
+        "paragraph",
+        "sentence",
+        "table_cell",
+        "code_block",
+        "character"
+      ]
+    }
+  },
+  "cost_latency": {},
+  "failure_count": 0,
+  "failure_tag_limitations": "Advanced tags require per-sample graph context, rerank rank trace, no-answer labels, and per-case cost/latency fields. Missing fields are tagged as unavailable_due_to_missing_trace_fields rather than inferred.",
+  "hard_negative_coverage": {
+    "status": "incomplete",
+    "configured_count": 0,
+    "taxonomy": [
+      "same_document_neighbor_wrong_chunk",
+      "same_topic_different_document",
+      "table_vs_body",
+      "header_footer_noise",
+      "ocr_noise",
+      "multi_document_conflict",
+      "graph_summary_requires_source_citation"
+    ],
+    "category_counts": {
+      "same_document_neighbor_wrong_chunk": 0,
+      "same_topic_different_document": 0,
+      "table_vs_body": 0,
+      "header_footer_noise": 0,
+      "ocr_noise": 0,
+      "multi_document_conflict": 0,
+      "graph_summary_requires_source_citation": 0
+    },
+    "covered_categories": [],
+    "missing_categories": [
+      "same_document_neighbor_wrong_chunk",
+      "same_topic_different_document",
+      "table_vs_body",
+      "header_footer_noise",
+      "ocr_noise",
+      "multi_document_conflict",
+      "graph_summary_requires_source_citation"
+    ],
+    "examples": {
+      "same_document_neighbor_wrong_chunk": [],
+      "same_topic_different_document": [],
+      "table_vs_body": [],
+      "header_footer_noise": [],
+      "ocr_noise": [],
+      "multi_document_conflict": [],
+      "graph_summary_requires_source_citation": []
+    }
+  },
+  "release_gate": {
+    "status": "blocked_not_measured",
+    "measured": false,
+    "blocked_reason": "measurement_blocked: dataset case count is insufficient or contains unapproved cases",
+    "checks": [],
+    "failed_checks": []
+  }
+}

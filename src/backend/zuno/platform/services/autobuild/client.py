@@ -1,8 +1,9 @@
 import asyncio
+import inspect
 import json
 
 from fastapi import WebSocket
-from typing import TypedDict, List, Dict
+from typing import Any, Dict, List, TypedDict, get_args, get_origin
 
 from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import JsonOutputParser
@@ -11,16 +12,15 @@ from langgraph.graph import StateGraph, START, END
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from zuno.capability.tools import AgentToolsWithName
 from zuno.platform.model_gateway import ModelGateway, build_default_model_gateway
 from zuno.platform.model_roles import ModelRole
-from zuno.resources.prompts.llm import agent_guide_word, auto_build_ask_prompt, auto_build_abstract_prompt, create_agent_prompt, \
+from zuno.platform.resources.prompts.llm import agent_guide_word, auto_build_ask_prompt, auto_build_abstract_prompt, create_agent_prompt, \
     PROMPT_REACT_BASE
+from zuno.api.dto.agent import AgentCreateReq
 from zuno.api.services.agent import AgentService
-from zuno.core.agents.general_agent import ChatService
-from zuno.api.services.tool import ToolService
 from zuno.api.services.user import UserPayload
-from zuno.api.services.llm import LLMService, React_provider
-from zuno.tools import action_Function_call
+from zuno.api.services.llm import LLMService
 
 
 class State(TypedDict):
@@ -31,6 +31,108 @@ class State(TypedDict):
 class AgentBaseModel(BaseModel):
     name: str = Field(description='想要创建Agent的名称')
     description: str = Field(description='想要创建Agent的描述信息')
+
+
+def _json_type(annotation: Any) -> str:
+    if annotation in (str, inspect.Signature.empty):
+        return "string"
+    if annotation is bool:
+        return "boolean"
+    if annotation is int:
+        return "integer"
+    if annotation is float:
+        return "number"
+    if annotation in (dict, Dict):
+        return "object"
+    if annotation in (list, List):
+        return "array"
+
+    origin = get_origin(annotation)
+    if origin in (list, List):
+        return "array"
+    if origin in (dict, Dict):
+        return "object"
+
+    args = [arg for arg in get_args(annotation) if arg is not type(None)]
+    if args:
+        return _json_type(args[0])
+    return "string"
+
+
+def _schema_from_callable(func: Any) -> Dict[str, Any]:
+    properties: Dict[str, Any] = {}
+    required: List[str] = []
+    target = getattr(func, "func", func)
+
+    try:
+        signature = inspect.signature(target)
+    except (TypeError, ValueError):
+        return {"type": "object", "properties": {}, "required": []}
+
+    for name, parameter in signature.parameters.items():
+        if name in {"self", "cls"} or parameter.kind in {
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        }:
+            continue
+        properties[name] = {"type": _json_type(parameter.annotation)}
+        if parameter.default is inspect.Signature.empty:
+            required.append(name)
+
+    return {"type": "object", "properties": properties, "required": required}
+
+
+def _tool_to_function_schema(name: str, tool: Any) -> Dict[str, Any]:
+    args_schema = getattr(tool, "args_schema", None)
+    if isinstance(args_schema, type) and issubclass(args_schema, BaseModel):
+        if hasattr(args_schema, "model_json_schema"):
+            parameters = args_schema.model_json_schema()
+        else:
+            parameters = args_schema.schema()
+    elif isinstance(args_schema, dict):
+        parameters = args_schema
+    else:
+        parameters = _schema_from_callable(tool)
+
+    parameters.setdefault("type", "object")
+    parameters.setdefault("properties", {})
+    parameters.setdefault("required", [])
+
+    description = (
+        getattr(tool, "description", None)
+        or inspect.getdoc(getattr(tool, "func", tool))
+        or f"Run tool {name}"
+    )
+    return {"name": name, "description": description, "parameters": parameters}
+
+
+def _llm_value(llm: Any, key: str, default: Any = None) -> Any:
+    if isinstance(llm, dict):
+        return llm.get(key, default)
+    return getattr(llm, key, default)
+
+
+def _uses_react_prompt(llm: Any) -> bool:
+    mode = str(_llm_value(llm, "tool_call_mode", "") or _llm_value(llm, "agent_mode", "")).lower()
+    return mode == "react"
+
+
+def _normalize_tool_names(value: Any) -> List[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value if item]
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return []
+        try:
+            parsed = json.loads(stripped)
+        except json.JSONDecodeError:
+            return [stripped]
+        return _normalize_tool_names(parsed)
+    return [str(value)]
+
 
 def resp_state(name: str = '', description: str = '', user_input: str = ''):
     return {"name": name, "description": description, "user_input": user_input}
@@ -86,22 +188,22 @@ class AutoBuildClient:
 
     async def check_model_exist(self):
         # 获得可用的模型
-        llm = LLMService.get_one_llm()
+        llm = await LLMService.get_one_llm()
         if llm is None:
             await self.send_message(message='没找到可用的大模型')
             raise ValueError(f'No large models available')
         else:
-            model = llm.model
-            base_url = llm.base_url
-            api_key = llm.api_key
+            model = _llm_value(llm, "model")
+            base_url = _llm_value(llm, "base_url")
+            api_key = _llm_value(llm, "api_key")
             # 创建Agent的构建方式
             await self.create_build_agent(model=model, api_key=api_key, base_url=base_url)
 
     async def ask_user_message(self, user_input, para_type):
         prompt = auto_build_ask_prompt.format(user_input=user_input, para_type=para_type)
 
-        resp = self.base_agent.ainvoke(input=prompt).content
-        return resp
+        resp = await self.base_agent.ainvoke(input=prompt)
+        return resp.content
 
     async def create_build_agent(self, **kwargs):
         self.base_agent = self.model_gateway.get_chat_model(
@@ -112,45 +214,54 @@ class AutoBuildClient:
     async def abstract_parameter(self, user_input):
         resp = await self.abstract_agent.ainvoke({"input": user_input, "history": ""})
 
-        return resp.content
+        return resp
 
     async def create_agent(self, name: str, description: str):
-        llm = LLMService.get_one_llm()
+        from zuno.api.services.tool import ToolService
+
+        llm = await LLMService.get_one_llm()
+        if llm is None:
+            await self.send_message(message='没找到可用的大模型')
+            raise ValueError(f'No large models available')
 
         tools = []
         tools_name = []
-        for key, func in action_Function_call:
+        for key, func in AgentToolsWithName.items():
             tools_name.append(key)
-            tools.append(ChatService.function_to_json(func))
+            tools.append(_tool_to_function_schema(key, func))
 
         # 检查是否走React 还是 Fun call
-        if llm.model in React_provider:
+        if _uses_react_prompt(llm):
             funcs = await self._func_react(user_input=description, tools=tools, tools_name=tools_name)
         else:
             # 这里可以优化的是将Tools Parameter中的required 字段给去掉
             prompt = create_agent_prompt.format(description=description)
             funcs, _ = await self._function_call(user_input=prompt, tools=tools)
-            funcs = json.loads(funcs)
+            funcs = _normalize_tool_names(funcs)
 
         tools_id = []
         for func in funcs:
             # 根据工具名称去查ID
-            tool_id = ToolService.get_id_by_tool_name(func, self.login_user.user_id)
-            tools_id.append(tool_id)
+            tool_id = await ToolService.get_id_by_tool_name(func, self.login_user.user_id)
+            if tool_id:
+                tools_id.append(tool_id)
             
         
-        AgentService.create_agent(
-            name=name,
-            logo='img/agent/assistant.png',
-            description=description,
-            llm_id=llm.llm_id,
-            tool_id=tools_id,
-            user_id=self.login_user.user_id,
+        await AgentService.create_agent(
+            self.login_user,
+            AgentCreateReq(
+                name=name,
+                logo_url='img/agent/assistant.png',
+                description=description,
+                llm_id=_llm_value(llm, "llm_id"),
+                tool_ids=tools_id,
+                system_prompt=description,
+            ),
         )
     
     async def _function_call(self, user_input: str, tools: List[Dict]):
         messages = [HumanMessage(content=user_input)]
-        message = self.base_agent.ainvoke(
+        message = await self.base_agent.ainvoke(
             messages,
             functions=tools,
         )
@@ -187,7 +298,7 @@ class AutoBuildClient:
 
         tools_name, _, _ = parse_tools_call(resp)
 
-        return tools_name
+        return [tools_name] if tools_name else []
 
 
 
@@ -240,7 +351,7 @@ class AutoBuildClient:
         async def abstract_name(state):
             resp = await self.abstract_parameter(user_input=state['user_input'])
             try:
-                data = json.loads(resp)
+                data = resp if isinstance(resp, dict) else json.loads(resp)
                 name = data.get('name')
                 return resp_state(name=name, description=state['description'], user_input=state['user_input'])
             except Exception as err:
@@ -251,7 +362,7 @@ class AutoBuildClient:
         async def abstract_description(state):
             resp = await self.abstract_parameter(user_input=state['user_input'])
             try:
-                data = json.loads(resp)
+                data = resp if isinstance(resp, dict) else json.loads(resp)
                 description = data.get('description')
                 return resp_state(name=state['name'], description=description, user_input=state['user_input'])
             except Exception as err:
@@ -261,7 +372,7 @@ class AutoBuildClient:
         # LangGraph循环图中的判断条件
         async def check_repeat_name(state):
             """pass"""
-            if AgentService.check_repeat_name(name=state['user_input'], user_id=self.login_user.user_id):
+            if await AgentService.check_repeat_name(name=state['user_input'], user_id=self.login_user.user_id):
                 await self.send_message(message='应用名称已经存在，请更换一个应用名称')
                 return 'receive_input_name'
             else:
@@ -296,7 +407,7 @@ class AutoBuildClient:
         self.builder_graph.add_edge('ask_user_description', 'receive_input_description')
         self.builder_graph.add_edge('receive_input_description', 'abstract_description')
         self.builder_graph.add_edge('abstract_description', 'auto_create_agent')
-        self.builder_graph.add_edge('auto_create_assistant', END)
+        self.builder_graph.add_edge('auto_create_agent', END)
 
 
 

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import JSON, Column, DateTime, text
 from sqlmodel import Field
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 class WorkSpaceSessionBase(SQLModelSerializable):

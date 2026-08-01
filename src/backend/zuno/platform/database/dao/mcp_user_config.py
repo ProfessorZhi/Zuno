@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from sqlmodel import and_, delete, select, update
 
-from zuno.database.models.mcp_user_config import MCPUserConfigTable
+from zuno.platform.database.models.mcp_user_config import MCPUserConfigTable
 from zuno.platform.database.session import session_getter
 
 

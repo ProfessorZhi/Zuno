@@ -14,6 +14,7 @@ from zuno.agent.contracts import (
     SkillCard,
     ToolCard,
 )
+from zuno.capability.conformance import validate_planner_exposure_conformance
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +135,14 @@ class CapabilityRouter:
             allowed_capability_ids=tuple(allowed_capabilities),
             budget_chars=request.planner_context_budget_chars,
         )
+        conformance = validate_planner_exposure_conformance(
+            task_goal=request.task_goal,
+            requested_capability_ids=request.requested_capability_ids,
+            allowed_capability_ids=tuple(allowed_capabilities),
+            blocked_capability_reasons=blocked,
+            planner_exposure=planner_exposure,
+            serialized_exposure=_canonical_json(planner_exposure),
+        )
 
         return CapabilityRouteDecision(
             selected_skill=selected_skill,
@@ -153,6 +162,7 @@ class CapabilityRouter:
                 "blocked_capability_reasons": dict(blocked),
                 "planner_exposure_ref": planner_exposure["exposure_ref"],
                 "planner_exposure_budget": planner_exposure["budget"],
+                "phase21_capability_conformance": conformance.as_trace(),
             },
         )
 

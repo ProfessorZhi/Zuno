@@ -1,6 +1,6 @@
 from sqlmodel import select
 
-from zuno.database.models.message import MessageDownTable, MessageLikeTable
+from zuno.platform.database.models.message import MessageDownTable, MessageLikeTable
 from zuno.platform.database.session import session_getter
 
 

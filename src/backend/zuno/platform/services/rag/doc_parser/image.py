@@ -3,10 +3,10 @@ import os
 import tempfile
 from datetime import datetime, timedelta, timezone
 
-from zuno.core.models.manager import ModelManager
+from zuno.agent.core.models.manager import ModelManager
 
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
 
 
 def describe_image(image_path: str) -> str:

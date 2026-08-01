@@ -1,6 +1,6 @@
-from zuno.services.storage.minio import MinioClient
-from zuno.services.storage.oss import OSSClient
-from zuno.settings import app_settings
+from zuno.platform.services.storage.minio import MinioClient
+from zuno.platform.services.storage.oss import OSSClient
+from zuno.platform.settings import app_settings
 
 
 class LazyStorageClient:

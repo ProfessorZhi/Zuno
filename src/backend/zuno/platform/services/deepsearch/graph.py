@@ -10,15 +10,15 @@ from langgraph.types import Send
 from loguru import logger
 from tavily import TavilyClient
 
-from zuno.core.models.manager import ModelManager
-from zuno.services.deepsearch.configuration import Configuration
-from zuno.services.deepsearch.prompts import (
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.services.deepsearch.configuration import Configuration
+from zuno.platform.services.deepsearch.prompts import (
     answer_instructions,
     get_current_date,
     query_writer_instructions,
     reflection_instructions,
 )
-from zuno.services.deepsearch.state import (
+from zuno.platform.services.deepsearch.state import (
     OverallState,
     QueryGenerationState,
     ReflectionState,

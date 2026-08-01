@@ -2,7 +2,7 @@ from dataclasses import replace
 
 
 def test_model_context_packet_serializes_without_mutating_graphrag_snapshot() -> None:
-    from zuno.services.application.context.contracts import (
+    from zuno.platform.services.application.context.contracts import (
         AgentExecutionContext,
         ContextItem,
         ContextSelectionReason,
@@ -11,7 +11,7 @@ def test_model_context_packet_serializes_without_mutating_graphrag_snapshot() ->
         ModelContextPacket,
         TokenBudgetPolicy,
     )
-    from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot
+    from zuno.platform.services.graphrag.query_service import GraphRAGProjectSnapshot
 
     snapshot = GraphRAGProjectSnapshot(
         graphrag_project_id="contract_review",
@@ -68,7 +68,7 @@ def test_model_context_packet_serializes_without_mutating_graphrag_snapshot() ->
 
 
 def test_token_budget_trace_records_dropped_items_and_reasons() -> None:
-    from zuno.services.application.context.contracts import (
+    from zuno.platform.services.application.context.contracts import (
         ContextItem,
         ContextSelectionReason,
         ContextSource,
@@ -109,7 +109,7 @@ def test_token_budget_trace_records_dropped_items_and_reasons() -> None:
 
 
 def test_context_contract_exports_are_explicit_and_do_not_create_query_runtime() -> None:
-    import zuno.services.application.context.contracts as contracts
+    import zuno.platform.services.application.context.contracts as contracts
 
     assert "GraphRAGQueryService" not in contracts.__all__
     assert "GraphRAGProjectSnapshot" not in contracts.__all__
@@ -126,7 +126,7 @@ def test_context_contract_exports_are_explicit_and_do_not_create_query_runtime()
 
 
 def test_context_trace_records_source_coverage_and_pack_policy() -> None:
-    from zuno.services.application.context.contracts import (
+    from zuno.platform.services.application.context.contracts import (
         AgentExecutionContext,
         ContextItem,
         ContextPackPolicy,

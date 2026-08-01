@@ -124,7 +124,20 @@ EXPECTED_EXPORTS = {
         "PreparedActionStatus",
         "ReconciliationConclusion",
         "ToolAttemptStatus",
+        "ToolGatewayReceipt",
+        "ToolInvocationGateway",
         "ToolRuntimeBatch",
+        "SandboxAdapterRegistry",
+        "DenoPyodideWasmRunner",
+        "OciProcessSandboxRunner",
+        "SandboxDispatch",
+        "SandboxExecutionResult",
+        "SandboxSessionRecord",
+        "SandboxSessionStore",
+        "InMemorySandboxSessionStore",
+        "SandboxPolicyViolation",
+        "SandboxProfile",
+        "SandboxRunner",
     ],
     "zuno.capability.trace": [
         "CapabilitySelectionTrace",
@@ -144,22 +157,22 @@ def test_capability_layer_modules_expose_target_boundaries() -> None:
         assert module.__all__ == expected_exports
 
 
-def test_capability_layer_modules_reuse_legacy_foundation_objects() -> None:
+def test_capability_layer_modules_reuse_canonical_platform_foundation_objects() -> None:
     from zuno.capability.contracts import CapabilityRecord, CapabilityType
     from zuno.capability.registry import CapabilityRegistry, ToolCardRegistry
     from zuno.capability.retrieval import NativeBM25Retriever, ToolCard
     from zuno.capability.selector import DynamicCapabilitySelector
     from zuno.capability.trace import CapabilitySelectionTrace
-    from zuno.services.application import capabilities as legacy
+    from zuno.platform.services.application import capabilities as platform_capabilities
 
-    assert CapabilityRecord is legacy.CapabilityRecord
-    assert CapabilityType is legacy.CapabilityType
-    assert ToolCard is legacy.ToolCard
-    assert CapabilityRegistry is legacy.CapabilityRegistry
-    assert ToolCardRegistry is legacy.ToolCardRegistry
-    assert NativeBM25Retriever is legacy.NativeBM25Retriever
-    assert DynamicCapabilitySelector is legacy.DynamicCapabilitySelector
-    assert CapabilitySelectionTrace is legacy.CapabilitySelectionTrace
+    assert CapabilityRecord is platform_capabilities.CapabilityRecord
+    assert CapabilityType is platform_capabilities.CapabilityType
+    assert ToolCard is platform_capabilities.ToolCard
+    assert CapabilityRegistry is platform_capabilities.CapabilityRegistry
+    assert ToolCardRegistry is platform_capabilities.ToolCardRegistry
+    assert NativeBM25Retriever is platform_capabilities.NativeBM25Retriever
+    assert DynamicCapabilitySelector is platform_capabilities.DynamicCapabilitySelector
+    assert CapabilitySelectionTrace is platform_capabilities.CapabilitySelectionTrace
 
 
 def test_capability_package_facade_points_at_layer_modules() -> None:
@@ -212,9 +225,8 @@ for name in __MODULES__:
     importlib.import_module(name)
 
 prefixes = [
-    "zuno.database",
     "zuno.api.services",
-    "zuno.services.rag.vector_db",
+    "zuno.platform.services.rag.vector_db",
 ]
 print(json.dumps({
     prefix: sorted(name for name in sys.modules if name == prefix or name.startswith(prefix + "."))

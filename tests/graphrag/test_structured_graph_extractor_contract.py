@@ -6,7 +6,7 @@ PROJECTS_ROOT = Path(__file__).resolve().parents[2] / "examples" / "graphrag-pro
 
 
 def _contract_review_project_payload():
-    from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
+    from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 
     project = GraphRAGProjectLoader(projects_root=PROJECTS_ROOT).load("contract_review")
     assert project is not None
@@ -14,7 +14,7 @@ def _contract_review_project_payload():
 
 
 def test_structured_graph_extractor_accepts_project_payload_as_primary_contract():
-    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
     chunk = {
@@ -38,7 +38,7 @@ def test_structured_graph_extractor_accepts_project_payload_as_primary_contract(
 
 
 def test_cached_graph_extractor_accepts_project_payload_as_primary_contract():
-    from zuno.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
+    from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
 
     project_payload = _contract_review_project_payload()
     chunk = {
@@ -59,7 +59,7 @@ def test_cached_graph_extractor_accepts_project_payload_as_primary_contract():
 
 
 def test_structured_graph_extractor_builds_contract_entities_and_relations():
-    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
 
@@ -123,7 +123,7 @@ def test_structured_graph_extractor_builds_contract_entities_and_relations():
 
 
 def test_structured_graph_extractor_recovers_contract_title_from_file_name():
-    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
     chunk = {
@@ -157,7 +157,7 @@ def test_structured_graph_extractor_recovers_contract_title_from_file_name():
 
 
 def test_structured_graph_extractor_supports_inline_clause_body_format():
-    from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+    from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 
     project_payload = _contract_review_project_payload()
     chunk = {

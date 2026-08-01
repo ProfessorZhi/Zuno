@@ -6,12 +6,12 @@ from loguru import logger
 
 from zuno.api.services.knowledge import KnowledgeService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.knowledge import (
+from zuno.api.dto.knowledge import (
     KnowledgeConfig,
     KnowledgeCreateRequest,
     KnowledgeUpdateRequest,
 )
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["Knowledge"])
 

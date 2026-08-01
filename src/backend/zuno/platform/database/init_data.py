@@ -14,16 +14,16 @@ from zuno.api.services.agent import AgentService
 from zuno.api.services.llm import LLMService
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.tool import ToolService
-from zuno.database import AgentTable, SystemUser, ToolTable, engine, ensure_database
-from zuno.database.dao.agent import AgentDao
-from zuno.database.dao.dialog import DialogDao
-from zuno.database.dao.llm import LLMDao
-from zuno.database.models.user import AdminUser
-from zuno.services.mcp.manager import MCPManager
-from zuno.services.storage import storage_client
-from zuno.settings import app_settings
-from zuno.utils.convert import convert_mcp_config
-from zuno.utils.helpers import get_provider_from_model
+from zuno.platform.database import AgentTable, SystemUser, ToolTable, engine, ensure_database
+from zuno.platform.database.dao.agent import AgentDao
+from zuno.platform.database.dao.dialog import DialogDao
+from zuno.platform.database.dao.llm import LLMDao
+from zuno.platform.database.models.user import AdminUser
+from zuno.platform.services.mcp.manager import MCPManager
+from zuno.platform.services.storage import storage_client
+from zuno.platform.settings import app_settings
+from zuno.platform.common.convert import convert_mcp_config
+from zuno.platform.common.helpers import get_provider_from_model
 
 HIDDEN_SYSTEM_TOOL_NAMES = {"tavily_search", "bocha_search", "text_to_image"}
 HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手", "文生图助手"}

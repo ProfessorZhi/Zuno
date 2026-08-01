@@ -1,4 +1,4 @@
-from zuno.services.graphrag.graph_store.entity_resolver import EntityResolver
-from zuno.services.graphrag.graph_store.graph_writer import GraphWriter
+from zuno.platform.services.graphrag.graph_store.entity_resolver import EntityResolver
+from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 
 __all__ = ["EntityResolver", "GraphWriter"]

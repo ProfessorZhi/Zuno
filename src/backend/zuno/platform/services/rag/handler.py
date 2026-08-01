@@ -3,15 +3,15 @@ from typing import Optional
 
 from loguru import logger
 
-from zuno.services.graphrag.models import normalize_retrieval_mode
-from zuno.services.rag.rerank import Reranker
-from zuno.services.rewrite.query_write import query_rewriter
-from zuno.services.retrieval.orchestrator import (
+from zuno.platform.services.graphrag.models import normalize_retrieval_mode
+from zuno.platform.services.rag.rerank import Reranker
+from zuno.platform.services.rewrite.query_write import query_rewriter
+from zuno.platform.services.retrieval.orchestrator import (
     QueryExpanderAdapter,
     RetrievalOrchestrator,
 )
-from zuno.services.retrieval.planner import RetrievalPlanner
-from zuno.services.retrieval.retrievers import (
+from zuno.platform.services.retrieval.planner import RetrievalPlanner
+from zuno.platform.services.retrieval.retrievers import (
     BM25RetrieverAdapter,
     GraphRetrieverAdapter,
     QueryProcessor,
@@ -19,10 +19,10 @@ from zuno.services.retrieval.retrievers import (
 )
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.services.rag.es_client import client as es_client
-from zuno.services.rag.retrieval import MixRetrival
-from zuno.services.rag.vector_db import milvus_client
-from zuno.settings import app_settings
+from zuno.platform.services.rag.es_client import client as es_client
+from zuno.platform.services.rag.retrieval import MixRetrival
+from zuno.platform.services.rag.vector_db import milvus_client
+from zuno.platform.settings import app_settings
 
 
 class RagHandler:
@@ -551,7 +551,7 @@ class RagHandler:
             await es_client.delete_documents(file_id, knowledge_id)
         await milvus_client.delete_by_file_id(file_id, knowledge_id)
         await milvus_client.delete_image_by_file_id(file_id, knowledge_id)
-        from zuno.services.graphrag.client import Neo4jClient
+        from zuno.platform.services.graphrag.client import Neo4jClient
 
         if Neo4jClient.is_enabled():
             graph_client = Neo4jClient()

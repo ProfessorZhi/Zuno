@@ -133,7 +133,7 @@ def test_get_workspace_sessions_endpoint_passes_mode_filter(monkeypatch):
 
 def test_agent_draft_titles_are_treated_as_placeholders():
     from zuno.api.services.workspace_session import WorkSpaceSessionService
-    from zuno.database.dao.workspace_session import WorkSpaceSessionDao
+    from zuno.platform.database.dao.workspace_session import WorkSpaceSessionDao
 
     for title in ["Demo Agent的新对话", "Demo Agent 的新对话", "Agent Alpha 的新会话", "新对话"]:
         assert WorkSpaceSessionService.is_placeholder_title(title)

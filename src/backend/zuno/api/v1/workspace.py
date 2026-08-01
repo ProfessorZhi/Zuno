@@ -8,8 +8,8 @@ from zuno.api.services.user import UserPayload, get_login_user
 from zuno.api.services.workspace import WorkspaceService
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
-from zuno.schema.schemas import resp_200
-from zuno.schema.workspace import WorkSpaceSimpleTask
+from zuno.api.dto.schemas import resp_200
+from zuno.api.dto.workspace import WorkSpaceSimpleTask
 
 router = APIRouter(prefix="/workspace", tags=["WorkSpace"])
 
@@ -247,6 +247,9 @@ async def approve_workspace_task(
             task_id=task_id,
             decision=payload.decision,
             comment=payload.comment,
+            approval_id=payload.approval_id,
+            tool_call_id=payload.tool_call_id,
+            required_approval=payload.required_approval,
             principal_id=str(login_user.user_id or ""),
         )
     )

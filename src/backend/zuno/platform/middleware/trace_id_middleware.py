@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from zuno.utils.contexts import set_trace_id_context
+from zuno.platform.common.contexts import set_trace_id_context
 
 
 class TraceIDMiddleware(BaseHTTPMiddleware):

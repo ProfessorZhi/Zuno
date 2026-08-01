@@ -106,6 +106,13 @@ class FeatureFlagStateMachine:
         if flag not in self.flags:
             raise KeyError(f"unknown feature flag: {flag}")
         current = self.flags[flag]["default"]
+        if current == desired:
+            return FlagDecision(
+                flag=flag,
+                current=current,
+                desired=desired,
+                rollback_command=self.flags[flag]["rollback_command"],
+            )
         if desired not in ALLOWED_TRANSITIONS[current]:
             raise ValueError(f"illegal transition for {flag}: {current} -> {desired}")
         return FlagDecision(
@@ -215,9 +222,14 @@ def verify_phase02_runtime_controls() -> list[str]:
 
     try:
         allowlist.assert_allowed("src/backend/zuno/platform/compatibility/legacy_aliases.py")
-        allowlist.assert_allowed("src/backend/zuno/platform/compatibility/legacy/__init__.py")
     except PermissionError as exc:
         errors.append(str(exc))
+    retired_legacy_package = "src/backend/zuno/platform/compatibility/legacy/__init__.py"
+    if retired_legacy_package in allowlist.allowlist_paths or retired_legacy_package in allowlist.legacy_paths:
+        errors.append("retired platform compatibility legacy package must not remain allowlisted")
+    retired_legacy_guard_suite = "tests/legacy_guards/**"
+    if retired_legacy_guard_suite in allowlist.allowlist_paths or retired_legacy_guard_suite in allowlist.legacy_paths:
+        errors.append("retired legacy guard suite must not remain allowlisted")
 
     if len(cutover.dry_run_hashes()) < 6:
         errors.append("data cutover dry run must cover at least six owners")

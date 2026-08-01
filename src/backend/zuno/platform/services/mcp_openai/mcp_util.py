@@ -5,9 +5,9 @@ from typing import Any
 
 from mcp.types import Tool as MCPTool
 
-from zuno.services.mcp_openai.mcp_client import MCPClient
-from zuno.services.mcp_openai.schema import FunctionTool
-from zuno.services.mcp_openai.strict_schema import ensure_strict_json_schema
+from zuno.platform.services.mcp_openai.mcp_client import MCPClient
+from zuno.platform.services.mcp_openai.schema import FunctionTool
+from zuno.platform.services.mcp_openai.strict_schema import ensure_strict_json_schema
 
 
 class MCPUtil:

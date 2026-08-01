@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT / "services" / "api" / "src"))
 
 
 def test_pipeline_stage_flow():
-    from zuno.services.pipeline.models import PIPELINE_STAGES
+    from zuno.platform.services.pipeline.models import PIPELINE_STAGES
 
     assert PIPELINE_STAGES[0] == "uploaded"
     assert PIPELINE_STAGES[-1] == "completed"
@@ -17,8 +17,8 @@ def test_pipeline_stage_flow():
 
 
 def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
-    from zuno.services.pipeline.models import (
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.models import (
         KnowledgeTaskStage,
         KnowledgeTaskStatus,
     )
@@ -96,35 +96,35 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
         return {}
 
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
         fake_select_task_by_id,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.update_task",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.update_task",
         fake_update_task,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task_event",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.create_task_event",
         fake_create_task_event,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(
-        "zuno.services.pipeline.manager.parse_file_into_legacy_chunks",
+        "zuno.platform.services.pipeline.manager.parse_file_into_legacy_chunks",
         fake_parse_file_into_legacy_chunks,
     )
     monkeypatch.setattr(
-        "zuno.services.rag.handler.RagHandler.index_milvus_documents",
+        "zuno.platform.services.rag.handler.RagHandler.index_milvus_documents",
         fake_index_milvus_documents,
     )
     monkeypatch.setattr(
-        "zuno.services.rag.handler.RagHandler.delete_documents_by_file",
+        "zuno.platform.services.rag.handler.RagHandler.delete_documents_by_file",
         fake_delete_documents_by_file,
     )
     monkeypatch.setattr(
-        "zuno.services.rag.handler.RagHandler.index_es_documents",
+        "zuno.platform.services.rag.handler.RagHandler.index_es_documents",
         fake_index_es_documents,
     )
     monkeypatch.setattr(
@@ -154,7 +154,7 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch):
 
 
 def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
 
     project_payload = {"id": "contract_review"}
     captured = {}
@@ -234,15 +234,15 @@ def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
     monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
     monkeypatch.setattr(KnowledgePipelineManager, "_parse_chunks", staticmethod(fake_parse_chunks))
     monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
-    monkeypatch.setattr("zuno.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
-    monkeypatch.setattr("zuno.services.pipeline.manager.Neo4jClient", FakeNeo4jClient)
-    monkeypatch.setattr("zuno.services.pipeline.manager.CachedGraphExtractor", FakeExtractor)
-    monkeypatch.setattr("zuno.services.pipeline.manager.GraphWriter", FakeGraphWriter)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.Neo4jClient", FakeNeo4jClient)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.CachedGraphExtractor", FakeExtractor)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.GraphWriter", FakeGraphWriter)
 
     manager = KnowledgePipelineManager(enable_graph_indexing=True, enable_elasticsearch=False)
     asyncio.run(manager.run_graph_stage("task_1"))
@@ -283,15 +283,15 @@ def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
         return "sync"
 
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.select_task_by_id",
         fake_select_task_by_id,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch)
@@ -360,15 +360,15 @@ def test_bulk_reindex_knowledge_files_creates_tasks_for_all_files(monkeypatch):
         fake_verify_user_permission,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_file.KnowledgeFileDao.select_knowledge_file",
+        "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.select_knowledge_file",
         fake_select_knowledge_file,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
+        "zuno.platform.database.dao.knowledge_task.KnowledgeTaskDao.create_task",
         fake_create_task,
     )
     monkeypatch.setattr(
-        "zuno.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
+        "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
     )
     monkeypatch.setattr(KnowledgeFileService, "_dispatch_task", fake_dispatch)
@@ -430,7 +430,7 @@ def test_bulk_reindex_knowledge_files_creates_tasks_for_all_files(monkeypatch):
 
 
 def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path):
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
 
     download_calls = []
 
@@ -439,7 +439,7 @@ def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path
 
     fake_client = SimpleNamespace(download_file=fake_download_file)
     monkeypatch.setattr(
-        "zuno.services.pipeline.manager.storage_client._get_client",
+        "zuno.platform.services.pipeline.manager.storage_client._get_client",
         lambda: fake_client,
     )
 
@@ -461,7 +461,7 @@ def test_pipeline_resolve_file_path_uses_public_url_helper(monkeypatch, tmp_path
 
 
 def test_pipeline_resolve_file_path_uses_local_fixture_for_reindex():
-    from zuno.services.pipeline.manager import KnowledgePipelineManager
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
 
     task = SimpleNamespace(
         knowledge_file_id="file_1",
@@ -479,8 +479,8 @@ def test_pipeline_resolve_file_path_uses_local_fixture_for_reindex():
 
 
 def test_graph_extractor_accepts_chunk_model():
-    from zuno.schema.chunk import ChunkModel
-    from zuno.services.graphrag.extractor import GraphExtractor
+    from zuno.api.dto.chunk import ChunkModel
+    from zuno.platform.services.graphrag.extractor import GraphExtractor
 
     chunk = ChunkModel(
         chunk_id="chunk_1",

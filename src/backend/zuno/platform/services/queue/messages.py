@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from zuno.services.pipeline.models import KnowledgeTaskStage
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage
 
 
 class KnowledgeTaskMessage(TypedDict):

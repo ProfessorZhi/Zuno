@@ -2,7 +2,7 @@ from typing import List
 
 from sqlmodel import delete, select
 
-from zuno.database.models.agent_skill import AgentSkill
+from zuno.platform.database.models.agent_skill import AgentSkill
 from zuno.platform.database.session import async_session_getter
 
 

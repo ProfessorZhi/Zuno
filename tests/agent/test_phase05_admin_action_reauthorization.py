@@ -22,7 +22,7 @@ class RecordingProductActionGuard:
 def test_agent_admin_override_reauthorizes_through_shared_security_guard(monkeypatch) -> None:
     from zuno.api.services.agent import AgentService
     from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     async def fake_owner(agent_id: str):
         assert agent_id == "agent-1"
@@ -44,7 +44,7 @@ def test_agent_admin_override_reauthorizes_through_shared_security_guard(monkeyp
 def test_llm_admin_override_denial_blocks_before_permission_success(monkeypatch) -> None:
     from zuno.api.services.llm import LLMService
     from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     async def fake_owner(llm_id: str):
         assert llm_id == "llm-1"
@@ -86,7 +86,7 @@ def test_tool_owner_update_does_not_require_admin_override_security_guard(monkey
 def test_mcp_agent_admin_delete_denial_blocks_dao_delete(monkeypatch) -> None:
     from zuno.api.services.mcp_agent import MCPAgentService
     from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     deleted = []
 
@@ -111,7 +111,7 @@ def test_mcp_agent_admin_delete_denial_blocks_dao_delete(monkeypatch) -> None:
 def test_knowledge_file_admin_status_reauthorizes_through_shared_security_guard(monkeypatch) -> None:
     from zuno.api.services.knowledge_file import KnowledgeFileService
     from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
-    from zuno.database.models.user import AdminUser
+    from zuno.platform.database.models.user import AdminUser
 
     async def fake_file(file_id: str):
         assert file_id == "kf-1"

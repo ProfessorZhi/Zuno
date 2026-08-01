@@ -9,16 +9,17 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.api.services.product import ProductService
+from zuno.api.dto.completion import CompletionReq
+from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent
 from zuno.agent.runtime import CutoverMode
-from zuno.platform.contracts import canonical_sha256
-from zuno.resources.prompts.completion import SYSTEM_PROMPT
-from zuno.schema.completion import CompletionReq
 from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
-from zuno.utils.helpers import (
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.common.helpers import (
     build_completion_history_messages,
     build_completion_system_prompt,
     build_completion_user_input,
 )
+from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT
 
 
 class CompletionService:
@@ -115,8 +116,6 @@ class CompletionService:
             return configured_mode
         if configured_mode:
             raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
-        if os.getenv("ZUNO_AGENT_RUNTIME") == "legacy_general_agent":
-            return "rollback"
         return "new_default"
 
     @staticmethod
@@ -215,8 +214,6 @@ class CompletionService:
 
     @staticmethod
     async def create_chat_agent(req: CompletionReq, login_user_id: str):
-        from zuno.core.agents.general_agent import AgentConfig, GeneralAgent
-
         db_config = await DialogService.get_agent_by_dialog_id(dialog_id=req.dialog_id)
         agent_config = AgentConfig(**db_config)
         agent_config.user_id = login_user_id
@@ -232,7 +229,7 @@ class CompletionService:
     @staticmethod
     async def build_history_text(*, agent_config, original_user_input: str, dialog_id: str) -> str:
         if agent_config.enable_memory:
-            from zuno.services.memory.client import memory_client
+            from zuno.platform.services.memory.client import memory_client
 
             history = await memory_client.search(query=original_user_input, run_id=dialog_id)
             return "\n".join(msg.get("memory", "") for msg in history.get("results", []))
@@ -269,7 +266,7 @@ class CompletionService:
         if not agent_config.enable_memory:
             return
 
-        from zuno.services.memory.client import memory_client
+        from zuno.platform.services.memory.client import memory_client
 
         await memory_client.add(
             messages=[

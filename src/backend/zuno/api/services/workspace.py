@@ -16,26 +16,26 @@ from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.tool import ToolService
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_session import WorkSpaceSessionService
-from zuno.database.models.workspace_session import WorkSpaceSessionCreate
-from zuno.resources.prompts.completion import SYSTEM_PROMPT
-from zuno.schema.schemas import resp_200
-from zuno.schema.usage_stats import UsageStatsAgentType
-from zuno.schema.workspace import WorkSpaceSimpleTask
-from zuno.services.execution_policy import (
+from zuno.api.dto.schemas import resp_200
+from zuno.api.dto.usage_stats import UsageStatsAgentType
+from zuno.api.dto.workspace import WorkSpaceSimpleTask
+from zuno.capability.tools.text2image.action import _text_to_image
+from zuno.platform.common.contexts import set_agent_name_context, set_user_id_context
+from zuno.platform.common.helpers import parse_imported_config
+from zuno.platform.common.model_output import normalize_model_id_for_provider
+from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate
+from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT
+from zuno.platform.services.execution_policy import (
     filter_tools_for_mode,
     get_execution_config_payload,
     normalize_access_scope,
     normalize_execution_mode,
     validate_tools_for_mode,
 )
-from zuno.services.workspace.attachment_service import (
+from zuno.platform.services.workspace.attachment_service import (
     build_workspace_attachment_prompt,
     classify_attachment,
 )
-from zuno.tools.text2image.action import _text_to_image
-from zuno.utils.contexts import set_agent_name_context, set_user_id_context
-from zuno.utils.helpers import parse_imported_config
-from zuno.utils.model_output import normalize_model_id_for_provider
 
 
 class WorkspaceService:
@@ -115,7 +115,7 @@ class WorkspaceService:
 
     @staticmethod
     async def build_mcp_configs(simple_task: WorkSpaceSimpleTask):
-        from zuno.services.workspace.simple_agent import MCPConfig
+        from zuno.platform.services.workspace.simple_agent import MCPConfig
 
         servers_config = []
         missing_mcp_ids = []
@@ -155,7 +155,7 @@ class WorkspaceService:
         usage_agent_name: str,
         servers_config,
     ):
-        from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+        from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
         return WorkSpaceSimpleAgent(
             model_config={

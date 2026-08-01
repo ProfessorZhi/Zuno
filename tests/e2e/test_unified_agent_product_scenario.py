@@ -3,7 +3,7 @@ from __future__ import annotations
 from zuno.agent.runtime import SQLiteAgentRunStore
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
-from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract
+from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract
 
 
 def test_unified_agent_product_scenario_exposes_artifact_trace_and_runtime_recovery(tmp_path) -> None:

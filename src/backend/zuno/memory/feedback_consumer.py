@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pydantic import ValidationError
 
-from zuno.database.models.memory_runtime import MemoryRawEventTable
+from zuno.platform.database.models.memory_runtime import MemoryRawEventTable
 from zuno.platform.contracts import ProductCommandV1, build_wave1_contract_registry
 from zuno.platform.database.foundation import InfrastructureConflictError
 from zuno.platform.database.session import domain_uow

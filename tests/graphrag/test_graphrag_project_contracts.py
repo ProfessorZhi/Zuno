@@ -2,7 +2,7 @@ from pydantic import ValidationError
 
 
 def test_graphrag_project_contract_has_explicit_defaults():
-    from zuno.services.graphrag.models import GraphRAGProjectContract
+    from zuno.platform.services.graphrag.models import GraphRAGProjectContract
 
     contract = GraphRAGProjectContract(graphrag_project_id="contract_review")
     payload = contract.model_dump()
@@ -22,7 +22,7 @@ def test_graphrag_project_contract_has_explicit_defaults():
 
 
 def test_graphrag_project_contract_validates_target_enums():
-    from zuno.services.graphrag.models import GraphRAGProjectContract
+    from zuno.platform.services.graphrag.models import GraphRAGProjectContract
 
     contract = GraphRAGProjectContract(
         graphrag_project_id="legal",
@@ -50,7 +50,7 @@ def test_graphrag_project_contract_validates_target_enums():
 
 def test_knowledge_config_embeds_graphrag_project_contract_and_normalizes_identity():
     from zuno.api.services.knowledge import KnowledgeService
-    from zuno.schema.knowledge import KnowledgeConfig
+    from zuno.api.dto.knowledge import KnowledgeConfig
 
     config = KnowledgeConfig.model_validate(
         {
@@ -84,7 +84,7 @@ def test_knowledge_config_embeds_graphrag_project_contract_and_normalizes_identi
 
 
 def test_retrieval_contracts_can_carry_graphrag_project_metadata():
-    from zuno.services.retrieval.models import RetrievalPlan, RetrievalRequest
+    from zuno.platform.services.retrieval.models import RetrievalPlan, RetrievalRequest
 
     project = {
         "graphrag_project_id": "legal",
@@ -123,7 +123,7 @@ def test_retrieval_contracts_can_carry_graphrag_project_metadata():
 
 
 def test_graphrag_extractor_config_is_llm_first_with_rule_fallback():
-    from zuno.services.graphrag.models import GraphRAGExtractorConfig
+    from zuno.platform.services.graphrag.models import GraphRAGExtractorConfig
 
     config = GraphRAGExtractorConfig.from_knowledge_config(
         graph_index_settings={

@@ -1,0 +1,5 @@
+phase_id: PHASE15
+status: completed
+coordinator_approval: approved
+evidence_ref: docs/evidence/goal05-phase15-sandbox-repair.md
+closure_note: "Real Deno/Pyodide/WASM, real OCI process sandbox, and Postgres integration evidence are available; PHASE15 closure is complete and PHASE20 may now proceed."

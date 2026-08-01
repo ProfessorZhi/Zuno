@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from zuno.services.graphrag.models import GraphRAGExtractorConfig
-from zuno.services.graphrag.project.loader import GraphRAGProjectLoader
-from zuno.services.graphrag.prompts.registry import GraphRAGPromptRegistry
-from zuno.services.graphrag.query_service import (
+from zuno.platform.services.graphrag.models import GraphRAGExtractorConfig
+from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
+from zuno.platform.services.graphrag.prompts.registry import GraphRAGPromptRegistry
+from zuno.platform.services.graphrag.query_service import (
     GraphRAGProjectSnapshot,
     GraphRAGQueryService,
     KnowledgeQueryResult,

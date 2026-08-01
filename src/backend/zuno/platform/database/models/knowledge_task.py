@@ -5,8 +5,8 @@ from uuid import uuid4
 from sqlalchemy import JSON, Column, DateTime, text
 from sqlmodel import Field
 
-from zuno.database.models.base import SQLModelSerializable
-from zuno.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
+from zuno.platform.database.models.base import SQLModelSerializable
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage, KnowledgeTaskStatus
 
 
 def get_task_id() -> str:

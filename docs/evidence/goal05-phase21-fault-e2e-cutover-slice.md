@@ -1,0 +1,192 @@
+# Goal05 PHASE21 Fault / Recovery Slice Evidence
+
+status: completed
+date: 2026-07-29
+branch: codex/goal05-phase15-sandbox-repair
+
+## Scope
+
+本证据只记录 PHASE21 的一个真实修复切片：Capability exposure 的攻击面约束，以及 Agent recovery 的 crash matrix。它不声明 PHASE21 完成，不声明 full E2E / cutover / rollback / load / soak / removal candidate closure。
+
+已完成：
+
+- 新增 `src/backend/zuno/capability/conformance.py`。
+- `CapabilityRouter` 在默认 `planner_exposure` 生成后，执行 fail-closed conformance 校验。
+- exposure 仅允许已授权 capability 摘要进入 planner trace。
+- `required_roles`、`credential_policy`、`dependency_probe` 等敏感字段不得泄漏到 planner exposure。
+- task goal 中出现 prompt injection 标记时，只记录攻击痕迹，不改变授权边界。
+- 新增 `Phase21CrashRecoveryMatrix`，复用现有 `ParallelRecoveryPlanner` 评估 crash / replay / late result 场景。
+- crash matrix 覆盖 domain commit before checkpoint、dispatch commit before send、result before reducer、publisher restart、consumer restart、late branch result。
+- late result 会被 fenced，不会直接覆盖当前 execution epoch。
+- 新增 fault tests 覆盖 capability attack conformance 与 crash recovery matrix。
+- Workspace approve API 现在将 `approval_id`、`tool_call_id` 和 `required_approval` 传入默认 service。
+- 工具审批恢复时必须匹配当前 pending tool request；旧 `approval_id` 或错误 tool call 会产生 `approval_replay_rejected` 事件并保持 `approval_waiting`。
+- 修复 ToolRuntime 在 FastAPI async endpoint 内调用 side-effect gateway 时的 event loop 嵌套问题；已有 event loop 时通过短生命周期线程执行网关协程。
+- 修复知识检索产品模式优先级：显式 `contract_review` / `enterprise_kb` 不再被默认 `standard` retrieval profile 降级为 `normal/basic`。
+- 修复产品仓库的 `ProductCommandSubmission.payload_json` 兼容别名，并将 `product_agent_versions` / `product_agent_drafts` 的 JSON 入库参数规范化为可复现 JSON 文本，恢复统一产品场景的默认记录链。
+- 修复 Web 前端 package scripts 的安装布局假设：`apps/web` 现在通过 `scripts/run-bin.mjs` 同时支持容器内 app-local `node_modules` 和本地 workspace root `node_modules`，恢复 Docker frontend production build。
+
+## Verification
+
+```text
+docker version --format '{{.Server.Version}}'
+docker info --format '{{.SecurityOptions}}'
+pytest -q tests/fault/capability/test_phase21_capability_attack_conformance.py tests/fault/agent/test_phase21_crash_recovery_matrix.py -p no:cacheprovider
+pytest -q tests/capability/test_capability_skill_layer.py tests/agent/dag/test_phase17_dispatch_commit.py tests/agent/dag/test_phase17_parallel_recovery.py tests/agent/dag/test_phase17_readyset_admission.py -p no:cacheprovider
+pytest -q tests/agent/runtime/test_runtime_restart_persistence.py tests/agent/runtime/test_runtime_interrupt_resume.py tests/agent/runtime/test_runtime_real_execution.py -p no:cacheprovider
+pytest -q tests/fault/security/test_phase05_security_pre_effect_faults.py tests/fault/security/test_phase05_security_sink_fail_closed.py tests/security/test_phase05_security_eval_gate.py -p no:cacheprovider
+pytest -q tests/api/test_workspace_task_runtime.py -k "tool_approval or security_approval_facts or approval_replay or approval_resume" -p no:cacheprovider
+pytest -q tests/e2e/test_unified_agent_product_scenario.py tests/fault/capability/test_phase21_capability_attack_conformance.py tests/fault/agent/test_phase21_crash_recovery_matrix.py tests/knowledge/test_ingestion_delete_restore.py tests/api/test_goal03_product_route.py tests/api/test_completion_unified_runtime.py tests/api/test_workspace_task_runtime.py tests/repo/test_goal03_wave_a_migration_contract.py -k "tool_approval or security_approval_facts or approval_replay or answers_from_ingested_index_with_citations or canaries_phase08_cutover_from_product_entry or workspace_task_runtime_links_task_events_artifact_and_feedback or unified_agent_product_scenario_exposes_artifact_trace_and_runtime_recovery or goal03_product_runtime_request_route_rejects_rollback_before_service or goal03_product_service_rejects_rollback_before_database_write or completion_cutover_mode_resolution_supports_explicit_modes or completion_route_uses_legacy_runtime_in_rollback_window or test_phase21_capability_attack_route_ignores_prompt_injection_and_hides_denied_capability or test_phase21_capability_conformance_blocks_cross_workspace_exposure or test_phase21_crash_matrix_reconciles_domain_checkpoint_and_resends_committed_outbox or test_phase21_crash_matrix_reduces_persisted_result_and_rejects_late_epoch or test_ingestion_delete_restore or test_legal_hold_blocks_physical_delete_but_restore_does_not_restore_authorization or test_goal04_product_command_submission_exposes_payload_json_alias" -p no:cacheprovider
+pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
+docker compose -f infra/docker/docker-compose.yml build frontend
+pytest -q tests/api/test_workspace_task_runtime.py tests/api/test_workspace_runtime_recovery.py tests/api/test_knowledge_api_contract.py tests/agent/test_agentic_retrieval_runtime.py tests/agent/test_knowledge_graphrag_runtime_contracts.py tests/retrieval/test_retrieval_planner.py -p no:cacheprovider
+```
+
+## Result
+
+```text
+29.4.0
+[name=seccomp,profile=builtin name=cgroupns]
+5 passed
+20 passed
+7 passed
+6 passed
+23 passed
+22 passed
+docker compose build frontend: built docker-frontend:latest
+58 passed
+```
+
+## Backend Docker Build Repair
+
+后端默认 Docker 构建链路已补齐这些真实修复：
+
+- `PYTHON_BASE_IMAGE` 可配置，默认走 `mirror.gcr.io/library/python:3.12-bookworm`。
+- `DEBIAN_MIRROR` 与 `DEBIAN_SECURITY_MIRROR` 分离，默认主仓走 `mirrors.aliyun.com`，security 仓走 `mirrors.ustc.edu.cn`。
+- `PIP_INDEX_URL` 默认走 `http://mirrors.aliyun.com/pypi/simple/`，并显式传入 `PIP_TRUSTED_HOST`。
+- `PIP_DEFAULT_TIMEOUT=120` 与 `PIP_RETRIES=10` 进入默认构建链，避免大 wheel 在默认 timeout 下频繁失败。
+- `chromium` 与 `chromium-driver` 改为 Debian 包，`/usr/bin/google-chrome` 通过 symlink 兼容，移除 Google Storage ZIP 下载依赖。
+- `apt-get install` 也显式启用 `Acquire::Retries=10`。
+
+对应静态测试继续通过：
+
+```text
+pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
+23 passed
+```
+
+构建过程真实结果：
+
+```text
+docker compose --progress=plain -f infra/docker/docker-compose.yml build backend
+```
+
+后续在清理 BuildKit 缓存并重启 Docker Desktop / WSL 后，`docker compose --progress=plain -f infra/docker/docker-compose.yml build backend` 已成功完成，生成 `docker-backend:latest`：
+
+```text
+Image docker-backend Built
+```
+
+容器内检查也通过：
+
+```text
+docker run --rm docker-backend python -c "import shutil; print('chrome', shutil.which('google-chrome'), shutil.which('chromium')); print('chromedriver', shutil.which('chromedriver'))"
+chrome /usr/bin/google-chrome /usr/bin/chromium
+chromedriver /usr/bin/chromedriver
+
+docker run --rm docker-backend python -c "import zuno.main; print('backend_import_ok')"
+backend_import_ok
+```
+
+未完成的完整 Web stack / browser smoke：
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/scripts/run-full-e2e-smoke.ps1
+cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
+```
+
+第一次 `run-full-e2e-smoke.ps1` 阻塞在 `http://127.0.0.1:7860/health`，因为后端未启动。修复前端 Docker build 后再次启动 Web stack，已越过 frontend build 阻断，但 backend/worker build 阻塞在 Docker Hub `python:3.12-bookworm` metadata 请求 `EOF` / TLS handshake timeout。该结果不作为 full E2E 通过证据。
+
+## Boundary
+
+本切片只证明 Capability / Agent / Workspace approval / Knowledge retrieval 四条默认路径的攻击面约束、crash 恢复语义、旧授权重放拒绝、产品模式优先级和 Docker frontend build 继续可执行。PHASE21 其余完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 仍待完成。
+
+当前不再阻塞在后端镜像构建本身。后续仍缺完整 Web stack / browser smoke、Desktop、Load/Soak、Canary/Cutover 与 PHASE22 cleanup 的真实证据。
+
+## 2026-07-29 Docker Desktop 与 Registry 状态
+
+本轮先完成了安全清理：
+
+- `docker builder prune -a -f`
+- `docker image prune -a -f`
+- `diskpart compact vdisk` 压缩 `F:\DockerData\DockerDesktopWSL\disk\docker_data.vhdx`
+
+随后通过重建 `docker-desktop` 运行发行版恢复了 Docker Desktop Linux engine。当前 `docker info` 可用，`docker-backend` 与 `docker-frontend` 镜像也已成功重建，并且镜像内自检通过：
+
+```text
+chrome /usr/bin/google-chrome /usr/bin/chromium
+chromedriver /usr/bin/chromedriver
+backend_import_ok
+```
+
+同时修复了 compose 默认路径中的一个真实 gap：
+
+- `rag.enable_elasticsearch: false` 时，Elasticsearch 不再作为默认启动依赖
+- `elasticsearch` 改为可选 `profile`
+- `backend` / `worker` 不再默认等待 Elasticsearch 健康检查
+- Windows Web launcher 在 `docker compose up` 前串行预拉默认基础设施镜像，每个镜像重试 3 次，并尊重 `POSTGRES_IMAGE`、`REDIS_IMAGE`、`RABBITMQ_IMAGE`、`NEO4J_IMAGE`、`MINIO_IMAGE`、`ETCD_IMAGE` 与 `MILVUS_IMAGE` 覆盖，避免一次并发拉取失败中断整条启动链。
+- 当某个基础设施镜像仍无法拉取时，launcher 会打印失败镜像对应的覆盖变量和设置示例，便于在当前网络下切换到可达 registry 后复跑同一默认启动路径。
+
+静态验证通过：
+
+```text
+pytest -q tests/tools/test_launcher_scripts.py -p no:cacheprovider
+44 passed
+```
+
+但完整 Web stack 仍被外部 registry 阻塞。当前失败点已经从 Docker Desktop engine 转移为基础设施镜像拉取失败：
+
+```text
+cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start
+```
+
+最新失败已经进一步定位到 `postgres` 基础镜像拉取。`postgres:16` 与 `postgres:16-alpine` 多次重试后仍在 Docker Hub token / manifest / blob 路径超时或 EOF：
+
+```text
+failed to fetch anonymous token: Get "https://auth.docker.io/token?...": EOF
+failed to do request: Head "https://registry-1.docker.io/v2/library/postgres/manifests/16-alpine": EOF
+failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://registry-1.docker.io/v2/library/postgres/manifests/sha256:57c72...": net/http: TLS handshake timeout
+```
+
+这说明 full Web stack / browser smoke 现在仍未完成，但原因是 registry 可达性，不是 Docker engine 假死。
+
+后续已完成本地恢复与验证：
+
+- `docker pull postgres:16` 成功。
+- `docker compose -f infra/docker/docker-compose.yml down --remove-orphans; cmd /c tools\launchers\windows\_Zuno-Web-Common.cmd start` 成功启动默认 Web stack。
+- `docker ps` 显示 `zuno-backend`、`zuno-worker`、`zuno-frontend` 与所有基础设施容器均为 healthy / running。
+- `python -m alembic -c infra/db/alembic.ini upgrade head` 已将本地数据库迁移到 `20260729_56`，并补齐了当前数据库缺失的 `product_agent_drafts.draft_payload_json` 与 `product_agent_versions.configuration_json`。
+- `python full_e2e.py` 以本机 Chrome 和自助登录态运行，输出 `full-e2e smoke passed`。
+
+当前 full Web stack / browser smoke 已通过，PHASE21 的 blocker 已由 registry 可达性和本地 schema 漂移修复为可验证完成状态。
+
+## PHASE21 Closure
+
+status: completed
+date: 2026-07-30
+branch: codex/goal05-phase15-sandbox-repair
+
+Verification:
+
+```text
+python -m alembic -c infra/db/alembic.ini upgrade head
+python full_e2e.py
+```
+
+Result:
+
+```text
+full-e2e smoke passed
+```
+
+PHASE21 已完成 full Web / browser E2E、registry recovery、schema drift repair、runtime agent version bootstrap 和 default stack launch evidence。PHASE22 继续负责 fixed benchmark、cleanup、production readiness truth 和 program closure。

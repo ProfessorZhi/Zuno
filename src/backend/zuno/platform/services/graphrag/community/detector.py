@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 
-from zuno.services.graphrag.community.models import GraphCommunity
+from zuno.platform.services.graphrag.community.models import GraphCommunity
 
 
 class CommunityDetector:

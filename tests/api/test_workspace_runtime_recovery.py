@@ -10,7 +10,7 @@ from zuno.api.services.product import (
 )
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
-from zuno.schema.workspace import WorkSpaceSimpleTask
+from zuno.api.dto.workspace import WorkSpaceSimpleTask
 
 
 def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:

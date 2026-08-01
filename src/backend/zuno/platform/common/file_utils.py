@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import aiofiles
 
-from zuno.utils.date_utils import get_beijing_date_str
+from zuno.platform.common.date_utils import get_beijing_date_str
 
 
 def format_file_size(size_bytes):

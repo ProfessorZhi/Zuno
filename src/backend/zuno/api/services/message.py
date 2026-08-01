@@ -1,6 +1,6 @@
 from loguru import logger
 
-from zuno.database.dao.message import MessageDownDao, MessageLikeDao
+from zuno.platform.database.dao.message import MessageDownDao, MessageLikeDao
 
 
 class MessageLikeService:

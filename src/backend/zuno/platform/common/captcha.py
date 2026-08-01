@@ -1,5 +1,5 @@
-from zuno.services.redis import redis_client
-from zuno.utils.runtime_observability import RedisKeys
+from zuno.platform.common.runtime_observability import RedisKeys
+from zuno.platform.services.redis import redis_client
 
 
 async def verify_captcha(captcha: str, captcha_key: str):

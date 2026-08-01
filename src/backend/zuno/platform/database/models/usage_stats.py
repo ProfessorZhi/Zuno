@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlmodel import Field
 from sqlalchemy import Column, DateTime, text
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 class UsageStatsBase(SQLModelSerializable):
     agent: Optional[str] = Field(description="使用统计的智能体")

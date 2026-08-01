@@ -1,10 +1,10 @@
 from loguru import logger
 
 from zuno.api.services.agent import AgentService
-from zuno.database.dao.dialog import DialogDao
-from zuno.database.dao.history import HistoryDao
-from zuno.database.models.user import AdminUser
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
+from zuno.platform.database.dao.dialog import DialogDao
+from zuno.platform.database.dao.history import HistoryDao
+from zuno.platform.database.models.user import AdminUser
 
 
 class DialogService:

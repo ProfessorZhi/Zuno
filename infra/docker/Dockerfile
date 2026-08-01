@@ -1,17 +1,23 @@
-FROM python:3.12-bookworm AS backend-base
+ARG PYTHON_BASE_IMAGE=python:3.12-bookworm
+FROM ${PYTHON_BASE_IMAGE} AS backend-base
 
 ARG DEBIAN_MIRROR=deb.debian.org
+ARG DEBIAN_SECURITY_MIRROR=deb.debian.org
 ARG PIP_INDEX_URL=https://pypi.org/simple
-ARG CHROME_VERSION=138.0.7204.183
+ARG PIP_TRUSTED_HOST=
+ARG PIP_DEFAULT_TIMEOUT=120
+ARG PIP_RETRIES=10
 
 ENV PYTHONPATH=/app/src/backend:/app
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN (sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
-    sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list) && \
-    apt-get update -o Acquire::Retries=5 && apt-get install -y --no-install-recommends \
+RUN ((sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources && \
+      sed -i "s|${DEBIAN_MIRROR}/debian-security|${DEBIAN_SECURITY_MIRROR}/debian-security|g" /etc/apt/sources.list.d/debian.sources) 2>/dev/null || \
+     (sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list && \
+      sed -i "s|${DEBIAN_MIRROR}/debian-security|${DEBIAN_SECURITY_MIRROR}/debian-security|g" /etc/apt/sources.list)) && \
+    apt-get update -o Acquire::Retries=5 && apt-get install -o Acquire::Retries=10 -y --no-install-recommends \
       ca-certificates \
       curl \
       fonts-liberation \
@@ -36,26 +42,21 @@ RUN (sed -i "s|deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian
       libxss1 \
       libxtst6 \
       libreoffice \
+      chromium \
+      chromium-driver \
       pandoc \
       texlive-xetex \
       unzip \
       wget && \
     rm -rf /var/lib/apt/lists/*
-
-RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip" && \
-    unzip -q chrome-linux64.zip && \
-    mv chrome-linux64 /opt/chrome && \
-    ln -s /opt/chrome/chrome /usr/bin/google-chrome && \
-    rm chrome-linux64.zip
-
-RUN wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip" && \
-    unzip -q chromedriver-linux64.zip && \
-    mv chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
-    chmod +x /usr/bin/chromedriver && \
-    rm -rf chromedriver-linux64*
+RUN ln -sf /usr/bin/chromium /usr/bin/google-chrome
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}"
+RUN if [ -n "${PIP_TRUSTED_HOST}" ]; then \
+      pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}" --trusted-host "${PIP_TRUSTED_HOST}" --timeout "${PIP_DEFAULT_TIMEOUT}" --retries "${PIP_RETRIES}"; \
+    else \
+      pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}" --timeout "${PIP_DEFAULT_TIMEOUT}" --retries "${PIP_RETRIES}"; \
+    fi
 
 COPY src/backend/ /app/src/backend/
 COPY infra/docker/docker_config.example.yaml /app/zuno/config.yaml

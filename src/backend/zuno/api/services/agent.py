@@ -1,9 +1,9 @@
-from zuno.database import AgentTable
-from zuno.database.dao.agent import AgentDao
-from zuno.database.dao.dialog import DialogDao
-from zuno.database.models.user import AdminUser, SystemUser
-from zuno.schema.agent import AgentCreateReq
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
+from zuno.api.dto.agent import AgentCreateReq
+from zuno.platform.database import AgentTable
+from zuno.platform.database.dao.agent import AgentDao
+from zuno.platform.database.dao.dialog import DialogDao
+from zuno.platform.database.models.user import AdminUser, SystemUser
 
 HIDDEN_SYSTEM_AGENT_NAMES = {"联网搜索助手", "博查搜索助手"}
 ADMIN_AGENT_ACTIONS = {

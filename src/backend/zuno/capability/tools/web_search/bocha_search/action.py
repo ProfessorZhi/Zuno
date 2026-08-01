@@ -2,7 +2,7 @@ from langchain.tools import tool
 import requests
 from typing import Optional, Literal
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 # 定义 freshness 的合法值（提升类型安全性）
 FreshnessType = Literal[

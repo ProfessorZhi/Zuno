@@ -2,10 +2,10 @@ from types import SimpleNamespace
 
 
 def test_build_retrieval_event_payload_includes_round_trace(monkeypatch):
-    from zuno.services.workspace.simple_agent import WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
-        "zuno.services.workspace.simple_agent.ModelManager.get_user_model",
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 

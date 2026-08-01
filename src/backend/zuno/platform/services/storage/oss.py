@@ -3,7 +3,7 @@ import mimetypes
 import oss2
 from loguru import logger
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class OSSClient:

@@ -1,8 +1,8 @@
 import re
 
-from zuno.database.dao.workspace_session import WorkSpaceSession, WorkSpaceSessionDao
-from zuno.database.models.workspace_session import WorkSpaceSessionCreate
-from zuno.utils.model_output import strip_model_wrapper_from_user_input, strip_think_tags
+from zuno.platform.common.model_output import strip_model_wrapper_from_user_input, strip_think_tags
+from zuno.platform.database.dao.workspace_session import WorkSpaceSession, WorkSpaceSessionDao
+from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate
 
 
 WRAPPED_HISTORY_HINTS = ("<chat_history>", "web_search", "read_webpage", "tool_code", "对话历史")

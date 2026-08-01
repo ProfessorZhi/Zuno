@@ -1,5 +1,5 @@
 from zuno.api.services.tool import ToolService
-from zuno.database import ToolTable
+from zuno.platform.database import ToolTable
 
 
 def test_serialize_tool_sets_runtime_type_for_cli_user_defined_tool():
@@ -22,4 +22,3 @@ def test_serialize_tool_sets_runtime_type_for_cli_user_defined_tool():
     payload = ToolService._serialize_tool(tool)
 
     assert payload["runtime_type"] == "cli"
-

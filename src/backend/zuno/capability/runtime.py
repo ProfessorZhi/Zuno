@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, replace
 import hashlib
 import json
 import re
+from threading import Thread
 from typing import Any, Protocol
 from uuid import uuid4
 
@@ -683,7 +684,7 @@ class ToolControlPlaneRuntime:
         async def executor() -> Any:
             return self._executors[adapter.adapter_id](gateway_args, execution_context)
 
-        result, receipt = asyncio.run(
+        result, receipt = _run_gateway_coroutine(
             gateway.invoke_readonly(
                 tool_name=manifest.tool_id,
                 args=gateway_args,
@@ -1227,6 +1228,28 @@ def _normalize_executor(executor: LegacyToolExecutor | ToolExecutor) -> LegacyTo
             return executor(context)  # type: ignore[misc]
 
     return invoke
+
+
+def _run_gateway_coroutine(coro: Any) -> Any:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+
+    outcome: dict[str, Any] = {}
+
+    def runner() -> None:
+        try:
+            outcome["result"] = asyncio.run(coro)
+        except BaseException as exc:  # pragma: no cover - re-raised on caller thread
+            outcome["error"] = exc
+
+    thread = Thread(target=runner, name="tool-invocation-gateway", daemon=False)
+    thread.start()
+    thread.join()
+    if "error" in outcome:
+        raise outcome["error"]
+    return outcome["result"]
 
 
 def _is_credential_ref(value: str) -> bool:

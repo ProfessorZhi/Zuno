@@ -46,7 +46,7 @@ def test_agent_runtime_facade_no_longer_part_of_current_runtime_truth() -> None:
 
 def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests() -> None:
     phase0_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase0_runtime_recovery.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase0_runtime_recovery.py"
     ).read_text(
         encoding="utf-8"
     )
@@ -57,7 +57,7 @@ def test_phase0_runtime_truth_avoids_service_api_runtime_paths_in_active_tests()
 
 def test_phase0_recovery_tests_use_project_query_runtime_truth() -> None:
     phase0_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase0_runtime_recovery.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase0_runtime_recovery.py"
     ).read_text(
         encoding="utf-8"
     )
@@ -82,7 +82,7 @@ def test_phase0_recovery_verifier_uses_project_query_runtime_truth() -> None:
 
 def test_phase5_import_tests_use_project_query_runtime_truth() -> None:
     phase5_import_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase5_langgraph_runtime_imports.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase5_langgraph_runtime_imports.py"
     ).read_text(encoding="utf-8")
 
     assert "KnowledgeQueryService" in phase5_import_test
@@ -103,8 +103,26 @@ def test_legacy_graph_runtime_retirement_guards_live_in_legacy_guard_tests() -> 
     assert not (REPO_ROOT / "tests/compat").exists()
 
     root_guard_tests = [
-        "tests/legacy_guards/test_phase11c_agent_runtime_retirement.py",
-        "tests/legacy_guards/test_phase11c_graph_public_export_retirement.py",
+        "tests/repo/test_phase0_runtime_recovery.py",
+        "tests/repo/test_phase2_graphrag_mainline_deepening.py",
+        "tests/repo/test_phase3_community_graphrag_v1.py",
+        "tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py",
+        "tests/repo/test_phase4_global_drift_v1.py",
+        "tests/repo/test_phase2_retrieval_strategy_program.py",
+        "tests/repo/test_phase11a_knowledge_query_service.py",
+        "tests/repo/test_phase11b_single_generalagent_cutover.py",
+        "tests/repo/test_phase11c_agent_runtime_retirement.py",
+        "tests/repo/test_phase11c_graph_public_export_retirement.py",
+        "tests/repo/test_phase11c_workspace_project_query_cutover.py",
+        "tests/repo/test_project_query_compatibility_boundaries.py",
+        "tests/repo/test_hardening01_community_runtime_contract.py",
+        "tests/repo/test_phase02_contract_review_asset_migration.py",
+        "tests/repo/test_phase6_agent_graphrag_pluginization.py",
+        "tests/repo/test_phase5_graphrag_index_filters.py",
+        "tests/repo/test_phase5_langgraph_runtime_imports.py",
+        "tests/repo/test_phase5_general_agent_real_runtime_flow.py",
+        "tests/repo/test_phase5_workspace_real_runtime_flow.py",
+        "tests/repo/test_phase5_retrieval_modes.py",
     ]
     for relative_path in root_guard_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
@@ -121,17 +139,34 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert not (REPO_ROOT / "tests/compat").exists()
 
     root_tests = [
+        "tests/repo/test_phase11c_domain_pack_api_retirement.py",
         "tests/graphrag/test_contract_review_project_payload.py",
     ]
     for relative_path in root_tests:
         assert (REPO_ROOT / relative_path).exists(), relative_path
 
-    assert (REPO_ROOT / "tests/legacy_guards/test_phase11c_agent_runtime_retirement.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11c_agent_runtime_retirement.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase2_retrieval_strategy_program.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase3_community_graphrag_v1.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase4_global_drift_v1.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11a_knowledge_query_service.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11b_single_generalagent_cutover.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase11c_workspace_project_query_cutover.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_project_query_compatibility_boundaries.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_hardening01_community_runtime_contract.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase02_contract_review_asset_migration.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase6_agent_graphrag_pluginization.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_graphrag_index_filters.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_langgraph_runtime_imports.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_general_agent_real_runtime_flow.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_workspace_real_runtime_flow.py").exists()
+    assert (REPO_ROOT / "tests/repo/test_phase5_retrieval_modes.py").exists()
 
 
 def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:
     phase5_paths_test = (
-        REPO_ROOT / "tests" / "legacy_guards" / "test_phase5_domain_runtime_paths.py"
+        REPO_ROOT / "tests" / "repo" / "test_phase5_domain_runtime_paths.py"
     ).read_text(encoding="utf-8")
 
     assert "KnowledgeQueryService" in phase5_paths_test

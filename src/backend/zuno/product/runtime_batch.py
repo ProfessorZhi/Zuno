@@ -6,7 +6,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Iterable, Literal
 
-from zuno.schema.workspace import (
+from zuno.api.dto.workspace import (
     WORKSPACE_TASK_STATUS_TO_LIFECYCLE,
     ArtifactContract,
     WorkSpaceSimpleTask,

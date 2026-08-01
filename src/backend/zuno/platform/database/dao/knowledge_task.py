@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from sqlmodel import select, update
 
-from zuno.database.models.knowledge_task import KnowledgeTaskEventTable, KnowledgeTaskTable
+from zuno.platform.database.models.knowledge_task import KnowledgeTaskEventTable, KnowledgeTaskTable
 from zuno.platform.database.session import session_getter
 
 

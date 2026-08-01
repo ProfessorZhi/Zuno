@@ -466,7 +466,7 @@ def test_run_eval_agentic_profile_fuses_standard_floor_with_deep_contexts(monkey
 
 
 def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
-    from zuno.core.models import manager as model_manager
+    from zuno.agent.core.models import manager as model_manager
     from zuno.evals.rag_eval import run_eval as run_eval_module
 
     async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
@@ -1149,8 +1149,8 @@ def test_judge_answer_heuristic_supports_multiline_extracts():
 
 
 def test_graph_retriever_resolves_graph_hits_back_to_source_chunks():
-    from zuno.schema.search import SearchModel
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.api.dto.search import SearchModel
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1210,7 +1210,7 @@ def test_graph_retriever_resolves_graph_hits_back_to_source_chunks():
 
 
 def test_graph_extractor_connects_anchor_to_structure_lists():
-    from zuno.services.graphrag.extractor import GraphExtractor
+    from zuno.platform.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_milvus",
@@ -1234,7 +1234,7 @@ def test_graph_extractor_connects_anchor_to_structure_lists():
 
 
 def test_graph_extractor_filters_noise_and_keeps_rabbitmq_list_labels():
-    from zuno.services.graphrag.extractor import GraphExtractor
+    from zuno.platform.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_rabbitmq",
@@ -1261,7 +1261,7 @@ def test_graph_extractor_filters_noise_and_keeps_rabbitmq_list_labels():
 
 
 def test_graph_extractor_captures_agent_server_deployment_and_persistence_lists():
-    from zuno.services.graphrag.extractor import GraphExtractor
+    from zuno.platform.services.graphrag.extractor import GraphExtractor
 
     chunk = {
         "chunk_id": "chunk_agent_server",
@@ -1291,7 +1291,7 @@ def test_graph_extractor_captures_agent_server_deployment_and_persistence_lists(
 
 
 def test_graph_retriever_uses_query_seed_entities_from_query_text():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1320,7 +1320,7 @@ def test_graph_retriever_uses_query_seed_entities_from_query_text():
 
 
 def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1348,7 +1348,7 @@ def test_graph_retriever_skips_graph_for_non_relational_single_entity_query():
 
 
 def test_graph_retriever_keeps_graph_for_relational_structure_query_and_filters_generic_targets():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1379,7 +1379,7 @@ def test_graph_retriever_keeps_graph_for_relational_structure_query_and_filters_
 
 
 def test_graph_retriever_filters_scale_template_targets_for_agent_server_queries():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1407,7 +1407,7 @@ def test_graph_retriever_filters_scale_template_targets_for_agent_server_queries
 
 
 def test_graph_retriever_adds_alias_seed_for_chinese_persistence_query():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1443,7 +1443,7 @@ def test_graph_retriever_adds_alias_seed_for_chinese_persistence_query():
 
 
 def test_graph_retriever_does_not_enable_graph_only_because_query_has_many_ascii_terms():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1470,7 +1470,7 @@ def test_graph_retriever_does_not_enable_graph_only_because_query_has_many_ascii
 
 
 def test_graph_retriever_skips_graph_for_non_relational_type_listing_query():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seen_entities = []
 
@@ -1497,7 +1497,7 @@ def test_graph_retriever_skips_graph_for_non_relational_type_listing_query():
 
 
 def test_graph_retriever_downranks_agent_server_scale_chunks_for_non_scaling_queries():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1535,7 +1535,7 @@ def test_graph_retriever_downranks_agent_server_scale_chunks_for_non_scaling_que
 
 
 def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_about_tests():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1573,7 +1573,7 @@ def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_a
 
 
 def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
-    from zuno.services.rag.doc_parser.text import TextParser
+    from zuno.platform.services.rag.doc_parser.text import TextParser
 
     path = tmp_path / "demo.txt"
     path.write_text("ProjectAtlas release approvals are handled by Bob.\nBob reports to Carol.", encoding="utf-8")
@@ -1587,8 +1587,8 @@ def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
 
 
 def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypatch):
-    from zuno.schema.search import SearchModel
-    from zuno.services.rag.handler import RagHandler
+    from zuno.api.dto.search import SearchModel
+    from zuno.platform.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1637,7 +1637,7 @@ def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypat
 
     monkeypatch.setattr(RagHandler, "_resolve_runtime_settings", classmethod(lambda cls, ids: fake_runtime_settings()))
     monkeypatch.setattr(RagHandler, "mix_retrival_documents", classmethod(lambda cls, *args, **kwargs: fake_mix_retrieval()))
-    monkeypatch.setattr("zuno.services.rag.handler.Reranker.rerank_documents", fake_rerank_documents)
+    monkeypatch.setattr("zuno.platform.services.rag.handler.Reranker.rerank_documents", fake_rerank_documents)
 
     result = asyncio.run(
         RagHandler._retrieve_ranked_documents_rag_detail(
@@ -1654,8 +1654,8 @@ def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypat
 
 
 def test_rag_detail_without_external_rerank_uses_local_priority_for_agent_server_query(monkeypatch):
-    from zuno.schema.search import SearchModel
-    from zuno.services.rag.handler import RagHandler
+    from zuno.api.dto.search import SearchModel
+    from zuno.platform.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1712,8 +1712,8 @@ def test_rag_detail_without_external_rerank_uses_local_priority_for_agent_server
 
 
 def test_rag_detail_local_priority_bridges_chinese_persistence_query_to_english_section(monkeypatch):
-    from zuno.schema.search import SearchModel
-    from zuno.services.rag.handler import RagHandler
+    from zuno.api.dto.search import SearchModel
+    from zuno.platform.services.rag.handler import RagHandler
 
     async def fake_mix_retrieval(*args, **kwargs):
         return [
@@ -1783,7 +1783,7 @@ def test_rag_detail_local_priority_bridges_chinese_persistence_query_to_english_
 
 
 def test_graph_retriever_prefers_task_queue_section_for_redis_postgres_question():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=1, limit=10, domain_pack_id=None):
@@ -1825,7 +1825,7 @@ def test_graph_retriever_prefers_task_queue_section_for_redis_postgres_question(
 
 
 def test_reranker_falls_back_when_request_errors(monkeypatch):
-    from zuno.services.rag.rerank import Reranker
+    from zuno.platform.services.rag.rerank import Reranker
 
     monkeypatch.setattr(Reranker, "_is_configured", classmethod(lambda cls, config_override=None: True))
 
@@ -1849,7 +1849,7 @@ def test_reranker_falls_back_when_request_errors(monkeypatch):
 
 
 def test_orchestrator_skips_rag_entry_chunk_for_already_graph_worthy_query():
-    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.graphrag.orchestrator import RetrievalOrchestrator
 
     captured = {}
 
@@ -1896,7 +1896,7 @@ def test_orchestrator_skips_rag_entry_chunk_for_already_graph_worthy_query():
 
 
 def test_orchestrator_keeps_rag_entry_chunk_for_weak_graph_query():
-    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.graphrag.orchestrator import RetrievalOrchestrator
 
     captured = {}
 
@@ -1943,7 +1943,7 @@ def test_orchestrator_keeps_rag_entry_chunk_for_weak_graph_query():
 
 
 def test_graph_retriever_extracts_additional_multiline_seeds_from_entry_chunk():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     seeds = GraphRetriever._extract_query_seeds(
         "Python 閲屽彉閲忋€佸懡鍚嶇┖闂村拰瀵硅薄缁戝畾涔嬮棿鏄粈涔堝叧绯伙紵\n"
@@ -1956,7 +1956,7 @@ def test_graph_retriever_extracts_additional_multiline_seeds_from_entry_chunk():
 
 
 def test_graph_retriever_needs_entry_chunk_for_generic_relation_seed():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     assert GraphRetriever._needs_entry_chunk(
         "Python 閲屽彉閲忋€佸懡鍚嶇┖闂村拰瀵硅薄缁戝畾涔嬮棿鏄粈涔堝叧绯伙紵",
@@ -1965,7 +1965,7 @@ def test_graph_retriever_needs_entry_chunk_for_generic_relation_seed():
 
 
 def test_graph_retriever_augments_focus_file_with_sibling_chunks():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     class FakeClient:
         async def query_neighbors(self, entity_name, knowledge_id, hops=2, limit=10, domain_pack_id=None):
@@ -2023,7 +2023,7 @@ def test_graph_retriever_augments_focus_file_with_sibling_chunks():
 
 
 def test_graph_retriever_score_demotes_metadata_heavy_graph_chunk():
-    from zuno.services.graphrag.retriever import GraphRetriever
+    from zuno.platform.services.graphrag.retriever import GraphRetriever
 
     query = "Python 里变量、命名空间和对象绑定之间是什么关系？"
     query_terms = GraphRetriever._expanded_query_terms(query, ["Python", "命名空间", "对象绑定"])
@@ -2052,7 +2052,7 @@ def test_graph_retriever_score_demotes_metadata_heavy_graph_chunk():
 
 
 def test_orchestrator_hybrid_content_preserves_merged_retriever_order():
-    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
         async def retrieve(self, query, knowledge_ids, options=None):
@@ -2118,7 +2118,7 @@ def test_orchestrator_hybrid_content_preserves_merged_retriever_order():
 
 
 def test_orchestrator_hybrid_content_keeps_vector_result_before_graph_result():
-    from zuno.services.graphrag.orchestrator import RetrievalOrchestrator
+    from zuno.platform.services.graphrag.orchestrator import RetrievalOrchestrator
 
     class FakeRagRetriever:
         async def retrieve(self, query, knowledge_ids, options=None):

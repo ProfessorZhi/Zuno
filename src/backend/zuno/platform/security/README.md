@@ -20,7 +20,7 @@ PHASE09 / PHASE10 Planning runtime 只消费这里输出的 verdict、planning a
 ## 禁止事项
 
 - 禁止在 PHASE07 迁移真实 sandbox runtime、凭据读取、approval UI 或工具执行逻辑。
-- 禁止破坏 `zuno.services.sandbox.*`、`zuno.services.execution_policy` 和现有 capability policy import path。
+- 禁止破坏 `zuno.services.sandbox.*`、`zuno.services.execution_policy` 和现有 capability policy 迁移兼容 path。
 - 禁止把完整安全沙箱写成已经完成的 Current runtime。
 
 ## Focused tests

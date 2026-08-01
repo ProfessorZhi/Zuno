@@ -1,3 +1,3 @@
-from zuno.services.embedding.providers import EmbeddingProvider, FakeEmbeddingProvider
+from zuno.platform.services.embedding.providers import EmbeddingProvider, FakeEmbeddingProvider
 
 __all__ = ["EmbeddingProvider", "FakeEmbeddingProvider"]

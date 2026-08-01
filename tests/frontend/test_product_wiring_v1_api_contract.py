@@ -128,7 +128,7 @@ def test_product_wiring_knowledge_config_endpoints_delegate_to_service(monkeypat
 
 def test_product_wiring_knowledge_create_returns_created_knowledge_with_config(monkeypatch):
     from zuno.api.v1 import knowledge
-    from zuno.schema.knowledge import KnowledgeConfig, KnowledgeCreateRequest
+    from zuno.api.dto.knowledge import KnowledgeConfig, KnowledgeCreateRequest
 
     captured = {}
 

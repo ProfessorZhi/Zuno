@@ -2,8 +2,8 @@ from typing import List
 
 from sqlmodel import delete, select
 
-from zuno.database.models.role import AdminRole
-from zuno.database.models.user_role import UserRole, UserRoleBase
+from zuno.platform.database.models.role import AdminRole
+from zuno.platform.database.models.user_role import UserRole, UserRoleBase
 from zuno.platform.database.session import session_getter
 
 

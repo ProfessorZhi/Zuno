@@ -16,6 +16,8 @@ audit_scope: 11 modules mandatory target coverage
 
 本轮已完成一项真实 repair：`ToolInvocationGateway` 默认路径新增 sandbox profile resolution、session isolation、limits/allowlist hash、`tool_sandbox_receipts` 持久化和 dispatch 前 fail-closed gate。该修复只证明 sandbox contract 已进入默认 gateway，不证明 Deno/Pyodide 或 OCI container 已真实执行。
 
+后续 Repair PR 继续补充 `docs/evidence/goal05-phase15-sandbox-repair.md`：`SandboxAdapterRegistry.execute()` 已接入 Deno/Pyodide runner contract 与 OCI Docker runner contract，gateway 会在 provider executor 前执行 sandbox，并在环境缺失时 fail-closed。由于 Deno 和 Docker daemon 仍不可用，该 repair 仍不关闭 PHASE15。
+
 ## Frozen Gap Ledger
 
 冻结文件：

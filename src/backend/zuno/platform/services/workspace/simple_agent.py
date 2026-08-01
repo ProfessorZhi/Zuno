@@ -32,60 +32,61 @@ from zuno.api.services.tool import ToolService
 from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.api.services.capability import CapabilityService
-from zuno.core.callbacks import usage_metadata_callback
-from zuno.core.models.manager import ModelManager
-from zuno.services.graphrag.query_service import KnowledgeQueryResult
-from zuno.services.application.knowledge import KnowledgeQueryService
-from zuno.database import AgentSkill
-from zuno.schema.tool import (
+from zuno.agent.core.callbacks import usage_metadata_callback
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
+from zuno.platform.services.application.knowledge import KnowledgeQueryService
+from zuno.platform.database import AgentSkill
+from zuno.api.dto.tool import (
     CLIToolPreviewReq,
     RemoteApiAssistReq,
     SimpleApiConfig,
     SimpleApiParamConfig,
 )
-from zuno.database.models.workspace_session import (
+from zuno.platform.database.models.workspace_session import (
     WorkSpaceSessionContext,
     WorkSpaceSessionCreate,
 )
-from zuno.resources.prompts.completion import GenerateTitlePrompt
-from zuno.schema.usage_stats import UsageStatsAgentType
-from zuno.schema.workspace import WorkSpaceAgents, WorkspaceAgentStreamEvent
-from zuno.services.execution_policy import (
+from zuno.platform.resources.prompts.completion import GenerateTitlePrompt
+from zuno.api.dto.usage_stats import UsageStatsAgentType
+from zuno.api.dto.workspace import WorkSpaceAgents, WorkspaceAgentStreamEvent
+from zuno.platform.services.execution_policy import (
     normalize_access_scope,
     normalize_execution_mode,
 )
-from zuno.services.mcp.manager import MCPManager
-from zuno.services.cli_tool_discovery import CliToolDiscoveryService
-from zuno.services.rag.handler import RagHandler
-from zuno.services.simple_api_tool import (
+from zuno.platform.services.mcp.manager import MCPManager
+from zuno.platform.services.cli_tool_discovery import CliToolDiscoveryService
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.platform.services.simple_api_tool import (
     build_openapi_schema_from_simple_config,
     build_remote_api_assist_draft,
 )
-from zuno.services.structured_tool_result_formatter import format_structured_tool_result
-from zuno.services.tool_creation_service import ToolCreationService
-from zuno.services.user_defined_tool_runtime import (
+from zuno.platform.services.structured_tool_result_formatter import format_structured_tool_result
+from zuno.platform.services.tool_creation_service import ToolCreationService
+from zuno.platform.services.user_defined_tool_runtime import (
     build_user_defined_langchain_tools,
     get_user_defined_runtime_type,
 )
-from zuno.services.workspace.desktop_bridge_runtime import (
+from zuno.platform.services.workspace.desktop_bridge_runtime import (
     DesktopBridgeConfig,
     build_terminal_langchain_tools,
 )
-from zuno.tools import WorkSpacePlugins
-from zuno.tools.text2image.action import _text_to_image
-from zuno.utils.convert import convert_mcp_config
-from zuno.utils.model_output import (
+from zuno.capability.tools import WorkSpacePlugins
+from zuno.capability.tools.text2image.action import _text_to_image
+from zuno.platform.common.convert import convert_mcp_config
+from zuno.platform.common.model_output import (
     extract_visible_text_from_stream,
     is_minimax_model,
     normalize_messages_for_model,
     strip_model_wrapper_from_user_input,
 )
-from zuno.utils.runtime_observability import (
+from zuno.platform.common.runtime_observability import (
     build_langchain_run_config,
     build_langsmith_metadata,
     get_active_trace_id,
 )
-from zuno.settings import app_settings
+from zuno.platform.observability import get_observability_adapter
+from zuno.platform.settings import app_settings
 
 tool = lc_tool
 
@@ -176,6 +177,7 @@ class WorkSpaceSimpleAgent:
             else None
         )
 
+        self.trace_adapter = get_observability_adapter(getattr(app_settings, "langsmith", {}))
         self.server_dict: dict[str, Any] = {}
         self.route_hint = self._detect_route_hint(self.original_query)
         self.knowledge_query_service = KnowledgeQueryService()

@@ -2,8 +2,8 @@ import os.path
 import re
 from datetime import datetime, timedelta, timezone
 
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
 
 
 class MarkdownParser:

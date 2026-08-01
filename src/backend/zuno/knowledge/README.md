@@ -23,7 +23,7 @@
 ## 禁止事项
 
 - 禁止直接迁移 GraphRAG、retrieval、RAG、vector DB 或 query method 行为。
-- 禁止破坏 `zuno.services.graphrag.*`、`zuno.services.retrieval.*`、`zuno.services.rag.*` 和 application knowledge 旧 import path。
+- 禁止破坏 `zuno.services.graphrag.*`、`zuno.services.retrieval.*`、`zuno.services.rag.*` 和 application knowledge 迁移兼容 import path。
 - 禁止把本地 deterministic RRF/rerank trace 写成生产 reranker 服务；禁止把本地 deterministic graph extraction / community report trace 写成生产级 LLM GraphRAG extraction、真实 community report pipeline 或外部图索引服务。
 
 ## Focused tests
@@ -35,5 +35,5 @@
 - `tests/graphrag/**`
 - `tests/retrieval/**`
 - `tests/agent/test_general_agent_project_query_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/repo/test_static_target_layer_imports.py`

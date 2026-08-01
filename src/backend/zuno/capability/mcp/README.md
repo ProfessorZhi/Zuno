@@ -16,5 +16,5 @@ MCP server、remote proxy 和 MCP tool provider 属于 Capability 层的工具�
 
 ## Focused tests
 
-- `tests/legacy_guards/test_zuno_alias_imports.py`
-- `tests/legacy_guards/test_zuno_config_resource_aliases.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`

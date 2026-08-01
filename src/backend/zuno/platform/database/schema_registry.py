@@ -35,6 +35,7 @@ DOMAIN_TABLE_OWNERS = {
     "role": "Security",
     "tool": "Tool Execution",
     "tool_sandbox_receipts": "Tool Runtime",
+    "tool_sandbox_sessions": "Tool Runtime",
     "usage_stats": "Observability / Eval",
     "user": "Security",
     "user_role": "Security",

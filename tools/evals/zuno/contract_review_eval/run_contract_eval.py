@@ -12,10 +12,10 @@ BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from zuno.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
-from zuno.services.graphrag.project.loader import GraphRAGProjectLoader, LoadedGraphRAGProject
-from zuno.services.graphrag.retriever import GraphRetriever
-from zuno.utils.runtime_observability import configure_langsmith
+from zuno.platform.common.runtime_observability import configure_langsmith
+from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
+from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader, LoadedGraphRAGProject
+from zuno.platform.services.graphrag.retriever import GraphRetriever
 
 
 BASE_DIR = Path(__file__).resolve().parent

@@ -2,10 +2,10 @@ from typing import List
 
 from loguru import logger
 
-from zuno.database.dao.mcp_agent import MCPAgentDao
-from zuno.database.models.user import AdminUser, SystemUser
-from zuno.schema.schemas import resp_200, resp_500
+from zuno.api.dto.schemas import resp_200, resp_500
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
+from zuno.platform.database.dao.mcp_agent import MCPAgentDao
+from zuno.platform.database.models.user import AdminUser, SystemUser
 
 
 class MCPAgentService:

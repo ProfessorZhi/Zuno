@@ -1,6 +1,6 @@
 import asyncio
 
-from zuno.services.rewrite.query_write import QueryRewrite
+from zuno.platform.services.rewrite.query_write import QueryRewrite
 
 
 class _FakeResponse:

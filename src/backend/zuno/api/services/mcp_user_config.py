@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from zuno.database.dao.mcp_user_config import MCPUserConfigDao
+from zuno.platform.database.dao.mcp_user_config import MCPUserConfigDao
 
 
 class MCPUserConfigService:

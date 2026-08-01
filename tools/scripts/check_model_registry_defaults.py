@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import sys
@@ -88,7 +88,7 @@ def summarize_registry(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def load_rows_from_database() -> list[dict[str, Any]]:
-    from zuno.database.dao.llm import LLMDao
+    from zuno.platform.database.dao.llm import LLMDao
 
     import asyncio
 

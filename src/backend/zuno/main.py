@@ -6,13 +6,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
-from zuno.compatibility.vendor.fastapi_jwt_auth.exceptions import AuthJWTException
+from zuno.platform.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.vendor.fastapi_jwt_auth.exceptions import AuthJWTException
 
 from zuno.platform.middleware.trace_id_middleware import TraceIDMiddleware
 from zuno.platform.middleware.white_list_middleware import WhitelistMiddleware
-from zuno.settings import app_settings, initialize_app_settings
-from zuno.utils.runtime_observability import configure_langsmith
+from zuno.platform.settings import app_settings, initialize_app_settings
+from zuno.platform.common.runtime_observability import configure_langsmith
 
 warnings.filterwarnings("ignore")
 logging.getLogger("chromadb").setLevel(logging.WARNING)
@@ -45,7 +45,7 @@ async def init_config():
     await initialize_app_settings()
     configure_langsmith()
 
-    from zuno.database.init_data import (
+    from zuno.platform.database.init_data import (
         init_database,
         init_default_agent,
         update_system_mcp_server,

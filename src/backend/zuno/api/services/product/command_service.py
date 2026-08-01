@@ -248,7 +248,7 @@ class ProductService:
             journal_sequence_no=1,
             outbox_message_id=f"outbox:{client_request_id}",
         )
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             if bootstrap_runtime_agent:
@@ -335,7 +335,7 @@ class ProductService:
         raw_intent_ref: str,
         payload: dict[str, Any],
     ) -> ProductActionConsumeResult:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             consumed = repo.consume_action_token_as_command(
@@ -367,7 +367,7 @@ class ProductService:
         primary_agent_core_profile_ref: str,
         configuration: dict[str, Any],
     ) -> tuple[ProductAgentDefinitionResult, ProductAgentDraftResult]:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         agent_definition_id = f"agent-definition:{client_request_id}"
         draft_id = f"agent-draft:{client_request_id}"
@@ -425,7 +425,7 @@ class ProductService:
         primary_agent_core_profile_ref: str,
         configuration: dict[str, Any],
     ) -> tuple[ProductAgentPublicationResult, ProductAgentCatalogEntryResult]:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         publication_id = f"agent-publication:{client_request_id}"
         catalog_entry_id = f"agent-catalog:{tenant_id}:{workspace_id}:{agent_definition_id}"
@@ -487,7 +487,7 @@ class ProductService:
         agent_version_id: str,
         installation_scope: str,
     ) -> ProductAgentInstallationResult:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         installation_id = f"agent-installation:{client_request_id}"
         with ProductUnitOfWork(engine) as repo:
@@ -516,7 +516,7 @@ class ProductService:
         principal_id: str,
         installation_id: str,
     ) -> ProductAgentInstallationResult:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             revoked = repo.revoke_agent_installation(
@@ -540,7 +540,7 @@ class ProductService:
         workspace_id: str,
         publication_id: str,
     ) -> ProductAgentPublicationResult:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             revoked = repo.revoke_agent_publication(
@@ -563,7 +563,7 @@ class ProductService:
         principal_id: str,
     ) -> tuple[ProductAgentCatalogEntryResult, ...]:
         _ = principal_id
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             entries = repo.list_catalog_entries(tenant_id=tenant_id, workspace_id=workspace_id)
@@ -592,7 +592,7 @@ class ProductService:
         agent_definition_id: str,
     ) -> ProductAgentEditorSnapshotResult:
         _ = principal_id
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             definition = repo.get_agent_definition(
@@ -692,7 +692,7 @@ class ProductService:
         engine: Any | None = None,
     ) -> ProductRuntimeDispatchConsumeResult:
         if engine is None:
-            from zuno.database import engine as default_engine
+            from zuno.platform.database import engine as default_engine
 
             engine = default_engine
 
@@ -844,7 +844,7 @@ class ProductService:
         engine: Any | None = None,
     ) -> ProductProjectionRebuildConsumeResult:
         if engine is None:
-            from zuno.database import engine as default_engine
+            from zuno.platform.database import engine as default_engine
 
             engine = default_engine
 
@@ -912,7 +912,7 @@ class ProductService:
         principal_id: str,
         last_event_id: str | None = None,
     ) -> tuple[ProductStreamEventResult, ...]:
-        from zuno.database import engine
+        from zuno.platform.database import engine
 
         with ProductUnitOfWork(engine) as repo:
             events = repo.list_projection_events(

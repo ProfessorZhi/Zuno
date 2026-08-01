@@ -1,0 +1,29 @@
+{
+  "chunk_size": 1800,
+  "overlap": 240,
+  "citation_chunking": {
+    "strategy": "citation_sized_with_parent_context",
+    "citation_chunk_char_limit": 240,
+    "parent_context_char_limit": 1200,
+    "boundary_priority": [
+      "section",
+      "paragraph",
+      "sentence",
+      "table_cell",
+      "code_block",
+      "character"
+    ]
+  },
+  "metrics": [
+    "retrieval_recall_at_k",
+    "context_precision_at_k",
+    "mrr_at_k",
+    "ndcg_at_k",
+    "answer_correctness",
+    "citation_accuracy",
+    "source_doc_citation_accuracy",
+    "evidence_text_available_at_k",
+    "source_span_accuracy",
+    "unsupported_claim_rate"
+  ]
+}

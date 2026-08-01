@@ -5,7 +5,7 @@ import redis
 from loguru import logger
 from redis import ConnectionPool, RedisCluster
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class RedisClient:

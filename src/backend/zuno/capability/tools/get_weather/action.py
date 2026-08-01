@@ -2,8 +2,8 @@ import requests
 from langchain.tools import tool
 from loguru import logger
 
-from zuno.resources.prompts.tool import MESSAGE_PROMPT, WEATHER_PROMPT
-from zuno.settings import app_settings
+from zuno.platform.resources.prompts.tool import MESSAGE_PROMPT, WEATHER_PROMPT
+from zuno.platform.settings import app_settings
 
 
 @tool(parse_docstring=True)

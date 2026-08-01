@@ -1,0 +1,202 @@
+{
+  "standard_rag": [
+    {
+      "case_id": "case_pub_001",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for Were Scott Derrickson and Ed W",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_002",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for What government position was h",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_033",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for Who is the individual associat",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 6
+    },
+    {
+      "case_id": "case_pub_034",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for Which individual is implicated",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 4
+    },
+    {
+      "case_id": "case_pub_057",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for \"The following problem illustr",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_058",
+      "profile_name": "standard_rag",
+      "status": "success",
+      "answer": "Standard RAG synthesis for Why does every C program need ",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    }
+  ],
+  "graphrag_local": [
+    {
+      "case_id": "case_pub_001",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for Were Scott Derrickson and Ed W",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_002",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for What government position was h",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_033",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for Who is the individual associat",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 6
+    },
+    {
+      "case_id": "case_pub_034",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for Which individual is implicated",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 4
+    },
+    {
+      "case_id": "case_pub_057",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for \"The following problem illustr",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_058",
+      "profile_name": "graphrag_local",
+      "status": "success",
+      "answer": "Local GraphRAG neighborhood synthesis for Why does every C program need ",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    }
+  ],
+  "graphrag_global": [
+    {
+      "case_id": "case_pub_001",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for Were Scott Derrickson and Ed W",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 1
+    },
+    {
+      "case_id": "case_pub_002",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for What government position was h",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 1
+    },
+    {
+      "case_id": "case_pub_033",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for Who is the individual associat",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 3
+    },
+    {
+      "case_id": "case_pub_034",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for Which individual is implicated",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 2
+    },
+    {
+      "case_id": "case_pub_057",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for \"The following problem illustr",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 1
+    },
+    {
+      "case_id": "case_pub_058",
+      "profile_name": "graphrag_global",
+      "status": "success",
+      "answer": "Deep GraphRAG multi-hop synthesis for Why does every C program need ",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 1
+    }
+  ],
+  "agentic_graphrag": [
+    {
+      "case_id": "case_pub_001",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for Were Scott Derrickson and Ed W",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 3
+    },
+    {
+      "case_id": "case_pub_002",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for What government position was h",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 3
+    },
+    {
+      "case_id": "case_pub_033",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for Who is the individual associat",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 9
+    },
+    {
+      "case_id": "case_pub_034",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for Which individual is implicated",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 6
+    },
+    {
+      "case_id": "case_pub_057",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for \"The following problem illustr",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 3
+    },
+    {
+      "case_id": "case_pub_058",
+      "profile_name": "agentic_graphrag",
+      "status": "success",
+      "answer": "Agentic GraphRAG autonomous plan-reflect synthesis for Why does every C program need ",
+      "standard_floor_preserved": true,
+      "retrieved_doc_count": 3
+    }
+  ]
+}

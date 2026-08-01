@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
 from zuno.capability.tool_runtime.invocation_gateway import ToolEffectUnknownError, ToolInvocationGateway
+from zuno.capability.tool_runtime.sandbox import SandboxAdapterRegistry, SandboxDispatch, SandboxExecutionResult, SandboxRunner
 
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork, redact_sensitive_payload
@@ -25,6 +26,20 @@ from zuno.platform.database.tool_runtime import (
     ToolUnitOfWork,
     ToolVersionInput,
 )
+
+
+class _IntegrationSandboxRunner(SandboxRunner):
+    def __init__(self, adapter_tier: str) -> None:
+        self.adapter_tier = adapter_tier
+
+    def execute(self, *, dispatch: SandboxDispatch, args: dict[str, object]) -> SandboxExecutionResult:
+        return SandboxExecutionResult(
+            status="SUCCEEDED",
+            stdout="integration sandbox",
+            stderr="",
+            exit_code=0,
+            output_payload={"sandbox_adapter_tier": dispatch.adapter_tier, "session_ref": dispatch.session_ref},
+        )
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -79,6 +94,7 @@ def engine(migrated_postgres):
                     tool_effect_reconciliations,
                     tool_effect_receipts,
                     tool_sandbox_receipts,
+                    tool_sandbox_sessions,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
                     tool_execution_receipts,
@@ -519,7 +535,10 @@ def test_phase16_gateway_records_side_effect_classification_before_blocking(engi
 
 
 def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine) -> None:
-    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    gateway = ToolInvocationGateway(
+        unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        sandbox_registry=SandboxAdapterRegistry(runner_factory=lambda tier: _IntegrationSandboxRunner(tier)),
+    )
     dispatched = False
 
     async def executor() -> dict[str, str]:
@@ -554,6 +573,16 @@ def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine
                 """
             )
         ).mappings().one()
+        session = conn.execute(
+            text(
+                """
+                SELECT session_ref, session_version, sandbox_profile_id, adapter_tier
+                FROM tool_sandbox_sessions
+                WHERE session_ref = :session_ref
+                """
+            ),
+            {"session_ref": sandbox["session_ref"]},
+        ).mappings().one()
         attempt = conn.execute(
             text(
                 """
@@ -579,11 +608,68 @@ def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine
     assert sandbox["session_version"] == 1
     assert sandbox["isolation_verified"] is True
     assert sandbox["allowlist_enforced"] is True
+    assert session["session_ref"] == sandbox["session_ref"]
+    assert session["session_version"] == 1
+    assert session["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
+    assert session["adapter_tier"] == "WASM_PYTHON"
     assert attempt["status"] == "SUCCEEDED"
     assert attempt["dispatch_certainty"] == "DISPATCHED"
     assert observation["output_trusted"] is False
     assert observation["memory_write_allowed"] is False
     assert observation["evidence_write_allowed"] is False
+
+
+def test_phase15_default_gateway_persists_sandbox_session_before_fail_closed_dispatch(engine, monkeypatch) -> None:
+    monkeypatch.setattr("shutil.which", lambda _name: None)
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+
+    async def executor() -> dict[str, str]:
+        return {"value": "should-not-run"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="analysis.python",
+        args={"allowed_paths": ["workspace://inputs/table.csv"], "code": "print(40 + 2)"},
+        tenant_id="tenant-phase15-sandbox-default",
+        workspace_id="workspace-phase15-sandbox-default",
+        trace_id="trace-phase15-sandbox-default",
+        call_id="call-phase15-sandbox-default",
+        adapter_kind="PYTHON",
+        executor=executor,
+        readonly=True,
+    ))
+
+    expected_session_ref = "sandbox-session:tenant-phase15-sandbox-default:workspace-phase15-sandbox-default:call-phase15-sandbox-default:trace-phase15-sandbox-default:call-phase15-sandbox-default"
+    assert result is None
+    assert receipt.status == "blocked"
+    assert receipt.blocked_reason == "Deno executable unavailable for WASM Python sandbox"
+
+    with engine.connect() as conn:
+        session = conn.execute(
+            text(
+                """
+                SELECT session_ref, session_version, sandbox_profile_id, adapter_tier
+                FROM tool_sandbox_sessions
+                WHERE session_ref = :session_ref
+                """
+            ),
+            {"session_ref": expected_session_ref},
+        ).mappings().one()
+        blocked_receipt = conn.execute(
+            text(
+                """
+                SELECT adapter_tier, session_ref, receipt_payload_hash
+                FROM tool_sandbox_receipts
+                WHERE sandbox_receipt_id = 'tool-sandbox-receipt:call-phase15-sandbox-default'
+                """
+            )
+        ).mappings().one()
+
+    assert session["session_version"] == 1
+    assert session["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
+    assert session["adapter_tier"] == "WASM_PYTHON"
+    assert blocked_receipt["adapter_tier"] == "WASM_PYTHON"
+    assert blocked_receipt["session_ref"] == expected_session_ref
+    assert blocked_receipt["receipt_payload_hash"]
 
 
 def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:

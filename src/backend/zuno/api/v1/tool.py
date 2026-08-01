@@ -3,8 +3,8 @@ from loguru import logger
 
 from zuno.api.services.tool import ToolRuntimeService, ToolService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
-from zuno.schema.tool import (
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.tool import (
     CLIToolPreviewReq,
     RemoteApiAssistReq,
     ToolConnectivityReq,
@@ -12,7 +12,7 @@ from zuno.schema.tool import (
     ToolDeleteReq,
     ToolUpdateReq,
 )
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 router = APIRouter(tags=["Tool"], prefix="/tool")
 

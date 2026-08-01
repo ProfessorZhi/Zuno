@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from zuno.platform.contracts import canonical_sha256
+from zuno.platform.database.product.domain import ProductCommandSubmission
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = REPO_ROOT / "infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py"
@@ -112,6 +115,30 @@ def test_goal04_product_agent_definition_description_migration_repairs_catalog_p
     assert "description: str = \"\"" in repository
     assert "display_name, description, status, aggregate_version" in repository
     assert "description=description" in service
+
+
+def test_goal04_product_command_submission_exposes_payload_json_alias() -> None:
+    payload = {"cutover_mode": "new_default", "goal": "publish safely"}
+    submission = ProductCommandSubmission(
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        conversation_id="conversation-a",
+        principal_id="principal-a",
+        active_agent_version_id="agent-version:wave-a",
+        submission_id="submission:wave-a",
+        client_request_id="client:wave-a",
+        raw_intent_ref="intent:wave-a",
+        command_id="command:wave-a",
+        command_kind="SUBMIT_USER_GOAL",
+        owner_module="Agent Core",
+        runtime_request_ref="runtime-request:wave-a",
+        payload=payload,
+        journal_sequence_no=1,
+        outbox_message_id="outbox:wave-a",
+    )
+
+    assert submission.payload_json == payload
+    assert submission.request_hash == canonical_sha256(payload)
 
 
 def test_goal03_wave_a_capability_version_supply_chain_migration_adds_verified_refs() -> None:

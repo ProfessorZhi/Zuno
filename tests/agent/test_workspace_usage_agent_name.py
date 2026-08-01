@@ -1,6 +1,6 @@
 import asyncio
 
-from zuno.schema.workspace import WorkSpaceSimpleTask
+from zuno.api.dto.workspace import WorkSpaceSimpleTask
 
 
 def _task(**kwargs):
@@ -67,7 +67,7 @@ def test_agent_workspace_usage_can_resolve_agent_id(monkeypatch):
 
 def test_workspace_simple_chat_can_enable_multi_agent_runtime(monkeypatch):
     from zuno.api.v1.workspace import workspace_simple_chat
-    from zuno.schema.workspace import WorkSpaceSimpleTask
+    from zuno.api.dto.workspace import WorkSpaceSimpleTask
 
     captured = {}
 
@@ -116,7 +116,7 @@ def test_workspace_simple_chat_can_enable_multi_agent_runtime(monkeypatch):
         "zuno.api.services.workspace.validate_tools_for_mode",
         lambda tools, execution_mode: None,
     )
-    monkeypatch.setattr("zuno.services.workspace.simple_agent.WorkSpaceSimpleAgent", FakeSimpleAgent)
+    monkeypatch.setattr("zuno.platform.services.workspace.simple_agent.WorkSpaceSimpleAgent", FakeSimpleAgent)
 
     response = asyncio.run(
         workspace_simple_chat(

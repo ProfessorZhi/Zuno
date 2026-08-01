@@ -15,6 +15,10 @@ class ProductPersistenceConflict(RuntimeError):
     pass
 
 
+def _json_payload(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
 @dataclass(frozen=True, slots=True)
 class ProductCommandSubmission:
     tenant_id: str
@@ -37,6 +41,10 @@ class ProductCommandSubmission:
     @property
     def request_hash(self) -> str:
         return canonical_sha256(self.payload)
+
+    @property
+    def payload_json(self) -> dict[str, Any]:
+        return self.payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,7 +251,7 @@ class ProductRepository:
                 "workspace_id": workspace_id,
                 "agent_definition_id": agent_definition_id,
                 "draft_hash": canonical_sha256(draft_payload),
-                "draft_payload_json": draft_payload,
+                "draft_payload_json": _json_payload(draft_payload),
                 "status": status,
             },
         )
@@ -280,7 +288,7 @@ class ProductRepository:
                 "agent_definition_id": agent_definition_id,
                 "version_no": version_no,
                 "config_hash": canonical_sha256(configuration_payload),
-                "configuration_json": configuration_payload,
+                "configuration_json": _json_payload(configuration_payload),
                 "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
                 "status": status,
             },
@@ -346,11 +354,13 @@ class ProductRepository:
                 "tenant_id": tenant_id,
                 "agent_definition_id": agent_definition_id,
                 "config_hash": config_hash,
-                "configuration_json": {
-                    "agent_version_id": agent_version_id,
-                    "display_name": display_name,
-                    "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
-                },
+                "configuration_json": _json_payload(
+                    {
+                        "agent_version_id": agent_version_id,
+                        "display_name": display_name,
+                        "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
+                    }
+                ),
                 "primary_agent_core_profile_ref": primary_agent_core_profile_ref,
             },
         )

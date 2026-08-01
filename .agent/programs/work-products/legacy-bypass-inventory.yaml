@@ -24,7 +24,7 @@ inventory:
     category: "root_alias"
     risk: "legacy root import registry keeps zuno.core/services/schema/database/tools/resources/config/mcp_servers aliases alive"
     target_gateway: "canonical module imports only"
-    current_callers: ["src/backend/zuno/__init__.py import hook", "tests/legacy_guards/test_zuno_alias_imports.py", "tools/scripts/verify_repo_structure.py"]
+    current_callers: ["src/backend/zuno/__init__.py import hook", "tests/repo/test_zuno_canonical_import_surfaces.py", "tools/scripts/verify_repo_structure.py"]
     temporary_allowlist: true
     migration_task: "PHASE02 legacy-runtime-compatibility-and-cutover-map"
     removal_task: "P22-T03 Legacy-free Canonical Directory Cleanup"
@@ -37,39 +37,13 @@ inventory:
     category: "root_alias"
     risk: "package import auto-registers legacy alias finder"
     target_gateway: "no implicit legacy import hook"
-    current_callers: ["import zuno package bootstrap", "tests/legacy_guards/test_zuno_alias_imports.py"]
+    current_callers: ["import zuno package bootstrap", "tests/repo/test_zuno_canonical_import_surfaces.py"]
     temporary_allowlist: true
     migration_task: "PHASE02 legacy alias cutover"
     removal_task: "P22-T03"
     deadline: "PHASE22"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/repo/test_repo_structure_consistency.py"
-  - path: "src/backend/zuno/platform/compatibility/legacy/__init__.py"
-    symbol: "legacy compatibility package"
-    owner: "Repository Governance"
-    category: "legacy_directory"
-    risk: "production path contains legacy namespace"
-    target_gateway: "owner adapters/versioned only"
-    current_callers: ["platform compatibility package scan", "tools/scripts/verify_repo_structure.py"]
-    temporary_allowlist: true
-    migration_task: "PHASE02 compatibility matrix"
-    removal_task: "P22-T03"
-    deadline: "PHASE22"
-    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
-    test: "tools/scripts/verify_repo_structure.py::verify_phase02_compatibility_vendor_boundary"
-  - path: "tests/legacy_guards/**"
-    symbol: "legacy_guards test suite"
-    owner: "Repository Governance"
-    category: "legacy_directory"
-    risk: "temporary legacy guard suite remains in active test tree"
-    target_gateway: "PHASE22 closure guard tests"
-    current_callers: ["pytest legacy guard collection", "tools/scripts/verify_repo_structure.py"]
-    temporary_allowlist: true
-    migration_task: "PHASE01/P02 inventory guards"
-    removal_task: "P22-T03"
-    deadline: "PHASE22"
-    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
-    test: "tests/repo/test_zuno_runtime_chain_guard.py"
   - path: "src/backend/zuno/agent/core/models/manager.py"
     symbol: "ModelManager.get_tool_invocation_model / get_conversation_model / get_qwen_vl_model / get_user_model"
     owner: "04 Model Gateway"

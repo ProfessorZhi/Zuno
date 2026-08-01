@@ -42,5 +42,5 @@ PHASE02 的 provider 分类入口是 `docs/architecture/repo-ownership-matrix.md
 - `tests/agent/test_capability_registry.py`
 - `tests/agent/test_tool_control_plane_contract.py`
 - `tests/agent/test_tool_control_plane_runtime.py`
-- `tests/legacy_guards/test_zuno_alias_imports.py`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`
 - `tests/repo/test_static_target_layer_imports.py`

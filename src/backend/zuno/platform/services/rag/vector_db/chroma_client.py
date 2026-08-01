@@ -6,9 +6,9 @@ from typing import Dict, List, Optional
 import chromadb
 from loguru import logger
 
-from zuno.schema.search import SearchModel
-from zuno.services.rag.embedding import get_embedding
-from zuno.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding
+from zuno.api.dto.search import SearchModel
+from zuno.platform.services.rag.embedding import get_embedding
+from zuno.platform.services.rag.vl_embedding import get_vl_image_embedding, get_vl_text_embedding
 
 
 def _resolve_vector_db_path() -> Path:

@@ -26,6 +26,33 @@ def _hash_check(column_name: str, constraint_name: str) -> sa.CheckConstraint:
 
 def upgrade() -> None:
     op.create_table(
+        "tool_sandbox_sessions",
+        sa.Column("session_ref", sa.String(length=240), primary_key=True),
+        sa.Column("tenant_id", sa.String(length=120), nullable=False),
+        sa.Column("workspace_id", sa.String(length=120), nullable=False),
+        sa.Column("run_id", sa.String(length=180), nullable=False),
+        sa.Column("thread_id", sa.String(length=180), nullable=False),
+        sa.Column("call_id", sa.String(length=180), nullable=False),
+        sa.Column("sandbox_profile_id", sa.String(length=180), nullable=False),
+        sa.Column("adapter_tier", sa.String(length=40), nullable=False),
+        sa.Column("session_version", sa.Integer(), nullable=False),
+        sa.Column("profile_hash", sa.String(length=64), nullable=False),
+        sa.Column("limits_hash", sa.String(length=64), nullable=False),
+        sa.Column("session_hash", sa.String(length=64), nullable=False),
+        sa.Column("state_integrity_hash", sa.String(length=64), nullable=False),
+        sa.Column("session_size_bytes", sa.Integer(), nullable=False),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        _hash_check("profile_hash", "ck_tool_sandbox_sessions_profile_hash"),
+        _hash_check("limits_hash", "ck_tool_sandbox_sessions_limits_hash"),
+        _hash_check("session_hash", "ck_tool_sandbox_sessions_session_hash"),
+        _hash_check("state_integrity_hash", "ck_tool_sandbox_sessions_state_hash"),
+        sa.CheckConstraint("session_version > 0", name="ck_tool_sandbox_sessions_session_version"),
+        sa.CheckConstraint("session_size_bytes > 0", name="ck_tool_sandbox_sessions_size"),
+        sa.CheckConstraint("adapter_tier in ('WASM_PYTHON','OCI_PROCESS')", name="ck_tool_sandbox_sessions_adapter_tier"),
+        sa.UniqueConstraint("tenant_id", "workspace_id", "run_id", "thread_id", "call_id", name="uq_tool_sandbox_sessions_scope"),
+    )
+    op.create_table(
         "tool_sandbox_receipts",
         sa.Column("sandbox_receipt_id", sa.String(length=180), primary_key=True),
         sa.Column("tenant_id", sa.String(length=120), nullable=False),
@@ -49,6 +76,7 @@ def upgrade() -> None:
             name="fk_tool_sandbox_receipts_prepared",
         ),
         sa.ForeignKeyConstraint(["attempt_id"], ["tool_attempts.attempt_id"], name="fk_tool_sandbox_receipts_attempt"),
+        sa.ForeignKeyConstraint(["session_ref"], ["tool_sandbox_sessions.session_ref"], name="fk_tool_sandbox_receipts_session"),
         sa.UniqueConstraint("tenant_id", "prepared_tool_action_id", "attempt_id", name="uq_tool_sandbox_receipts_attempt"),
         _hash_check("profile_hash", "ck_tool_sandbox_receipts_profile_hash"),
         _hash_check("limits_hash", "ck_tool_sandbox_receipts_limits_hash"),
@@ -64,3 +92,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("tool_sandbox_receipts")
+    op.drop_table("tool_sandbox_sessions")

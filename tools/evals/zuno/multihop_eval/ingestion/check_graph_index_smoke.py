@@ -15,8 +15,8 @@ if str(REPO_ROOT) not in sys.path:
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from zuno.services.runtime_registry import get_local_runtime_settings
-from zuno.services.graphrag.client import Neo4jClient
+from zuno.platform.services.graphrag.client import Neo4jClient
+from zuno.platform.services.runtime_registry import get_local_runtime_settings
 
 from tools.evals.zuno.multihop_eval.run_real_runtime_eval import (
     _read_jsonl,

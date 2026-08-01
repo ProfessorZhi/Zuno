@@ -7,8 +7,8 @@ BACKEND_ROOT = Path(__file__).resolve().parents[3]
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from zuno.settings import initialize_app_settings, resolve_app_config_path
-from zuno.tools.send_email import action as email_action
+from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
+from zuno.capability.tools.send_email import action as email_action
 
 
 def _resolve_runtime_config_path() -> Path | None:

@@ -36,7 +36,7 @@ def _minimal_repo(root: Path, verifier) -> None:
             [
                 "state: active",
                 f"active_program: {verifier.ACTIVE_PROGRAM_NAME}",
-                "current_phase: PHASE08",
+                "current_phase: PHASE22",
             ]
         ),
     )
@@ -47,7 +47,7 @@ def _minimal_repo(root: Path, verifier) -> None:
                 "program:",
                 f"  id: {verifier.ACTIVE_PROGRAM_NAME}",
                 "  state: active",
-                "  current_phase: PHASE08",
+                "  current_phase: PHASE22",
                 "  phase_count: 22",
             ]
         ),
@@ -82,7 +82,7 @@ def test_active_program_route_drift_fails(tmp_path, monkeypatch) -> None:
             [
                 "state: active",
                 "active_program: zuno-old-program-v1",
-                "current_phase: PHASE08",
+                "current_phase: PHASE22",
             ]
         ),
     )

@@ -1,4 +1,5 @@
 import re
+import json
 from pathlib import Path
 
 
@@ -11,10 +12,36 @@ def test_web_start_launcher_does_not_rebuild_on_plain_start():
 
     assert start_block is not None
     assert 'for %%I in ("%SCRIPT_DIR%..\\..\\..") do set "PROJECT_ROOT=%%~fI"' in content
+    assert "call :pull_infra_images" in start_block.group(1)
     assert "docker compose up -d --remove-orphans" in start_block.group(1)
     assert "docker compose up --build -d" not in start_block.group(1)
     assert 'call :wait_http "http://127.0.0.1:7860/health" "Backend API" 90' in start_block.group(1)
     assert 'call :wait_http "http://127.0.0.1:8090" "Web frontend" 90' in start_block.group(1)
+
+
+def test_web_launcher_prepulls_infra_images_with_retry_and_env_overrides():
+    content = (REPO_ROOT / "tools" / "launchers" / "windows" / "_Zuno-Web-Common.cmd").read_text(encoding="utf-8")
+
+    assert ':default_compose_images' in content
+    assert 'if not defined POSTGRES_IMAGE set "POSTGRES_IMAGE=postgres:16"' in content
+    assert 'if not defined NEO4J_IMAGE set "NEO4J_IMAGE=neo4j:5-community"' in content
+    assert 'if not defined MILVUS_IMAGE set "MILVUS_IMAGE=milvusdb/milvus:v2.4.15"' in content
+    assert ':pull_image' in content
+    assert "docker image inspect \"!PULL_IMAGE!\"" in content
+    assert "docker pull \"!PULL_IMAGE!\"" in content
+    assert "for /L %%I in (1,1,3) do (" in content
+    assert "call :pull_image \"!POSTGRES_IMAGE!\" \"POSTGRES_IMAGE\"" in content
+    assert "call :pull_image \"!MILVUS_IMAGE!\" \"MILVUS_IMAGE\"" in content
+    assert "set \"PULL_IMAGE_VAR=%~2\"" in content
+    assert "echo To use a reachable mirror, set !PULL_IMAGE_VAR! before starting Zuno Web." in content
+    assert 'echo   set "!PULL_IMAGE_VAR!=registry.example.com/library/image:tag"' in content
+
+
+def test_docker_worker_uses_canonical_queue_runner_module():
+    content = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert 'command: ["python", "-m", "zuno.platform.services.queue.runner"]' in content
+    assert 'command: ["python", "-m", "zuno.services.queue.runner"]' not in content
 
 
 def test_scripts_start_does_not_install_dependencies_by_default():
@@ -44,6 +71,13 @@ def test_full_e2e_smoke_script_resolves_repository_root_not_tools_root():
 def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
     content = (REPO_ROOT / "tools" / "qa" / "full-e2e" / "full_e2e.py").read_text(encoding="utf-8")
 
+    assert "ZUNO_FULL_E2E_CHROME" in content
+    assert r"C:\Program Files\Google\Chrome\Application\chrome.exe" in content
+    assert "Set ZUNO_FULL_E2E_CHROME to a local Chrome/Chromium path." in content
+    assert "_bootstrap_runtime_agent_version" in content
+    assert "psycopg.connect" in content
+    assert "product_agent_definitions" in content
+    assert "product_agent_versions" in content
     assert "PRODUCT_CUTOVER_COMMANDS" in content
     assert '"shadow": "SHADOW_SUBMIT_USER_GOAL"' in content
     assert '"canary": "CANARY_SUBMIT_USER_GOAL"' in content
@@ -53,6 +87,46 @@ def test_full_e2e_smoke_covers_product_runtime_cutover_modes():
     assert '_runtime_request_body("rollback", "SUBMIT_USER_GOAL")' in content
     assert "Product runtime rollback mode is active" in content
     assert "receipt/projection evidence" in content
+
+
+def test_web_package_scripts_support_container_and_workspace_node_modules():
+    package = json.loads((REPO_ROOT / "apps" / "web" / "package.json").read_text(encoding="utf-8"))
+    runner = (REPO_ROOT / "apps" / "web" / "scripts" / "run-bin.mjs").read_text(encoding="utf-8")
+
+    assert package["scripts"]["dev"] == "node scripts/run-bin.mjs vite"
+    assert package["scripts"]["build"] == "node scripts/run-bin.mjs vite build"
+    assert package["scripts"]["preview"] == "node scripts/run-bin.mjs vite preview"
+    assert package["scripts"]["lint"] == "node scripts/run-bin.mjs vue-tsc --noEmit"
+    assert "resolve(appRoot, 'node_modules', bins[binName])" in runner
+    assert "resolve(appRoot, '..', '..', 'node_modules', bins[binName])" in runner
+    assert "vite: 'vite/bin/vite.js'" in runner
+    assert "'vue-tsc': 'vue-tsc/bin/vue-tsc.js'" in runner
+
+
+def test_docker_backend_build_uses_configurable_mirrored_python_base():
+    dockerfile = (REPO_ROOT / "infra" / "docker" / "Dockerfile").read_text(encoding="utf-8")
+    compose = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "ARG PYTHON_BASE_IMAGE=python:3.12-bookworm" in dockerfile
+    assert "ARG DEBIAN_MIRROR=deb.debian.org" in dockerfile
+    assert "ARG DEBIAN_SECURITY_MIRROR=deb.debian.org" in dockerfile
+    assert "ARG PIP_TRUSTED_HOST=" in dockerfile
+    assert "ARG PIP_DEFAULT_TIMEOUT=120" in dockerfile
+    assert "ARG PIP_RETRIES=10" in dockerfile
+    assert "FROM ${PYTHON_BASE_IMAGE} AS backend-base" in dockerfile
+    assert "chromium" in dockerfile
+    assert "chromium-driver" in dockerfile
+    assert "apt-get install -o Acquire::Retries=10 -y --no-install-recommends" in dockerfile
+    assert "ln -sf /usr/bin/chromium /usr/bin/google-chrome" in dockerfile
+    assert 'pip install --no-cache-dir -r requirements.txt -i "${PIP_INDEX_URL}" --trusted-host "${PIP_TRUSTED_HOST}" --timeout "${PIP_DEFAULT_TIMEOUT}" --retries "${PIP_RETRIES}"' in dockerfile
+    assert compose.count("image: docker-backend") == 2
+    assert compose.count("PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-mirror.gcr.io/library/python:3.12-bookworm}") == 2
+    assert compose.count("DEBIAN_MIRROR: ${DEBIAN_MIRROR:-mirrors.aliyun.com}") == 2
+    assert compose.count("DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-mirrors.ustc.edu.cn}") == 2
+    assert compose.count("PIP_INDEX_URL: ${PIP_INDEX_URL:-http://mirrors.aliyun.com/pypi/simple/}") == 2
+    assert compose.count("PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-mirrors.aliyun.com}") == 2
+    assert compose.count("PIP_DEFAULT_TIMEOUT: ${PIP_DEFAULT_TIMEOUT:-120}") == 2
+    assert compose.count("PIP_RETRIES: ${PIP_RETRIES:-10}") == 2
 
 
 def test_desktop_smoke_script_runs_real_electron_bridge_check():
@@ -255,11 +329,21 @@ def test_docker_stack_includes_neo4j_runtime():
     local_config = (REPO_ROOT / "infra" / "docker" / "docker_config.example.yaml").read_text(encoding="utf-8")
 
     assert "\n  neo4j:\n" in compose
-    assert "image: neo4j:5-community" in compose
+    assert "image: ${NEO4J_IMAGE:-neo4j:5-community}" in compose
     assert "neo4j:\n        condition: service_healthy" in compose
     assert "neo4j:" in local_config
     assert "enabled: true" in local_config
     assert "bolt://neo4j:7687" in local_config
+
+
+def test_elasticsearch_is_optional_when_disabled_in_default_config():
+    compose = (REPO_ROOT / "infra" / "docker" / "docker-compose.yml").read_text(encoding="utf-8")
+    local_config = (REPO_ROOT / "infra" / "docker" / "docker_config.example.yaml").read_text(encoding="utf-8")
+
+    assert "enable_elasticsearch: false" in local_config
+    assert "profiles:\n      - elasticsearch" in compose
+    assert "image: ${ELASTICSEARCH_IMAGE:-docker.elastic.co/elasticsearch/elasticsearch:7.17.24}" in compose
+    assert "elasticsearch:\n        condition: service_healthy" not in compose
 
 
 def test_compose_launchers_remove_orphans_on_lifecycle_commands():

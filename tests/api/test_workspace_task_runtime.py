@@ -18,7 +18,7 @@ from zuno.api.v1.workspace import router as workspace_router
 from zuno.agent.contracts import CapabilityPlan
 from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
 from zuno.platform.security import SecurityProductActionDenied
-from zuno.schema.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
+from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 
 
 _PRODUCT_RUNTIME_SUBMISSIONS: list[dict] = []
@@ -977,7 +977,13 @@ def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_to
 
     approve_response = client.post(
         "/api/v1/workspace/task/task_phase08_mail/approve",
-        json={"decision": "approved", "comment": "Approve PHASE08 tool execution."},
+        json={
+            "decision": "approved",
+            "comment": "Approve PHASE08 tool execution.",
+            "approval_id": approval_event["payload"]["approval_id"],
+            "tool_call_id": approval_event["payload"]["tool_request_id"],
+            "required_approval": approval_event["payload"]["required_approval"],
+        },
     )
     assert approve_response.status_code == 200
     approved = approve_response.json()["data"]
@@ -1054,10 +1060,18 @@ def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_p
         assert facts[0]["status"] == "approval_waiting"
         assert facts[0]["prepared_action_hash"]
         assert "raw-secret" not in repr(facts)
+        waiting_events = client.get("/api/v1/workspace/task/task_phase05_mail_api/events").json()["data"]
+        approval_event = waiting_events[-1]
 
         approve_response = client.post(
             "/api/v1/workspace/task/task_phase05_mail_api/approve",
-            json={"decision": "approved", "comment": "Approved by product user."},
+            json={
+                "decision": "approved",
+                "comment": "Approved by product user.",
+                "approval_id": approval_event["payload"]["approval_id"],
+                "tool_call_id": approval_event["payload"]["tool_request_id"],
+                "required_approval": approval_event["payload"]["required_approval"],
+            },
         )
         assert approve_response.status_code == 200
         assert [fact["status"] for fact in facts] == [
@@ -1070,6 +1084,58 @@ def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_p
         )
         assert facts[-1]["approval_adapter_ref"] == "workspace.approval_decision_ref"
         assert facts[-1]["approval_adapter_removal_phase"] == ""
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+
+
+def test_workspace_task_tool_approval_replay_requires_latest_pending_binding() -> None:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    try:
+        client = _client()
+
+        create_response = client.post(
+            "/api/v1/workspace/task",
+            json={
+                "query": "Send the approved project email",
+                "model_id": "model-local",
+                "session_id": "session_phase21_replay",
+                "workspace_id": "workspace_phase21_replay",
+                "task_id": "task_phase21_approval_replay",
+                "trace_id": "trace_phase21_approval_replay",
+                "goal": "approval replay closure",
+                "product_mode": "general_agent",
+                "plugins": ["mail.send"],
+                "mcp_servers": [],
+            },
+        )
+
+        assert create_response.status_code == 200
+        waiting_events = client.get("/api/v1/workspace/task/task_phase21_approval_replay/events").json()["data"]
+        approval_event = waiting_events[-1]
+
+        replay_response = client.post(
+            "/api/v1/workspace/task/task_phase21_approval_replay/approve",
+            json={
+                "decision": "approved",
+                "comment": "Replay an old approval.",
+                "approval_id": "approval_stale",
+                "tool_call_id": approval_event["payload"]["tool_request_id"],
+                "required_approval": approval_event["payload"]["required_approval"],
+            },
+        )
+        snapshot = client.get("/api/v1/workspace/task/task_phase21_approval_replay").json()["data"]
+        events = client.get("/api/v1/workspace/task/task_phase21_approval_replay/events").json()["data"]
+
+        assert replay_response.status_code == 409
+        assert replay_response.json()["detail"] == (
+            "Approval binding mismatch; fetch the latest pending action before retrying"
+        )
+        assert snapshot["task"]["status"] == "approval_waiting"
+        replay_event = events[-1]
+        assert replay_event["type"] == "approval_replay_rejected"
+        assert replay_event["payload"]["reason"] == "approval_binding_mismatch"
+        assert replay_event["payload"]["mismatched_fields"] == ["approval_id"]
+        assert "raw-secret" not in repr(events)
     finally:
         WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 

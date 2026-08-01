@@ -8,9 +8,9 @@ from langchain_core.tools import StructuredTool
 from langchain_core.tools import tool as create_tool
 from langgraph.graph import END, START, MessagesState, StateGraph
 
-from zuno.core.models.manager import ModelManager
-from zuno.services.sandbox import PyodideSandbox
-from zuno.utils.extract import extract_and_combine_codeblocks
+from zuno.agent.core.models.manager import ModelManager
+from zuno.platform.common.extract import extract_and_combine_codeblocks
+from zuno.platform.services.sandbox import PyodideSandbox
 
 EvalFunction = Callable[[str, dict[str, Any]], tuple[str, dict[str, Any]]]
 EvalCoroutine = Callable[[str, dict[str, Any]], Awaitable[tuple[str, dict[str, Any]]]]

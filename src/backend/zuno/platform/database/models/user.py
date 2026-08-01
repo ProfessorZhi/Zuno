@@ -5,7 +5,7 @@ from pydantic import field_validator
 from sqlalchemy import Column, DateTime, text
 from sqlmodel import Field
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 # 系统用户
 SystemUser = '0'

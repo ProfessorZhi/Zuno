@@ -37,7 +37,7 @@ PHASE02-PHASE05 status: contract-current-runtime-current-production-target
 ## 禁止事项
 
 - 禁止在 PHASE04 直接迁移生产 parser platform、pipeline manager、队列 worker 或 API 上传逻辑。
-- 禁止破坏 `zuno.services.convert_files.*`、`zuno.services.pipeline.*`、`zuno.services.rag.*` 旧 import path。
+- 禁止破坏 `zuno.services.convert_files.*`、`zuno.services.pipeline.*`、`zuno.services.rag.*` 迁移兼容 import path。
 - 禁止把 Parse Gateway 写成已经完成的生产 runtime。
 
 ## Focused tests

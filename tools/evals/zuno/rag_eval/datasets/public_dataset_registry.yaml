@@ -1,0 +1,93 @@
+datasets:
+  - source_id: "microsoft_graphrag_benchmarking"
+    official_name: "Microsoft GraphRAG Benchmarking Datasets"
+    official_url: "https://huggingface.co/datasets/Awesome-GraphRAG/GraphRAG-Bench"
+    official_repository: "https://github.com/microsoft/graphrag"
+    upstream_commit: "main"
+    upstream_version: "v0.5.0"
+    license_spdx: "MIT"
+    license_evidence_ref: "https://github.com/microsoft/graphrag/blob/main/LICENSE"
+    citation: "Edge et al., 2024. From Local to Global: A Graph RAG Approach to Query-Focused Summarization."
+    download_method: "official_http"
+    download_files:
+      - "questions.jsonl"
+    source_split: "main"
+    corpus_files:
+      - "questions.jsonl"
+    question_files:
+      - "questions.jsonl"
+    supporting_fact_format: "rationale_topic"
+    redistribution_policy: "allowed_mit"
+    local_cache_path: ".local/eval-datasets/microsoft_graphrag"
+    adapter_status: "verified_candidate"
+    expected_files:
+      - "questions.jsonl"
+    expected_checksums:
+      "questions.jsonl": "93343031ce103332363bbe31e14f55d9956b33d485ef331c172c97af680b0736"
+    corpus_type: "textbooks_and_open_ended"
+    question_type: "global_summary"
+    answer_ground_truth: true
+    evidence_ground_truth: true
+
+  - source_id: "hotpot_qa"
+    official_name: "HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering"
+    official_url: "https://huggingface.co/datasets/hotpotqa/hotpot_qa"
+    official_repository: "https://github.com/hotpotqa/hotpot"
+    upstream_commit: "master"
+    upstream_version: "v1.0"
+    license_spdx: "CC-BY-SA-4.0"
+    license_evidence_ref: "https://creativecommons.org/licenses/by-sa/4.0/"
+    citation: "Yang et al., 2018. HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answering."
+    download_method: "official_http"
+    download_files:
+      - "hotpot_dev_distractor_v1.json"
+    source_split: "validation"
+    corpus_files:
+      - "hotpot_dev_distractor_v1.json"
+    question_files:
+      - "hotpot_dev_distractor_v1.json"
+    supporting_fact_format: "paragraph_sentences"
+    redistribution_policy: "allowed_cc_by_sa"
+    local_cache_path: ".local/eval-datasets/hotpot_qa"
+    adapter_status: "verified_candidate"
+    expected_files:
+      - "hotpot_dev_distractor_v1.json"
+    expected_checksums:
+      "hotpot_dev_distractor_v1.json": "9a9935cb9d740fda3f6aac46dd09f791c4be9d87dfac524098f542ad18fe99e2"
+    corpus_type: "wikipedia_paragraphs"
+    question_type: "multihop_fact"
+    answer_ground_truth: true
+    evidence_ground_truth: true
+
+  - source_id: "multihop_rag"
+    official_name: "MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries"
+    official_url: "https://huggingface.co/datasets/yixuantt/MultiHopRAG"
+    official_repository: "https://github.com/yixiruan/MultiHop-RAG"
+    upstream_commit: "main"
+    upstream_version: "v1.0"
+    license_spdx: "Apache-2.0"
+    license_evidence_ref: "https://github.com/yixiruan/MultiHop-RAG/blob/main/LICENSE"
+    citation: "Tang et al., 2024. MultiHop-RAG: Benchmarking Retrieval-Augmented Generation for Multi-Hop Queries."
+    download_method: "official_http"
+    download_files:
+      - "queries.json"
+      - "corpus.json"
+    source_split: "train"
+    corpus_files:
+      - "corpus.json"
+    question_files:
+      - "queries.json"
+    supporting_fact_format: "document_passage"
+    redistribution_policy: "allowed_apache_2"
+    local_cache_path: ".local/eval-datasets/multihop_rag"
+    adapter_status: "verified_candidate"
+    expected_files:
+      - "queries.json"
+      - "corpus.json"
+    expected_checksums:
+      "queries.json": "aefa9e044de37c33a097c1fa5094e721842efd1f3a8c96b5b96bf19faf429d2f"
+      "corpus.json": "c8e13667d457c91cf86fe61cb9bbf78da8ae360dcfb686fcee43545c9ea56677"
+    corpus_type: "news_articles"
+    question_type: "multihop_reasoning"
+    answer_ground_truth: true
+    evidence_ground_truth: true

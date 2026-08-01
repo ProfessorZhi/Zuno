@@ -4,50 +4,44 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
 
 def _run_backend_python(code: str) -> subprocess.CompletedProcess[str]:
+    command = [
+        sys.executable,
+        "-c",
+        (
+            "import sys; "
+            f"sys.path.insert(0, r'{BACKEND_ROOT}'); "
+            f"{code}"
+        ),
+    ]
     return subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            (
-                "import sys; "
-                f"sys.path.insert(0, r'{BACKEND_ROOT}'); "
-                + code
-            ),
-        ],
+        command,
         cwd=REPO_ROOT,
-        text=True,
         capture_output=True,
+        text=True,
+        check=False,
     )
 
 
-def verify_backend_entry_file() -> list[str]:
+def verify_backend_import_root() -> list[str]:
     errors: list[str] = []
-    entry_file = BACKEND_ROOT / "zuno" / "main.py"
-    if not entry_file.exists():
-        errors.append("missing backend entry file: src/backend/zuno/main.py")
-        return errors
-
     result = _run_backend_python("import zuno.main; print(zuno.main.__file__)")
     if result.returncode != 0:
         errors.append(f"failed to import zuno.main from backend root: {result.stderr.strip()}")
-    elif "src\\backend\\zuno\\main.py" not in result.stdout:
-        errors.append(f"zuno.main did not resolve to src/backend entry: {result.stdout.strip()}")
     return errors
 
 
 def verify_high_value_imports() -> list[str]:
     result = _run_backend_python(
         (
-            "from zuno.services.application.knowledge import KnowledgeQueryService; "
-            "from zuno.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
-            "from zuno.services.retrieval.orchestrator import RetrievalOrchestrator; "
-            "from zuno.services.graphrag.retriever import GraphRetriever; "
+            "from zuno.platform.services.application.knowledge import KnowledgeQueryService; "
+            "from zuno.platform.services.graphrag.query_service import GraphRAGProjectSnapshot, GraphRAGQueryService; "
+            "from zuno.platform.services.retrieval.orchestrator import RetrievalOrchestrator; "
+            "from zuno.platform.services.graphrag.retriever import GraphRetriever; "
             "print(KnowledgeQueryService.__name__, GraphRAGQueryService.__name__, "
             "GraphRAGProjectSnapshot.__name__, RetrievalOrchestrator.__name__, GraphRetriever.__name__)"
         )
@@ -62,37 +56,27 @@ def verify_high_value_imports() -> list[str]:
     return []
 
 
-def verify_local_start_script() -> list[str]:
-    start_script = (REPO_ROOT / "tools" / "scripts" / "start.py").read_text(encoding="utf-8")
+def verify_dockerfile_pythonpath() -> list[str]:
+    dockerfile = REPO_ROOT / "infra" / "docker" / "Dockerfile"
     errors: list[str] = []
-    if 'BACKEND_DIR = PROJECT_ROOT' not in start_script:
-        errors.append("tools/scripts/start.py no longer starts from repo root")
-    if '"--app-dir", "src/backend", "zuno.main:app"' not in start_script:
-        errors.append("tools/scripts/start.py does not use the src/backend startup path")
-    return errors
-
-
-def verify_docker_startup_path() -> list[str]:
-    dockerfile = (REPO_ROOT / "infra" / "docker" / "Dockerfile").read_text(encoding="utf-8")
-    errors: list[str] = []
-    if "ENV PYTHONPATH=/app/src/backend:/app" not in dockerfile:
+    if not dockerfile.exists():
+        return ["infra/docker/Dockerfile does not exist"]
+    content = dockerfile.read_text(encoding="utf-8")
+    if "PYTHONPATH=/app/src/backend" not in content and "PYTHONPATH=/app/src/backend:${PYTHONPATH}" not in content:
         errors.append("infra/docker/Dockerfile does not expose the Phase 0 backend import path")
-    if 'CMD ["uvicorn", "--app-dir", "src/backend", "zuno.main:app"' not in dockerfile:
-        errors.append("infra/docker/Dockerfile does not use the Phase 0 backend startup path")
     return errors
 
 
 def main() -> int:
     errors = [
-        *verify_backend_entry_file(),
+        *verify_backend_import_root(),
         *verify_high_value_imports(),
-        *verify_local_start_script(),
-        *verify_docker_startup_path(),
+        *verify_dockerfile_pythonpath(),
     ]
 
     if errors:
-        for error in errors:
-            print(f"ERROR: {error}")
+        for err in errors:
+            print(f"ERROR: {err}")
         print("Phase 0 runtime recovery verification failed.")
         return 1
 

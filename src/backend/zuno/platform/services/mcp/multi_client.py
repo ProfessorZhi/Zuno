@@ -11,10 +11,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import BaseTool
 from mcp import ClientSession
 
-from zuno.services.mcp.load_mcp.prompts import load_mcp_prompt
-from zuno.services.mcp.load_mcp.resources import load_mcp_resources
-from zuno.services.mcp.load_mcp.tools import load_mcp_tools
-from zuno.services.mcp.sessions import (
+from zuno.platform.services.mcp.load_mcp.prompts import load_mcp_prompt
+from zuno.platform.services.mcp.load_mcp.resources import load_mcp_resources
+from zuno.platform.services.mcp.load_mcp.tools import load_mcp_tools
+from zuno.platform.services.mcp.sessions import (
     Connection,
     McpHttpClientFactory,
     SSEConnection,

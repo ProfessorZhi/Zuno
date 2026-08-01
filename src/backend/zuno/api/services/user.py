@@ -6,22 +6,22 @@ from typing import Optional
 
 import rsa
 from fastapi import Depends, HTTPException, Request
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.vendor.fastapi_jwt_auth import AuthJWT
 from loguru import logger
 
 from zuno.api.errcode.user import UserNameAlreadyExistError
-from zuno.database.dao.user import UserDao
-from zuno.database.dao.user_role import UserRoleDao
-from zuno.database.models.role import AdminRole
-from zuno.database.models.user import AdminUser, UserTable
-from zuno.schema.schemas import CreateUserReq
-from zuno.services.redis import redis_client
-from zuno.services.storage import storage_client
-from zuno.settings import app_settings
-from zuno.utils.constants import RSA_KEY
-from zuno.utils.hash import md5_hash
-from zuno.utils.JWT import ACCESS_TOKEN_EXPIRE_TIME
-from zuno.utils.runtime_observability import RedisKeys
+from zuno.api.dto.schemas import CreateUserReq
+from zuno.platform.common.JWT import ACCESS_TOKEN_EXPIRE_TIME
+from zuno.platform.common.constants import RSA_KEY
+from zuno.platform.common.hash import md5_hash
+from zuno.platform.common.runtime_observability import RedisKeys
+from zuno.platform.database.dao.user import UserDao
+from zuno.platform.database.dao.user_role import UserRoleDao
+from zuno.platform.database.models.role import AdminRole
+from zuno.platform.database.models.user import AdminUser, UserTable
+from zuno.platform.services.redis import redis_client
+from zuno.platform.services.storage import storage_client
+from zuno.platform.settings import app_settings
 
 USER_AVATAR_ASSET_VERSION = "20260511-clean3"
 

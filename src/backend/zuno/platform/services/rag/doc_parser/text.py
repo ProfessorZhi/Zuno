@@ -1,9 +1,9 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-from zuno.schema.chunk import ChunkModel
-from zuno.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
-from zuno.settings import app_settings
+from zuno.api.dto.chunk import ChunkModel
+from zuno.platform.services.rag.doc_parser.chunk_ids import build_chunk_id, build_source_chunk_id
+from zuno.platform.settings import app_settings
 
 
 class TextParser:

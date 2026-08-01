@@ -1,11 +1,11 @@
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.vendor.fastapi_jwt_auth import AuthJWT
 
 from zuno.api.errcode.user import UserValidateError
 from zuno.api.services.user import UserService, get_user_jwt
-from zuno.schema.schemas import UnifiedResponseModel, resp_200
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200
 
 router = APIRouter(tags=["User"])
 

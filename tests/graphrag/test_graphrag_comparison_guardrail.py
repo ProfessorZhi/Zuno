@@ -6,8 +6,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src" / "backend"))
 
-from zuno.services.retrieval.fusion import RetrievalFusion
-from zuno.services.retrieval.models import RetrievedDocument
+from zuno.platform.services.retrieval.fusion import RetrievalFusion
+from zuno.platform.services.retrieval.models import RetrievedDocument
 
 
 def _doc(

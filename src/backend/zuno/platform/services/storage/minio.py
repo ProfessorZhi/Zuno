@@ -6,7 +6,7 @@ from loguru import logger
 from minio import Minio
 from minio.error import S3Error
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class MinioClient:

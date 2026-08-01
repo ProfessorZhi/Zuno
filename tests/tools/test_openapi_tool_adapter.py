@@ -1,4 +1,4 @@
-from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter
 import asyncio
 
 

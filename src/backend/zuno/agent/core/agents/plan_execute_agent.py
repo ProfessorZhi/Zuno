@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 from typing import List
 from loguru import logger
@@ -8,12 +8,12 @@ from langchain_core.tools import BaseTool
 
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.mcp_user_config import MCPUserConfigService
-from zuno.core.models.manager import ModelManager
-from zuno.resources.prompts.completion import FIX_JSON_PROMPT, PLAN_CALL_TOOL_PROMPT, SINGLE_PLAN_CALL_PROMPT
-from zuno.schema.completion import PlanToolFlow
-from zuno.core.agents.structured_response_agent import StructuredResponseAgent
-from zuno.services.mcp.manager import MCPManager
-from zuno.utils.convert import convert_mcp_config
+from zuno.agent.core.agents.structured_response_agent import StructuredResponseAgent
+from zuno.agent.core.models.manager import ModelManager
+from zuno.api.dto.completion import PlanToolFlow
+from zuno.platform.common.convert import convert_mcp_config
+from zuno.platform.resources.prompts.completion import FIX_JSON_PROMPT, PLAN_CALL_TOOL_PROMPT, SINGLE_PLAN_CALL_PROMPT
+from zuno.platform.services.mcp.manager import MCPManager
 
 # A Plan-and-Execute Agent Execution Paradigm
 class PlanExecuteAgent:

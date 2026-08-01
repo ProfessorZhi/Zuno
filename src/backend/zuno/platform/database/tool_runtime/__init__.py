@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from .domain import (
     PreparedToolActionInput,
@@ -14,6 +14,7 @@ from .domain import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolSandboxReceiptInput,
+    ToolSandboxSessionInput,
     ToolRepository,
     ToolRuntimeConflict,
     ToolUnitOfWork,
@@ -34,6 +35,7 @@ __all__ = [
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
     "ToolSandboxReceiptInput",
+    "ToolSandboxSessionInput",
     "ToolRepository",
     "ToolRuntimeConflict",
     "ToolUnitOfWork",

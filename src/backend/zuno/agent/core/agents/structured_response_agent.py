@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from langchain.agents import create_agent
 from langchain.agents.structured_output import ToolStrategy
 
-from zuno.core.callbacks import usage_metadata_callback
-from zuno.core.models.manager import ModelManager
+from zuno.agent.core.callbacks import usage_metadata_callback
+from zuno.agent.core.models.manager import ModelManager
 
 
 class StructuredResponseAgent:

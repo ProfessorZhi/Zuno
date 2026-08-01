@@ -4,11 +4,11 @@
 
 ## 当前角色
 
-`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。旧 public import path `zuno.schema.*` 由 `platform/compatibility/legacy_aliases.py` 映射到这里；它是兼容 alias，不是仍存在的物理目录。
+`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。旧 public import path `zuno.schema.*` 不再由 `platform/compatibility/legacy_aliases.py` 承接；它不是默认路径，也不是仍存在的物理目录。
 
 ## Target role
 
-目标状态下，公开 HTTP DTO 应由 API 层拥有或通过 API 层清晰暴露；仍被旧路径消费的 `zuno.schema.*` 先通过 legacy alias 保留。是否整理 DTO 文件、字段或导出面，必须由 API contract tests 证明。
+目标状态下，公开 HTTP DTO 应由 API 层拥有或通过 API 层清晰暴露；任何仍使用旧 `zuno.schema.*` 的 consumer 都必须迁移到 canonical API DTO import。是否整理 DTO 文件、字段或导出面，必须由 API contract tests 证明。
 
 ## 允许新增内容
 
@@ -19,7 +19,7 @@
 ## 禁止事项
 
 - 禁止改变 public API 字段、默认值、response envelope、SSE event 或前端 contract。
-- 禁止直接删除 `zuno.schema.*` import path 或把它误写成物理 `src/backend/zuno/schema/` Current 目录。
+- 禁止恢复 `zuno.schema.*` 默认 import path 或把它误写成物理 `src/backend/zuno/schema/` Current 目录。
 - 禁止把 GraphRAG runtime、DB model 或 Agent loop 状态混入 API DTO。
 
 ## Focused tests

@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from zuno.evals.rag_eval.paths import default_corpus_root
+from tools.evals.zuno.rag_eval.paths import default_corpus_root
 
 
 ENTERPRISE_DOCUMENT_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {

@@ -35,7 +35,7 @@ __all__ = [
 
 def __getattr__(name: str) -> Any:
     if name == "client":
-        module = import_module("zuno.services.memory.client")
+        module = import_module("zuno.platform.services.memory.client")
         globals()[name] = module
         return module
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

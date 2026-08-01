@@ -3,7 +3,7 @@ from typing import List, Optional, Set
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from zuno.settings import app_settings
+from zuno.platform.settings import app_settings
 
 
 class WhitelistChecker:

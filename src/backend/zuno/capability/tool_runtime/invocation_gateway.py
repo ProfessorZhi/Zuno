@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+import json
 from typing import Any
 
 from zuno.platform.database.foundation import (
@@ -24,6 +25,7 @@ from zuno.platform.database.tool_runtime import (
     ToolExecutionReceiptInput,
     ToolObservationInput,
     ToolSandboxReceiptInput,
+    ToolSandboxSessionInput,
     ToolUnitOfWork,
     ToolVersionInput,
 )
@@ -34,7 +36,10 @@ from zuno.platform.security import (
     redact_sensitive_payload,
 )
 from .effect_policy import classify_tool_effect
-from .sandbox import SandboxAdapterRegistry, SandboxPolicyViolation
+from .sandbox import SandboxAdapterRegistry, SandboxExecutionResult, SandboxPolicyViolation, SandboxSessionRecord, SandboxSessionStore
+
+
+_SANDBOXABLE_ADAPTER_KINDS = {"PYTHON", "WASM_PYTHON", "PYODIDE", "CLI", "OPENAPI", "BROWSER", "SHELL", "GIT"}
 
 
 class ToolEffectUnknownError(RuntimeError):
@@ -77,6 +82,61 @@ class _ExecutePrerequisiteResult:
     fencing_epoch: int = 0
 
 
+class _ToolRuntimeSandboxSessionStore(SandboxSessionStore):
+    def __init__(self, unit_of_work_factory: Callable[[], ToolUnitOfWork]) -> None:
+        self._unit_of_work_factory = unit_of_work_factory
+
+    def put(self, record: SandboxSessionRecord) -> None:
+        with self._unit_of_work_factory() as repo:
+            repo.record_sandbox_session(
+                ToolSandboxSessionInput(
+                    session_ref=record.session_ref,
+                    tenant_id=record.tenant_id,
+                    workspace_id=record.workspace_id,
+                    run_id=record.run_id,
+                    thread_id=record.thread_id,
+                    call_id=record.call_id,
+                    sandbox_profile_id=record.sandbox_profile_id,
+                    adapter_tier=record.adapter_tier,
+                    session_version=record.session_version,
+                    profile_hash=record.profile_hash,
+                    limits_hash=record.limits_hash,
+                    session_hash=record.session_hash,
+                    state_integrity_hash=canonical_sha256(
+                        {
+                            "session_hash": record.session_hash,
+                            "profile_hash": record.profile_hash,
+                            "limits_hash": record.limits_hash,
+                        }
+                    ),
+                    session_size_bytes=record.session_size_bytes,
+                    expires_at=record.expires_at,
+                )
+            )
+
+    def get(self, session_ref: str) -> SandboxSessionRecord | None:
+        with self._unit_of_work_factory() as repo:
+            row = repo.get_sandbox_session(session_ref=session_ref)
+        if row is None:
+            return None
+        return SandboxSessionRecord(
+            session_ref=str(row["session_ref"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            run_id=str(row["run_id"]),
+            thread_id=str(row["thread_id"]),
+            call_id=str(row["call_id"]),
+            sandbox_profile_id=str(row["sandbox_profile_id"]),
+            adapter_tier=str(row["adapter_tier"]),
+            session_version=int(row["session_version"]),
+            profile_hash=str(row["profile_hash"]),
+            limits_hash=str(row["limits_hash"]),
+            session_hash=str(row["session_hash"]),
+            expires_at=row["expires_at"],
+            session_size_bytes=int(row["session_size_bytes"]),
+        )
+
+
 class ToolInvocationGateway:
     def __init__(
         self,
@@ -89,7 +149,9 @@ class ToolInvocationGateway:
         self._unit_of_work_factory = unit_of_work_factory
         self._security_unit_of_work_factory = security_unit_of_work_factory
         self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
-        self._sandbox_registry = sandbox_registry or SandboxAdapterRegistry()
+        self._sandbox_registry = sandbox_registry or SandboxAdapterRegistry(
+            session_store=_ToolRuntimeSandboxSessionStore(unit_of_work_factory)
+        )
 
     async def invoke_readonly(
         self,
@@ -291,18 +353,21 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
-                    sandbox_blocked_reason = self._prepare_sandbox_or_block(
-                        tenant_id=tenant_id,
-                        workspace_id=workspace_id,
-                        trace_id=trace_id,
-                        call_id=call_id,
-                        tool_name=tool_name,
-                        adapter_kind=adapter_kind,
-                        args=args,
-                        prepared_id=prepared_id,
-                        attempt_id=attempt_id,
-                        receipt_id=receipt_id,
-                    )
+                    sandbox_blocked_reason = ""
+                    sandbox_result: SandboxExecutionResult | None = None
+                    if adapter_kind.upper() in _SANDBOXABLE_ADAPTER_KINDS:
+                        sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
+                            tenant_id=tenant_id,
+                            workspace_id=workspace_id,
+                            trace_id=trace_id,
+                            call_id=call_id,
+                            tool_name=tool_name,
+                            adapter_kind=adapter_kind,
+                            args=args,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                        )
                     if sandbox_blocked_reason:
                         payload["sandbox_blocked_reason"] = sandbox_blocked_reason
                         self._record_terminal(
@@ -698,18 +763,21 @@ class ToolInvocationGateway:
             return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, blocked_reason)
 
         try:
-            sandbox_blocked_reason = self._prepare_sandbox_or_block(
-                tenant_id=tenant_id,
-                workspace_id=workspace_id,
-                trace_id=trace_id,
-                call_id=call_id,
-                tool_name=tool_name,
-                adapter_kind=adapter_kind,
-                args=args,
-                prepared_id=prepared_id,
-                attempt_id=attempt_id,
-                receipt_id=receipt_id,
-            )
+            sandbox_blocked_reason = ""
+            sandbox_result: SandboxExecutionResult | None = None
+            if adapter_kind.upper() in _SANDBOXABLE_ADAPTER_KINDS:
+                sandbox_blocked_reason, sandbox_result = self._prepare_sandbox_or_block(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    trace_id=trace_id,
+                    call_id=call_id,
+                    tool_name=tool_name,
+                    adapter_kind=adapter_kind,
+                    args=args,
+                    prepared_id=prepared_id,
+                    attempt_id=attempt_id,
+                    receipt_id=receipt_id,
+                )
             if sandbox_blocked_reason:
                 self._record_terminal(
                     tenant_id=tenant_id,
@@ -856,7 +924,7 @@ class ToolInvocationGateway:
         prepared_id: str,
         attempt_id: str,
         receipt_id: str,
-    ) -> str:
+    ) -> tuple[str, SandboxExecutionResult | None]:
         try:
             sandbox = self._sandbox_registry.prepare(
                 tenant_id=tenant_id,
@@ -869,12 +937,98 @@ class ToolInvocationGateway:
                 args=redact_sensitive_payload(args),
             )
         except SandboxPolicyViolation as exc:
-            return str(exc)
+            return str(exc), None
+        try:
+            sandbox_result = self._sandbox_registry.execute(dispatch=sandbox, args=redact_sensitive_payload(args))
+        except SandboxPolicyViolation as exc:
+            self._record_sandbox_receipt(
+                tenant_id=tenant_id,
+                call_id=call_id,
+                prepared_id=prepared_id,
+                attempt_id=attempt_id,
+                receipt_id=receipt_id,
+                adapter_kind=adapter_kind,
+                sandbox=sandbox,
+                sandbox_result=SandboxExecutionResult(
+                    status="BLOCKED",
+                    stdout="",
+                    stderr=str(exc),
+                    exit_code=126,
+                    output_payload={"sandbox_blocked_reason": str(exc), "session_ref": sandbox.session_ref},
+                ),
+            )
+            return str(exc), None
+        sandbox_result = _redact_sandbox_execution_result(sandbox_result)
+        self._record_sandbox_receipt(
+            tenant_id=tenant_id,
+            call_id=call_id,
+            prepared_id=prepared_id,
+            attempt_id=attempt_id,
+            receipt_id=receipt_id,
+            adapter_kind=adapter_kind,
+            sandbox=sandbox,
+            sandbox_result=sandbox_result,
+        )
+        if sandbox_result.status != "SUCCEEDED":
+            return "sandbox execution failed", None
+        return "", sandbox_result
+
+    def _record_sandbox_receipt(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        prepared_id: str,
+        attempt_id: str,
+        receipt_id: str,
+        adapter_kind: str,
+        sandbox: Any,
+        sandbox_result: SandboxExecutionResult,
+    ) -> None:
         payload = dict(sandbox.dispatch_payload)
         payload["prepared_tool_action_id"] = prepared_id
         payload["attempt_id"] = attempt_id
         payload["execution_receipt_id"] = receipt_id
+        payload["sandbox_execution"] = sandbox_result.output_payload
+        payload["sandbox_execution_status"] = sandbox_result.status
+        session_payload = dict(sandbox.dispatch_payload.get("session") or {})
+        profile_payload = dict(sandbox.dispatch_payload.get("profile") or {})
+        session_workspace_id = str(session_payload.get("workspace_id") or "")
+        session_run_id = str(session_payload.get("run_id") or call_id)
+        session_thread_id = str(session_payload.get("thread_id") or call_id)
+        session_call_id = str(session_payload.get("call_id") or call_id)
+        session_profile_id = str(session_payload.get("profile_id") or sandbox.sandbox_profile_id)
+        session_version = int(session_payload.get("session_version") or sandbox.session_version)
+        expires_at = datetime.fromisoformat(
+            str(session_payload.get("expires_at") or profile_payload.get("limits", {}).get("expires_at"))
+        )
         with self._unit_of_work_factory() as repo:
+            if repo.get_sandbox_session(session_ref=sandbox.session_ref) is None:
+                repo.record_sandbox_session(
+                    ToolSandboxSessionInput(
+                        session_ref=sandbox.session_ref,
+                        tenant_id=tenant_id,
+                        workspace_id=session_workspace_id,
+                        run_id=session_run_id,
+                        thread_id=session_thread_id,
+                        call_id=session_call_id,
+                        sandbox_profile_id=session_profile_id,
+                        adapter_tier=sandbox.adapter_tier,
+                        session_version=session_version,
+                        profile_hash=sandbox.profile_hash,
+                        limits_hash=sandbox.limits_hash,
+                        session_hash=sandbox.session_hash,
+                        state_integrity_hash=canonical_sha256(
+                            {
+                                "session_hash": sandbox.session_hash,
+                                "profile_hash": sandbox.profile_hash,
+                                "limits_hash": sandbox.limits_hash,
+                            }
+                        ),
+                        session_size_bytes=len(json.dumps(session_payload, ensure_ascii=True, sort_keys=True).encode("utf-8")),
+                        expires_at=expires_at,
+                    )
+                )
             repo.record_attempt(
                 ToolAttemptInput(
                     attempt_id=attempt_id,
@@ -912,7 +1066,6 @@ class ToolInvocationGateway:
                     receipt_payload=payload,
                 )
             )
-        return ""
 
     def _issue_secret_lease(
         self,
@@ -1313,6 +1466,42 @@ def _async_job_payload_from_result(*, result: Any, call_id: str) -> dict[str, An
         "effect_certainty": "UNKNOWN_EFFECT",
         "native_result": redact_sensitive_payload(native),
     }
+
+
+def _sandbox_observation_reconciliation_payload(
+    *,
+    sandbox_result: SandboxExecutionResult,
+    call_id: str,
+) -> dict[str, Any]:
+    return {
+        "provider_effect_id": f"sandbox-observation:{call_id}",
+        "effect_status": "UNKNOWN",
+        "effect_certainty": "UNKNOWN_EFFECT",
+        "reconciliation_id": f"tool-effect-reconciliation:{call_id}",
+        "next_action": "RECONCILE",
+        "reconciliation_query": redact_sensitive_payload(
+            {
+                "reason": "sandbox_observation_requires_effect_reconciliation",
+                "sandbox_adapter_tier": sandbox_result.output_payload.get("sandbox_adapter_tier"),
+                "session_ref": sandbox_result.output_payload.get("session_ref"),
+                "exit_code": sandbox_result.exit_code,
+                "stdout": sandbox_result.stdout,
+                "stderr": sandbox_result.stderr,
+                "output_payload": sandbox_result.output_payload,
+            }
+        ),
+    }
+
+
+def _redact_sandbox_execution_result(result: SandboxExecutionResult) -> SandboxExecutionResult:
+    return SandboxExecutionResult(
+        status=result.status,
+        stdout=str(redact_sensitive_payload(result.stdout)),
+        stderr=str(redact_sensitive_payload(result.stderr)),
+        exit_code=result.exit_code,
+        output_payload=redact_sensitive_payload(result.output_payload),
+    )
+
 
 def _unknown_effect_payload(*, exc: ToolEffectUnknownError, call_id: str) -> dict[str, Any]:
     return {

@@ -3,8 +3,8 @@ from loguru import logger
 
 from zuno.api.services.capability import CapabilityService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.capability import CapabilitySearchReq
-from zuno.schema.schemas import UnifiedResponseModel, resp_200
+from zuno.api.dto.capability import CapabilitySearchReq
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200
 
 router = APIRouter(tags=["Capability"], prefix="/capability")
 

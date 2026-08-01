@@ -6,7 +6,32 @@ PHASE10 status: contract-foundation
 
 ## 当前角色
 
-`platform/observability/` 当前提供 LangSmith-compatible metadata、trace helper、OTel / LangSmith-compatible span schema、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge。真实 trace storage、在线 eval、LangSmith 产品化写入和可视化平台仍未形成完整平台能力。
+`platform/observability/` 当前提供 LangSmith-compatible metadata、trace helper、OTel / LangSmith-compatible span schema、`trace_adapter.py` (`ObservabilityTracePort`, `NoopTraceAdapter`, `InMemoryTraceAdapter`, `LangSmithTraceAdapter`)、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge。
+
+本工作包 (AG-PHASE22-LANGSMITH-ADAPTER-CORRECTION) 完成状态：
+- ObservabilityTracePort available
+- NoopTraceAdapter available
+- InMemoryTraceAdapter available
+- LangSmith SDK Adapter corrected security, trace_id, content switches & delivery retry semantics available
+- Adapter focused tests passed
+
+LangChain 自动 Tracing 与手工 Adapter 边界：
+- 自动 Tracing (`configure_langsmith()`): 负责原生 LangChain / LangGraph 模型的调用链追踪；
+- 手工 Adapter (`LangSmithTraceAdapter`): 负责自定义平台/工作区/任务非原生节点，通过 `zuno_trace_id` 与 `correlation_refs` 关联；
+- 不在手工 Adapter 中重复构建第二棵独立的 AgentRun 根 Trace 树。
+
+Error 采样与 Delivery 语义：
+- 已采样的 Trace 完整保留内部 Error Span；
+- 未采样 Trace 在 `end_span` 出现异常且 `error_sample_rate > 0.0` 时触发产生 `UnsampledTrace:ErrorSummary` 记录；
+- `end_span` 仅在 SDK `update_run` 成功后进入 ended 状态，失败记录 `delivery_failures` 并支持受控重试（上限 3 次）。
+
+Target 待完成项：
+- AgentRunGraph full-chain span wiring
+- StepExecutionGraph span wiring
+- Retrieval Round span wiring
+- Tool Gateway span wiring
+- Final Gate span wiring
+- LangSmith Experiment integration
 
 ## Target role
 
@@ -26,5 +51,5 @@ PHASE10 status: contract-foundation
 ## Focused tests
 
 - `python tools/scripts/verify_repo_structure.py`
-- `pytest -q tests/repo/test_repo_structure_consistency.py tests/legacy_guards/test_zuno_alias_imports.py -p no:cacheprovider`
+- `pytest -q tests/repo/test_repo_structure_consistency.py tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider`
 - `pytest -q tests/evals/test_observability_trace_contract.py tests/agent/test_platform_layer_surfaces.py tests/repo/test_backend_facade_layers.py tests/repo/test_static_target_layer_imports.py -p no:cacheprovider`

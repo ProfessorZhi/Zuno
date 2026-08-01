@@ -4,14 +4,14 @@ from pathlib import Path
 
 
 def test_doc_parser_turns_image_file_into_image_chunk(monkeypatch):
-    from zuno.services.rag.parser import doc_parser
+    from zuno.platform.services.rag.parser import doc_parser
 
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as temp_dir:
         image_path = Path(temp_dir) / "demo.png"
         image_path.write_bytes(b"fake-image")
 
         monkeypatch.setattr(
-            "zuno.services.rag.parser.describe_image",
+            "zuno.platform.services.rag.parser.describe_image",
             lambda _path: "an image containing a system flow chart",
         )
 
@@ -33,7 +33,7 @@ def test_doc_parser_turns_image_file_into_image_chunk(monkeypatch):
 def test_retrieval_combines_text_and_image_results(monkeypatch):
     from types import SimpleNamespace
 
-    from zuno.services.rag.retrieval import MixRetrival
+    from zuno.platform.services.rag.retrieval import MixRetrival
 
     async def fake_search(_query, _knowledge_id, top_k=10, config_override=None):
         return []
@@ -42,7 +42,7 @@ def test_retrieval_combines_text_and_image_results(monkeypatch):
         return [f"{knowledge_id}:{query}:image"]
 
     monkeypatch.setattr(
-        "zuno.services.rag.retrieval.milvus_client",
+        "zuno.platform.services.rag.retrieval.milvus_client",
         SimpleNamespace(search=fake_search, search_image=fake_search_image, search_summary=fake_search),
     )
 

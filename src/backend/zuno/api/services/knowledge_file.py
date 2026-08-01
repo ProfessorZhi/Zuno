@@ -5,19 +5,19 @@ from uuid import uuid4
 from loguru import logger
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.database.dao.knowledge_file import KnowledgeFileDao
-from zuno.database.dao.knowledge_task import KnowledgeTaskDao
-from zuno.database.models.user import AdminUser
 from zuno.api.services.security_admin_actions import require_admin_action_authorized
-from zuno.services.pipeline.manager import KnowledgePipelineManager
-from zuno.services.pipeline.models import KnowledgeTaskStage
-from zuno.services.queue.client import QueueClient, get_queue_names
-from zuno.services.queue.messages import build_task_message
-from zuno.services.rag.handler import RagHandler
-from zuno.services.storage import storage_client
-from zuno.settings import app_settings
-from zuno.utils.file_utils import get_object_key_from_public_url, get_save_tempfile
-from zuno.utils.runtime_observability import get_active_trace_id
+from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile
+from zuno.platform.common.runtime_observability import get_active_trace_id
+from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao
+from zuno.platform.database.dao.knowledge_task import KnowledgeTaskDao
+from zuno.platform.database.models.user import AdminUser
+from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+from zuno.platform.services.pipeline.models import KnowledgeTaskStage
+from zuno.platform.services.queue.client import QueueClient, get_queue_names
+from zuno.platform.services.queue.messages import build_task_message
+from zuno.platform.services.rag.handler import RagHandler
+from zuno.platform.services.storage import storage_client
+from zuno.platform.settings import app_settings
 
 
 class KnowledgeFileService:

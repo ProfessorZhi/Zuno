@@ -1,6 +1,6 @@
 from sqlmodel import and_, delete, select, update
 
-from zuno.database.models.knowledge import KnowledgeTable
+from zuno.platform.database.models.knowledge import KnowledgeTable
 from zuno.platform.database.session import session_getter
 
 

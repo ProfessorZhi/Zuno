@@ -1,5 +1,5 @@
-from zuno.services.rag.es_client import client as es_client
-from zuno.services.rag.vector_db import milvus_client
+from zuno.platform.services.rag.es_client import client as es_client
+from zuno.platform.services.rag.vector_db import milvus_client
 
 
 class MixRetrival:

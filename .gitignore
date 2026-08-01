@@ -26,6 +26,8 @@ src/backend/zuno/config.local.yaml
 .local/
 .agents/
 .codex/
+.qoder/better-harness/
+.qoder/repowiki/
 
 # Agent workflow library: keep durable references/templates/scripts tracked.
 # All local-only notes, scratch space, logs, machine-local state, and secrets
@@ -66,6 +68,7 @@ screenshots-redesign/
 apps/web/output/
 
 # generated RAG evaluation artifacts
+/rag_eval_dataset/
 .local/evals/zuno/rag_eval/corpus/
 .local/evals/zuno/rag_eval/runs/
 .local/evals/zuno/contract_review_eval/.tmp_test_reports/

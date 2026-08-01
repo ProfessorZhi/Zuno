@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.schemas import resp_200
-from zuno.schema.usage_stats import UsageStatsRequest
+from zuno.api.dto.schemas import resp_200
+from zuno.api.dto.usage_stats import UsageStatsRequest
 
 router = APIRouter(tags=["Usage-Stats"])
 

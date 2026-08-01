@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from sqlmodel import delete, desc, select, update
 
-from zuno.database.models.dialog import DialogTable
+from zuno.platform.database.models.dialog import DialogTable
 from zuno.platform.database.session import session_getter
 
 

@@ -2,9 +2,9 @@ from typing import List
 
 from sqlmodel import and_, delete, desc, select, update
 
-from zuno.database.models.mcp_agent import MCPAgentTable
+from zuno.platform.database.models.mcp_agent import MCPAgentTable
 from zuno.platform.database.session import session_getter
-from zuno.utils.helpers import delete_img
+from zuno.platform.common.helpers import delete_img
 
 
 class MCPAgentDao:

@@ -1,6 +1,6 @@
 from fastapi.exceptions import HTTPException
 
-from zuno.schema.schemas import UnifiedResponseModel
+from zuno.api.dto.schemas import UnifiedResponseModel
 
 
 class BaseErrorCode:

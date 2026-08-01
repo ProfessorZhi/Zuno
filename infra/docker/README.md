@@ -15,6 +15,8 @@
 - `minio`：S3 兼容对象存储。
 - `worker`：消费 RabbitMQ 队列，执行文档解析、RAG 索引和 GraphRAG 索引阶段。
 
+默认配置中的 `rag.enable_elasticsearch` 为 `false`，因此 Elasticsearch 不属于默认启动依赖。需要验证 BM25 外部索引读写时，显式启用 `elasticsearch` profile。
+
 ## 要求
 
 - Docker Desktop 或 Docker Engine + Compose v2。
@@ -28,6 +30,12 @@
 ```powershell
 copy infra\docker\docker_config.example.yaml infra\docker\docker_config.local.yaml
 docker compose -f infra/docker/docker-compose.yml up --build -d
+```
+
+启用可选 Elasticsearch：
+
+```powershell
+docker compose --profile elasticsearch -f infra/docker/docker-compose.yml up --build -d
 ```
 
 macOS/Linux：
@@ -151,6 +159,15 @@ docker compose -f infra/docker/docker-compose.yml build `
   --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple `
   --build-arg DEBIAN_MIRROR=mirrors.tuna.tsinghua.edu.cn
 ```
+
+基础设施镜像也可用环境变量覆盖，例如：
+
+```powershell
+$env:ELASTICSEARCH_IMAGE="docker.elastic.co/elasticsearch/elasticsearch:7.17.24"
+docker compose --profile elasticsearch -f infra/docker/docker-compose.yml up -d
+```
+
+Windows Web launcher 会在 `docker compose up` 前串行预拉默认基础设施镜像，并对每个镜像重试 3 次。若某个 registry 在当前网络下不可达，launcher 会打印失败镜像对应的覆盖变量；可先设置 `POSTGRES_IMAGE`、`REDIS_IMAGE`、`RABBITMQ_IMAGE`、`NEO4J_IMAGE`、`MINIO_IMAGE`、`ETCD_IMAGE` 或 `MILVUS_IMAGE` 后重新启动。
 
 ## 常见问题
 

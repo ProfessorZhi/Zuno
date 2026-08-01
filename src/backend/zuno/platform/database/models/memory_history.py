@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import Text, Column, DateTime, text, Boolean
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 
 class MemoryHistoryTable(SQLModelSerializable, table=True):

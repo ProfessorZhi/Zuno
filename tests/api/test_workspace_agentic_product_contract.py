@@ -63,7 +63,7 @@ def _seed_index(client: TestClient, *, workspace_id: str, knowledge_space_id: st
 
 
 def test_workspace_product_schema_serializes_config_and_rejects_internal_profiles() -> None:
-    from zuno.schema.workspace import (
+    from zuno.api.dto.workspace import (
         ChangeImpactPreview,
         KnowledgeSpaceConfig,
         WorkSpaceSimpleTask,

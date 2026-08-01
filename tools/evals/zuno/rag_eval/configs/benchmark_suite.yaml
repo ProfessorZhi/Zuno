@@ -1,0 +1,16 @@
+suite_id: "PublicBenchmarkSuiteV1"
+suite_version: "1.0.0"
+status: "candidate_review_pending"
+slices:
+  - slice_id: "multihop_fact_slice"
+    source_dataset: "hotpot_qa"
+    case_count: 32
+    question_type: "multihop_fact"
+  - slice_id: "graph_reasoning_slice"
+    source_dataset: "multihop_rag"
+    case_count: 24
+    question_type: "multihop_reasoning"
+  - slice_id: "global_summary_slice"
+    source_dataset: "microsoft_graphrag_benchmarking"
+    case_count: 24
+    question_type: "global_summary"

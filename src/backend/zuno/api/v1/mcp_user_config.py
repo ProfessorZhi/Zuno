@@ -4,12 +4,12 @@ from loguru import logger
 from zuno.api.services.mcp_server import MCPService
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.schema.mcp_user_config import (
+from zuno.api.dto.mcp_user_config import (
     MCPUserConfigCreateRequest,
     MCPUserConfigTestRequest,
     MCPUserConfigUpdateRequest,
 )
-from zuno.schema.schemas import UnifiedResponseModel, resp_200, resp_500
+from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 
 router = APIRouter(tags=["MCP-User-Config"])
 

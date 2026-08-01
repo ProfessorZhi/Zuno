@@ -149,7 +149,7 @@ def build_package_a_production_ingestion_runtime(
         object_store=durable_object_store,
         worker_id=worker_id,
     )
-from zuno.schema.workspace import (
+from zuno.api.dto.workspace import (
     ArtifactContract,
     FeedbackContract,
     TraceEventContract,
@@ -1316,7 +1316,17 @@ class WorkspaceTaskRuntimeService:
         return cls.get_task_snapshot(task_id)
 
     @classmethod
-    def approve_task(cls, *, task_id: str, decision: str, comment: str | None, principal_id: str = "") -> dict:
+    def approve_task(
+        cls,
+        *,
+        task_id: str,
+        decision: str,
+        comment: str | None,
+        approval_id: str | None = None,
+        tool_call_id: str | None = None,
+        required_approval: str | None = None,
+        principal_id: str = "",
+    ) -> dict:
         task = cls._require_task(task_id)
         normalized_decision = decision.strip().lower()
         if normalized_decision not in {"approved", "rejected"}:
@@ -1339,7 +1349,37 @@ class WorkspaceTaskRuntimeService:
             )
         )
 
-        pending_tool_request = cls._pending_tool_requests.pop(task_id, None)
+        pending_tool_request = cls._pending_tool_requests.get(task_id)
+        if pending_tool_request is not None:
+            expected_required = f"tool:{pending_tool_request.tool_id}"
+            binding_errors = []
+            if approval_id != pending_tool_request.approval_id:
+                binding_errors.append("approval_id")
+            if tool_call_id != pending_tool_request.tool_request_id:
+                binding_errors.append("tool_call_id")
+            if required_approval not in {None, expected_required}:
+                binding_errors.append("required_approval")
+            if binding_errors:
+                cls._events[task_id].append(
+                    cls._event(
+                        task_id=task_id,
+                        trace_id=task.trace_id or "",
+                        event_type="approval_replay_rejected",
+                        status="approval_waiting",
+                        payload={
+                            "reason": "approval_binding_mismatch",
+                            "mismatched_fields": binding_errors,
+                            "expected_required_approval": expected_required,
+                        },
+                    )
+                )
+                raise HTTPException(
+                    status_code=409,
+                    detail="Approval binding mismatch; fetch the latest pending action before retrying",
+                )
+
+        if pending_tool_request is not None:
+            cls._pending_tool_requests.pop(task_id, None)
 
         if normalized_decision == "rejected":
             cls._durable_runtime.resume_task(

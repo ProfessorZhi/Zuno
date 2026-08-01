@@ -52,7 +52,7 @@
 
 ## Debug Playbooks
 
-- 旧 import 失败：先查 `platform/compatibility/legacy_aliases.py`，再查 `tests/legacy_guards/test_zuno_alias_imports.py`。
+- 旧 import 失败：先查 `platform/compatibility/legacy_aliases.py`，再查 `tests/repo/test_zuno_canonical_import_surfaces.py`。
 - 目录 verifier 失败：先查 `BACKEND_ZUNO_DIRECTORY_CLASSIFICATIONS`、`BACKEND_ZUNO_ALLOWED_TOP_LEVEL_FILES`、`BACKEND_LEGACY_IMPORT_ALIASES` 和 `BACKEND_RETIRED_TOP_LEVEL_PATHS`。
 - 不知道目录归属：先查 `.agent/references/code-map.md`，再查 `.agent/references/runtime-call-chain.md`。
 
@@ -60,7 +60,7 @@
 
 ```powershell
 pytest -q tests/repo/test_repo_structure_consistency.py -p no:cacheprovider
-pytest -q tests/legacy_guards/test_zuno_alias_imports.py -p no:cacheprovider
+pytest -q tests/repo/test_zuno_canonical_import_surfaces.py -p no:cacheprovider
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 ```

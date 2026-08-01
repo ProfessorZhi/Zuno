@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-07-31T02:46:09.544416+00:00",
+  "candidate_file": "docs\\evidence\\goal05-phase22-public-benchmark-review-pack\\candidate_cases.jsonl",
+  "candidate_file_sha256": "0778845012e31392dddfb6b0b64b51c8010f387f4f113a6207ed3f997af004fa",
+  "validator_version": "1.0.0",
+  "total_case_count": 80,
+  "dataset_slice_counts": {
+    "snapshot_multihop_fact_slice": 32,
+    "snapshot_graph_reasoning_slice": 24,
+    "snapshot_global_summary_slice": 24
+  },
+  "verified_count": 20,
+  "incomplete_count": 60,
+  "unverifiable_count": 0,
+  "invalid_count": 0,
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "exact_duplicate_count": 0,
+  "near_duplicate_count": 0,
+  "near_duplicate_threshold": 0.8,
+  "license_verified_count": 80,
+  "license_pending_count": 0,
+  "source_id_verified_count": 80,
+  "evidence_complete_count": 20,
+  "findings_by_rule": {
+    "rule_5": 80,
+    "rule_6": 80,
+    "rule_9": 60,
+    "rule_10": 60,
+    "rule_11": 60,
+    "rule_12": 60,
+    "rule_14": 80
+  },
+  "overall_status": "REVIEW_REQUIRED",
+  "duplicate_details": {
+    "exact_duplicate_count": 0,
+    "exact_duplicate_pairs": [],
+    "near_duplicate_count": 0,
+    "near_duplicate_pairs": [],
+    "near_duplicate_threshold": 0.8
+  }
+}

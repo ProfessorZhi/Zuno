@@ -8,7 +8,7 @@
 
 ## Target role
 
-目标状态下，配置底座归入 Platform 层叙事；`config/` 只有在旧 import path、资源路径或启动配置需要兼容时才保留为 infrastructure source。后续如果收敛到 `platform/config`，必须先证明资源加载路径和 settings tests 不漂移。
+目标状态下，配置底座归入 Platform 层叙事；`config/` 只有在迁移兼容面、资源路径或启动配置需要保留时才作为 infrastructure source。后续如果收敛到 `platform/config`，必须先证明资源加载路径和 settings tests 不漂移。
 
 ## 允许新增内容
 

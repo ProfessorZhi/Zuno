@@ -11,14 +11,14 @@ zuno-canonical-architecture-runtime-realization-v1
 ## 当前状态
 
 - State: active
-- Current phase: `PHASE20`
+- Current phase: `PHASE21`
 - Program version: 2
 - Phase count: 22
 - Atomic Work Packages: 163
 - Execution mode: full-scope / runtime-first / vertical-slice checkpoints / evidence-gated
 - Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
 
-2026-07-20 Goal01 audit 将 PHASE11 Durable Ingestion and Source Lineage 重新打开为 in_progress。2026-07-24 的 Goal02 final closure 已完成有限 Closure Review 并恢复传输。Goal03 Backend Platform Expansion 已完成 Wave A 和 Wave B。Goal04 PR B 已完成 PHASE16 Coordinator Closure 并合并到 main；Goal04 PR C 已完成 PHASE17 Coordinator Closure 并合并到 main；Goal04 PR D 已完成 PHASE18 Coordinator Closure 并合并到 main；Goal04 PR A 已完成 PHASE10 Coordinator Closure 并合并到 main。PHASE19 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`。PHASE20 ready；production ready 未建立。
+2026-07-20 Goal01 audit 将 PHASE11 Durable Ingestion and Source Lineage 重新打开为 in_progress。2026-07-24 的 Goal02 final closure 已完成有限 Closure Review 并恢复传输。Goal03 Backend Platform Expansion 已完成 Wave A 和 Wave B，但 Goal05 一次性 Target Coverage Audit 曾撤回 PHASE15 completed 结论，随后在真实 Deno/Pyodide、OCI runtime 和 Postgres integration 证据补齐后重新关闭 PHASE15。Goal04 PR B 已完成 PHASE16 Coordinator Closure 并合并到 main；Goal04 PR C 已完成 PHASE17 Coordinator Closure 并合并到 main；Goal04 PR D 已完成 PHASE18 Coordinator Closure 并合并到 main；Goal04 PR A 已完成 PHASE10 Coordinator Closure 并合并到 main。PHASE19 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`。PHASE20 Eval Runtime 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal05-phase20-eval-runtime.md`。PHASE21 现在进入 Fault / E2E / Cutover 阶段；production ready 未建立。
 
 ## 必读文件
 

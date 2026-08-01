@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-from zuno.services.graphrag.models import GraphRAGProjectContract
+from zuno.platform.services.graphrag.models import GraphRAGProjectContract
 
 
 def _with_legacy_project_id(data: Any) -> Any:

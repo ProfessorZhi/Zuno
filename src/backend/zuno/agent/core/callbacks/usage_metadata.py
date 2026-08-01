@@ -7,9 +7,9 @@ from langchain_core.messages import AIMessage
 from langchain_core.messages.ai import UsageMetadata, add_usage
 from langchain_core.outputs import ChatGeneration, LLMResult
 
-from zuno.database import SystemUser
 from zuno.api.services.usage_stats import UsageStatsService
-from zuno.utils.contexts import get_user_id_context, get_agent_name_context
+from zuno.platform.common.contexts import get_user_id_context, get_agent_name_context
+from zuno.platform.database import SystemUser
 
 
 class UsageMetadataCallbackHandler(BaseCallbackHandler):

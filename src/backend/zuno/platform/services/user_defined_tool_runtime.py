@@ -4,13 +4,13 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple
 from langchain_core.tools import BaseTool, StructuredTool
 from pydantic import BaseModel, Field, create_model
 
-from zuno.database import ToolTable
 from zuno.capability.tool_runtime import ToolInvocationGateway
 from zuno.platform.database import engine
+from zuno.platform.database import ToolTable
 from zuno.platform.database.tool_runtime import ToolUnitOfWork
-from zuno.services.simple_api_tool import normalize_remote_api_auth_config
-from zuno.tools.cli_tool.adapter import CLIToolAdapter
-from zuno.tools.openapi_tool.adapter import OpenAPIToolAdapter
+from zuno.platform.services.simple_api_tool import normalize_remote_api_auth_config
+from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter
+from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter
 
 
 PHASE15_SIDE_EFFECT_BLOCK_REASON = "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"

@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import JSON, Column, DateTime, text
 
-from zuno.database.models.base import SQLModelSerializable
+from zuno.platform.database.models.base import SQLModelSerializable
 
 # 规范Milvus 和 Elasticsearch的命名名称
 def get_knowledge_id():

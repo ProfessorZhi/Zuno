@@ -3,7 +3,7 @@ import pkgutil
 
 from sqlmodel import SQLModel
 
-from zuno.database import models as model_package
+from zuno.platform.database import models as model_package
 
 
 def import_all_models() -> None:

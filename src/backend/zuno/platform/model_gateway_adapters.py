@@ -51,7 +51,7 @@ class OpenAIEmbeddingGatewayAdapter:
 
 
 def build_openai_embedding_gateway_adapter(config_override: Any = None) -> OpenAIEmbeddingGatewayAdapter:
-    from zuno.core.models.manager import ModelManager
+    from zuno.agent.core.models.manager import ModelManager
 
     config = _normalize_embedding_config_override(config_override) or ModelManager.get_model_config(
         "embedding",

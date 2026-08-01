@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlmodel import delete, select
 
-from zuno.database.models.memory_history import MemoryHistoryTable
+from zuno.platform.database.models.memory_history import MemoryHistoryTable
 from zuno.platform.database.session import session_getter
 
 logger = logging.getLogger(__name__)
