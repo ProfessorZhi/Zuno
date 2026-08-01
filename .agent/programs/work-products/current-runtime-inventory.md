@@ -63,9 +63,9 @@ legacy/removal task
 | --- | --- |
 | entrypoint | `POST /api/v1/completion` in `src/backend/zuno/api/v1/completion.py` |
 | caller | Web/API clients and `tests/api/test_completion_unified_runtime.py` |
-| callee | `CompletionService` -> `GeneralAgent.astream()`; unified runtime metadata hook for tests |
+| callee | `CompletionService.stream_unified_runtime()` -> `UnifiedAgentRuntimeService.stream()`; retired rollback is fail-closed |
 | factory/registry/decorator/plugin loader/env flag/string route/MCP/CLI/worker | FastAPI `@router.post`, string route `/completion`; `CompletionService.configure_unified_runtime_store_for_tests` test hook |
-| default implementation | local `GeneralAgent` single loop with model gateway default factory |
+| default implementation | Product Runtime new-default path through unified runtime service |
 | feature flag | no product cutover flag; runtime store hook is test-only |
 | state owner | Product Surface owns request/response surface; Agent Core owns run loop behavior |
 | transaction boundary | no canonical PostgreSQL transaction; current path streams from in-process service |
@@ -205,11 +205,11 @@ legacy/removal task
 
 | field | value |
 | --- | --- |
-| entrypoint | `GeneralAgent.astream()` and API services importing `GeneralAgent` |
-| caller | Completion service, legacy workspace services, tests |
+| entrypoint | `GeneralAgent.astream()` focused agent-layer tests and canonical `zuno.agent` facade imports |
+| caller | focused agent/runtime tests and internal agent-layer compatibility surfaces; not `/completion` default or rollback |
 | callee | `ContextOrchestrator.prepare`, `KnowledgeQueryService.query`, model gateway, tool bridge, `RuntimeTurnLedger.from_runtime` |
-| factory/registry/decorator/plugin loader/env flag/string route/MCP/CLI/worker | lazy imports via `zuno.agent.runtime`, legacy aliases via `platform/compatibility/legacy_aliases.py`; capability registry in setup |
-| default implementation | single GeneralAgent ReAct loop |
+| factory/registry/decorator/plugin loader/env flag/string route/MCP/CLI/worker | canonical lazy exports via `zuno.agent` / `zuno.agent.core`; capability registry in setup |
+| default implementation | contained agent-layer ReAct loop; product `/completion` no longer routes here |
 | feature flag | `AgentConfig.enable_memory`, selected tools/MCP/knowledge ids |
 | state owner | Agent Core current local loop; Memory/Knowledge/Tool owners consumed through local facades |
 | transaction boundary | no canonical run transaction; local memory/raw event writes when enabled |
@@ -217,7 +217,7 @@ legacy/removal task
 | security gate | local tool approval/permissions surfaces; no full server security decision Current |
 | test evidence | `tests/agent/test_generalagent_context_memory_runtime.py`, `tests/repo/test_phase11b_single_generalagent_cutover.py` |
 | target phase | PHASE08, PHASE13, PHASE15 |
-| legacy/removal task | PHASE22 legacy alias/import retirement |
+| legacy/removal task | PHASE22 completion rollback retirement completed; remaining GeneralAgent class is contained agent-layer surface, not Product default |
 
 ### RC-010 Knowledge Query and Agentic Retrieval
 

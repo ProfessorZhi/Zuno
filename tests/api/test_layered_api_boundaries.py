@@ -79,7 +79,8 @@ def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
     assert "from zuno.api.services.completion import CompletionService" in controller
     assert "from zuno.core.agents.general_agent import AgentConfig, GeneralAgent" not in controller
     assert "from zuno.services.memory.client import memory_client" not in controller
-    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" in service
+    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" not in service
+    assert "CompletionService.stream_unified_runtime" in controller
     assert "from zuno.platform.services.memory.client import memory_client" in service
     assert "from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT" in service
     assert "from zuno.api.dto.completion import CompletionReq" in service
@@ -337,7 +338,8 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.dao.agent_skill import AgentSkillDao" in agent_skill
     assert "from zuno.platform.database.models.agent_skill import AgentSkill" in agent_skill
     assert "from zuno.platform.resources.prompts.skill import AgentSkillAsToolPrompt" in agent_skill
-    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" in completion
+    assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" not in completion
+    assert "async def stream_unified_runtime" in completion
     assert "from zuno.platform.services.memory.client import memory_client" in completion
     assert "from zuno.platform.services.redis import redis_client" in wechat
     assert "from zuno.platform.services.workspace.wechat_agent import WeChatAgent" in wechat

@@ -53,7 +53,7 @@ def verify_phase01_baseline() -> list[str]:
         "knowledge synthetic evidence": (KNOWLEDGE_STEP, 'evidence_ids=[f"evidence:{state.run_id}:{step.step_id}"]'),
         "completion canned answer": (COMPLETION_SERVICE, '"Unified runtime completed."'),
         "completion opt-in unified runtime": (COMPLETION_ROUTE, 'req.product_mode == "unified_runtime"'),
-        "general agent default path": (COMPLETION_ROUTE, "chat_agent, agent_config = await _create_chat_agent"),
+        "completion rollback retired": (COMPLETION_SERVICE, "completion rollback mode is retired after PHASE22 cutover"),
     }
     for label, (path, phrase) in expected_current_gaps.items():
         if not _contains(path, phrase):
@@ -129,8 +129,12 @@ def verify_enforce_product_cutover() -> list[str]:
         errors.append("Completion still requires product_mode unified_runtime opt-in")
     if '"Unified runtime completed."' in completion_service:
         errors.append("Completion still emits canned unified runtime completion text")
-    if "legacy_general_agent" not in completion_route + completion_service:
-        errors.append("Completion cutover missing explicit legacy_general_agent rollback flag")
+    if "legacy_general_agent" in completion_route + completion_service:
+        errors.append("Completion cutover still exposes retired legacy_general_agent rollback")
+    if "_create_chat_agent" in completion_route:
+        errors.append("Completion route still contains retired GeneralAgent rollback helper")
+    if "GeneralAgent" in completion_route:
+        errors.append("Completion route still exposes GeneralAgent rollback surface")
     return errors
 
 

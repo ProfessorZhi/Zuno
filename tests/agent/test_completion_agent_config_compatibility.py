@@ -1,128 +1,66 @@
+from __future__ import annotations
+
 import asyncio
 from types import SimpleNamespace
 
+import pytest
 
-def test_completion_passes_dialog_id_into_general_agent(monkeypatch):
-    from zuno.api.v1.completion import completion
+
+def test_completion_route_no_longer_exports_general_agent_rollback() -> None:
+    import zuno.api.v1.completion as completion_module
+
+    assert "GeneralAgent" not in completion_module.__all__
+    assert "AgentConfig" not in completion_module.__dict__
+    assert "GeneralAgent" not in completion_module.__dict__
+    assert "_create_chat_agent" not in completion_module.__dict__
+
+
+def test_completion_rejects_retired_rollback_mode_before_agent_config(monkeypatch) -> None:
     from zuno.api.dto.completion import CompletionReq
+    from zuno.api.v1.completion import completion
 
-    captured = {}
+    async def fail_stream_unified_runtime(**kwargs):
+        raise AssertionError(f"retired rollback reached unified runtime: {kwargs!r}")
+        yield {}
+
     monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
-
-    class FakeAgent:
-        def __init__(self, agent_config):
-            captured["dialog_id"] = agent_config.dialog_id
-            captured["product_mode"] = agent_config.product_mode
-            captured["query_method"] = agent_config.query_method
-
-        async def init_agent(self):
-            return None
-
-        async def astream(self, messages):
-            yield {
-                "type": "response_chunk",
-                "timestamp": 0.0,
-                "data": {"chunk": "ok", "accumulated": "ok"},
-            }
-
-        def stop_streaming_callback(self):
-            return None
-
-    async def fake_get_agent_by_dialog_id(dialog_id):
-        assert dialog_id == "dialog_42"
-        return {
-            "user_id": "u_agent",
-            "llm_id": "",
-            "mcp_ids": [],
-            "knowledge_ids": ["kb_1"],
-            "domain_pack_id": "contract_review",
-            "tool_ids": [],
-            "agent_skill_ids": [],
-            "system_prompt": "review contract",
-            "enable_memory": False,
-            "name": "contract-agent",
-        }
-
-    async def fake_select_history(dialog_id):
-        return []
-
-    async def fake_save_chat_history(**kwargs):
-        return None
-
-    monkeypatch.setattr("zuno.api.v1.completion.GeneralAgent", FakeAgent)
-    monkeypatch.setattr("zuno.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
-    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.select_history", fake_select_history)
-    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
-
-    response = asyncio.run(
-        completion(
-            req=CompletionReq(user_input="审查合同", dialog_id="dialog_42", file_url=None),
-            login_user=SimpleNamespace(user_id="u_login"),
-        )
+    monkeypatch.setattr(
+        "zuno.api.v1.completion.CompletionService.stream_unified_runtime",
+        fail_stream_unified_runtime,
     )
 
-    assert captured["dialog_id"] == "dialog_42"
-    assert captured["product_mode"] == "auto"
-    assert captured["query_method"] is None
-    assert response.media_type == "text/event-stream"
+    with pytest.raises(ValueError, match="rollback mode is retired"):
+        asyncio.run(
+            completion(
+                req=CompletionReq(user_input="审查合同", dialog_id="dialog_42", file_url=None),
+                login_user=SimpleNamespace(user_id="u_login"),
+            )
+        )
 
 
-def test_completion_can_enable_multi_agent_runtime(monkeypatch):
-    from zuno.api.v1.completion import completion
+def test_completion_new_default_returns_unified_stream_without_agent_config(monkeypatch) -> None:
     from zuno.api.dto.completion import CompletionReq
+    from zuno.api.v1.completion import completion
 
     captured = {}
-    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
 
-    class FakeAgent:
-        def __init__(self, agent_config):
-            captured["multi_agent_enabled"] = agent_config.multi_agent_enabled
-            captured["product_mode"] = agent_config.product_mode
-            captured["query_method"] = agent_config.query_method
-
-        async def init_agent(self):
-            return None
-
-        async def astream(self, messages):
-            yield {
-                "type": "response_chunk",
-                "timestamp": 0.0,
-                "data": {"chunk": "ok", "accumulated": "ok"},
-            }
-
-        def stop_streaming_callback(self):
-            return None
-
-    async def fake_get_agent_by_dialog_id(dialog_id):
-        assert dialog_id == "dialog_multi"
-        return {
-            "user_id": "u_agent",
-            "llm_id": "",
-            "mcp_ids": [],
-            "knowledge_ids": ["kb_1"],
-            "domain_pack_id": "contract_review",
-            "tool_ids": [],
-            "agent_skill_ids": [],
-            "system_prompt": "review contract",
-            "enable_memory": False,
-            "name": "contract-agent",
+    async def fake_stream_unified_runtime(**kwargs):
+        captured.update(kwargs)
+        yield {
+            "type": "response_chunk",
+            "data": {"chunk": "ok", "runtime_topology": "unified_agent_runtime"},
         }
 
-    async def fake_select_history(dialog_id):
-        return []
+    monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
+    monkeypatch.setattr(
+        "zuno.api.v1.completion.CompletionService.stream_unified_runtime",
+        fake_stream_unified_runtime,
+    )
 
-    async def fake_save_chat_history(**kwargs):
-        return None
-
-    monkeypatch.setattr("zuno.api.v1.completion.GeneralAgent", FakeAgent)
-    monkeypatch.setattr("zuno.api.v1.completion.DialogService.get_agent_by_dialog_id", fake_get_agent_by_dialog_id)
-    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.select_history", fake_select_history)
-    monkeypatch.setattr("zuno.api.v1.completion.HistoryService.save_chat_history", fake_save_chat_history)
-
-    response = asyncio.run(
-        completion(
+    async def call_and_drain_response():
+        response = await completion(
             req=CompletionReq(
-                user_input="用多 agent 审查合同",
+                user_input="用目标 runtime 审查合同",
                 dialog_id="dialog_multi",
                 file_url=None,
                 multi_agent_enabled=True,
@@ -131,9 +69,15 @@ def test_completion_can_enable_multi_agent_runtime(monkeypatch):
             ),
             login_user=SimpleNamespace(user_id="u_login"),
         )
-    )
+        chunks = []
+        async for chunk in response.body_iterator:
+            chunks.append(chunk)
+        return response, chunks
 
-    assert captured["multi_agent_enabled"] is True
-    assert captured["product_mode"] == "enhanced"
-    assert captured["query_method"] == "local"
+    response, chunks = asyncio.run(call_and_drain_response())
+
+    assert captured["login_user_id"] == "u_login"
+    assert captured["cutover_mode"] == "new_default"
+    assert captured["req"].dialog_id == "dialog_multi"
+    assert chunks
     assert response.media_type == "text/event-stream"

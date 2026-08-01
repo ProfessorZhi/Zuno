@@ -12,13 +12,13 @@ version_policy:
 endpoints:
   - endpoint: "POST /api/v1/completion"
     current_handler: "src/backend/zuno/api/v1/completion.py::completion"
-    current_contract: "completion SSE stream defaults to Product Runtime cutover mode; retired ZUNO_AGENT_RUNTIME rollback is ignored"
+    current_contract: "completion SSE stream defaults to Product Runtime cutover mode; retired ZUNO_AGENT_RUNTIME rollback is ignored and retired ZUNO_COMPLETION_CUTOVER_MODE=rollback is rejected"
     strategy: "version_adapter_then_remove"
     canonical_target: "Product Command creates RuntimeRequest and Product Stream returns Projection events"
     compatibility_adapter: "api/product/v1/completion_adapter"
     client_surfaces: ["apps/web existing completion callers if any", "external demo clients"]
     required_guards: ["no direct GeneralAgent default", "Security/Budget/Trace/RunOutcome preserved"]
-    rollback: "explicit ZUNO_COMPLETION_CUTOVER_MODE=rollback drill only; no ZUNO_AGENT_RUNTIME legacy default fallback"
+    rollback: "retired and fail-closed; no ZUNO_COMPLETION_CUTOVER_MODE=rollback or ZUNO_AGENT_RUNTIME legacy fallback"
     sunset: "PHASE10"
     removal_task: "P22-T03"
   - endpoint: "POST /api/v1/workspace/task"

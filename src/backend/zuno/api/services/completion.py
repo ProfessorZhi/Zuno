@@ -6,11 +6,9 @@ from uuid import uuid4
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
-from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
 from zuno.api.services.product import ProductService
 from zuno.api.dto.completion import CompletionReq
-from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent
 from zuno.agent.runtime import CutoverMode
 from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.platform.contracts import canonical_sha256
@@ -112,8 +110,10 @@ class CompletionService:
     @staticmethod
     def resolve_cutover_mode() -> CutoverMode:
         configured_mode = str(os.getenv("ZUNO_COMPLETION_CUTOVER_MODE", "") or "").strip().lower()
-        if configured_mode in {"shadow", "canary", "new_default", "rollback"}:
+        if configured_mode in {"shadow", "canary", "new_default"}:
             return configured_mode
+        if configured_mode == "rollback":
+            raise ValueError("completion rollback mode is retired after PHASE22 cutover")
         if configured_mode:
             raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
         return "new_default"
@@ -211,20 +211,6 @@ class CompletionService:
             "stream_cursor_id": result.projection.stream_cursor_id,
             "available_action_tokens": [action.action_token_id for action in result.available_actions],
         }
-
-    @staticmethod
-    async def create_chat_agent(req: CompletionReq, login_user_id: str):
-        db_config = await DialogService.get_agent_by_dialog_id(dialog_id=req.dialog_id)
-        agent_config = AgentConfig(**db_config)
-        agent_config.user_id = login_user_id
-        agent_config.dialog_id = req.dialog_id
-        agent_config.multi_agent_enabled = bool(req.multi_agent_enabled)
-        agent_config.product_mode = req.product_mode
-        agent_config.query_method = req.query_method
-
-        chat_agent = GeneralAgent(agent_config)
-        await chat_agent.init_agent()
-        return chat_agent, agent_config
 
     @staticmethod
     async def build_history_text(*, agent_config, original_user_input: str, dialog_id: str) -> str:
