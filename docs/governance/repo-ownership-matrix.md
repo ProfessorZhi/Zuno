@@ -12,9 +12,9 @@ phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 
 - `src/backend/zuno` 顶层只有 `api / agent / memory / capability / knowledge / platform` 六层。
 - `platform/services` 仍是主要 migration source，不能 bulk move。
-- `zuno.schema.*`、`zuno.database.*` 和 `zuno.services.*` 是 public legacy import aliases，当前分别指向 `api/dto`、`platform/database` 和 `platform/services`，不能直接删除。
-- `platform/compatibility/vendor/fastapi_jwt_auth` 仍是当前兼容路径，`platform/vendor` 只是 PHASE02 建立的目标 owner 和 import guard。
-- 新增 runtime 代码不得写入 `platform/compatibility`。compatibility 只保留 legacy import registry 和当前已存在的兼容 vendor 路径。
+- `zuno.schema.*`、`zuno.database.*` 和 `zuno.services.*` 是已退休或待收敛的 public legacy import surfaces，不是默认运行路径；当前 owner 分别是 `api/dto`、`platform/database` 和 `platform/services`。
+- `platform/compatibility/` 在 PHASE22 Wave 1 已删除；`fastapi_jwt_auth` 第三方 shim 已物理迁移到 `platform/vendor/fastapi_jwt_auth`，canonical import path 为 `zuno.platform.vendor.fastapi_jwt_auth`。
+- 新增 runtime 代码不得写入 `platform/compatibility`（目录已不存在）；如需第三方 shim 只能放入 canonical `platform/vendor/`。
 
 ## Runtime Domain Coverage
 
@@ -44,9 +44,9 @@ phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 | src/backend/zuno/api/dto | physical-dto-owner | api/dto | src/backend/zuno/api/dto | zuno.schema.* | high | tests/api; tests/api/test_workspace_product_loop_contract.py; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
 | src/backend/zuno/platform/database | physical-database-owner | platform/database | src/backend/zuno/platform/database | zuno.database.* | high | tests/storage; tests/repo/test_repo_structure_consistency.py; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
 | src/backend/zuno/platform/storage | physical-storage-owner | platform/storage | src/backend/zuno/platform/storage | zuno.services.storage.* during migration | high | tests/storage; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
-| zuno.schema.* | legacy-public-alias | api/dto | src/backend/zuno/api/dto | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/api; tests/api/test_workspace_product_loop_contract.py; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
-| zuno.database.* | legacy-public-alias | platform/database | src/backend/zuno/platform/database | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/storage; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
-| zuno.services.* | legacy-public-alias | platform/services | src/backend/zuno/platform/services | src/backend/zuno/platform/compatibility/legacy_aliases.py | high | tests/agent; tests/api; tests/retrieval; tests/tools; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | legacy-alias-current |
+| zuno.schema.* | retired-public-alias | api/dto | src/backend/zuno/api/dto | n/a; `platform/compatibility/legacy_aliases.py` removed | high | tests/api; tests/api/test_workspace_product_loop_contract.py; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_phase22_cleanup_boundary.py | wave-1-retired |
+| zuno.database.* | retired-public-alias | platform/database | src/backend/zuno/platform/database | n/a; `platform/compatibility/legacy_aliases.py` removed | high | tests/storage; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_phase22_cleanup_boundary.py | wave-1-retired |
+| zuno.services.* | migration-source-public-surface | platform/services | src/backend/zuno/platform/services | n/a; no `platform/compatibility` registry | high | tests/agent; tests/api; tests/retrieval; tests/tools; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_phase22_cleanup_boundary.py | migration-source-not-default |
 | src/backend/zuno/knowledge/ingestion | reserved-import-guard | knowledge/ingestion | src/backend/zuno/knowledge/ingestion | platform/services/convert_files and pipeline remain current | high | tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
 | src/backend/zuno/platform/security | reserved-import-guard | platform/security | src/backend/zuno/platform/security | zuno.services.sandbox and execution_policy remain current | high | tests/tools; tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
 | src/backend/zuno/platform/observability | reserved-import-guard | platform/observability | src/backend/zuno/platform/observability | zuno.utils.runtime_observability alias remains current | medium | tests/agent; tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
@@ -88,9 +88,9 @@ phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 | src/backend/zuno/capability/mcp/servers/qa_echo | mcp-smoke-server | capability/mcp | src/backend/zuno/capability/mcp/servers/qa_echo | zuno.mcp_servers.qa_echo.* | low | tests/tools; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
 | src/backend/zuno/capability/mcp/servers/remote_proxy | mcp-compat-proxy | capability/mcp | src/backend/zuno/capability/mcp/servers/remote_proxy | zuno.mcp_servers.remote_proxy.* | high | tests/tools; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
 | src/backend/zuno/capability/mcp/servers/weather | mcp-provider | capability/mcp | src/backend/zuno/capability/mcp/servers/weather | zuno.mcp_servers.weather.* | low | tests/tools; tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current-owned |
-| src/backend/zuno/platform/compatibility/legacy_aliases.py | legacy-import-registry | platform/compatibility | src/backend/zuno/platform/compatibility/legacy_aliases.py | zuno.compatibility and retired public imports | high | tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_repo_structure.py | current |
-| src/backend/zuno/platform/compatibility/vendor/fastapi_jwt_auth | vendor-shim-current-compat-path | platform/vendor | future src/backend/zuno/platform/vendor/fastapi_jwt_auth | zuno.compatibility.vendor.fastapi_jwt_auth | high | tests/api/test_fastapi_jwt_auth_compat.py | python tools/scripts/verify_repo_structure.py | current-compat-shim |
-| src/backend/zuno/platform/vendor | target-vendor-owner | platform/vendor | src/backend/zuno/platform/vendor | no runtime import yet | high | tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_repo_structure.py | target-owner-reserved |
+| src/backend/zuno/platform/compatibility/legacy_aliases.py | retired-legacy-import-registry | platform/compatibility (deleted) | not current; alias registry removed | zuno.compatibility and retired public imports | high | tests/repo/test_zuno_canonical_import_surfaces.py | python tools/scripts/verify_phase22_cleanup_boundary.py | wave-1-retired |
+| src/backend/zuno/platform/vendor/fastapi_jwt_auth | canonical-vendor-shim | platform/vendor | src/backend/zuno/platform/vendor/fastapi_jwt_auth | zuno.platform.vendor.fastapi_jwt_auth | high | tests/api/test_fastapi_jwt_auth_compat.py | python tools/scripts/verify_phase22_cleanup_boundary.py | wave-1-canonical |
+| src/backend/zuno/platform/vendor | canonical-vendor-owner | platform/vendor | src/backend/zuno/platform/vendor | n/a | high | tests/repo/test_repo_structure_consistency.py | python tools/scripts/verify_phase22_cleanup_boundary.py | canonical-owner-active |
 
 ## PHASE05 Owner Surface Pin
 
@@ -107,14 +107,14 @@ phase: PHASE02_runtime-migration-map-and-repo-ownership-lock
 
 | compatibility surface | PHASE05 status | retirement condition |
 | --- | --- | --- |
-| `zuno.schema.*` | 保留；映射到 `api/dto`。 | 所有 public DTO import consumer 迁移后，先更新 canonical import guard，再按单独 public API 计划退休。 |
+| `zuno.schema.*` | Wave 1 已从默认 runtime import 面退休；canonical owner 是 `api/dto`。 | 任何剩余 consumer 必须迁到 canonical import；禁止恢复 `platform/compatibility/legacy_aliases.py`。 |
 | `zuno.services.application.capabilities.*` | 保留；真实 provider foundation 仍在 `platform/services/application/capabilities/`。 | Capability provider runtime 有独立 owner、import matrix 和 focused tests 后，再逐项迁移。 |
-| `platform/compatibility/legacy_aliases.py` | 保留；是旧 public path 的唯一注册表。 | 所有被保护 alias 都有替代路径、consumer 迁移证据和 canonical repo guard 更新后才能收缩。 |
-| `platform/compatibility/vendor/fastapi_jwt_auth` | 保留；当前 vendor shim compat path。 | `platform/vendor/fastapi_jwt_auth` 迁移方案、API compat tests 和 import matrix 完成后再迁移。 |
+| `platform/compatibility/legacy_aliases.py` | Wave 1 已删除。 | n/a |
+| `platform/compatibility/vendor/fastapi_jwt_auth` | Wave 1 已迁移到 `platform/vendor/fastapi_jwt_auth`。 | canonical owner 验证由 `verify_phase22_cleanup_boundary.py` 强制：vendor shim 必须位于 `platform/vendor/`，任何回写到 `platform/compatibility/vendor/fastapi_jwt_auth` 都失败。 |
 
 ## Guardrails
 
 - 新增 `platform/services/*` 子目录前，必须先更新 `PLATFORM_SERVICES_TARGET_OWNERS` 和本矩阵。
 - 新增 `capability/tools/*` 或 `capability/mcp/servers/*` 前，必须先更新 provider 分类和本矩阵。
-- `platform/compatibility` 不接收新 runtime code。只有 `legacy_aliases.py` 和当前已存在的 `vendor/fastapi_jwt_auth` 兼容路径属于允许范围；`legacy/` 空包已在 PHASE22 删除。
-- `platform/vendor` 在 PHASE02 只作为目标 owner 和 import guard；迁移实际 vendor shim 前，必须先更新 `tests/api/test_fastapi_jwt_auth_compat.py` 和 legacy import matrix。
+- `platform/compatibility` 已删除；任何回写到 `platform/compatibility/` 或 `platform/compatibility/legacy_aliases.py` 都会被 `verify_phase22_cleanup_boundary.py` 拒绝。
+- 第三方 shim 只允许放在 `platform/vendor/<name>/`，canonical import path 形如 `zuno.platform.vendor.<name>`；Wave 1 的 `fastapi_jwt_auth` 已是这一模式。

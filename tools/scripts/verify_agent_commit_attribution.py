@@ -11,6 +11,7 @@ ALLOWED_AGENTS = {
     "Antigravity",
     "Qoder",
     "Codex",
+    "Claude-Code",
     "Trae",
     "ChatGPT-Docs",
     "Human",
@@ -23,6 +24,7 @@ ALLOWED_MODES = {
     "Standard",
     "Docs-Maintenance",
     "Human",
+    "Goal",
 }
 
 BOT_AUTHORS = {
