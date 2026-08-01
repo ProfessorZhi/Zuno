@@ -1,8 +1,10 @@
 # PHASE22 Release Decision Engine
 
 > work package: `MM-PHASE22-BENCHMARK-RELEASE-DECISION`
+> PR: <https://github.com/ProfessorZhi/Zuno/pull/63>
 > branch: `agent/minimax/phase22-release-decision-engine`
 > base: `docs/phase22-agent-performance-governance` @ `3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1`
+> head: `1f4ae9050d1db011b227d9e03944a2341a991248`
 
 This document records the PR for `P22-T02` (Benchmark Comparison and Release
 Decision). The work package introduces a deterministic, fail-closed
