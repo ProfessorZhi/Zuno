@@ -977,6 +977,7 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
         metrics=None,
         failure_fingerprint="Mock Fingerprint",
         incomparable_reason="dataset_insufficient",
+        git_info=("clean-run-sha", False),
     )
 
     manifest_file = tmp_path / "benchmark_manifest.json"
@@ -987,6 +988,8 @@ def test_benchmark_manifest_and_schema_validation_paths(tmp_path: Path) -> None:
     assert manifest_data["benchmark_id"] == "enterprise_rag_paired_benchmark"
     assert manifest_data["status"] == "BLOCKED"
     assert manifest_data["measurement_status"] == "blocked_not_measured"
+    assert manifest_data["git_commit_sha"] == "clean-run-sha"
+    assert manifest_data["working_tree_dirty"] is False
     assert manifest_data["failure_fingerprint"] == "Mock Fingerprint"
     assert manifest_data["incomparable_reason"] == "dataset_insufficient"
     assert manifest_data["is_comparable"] is False

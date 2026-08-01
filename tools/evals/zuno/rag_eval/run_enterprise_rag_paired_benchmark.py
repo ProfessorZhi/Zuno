@@ -383,8 +383,9 @@ def _build_and_write_benchmark_manifest(
     failure_fingerprint: str | None = None,
     incomparable_reason: str | None = None,
     gap_report: dict[str, Any] | None = None,
+    git_info: tuple[str, bool] | None = None,
 ) -> None:
-    git_sha, git_dirty = _get_git_info()
+    git_sha, git_dirty = git_info if git_info is not None else _get_git_info()
     dataset_sha = _sha256_file(dataset_path) if dataset_path else None
     corpus_sha = _sha256_file(corpus_manifest_path) if corpus_manifest_path else None
     profile_set = dict(PROFILE_ALIASES)
@@ -1857,6 +1858,7 @@ async def run_enterprise_rag_paired_benchmark(
 
     import traceback
     created_at = time.time()
+    run_git_info = _get_git_info()
     output_root.mkdir(parents=True, exist_ok=True)
 
     reproduce_argv, reproduce_cmd = _render_reproduce_command(
@@ -1985,6 +1987,7 @@ async def run_enterprise_rag_paired_benchmark(
                 metrics=metrics,
                 incomparable_reason=incomp_reason,
                 gap_report=gap_report,
+                git_info=run_git_info,
             )
             return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
 
@@ -2019,7 +2022,8 @@ async def run_enterprise_rag_paired_benchmark(
                 corpus_manifest_path=corpus_manifest_path,
                 profile_completeness=None,
                 metrics=metrics,
-                incomparable_reason="prepared_only_no_metrics"
+                incomparable_reason="prepared_only_no_metrics",
+                git_info=run_git_info,
             )
             return {"status": "prepared", "metrics_source": "prepared_not_measured", "output_root": str(output_root)}
 
@@ -2074,6 +2078,7 @@ async def run_enterprise_rag_paired_benchmark(
                 metrics=metrics,
                 failure_fingerprint=str(exc),
                 incomparable_reason=f"profile_runner_failed_with_exception: {exc}",
+                git_info=run_git_info,
             )
             return {"status": "blocked", "metrics_source": "blocked_not_measured", "output_root": str(output_root)}
 
@@ -2208,6 +2213,7 @@ async def run_enterprise_rag_paired_benchmark(
             profile_completeness=profile_completeness,
             metrics=metrics,
             incomparable_reason=incomp_reason,
+            git_info=run_git_info,
         )
 
         return {
@@ -2232,7 +2238,8 @@ async def run_enterprise_rag_paired_benchmark(
             profile_completeness=None,
             metrics=None,
             failure_fingerprint=traceback.format_exc(),
-            incomparable_reason=f"runtime_unhandled_exception: {err}"
+            incomparable_reason=f"runtime_unhandled_exception: {err}",
+            git_info=run_git_info,
         )
         raise
 
