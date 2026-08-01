@@ -302,6 +302,26 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _is_ignored_local_artifact(path: Path) -> bool:
+    """Return true for local runtime artifacts that do not prove source revival."""
+    return (
+        any(part == "__pycache__" for part in path.parts)
+        or path.suffix in {".pyc", ".pyo"}
+    )
+
+
+def _contains_non_artifact_path(path: Path) -> bool:
+    """Whether a forbidden root still contains meaningful source/doc content."""
+    if not path.exists():
+        return False
+    if path.is_file():
+        return not _is_ignored_local_artifact(path)
+    for child in path.rglob("*"):
+        if child.is_file() and not _is_ignored_local_artifact(child):
+            return True
+    return False
+
+
 def _load_active_candidate_allowlist(work_product_path: Path) -> tuple[set[str], list[str]]:
     """Return the legacy-segment allowlist parsed from the work product.
 
@@ -626,7 +646,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     legacy_alias_module = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "legacy_aliases.py"
 
     for forbidden_root in forbidden_roots:
-        if forbidden_root.exists():
+        if _contains_non_artifact_path(forbidden_root):
             errors.append(
                 f"forbidden root re-introduced: {forbidden_root.relative_to(REPO_ROOT)}"
             )
@@ -718,7 +738,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     retired_vendor_shim = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "vendor" / "fastapi_jwt_auth"
     if not canonical_vendor_shim.is_dir():
         errors.append("canonical vendor shim missing: src/backend/zuno/platform/vendor/fastapi_jwt_auth")
-    if retired_vendor_shim.exists():
+    if _contains_non_artifact_path(retired_vendor_shim):
         errors.append("retired vendor shim still present under platform/compatibility/vendor/fastapi_jwt_auth")
 
     feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")

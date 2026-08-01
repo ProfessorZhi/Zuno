@@ -18,7 +18,7 @@ mandatory_removal_candidates:
     owner: "Repository Governance"
     reason: "legacy root import registry keeps old zuno.* package aliases alive."
     replacement: "canonical imports under zuno.api, zuno.platform, zuno.agent, zuno.capability and zuno.knowledge."
-    current_status: "active_candidate"
+    current_status: "resolved_retired"
     removal_task: "P22-T03"
   - path: "src/backend/zuno/__init__.py"
     owner: "Repository Governance"

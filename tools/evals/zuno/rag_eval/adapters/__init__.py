@@ -1,0 +1,4 @@
+"""RAG Eval Adapters Package.
+
+AG-PHASE22-DEEP-AGENTIC-CANONICAL-ADAPTERS
+"""
