@@ -269,7 +269,7 @@ def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
             "domain_pack_id": "contract_review",
         }
 
-    async def fake_parse_chunks(_task):
+    async def fake_parse_graph_documents(_task):
         return [{"chunk_id": "chunk_1", "source_chunk_id": "source_1", "content": "contract clause"}]
 
     async def fake_record_stage(*args, **kwargs):
@@ -320,7 +320,7 @@ def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
             return None
 
     monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
-    monkeypatch.setattr(KnowledgePipelineManager, "_parse_chunks", staticmethod(fake_parse_chunks))
+    monkeypatch.setattr(KnowledgePipelineManager, "_parse_graph_documents", staticmethod(fake_parse_graph_documents))
     monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
@@ -337,7 +337,95 @@ def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
 
     assert captured["knowledge_id"] == "kb_1"
     assert captured["project_payload"] == project_payload
+    assert captured["chunk"]["chunk_id"] == "chunk_1"
     assert captured["entity_kwargs"]["graphrag_project_id"] == "contract_review"
+
+
+def test_pipeline_graph_stage_uses_canonical_handoff_without_chunk_projection(monkeypatch, tmp_path):
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+
+    source = tmp_path / "contract.md"
+    source.write_text("# Contract\nPayment obligations create audit evidence.", encoding="utf-8")
+    captured = {}
+
+    async def fake_load_task(task_id):
+        return SimpleNamespace(
+            id=task_id,
+            knowledge_id="kb_graph",
+            knowledge_file_id="file_graph",
+            payload={"file_path": str(source), "file_name": "contract.md"},
+            result_summary={},
+        )
+
+    async def fake_get_knowledge_config(_knowledge_id):
+        return {
+            "index_capability": "rag_graph",
+            "index_settings": {"status": "active"},
+            "graph_index_settings": {"index_version": "v1"},
+        }
+
+    async def fake_get_runtime_settings(_knowledge_id):
+        return {"project_payload": {"id": "contract_review"}}
+
+    async def fail_chunk_projection(**kwargs):
+        raise AssertionError(f"graph stage should not project ChunkModel: {kwargs}")
+
+    async def fake_record_stage(*args, **kwargs):
+        return None
+
+    async def fake_mark_community_stale(_knowledge_id):
+        return None
+
+    async def fake_mark_task_finished(*args, **kwargs):
+        return None
+
+    async def fake_create_task_event(*args, **kwargs):
+        return None
+
+    async def fake_update_pipeline_fields(*args, **kwargs):
+        return None
+
+    class FakeExtractor:
+        async def extract_from_chunk(self, chunk, knowledge_id, project_payload=None):
+            captured.setdefault("chunks", []).append(dict(chunk))
+            captured["project_payload"] = project_payload
+            return {"entities": [], "relations": []}
+
+    class FakeNeo4jClient:
+        @classmethod
+        def is_enabled(cls):
+            return True
+
+        async def delete_by_source_chunk(self, *args, **kwargs):
+            captured.setdefault("deleted_source_chunks", []).append(args)
+
+        async def upsert_entity(self, *args, **kwargs):
+            return None
+
+        async def upsert_relation(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
+    monkeypatch.setattr(
+        "zuno.platform.services.pipeline.manager.parse_file_into_chunk_model_projection",
+        fail_chunk_projection,
+    )
+    monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.mark_community_stale", fake_mark_community_stale)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.mark_task_finished", fake_mark_task_finished)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.create_task_event", fake_create_task_event)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.Neo4jClient", FakeNeo4jClient)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.CachedGraphExtractor", FakeExtractor)
+
+    asyncio.run(KnowledgePipelineManager(enable_graph_indexing=True).run_graph_stage("task_graph"))
+
+    assert captured["chunks"]
+    assert captured["project_payload"] == {"id": "contract_review"}
+    assert all("content" in chunk for chunk in captured["chunks"])
+    assert all("source_chunk_id" in chunk for chunk in captured["chunks"])
 
 
 def test_retry_task_creates_new_task_and_redispatches(monkeypatch):

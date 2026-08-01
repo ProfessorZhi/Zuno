@@ -44,10 +44,13 @@ SOURCE_EXPECTATIONS = {
     ],
     "src/backend/zuno/platform/services/pipeline/manager.py": [
         "_parse_document",
+        "_parse_graph_documents",
         "ParseGateway",
         "ParseDocumentRequest",
         "knowledge.pipeline.parse_stage.canonical_ir",
+        "knowledge.pipeline.graph_index.canonical_handoff",
         "canonical_document_ir_blocks",
+        "canonical_index_handoff_graphrag_documents",
         "parse_file_into_chunk_model_projection",
         "run_rag_index_stage",
         "run_graph_stage",

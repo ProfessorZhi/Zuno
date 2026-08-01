@@ -9,7 +9,7 @@ work_package: P22-T03 / P22-T04
 
 ## Scope
 
-本证据记录 PHASE22 cleanup 的一个窄切片：把生产源码中的 `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 退役，迁入明确的 `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py`，并把 workspace attachment 与 knowledge pipeline 的默认调用入口从 `parse_file_into_legacy_chunks` 改为 `parse_file_into_chunk_model_projection`。2026-08-02 后续切片已把 workspace attachment 和 Knowledge pipeline parse stage 再推进为直接消费 `CanonicalDocumentIR.blocks`，详见 `docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md` 与 `docs/evidence/goal05-phase22-pipeline-parse-ir-cutover.md`。
+本证据记录 PHASE22 cleanup 的一个窄切片：把生产源码中的 `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 退役，迁入明确的 `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py`，并把 workspace attachment 与 knowledge pipeline 的默认调用入口从 `parse_file_into_legacy_chunks` 改为 `parse_file_into_chunk_model_projection`。2026-08-02 后续切片已把 workspace attachment、Knowledge pipeline parse stage 和 Knowledge pipeline graph stage 再推进为直接消费 Canonical IR / canonical handoff，详见 `docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-parse-ir-cutover.md` 与 `docs/evidence/goal05-phase22-pipeline-graph-ir-cutover.md`。
 
 本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，不声明 ChunkModel projection 已退休。
 
@@ -20,13 +20,14 @@ work_package: P22-T03 / P22-T04
 - `src/backend/zuno/platform/services/workspace/attachment_service.py` 曾在本切片改为 `parse_file_into_chunk_model_projection`；后续已改为直接走 `ParseGateway` / `CanonicalDocumentIR.blocks`，不再依赖 ChunkModel projection。
 - `src/backend/zuno/platform/services/pipeline/manager.py` 默认 parse / rag index / graph stage chunk projection 入口改为 `parse_file_into_chunk_model_projection`。
 - `src/backend/zuno/platform/services/pipeline/manager.py` 的 parse stage 后续已改为直接走 `ParseGateway` / `CanonicalDocumentIR.blocks`；RAG/Graph indexing 仍使用 projection。
+- `src/backend/zuno/platform/services/pipeline/manager.py` 的 graph stage 后续已改为直接走 canonical `graphrag_documents` handoff；RAG indexing 仍使用 projection。
 - `src/backend/zuno/knowledge/ingestion/__init__.py` 只导出新的 chunk projection adapter 常量与函数。
 - `.agent/programs/work-products/phase22-removal-candidates.yaml` 把 `legacy_cutover.py` 从 `active_candidate` 改为 `resolved_retired`，并把剩余 blocker 缩小为 ChunkModel projection retirement。
 - `tools/scripts/verify_phase22_cleanup_boundary.py` 改为检查新 adapter，并在生产源码扫描中不再允许旧 `legacy_cutover.py` 通过 active allowlist。
 
 ## Still Open
 
-- `ChunkModel` projection 仍存在，原因是 knowledge pipeline RAG/Graph indexing 下游 consumer 尚未全部退休 ChunkModel；workspace attachment 默认路径和 pipeline parse stage 已经退出该 projection。
+- `ChunkModel` projection 仍存在，原因是 knowledge pipeline RAG indexing 下游 consumer 尚未全部退休 ChunkModel；workspace attachment 默认路径、pipeline parse stage 和 pipeline graph stage 已经退出该 projection。
 - `src/backend/zuno/agent/core/agents/general_agent.py` 仍是 PHASE22 removal candidates 中唯一 `active_candidate`。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
