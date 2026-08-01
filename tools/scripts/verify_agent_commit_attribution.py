@@ -24,6 +24,7 @@ ALLOWED_MODES = {
     "Standard",
     "Docs-Maintenance",
     "Human",
+    "Goal",
 }
 
 BOT_AUTHORS = {
