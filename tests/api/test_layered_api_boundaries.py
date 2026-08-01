@@ -189,7 +189,9 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
     text2image_init = _read("src/backend/zuno/capability/tools/text2image/__init__.py")
     send_email_cli = _read("src/backend/zuno/capability/tools/send_email/cli.py")
     remote_proxy_main = _read("src/backend/zuno/capability/mcp/servers/remote_proxy/main.py")
-    knowledge_legacy_cutover = _read("src/backend/zuno/knowledge/ingestion/legacy_cutover.py")
+    knowledge_chunk_projection = _read(
+        "src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py"
+    )
     sandbox_init = _read("src/backend/zuno/platform/services/sandbox/__init__.py")
     capability_registry = _read("src/backend/zuno/platform/services/capability_registry.py")
 
@@ -205,7 +207,7 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
     assert "from zuno.capability.tools.text2image.action import _text_to_image" in text2image_init
     assert "from zuno.capability.tools.send_email import action as email_action" in send_email_cli
     assert "from zuno.platform.services.mcp.sessions import create_session" in remote_proxy_main
-    assert "from zuno.api.dto.chunk import ChunkModel" in knowledge_legacy_cutover
+    assert "from zuno.api.dto.chunk import ChunkModel" in knowledge_chunk_projection
     assert "from zuno.platform.services.sandbox.pyodide import (" in sandbox_init
     assert "from zuno.platform.services.application.capabilities import (" in capability_registry
 
@@ -218,7 +220,7 @@ def test_capability_tool_actions_use_canonical_imports() -> None:
         text2image_init,
         send_email_cli,
         remote_proxy_main,
-        knowledge_legacy_cutover,
+        knowledge_chunk_projection,
         sandbox_init,
         capability_registry,
     ]:

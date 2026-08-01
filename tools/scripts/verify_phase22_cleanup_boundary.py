@@ -243,7 +243,9 @@ SEND_EMAIL_CLI = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools"
 REMOTE_PROXY_MAIN = (
     REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "mcp" / "servers" / "remote_proxy" / "main.py"
 )
-KNOWLEDGE_LEGACY_CUTOVER = REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "legacy_cutover.py"
+KNOWLEDGE_CHUNK_PROJECTION_ADAPTER = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "chunk_projection_adapter.py"
+)
 SANDBOX_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "sandbox" / "__init__.py"
 CAPABILITY_REGISTRY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "capability_registry.py"
 UPLOAD_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "upload.py"
@@ -450,7 +452,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/memory/",
             "src/backend/zuno/platform/services/sandbox/__init__.py",
             "src/backend/zuno/platform/services/capability_registry.py",
-            "src/backend/zuno/knowledge/ingestion/legacy_cutover.py",
+            "src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py",
             "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
             "src/backend/zuno/capability/tools/image2text/__init__.py",
             "src/backend/zuno/capability/tools/text2image/__init__.py",
@@ -675,7 +677,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             rel = path.relative_to(production_root)
             # Skip Python bytecode cache directories; they are build artifacts
             # whose names derive from source files and must not be treated
-            # as production source paths (e.g. __pycache__/legacy_cutover.cpython-312.pyc).
+            # as production source paths derived from retired source files.
             if any(part == "__pycache__" for part in rel.parts):
                 continue
             full_rel = production_root.relative_to(REPO_ROOT) / rel
@@ -804,7 +806,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("text2image init", TEXT2IMAGE_INIT),
         ("send email cli", SEND_EMAIL_CLI),
         ("remote mcp proxy main", REMOTE_PROXY_MAIN),
-        ("knowledge legacy cutover", KNOWLEDGE_LEGACY_CUTOVER),
+        ("knowledge chunk projection adapter", KNOWLEDGE_CHUNK_PROJECTION_ADAPTER),
         ("sandbox init", SANDBOX_INIT),
         ("capability registry", CAPABILITY_REGISTRY),
         ("upload service", UPLOAD_SERVICE),

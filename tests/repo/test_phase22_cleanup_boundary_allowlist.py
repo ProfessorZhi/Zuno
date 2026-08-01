@@ -18,7 +18,7 @@ WORK_PRODUCT = (
     / "work-products"
     / "phase22-removal-candidates.yaml"
 )
-LEGACY_CUTOVER_PATH = "src/backend/zuno/knowledge/ingestion/legacy_cutover.py"
+RETIRED_LEGACY_CUTOVER_PATH = "src/backend/zuno/knowledge/ingestion/legacy_cutover.py"
 GENERAL_AGENT_PATH = "src/backend/zuno/agent/core/agents/general_agent.py"
 
 
@@ -29,13 +29,10 @@ def _write_work_product(tmp_path: Path, body: str) -> Path:
 
 
 def test_active_candidate_paths_are_admitted(tmp_path: Path) -> None:
-    """legacy_cutover.py is a real fixed blocker registered as active_candidate."""
+    """Only mandatory active candidates widen the temporary cleanup allowlist."""
     body = f"""
 phase_id: PHASE22
 mandatory_removal_candidates:
-  - path: "{LEGACY_CUTOVER_PATH}"
-    current_status: "active_candidate"
-    removal_task: "P16-RETIRE-CHUNKMODEL"
   - path: "{GENERAL_AGENT_PATH}"
     current_status: "active_candidate"
     removal_task: "P22-T03"
@@ -47,7 +44,6 @@ unrelated_section:
 """
     allowlist, errors = _load_active_candidate_allowlist(_write_work_product(tmp_path, body))
     assert errors == []
-    assert LEGACY_CUTOVER_PATH in allowlist
     assert GENERAL_AGENT_PATH in allowlist
 
 
@@ -63,7 +59,7 @@ mandatory_removal_candidates:
     allowlist, errors = _load_active_candidate_allowlist(_write_work_product(tmp_path, body))
     assert errors == []
     assert "src/backend/zuno/platform/compatibility/legacy_aliases.py" not in allowlist
-    assert LEGACY_CUTOVER_PATH in allowlist
+    assert RETIRED_LEGACY_CUTOVER_PATH in allowlist
 
 
 def test_resolved_this_slice_does_not_create_allowlist_entry(tmp_path: Path) -> None:
@@ -78,7 +74,7 @@ resolved_this_slice:
 """
     allowlist, errors = _load_active_candidate_allowlist(_write_work_product(tmp_path, body))
     assert errors == []
-    assert LEGACY_CUTOVER_PATH not in allowlist
+    assert RETIRED_LEGACY_CUTOVER_PATH not in allowlist
 
 
 def test_unrelated_section_does_not_create_allowlist_entry(tmp_path: Path) -> None:
@@ -98,7 +94,7 @@ remaining_not_closed:
 """
     allowlist, errors = _load_active_candidate_allowlist(_write_work_product(tmp_path, body))
     assert errors == []
-    assert LEGACY_CUTOVER_PATH not in allowlist
+    assert RETIRED_LEGACY_CUTOVER_PATH not in allowlist
 
 
 def test_missing_current_status_fails_closed(tmp_path: Path) -> None:
@@ -140,7 +136,8 @@ def test_real_work_product_admits_only_mandatory_active_candidates() -> None:
     """Live guard: the real work product only admits mandatory+active_candidate."""
     allowlist, errors = _load_active_candidate_allowlist(WORK_PRODUCT)
     assert errors == [], errors
-    assert LEGACY_CUTOVER_PATH in allowlist
+    assert RETIRED_LEGACY_CUTOVER_PATH not in allowlist
+    assert GENERAL_AGENT_PATH in allowlist
     # resolved_retired entries inside mandatory must NOT leak in
     assert "tests/legacy_guards/" not in allowlist
     assert "legacy_general_agent_completion_rollback" not in allowlist

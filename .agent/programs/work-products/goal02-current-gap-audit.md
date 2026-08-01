@@ -180,7 +180,7 @@ audit_scope: PHASE08 Deterministic Single Controller Runtime; PHASE11 Durable In
 
 ### P11-T08 Delete, Recovery and Legacy Parser Cutover
 
-- 已有实现：delete_restore.py、legacy_cutover.py、delete/restore tests、legacy upload/parser cutover inventory。
+- 已有实现：delete_restore.py、chunk_projection_adapter.py、delete/restore tests、legacy upload/parser cutover inventory。
 - 缺失 Contract：visibility revoke → cleanup request → physical delete → verification；legal hold；restore；late worker；DLQ replay；stale lease；MinIO object missing。
 - 缺失状态转换：delete requested / hidden / cleanup_requested / physically_deleted / verified / held / restored。
 - 缺失恢复与幂等：duplicate delete/restore、delete during parse/review、late worker、crash recovery。

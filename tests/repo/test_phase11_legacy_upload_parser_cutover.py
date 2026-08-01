@@ -28,5 +28,5 @@ def test_phase11_legacy_cutover_inventory_keeps_closure_boundary() -> None:
     assert "status: closure_inventory" in text
     assert "PHASE11 为 `completed`" in text
     assert "versioned_adapter_required" in text
-    assert "temporary.adapter.phase11.legacy_chunk_projection" in text
+    assert "versioned.adapter.phase22.chunk_model_projection" in text
     assert "生产默认路径已证明完整经过 SourceObject" in text

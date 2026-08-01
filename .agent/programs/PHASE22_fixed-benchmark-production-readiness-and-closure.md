@@ -126,10 +126,10 @@ cd apps/web && npm run lint && npm run build
 
 ## Current Status
 
-- **Cleanup Slice**: P22-T03 cleanup governance guards are active; final PHASE22 cleanup remains open until full final verification and program archive complete.
+- **Cleanup Slice**: P22-T03 cleanup governance guards are active; `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` has retired into `chunk_projection_adapter.py`, and workspace attachment / knowledge pipeline defaults now call `parse_file_into_chunk_model_projection`. Final PHASE22 cleanup remains open until ChunkModel projection retirement, GeneralAgent active candidate retirement, full final verification and program archive complete.
 - **Benchmark Runner**: Contract test doubles implemented (StandardRAGProfileRunner, LocalGraphRAGProfileRunner, DeepGraphRAGProfileRunner, AgenticGraphRAGProfileRunner).
 - **Observability Adapter**: Port contract and in-memory trace prototype available. LangSmith SDK integration and runtime trace wiring not implemented.
 - **Dataset Contract & Candidate Pack**: Generated 80 public candidate cases (raw_question_candidate_count=80, evidence_complete_count=20, rejected_or_incomplete_count=60, reviewer_approved_count=0, benchmark_eligible_count=0).
 - **Smoke status**: Profile Contract Smoke completed (CONTRACT_SMOKE_COMPLETED / MEASUREMENT_BLOCKED / not_measured_test_double_runner).
-- **Verification status**: PR #52 merged into `main` as merge commit `14ab8d99c38ca6e23124a02c6f8ac71fd2602bac`; focused unit suites and repository gates passed for the merged PHASE22 preparation slice.
+- **Verification status**: PR #52 merged into `main` as merge commit `14ab8d99c38ca6e23124a02c6f8ac71fd2602bac`; focused unit suites and repository gates passed for the merged PHASE22 preparation slice. Chunk projection cleanup evidence is recorded in `docs/evidence/goal05-phase22-chunk-projection-cleanup.md`.
 - **Completion status**: PHASE22 remains `in_progress`; fixed benchmark measurement, formal four-profile runtime, production readiness decision, full final verification and program archive are not complete.
