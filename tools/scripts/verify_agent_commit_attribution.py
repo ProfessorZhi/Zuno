@@ -11,6 +11,7 @@ ALLOWED_AGENTS = {
     "Antigravity",
     "Qoder",
     "Codex",
+    "Claude-Code",
     "Trae",
     "ChatGPT-Docs",
     "Human",
