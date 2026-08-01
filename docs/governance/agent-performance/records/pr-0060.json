@@ -1,0 +1,39 @@
+{
+  "pr_number": 60,
+  "pr_url": "https://github.com/ProfessorZhi/Zuno/pull/60",
+  "agent_shell": "Claude Code",
+  "provider": "DeepSeek",
+  "visible_model": "deepseek-v4-flash",
+  "work_package": "DS-PHASE22-RUNTIME-EVIDENCE-BINDING-CONTRACT-V2",
+  "source_pr": 58,
+  "source_pr_head": "999d00a93734c02be26082116b4bc19673a179b3",
+  "governance_base_sha": "3fa2f4734c88f9e4510cf0c2f3a99d82b06226a1",
+  "started_at": "2026-08-01T09:47:06+0800",
+  "finished_at": "2026-08-01T09:55:21+0800",
+  "reported_wall_clock": "~8m",
+  "input_tokens": "not reported",
+  "output_tokens": "not reported",
+  "cache_read_tokens": "not reported",
+  "cache_write_tokens": "not reported",
+  "total_tokens": "not reported",
+  "provider_reported_cost": "not reported",
+  "cli_estimated_cost": "not reported",
+  "commits": [
+    "48d8d9747c3fcac0143ba086b85884fa940ae58a"
+  ],
+  "tests": {
+    "pytest_tests_evals_test_runtime_evidence_binding": "90 passed",
+    "compileall": "passed",
+    "verify_repo_structure": "passed",
+    "verify_current_program": "passed",
+    "verify_agent_system": "passed",
+    "verify_doc_boundaries": "passed",
+    "verify_agent_commit_attribution": "passed",
+    "git_diff_check": "clean"
+  },
+  "ci_status": "in_progress",
+  "ci_run_id": null,
+  "status": "SUBMITTED_FOR_REVIEW",
+  "current_score": null,
+  "reviews": []
+}

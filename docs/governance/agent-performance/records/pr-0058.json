@@ -1,0 +1,75 @@
+{
+  "pr_number": 58,
+  "pr_url": "https://github.com/ProfessorZhi/Zuno/pull/58",
+  "agent_shell": "Claude Code",
+  "provider": "DeepSeek",
+  "visible_model": "deepseek-v4-flash",
+  "work_package": "DS-PHASE22-RUNTIME-EVIDENCE-BINDING-CONTRACT",
+  "status": "SUPERSEDED",
+  "current_score": 83,
+  "reported_wall_clock": "19m31s",
+  "input_tokens": "not reported",
+  "output_tokens": "not reported",
+  "cache_read_tokens": "not reported",
+  "cache_write_tokens": "not reported",
+  "total_tokens": "not reported",
+  "provider_reported_cost": "not reported",
+  "cli_estimated_cost": "not reported",
+  "ci_result": "failure",
+  "ci_run_id": 30677712286,
+  "failure_reasons": [
+    "Attribution Trailer 缺失",
+    "3 个 P1、1 个 P2"
+  ],
+  "replacement_pr_number": 60,
+  "merged_at": null,
+  "merge_commit_sha": null,
+  "review_block": {
+    "reviewed_head_sha": "999d00a93734c02be26082116b4bc19673a179b3",
+    "decision": "REQUEST_CHANGES",
+    "review_round": 1,
+    "severity": {
+      "p0": 0,
+      "p1": 3,
+      "p2": 1
+    },
+    "scores": {
+      "architecture_alignment": 84,
+      "correctness": 79,
+      "failure_semantics": 75,
+      "security_trust_boundary": 70,
+      "test_quality": 88,
+      "scope_discipline": 96,
+      "git_governance": 90,
+      "reporting_truthfulness": 90,
+      "maintainability": 78,
+      "execution_efficiency": 90,
+      "overall": 83
+    },
+    "strengths": [
+      "严格遵守三文件 Scope",
+      "没有 Reset、Rebase、Amend 或 Force Push",
+      "对 Attribution 冲突没有冒充其他 Agent",
+      "确定性 Validator 和负向测试覆盖较强",
+      "运行时间与报告数据较完整"
+    ],
+    "required_changes": [
+      "Gap Code 禁止插入不可信输入",
+      "Validator 的所有公开输入路径都必须 Never Raise",
+      "Snapshot 和 Runtime Version 不可比较必须返回 INCOMPARABLE",
+      "Hash Helper 的异常 Contract 必须与实现一致",
+      "替代 PR Commit 必须使用 Agent: Claude-Code"
+    ],
+    "recommended_task_types": [
+      "确定性 Validation Contract",
+      "负向和故障路径测试",
+      "严格文件 Scope 的新模块",
+      "数据绑定和 Hash Contract"
+    ],
+    "unsuitable_task_types": [
+      "未冻结状态语义时自行重新解释 Contract",
+      "动态错误码设计",
+      "无人审核的 Security Error Surface"
+    ]
+  }
+}
