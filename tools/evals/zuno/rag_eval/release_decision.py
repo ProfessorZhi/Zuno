@@ -9,10 +9,13 @@ not call any model, does not run any benchmark, and does not import
 
 The engine produces a ReleaseDecision containing one of:
 
-* PASSED       -- comparable, fully measured, every gate passes.
-* FAILED       -- comparable, fully measured, at least one gate fails.
-* BLOCKED      -- missing profile, profile not measured, or evidence gap.
-* INCOMPARABLE -- comparable fingerprint mismatch across profiles.
+* PASSED       -- comparable, fully measured, every required gate is present,
+                   every value satisfies its threshold.
+* FAILED       -- comparable, fully measured, at least one gate value fails
+                   a threshold or a high-risk failure bucket is present.
+* BLOCKED      -- missing profile, profile not measured, evidence gap, or a
+                   required gate block is absent.
+* INCOMPARABLE -- exactly one comparability dimension differs across profiles.
 * ERROR        -- input structure, type, range or hash is invalid.
 
 All reason codes come from a fixed, closed set. Reasons never embed raw input
@@ -20,6 +23,14 @@ payloads, file paths, exceptions or secret material. Hashes come from
 ``zuno.platform.contracts.canonical.canonical_sha256`` and are stable across
 runs and platforms. Two runs of the same input always produce byte-identical
 output.
+
+CLI Exit Code Contract:
+
+* 0 -- PASSED
+* 1 -- FAILED
+* 2 -- BLOCKED
+* 3 -- INCOMPARABLE
+* 4 -- ERROR or CLI read/write/parse failure
 """
 
 from __future__ import annotations
@@ -27,7 +38,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 from typing import Any, Final
 
 from zuno.platform.contracts.canonical import canonical_sha256
@@ -70,6 +81,18 @@ FINGERPRINT_DIMENSIONS: Final[tuple[str, ...]] = (
     "budget_class",
 )
 
+# Each gate is required; if the top-level block is missing or invalid, the
+# decision is BLOCKED with a dedicated reason code.
+REQUIRED_TOP_LEVEL_GATES: Final[tuple[str, ...]] = (
+    "core_five",
+    "citation_safety",
+    "critical_slice",
+    "critical_slice_baseline",
+    "agent_efficiency",
+    "cost_latency_budget",
+    "failure_buckets",
+)
+
 HIGH_RISK_FAILURE_BUCKETS: Final[frozenset[str]] = frozenset(
     {
         "answer_unfaithful",
@@ -91,12 +114,28 @@ class ReleaseDecisionStatus(StrEnum):
     ERROR = "ERROR"
 
 
+class ReleaseDecisionExitCode(IntEnum):
+    PASSED = 0
+    FAILED = 1
+    BLOCKED = 2
+    INCOMPARABLE = 3
+    ERROR = 4
+
+
+EXIT_CODE_BY_STATUS: Final[dict[ReleaseDecisionStatus, int]] = {
+    ReleaseDecisionStatus.PASSED: int(ReleaseDecisionExitCode.PASSED),
+    ReleaseDecisionStatus.FAILED: int(ReleaseDecisionExitCode.FAILED),
+    ReleaseDecisionStatus.BLOCKED: int(ReleaseDecisionExitCode.BLOCKED),
+    ReleaseDecisionStatus.INCOMPARABLE: int(ReleaseDecisionExitCode.INCOMPARABLE),
+    ReleaseDecisionStatus.ERROR: int(ReleaseDecisionExitCode.ERROR),
+}
+
+
 PASSED_REASONS: Final[frozenset[str]] = frozenset({"all_gates_passed"})
 
 FAILED_REASONS: Final[frozenset[str]] = frozenset(
     {
         "core_five_metric_below_threshold",
-        "core_five_metric_missing",
         "citation_accuracy_below_threshold",
         "unsupported_claim_rate_above_threshold",
         "contradicted_claim_rate_above_threshold",
@@ -106,7 +145,6 @@ FAILED_REASONS: Final[frozenset[str]] = frozenset(
         "cost_above_budget",
         "latency_above_budget",
         "high_risk_failure_bucket_present",
-        "unknown_failure_bucket",
     }
 )
 
@@ -114,14 +152,24 @@ BLOCKED_REASONS: Final[frozenset[str]] = frozenset(
     {
         "missing_profile",
         "profile_not_measured",
-        "missing_required_field",
-        "evidence_missing",
+        "core_five_block_missing",
         "core_five_metric_missing",
+        "citation_safety_block_missing",
+        "citation_safety_metric_missing",
+        "critical_slice_block_missing",
+        "critical_slice_baseline_block_missing",
+        "agent_efficiency_block_missing",
+        "agent_efficiency_metric_missing",
+        "cost_latency_budget_block_missing",
+        "cost_latency_metric_missing",
+        "failure_buckets_block_missing",
+        "evidence_missing",
         "input_unreadable",
         "output_unwritable",
         "missing_input_path",
         "missing_output_path",
         "comparability_fingerprint_undeclared",
+        "fingerprint_dimension_missing",
     }
 )
 
@@ -139,7 +187,6 @@ INCOMPARABLE_REASONS: Final[frozenset[str]] = frozenset(
         "runtime_profile_mismatch",
         "security_scope_mismatch",
         "budget_class_mismatch",
-        "fingerprint_dimension_missing",
     }
 )
 
@@ -156,6 +203,14 @@ ERROR_REASONS: Final[frozenset[str]] = frozenset(
         "artifact_hash_invalid",
         "failure_buckets_malformed",
         "unknown_top_level_field",
+        "core_five_block_invalid",
+        "citation_safety_block_invalid",
+        "critical_slice_block_invalid",
+        "critical_slice_baseline_block_invalid",
+        "agent_efficiency_block_invalid",
+        "cost_latency_budget_block_invalid",
+        "failure_buckets_block_invalid",
+        "evidence_refs_invalid",
         "decision_input_invalid",
     }
 )
@@ -210,11 +265,16 @@ class ReleaseDecision:
             "reproduce_command_template": self.reproduce_command_template,
             "decision_engine_version": self.decision_engine_version,
             "closed_set_version": self.closed_set_version,
+            "exit_code": EXIT_CODE_BY_STATUS[self.status],
         }
 
+    @property
+    def exit_code(self) -> int:
+        return EXIT_CODE_BY_STATUS[self.status]
 
-DECISION_ENGINE_VERSION: Final[str] = "phase22-release-decision-v1"
-CLOSED_SET_VERSION: Final[str] = "closed-set-v1"
+
+DECISION_ENGINE_VERSION: Final[str] = "phase22-release-decision-v2"
+CLOSED_SET_VERSION: Final[str] = "closed-set-v2"
 
 REPRODUCE_COMMAND_TEMPLATE: Final[str] = (
     "python -m tools.evals.zuno.rag_eval.run_phase22_release_decision "
@@ -249,26 +309,6 @@ def _validate_score(value: Any, *, field_path: str) -> float | None:
     return float(value)
 
 
-def _validate_non_negative_number(
-    value: Any, *, field_path: str, allow_none: bool = False
-) -> float | int | None:
-    if value is None:
-        if allow_none:
-            return None
-        raise ReleaseDecisionError(f"value missing at {field_path}")
-    if not _is_real_number(value):
-        raise ReleaseDecisionError(f"value not a real number at {field_path}")
-    return value
-
-
-def _validate_string_hash(value: Any, *, field_path: str) -> str:
-    if not isinstance(value, str) or not value:
-        raise ReleaseDecisionError(f"hash string required at {field_path}")
-    if len(value) < 8:
-        raise ReleaseDecisionError(f"hash string too short at {field_path}")
-    return value
-
-
 def _validate_required_string(value: Any, *, field_path: str) -> str:
     if not isinstance(value, str) or not value:
         raise ReleaseDecisionError(f"required string at {field_path}")
@@ -281,6 +321,33 @@ def _validate_optional_string(value: Any, *, field_path: str) -> str | None:
     if not isinstance(value, str) or not value:
         raise ReleaseDecisionError(f"optional string invalid at {field_path}")
     return value
+
+
+def _validate_string_hash(value: Any, *, field_path: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ReleaseDecisionError(f"hash string required at {field_path}")
+    if len(value) < 8:
+        raise ReleaseDecisionError(f"hash string too short at {field_path}")
+    return value
+
+
+def _validate_evidence_refs(value: Any, *, field_path: str) -> tuple[str, ...]:
+    if not isinstance(value, (list, tuple)):
+        raise ReleaseDecisionError(
+            f"evidence_refs must be a list of strings at {field_path}"
+        )
+    seen: set[str] = set()
+    normalized: list[str] = []
+    for entry in value:
+        if not isinstance(entry, str) or not entry:
+            raise ReleaseDecisionError(
+                f"evidence_refs entries must be non-empty strings at {field_path}"
+            )
+        if entry in seen:
+            continue
+        seen.add(entry)
+        normalized.append(entry)
+    return tuple(normalized)
 
 
 def _normalize_failure_buckets(value: Any, *, field_path: str) -> tuple[str, ...]:
@@ -323,7 +390,6 @@ def _normalize_profile_block(
 ) -> dict[str, Any]:
     if not isinstance(block, Mapping):
         raise ReleaseDecisionError(f"profile block must be a mapping at {field_path}")
-    profile_id = block.get("profile_id")
     artifact = block.get("artifact", {})
     if not isinstance(artifact, Mapping):
         raise ReleaseDecisionError(f"profile artifact must be a mapping at {field_path}")
@@ -338,7 +404,6 @@ def _normalize_profile_block(
     )
     artifact_ref = block.get("evidence_ref")
     declared_fingerprint = block.get("fingerprint")
-    fingerprint: dict[str, str | None]
     if declared_fingerprint is None:
         fingerprint = dict(expected_fingerprint)
     else:
@@ -346,7 +411,6 @@ def _normalize_profile_block(
             declared_fingerprint, field_path=f"{field_path}.fingerprint"
         )
     return {
-        "profile_id": profile_id,
         "measurement_status": measurement_status,
         "artifact": _normalize_artifact_hash_block(
             artifact, field_path=f"{field_path}.artifact"
@@ -374,7 +438,6 @@ def _normalize_comparability_fingerprint(
 
 
 def _validate_input_structure(payload: Any) -> str | None:
-    """Return a closed-set reason if the input structure is invalid; None otherwise."""
     if not isinstance(payload, Mapping):
         return "input_not_object"
     allowed_top = {
@@ -396,284 +459,76 @@ def _validate_input_structure(payload: Any) -> str | None:
     return None
 
 
-def _safe_load_input(raw_text: str) -> Any:
-    try:
-        return json.loads(raw_text)
-    except (TypeError, ValueError):
-        return None
-
-
-def evaluate_release_decision(payload: Mapping[str, Any]) -> ReleaseDecision:
-    """Evaluate the Phase22 Release Decision from a structured JSON Mapping.
-
-    Raises ``ReleaseDecisionError`` only when the decision engine cannot run.
-    Decision status ``ERROR`` is encoded inside the returned ``ReleaseDecision``
-    for any structural / type / range problem in the input.
-    """
-    try:
-        structure_reason = _validate_input_structure(payload)
-        if structure_reason is not None:
-            return _error_decision(payload, reason=structure_reason, gate_results=())
-        profiles_block = payload.get("profiles")
-        if not isinstance(profiles_block, Mapping):
-            return _error_decision(
-                payload, reason="profiles_not_object", gate_results=()
-            )
-        fingerprint_block = payload.get("comparability_fingerprint")
-        if fingerprint_block is None:
-            return _error_decision(
-                payload,
-                reason="comparability_fingerprint_malformed",
-                gate_results=(),
-            )
-        try:
-            fingerprint = _normalize_comparability_fingerprint(
-                fingerprint_block, field_path="comparability_fingerprint"
-            )
-        except ReleaseDecisionError:
-            return _error_decision(
-                payload,
-                reason="comparability_fingerprint_malformed",
-                gate_results=(),
-            )
-
-        normalized_profiles: dict[str, dict[str, Any]] = {}
-        profile_hashes: dict[str, str] = {}
-        missing_profiles: list[str] = []
-        measurement_blocked: list[str] = []
-        try:
-            for profile_id in REQUIRED_PROFILE_IDS:
-                if profile_id not in profiles_block:
-                    missing_profiles.append(profile_id)
-                    continue
-                normalized = _normalize_profile_block(
-                    profiles_block[profile_id],
-                    field_path=f"profiles.{profile_id}",
-                    expected_fingerprint=fingerprint,
-                )
-                if normalized["measurement_status"] != "MEASURED":
-                    measurement_blocked.append(profile_id)
-                normalized_profiles[profile_id] = normalized
-                profile_hash_input = {
-                    "profile_id": profile_id,
-                    "measurement_status": normalized["measurement_status"],
-                    "artifact": normalized["artifact"],
-                    "failure_buckets": list(normalized["failure_buckets"]),
-                    "fingerprint": normalized["fingerprint"],
-                }
-                profile_hashes[profile_id] = canonical_sha256(profile_hash_input)
-        except ReleaseDecisionError as exc:
-            return _error_decision(
-                payload,
-                reason="decision_input_invalid",
-                gate_results=(),
-                detail=str(exc),
-            )
-
-        if missing_profiles:
-            gate = GateFailure(
-                gate="profile_completeness",
-                reason="missing_profile",
-                profile_id=missing_profiles[0],
-                metric=None,
-                detail_kind="missing_profiles",
-            )
-            return _blocked_decision(
-                payload,
-                profile_hashes=profile_hashes,
-                fingerprint=fingerprint,
-                reason_codes=("missing_profile",),
-                gate_results=(gate,),
-            )
-
-        if measurement_blocked:
-            gate = GateFailure(
-                gate="profile_measurement",
-                reason="profile_not_measured",
-                profile_id=measurement_blocked[0],
-                metric=None,
-                detail_kind="not_measured_profiles",
-            )
-            return _blocked_decision(
-                payload,
-                profile_hashes=profile_hashes,
-                fingerprint=fingerprint,
-                reason_codes=("profile_not_measured",),
-                gate_results=(gate,),
-            )
-
-        try:
-            profile_fingerprints: dict[str, Mapping[str, str | None]] = {
-                pid: normalized["fingerprint"]
-                for pid, normalized in normalized_profiles.items()
-            }
-            comparable, mismatches = _evaluate_comparability(profile_fingerprints)
-        except ReleaseDecisionError as exc:
-            return _error_decision(
-                payload,
-                reason="decision_input_invalid",
-                gate_results=(),
-                detail=str(exc),
-            )
-        if not comparable:
-            gate = GateFailure(
-                gate="comparability_fingerprint",
-                reason="fingerprint_dimension_missing",
-                profile_id=None,
-                metric=None,
-                detail_kind="mismatch_dimensions",
-            )
-            return _incomparable_decision(
-                payload,
-                profile_hashes=profile_hashes,
-                fingerprint=fingerprint,
-                reason_codes=tuple(sorted(mismatches)),
-                gate_results=(gate,),
-            )
-
-        gate_results: list[GateFailure] = []
-        try:
-            gate_results.extend(
-                _evaluate_core_five(payload.get("core_five"), profiles=normalized_profiles)
-            )
-            gate_results.extend(
-                _evaluate_citation_safety(
-                    payload.get("citation_safety"), profiles=normalized_profiles
-                )
-            )
-            gate_results.extend(
-                _evaluate_critical_slice(
-                    payload.get("critical_slice"),
-                    payload.get("critical_slice_baseline"),
-                    profiles=normalized_profiles,
-                )
-            )
-            gate_results.extend(
-                _evaluate_agent_efficiency(
-                    payload.get("agent_efficiency"),
-                    profiles=normalized_profiles,
-                )
-            )
-            gate_results.extend(
-                _evaluate_cost_latency(
-                    payload.get("cost_latency_budget"),
-                    profiles=normalized_profiles,
-                )
-            )
-            gate_results.extend(
-                _evaluate_failure_buckets(
-                    payload.get("failure_buckets"), profiles=normalized_profiles
-                )
-            )
-        except ReleaseDecisionError as exc:
-            return _error_decision(
-                payload,
-                reason="decision_input_invalid",
-                gate_results=(),
-                detail=str(exc),
-            )
-
-        reason_codes = tuple(sorted({item.reason for item in gate_results}))
-        if gate_results:
-            for code in reason_codes:
-                _validate_closed_set(code, FAILED_REASONS)
-            evidence_refs = _collect_evidence_refs(
-                payload, profiles=normalized_profiles
-            )
-            return _build_decision(
-                ReleaseDecisionStatus.FAILED,
-                payload,
-                profile_hashes=profile_hashes,
-                fingerprint=fingerprint,
-                gate_results=tuple(gate_results),
-                reason_codes=reason_codes,
-                evidence_refs=evidence_refs,
-            )
-
-        evidence_refs = _collect_evidence_refs(payload, profiles=normalized_profiles)
-        if not evidence_refs:
-            gate = GateFailure(
-                gate="evidence",
-                reason="evidence_missing",
-                profile_id=None,
-                metric=None,
-                detail_kind="missing_evidence_refs",
-            )
-            return _blocked_decision(
-                payload,
-                profile_hashes=profile_hashes,
-                fingerprint=fingerprint,
-                reason_codes=("evidence_missing",),
-                gate_results=(gate,),
-            )
-
-        return _build_decision(
-            ReleaseDecisionStatus.PASSED,
-            payload,
-            profile_hashes=profile_hashes,
-            fingerprint=fingerprint,
-            gate_results=(),
-            reason_codes=("all_gates_passed",),
-            evidence_refs=evidence_refs,
-        )
-    except ReleaseDecisionError as exc:
-        return _error_decision(
-            payload if isinstance(payload, Mapping) else {},
-            reason="decision_input_invalid",
-            gate_results=(),
-            detail=str(exc),
-        )
-
-
 def _evaluate_comparability(
     profile_fingerprints: Mapping[str, Mapping[str, str | None]],
-) -> tuple[bool, set[str]]:
-    """Compare per-profile fingerprints; return (comparable, mismatched dimensions)."""
+) -> tuple[bool, tuple[str, ...]]:
+    """Compare per-profile fingerprints; return (comparable, mismatched dimension codes).
+
+    Only dimensions whose value actually differs across profiles produce codes;
+    a ``None`` value is treated the same as the string ``"None"`` literally
+    only for equality comparison; it is not a missing dimension and the
+    fingerprint was already required to declare every dimension at the top
+    level.
+    """
     if len(profile_fingerprints) < 2:
-        return True, set()
+        return True, ()
     reference_profile_id = sorted(profile_fingerprints)[0]
     reference = profile_fingerprints[reference_profile_id]
-    mismatches: set[str] = set()
+    mismatches: list[str] = []
     for dimension in FINGERPRINT_DIMENSIONS:
         reference_value = reference.get(dimension)
+        if reference_value is None:
+            reference_value_normalized: str | None = None
+        else:
+            reference_value_normalized = str(reference_value)
         for profile_id, fingerprint in profile_fingerprints.items():
             if profile_id == reference_profile_id:
                 continue
-            if fingerprint.get(dimension) != reference_value:
-                mismatches.add(f"{dimension}_mismatch")
-    if mismatches:
-        mismatches.add("fingerprint_dimension_missing")
-    return not mismatches, mismatches
+            other_value = fingerprint.get(dimension)
+            if other_value is None:
+                other_value_normalized: str | None = None
+            else:
+                other_value_normalized = str(other_value)
+            if other_value_normalized != reference_value_normalized:
+                mismatches.append(f"{dimension}_mismatch")
+    return (not mismatches), tuple(sorted(set(mismatches)))
+
+
+def _check_required_top_level_block(
+    payload: Mapping[str, Any], key: str, *, gate: str
+) -> tuple[bool, GateFailure | None]:
+    value = payload.get(key)
+    if value is None:
+        return False, GateFailure(
+            gate=gate,
+            reason=f"{gate}_block_missing",
+            profile_id=None,
+            metric=None,
+            detail_kind="missing_top_level_block",
+        )
+    if not isinstance(value, Mapping):
+        # The block is present but its shape is wrong: this is an ERROR
+        # reason, not a BLOCKED reason, so we surface it from the caller.
+        return False, GateFailure(
+            gate=gate,
+            reason=f"{gate}_block_invalid",
+            profile_id=None,
+            metric=None,
+            detail_kind="invalid_top_level_block",
+        )
+    return True, None
 
 
 def _evaluate_core_five(
-    block: Any, *, profiles: Mapping[str, dict[str, Any]]
-) -> list[GateFailure]:
-    if block is None:
-        return [
-            GateFailure(
-                gate="core_five",
-                reason="core_five_metric_missing",
-                profile_id=None,
-                metric="core_five",
-                detail_kind="missing_core_five_block",
-            )
-        ]
-    if not isinstance(block, Mapping):
-        return [
-            GateFailure(
-                gate="core_five",
-                reason="core_five_metric_missing",
-                profile_id=None,
-                metric="core_five",
-                detail_kind="invalid_core_five_block",
-            )
-        ]
-    failures: list[GateFailure] = []
+    block: Mapping[str, Any], *, profiles: Mapping[str, dict[str, Any]]
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    """Return (blocked_failures, failed_failures) for the core_five gate."""
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     for profile_id in REQUIRED_PROFILE_IDS:
         profile_metrics = block.get(profile_id)
         if not isinstance(profile_metrics, Mapping):
-            failures.append(
+            blocked.append(
                 GateFailure(
                     gate="core_five",
                     reason="core_five_metric_missing",
@@ -686,7 +541,7 @@ def _evaluate_core_five(
         for metric in CORE_FIVE_METRIC_NAMES:
             value = profile_metrics.get(metric)
             if value is None:
-                failures.append(
+                blocked.append(
                     GateFailure(
                         gate="core_five",
                         reason="core_five_metric_missing",
@@ -699,9 +554,8 @@ def _evaluate_core_five(
             normalized = _validate_score(
                 value, field_path=f"core_five.{profile_id}.{metric}"
             )
-            threshold = 0.5
-            if normalized is None or normalized < threshold:
-                failures.append(
+            if normalized is None or normalized < 0.5:
+                failed.append(
                     GateFailure(
                         gate="core_five",
                         reason="core_five_metric_below_threshold",
@@ -710,24 +564,33 @@ def _evaluate_core_five(
                         detail_kind="below_threshold",
                     )
                 )
-    return failures
+    return blocked, failed
 
 
 def _evaluate_citation_safety(
-    block: Any, *, profiles: Mapping[str, dict[str, Any]]
-) -> list[GateFailure]:
-    if block is None:
-        return []
-    if not isinstance(block, Mapping):
-        return []
-    failures: list[GateFailure] = []
+    block: Mapping[str, Any], *, profiles: Mapping[str, dict[str, Any]]
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     for profile_id in REQUIRED_PROFILE_IDS:
         metric_block = block.get(profile_id)
         if not isinstance(metric_block, Mapping):
+            blocked.append(
+                GateFailure(
+                    gate="citation_safety",
+                    reason="citation_safety_metric_missing",
+                    profile_id=profile_id,
+                    metric=None,
+                    detail_kind="missing_metric_block",
+                )
+            )
             continue
         for metric in CITATION_SAFETY_METRIC_NAMES:
             value = metric_block.get(metric)
             if value is None:
+                # Citation/Safety metrics are optional for each profile; if
+                # all four profiles are missing a metric we surface a single
+                # blocked signal at the end.
                 continue
             normalized = _validate_score(
                 value, field_path=f"citation_safety.{profile_id}.{metric}"
@@ -735,7 +598,7 @@ def _evaluate_citation_safety(
             if normalized is None:
                 continue
             if metric == "citation_accuracy" and normalized < 0.85:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="citation_safety",
                         reason="citation_accuracy_below_threshold",
@@ -745,7 +608,7 @@ def _evaluate_citation_safety(
                     )
                 )
             elif metric == "unsupported_claim_rate" and normalized > 0.05:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="citation_safety",
                         reason="unsupported_claim_rate_above_threshold",
@@ -755,7 +618,7 @@ def _evaluate_citation_safety(
                     )
                 )
             elif metric == "contradicted_claim_rate" and normalized > 0.0:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="citation_safety",
                         reason="contradicted_claim_rate_above_threshold",
@@ -765,7 +628,7 @@ def _evaluate_citation_safety(
                     )
                 )
             elif metric == "abstention_correctness" and normalized < 0.5:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="citation_safety",
                         reason="abstention_correctness_below_threshold",
@@ -774,24 +637,31 @@ def _evaluate_citation_safety(
                         detail_kind="below_threshold",
                     )
                 )
-    return failures
+    return blocked, failed
 
 
 def _evaluate_critical_slice(
-    block: Any,
-    baseline_block: Any,
-    *,
-    profiles: Mapping[str, dict[str, Any]],
-) -> list[GateFailure]:
-    if block is None or not isinstance(block, Mapping):
-        return []
-    if baseline_block is not None and not isinstance(baseline_block, Mapping):
-        return []
-    failures: list[GateFailure] = []
+    block: Mapping[str, Any],
+    baseline_block: Mapping[str, Any],
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     for profile_id in REQUIRED_PROFILE_IDS:
         slice_block = block.get(profile_id)
-        if not isinstance(slice_block, Mapping):
+        if not isinstance(slice_block, Mapping) or not slice_block:
+            blocked.append(
+                GateFailure(
+                    gate="critical_slice",
+                    reason="critical_slice_block_missing",
+                    profile_id=profile_id,
+                    metric=None,
+                    detail_kind="missing_slice_block",
+                )
+            )
             continue
+        baseline_for_profile = (
+            baseline_block.get(profile_id) if isinstance(baseline_block, Mapping) else None
+        )
         for slice_name, current_value in slice_block.items():
             if not isinstance(slice_name, str) or not slice_name:
                 continue
@@ -800,8 +670,8 @@ def _evaluate_critical_slice(
                 field_path=f"critical_slice.{profile_id}.{slice_name}",
             )
             baseline_value = (
-                baseline_block.get(profile_id, {}).get(slice_name)
-                if isinstance(baseline_block, Mapping)
+                baseline_for_profile.get(slice_name)
+                if isinstance(baseline_for_profile, Mapping)
                 else None
             )
             baseline = (
@@ -815,7 +685,7 @@ def _evaluate_critical_slice(
             if current is None:
                 continue
             if baseline is not None and current + 1e-9 < baseline:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="critical_slice",
                         reason="critical_slice_regression",
@@ -825,7 +695,7 @@ def _evaluate_critical_slice(
                     )
                 )
             elif baseline is None and current < 0.5:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="critical_slice",
                         reason="critical_slice_regression",
@@ -834,54 +704,44 @@ def _evaluate_critical_slice(
                         detail_kind="below_floor",
                     )
                 )
-    return failures
+    return blocked, failed
 
 
 def _evaluate_agent_efficiency(
-    block: Any, *, profiles: Mapping[str, dict[str, Any]]
-) -> list[GateFailure]:
-    if block is None or not isinstance(block, Mapping):
-        return []
-    failures: list[GateFailure] = []
-    target_profile = (
-        profiles[DEFAULT_AGENT_EFFICIENT_PROFILE_ID]
-        if DEFAULT_AGENT_EFFICIENT_PROFILE_ID in profiles
-        else None
-    )
-    if target_profile is None:
-        return failures
+    block: Mapping[str, Any],
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     target_metrics = block.get(DEFAULT_AGENT_EFFICIENT_PROFILE_ID)
     if not isinstance(target_metrics, Mapping):
-        return failures
+        blocked.append(
+            GateFailure(
+                gate="agent_efficiency",
+                reason="agent_efficiency_metric_missing",
+                profile_id=DEFAULT_AGENT_EFFICIENT_PROFILE_ID,
+                metric=None,
+                detail_kind="missing_metric_block",
+            )
+        )
+        return blocked, failed
     evidence_yield = target_metrics.get("evidence_yield")
     if evidence_yield is None:
-        failures.append(
+        blocked.append(
             GateFailure(
                 gate="agent_efficiency",
-                reason="agent_efficiency_quality_constraint_failed",
+                reason="agent_efficiency_metric_missing",
                 profile_id=DEFAULT_AGENT_EFFICIENT_PROFILE_ID,
                 metric="evidence_yield",
-                detail_kind="missing_value",
+                detail_kind="missing_metric_value",
             )
         )
-        return failures
-    try:
-        score = _validate_score(
-            evidence_yield,
-            field_path=f"agent_efficiency.{DEFAULT_AGENT_EFFICIENT_PROFILE_ID}.evidence_yield",
-        )
-    except ReleaseDecisionError:
-        return [
-            GateFailure(
-                gate="agent_efficiency",
-                reason="agent_efficiency_quality_constraint_failed",
-                profile_id=DEFAULT_AGENT_EFFICIENT_PROFILE_ID,
-                metric="evidence_yield",
-                detail_kind="invalid_value",
-            )
-        ]
+        return blocked, failed
+    score = _validate_score(
+        evidence_yield,
+        field_path=f"agent_efficiency.{DEFAULT_AGENT_EFFICIENT_PROFILE_ID}.evidence_yield",
+    )
     if score is None or score < 0.5:
-        failures.append(
+        failed.append(
             GateFailure(
                 gate="agent_efficiency",
                 reason="agent_efficiency_quality_constraint_failed",
@@ -890,27 +750,48 @@ def _evaluate_agent_efficiency(
                 detail_kind="below_floor",
             )
         )
-    return failures
+    return blocked, failed
 
 
 def _evaluate_cost_latency(
-    block: Any, *, profiles: Mapping[str, dict[str, Any]]
-) -> list[GateFailure]:
-    if block is None or not isinstance(block, Mapping):
-        return []
-    failures: list[GateFailure] = []
+    block: Mapping[str, Any],
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     max_cost = block.get("max_total_cost")
     max_latency = block.get("max_p95_latency_ms")
+    if max_cost is None and max_latency is None:
+        blocked.append(
+            GateFailure(
+                gate="cost_latency",
+                reason="cost_latency_metric_missing",
+                profile_id=None,
+                metric=None,
+                detail_kind="missing_budget",
+            )
+        )
+        return blocked, failed
     measured: dict[str, dict[str, Any]] = {}
     for profile_id in REQUIRED_PROFILE_IDS:
         profile_metrics = block.get(profile_id)
         if isinstance(profile_metrics, Mapping):
             measured[profile_id] = dict(profile_metrics)
+    if not measured:
+        blocked.append(
+            GateFailure(
+                gate="cost_latency",
+                reason="cost_latency_metric_missing",
+                profile_id=None,
+                metric=None,
+                detail_kind="missing_measurements",
+            )
+        )
+        return blocked, failed
     for profile_id, metrics in measured.items():
         if max_cost is not None:
             cost = metrics.get("total_cost")
             if isinstance(cost, (int, float)) and cost > max_cost:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="cost_latency",
                         reason="cost_above_budget",
@@ -922,7 +803,7 @@ def _evaluate_cost_latency(
         if max_latency is not None:
             latency = metrics.get("p95_latency_ms")
             if isinstance(latency, (int, float)) and latency > max_latency:
-                failures.append(
+                failed.append(
                     GateFailure(
                         gate="cost_latency",
                         reason="latency_above_budget",
@@ -931,26 +812,41 @@ def _evaluate_cost_latency(
                         detail_kind="above_budget",
                     )
                 )
-    return failures
+    return blocked, failed
 
 
 def _evaluate_failure_buckets(
-    block: Any, *, profiles: Mapping[str, dict[str, Any]]
-) -> list[GateFailure]:
-    failures: list[GateFailure] = []
+    block: Mapping[str, Any], *, profiles: Mapping[str, dict[str, Any]]
+) -> tuple[list[GateFailure], list[GateFailure]]:
+    blocked: list[GateFailure] = []
+    failed: list[GateFailure] = []
     observed: set[str] = set()
+    has_observation = False
     for profile_id in REQUIRED_PROFILE_IDS:
         profile_buckets = profiles.get(profile_id, {}).get("failure_buckets", ())
+        if profile_buckets:
+            has_observation = True
         observed.update(profile_buckets)
-        if block is not None and isinstance(block, Mapping):
-            extra = block.get(profile_id)
-            if isinstance(extra, (list, tuple)):
-                for entry in extra:
-                    if isinstance(entry, str) and entry:
-                        observed.add(entry)
+        extra = block.get(profile_id)
+        if isinstance(extra, (list, tuple)):
+            has_observation = True
+            for entry in extra:
+                if isinstance(entry, str) and entry:
+                    observed.add(entry)
+    if not has_observation:
+        blocked.append(
+            GateFailure(
+                gate="failure_buckets",
+                reason="failure_buckets_block_missing",
+                profile_id=None,
+                metric=None,
+                detail_kind="missing_observation",
+            )
+        )
+        return blocked, failed
     for bucket in sorted(observed):
         if bucket in HIGH_RISK_FAILURE_BUCKETS:
-            failures.append(
+            failed.append(
                 GateFailure(
                     gate="failure_buckets",
                     reason="high_risk_failure_bucket_present",
@@ -959,7 +855,7 @@ def _evaluate_failure_buckets(
                     detail_kind="high_risk_bucket",
                 )
             )
-    return failures
+    return blocked, failed
 
 
 def _collect_evidence_refs(
@@ -993,6 +889,293 @@ def _canonical_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def evaluate_release_decision(payload: Mapping[str, Any]) -> ReleaseDecision:
+    """Evaluate the Phase22 Release Decision from a structured JSON Mapping.
+
+    Raises ``ReleaseDecisionError`` only when the decision engine itself cannot
+    run. Decision status ERROR is encoded inside the returned
+    ``ReleaseDecision`` for any structural / type / range problem in the input.
+    """
+    safe_payload = payload if isinstance(payload, Mapping) else {}
+    try:
+        structure_reason = _validate_input_structure(safe_payload)
+        if structure_reason is not None:
+            return _error_decision(safe_payload, reason=structure_reason, gate_results=())
+        profiles_block = safe_payload.get("profiles")
+        if not isinstance(profiles_block, Mapping):
+            return _error_decision(
+                safe_payload, reason="profiles_not_object", gate_results=()
+            )
+        fingerprint_block = safe_payload.get("comparability_fingerprint")
+        if fingerprint_block is None:
+            return _error_decision(
+                safe_payload,
+                reason="comparability_fingerprint_malformed",
+                gate_results=(),
+            )
+        try:
+            fingerprint = _normalize_comparability_fingerprint(
+                fingerprint_block, field_path="comparability_fingerprint"
+            )
+        except ReleaseDecisionError:
+            return _error_decision(
+                safe_payload,
+                reason="comparability_fingerprint_malformed",
+                gate_results=(),
+            )
+
+        normalized_profiles: dict[str, dict[str, Any]] = {}
+        profile_hashes: dict[str, str] = {}
+        missing_profiles: list[str] = []
+        measurement_blocked: list[str] = []
+        try:
+            for profile_id in REQUIRED_PROFILE_IDS:
+                if profile_id not in profiles_block:
+                    missing_profiles.append(profile_id)
+                    continue
+                normalized = _normalize_profile_block(
+                    profiles_block[profile_id],
+                    field_path=f"profiles.{profile_id}",
+                    expected_fingerprint=fingerprint,
+                )
+                if normalized["measurement_status"] != "MEASURED":
+                    measurement_blocked.append(profile_id)
+                normalized_profiles[profile_id] = normalized
+                profile_hash_input = {
+                    "profile_id": profile_id,
+                    "measurement_status": normalized["measurement_status"],
+                    "artifact": normalized["artifact"],
+                    "failure_buckets": list(normalized["failure_buckets"]),
+                    "fingerprint": normalized["fingerprint"],
+                }
+                profile_hashes[profile_id] = canonical_sha256(profile_hash_input)
+        except ReleaseDecisionError as exc:
+            return _error_decision(
+                safe_payload,
+                reason="decision_input_invalid",
+                gate_results=(),
+                detail=str(exc),
+            )
+
+        if missing_profiles:
+            gate = GateFailure(
+                gate="profile_completeness",
+                reason="missing_profile",
+                profile_id=missing_profiles[0],
+                metric=None,
+                detail_kind="missing_profiles",
+            )
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=("missing_profile",),
+                gate_results=(gate,),
+            )
+
+        if measurement_blocked:
+            gate = GateFailure(
+                gate="profile_measurement",
+                reason="profile_not_measured",
+                profile_id=measurement_blocked[0],
+                metric=None,
+                detail_kind="not_measured_profiles",
+            )
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=("profile_not_measured",),
+                gate_results=(gate,),
+            )
+
+        try:
+            profile_fingerprints: dict[str, Mapping[str, str | None]] = {
+                pid: normalized["fingerprint"]
+                for pid, normalized in normalized_profiles.items()
+            }
+            comparable, mismatches = _evaluate_comparability(profile_fingerprints)
+        except ReleaseDecisionError as exc:
+            return _error_decision(
+                safe_payload,
+                reason="decision_input_invalid",
+                gate_results=(),
+                detail=str(exc),
+            )
+        if not comparable:
+            gate = GateFailure(
+                gate="comparability_fingerprint",
+                reason=mismatches[0],
+                profile_id=None,
+                metric=None,
+                detail_kind="mismatch_dimensions",
+            )
+            return _incomparable_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=tuple(mismatches),
+                gate_results=(gate,),
+            )
+
+        # Each required top-level gate must be present (and structurally a
+        # mapping). Missing or malformed top-level blocks become BLOCKED if
+        # the block is absent and ERROR if the block has the wrong shape.
+        blocked_top_level: list[GateFailure] = []
+        error_top_level: list[GateFailure] = []
+        required_blocks: dict[str, Mapping[str, Any]] = {}
+        for gate_name in REQUIRED_TOP_LEVEL_GATES:
+            present, gate_failure = _check_required_top_level_block(
+                safe_payload, gate_name, gate=gate_name
+            )
+            if gate_failure is None:
+                required_blocks[gate_name] = safe_payload[gate_name]  # type: ignore[index]
+                continue
+            if gate_failure.reason.endswith("_block_invalid"):
+                error_top_level.append(gate_failure)
+            else:
+                blocked_top_level.append(gate_failure)
+        if error_top_level:
+            return _error_decision(
+                safe_payload,
+                reason=error_top_level[0].reason,
+                gate_results=tuple(error_top_level),
+            )
+        if blocked_top_level:
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=tuple(sorted({f.reason for f in blocked_top_level})),
+                gate_results=tuple(blocked_top_level),
+            )
+
+        # evidence_refs: top-level must be a list of strings. If it is
+        # absent we BLOCK.
+        top_evidence_refs = safe_payload.get("evidence_refs")
+        if top_evidence_refs is None:
+            gate = GateFailure(
+                gate="evidence",
+                reason="evidence_missing",
+                profile_id=None,
+                metric=None,
+                detail_kind="missing_top_level_evidence_refs",
+            )
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=("evidence_missing",),
+                gate_results=(gate,),
+            )
+        try:
+            normalize_evidence_refs = _validate_evidence_refs(
+                top_evidence_refs, field_path="evidence_refs"
+            )
+        except ReleaseDecisionError:
+            return _error_decision(
+                safe_payload,
+                reason="evidence_refs_invalid",
+                gate_results=(),
+            )
+
+        # Per-gate evaluation. Each evaluator returns (blocked, failed).
+        blocked_eval: list[GateFailure] = []
+        failed_eval: list[GateFailure] = []
+        try:
+            core_block = required_blocks["core_five"]
+            cs_block = required_blocks["citation_safety"]
+            slice_block = required_blocks["critical_slice"]
+            baseline_block = required_blocks["critical_slice_baseline"]
+            eff_block = required_blocks["agent_efficiency"]
+            cost_block = required_blocks["cost_latency_budget"]
+            fb_block = required_blocks["failure_buckets"]
+
+            b, f = _evaluate_core_five(core_block, profiles=normalized_profiles)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+            b, f = _evaluate_citation_safety(cs_block, profiles=normalized_profiles)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+            b, f = _evaluate_critical_slice(slice_block, baseline_block)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+            b, f = _evaluate_agent_efficiency(eff_block)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+            b, f = _evaluate_cost_latency(cost_block)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+            b, f = _evaluate_failure_buckets(fb_block, profiles=normalized_profiles)
+            blocked_eval.extend(b)
+            failed_eval.extend(f)
+        except ReleaseDecisionError as exc:
+            return _error_decision(
+                safe_payload,
+                reason="decision_input_invalid",
+                gate_results=(),
+                detail=str(exc),
+            )
+
+        if blocked_eval:
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=tuple(sorted({f.reason for f in blocked_eval})),
+                gate_results=tuple(blocked_eval),
+            )
+
+        if failed_eval:
+            return _build_decision(
+                ReleaseDecisionStatus.FAILED,
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                gate_results=tuple(failed_eval),
+                reason_codes=tuple(sorted({f.reason for f in failed_eval})),
+                evidence_refs=normalize_evidence_refs,
+            )
+
+        profile_evidence_refs = _collect_evidence_refs(
+            safe_payload, profiles=normalized_profiles
+        )
+        all_evidence_refs = tuple(sorted(set(normalize_evidence_refs) | set(profile_evidence_refs)))
+        if not all_evidence_refs:
+            return _blocked_decision(
+                safe_payload,
+                profile_hashes=profile_hashes,
+                fingerprint=fingerprint,
+                reason_codes=("evidence_missing",),
+                gate_results=(
+                    GateFailure(
+                        gate="evidence",
+                        reason="evidence_missing",
+                        profile_id=None,
+                        metric=None,
+                        detail_kind="no_evidence_refs_collected",
+                    ),
+                ),
+            )
+
+        return _build_decision(
+            ReleaseDecisionStatus.PASSED,
+            safe_payload,
+            profile_hashes=profile_hashes,
+            fingerprint=fingerprint,
+            gate_results=(),
+            reason_codes=("all_gates_passed",),
+            evidence_refs=all_evidence_refs,
+        )
+    except ReleaseDecisionError as exc:
+        return _error_decision(
+            safe_payload if isinstance(safe_payload, Mapping) else {},
+            reason="decision_input_invalid",
+            gate_results=(),
+            detail=str(exc),
+        )
+
+
 def _build_decision(
     status: ReleaseDecisionStatus,
     payload: Mapping[str, Any],
@@ -1005,7 +1188,7 @@ def _build_decision(
 ) -> ReleaseDecision:
     canonical_input_hash = canonical_sha256(_canonical_payload(dict(payload)))
     comparability_fingerprint_hash = canonical_sha256(
-        {dimension: fingerprint[dimension] for dimension in FINGERPRINT_DIMENSIONS}
+        {dimension: fingerprint.get(dimension) for dimension in FINGERPRINT_DIMENSIONS}
     )
     decision_payload = {
         "canonical_input_hash": canonical_input_hash,
@@ -1054,7 +1237,6 @@ def _error_decision(
         "comparability_fingerprint_hash": canonical_sha256({}),
         "gate_results": [item.to_dict() for item in gate_results],
         "evidence_refs": [],
-        "error_detail": detail or "",
     }
     decision_hash = canonical_sha256(decision_payload)
     return ReleaseDecision(
@@ -1102,8 +1284,6 @@ def _incomparable_decision(
     gate_results: tuple[GateFailure, ...],
 ) -> ReleaseDecision:
     for code in reason_codes:
-        if code == "fingerprint_dimension_missing":
-            continue
         _validate_closed_set(code, INCOMPARABLE_REASONS)
     return _build_decision(
         ReleaseDecisionStatus.INCOMPARABLE,
@@ -1127,25 +1307,40 @@ def is_closed_reason(code: str) -> bool:
     )
 
 
+def exit_code_for(decision: ReleaseDecision | ReleaseDecisionStatus | str) -> int:
+    """Return the canonical exit code for a decision status."""
+    if isinstance(decision, ReleaseDecision):
+        return decision.exit_code
+    if isinstance(decision, ReleaseDecisionStatus):
+        return EXIT_CODE_BY_STATUS[decision]
+    normalized = str(decision)
+    if normalized not in EXIT_CODE_BY_STATUS:
+        return int(ReleaseDecisionExitCode.ERROR)
+    return EXIT_CODE_BY_STATUS[ReleaseDecisionStatus(normalized)]
+
+
 __all__ = [
     "BLOCKED_REASONS",
     "CLOSED_SET_VERSION",
     "CITATION_SAFETY_METRIC_NAMES",
     "CORE_FIVE_METRIC_NAMES",
     "DECISION_ENGINE_VERSION",
+    "DEFAULT_AGENT_EFFICIENT_PROFILE_ID",
     "ERROR_REASONS",
-    "FINGERPRINT_DIMENSIONS",
+    "EXIT_CODE_BY_STATUS",
     "FAILED_REASONS",
+    "FINGERPRINT_DIMENSIONS",
     "HIGH_RISK_FAILURE_BUCKETS",
     "INCOMPARABLE_REASONS",
     "PASSED_REASONS",
     "REPRODUCE_COMMAND_TEMPLATE",
     "REQUIRED_PROFILE_IDS",
-    "DEFAULT_AGENT_EFFICIENT_PROFILE_ID",
-    "GateFailure",
+    "REQUIRED_TOP_LEVEL_GATES",
     "ReleaseDecision",
     "ReleaseDecisionError",
+    "ReleaseDecisionExitCode",
     "ReleaseDecisionStatus",
     "evaluate_release_decision",
+    "exit_code_for",
     "is_closed_reason",
 ]
