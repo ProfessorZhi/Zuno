@@ -4,6 +4,7 @@ import pytest
 from tools.scripts.verify_agent_commit_attribution import (
     ALLOWED_AGENTS,
     ALLOWED_MODES,
+    is_human_only_commit,
     parse_commit_trailers,
 )
 
@@ -48,3 +49,18 @@ def test_crlf_line_endings_parsing() -> None:
     trailers = parse_commit_trailers(msg)
     assert trailers["Agent"] == "Qoder"
     assert trailers["Agent-Mode"] == "Codex"
+
+
+def test_human_only_commit_without_trailers_is_allowable_boundary() -> None:
+    assert is_human_only_commit(author="ProfessorZhi", trailers={})
+
+
+def test_bot_commit_is_not_human_only() -> None:
+    assert not is_human_only_commit(author="github-actions[bot]", trailers={})
+
+
+def test_partial_attribution_trailer_is_not_human_only() -> None:
+    assert not is_human_only_commit(
+        author="ProfessorZhi",
+        trailers={"Agent": "Codex"},
+    )

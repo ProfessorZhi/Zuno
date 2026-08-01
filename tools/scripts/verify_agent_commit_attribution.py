@@ -64,6 +64,11 @@ def parse_commit_trailers(commit_msg: str) -> dict[str, str]:
     return trailers
 
 
+def is_human_only_commit(*, author: str, trailers: dict[str, str]) -> bool:
+    """Human-authored commit with no attribution trailer surface to validate."""
+    return author not in BOT_AUTHORS and not trailers
+
+
 def verify_commit_attribution(
     base_sha: Optional[str] = None,
     head_sha: Optional[str] = None,
@@ -102,7 +107,10 @@ def verify_commit_attribution(
         commit_msg = run_git_command(["log", "--format=%B", "-n", "1", sha])
         trailers = parse_commit_trailers(commit_msg)
 
-        if allow_human_only and trailers.get("Agent") == "Human":
+        if allow_human_only and (
+            trailers.get("Agent") == "Human"
+            or is_human_only_commit(author=author, trailers=trailers)
+        ):
             continue
 
         required_keys = ["Agent", "Agent-Mode", "Human-Owner", "Architecture-Reviewer", "Work-Package"]
