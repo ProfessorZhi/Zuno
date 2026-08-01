@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from langchain_core.messages import HumanMessage
 import pytest
 
 from zuno.agent.runtime import SQLiteAgentRunStore
@@ -280,7 +278,8 @@ def test_completion_cutover_mode_resolution_supports_explicit_modes_and_ignores_
     assert CompletionService.resolve_cutover_mode() == "canary"
 
     monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
-    assert CompletionService.resolve_cutover_mode() == "rollback"
+    with pytest.raises(ValueError, match="rollback mode is retired"):
+        CompletionService.resolve_cutover_mode()
 
     monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
     monkeypatch.setenv("ZUNO_AGENT_RUNTIME", "legacy_general_agent")
@@ -339,67 +338,21 @@ def test_completion_route_forwards_explicit_cutover_mode(monkeypatch, cutover_mo
     assert captured["cutover_mode"] == cutover_mode
 
 
-def test_completion_route_uses_legacy_runtime_in_rollback_window(monkeypatch) -> None:
-    class FakeChatAgent:
-        def __init__(self) -> None:
-            self.stopped = False
-
-        async def astream(self, messages):
-            del messages
-            yield {"type": "planning", "data": {"status": "ok"}}
-            yield {"type": "response_chunk", "data": {"chunk": "legacy answer"}}
-
-        def stop_streaming_callback(self) -> None:
-            self.stopped = True
-
-    fake_agent = FakeChatAgent()
-
-    async def fake_create_chat_agent(req, login_user_id):
-        del req, login_user_id
-        return fake_agent, SimpleNamespace(
-            name="legacy-agent",
-            enable_memory=False,
-            system_prompt="",
-            product_mode="auto",
-            query_method="direct",
-        )
-
-    async def fake_prepare_messages(*, req, agent_config):
-        del agent_config
-        return req.user_input, [HumanMessage(content=req.user_input)]
-
-    async def fake_save_chat_history(**kwargs):
-        del kwargs
-
+def test_completion_route_rejects_retired_rollback_before_general_agent(monkeypatch) -> None:
     monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
-    monkeypatch.setattr("zuno.api.v1.completion._create_chat_agent", fake_create_chat_agent)
-    monkeypatch.setattr(CompletionService, "prepare_messages", fake_prepare_messages)
-    monkeypatch.setattr(CompletionService, "save_memory_turn", fake_save_chat_history)
-    monkeypatch.setattr("zuno.api.services.history.HistoryService.save_chat_history", fake_save_chat_history)
     monkeypatch.setattr(
         CompletionService,
         "record_product_runtime_request",
-        staticmethod(lambda **kwargs: {"status": "ACCEPTED", "route": "/completion", "mode": "shadow"}),
+        staticmethod(lambda **kwargs: pytest.fail("rollback reached product runtime request")),
     )
 
     client = _client()
-    with client.stream(
-        "POST",
-        "/api/v1/completion",
-        json={
-            "user_input": "Summarize the workspace evidence with citations.",
-            "dialog_id": "dialog_phase11_completion",
-            "product_mode": "auto",
-        },
-    ) as response:
-        assert response.status_code == 200
-        lines = list(response.iter_lines())
-
-    streamed = [
-        json.loads(line.removeprefix("data: ").strip())
-        for line in lines
-        if line.startswith("data: ")
-    ]
-    assert streamed[0]["type"] == "planning"
-    assert streamed[-1]["type"] == "response_chunk"
-    assert streamed[-1]["data"]["chunk"] == "legacy answer"
+    with pytest.raises(ValueError, match="rollback mode is retired"):
+        client.post(
+            "/api/v1/completion",
+            json={
+                "user_input": "Summarize the workspace evidence with citations.",
+                "dialog_id": "dialog_phase22_retired_rollback",
+                "product_mode": "auto",
+            },
+        )

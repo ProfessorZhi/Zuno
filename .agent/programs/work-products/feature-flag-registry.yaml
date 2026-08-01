@@ -37,7 +37,7 @@ flags:
     scope: "completion route rollback"
     default: "RETIRED"
     metric: ["legacy_completion_invocation_count", "missing_trace_count"]
-    rollback_command: "retired; use ZUNO_COMPLETION_CUTOVER_MODE=rollback only for explicit controlled cutover drills"
+    rollback_command: "retired and fail-closed; ZUNO_COMPLETION_CUTOVER_MODE=rollback is rejected after PHASE22 cutover"
     expires_at_phase: "PHASE08"
     retire_task: "P22-T03"
     domain_fact_owner: "unchanged"

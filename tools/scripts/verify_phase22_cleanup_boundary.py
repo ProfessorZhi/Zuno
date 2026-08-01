@@ -270,6 +270,7 @@ MCP_AGENT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" 
 CAPABILITY_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "capability.py"
 AGENT_SKILL_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "agent_skill.py"
 COMPLETION_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py"
+COMPLETION_ROUTE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1" / "completion.py"
 WECHAT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "wechat.py"
 MCP_CHAT_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "mcp_chat.py"
 CLI_TOOL_DISCOVERY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "cli_tool_discovery.py"
@@ -623,6 +624,16 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     completion_service = _read(REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py")
     if "ZUNO_AGENT_RUNTIME" in completion_service:
         errors.append("completion service still accepts retired ZUNO_AGENT_RUNTIME rollback env")
+    if "legacy_general_agent" in completion_service:
+        errors.append("completion service still exposes retired legacy_general_agent rollback")
+    if "completion rollback mode is retired after PHASE22 cutover" not in completion_service:
+        errors.append("completion service missing retired rollback fail-closed guard")
+    completion_route_text = _read(COMPLETION_ROUTE)
+    for marker in ["_create_chat_agent", "GeneralAgent", "AgentConfig"]:
+        if marker in completion_route_text:
+            errors.append(f"completion route still exposes retired GeneralAgent rollback marker: {marker}")
+    if "CompletionService.stream_unified_runtime" not in completion_route_text:
+        errors.append("completion route missing unified runtime default stream")
 
     legacy_compatibility_package = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "compatibility" / "legacy"
     if legacy_compatibility_package.exists():
