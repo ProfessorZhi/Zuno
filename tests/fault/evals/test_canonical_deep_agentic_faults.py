@@ -1,11 +1,11 @@
 """Fault Injection Tests for Deep and Agentic GraphRAG Canonical Adapters.
 
-AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
+AG-PR56-FAIL-CLOSED-PAYLOAD-HARDENING
 
 Fail-Closed Fault Verification:
 - Tests exact mapping of failure_class when runtime ports return blocked status.
 - Verifies invalid receipt owner, missing receipt hash, and unpopulated ports fail closed.
-- Asserts measurement_state is strictly BLOCKED.
+- Asserts measurement_state is strictly BLOCKED and trace_id is None.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import pytest
 from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
     AgenticGraphRAGCanonicalAdapter,
     DeepGraphRAGCanonicalAdapter,
+    validate_structural_canonical_receipt,
 )
 from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseInput,
@@ -102,6 +103,7 @@ def test_fault_injection_agentic_adapter_mapped_failure_class(expected_fault: st
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == expected_fault
+    assert res.trace_id is None
 
 
 def test_fault_injection_missing_receipt_hash_fails_closed() -> None:
@@ -131,6 +133,7 @@ def test_fault_injection_missing_receipt_hash_fails_closed() -> None:
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "runtime_contract_incomplete"
+    assert res.trace_id is None
 
 
 def test_fault_injection_receipt_reference_binding_mismatch_fails_closed() -> None:
@@ -207,3 +210,4 @@ def test_fault_injection_receipt_reference_binding_mismatch_fails_closed() -> No
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "runtime_contract_incomplete"
+    assert res.trace_id is None

@@ -1,11 +1,12 @@
 """Boundary Integration Contract Tests for Deep and Agentic GraphRAG Adapters.
 
-AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
+AG-PR56-FAIL-CLOSED-PAYLOAD-HARDENING
 
 Fail-Closed Integration Verification:
 - Tests execution behavior when test double runtime ports are injected into adapter boundaries.
 - Validates fail-closed handling when formal product runtime ports are unwired or absent.
 - Ensures test double runtimes NEVER produce measurement_state="RUNTIME_OBSERVED".
+- Verifies result trace_id is ALWAYS None on blocked/test-double results.
 """
 
 from __future__ import annotations
@@ -128,7 +129,7 @@ class BoundaryTestDoubleAgentPort:
 
 
 class MaliciousFakeAgentPort:
-    """Fake Agent Port that attempts to impersonate product runtime by declaring is_test_double=False and magic authority."""
+    """Fake Agent Port that attempts to impersonate product runtime by declaring is_test_double=False."""
     is_test_double = False
     __zuno_product_authority__ = "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
 
@@ -256,6 +257,7 @@ def test_boundary_integration_deep_adapter_flow() -> None:
     assert res.is_test_double is True
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.trace_id is None
     assert "Boundary Test Double answer" in res.answer
 
 
@@ -270,6 +272,7 @@ def test_boundary_integration_agentic_adapter_flow() -> None:
     assert res.is_test_double is True
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.trace_id is None
     assert res.answer == "Boundary Test Double Agent Core answer"
 
 
@@ -283,6 +286,7 @@ def test_boundary_integration_unwired_product_runtime_fails_closed() -> None:
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_agent_run_graph_unavailable"
+    assert res.trace_id is None
 
 
 def test_boundary_integration_malicious_fake_cannot_impersonate_product_runtime() -> None:
@@ -297,3 +301,4 @@ def test_boundary_integration_malicious_fake_cannot_impersonate_product_runtime(
     assert res.measurement_state == "BLOCKED"
     assert res.measurement_state != "RUNTIME_OBSERVED"
     assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.trace_id is None

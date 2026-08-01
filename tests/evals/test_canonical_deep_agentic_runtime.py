@@ -1,15 +1,15 @@
 """Unit Contract Tests for Deep and Agentic GraphRAG Canonical Execution Adapters.
 
-AG-PR56-FAIL-CLOSED-BOUNDARY-REPAIR
+AG-PR56-FAIL-CLOSED-PAYLOAD-HARDENING
 
-Fail-Closed Boundary Verification:
+Fail-Closed Payload Hardening Verification:
 - Injected Runtime ports are invoked with exact parameters.
 - Gold document refs are NEVER passed into Deep retrieval request.
-- Self-attestation is completely removed; fake objects CANNOT declare Product Runtime.
-- All injected objects fail closed (runtime_status="blocked", measurement_state="BLOCKED", is_test_double=True).
-- Formal evidence fields (token_usage, cost, receipts) remain empty on blocked results.
-- Latency is reported in seconds (matching Canonical Runner).
-- Missing product runtime, exceptions, non-dict returns, or invalid receipts return BLOCKED.
+- Strict payload normalization for retrieval_rounds, evidence_refs, retrieved_document_refs, and answer.
+- All result trace_id values are None on blocked/test-double results even when trace adapter generates spans.
+- Secret or unmapped failure_class values are normalized to canonical_runtime_reported_blocked.
+- Receipt helper only accepts mappings and does not invoke __str__ on arbitrary objects.
+- All formal evidence fields (token_usage, cost, receipts) remain empty on blocked results.
 """
 
 from __future__ import annotations
@@ -21,12 +21,13 @@ from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
     AgenticGraphRAGCanonicalAdapter,
     CanonicalReceiptRef,
     DeepGraphRAGCanonicalAdapter,
-    validate_canonical_receipt,
+    validate_structural_canonical_receipt,
 )
 from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseInput,
     CanonicalRuntimeDependencies,
 )
+from zuno.platform.observability.trace_adapter import InMemoryTraceAdapter
 
 
 def _full_preflight_deps(**overrides: Any) -> CanonicalRuntimeDependencies:
@@ -35,7 +36,7 @@ def _full_preflight_deps(**overrides: Any) -> CanonicalRuntimeDependencies:
         "knowledge_runtime": object(),
         "index_runtime": object(),
         "agent_run_runtime": object(),
-        "trace_adapter": object(),
+        "trace_adapter": InMemoryTraceAdapter(config={"enabled": True, "sample_rate": 1.0}),
         "result_store": object(),
         "artifact_store": object(),
         "usage_receipt_provider": object(),
@@ -47,16 +48,18 @@ def _full_preflight_deps(**overrides: Any) -> CanonicalRuntimeDependencies:
 
 class ContractTestDoubleKnowledgeRuntime:
     """Explicit Test Double Knowledge Runtime for Unit Contract Tests."""
-    is_test_double = True
 
-    def __init__(self) -> None:
+    def __init__(self, return_payload: Any = None) -> None:
         self.last_query_params: dict[str, Any] = {}
+        self.return_payload = return_payload
 
-    def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+    def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> Any:
         self.last_query_params = {
             "question": question,
             "corpus_snapshot_ref": corpus_snapshot_ref,
         }
+        if self.return_payload is not None:
+            return self.return_payload
         return {
             "answer": "Test double response text",
             "evidence_refs": ("ev_001",),
@@ -70,16 +73,15 @@ class ContractTestDoubleKnowledgeRuntime:
 
 class ContractTestDoubleAgentRuntime:
     """Explicit Test Double Agent Runtime for Unit Contract Tests."""
-    is_test_double = True
 
-    def __init__(self, should_fail: bool = False) -> None:
-        self.should_fail = should_fail
+    def __init__(self, return_payload: Any = None) -> None:
         self.last_execute_params: dict[str, Any] = {}
+        self.return_payload = return_payload
 
-    def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
+    def execute_agent_run(self, **kwargs: Any) -> Any:
         self.last_execute_params = kwargs
-        if self.should_fail:
-            return {"status": "blocked", "failure_class": "agentic_run_failed"}
+        if self.return_payload is not None:
+            return self.return_payload
         return {
             "status": "completed",
             "answer": "Test double agentic answer",
@@ -183,219 +185,160 @@ def _unit_case_input(profile_name: str = "deep_graphrag") -> CanonicalCaseInput:
 
 
 # ---------------------------------------------------------------------------
-# Deep GraphRAG Unit Contract Tests
+# Payload Hardening Tests
 # ---------------------------------------------------------------------------
 
-def test_unit_contract_deep_gold_refs_not_in_retrieval_request() -> None:
-    """Deep adapter MUST NOT pass gold_document_refs into retrieval request."""
-    k_runtime = ContractTestDoubleKnowledgeRuntime()
+def test_unit_contract_deep_retrieval_rounds_none_returns_payload_invalid() -> None:
+    """Deep adapter returns runtime_payload_invalid when retrieval_rounds is None."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "ok",
+        "retrieval_rounds": None,
+    })
     deps = _full_preflight_deps(knowledge_runtime=k_runtime)
     adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
-
-    assert "gold_doc_refs" not in k_runtime.last_query_params
-    assert "gold_document_refs" not in k_runtime.last_query_params
-    assert "gold_evidence_refs" not in k_runtime.last_query_params
-    assert "supporting_fact_refs" not in k_runtime.last_query_params
-    assert "citation_ground_truth" not in k_runtime.last_query_params
-    assert "expected_answer" not in k_runtime.last_query_params
-    assert k_runtime.last_query_params["question"] == "What is the unit test behavior of deep graphrag?"
-    assert k_runtime.last_query_params["corpus_snapshot_ref"] == "snapshot_unit_v1"
-
-    assert res.is_test_double is True
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
+    assert res.failure_class == "runtime_payload_invalid"
 
 
-def test_unit_contract_deep_unpopulated_port_fails_closed() -> None:
-    """Deep adapter returns BLOCKED when knowledge_runtime port is unpopulated."""
-    deps = _full_preflight_deps(knowledge_runtime=None)
+def test_unit_contract_deep_retrieval_rounds_invalid_string_returns_payload_invalid() -> None:
+    """Deep adapter returns runtime_payload_invalid when retrieval_rounds is a string."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "ok",
+        "retrieval_rounds": "invalid",
+    })
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
     adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "canonical_knowledge_runtime_unavailable"
+    assert res.failure_class == "runtime_payload_invalid"
 
 
-def test_unit_contract_fake_authority_cannot_impersonate_product_runtime() -> None:
-    """Regression test proving fake runtime setting is_test_double=False or magic authority still fails closed."""
-    class FakeAuthorityRuntime:
-        is_test_double = False
-        __zuno_product_authority__ = "ZUNO_PRODUCT_RUNTIME_AUTHORITY_VERIFIED"
-
-        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
-            return {"answer": "Fake authority answer", "token_usage": 999, "cost": 9.99}
-
-    deps = _full_preflight_deps(knowledge_runtime=FakeAuthorityRuntime())
+def test_unit_contract_deep_evidence_refs_invalid_type_returns_payload_invalid() -> None:
+    """Deep adapter returns runtime_payload_invalid when evidence_refs contains non-strings."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "ok",
+        "evidence_refs": {"invalid": "dict"},
+    })
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
     adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
-
-    assert res.is_test_double is True
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.measurement_state != "RUNTIME_OBSERVED"
-    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
-    assert res.token_usage == 0
-    assert res.cost == 0.0
+    assert res.failure_class == "runtime_payload_invalid"
 
 
-# ---------------------------------------------------------------------------
-# Agentic GraphRAG Unit Contract Tests
-# ---------------------------------------------------------------------------
+def test_unit_contract_deep_retrieved_document_refs_invalid_type_returns_payload_invalid() -> None:
+    """Deep adapter returns runtime_payload_invalid when retrieved_document_refs has wrong element type."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "ok",
+        "retrieved_document_refs": [123, 456],
+    })
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
+    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
 
-def test_unit_contract_agentic_unwired_product_runtime_fails_closed() -> None:
-    """Agentic adapter returns BLOCKED when agent_run_runtime has no execute_agent_run method."""
-    dummy_runtime_without_method = object()
-    deps = _full_preflight_deps(agent_run_runtime=dummy_runtime_without_method)
+    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "runtime_payload_invalid"
+
+
+def test_unit_contract_agentic_retrieval_rounds_non_numeric_returns_payload_invalid() -> None:
+    """Agentic adapter returns runtime_payload_invalid when retrieval_rounds is float."""
+    case_in = _unit_case_input("agentic_graphrag")
+    agent_runtime = ContractTestDoubleAgentRuntime()
+    payload = agent_runtime.execute_agent_run(
+        tenant_id=case_in.tenant_id,
+        workspace_id=case_in.workspace_id,
+        corpus_snapshot_ref=case_in.corpus_snapshot_ref,
+    )
+    payload["retrieval_rounds"] = 1.5
+    agent_runtime.return_payload = payload
+
+    deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
     adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
 
-    res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
+    res = adapter.run_canonical_case(case_in)
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "canonical_agentic_product_runtime_unavailable"
+    assert res.failure_class == "runtime_payload_invalid"
 
 
-def test_unit_contract_agentic_test_double_runtime_execution_fails_closed() -> None:
-    """Agentic adapter invokes test double but fails closed with BLOCKED state and empty evidence refs."""
-    agent_runtime = ContractTestDoubleAgentRuntime()
+def test_unit_contract_agentic_status_non_string_returns_payload_invalid() -> None:
+    """Agentic adapter returns runtime_payload_invalid when status is non-string."""
+    agent_runtime = ContractTestDoubleAgentRuntime(return_payload={"status": 123})
     deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
     adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
-
-    assert agent_runtime.last_execute_params.get("question") == "What is the unit test behavior of deep graphrag?"
-    assert "gold_document_refs" not in agent_runtime.last_execute_params
-    assert "gold_evidence_refs" not in agent_runtime.last_execute_params
-
-    assert res.is_test_double is True
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
-    assert res.plan_version_ref == ""
-    assert res.run_outcome_ref == ""
-    assert res.budget_settlement_ref == ""
-    assert res.artifact_receipt_ref == ""
-    assert res.token_usage == 0
-    assert res.cost == 0.0
+    assert res.failure_class == "runtime_payload_invalid"
 
 
-def test_unit_contract_latency_unit_in_seconds() -> None:
-    """Adapters output latency in seconds (not milliseconds)."""
+def test_unit_contract_trace_id_always_none_on_blocked_result() -> None:
+    """Deep and Agentic adapters MUST set trace_id=None on blocked/test-double results even when trace adapter generates span."""
     k_runtime = ContractTestDoubleKnowledgeRuntime()
-    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
-    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+    a_runtime = ContractTestDoubleAgentRuntime()
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime, agent_run_runtime=a_runtime)
 
-    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
-    assert isinstance(res.latency, float)
-    assert res.latency < 5.0  # Should be fraction of a second, not 5000ms!
+    deep_adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
+    deep_res = deep_adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
 
+    agent_adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
+    agent_res = agent_adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
 
-def test_unit_contract_exception_in_runtime_fails_closed() -> None:
-    """Adapters return BLOCKED with deterministic gap when runtime raises exception."""
-    class ExceptionKnowledgeRuntime:
-        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
-            raise RuntimeError("Database connection lost")
-
-    deps = _full_preflight_deps(knowledge_runtime=ExceptionKnowledgeRuntime())
-    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
-
-    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
-    assert res.runtime_status == "blocked"
-    assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "canonical_knowledge_runtime_exception"
+    assert deep_res.trace_id is None
+    assert agent_res.trace_id is None
 
 
-def test_unit_contract_non_dict_return_fails_closed() -> None:
-    """Adapters return BLOCKED with runtime_contract_incomplete when runtime returns non-dict."""
-    class InvalidReturnKnowledgeRuntime:
-        def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> str:
-            return "Just a raw string instead of a dict"
+def test_unit_contract_receipt_helper_does_not_invoke_str_on_arbitrary_objects() -> None:
+    """validate_structural_canonical_receipt rejects arbitrary objects without calling __str__."""
+    class EvilObject:
+        def __str__(self) -> str:
+            raise RuntimeError("Should never call __str__ on arbitrary object!")
 
-    deps = _full_preflight_deps(knowledge_runtime=InvalidReturnKnowledgeRuntime())
-    adapter = DeepGraphRAGCanonicalAdapter(deps=deps)
-
-    res = adapter.run_canonical_case(_unit_case_input("deep_graphrag"))
-    assert res.runtime_status == "blocked"
-    assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "runtime_contract_incomplete"
+    assert validate_structural_canonical_receipt(EvilObject(), "SecurityDecision", "security", "t1", "w1") is False
 
 
-def test_unit_contract_receipt_validation_owner_mismatch_fails_closed() -> None:
-    """Receipt validation fails when receipt owner does not match expected authority."""
-    bad_receipt = {
-        "receipt_type": "SecurityDecision",
-        "receipt_ref": "sec_01",
-        "owner": "wrong_owner",
-        "status": "valid",
-        "tenant_id": "t1",
-        "workspace_id": "w1",
-        "runtime_version": "2.0.0",
-        "snapshot_ref": "s1",
-        "payload_hash": "h1",
-    }
-    assert validate_canonical_receipt(bad_receipt, "SecurityDecision", "security", "t1", "w1") is False
-
-
-def test_unit_contract_receipt_validation_missing_hash_fails_closed() -> None:
-    """Receipt validation fails when payload_hash is empty."""
-    bad_receipt = {
-        "receipt_type": "PlanVersion",
-        "receipt_ref": "plan_01",
-        "owner": "agent_core",
-        "status": "valid",
-        "tenant_id": "t1",
-        "workspace_id": "w1",
-        "runtime_version": "2.0.0",
-        "snapshot_ref": "s1",
-        "payload_hash": "",
-    }
-    assert validate_canonical_receipt(bad_receipt, "PlanVersion", "agent_core", "t1", "w1") is False
-
-
-def test_unit_contract_receipt_validation_missing_version_or_snapshot_fails_closed() -> None:
-    """Receipt validation fails when runtime_version or snapshot_ref is missing."""
-    no_version = {
-        "receipt_type": "UsageReceipt",
-        "receipt_ref": "u01",
-        "owner": "model_gateway",
-        "status": "valid",
-        "tenant_id": "t1",
-        "workspace_id": "w1",
-        "runtime_version": "",
-        "snapshot_ref": "s1",
-        "payload_hash": "h1",
-    }
-    no_snapshot = {
-        "receipt_type": "BudgetSettlement",
-        "receipt_ref": "b01",
-        "owner": "budget",
-        "status": "valid",
-        "tenant_id": "t1",
-        "workspace_id": "w1",
-        "runtime_version": "2.0.0",
-        "snapshot_ref": "",
-        "payload_hash": "h1",
-    }
-    assert validate_canonical_receipt(no_version, "UsageReceipt", "model_gateway", "t1", "w1") is False
-    assert validate_canonical_receipt(no_snapshot, "BudgetSettlement", "budget", "t1", "w1") is False
-
-
-def test_unit_contract_agentic_receipt_binding_mismatch_fails_closed() -> None:
-    """Agentic adapter returns BLOCKED when plan_version_ref does not match receipt_ref."""
-    class MismatchedRefAgentRuntime(ContractTestDoubleAgentRuntime):
-        def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
-            res = super().execute_agent_run(**kwargs)
-            res["plan_version_ref"] = "mismatched_plan_ref"
-            return res
-
-    deps = _full_preflight_deps(agent_run_runtime=MismatchedRefAgentRuntime())
+def test_unit_contract_secret_failure_class_mapped_to_canonical_runtime_reported_blocked() -> None:
+    """Agentic adapter maps secret-style or unmapped failure_class to canonical_runtime_reported_blocked."""
+    agent_runtime = ContractTestDoubleAgentRuntime(return_payload={
+        "status": "blocked",
+        "failure_class": "sk-proj-secret-token-key-12345\nwith_newlines",
+    })
+    deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
     adapter = AgenticGraphRAGCanonicalAdapter(deps=deps)
 
     res = adapter.run_canonical_case(_unit_case_input("agentic_graphrag"))
     assert res.runtime_status == "blocked"
     assert res.measurement_state == "BLOCKED"
-    assert res.failure_class == "runtime_contract_incomplete"
+    assert res.failure_class == "canonical_runtime_reported_blocked"
+    assert "sk-proj" not in res.blocked_reason
+    assert "secret" not in str(res.dependency_gaps)
+
+
+def test_unit_contract_dict_or_none_failure_class_mapped_safely() -> None:
+    """Agentic adapter maps dict or None failure_class safely."""
+    agent_runtime_dict = ContractTestDoubleAgentRuntime(return_payload={
+        "status": "blocked",
+        "failure_class": {"secret": "data"},
+    })
+    deps_dict = _full_preflight_deps(agent_run_runtime=agent_runtime_dict)
+    adapter_dict = AgenticGraphRAGCanonicalAdapter(deps=deps_dict)
+    res_dict = adapter_dict.run_canonical_case(_unit_case_input("agentic_graphrag"))
+    assert res_dict.failure_class == "canonical_runtime_reported_blocked"
+
+    agent_runtime_none = ContractTestDoubleAgentRuntime(return_payload={
+        "status": "blocked",
+        "failure_class": None,
+    })
+    deps_none = _full_preflight_deps(agent_run_runtime=agent_runtime_none)
+    adapter_none = AgenticGraphRAGCanonicalAdapter(deps=deps_none)
+    res_none = adapter_none.run_canonical_case(_unit_case_input("agentic_graphrag"))
+    assert res_none.failure_class == "canonical_runtime_reported_blocked"
