@@ -653,6 +653,11 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             if not path.is_file():
                 continue
             rel = path.relative_to(production_root)
+            # Skip Python bytecode cache directories; they are build artifacts
+            # whose names derive from source files and must not be treated
+            # as production source paths (e.g. __pycache__/legacy_cutover.cpython-312.pyc).
+            if any(part == "__pycache__" for part in rel.parts):
+                continue
             full_rel = production_root.relative_to(REPO_ROOT) / rel
             full_rel_str = full_rel.as_posix()
             parts = rel.parts
