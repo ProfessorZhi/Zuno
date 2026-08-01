@@ -45,8 +45,8 @@ def verify_phase07_post_closure_consistency() -> list[str]:
         ("pre-closure evidence", PRE_CLOSURE, ["status: passed", "gate: pre_closure"]),
         ("closure decision", CLOSURE, ["status: approved", "coordinator_approval: approved", "phase07_state: completed"]),
         ("readiness", READINESS, ["current_phase_status: completed", "coordinator_approval: approved", "target_not_current: 0"]),
-        ("manifest", MANIFEST, ["current_phase: PHASE20", "id: PHASE07", "state: completed", "id: PHASE08", "state: completed", "id: PHASE09", "state: completed", "id: PHASE10", "state: completed", "id: PHASE19", "state: completed", "id: PHASE20", "state: ready"]),
-        ("current", CURRENT, ["current_phase: PHASE20", "PHASE07 completed", "PHASE08 completed", "PHASE09 completed", "PHASE10 completed", "PHASE19 completed"]),
+        ("manifest", MANIFEST, ["current_phase: PHASE15", "id: PHASE07", "state: completed", "id: PHASE08", "state: completed", "id: PHASE09", "state: completed", "id: PHASE10", "state: completed", "id: PHASE15", "state: blocked", "id: PHASE19", "state: completed", "id: PHASE20", "state: blocked"]),
+        ("current", CURRENT, ["current_phase: PHASE15", "PHASE07 completed", "PHASE08 completed", "PHASE09 completed", "PHASE10 completed", "PHASE15 blocked", "PHASE19 completed", "PHASE20 blocked"]),
         ("closure checklist", CHECKLIST, ["[x] PHASE07 Model Gateway Runtime"]),
     ]:
         text = _read(path)

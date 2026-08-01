@@ -1,13 +1,24 @@
 # PHASE20 Observability Eval, Benchmark and Release Gate
 
 phase_id: PHASE20
-status: ready
+status: blocked
 depends_on: PHASE06, PHASE18, PHASE19
 owner: Module 10 Observability & Eval
 
 ## Phase 目标
 
 在完整 Trace 基础上实现 EvalDataset/Version/Case、EvalRun/CaseExecution、RAG Core Five、GraphRAG Trace、Agent Efficiency、Failure Bucket、BenchmarkComparison、MeasurementStatus、ReleaseGateEvaluation 和 EvidenceRecord。此 Phase 建立真实评测能力，但最终固定数据集运行和生产就绪结论在 PHASE22。
+
+## Goal05 Blocker
+
+PHASE20 在所有 Mandatory Target Gap 修复前保持 blocked。Goal05 一次性 Target Coverage Audit 已冻结：
+
+```text
+docs/evidence/goal05-target-coverage-audit.md
+.agent/programs/work-products/goal05-target-gap-ledger.yaml
+```
+
+当前阻塞项：PHASE15 Agent Sandbox 真实 Deno/Pyodide、OCI Process Sandbox 和 Postgres integration evidence 缺失。不得在该 Gap 修复前启动 PHASE20 或声明 Eval/Release Gate current。
 
 ## Minimal Read Set
 

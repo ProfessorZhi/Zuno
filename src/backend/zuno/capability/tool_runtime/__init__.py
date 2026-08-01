@@ -11,6 +11,7 @@ from .runtime_batch import (
     ToolRuntimeBatch,
 )
 from .invocation_gateway import ToolGatewayReceipt, ToolInvocationGateway
+from .sandbox import SandboxAdapterRegistry, SandboxDispatch, SandboxPolicyViolation, SandboxProfile
 
 __all__ = [
     "AdapterFamily",
@@ -23,4 +24,8 @@ __all__ = [
     "ToolGatewayReceipt",
     "ToolInvocationGateway",
     "ToolRuntimeBatch",
+    "SandboxAdapterRegistry",
+    "SandboxDispatch",
+    "SandboxPolicyViolation",
+    "SandboxProfile",
 ]

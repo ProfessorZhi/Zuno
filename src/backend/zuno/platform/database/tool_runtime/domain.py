@@ -83,6 +83,24 @@ class ToolExecutionReceiptInput:
     receipt_payload: dict[str, Any]
 
 @dataclass(frozen=True, slots=True)
+class ToolSandboxReceiptInput:
+    sandbox_receipt_id: str
+    tenant_id: str
+    prepared_tool_action_id: str
+    attempt_id: str
+    sandbox_profile_id: str
+    adapter_tier: str
+    session_ref: str
+    session_version: int
+    profile_hash: str
+    limits_hash: str
+    session_hash: str
+    state_integrity_hash: str
+    isolation_verified: bool
+    allowlist_enforced: bool
+    receipt_payload: dict[str, Any]
+
+@dataclass(frozen=True, slots=True)
 class ToolEffectReceiptInput:
     effect_receipt_id: str
     tenant_id: str
@@ -259,7 +277,10 @@ class ToolRepository:
                 VALUES (
                     :provider_id, :tenant_id, :owner_module, :provider_name, :status, :schema_hash
                 )
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (attempt_id) DO UPDATE
+                SET status = EXCLUDED.status,
+                    dispatch_certainty = EXCLUDED.dispatch_certainty,
+                    state_history = EXCLUDED.state_history
                 """
             ),
             {
@@ -628,6 +649,44 @@ class ToolRepository:
                 "effect_certainty": receipt.effect_certainty,
                 "append_only_generation": receipt.append_only_generation,
                 "receipt_hash": canonical_sha256(receipt.receipt_payload),
+            },
+        )
+
+    def record_sandbox_receipt(self, receipt: ToolSandboxReceiptInput) -> None:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO tool_sandbox_receipts (
+                    sandbox_receipt_id, tenant_id, prepared_tool_action_id, attempt_id,
+                    sandbox_profile_id, adapter_tier, session_ref, session_version,
+                    profile_hash, limits_hash, session_hash, state_integrity_hash,
+                    isolation_verified, allowlist_enforced, receipt_payload_hash
+                )
+                VALUES (
+                    :sandbox_receipt_id, :tenant_id, :prepared_tool_action_id, :attempt_id,
+                    :sandbox_profile_id, :adapter_tier, :session_ref, :session_version,
+                    :profile_hash, :limits_hash, :session_hash, :state_integrity_hash,
+                    :isolation_verified, :allowlist_enforced, :receipt_payload_hash
+                )
+                ON CONFLICT DO NOTHING
+                """
+            ),
+            {
+                "sandbox_receipt_id": receipt.sandbox_receipt_id,
+                "tenant_id": receipt.tenant_id,
+                "prepared_tool_action_id": receipt.prepared_tool_action_id,
+                "attempt_id": receipt.attempt_id,
+                "sandbox_profile_id": receipt.sandbox_profile_id,
+                "adapter_tier": receipt.adapter_tier,
+                "session_ref": receipt.session_ref,
+                "session_version": receipt.session_version,
+                "profile_hash": receipt.profile_hash,
+                "limits_hash": receipt.limits_hash,
+                "session_hash": receipt.session_hash,
+                "state_integrity_hash": receipt.state_integrity_hash,
+                "isolation_verified": receipt.isolation_verified,
+                "allowlist_enforced": receipt.allowlist_enforced,
+                "receipt_payload_hash": canonical_sha256(receipt.receipt_payload),
             },
         )
 
@@ -1177,6 +1236,7 @@ __all__ = [
     "ToolEffectReconciliationInput",
     "ToolExecutionReceiptInput",
     "ToolObservationInput",
+    "ToolSandboxReceiptInput",
     "ToolRepository",
     "ToolRuntimeConflict",
     "ToolUnitOfWork",

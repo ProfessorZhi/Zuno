@@ -78,6 +78,7 @@ def engine(migrated_postgres):
                     tool_async_jobs,
                     tool_effect_reconciliations,
                     tool_effect_receipts,
+                    tool_sandbox_receipts,
                     tool_bypass_guard_receipts,
                     tool_adapter_bindings,
                     tool_execution_receipts,
@@ -515,6 +516,75 @@ def test_phase16_gateway_records_side_effect_classification_before_blocking(engi
             "target_conflict_keys": list(effect_policy.target_resource_set.conflict_keys),
         }
     )
+
+
+def test_phase15_gateway_records_sandbox_receipt_before_readonly_dispatch(engine) -> None:
+    gateway = ToolInvocationGateway(unit_of_work_factory=lambda: ToolUnitOfWork(engine))
+    dispatched = False
+
+    async def executor() -> dict[str, str]:
+        nonlocal dispatched
+        dispatched = True
+        return {"value": "42"}
+
+    result, receipt = asyncio.run(gateway.invoke_readonly(
+        tool_name="analysis.python",
+        args={"allowed_paths": ["workspace://inputs/table.csv"], "code": "print(40 + 2)"},
+        tenant_id="tenant-phase15-sandbox",
+        workspace_id="workspace-phase15-sandbox",
+        trace_id="trace-phase15-sandbox",
+        call_id="call-phase15-python",
+        adapter_kind="PYTHON",
+        executor=executor,
+        readonly=True,
+    ))
+
+    assert dispatched is True
+    assert result == {"value": "42"}
+    assert receipt.status == "completed"
+
+    with engine.connect() as conn:
+        sandbox = conn.execute(
+            text(
+                """
+                SELECT sandbox_profile_id, adapter_tier, session_ref, session_version,
+                       isolation_verified, allowlist_enforced
+                FROM tool_sandbox_receipts
+                WHERE sandbox_receipt_id = 'tool-sandbox-receipt:call-phase15-python'
+                """
+            )
+        ).mappings().one()
+        attempt = conn.execute(
+            text(
+                """
+                SELECT status, dispatch_certainty
+                FROM tool_attempts
+                WHERE attempt_id = 'tool-attempt:call-phase15-python'
+                """
+            )
+        ).mappings().one()
+        observation = conn.execute(
+            text(
+                """
+                SELECT output_trusted, memory_write_allowed, evidence_write_allowed
+                FROM tool_observations
+                WHERE observation_id = 'tool-observation:tool-attempt:call-phase15-python'
+                """
+            )
+        ).mappings().one()
+
+    assert sandbox["sandbox_profile_id"] == "sandbox-profile:wasm-python:v1"
+    assert sandbox["adapter_tier"] == "WASM_PYTHON"
+    assert sandbox["session_ref"].endswith(":call-phase15-python")
+    assert sandbox["session_version"] == 1
+    assert sandbox["isolation_verified"] is True
+    assert sandbox["allowlist_enforced"] is True
+    assert attempt["status"] == "SUCCEEDED"
+    assert attempt["dispatch_certainty"] == "DISPATCHED"
+    assert observation["output_trusted"] is False
+    assert observation["memory_write_allowed"] is False
+    assert observation["evidence_write_allowed"] is False
+
 
 def test_phase16_gateway_binds_security_prepare_to_prepared_action_hash(engine) -> None:
     gateway = ToolInvocationGateway(
