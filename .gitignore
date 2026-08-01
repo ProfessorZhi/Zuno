@@ -26,6 +26,7 @@ src/backend/zuno/config.local.yaml
 .local/
 .agents/
 .codex/
+.qoder/better-harness/
 .qoder/repowiki/
 
 # Agent workflow library: keep durable references/templates/scripts tracked.
