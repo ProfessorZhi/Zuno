@@ -249,10 +249,13 @@ def test_knowledge_pipeline_parse_stage_uses_canonical_ir_before_chunk_projectio
     manager = _read("src/backend/zuno/platform/services/pipeline/manager.py")
 
     assert "def _parse_document" in manager
+    assert "def _parse_graph_documents" in manager
     assert "knowledge.pipeline.parse_stage.canonical_ir" in manager
+    assert "knowledge.pipeline.graph_index.canonical_handoff" in manager
     assert "ParseGateway" in manager
     assert "ParseDocumentRequest" in manager
     assert "canonical_document_ir_blocks" in manager
+    assert "canonical_index_handoff_graphrag_documents" in manager
     assert "parse_file_into_chunk_model_projection" in manager
     assert "run_rag_index_stage" in manager
     assert "run_graph_stage" in manager

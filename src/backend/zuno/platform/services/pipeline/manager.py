@@ -132,7 +132,14 @@ class KnowledgePipelineManager:
             if cleanup and os.path.exists(file_path):
                 os.remove(file_path)
 
-    async def _parse_document(self, task) -> CanonicalDocumentIR:
+    async def _parse_document(
+        self,
+        task,
+        *,
+        adapter: str = "knowledge.pipeline.parse_stage.canonical_ir",
+        consumer: str = "knowledge_pipeline_parse_stage",
+        projection: str = "canonical_document_ir_blocks",
+    ) -> CanonicalDocumentIR:
         file_path, cleanup = await self._resolve_file_path(task)
         try:
             payload = task.payload or {}
@@ -149,11 +156,11 @@ class KnowledgePipelineManager:
                     source_bytes=path.read_bytes(),
                     parse_idempotency_key=f"knowledge-pipeline-parse:{task.id}:{task.knowledge_file_id}",
                     parser_config={
-                        "adapter": "knowledge.pipeline.parse_stage.canonical_ir",
+                        "adapter": adapter,
                         "knowledge_config": knowledge_config,
                         "owner": "Input / Knowledge Runtime",
-                        "consumer": "knowledge_pipeline_parse_stage",
-                        "projection": "canonical_document_ir_blocks",
+                        "consumer": consumer,
+                        "projection": projection,
                     },
                 )
             )
@@ -164,6 +171,18 @@ class KnowledgePipelineManager:
         finally:
             if cleanup and os.path.exists(file_path):
                 os.remove(file_path)
+
+    async def _parse_graph_documents(self, task) -> list[dict]:
+        document = await self._parse_document(
+            task,
+            adapter="knowledge.pipeline.graph_index.canonical_handoff",
+            consumer="knowledge_pipeline_graph_index_stage",
+            projection="canonical_index_handoff_graphrag_documents",
+        )
+        from zuno.knowledge.ingestion import build_index_handoff_payload
+
+        handoff = build_index_handoff_payload(document)
+        return list(handoff.graphrag_documents)
 
     async def mark_queued(self, task_id: str):
         task = await self._load_task(task_id)
@@ -258,7 +277,7 @@ class KnowledgePipelineManager:
             knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
             index_capability = knowledge_config.get("index_capability", "rag")
             if self.enable_graph_indexing and index_capability == "rag_graph":
-                chunks = await self._parse_chunks(task)
+                graph_documents = await self._parse_graph_documents(task)
                 runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
                 project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
                 graphrag_project_id = (
@@ -283,7 +302,7 @@ class KnowledgePipelineManager:
                     extractor = CachedGraphExtractor()
                     writer = GraphWriter()
                     client = Neo4jClient()
-                    for chunk in chunks:
+                    for chunk in graph_documents:
                         chunk_payload = chunk.to_dict() if hasattr(chunk, "to_dict") else dict(chunk)
                         source_chunk_id = str(chunk_payload.get("source_chunk_id") or chunk_payload.get("chunk_id") or "").strip()
                         if source_chunk_id:
