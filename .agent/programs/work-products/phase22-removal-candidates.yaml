@@ -50,6 +50,12 @@ mandatory_removal_candidates:
     replacement: "Single Controller Product Runtime path."
     current_status: "active_candidate"
     removal_task: "P22-T03"
+  - path: "src/backend/zuno/knowledge/ingestion/legacy_cutover.py"
+    owner: "Input Parser Adapter Owner"
+    reason: "temporary legacy parser adapter bridges canonical ParseGateway IR to legacy ChunkModel projection; gated by LEGACY_ADAPTER_OWNER + LEGACY_ADAPTER_REMOVAL_PHASE."
+    replacement: "canonical ChunkModel retirement must precede removal; PHASE16 owns this retirement."
+    current_status: "active_candidate"
+    removal_task: "P16-RETIRE-CHUNKMODEL"
 resolved_this_slice:
   - path: "tests/legacy_guards/"
     before: "legacy guard suite was a PHASE02 temporary allowlist exception and PHASE22 active removal candidate"

@@ -302,6 +302,73 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _load_active_candidate_allowlist(work_product_path: Path) -> tuple[set[str], list[str]]:
+    """Return the legacy-segment allowlist parsed from the work product.
+
+    The allowlist is the set of ``path`` values that appear under the top-level
+    ``mandatory_removal_candidates`` list AND whose ``current_status`` is exactly
+    ``"active_candidate"``. Any entry outside that section, or with a missing
+    or unknown ``current_status``, is NOT admitted. Structural anomalies
+    (YAML parse failure, missing mandatory section, wrong container type,
+    non-mapping entry) are reported via the ``errors`` list and never
+    silently widen the allowlist.
+
+    The function is intentionally narrow: it never falls back to scanning the
+    whole file for ``- path:`` lines. Phases that previously relied on a wide
+    file-level scan are migrated to the strict allowlist by registering each
+    active candidate explicitly in ``mandatory_removal_candidates``.
+    """
+    errors: list[str] = []
+    allowlist: set[str] = set()
+    if not work_product_path.exists():
+        errors.append("missing phase22 removal candidates work product")
+        return allowlist, errors
+    try:
+        import yaml
+    except Exception as exc:  # pragma: no cover - dependency is declared
+        errors.append(f"PyYAML unavailable for work-product parsing: {exc}")
+        return allowlist, errors
+    try:
+        document = yaml.safe_load(_read(work_product_path))
+    except yaml.YAMLError as exc:
+        errors.append(f"phase22 removal candidates work product is not valid YAML: {exc}")
+        return allowlist, errors
+    if not isinstance(document, dict):
+        errors.append("phase22 removal candidates work product must be a YAML mapping at root")
+        return allowlist, errors
+    mandatory = document.get("mandatory_removal_candidates")
+    if mandatory is None:
+        errors.append(
+            "phase22 removal candidates work product missing mandatory_removal_candidates section"
+        )
+        return allowlist, errors
+    if not isinstance(mandatory, list):
+        errors.append(
+            "phase22 removal candidates work product mandatory_removal_candidates must be a list"
+        )
+        return allowlist, errors
+    for entry in mandatory:
+        if not isinstance(entry, dict):
+            errors.append(
+                "mandatory_removal_candidates entry is not a YAML mapping; refusing allowlist entry"
+            )
+            continue
+        path_value = entry.get("path")
+        status_value = entry.get("current_status")
+        if not isinstance(path_value, str) or not path_value:
+            errors.append(
+                "mandatory_removal_candidates entry missing string path; refusing allowlist entry"
+            )
+            continue
+        if not isinstance(status_value, str) or status_value != "active_candidate":
+            # Fail closed: any missing or non-active status disqualifies the
+            # entry from the allowlist. resolved_retired, resolved_this_slice,
+            # retired, unknown and missing all leave the allowlist unchanged.
+            continue
+        allowlist.add(path_value)
+    return allowlist, errors
+
+
 def verify_phase22_cleanup_boundary() -> list[str]:
     errors: list[str] = []
 
@@ -570,12 +637,14 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     # Allowed set: legacy segments that are explicitly tracked in the work product
     # as active removal candidates (i.e., fixed blockers awaiting a future wave).
     # Anything not in this set is treated as a fresh re-introduction.
-    tracked_active_candidates: set[str] = set()
-    if WORK_PRODUCT.exists():
-        for line in _read(WORK_PRODUCT).splitlines():
-            stripped = line.strip()
-            if stripped.startswith("- path:"):
-                tracked_active_candidates.add(stripped.split(":", 1)[1].strip().strip('"'))
+    # The allowlist is intentionally narrow: only entries inside the
+    # ``mandatory_removal_candidates`` top-level list with ``current_status:
+    # active_candidate`` are admitted. Items in any other section
+    # (resolved_this_slice, wave1_resolved, fixed_blockers,
+    # remaining_not_closed, etc.) must NOT enter the allowlist. Missing or
+    # unknown current_status values fail closed.
+    tracked_active_candidates, allowlist_errors = _load_active_candidate_allowlist(WORK_PRODUCT)
+    errors.extend(allowlist_errors)
 
     for production_root in production_roots:
         if not production_root.exists():
