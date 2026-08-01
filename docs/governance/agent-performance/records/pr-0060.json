@@ -31,8 +31,8 @@
     "verify_agent_commit_attribution": "passed",
     "git_diff_check": "clean"
   },
-  "ci_status": "in_progress",
-  "ci_run_id": null,
+  "ci_status": "success",
+  "ci_run_id": 30678988354,
   "status": "SUBMITTED_FOR_REVIEW",
   "current_score": null,
   "reviews": []
