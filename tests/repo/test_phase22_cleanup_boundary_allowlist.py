@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from tools.scripts.verify_phase22_cleanup_boundary import (
+    _contains_non_artifact_path,
     _load_active_candidate_allowlist,
 )
 
@@ -143,11 +144,31 @@ def test_real_work_product_admits_only_mandatory_active_candidates() -> None:
     # resolved_retired entries inside mandatory must NOT leak in
     assert "tests/legacy_guards/" not in allowlist
     assert "legacy_general_agent_completion_rollback" not in allowlist
-    # legacy_aliases.py IS a real active_candidate in mandatory (Wave 0 has
-    # not yet retired the source file); its presence in the allowlist is the
-    # intended safety net while the directory remains registered for
-    # P22-T03.
-    assert "src/backend/zuno/platform/compatibility/legacy_aliases.py" in allowlist
+    # legacy_aliases.py was retired by Wave 1 and must not keep widening
+    # the legacy-segment allowlist.
+    assert "src/backend/zuno/platform/compatibility/legacy_aliases.py" not in allowlist
+
+
+def test_forbidden_root_with_only_bytecode_cache_is_not_source_revival(tmp_path: Path) -> None:
+    """Local __pycache__ remnants do not prove that a retired root came back."""
+    forbidden_root = tmp_path / "src" / "backend" / "zuno" / "platform" / "compatibility"
+    cache_dir = forbidden_root / "__pycache__"
+    cache_dir.mkdir(parents=True)
+    (cache_dir / "__init__.cpython-312.pyc").write_bytes(b"cache")
+    nested_cache = forbidden_root / "vendor" / "fastapi_jwt_auth" / "__pycache__"
+    nested_cache.mkdir(parents=True)
+    (nested_cache / "auth_jwt.cpython-312.pyc").write_bytes(b"cache")
+
+    assert not _contains_non_artifact_path(forbidden_root)
+
+
+def test_forbidden_root_with_source_file_is_source_revival(tmp_path: Path) -> None:
+    """Any real file under a retired root still fails the cleanup boundary."""
+    forbidden_root = tmp_path / "src" / "backend" / "zuno" / "platform" / "compatibility"
+    forbidden_root.mkdir(parents=True)
+    (forbidden_root / "__init__.py").write_text("# revived source\n", encoding="utf-8")
+
+    assert _contains_non_artifact_path(forbidden_root)
 
 
 if __name__ == "__main__":
