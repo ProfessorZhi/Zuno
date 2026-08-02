@@ -1025,6 +1025,55 @@ def test_21b_standard_rag_does_not_require_agent_run_outcome_for_rule6() -> None
     assert "reviewer_pending" in reason
 
 
+def test_21e_standard_rag_blank_receipt_refs_are_missing_not_observed() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="standard_rag",
+        actual_profile="standard_rag",
+        snapshot_ref="   ",
+        trace_id="  ",
+        budget_settlement_ref="\t",
+        budget_settlement_valid=True,
+        artifact_receipt_ref=" \n ",
+        artifact_receipt_valid=True,
+        reviewer_status="pending",
+    )
+    assert state == MeasurementState.BLOCKED
+    assert "snapshot_ref_missing" in reason
+    assert "trace_missing" in reason
+    assert "budget_settlement_missing" in reason
+    assert "artifact_receipt_missing" in reason
+    assert "reviewer_pending" not in reason
+
+
+def test_21f_agentic_graphrag_blank_run_outcome_is_missing() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="agentic_graphrag",
+        actual_profile="agentic_graphrag",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        budget_settlement_valid=True,
+        artifact_receipt_ref="art_001",
+        artifact_receipt_valid=True,
+        run_outcome_ref="   ",
+        run_outcome_valid=True,
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        reviewer_attested=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+        formal_credential_attested=True,
+    )
+    assert state == MeasurementState.BLOCKED
+    assert "run_outcome_missing" in reason
+
+
 def test_21c_formal_credential_bools_without_attestation_cannot_reach_measured() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(

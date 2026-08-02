@@ -18,6 +18,11 @@ measurement status. Priority order is contractual and must not be changed:
 7. All gates satisfied   -> MEASURED
 
 Rule 6 (RUNTIME_OBSERVED) must NEVER mask missing or invalid receipts from Rule 5.
+
+Blank-value semantics are part of the runtime evidence contract: for
+snapshot_ref, trace_id and receipt refs, empty or whitespace-only values are
+MISSING. They must yield a Rule 5 BLOCKED gap, never RUNTIME_OBSERVED or
+MEASURED.
 """
 
 from __future__ import annotations
@@ -33,6 +38,10 @@ class MeasurementState(StrEnum):
     BLOCKED = "BLOCKED"
     FAILED = "FAILED"
     INCOMPARABLE = "INCOMPARABLE"
+
+
+def _is_blank(value: Optional[str]) -> bool:
+    return value is None or not bool(str(value).strip())
 
 
 class MeasurementTruthGate:
@@ -94,19 +103,19 @@ class MeasurementTruthGate:
 
         # ── Rule 5: Runtime Evidence & Receipt Validation ────────────────────
         evidence_gaps: list[str] = []
-        if not snapshot_ref:
+        if _is_blank(snapshot_ref):
             evidence_gaps.append("snapshot_ref_missing")
-        if not trace_id:
+        if _is_blank(trace_id):
             evidence_gaps.append("trace_missing")
 
         # Budget settlement validation
-        if not budget_settlement_ref:
+        if _is_blank(budget_settlement_ref):
             evidence_gaps.append("budget_settlement_missing")
         elif not budget_settlement_valid:
             evidence_gaps.append("budget_settlement_invalid")
 
         # Artifact receipt validation
-        if not artifact_receipt_ref:
+        if _is_blank(artifact_receipt_ref):
             evidence_gaps.append("artifact_receipt_missing")
         elif not artifact_receipt_valid:
             evidence_gaps.append("artifact_receipt_invalid")
@@ -116,7 +125,7 @@ class MeasurementTruthGate:
         # trace, usage, budget and artifact receipts, but not Agent Core
         # PlanVersion / RunOutcome receipts.
         if actual_profile == "agentic_graphrag":
-            if not run_outcome_ref:
+            if _is_blank(run_outcome_ref):
                 evidence_gaps.append("run_outcome_missing")
             elif not run_outcome_valid:
                 evidence_gaps.append("run_outcome_invalid")
