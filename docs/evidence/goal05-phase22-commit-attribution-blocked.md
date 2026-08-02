@@ -41,10 +41,10 @@ New commits on the integration branch from this round onward must include
 all 5 trailers:
 
 ```text
-Agent: Claude Code
+Agent: Claude-Code
 Provider: MiniMax
 Model: MiniMax-M3
-Agent-Mode: implementation
+Agent-Mode: Codex
 Human-Owner: ProfessorZhi
 Architecture-Reviewer: ChatGPT
 Work-Package: PHASE22-PR97-REVIEW-FIX
