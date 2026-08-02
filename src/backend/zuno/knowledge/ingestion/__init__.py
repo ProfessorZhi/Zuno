@@ -102,7 +102,6 @@ _LAZY_EXPORT_TO_MODULE = {
     "build_index_handoff_payload": "zuno.knowledge.ingestion.router",
     "canonical_ir_to_vector_payloads": "zuno.knowledge.ingestion.vector_payload",
     "get_parser_adapter": "zuno.knowledge.ingestion.adapters",
-    "normalize_legacy_chunks_to_ir": "zuno.knowledge.ingestion.normalizer",
     "package_a_rabbitmq_topology": "zuno.knowledge.ingestion.worker",
     "select_parser_for_format": "zuno.knowledge.ingestion.router",
 }
@@ -202,7 +201,6 @@ __all__ = [
     "canonical_ir_to_vector_payloads",
     "canonical_document_ir_contract_report",
     "get_parser_adapter",
-    "normalize_legacy_chunks_to_ir",
     "round_trip_canonical_document_ir",
     "select_parser_for_format",
 ]

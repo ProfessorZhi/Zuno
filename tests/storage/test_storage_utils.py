@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 import sys
 
@@ -28,13 +27,22 @@ def test_extract_object_key_keeps_plain_relative_path():
     assert object_key == "files/2026-4-17/txt/demo.txt"
 
 
-def test_text_parser_does_not_delete_source_file(tmp_path):
-    from zuno.platform.services.rag.doc_parser.text import text_parser
+def test_parse_gateway_file_uri_does_not_delete_source_file(tmp_path):
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
     source = tmp_path / "demo.txt"
     source.write_text("hello\nworld", encoding="utf-8")
 
-    text = asyncio.run(text_parser.parse_file(str(source)))
+    result = ParseGateway.parse_document(
+        ParseDocumentRequest(
+            document_id="doc_storage_utils",
+            workspace_id="workspace_storage_utils",
+            source_uri=source.as_uri(),
+            mime_type="text/plain",
+        )
+    )
 
-    assert text == "hello\nworld"
+    assert result.status == "succeeded"
+    assert result.document is not None
+    assert [block.text for block in result.document.blocks] == ["hello", "world"]
     assert source.exists()

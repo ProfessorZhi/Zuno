@@ -28,5 +28,5 @@ def test_phase11_legacy_cutover_inventory_keeps_closure_boundary() -> None:
     assert "status: closure_inventory" in text
     assert "PHASE11 为 `completed`" in text
     assert "canonical_ir_default_no_chunk_projection" in text
-    assert "legacy_compatibility_retained" in text
+    assert "retired_removed" in text
     assert "生产默认路径已证明完整经过 SourceObject" in text

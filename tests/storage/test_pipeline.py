@@ -794,18 +794,20 @@ def test_pipeline_resolve_file_path_uses_local_fixture_for_reindex():
     assert Path(file_path).exists()
 
 
-def test_graph_extractor_accepts_chunk_model():
-    from zuno.api.dto.chunk import ChunkModel
+def test_graph_extractor_accepts_canonical_vector_payload_dict():
     from zuno.platform.services.graphrag.extractor import GraphExtractor
 
-    chunk = ChunkModel(
-        chunk_id="chunk_1",
-        content="Alice works with Bob at OpenAI.",
-        file_id="file_1",
-        file_name="demo.txt",
-        update_time="2026-04-17T19:00:00",
-        knowledge_id="knowledge_1",
-    )
+    chunk = {
+        "chunk_id": "chunk_1",
+        "content": "Alice works with Bob at OpenAI.",
+        "file_id": "file_1",
+        "file_name": "demo.txt",
+        "update_time": "2026-04-17T19:00:00",
+        "knowledge_id": "knowledge_1",
+        "source_chunk_id": "source_chunk_1",
+        "document_hash": "doc_hash_1",
+        "chunk_hash": "chunk_hash_1",
+    }
 
     result = asyncio.run(GraphExtractor().extract_from_chunk(chunk, "knowledge_1"))
 

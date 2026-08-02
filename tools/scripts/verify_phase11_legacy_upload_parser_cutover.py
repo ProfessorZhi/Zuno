@@ -22,7 +22,7 @@ EXPECTED_ROWS = {
     },
     "P11-LC-04": {
         "path": "src/backend/zuno/platform/services/rag/parser.py",
-        "status": "legacy_compatibility_retained",
+        "status": "retired_removed",
     },
     "P11-LC-05": {
         "path": "src/backend/zuno/knowledge/ingestion/gateway.py",
@@ -118,7 +118,7 @@ def verify_phase11_legacy_upload_parser_cutover() -> list[str]:
 
     for required_phrase in [
         "PHASE11 为 `completed`",
-        "legacy_compatibility_retained",
+        "retired_removed",
         "not_phase11_ingestion",
         "canonical_runtime_candidate",
         "生产默认路径已证明完整经过 SourceObject",

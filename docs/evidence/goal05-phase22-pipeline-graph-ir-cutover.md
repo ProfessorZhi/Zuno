@@ -8,7 +8,7 @@ work_package: P22-T03 / P22-T04
 
 本证据记录 PHASE22 cleanup 的一个窄切片：Knowledge pipeline 的 `run_graph_stage` 不再调用 `_parse_chunks` / `parse_file_into_chunk_model_projection`。Graph stage 现在直接通过 `ParseGateway` 生成 `CanonicalDocumentIR`，再使用 `build_index_handoff_payload(document).graphrag_documents` 交给 Graph extractor / writer。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，也不声明全仓 `ChunkModel` 已退休。2026-08-02 后续切片已把 `run_rag_index_stage`、RAG rebuild script 与 fixed/local eval 入口继续推进到 Canonical IR / canonical vector payload；旧 RAG doc_parser / ChunkModel DTO 仅作为兼容残留。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。2026-08-02 后续切片已把 `run_rag_index_stage`、RAG rebuild script 与 fixed/local eval 入口继续推进到 Canonical IR / canonical vector payload；旧 RAG doc_parser / ChunkModel DTO 已在后续 PHASE22 cleanup 切片退役。
 
 ## Implemented
 
@@ -21,7 +21,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc parser 仍直接依赖 `ChunkModel`，但不再由 Knowledge pipeline、RAG rebuild script 或 fixed/local eval 默认入口调用。
+- 旧 RAG doc parser 已在后续 PHASE22 cleanup 切片退役。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

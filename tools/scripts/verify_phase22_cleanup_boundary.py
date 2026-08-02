@@ -208,6 +208,7 @@ WORKSPACE_TASK_RUNTIME_SERVICE = (
     REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_task_runtime.py"
 )
 KNOWLEDGE_DTO = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "knowledge.py"
+API_DTO_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "__init__.py"
 WORK_PRODUCT = (
     REPO_ROOT / ".agent" / "programs" / "work-products" / "phase22-removal-candidates.yaml"
 )
@@ -249,6 +250,10 @@ KNOWLEDGE_VECTOR_PAYLOAD = (
 RETIRED_KNOWLEDGE_CHUNK_PROJECTION_ADAPTER = (
     REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "chunk_projection_adapter.py"
 )
+RETIRED_RAG_PARSER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rag" / "parser.py"
+RETIRED_RAG_DOC_PARSER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "rag" / "doc_parser"
+RETIRED_CHUNK_DTO = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "chunk.py"
+RETIRED_INGESTION_NORMALIZER = REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "normalizer.py"
 SANDBOX_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "sandbox" / "__init__.py"
 CAPABILITY_REGISTRY = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "capability_registry.py"
 UPLOAD_SERVICE = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "upload.py"
@@ -400,6 +405,16 @@ def verify_phase22_cleanup_boundary() -> list[str]:
 
     if RETIRED_KNOWLEDGE_CHUNK_PROJECTION_ADAPTER.exists():
         errors.append("retired chunk projection adapter still exists")
+    if RETIRED_RAG_PARSER.exists():
+        errors.append("retired RAG parser still exists")
+    if RETIRED_RAG_DOC_PARSER.exists():
+        errors.append("retired RAG doc_parser directory still exists")
+    if RETIRED_CHUNK_DTO.exists():
+        errors.append("retired ChunkModel DTO still exists")
+    if '"chunk"' in _read(API_DTO_INIT) or "chunk," in _read(API_DTO_INIT):
+        errors.append("api dto package still exports retired chunk DTO")
+    if RETIRED_INGESTION_NORMALIZER.exists():
+        errors.append("retired legacy ingestion normalizer still exists")
 
     if not WORK_PRODUCT.exists():
         errors.append("missing phase22 removal candidates work product")
@@ -460,6 +475,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/sandbox/__init__.py",
             "src/backend/zuno/platform/services/capability_registry.py",
             "src/backend/zuno/knowledge/ingestion/vector_payload.py",
+            "Old RAG parser/doc_parser, ChunkModel DTO and normalize_legacy_chunks_to_ir compatibility runtime are retired",
             "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
             "src/backend/zuno/capability/tools/image2text/__init__.py",
             "src/backend/zuno/capability/tools/text2image/__init__.py",

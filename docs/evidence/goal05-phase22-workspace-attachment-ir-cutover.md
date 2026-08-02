@@ -22,7 +22,7 @@ work_package: P22-T03 / P22-T04
 ## Still Open
 
 - Knowledge pipeline parse/rag/graph、RAG rebuild script 与 fixed/local eval 入口已在后续切片退出 ChunkModel projection。
-- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍作为非默认兼容残留存在。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 已在后续 PHASE22 cleanup 切片退役。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

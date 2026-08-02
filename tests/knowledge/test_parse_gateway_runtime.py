@@ -872,39 +872,11 @@ def test_parse_gateway_uses_adapter_registry_for_runtime_dispatch() -> None:
     assert result.document.provenance.parser_id == adapter.parser_id
 
 
-def test_legacy_chunks_normalize_to_ir_with_acl_source_span_provenance() -> None:
-    from zuno.knowledge.ingestion import normalize_legacy_chunks_to_ir
-    from zuno.api.dto.chunk import ChunkModel
+def test_parse_gateway_exports_no_legacy_chunk_normalizer() -> None:
+    import zuno.knowledge.ingestion as ingestion
 
-    chunk = ChunkModel(
-        chunk_id="legacy_chunk_1",
-        content="Legacy parser content",
-        file_id="file_legacy",
-        file_name="legacy.md",
-        update_time="2026-06-30T12:00:00",
-        knowledge_id="knowledge_legacy",
-        source_url="file://legacy.md",
-    )
-
-    document = normalize_legacy_chunks_to_ir(
-        chunks=[chunk],
-        document_id="doc_legacy",
-        workspace_id="workspace_phase04",
-        source_uri="file://legacy.md",
-        mime_type="text/markdown",
-        parser_id="legacy_doc_parser",
-        parser_version="phase04-runtime-v1",
-        acl_scope="workspace",
-        sensitivity_tags=["internal"],
-    )
-
-    assert document.metadata.document_id == "doc_legacy"
-    assert document.metadata.hash == chunk.document_hash
-    assert document.blocks[0].block_id == "legacy_chunk_1"
-    assert document.blocks[0].source_span.line_range == [1, 1]
-    assert document.blocks[0].acl_scope == "workspace"
-    assert document.blocks[0].sensitivity_tags == ["internal"]
-    assert document.provenance.parser_id == "legacy_doc_parser"
+    assert "normalize_legacy_chunks_to_ir" not in ingestion.__all__
+    assert not hasattr(ingestion, "normalize_legacy_chunks_to_ir")
 
 
 def test_parse_gateway_honors_authoritative_package_a_ids() -> None:

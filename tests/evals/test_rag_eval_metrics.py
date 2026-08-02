@@ -1572,18 +1572,27 @@ def test_graph_retriever_downranks_docs_navigation_chunks_when_question_is_not_a
     assert result["documents"][0]["chunk_id"] == "chunk_intro"
 
 
-def test_text_parser_chunk_ids_are_stable_for_repeated_parses(tmp_path):
-    from zuno.platform.services.rag.doc_parser.text import TextParser
+def test_canonical_vector_payload_chunk_ids_are_stable_for_repeated_parses(tmp_path):
+    from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway, canonical_ir_to_vector_payloads
 
     path = tmp_path / "demo.txt"
     path.write_text("ProjectAtlas release approvals are handled by Bob.\nBob reports to Carol.", encoding="utf-8")
 
-    parser = TextParser()
-    parser.chunk_size = 100
-    first = asyncio.run(parser.parse_into_chunks("file_demo", str(path), "k_demo"))
-    second = asyncio.run(parser.parse_into_chunks("file_demo", str(path), "k_demo"))
+    request = ParseDocumentRequest(
+        document_id="file_demo",
+        workspace_id="workspace_eval",
+        source_uri=path.as_uri(),
+        mime_type="text/plain",
+    )
+    first = ParseGateway.parse_document(request)
+    second = ParseGateway.parse_document(request)
 
-    assert [chunk.chunk_id for chunk in first] == [chunk.chunk_id for chunk in second]
+    assert first.document is not None
+    assert second.document is not None
+    first_chunks = canonical_ir_to_vector_payloads(first.document, knowledge_id="k_demo", update_time="2026-08-02T00:00:00+00:00")
+    second_chunks = canonical_ir_to_vector_payloads(second.document, knowledge_id="k_demo", update_time="2026-08-02T00:00:00+00:00")
+
+    assert [chunk["chunk_id"] for chunk in first_chunks] == [chunk["chunk_id"] for chunk in second_chunks]
 
 
 def test_rag_detail_retrieval_preserves_document_metadata_after_rerank(monkeypatch):
