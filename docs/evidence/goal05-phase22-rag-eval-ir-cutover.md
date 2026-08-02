@@ -8,7 +8,7 @@ work_package: P22-T03 / P22-T04
 
 本证据记录 PHASE22 cleanup 的一个窄切片：RAG rebuild script、stackless local eval 与 multihop real-runtime eval 不再调用旧 `doc_parser` / `ChunkModel` parser 路径。默认评测与重建入口改为 `ParseGateway` / Canonical IR / canonical vector payload dict。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。旧 `src/backend/zuno/platform/services/rag/parser.py` 与 `doc_parser/**` 仍作为兼容实现存在，但不再由 pipeline、rebuild script 或 fixed/local eval 默认入口调用。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。旧 `src/backend/zuno/platform/services/rag/parser.py` 与 `doc_parser/**` 已在后续 PHASE22 cleanup 切片退役。
 
 ## Implemented
 
@@ -20,7 +20,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在于 `src/backend/zuno/platform/services/rag/parser.py`、`src/backend/zuno/platform/services/rag/doc_parser/**` 和若干兼容测试；history service 已在后续切片改为 canonical dict payload。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 已在后续 PHASE22 cleanup 切片退役；history service 已在后续切片改为 canonical dict payload。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

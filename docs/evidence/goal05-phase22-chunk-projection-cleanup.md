@@ -26,7 +26,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 已在后续 PHASE22 cleanup 切片退役，见 `docs/evidence/goal05-phase22-rag-parser-dto-retirement.md`。
 - `src/backend/zuno/agent/core/agents/general_agent.py` 仍是 PHASE22 removal candidates 中唯一 `active_candidate`。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。

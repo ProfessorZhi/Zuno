@@ -8,7 +8,7 @@ work_package: P22-T03 / P22-T04
 
 本证据记录 PHASE22 cleanup 的一个窄切片：`HistoryService.save_es_documents` 与 `HistoryService.save_milvus_documents` 不再构造 `ChunkModel`，改为生成 canonical-shaped dict payload，并继续写入 ES / Milvus 兼容入口。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。旧 RAG `parser.py` / `doc_parser/**` 仍作为兼容实现存在。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。旧 RAG `parser.py` / `doc_parser/**` 已在后续 PHASE22 cleanup 切片退役，见 `docs/evidence/goal05-phase22-rag-parser-dto-retirement.md`。
 
 ## Implemented
 
@@ -19,7 +19,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在于 `src/backend/zuno/platform/services/rag/parser.py`、`src/backend/zuno/platform/services/rag/doc_parser/**` 和若干兼容测试。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 已在后续 PHASE22 cleanup 切片退役。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

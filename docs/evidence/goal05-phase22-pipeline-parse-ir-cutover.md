@@ -8,7 +8,7 @@ work_package: P22-T03 / P22-T04
 
 本证据记录 PHASE22 cleanup 的一个窄切片：Knowledge pipeline 的 `run_parse_stage` 不再为了 parse count 调用 `parse_file_into_chunk_model_projection`。Parse stage 现在直接调用 `ParseGateway` / `ParseDocumentRequest`，生成 `CanonicalDocumentIR` 后以 `CanonicalDocumentIR.blocks` 记录 parse count 和 stage detail。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，也不声明全仓 `ChunkModel` 已退休。2026-08-02 后续切片已把 `run_graph_stage`、`run_rag_index_stage`、RAG rebuild script 与 fixed/local eval 入口继续推进到 Canonical IR / canonical handoff；旧 RAG doc_parser / ChunkModel DTO 仅作为兼容残留。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。2026-08-02 后续切片已把 `run_graph_stage`、`run_rag_index_stage`、RAG rebuild script 与 fixed/local eval 入口继续推进到 Canonical IR / canonical handoff；旧 RAG doc_parser / ChunkModel DTO 已在后续 PHASE22 cleanup 切片退役。
 
 ## Implemented
 
@@ -21,7 +21,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc_parser / ChunkModel DTO 兼容实现仍存在于 `src/backend/zuno/platform/services/rag/parser.py` 与 `src/backend/zuno/platform/services/rag/doc_parser/**`。
+- 旧 RAG doc_parser / ChunkModel DTO 兼容实现已在后续 PHASE22 cleanup 切片退役。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 
