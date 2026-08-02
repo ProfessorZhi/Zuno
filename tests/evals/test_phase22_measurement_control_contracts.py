@@ -34,9 +34,11 @@ from tools.evals.zuno.rag_eval.benchmark_preflight import (  # noqa: E402
     CANONICAL_PROFILES,
     FORMAL_CREDENTIAL_ATTESTATION_VERSION,
     PRODUCT_RUNTIME_ATTESTATION_VERSION,
+    REVIEWER_ATTESTATION_VERSION,
     STATE_READY,
     compute_formal_credential_attestation_hash,
     compute_product_runtime_attestation_hash,
+    compute_reviewer_attestation_hash,
     evaluate_payload,
 )
 from tools.evals.zuno.rag_eval.release_decision import (  # noqa: E402
@@ -103,6 +105,20 @@ def _valid_preflight_payload() -> dict:
         }
 
     profiles = [profile_payload(name) for name in CANONICAL_PROFILES]
+    reviewer_attestation = {
+        "attestation_ref": "attestation://phase22/reviewer/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "case_set_ref": "case-set-2026-08",
+        "dataset_version": "dataset-v1",
+        "dataset_hash": "0" * 64,
+        "candidate_count": 12,
+        "reviewer_status": "approved",
+        "benchmark_eligible": True,
+        "reviewer_attestation_contract_version": REVIEWER_ATTESTATION_VERSION,
+    }
+    reviewer_attestation["attestation_hash"] = compute_reviewer_attestation_hash(
+        reviewer_attestation
+    )
     formal_credential_attestation = {
         "attestation_ref": "attestation://phase22/formal-credential/eval-run-2026-08-01",
         "eval_run_id": "eval-run-2026-08-01",
@@ -123,6 +139,7 @@ def _valid_preflight_payload() -> dict:
         "candidate_count": 12,
         "reviewer_status": "approved",
         "benchmark_eligible": True,
+        "reviewer_attestation": reviewer_attestation,
         "license_status": "verified",
         "integrity_status": "verified",
         "runtime_request_schema_gold_free": True,

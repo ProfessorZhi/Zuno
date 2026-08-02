@@ -1,4 +1,4 @@
-"""PHASE22 Benchmark Preflight Contract (v6).
+"""PHASE22 Benchmark Preflight Contract (v7).
 
 Deterministic, read-only preflight evaluation that answers exactly one
 question: whether the upstream confirmed-contract surfaces (governance,
@@ -75,6 +75,14 @@ Version 6 closes the Formal Credential attestation gap:
   fields except ``attestation_hash`` itself.
 * The attestation never contains secret values and is validation-only.
 
+Version 7 closes the Reviewer attestation gap:
+
+* ``reviewer_status=approved`` plus ``benchmark_eligible=true`` is not
+  sufficient to pass the Governance gate.
+* The top-level input must include a serialized ``reviewer_attestation``
+  mapping bound to eval run, case set, dataset version/hash and candidate
+  count.
+
 The evaluator enforces the documented 11 gate priority and never raises
 an exception for any input.
 """
@@ -89,9 +97,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
-CONTRACT_VERSION = "phase22-benchmark-preflight.v6"
+CONTRACT_VERSION = "phase22-benchmark-preflight.v7"
 PRODUCT_RUNTIME_ATTESTATION_VERSION = "phase22-product-runtime-attestation.v1"
 FORMAL_CREDENTIAL_ATTESTATION_VERSION = "phase22-formal-credential-attestation.v1"
+REVIEWER_ATTESTATION_VERSION = "phase22-reviewer-attestation.v1"
 
 CANONICAL_PROFILES: Tuple[str, ...] = (
     "standard_rag",
@@ -119,6 +128,7 @@ REQUIRED_TOP_FIELDS: Tuple[str, ...] = (
     "candidate_count",
     "reviewer_status",
     "benchmark_eligible",
+    "reviewer_attestation",
     "license_status",
     "integrity_status",
     "runtime_request_schema_gold_free",
@@ -212,6 +222,19 @@ _REQUIRED_FORMAL_CREDENTIAL_ATTESTATION_FIELDS: Tuple[str, ...] = (
     "attestation_hash",
 )
 
+_REQUIRED_REVIEWER_ATTESTATION_FIELDS: Tuple[str, ...] = (
+    "attestation_ref",
+    "eval_run_id",
+    "case_set_ref",
+    "dataset_version",
+    "dataset_hash",
+    "candidate_count",
+    "reviewer_status",
+    "benchmark_eligible",
+    "reviewer_attestation_contract_version",
+    "attestation_hash",
+)
+
 TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "eval_run_id": (str,),
     "case_set_ref": (str,),
@@ -220,6 +243,7 @@ TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "candidate_count": (int,),
     "reviewer_status": (str,),
     "benchmark_eligible": (bool,),
+    "reviewer_attestation": (Mapping,),
     "license_status": (str,),
     "integrity_status": (str,),
     "runtime_request_schema_gold_free": (bool,),
@@ -280,6 +304,7 @@ class BenchmarkPreflightInput:
     candidate_count: int
     reviewer_status: str
     benchmark_eligible: bool
+    reviewer_attestation: Optional[Mapping[str, Any]]
     license_status: str
     integrity_status: str
     runtime_request_schema_gold_free: bool
@@ -372,6 +397,17 @@ def compute_product_runtime_attestation_hash(attestation: Mapping[str, Any]) -> 
 
 def compute_formal_credential_attestation_hash(attestation: Mapping[str, Any]) -> str:
     """Canonical hash over a serialized Formal Credential attestation."""
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return _canonical_sha256_hex(payload)
+
+
+def compute_reviewer_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Reviewer attestation."""
 
     payload = {
         key: value
@@ -652,6 +688,63 @@ def _formal_credential_attestation_gap(
     return None
 
 
+def _reviewer_attestation_gap(input_obj: BenchmarkPreflightInput) -> Optional[str]:
+    attestation = input_obj.reviewer_attestation
+    if attestation is None:
+        return "reviewer_attestation_missing"
+    if not isinstance(attestation, Mapping):
+        return "reviewer_attestation_invalid"
+
+    for field_name in _REQUIRED_REVIEWER_ATTESTATION_FIELDS:
+        value = attestation.get(field_name)
+        if field_name == "candidate_count":
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                return "reviewer_attestation_field_missing"
+        elif field_name == "benchmark_eligible":
+            if not isinstance(value, bool):
+                return "reviewer_attestation_field_missing"
+        elif not _has_non_empty(value):
+            return "reviewer_attestation_field_missing"
+
+    if (
+        attestation.get("reviewer_attestation_contract_version")
+        != REVIEWER_ATTESTATION_VERSION
+    ):
+        return "reviewer_attestation_version_mismatch"
+
+    if not _is_valid_sha256_hex(attestation.get("attestation_hash")):
+        return "reviewer_attestation_hash_invalid"
+
+    try:
+        expected_hash = compute_reviewer_attestation_hash(attestation)
+    except (TypeError, ValueError):
+        return "reviewer_attestation_invalid"
+
+    if attestation.get("attestation_hash") != expected_hash:
+        return "reviewer_attestation_hash_mismatch"
+
+    if (
+        not _has_non_empty(input_obj.case_set_ref)
+        or not _has_non_empty(input_obj.dataset_version)
+        or not _has_non_empty(input_obj.dataset_hash)
+        or input_obj.candidate_count <= 0
+    ):
+        return None
+
+    if (
+        attestation.get("eval_run_id") != input_obj.eval_run_id
+        or attestation.get("case_set_ref") != input_obj.case_set_ref
+        or attestation.get("dataset_version") != input_obj.dataset_version
+        or attestation.get("dataset_hash") != input_obj.dataset_hash
+        or attestation.get("candidate_count") != input_obj.candidate_count
+        or attestation.get("reviewer_status") != input_obj.reviewer_status
+        or attestation.get("benchmark_eligible") is not input_obj.benchmark_eligible
+    ):
+        return "reviewer_attestation_scope_mismatch"
+
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Evaluator
 # ---------------------------------------------------------------------------
@@ -739,6 +832,7 @@ class BenchmarkPreflightEvaluator:
             candidate_count=_default_int(payload.get("candidate_count")),
             reviewer_status=_default_str(payload.get("reviewer_status")),
             benchmark_eligible=_default_bool(payload.get("benchmark_eligible")),
+            reviewer_attestation=payload.get("reviewer_attestation"),
             license_status=_default_str(payload.get("license_status")),
             integrity_status=_default_str(payload.get("integrity_status")),
             runtime_request_schema_gold_free=_default_bool(
@@ -922,6 +1016,9 @@ class BenchmarkPreflightEvaluator:
             gaps.append("reviewer_not_approved")
         if input_obj.benchmark_eligible is not True:
             gaps.append("benchmark_not_eligible")
+        attestation_gap = _reviewer_attestation_gap(input_obj)
+        if attestation_gap is not None:
+            gaps.append(attestation_gap)
         if input_obj.license_status != "verified":
             gaps.append("license_not_verified")
         if input_obj.integrity_status != "verified":
@@ -1184,6 +1281,7 @@ __all__ = [
     "CONTRACT_VERSION",
     "PRODUCT_RUNTIME_ATTESTATION_VERSION",
     "FORMAL_CREDENTIAL_ATTESTATION_VERSION",
+    "REVIEWER_ATTESTATION_VERSION",
     "CANONICAL_PROFILES",
     "STATE_READY",
     "STATE_BLOCKED",
@@ -1201,5 +1299,6 @@ __all__ = [
     "compute_input_fingerprint",
     "compute_product_runtime_attestation_hash",
     "compute_formal_credential_attestation_hash",
+    "compute_reviewer_attestation_hash",
     "validate_gap_code",
 ]

@@ -13,8 +13,8 @@ measurement status. Priority order is contractual and must not be changed:
    unresolved failure, invalid hash) -> BLOCKED
 6. Runtime Evidence Complete but formal gates pending
    (reviewer pending, benchmark_eligible false, credentials missing,
-   formal execution not requested, formal credential attestation missing)
-   -> RUNTIME_OBSERVED
+   reviewer attestation missing, formal execution not requested,
+   formal credential attestation missing) -> RUNTIME_OBSERVED
 7. All gates satisfied   -> MEASURED
 
 Rule 6 (RUNTIME_OBSERVED) must NEVER mask missing or invalid receipts from Rule 5.
@@ -68,6 +68,7 @@ class MeasurementTruthGate:
         # Rule 6 — Formal gate eligibility
         reviewer_status: str = "pending",
         benchmark_eligible: bool = False,
+        reviewer_attested: bool = False,
         has_formal_credentials: bool = False,
         formal_execution_requested: bool = False,
         formal_credential_attested: bool = False,
@@ -132,6 +133,8 @@ class MeasurementTruthGate:
             formal_gaps.append("reviewer_pending")
         if not benchmark_eligible:
             formal_gaps.append("benchmark_eligible_false")
+        if not reviewer_attested:
+            formal_gaps.append("reviewer_attestation_missing")
         if not has_formal_credentials:
             formal_gaps.append("formal_credentials_missing")
         if not formal_execution_requested:
