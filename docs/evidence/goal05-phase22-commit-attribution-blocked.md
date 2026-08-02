@@ -74,7 +74,44 @@ Agent Commit Attribution Verification Failed:
   - Commit 6a340068 missing required trailers: ['Agent-Mode', 'Human-Owner', 'Architecture-Reviewer', 'Work-Package']
   - Commit 13486bf9 missing required trailers: ['Agent-Mode', 'Human-Owner', 'Architecture-Reviewer', 'Work-Package']
   - ... (10 more historical commits)
+  - Commit 757cfe4c has invalid Agent: 'Claude Code'. Allowed: [..., 'Claude-Code', ...]
+  - Commit 757cfe4c has invalid Agent-Mode: 'implementation'. Allowed: [..., 'Codex', 'Standard', ...]
 ```
+
+## Conflict Between Spec Trailer Format and Verifier Allowlist
+
+This round's spec prescribes new commit trailers as:
+
+```text
+Agent: Claude Code           (with space)
+Agent-Mode: implementation   (literal "implementation")
+```
+
+The verifier's allowlist is:
+
+```text
+ALLOWED_AGENTS = {"Antigravity", "Qoder", "Codex", "Claude-Code", "Trae", "ChatGPT-Docs", "Human"}
+ALLOWED_MODES  = {"Standard-Conversation", "Expert-Team", "Codex", "Standard", "Docs-Maintenance", "Human", "Goal"}
+```
+
+The spec's values `Agent: Claude Code` and `Agent-Mode: implementation`
+are **not** in the verifier's allowlist. Adding new commits with the
+spec's exact values therefore extends the failure list rather than
+fixing it. The controller cannot resolve this conflict from within
+this round's contract (no amend, rebase, reset, force-push, or
+verifier mutation).
+
+A new commit at the integration branch tip has been added that uses
+the spec's exact format. The verifier flags it too, but the commit
+is on record as a faithful attempt to follow the round's spec. The
+verifier cannot pass until either:
+
+1. The verifier's allowlist is updated to include the spec's values,
+   OR
+2. The spec is reconciled with the verifier's existing allowlist.
+
+This is recorded as `BLOCKED_GOVERNANCE_CONTRACT` (verifier/spec
+mismatch). The integration branch remains Draft.
 
 ## Boundary
 
