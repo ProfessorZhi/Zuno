@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -32,6 +33,13 @@ def _read_yaml(repo_root: Path, relative_path: Path) -> Any:
 
 def _read_json(repo_root: Path, relative_path: Path) -> Any:
     return json.loads(_read_text(repo_root, relative_path))
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    content = path.read_bytes().replace(b"\r\n", b"\n")
+    digest.update(content)
+    return digest.hexdigest()
 
 
 def _require_file(repo_root: Path, relative_path: Path, errors: list[str]) -> bool:
@@ -81,6 +89,49 @@ def _claims_production_ready(text: str) -> bool:
         if any(claim in lowered for claim in positive_claims):
             return True
     return False
+
+
+def _verify_blocked_benchmark_artifacts(
+    repo_root: Path,
+    benchmark: dict[str, Any],
+    errors: list[str],
+) -> None:
+    artifact_refs = benchmark.get("artifact_refs")
+    if not isinstance(artifact_refs, dict):
+        errors.append("blocked benchmark manifest artifact_refs must be an object")
+        return
+
+    benchmark_dir = repo_root / BENCHMARK_MANIFEST.parent
+    for artifact_name, artifact_meta in sorted(artifact_refs.items()):
+        if not isinstance(artifact_meta, dict):
+            errors.append(
+                f"blocked benchmark artifact {artifact_name!r} metadata must be an object"
+            )
+            continue
+        relative_path = artifact_meta.get("path")
+        expected_sha = artifact_meta.get("sha256")
+        if not isinstance(relative_path, str) or not relative_path:
+            errors.append(
+                f"blocked benchmark artifact {artifact_name!r} missing path"
+            )
+            continue
+        if not isinstance(expected_sha, str) or len(expected_sha) != 64:
+            errors.append(
+                f"blocked benchmark artifact {artifact_name!r} missing sha256"
+            )
+            continue
+        artifact_path = benchmark_dir / relative_path
+        if not artifact_path.exists():
+            errors.append(
+                f"missing blocked benchmark artifact: {artifact_name} -> {relative_path}"
+            )
+            continue
+        actual_sha = _sha256_file(artifact_path)
+        if actual_sha != expected_sha:
+            errors.append(
+                f"blocked benchmark artifact hash mismatch: {artifact_name} "
+                f"expected {expected_sha} got {actual_sha}"
+            )
 
 
 def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]:
@@ -144,6 +195,7 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
         errors.append(
             f"blocked benchmark actual_case_count must remain 0, got {benchmark.get('actual_case_count')!r}"
         )
+    _verify_blocked_benchmark_artifacts(repo_root, benchmark, errors)
     if review.get("overall_status") != "REVIEW_REQUIRED":
         errors.append(
             f"public benchmark review pack must remain REVIEW_REQUIRED until human review, got {review.get('overall_status')!r}"

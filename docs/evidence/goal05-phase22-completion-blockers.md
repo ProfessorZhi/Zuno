@@ -32,6 +32,7 @@ python tools/scripts/verify_phase22_completion_blockers.py
 - benchmark / review 仍阻塞时，Program 被写成 `no-active` 或非 `active`；
 - 状态文档在阻塞证据存在时声明 production ready / quality proven；
 - blocked benchmark manifest 被改写为非 `BLOCKED` 或非 `blocked_not_measured`；
+- blocked benchmark manifest 中的 artifact refs 缺失或 SHA-256 与实际文件不一致；
 - public review pack 在未审阅时被改写为非 `REVIEW_REQUIRED`；
 - mandatory removal candidates 仍存在 `active_candidate`。
 
@@ -50,6 +51,10 @@ python tools/scripts/verify_phase22_completion_blockers.py
 python -m pytest -q tests/repo/test_phase22_completion_blockers.py -p no:cacheprovider
 python tools/scripts/verify_current_program.py
 ```
+
+当前 verifier 同时校验 `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`
+中的 `artifact_refs`：每个引用文件必须存在于 blocked benchmark evidence 目录下，且实际 SHA-256
+按 LF 规范化后必须与 manifest 记录一致，避免 Windows / CI checkout 换行差异改变结论。
 
 ## 边界
 
