@@ -108,11 +108,15 @@ class MeasurementTruthGate:
         elif not artifact_receipt_valid:
             evidence_gaps.append("artifact_receipt_invalid")
 
-        # Run outcome validation
-        if not run_outcome_ref:
-            evidence_gaps.append("run_outcome_missing")
-        elif not run_outcome_valid:
-            evidence_gaps.append("run_outcome_invalid")
+        # RunOutcome is mandatory for the agentic profile. For standard,
+        # local and deep RAG, runtime_evidence_binding requires security,
+        # trace, usage, budget and artifact receipts, but not Agent Core
+        # PlanVersion / RunOutcome receipts.
+        if actual_profile == "agentic_graphrag":
+            if not run_outcome_ref:
+                evidence_gaps.append("run_outcome_missing")
+            elif not run_outcome_valid:
+                evidence_gaps.append("run_outcome_invalid")
 
         if failure_class:
             evidence_gaps.append(f"unresolved_failure:{failure_class}")
