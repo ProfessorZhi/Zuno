@@ -62,6 +62,7 @@ from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
     run_enterprise_rag_paired_benchmark,
     validate_canonical_runtime_config,
 )
+from zuno.platform.observability.trace_adapter import LangSmithTraceAdapter
 
 
 def _sample_deps(
@@ -100,6 +101,14 @@ def _full_deps() -> CanonicalRuntimeDependencies:
         usage_receipt_provider=object(),
         budget_settlement_provider=object(),
     )
+
+
+class _FailingLangSmithClient:
+    def create_run(self, **kwargs: Any) -> None:
+        raise RuntimeError("network down")
+
+    def update_run(self, **kwargs: Any) -> None:
+        raise RuntimeError("network down")
 
 
 class FactoryPathKnowledgePort:
@@ -760,6 +769,31 @@ def test_09e_standard_adapter_invalid_runtime_evidence_binding_fails_closed() ->
     assert result.measurement_state == MeasurementState.BLOCKED
     assert result.failure_class == "runtime_evidence_binding_blocked"
     assert "reference_binding_hash_mismatch" in result.dependency_gaps
+    assert result.trace_id is None
+
+
+def test_09f_standard_adapter_trace_delivery_failure_fails_closed() -> None:
+    """Trace delivery failures must block canonical runtime evidence."""
+    trace_adapter = LangSmithTraceAdapter(
+        {"enabled": True, "sample_rate": 1.0, "fail_open": True},
+        client=_FailingLangSmithClient(),
+    )
+    deps = _full_deps()
+    deps = CanonicalRuntimeDependencies(
+        knowledge_runtime=EvidenceBindingKnowledgePort(_standard_runtime_evidence_binding()),
+        index_runtime=deps.index_runtime,
+        security_gate=deps.security_gate,
+        agent_run_runtime=deps.agent_run_runtime,
+        trace_adapter=trace_adapter,
+        result_store=deps.result_store,
+        artifact_store=deps.artifact_store,
+        usage_receipt_provider=deps.usage_receipt_provider,
+        budget_settlement_provider=deps.budget_settlement_provider,
+    )
+    result = StandardRAGCanonicalAdapter(deps).run_canonical_case(_sample_input("standard_rag"))
+
+    assert result.runtime_status == "blocked"
+    assert result.failure_class == "trace_delivery_failed"
     assert result.trace_id is None
 
 

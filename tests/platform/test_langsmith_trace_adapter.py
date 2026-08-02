@@ -98,6 +98,40 @@ def test_3_end_span_delivery_failure_and_retry_semantics() -> None:
     assert handle.external_run_id not in adapter_closed._ended_spans
 
 
+def test_3b_fail_open_create_run_failure_does_not_return_trace_handle() -> None:
+    client = create_autospec_client()
+    client.create_run.side_effect = RuntimeError("Network error")
+    adapter = LangSmithTraceAdapter({
+        "enabled": True,
+        "sample_rate": 1.0,
+        "fail_open": True,
+    }, client=client)
+
+    handle = adapter.start_span("SpanCreateFailure", trace_id=str(uuid.uuid4()))
+
+    assert handle is None
+    assert adapter.delivery_failures == 1
+    assert adapter._active_spans == {}
+
+
+def test_3c_fail_open_update_run_failure_keeps_span_unended() -> None:
+    client = create_autospec_client()
+    adapter = LangSmithTraceAdapter({
+        "enabled": True,
+        "sample_rate": 1.0,
+        "fail_open": True,
+    }, client=client)
+    handle = adapter.start_span("SpanUpdateFailure")
+    assert handle is not None
+    client.update_run.side_effect = RuntimeError("Network error")
+
+    adapter.end_span(handle, outputs={"res": "fail"})
+
+    assert adapter.delivery_failures == 1
+    assert handle.external_run_id in adapter._active_spans
+    assert handle.external_run_id not in adapter._ended_spans
+
+
 def test_4_error_summary_run_emitted_for_unsampled_trace_when_error_sampled() -> None:
     client = create_autospec_client()
     # sample_rate = 0, but error_sample_rate = 1.0

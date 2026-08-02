@@ -707,9 +707,10 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
             if ls_trace_id:
                 run_kwargs["trace_id"] = ls_trace_id
 
-            res = self._call_with_retry(lambda: client.create_run(**run_kwargs), "create_run")
-            if res is None and self.fail_open and self.delivery_failures > 0 and not client.create_run:
-                pass  # Swallow in fail_open mode if exception occurred
+            failure_count_before = self.delivery_failures
+            self._call_with_retry(lambda: client.create_run(**run_kwargs), "create_run")
+            if self.delivery_failures > failure_count_before:
+                return None
 
             handle = TraceSpanHandle(
                 provider="langsmith",
@@ -836,8 +837,10 @@ class LangSmithTraceAdapter(ObservabilityTracePort):
             if cleaned_meta:
                 update_kwargs["extra"] = {"metadata": cleaned_meta}
 
-            # Only enter _ended_spans after update_run succeeds!
+            failure_count_before = self.delivery_failures
             self._call_with_retry(lambda: client.update_run(**update_kwargs), "update_run")
+            if self.delivery_failures > failure_count_before:
+                return
             self._active_spans.pop(ext_id, None)
             self._ended_spans.add(ext_id)
         except ObservabilityError:
