@@ -4,8 +4,8 @@ status: controller_report_for_chatgpt_review
 phase: PHASE22
 parent_pr: 97
 integration_branch: codex/phase22-final-closure
-integration_head_sha: a880e4e539f5d3aa58865f0c09cd78d151494bce
-report_generated_at: 2026-08-02T12:27:48Z
+integration_head_sha: 47ba71375849f8ae87057faae3468663bc68ff45
+report_generated_at: 2026-08-02T13:19:02Z
 
 ## Frozen Facts
 
@@ -22,9 +22,9 @@ report_generated_at: 2026-08-02T12:27:48Z
 ## Final Head
 
 - branch: `codex/phase22-final-closure`
-- head SHA: `a880e4e539f5d3aa58865f0c09cd78d151494bce`
+- head SHA: `47ba71375849f8ae87057faae3468663bc68ff45`
 - base: `main` @ `dfb9981995f4193488ca022ee5ec15eeff6a6349`
-- 7 commits, 23 files, +2419 / -7
+- 9 commits, 26 files, +2679 / -7
 - pushed to `origin/codex/phase22-final-closure`
 - PR #97 draft, not merged
 
