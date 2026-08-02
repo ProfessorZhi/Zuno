@@ -11,6 +11,12 @@ from zuno.platform.services.rag.vl_embedding import get_vl_image_embedding, get_
 from zuno.platform.settings import app_settings
 
 
+def _chunk_get(chunk, field: str, default=""):
+    if isinstance(chunk, dict):
+        return chunk.get(field, default)
+    return getattr(chunk, field, default)
+
+
 class MilvusLiteClient:
     def __init__(self, **kwargs):
         self.milvus_host = app_settings.rag.vector_db.get("host")
@@ -179,34 +185,38 @@ class MilvusLiteClient:
             return False
 
         data = [
-            [chunk.chunk_id for chunk in chunks],
-            [chunk.document_hash for chunk in chunks],
-            [chunk.chunk_hash for chunk in chunks],
-            [chunk.content for chunk in chunks],
+            [_chunk_get(chunk, "chunk_id") for chunk in chunks],
+            [_chunk_get(chunk, "document_hash") for chunk in chunks],
+            [_chunk_get(chunk, "chunk_hash") for chunk in chunks],
+            [_chunk_get(chunk, "content") for chunk in chunks],
             embeddings,
-            [chunk.summary for chunk in chunks],
-            [chunk.file_id for chunk in chunks],
-            [chunk.file_name for chunk in chunks],
-            [chunk.knowledge_id for chunk in chunks],
-            [chunk.update_time for chunk in chunks],
-            [chunk.source_url for chunk in chunks],
+            [_chunk_get(chunk, "summary") for chunk in chunks],
+            [_chunk_get(chunk, "file_id") for chunk in chunks],
+            [_chunk_get(chunk, "file_name") for chunk in chunks],
+            [_chunk_get(chunk, "knowledge_id") for chunk in chunks],
+            [_chunk_get(chunk, "update_time") for chunk in chunks],
+            [_chunk_get(chunk, "source_url") for chunk in chunks],
         ]
         collection.insert(data)
         collection.flush()
         return True
 
     async def insert(self, collection_name: str, chunks, config_override=None) -> bool:
-        text_chunks = [chunk for chunk in chunks if getattr(chunk, "modality", "text") == "text"]
+        text_chunks = [chunk for chunk in chunks if _chunk_get(chunk, "modality", "text") == "text"]
         if not text_chunks:
             return True
-        embeddings = await get_embedding([chunk.content for chunk in text_chunks], config_override=config_override)
+        embeddings = await get_embedding([_chunk_get(chunk, "content") for chunk in text_chunks], config_override=config_override)
         return await self._insert_collection(collection_name, text_chunks, embeddings)
 
     async def insert_image_chunks(self, collection_name: str, chunks, config_override=None) -> bool:
-        image_chunks = [chunk for chunk in chunks if getattr(chunk, "modality", "text") == "image" and chunk.source_url]
+        image_chunks = [
+            chunk
+            for chunk in chunks
+            if _chunk_get(chunk, "modality", "text") == "image" and _chunk_get(chunk, "source_url")
+        ]
         if not image_chunks:
             return True
-        embeddings = await get_vl_image_embedding([chunk.source_url for chunk in image_chunks], config_override=config_override)
+        embeddings = await get_vl_image_embedding([_chunk_get(chunk, "source_url") for chunk in image_chunks], config_override=config_override)
         if len(embeddings) != len(image_chunks):
             logger.error(f"VL embedding count mismatch for collection '{collection_name}'")
             return False

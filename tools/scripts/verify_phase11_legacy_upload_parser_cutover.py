@@ -18,7 +18,7 @@ EXPECTED_ROWS = {
     },
     "P11-LC-03": {
         "path": "src/backend/zuno/platform/services/pipeline/manager.py",
-        "status": "versioned_adapter_required",
+        "status": "canonical_ir_default_no_chunk_projection",
     },
     "P11-LC-04": {
         "path": "src/backend/zuno/platform/services/rag/parser.py",
@@ -49,9 +49,10 @@ SOURCE_EXPECTATIONS = {
         "ParseDocumentRequest",
         "knowledge.pipeline.parse_stage.canonical_ir",
         "knowledge.pipeline.graph_index.canonical_handoff",
+        "knowledge.pipeline.rag_index.canonical_handoff",
         "canonical_document_ir_blocks",
         "canonical_index_handoff_graphrag_documents",
-        "parse_file_into_chunk_model_projection",
+        "canonical_index_handoff_vector_documents",
         "run_rag_index_stage",
         "run_graph_stage",
     ],

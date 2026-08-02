@@ -256,7 +256,7 @@ def test_knowledge_pipeline_parse_stage_uses_canonical_ir_before_chunk_projectio
     assert "ParseDocumentRequest" in manager
     assert "canonical_document_ir_blocks" in manager
     assert "canonical_index_handoff_graphrag_documents" in manager
-    assert "parse_file_into_chunk_model_projection" in manager
+    assert "parse_file_into_chunk_model_projection" not in manager
     assert "run_rag_index_stage" in manager
     assert "run_graph_stage" in manager
 
