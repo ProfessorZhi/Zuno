@@ -1,4 +1,4 @@
-"""PHASE22 Benchmark Preflight Contract (v5).
+"""PHASE22 Benchmark Preflight Contract (v6).
 
 Deterministic, read-only preflight evaluation that answers exactly one
 question: whether the upstream confirmed-contract surfaces (governance,
@@ -64,6 +64,17 @@ Version 5 closes the Product Runtime attestation gap:
 * Missing, malformed, mismatched, or hash-inconsistent attestations fail
   closed with fixed Runtime-gate gap codes.
 
+Version 6 closes the Formal Credential attestation gap:
+
+* ``credential_ref`` plus ``has_formal_credentials`` is not sufficient to
+  pass the Credentials gate.
+* The top-level input must include a serialized
+  ``formal_credential_attestation`` mapping bound to eval run,
+  credential ref, authorization ref and security epoch.
+* The attestation hash is canonical JSON SHA-256 over the attestation
+  fields except ``attestation_hash`` itself.
+* The attestation never contains secret values and is validation-only.
+
 The evaluator enforces the documented 11 gate priority and never raises
 an exception for any input.
 """
@@ -78,8 +89,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
-CONTRACT_VERSION = "phase22-benchmark-preflight.v5"
+CONTRACT_VERSION = "phase22-benchmark-preflight.v6"
 PRODUCT_RUNTIME_ATTESTATION_VERSION = "phase22-product-runtime-attestation.v1"
+FORMAL_CREDENTIAL_ATTESTATION_VERSION = "phase22-formal-credential-attestation.v1"
 
 CANONICAL_PROFILES: Tuple[str, ...] = (
     "standard_rag",
@@ -122,6 +134,7 @@ REQUIRED_TOP_FIELDS: Tuple[str, ...] = (
     "credential_ref",
     "has_formal_credentials",
     "formal_execution_requested",
+    "formal_credential_attestation",
     "output_artifact_ref",
     "profiles",
 )
@@ -188,6 +201,17 @@ _REQUIRED_PRODUCT_RUNTIME_ATTESTATION_FIELDS: Tuple[str, ...] = (
     "attestation_hash",
 )
 
+_REQUIRED_FORMAL_CREDENTIAL_ATTESTATION_FIELDS: Tuple[str, ...] = (
+    "attestation_ref",
+    "eval_run_id",
+    "credential_ref",
+    "authorization_ref",
+    "security_epoch",
+    "formal_execution_ref",
+    "formal_credential_contract_version",
+    "attestation_hash",
+)
+
 TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "eval_run_id": (str,),
     "case_set_ref": (str,),
@@ -211,6 +235,7 @@ TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "credential_ref": (str,),
     "has_formal_credentials": (bool,),
     "formal_execution_requested": (bool,),
+    "formal_credential_attestation": (Mapping,),
     "output_artifact_ref": (str,),
 }
 
@@ -270,6 +295,7 @@ class BenchmarkPreflightInput:
     credential_ref: str
     has_formal_credentials: bool
     formal_execution_requested: bool
+    formal_credential_attestation: Optional[Mapping[str, Any]]
     output_artifact_ref: str
     profiles: Tuple[ProfilePreflightInput, ...]
 
@@ -335,6 +361,17 @@ def compute_product_runtime_attestation_hash(attestation: Mapping[str, Any]) -> 
     ``attestation_hash`` is excluded so callers can validate a self-contained
     attestation payload without mutating it.
     """
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return _canonical_sha256_hex(payload)
+
+
+def compute_formal_credential_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Formal Credential attestation."""
 
     payload = {
         key: value
@@ -573,6 +610,48 @@ def _product_runtime_attestation_gap(profile: ProfilePreflightInput) -> Optional
     return None
 
 
+def _formal_credential_attestation_gap(
+    input_obj: BenchmarkPreflightInput,
+) -> Optional[str]:
+    attestation = input_obj.formal_credential_attestation
+    if attestation is None:
+        return "formal_credential_attestation_missing"
+    if not isinstance(attestation, Mapping):
+        return "formal_credential_attestation_invalid"
+
+    for field_name in _REQUIRED_FORMAL_CREDENTIAL_ATTESTATION_FIELDS:
+        value = attestation.get(field_name)
+        if not _has_non_empty(value):
+            return "formal_credential_attestation_field_missing"
+
+    if (
+        attestation.get("formal_credential_contract_version")
+        != FORMAL_CREDENTIAL_ATTESTATION_VERSION
+    ):
+        return "formal_credential_attestation_version_mismatch"
+
+    if not _is_valid_sha256_hex(attestation.get("attestation_hash")):
+        return "formal_credential_attestation_hash_invalid"
+
+    try:
+        expected_hash = compute_formal_credential_attestation_hash(attestation)
+    except (TypeError, ValueError):
+        return "formal_credential_attestation_invalid"
+
+    if attestation.get("attestation_hash") != expected_hash:
+        return "formal_credential_attestation_hash_mismatch"
+
+    if (
+        attestation.get("eval_run_id") != input_obj.eval_run_id
+        or attestation.get("credential_ref") != input_obj.credential_ref
+        or attestation.get("authorization_ref") != input_obj.authorization_ref
+        or attestation.get("security_epoch") != input_obj.security_epoch
+    ):
+        return "formal_credential_attestation_scope_mismatch"
+
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Evaluator
 # ---------------------------------------------------------------------------
@@ -686,6 +765,9 @@ class BenchmarkPreflightEvaluator:
             ),
             formal_execution_requested=_default_bool(
                 payload.get("formal_execution_requested")
+            ),
+            formal_credential_attestation=payload.get(
+                "formal_credential_attestation"
             ),
             output_artifact_ref=_default_str(payload.get("output_artifact_ref")),
             profiles=parsed_profiles,
@@ -1024,6 +1106,9 @@ class BenchmarkPreflightEvaluator:
             gaps.append("formal_credentials_missing")
         if input_obj.formal_execution_requested is not True:
             gaps.append("formal_execution_not_requested")
+        attestation_gap = _formal_credential_attestation_gap(input_obj)
+        if attestation_gap is not None:
+            gaps.append(attestation_gap)
         if gaps:
             return STATE_BLOCKED, tuple(gaps), ()
         return None
@@ -1098,6 +1183,7 @@ def evaluate_payload(payload: Mapping[str, Any]) -> BenchmarkPreflightReport:
 __all__ = [
     "CONTRACT_VERSION",
     "PRODUCT_RUNTIME_ATTESTATION_VERSION",
+    "FORMAL_CREDENTIAL_ATTESTATION_VERSION",
     "CANONICAL_PROFILES",
     "STATE_READY",
     "STATE_BLOCKED",
@@ -1114,5 +1200,6 @@ __all__ = [
     "report_to_dict",
     "compute_input_fingerprint",
     "compute_product_runtime_attestation_hash",
+    "compute_formal_credential_attestation_hash",
     "validate_gap_code",
 ]

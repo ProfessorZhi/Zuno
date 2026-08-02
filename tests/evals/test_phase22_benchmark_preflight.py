@@ -86,6 +86,20 @@ def _valid_product_runtime_attestation(name: str) -> Dict[str, Any]:
     return attestation
 
 
+def _valid_formal_credential_attestation() -> Dict[str, Any]:
+    attestation = {
+        "attestation_ref": "attestation://phase22/formal-credential/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "credential_ref": "vault://preflight/credentials",
+        "authorization_ref": "auth-ref-001",
+        "security_epoch": "epoch-2026-Q3",
+        "formal_execution_ref": "formal-execution://phase22/eval-run-2026-08-01",
+        "formal_credential_contract_version": "phase22-formal-credential-attestation.v1",
+    }
+    attestation["attestation_hash"] = _attestation_hash(attestation)
+    return attestation
+
+
 def _valid_profile(name: str) -> Dict[str, Any]:
     return {
         "profile_name": name,
@@ -134,6 +148,7 @@ def _valid_payload(profiles: List[Dict[str, Any]] | None = None) -> Dict[str, An
         "credential_ref": "vault://preflight/credentials",
         "has_formal_credentials": True,
         "formal_execution_requested": True,
+        "formal_credential_attestation": _valid_formal_credential_attestation(),
         "output_artifact_ref": "s3://zuno-preflight/eval-run-2026-08-01.json",
         "profiles": profiles
         if profiles is not None
@@ -159,7 +174,7 @@ class ReadyContractTests(unittest.TestCase):
         for pr in report.profile_results:
             self.assertEqual(pr.state, STATE_READY)
             self.assertEqual(pr.gap_codes, ())
-        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v5")
+        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v6")
         self.assertEqual(len(report.input_fingerprint), 64)
 
     def test_02_profile_input_order_does_not_change_state(self) -> None:
@@ -674,6 +689,33 @@ class CredentialsGateTests(unittest.TestCase):
         report = _evaluate(payload)
         self.assertEqual(report.state, STATE_BLOCKED)
         self.assertIn("formal_execution_not_requested", report.gap_codes)
+
+    def test_54a_formal_credentials_require_valid_attestation_contract(self) -> None:
+        payload = _valid_payload()
+        del payload["formal_credential_attestation"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("formal_credential_attestation_missing", report.gap_codes)
+
+    def test_54b_formal_credential_attestation_hash_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        payload["formal_credential_attestation"]["attestation_hash"] = "1" * 64
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn(
+            "formal_credential_attestation_hash_mismatch", report.gap_codes
+        )
+
+    def test_54c_formal_credential_attestation_scope_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        attestation = payload["formal_credential_attestation"]
+        attestation["credential_ref"] = "vault://preflight/other-credentials"
+        attestation["attestation_hash"] = _attestation_hash(attestation)
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn(
+            "formal_credential_attestation_scope_mismatch", report.gap_codes
+        )
 
 
 # ---------------------------------------------------------------------------
