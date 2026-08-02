@@ -17,7 +17,7 @@
 该修复证明两件事：
 
 1. preflight 不再接受裸布尔声明；
-2. canonical adapter 在 `runtime_evidence_binding` 已验证并达到 `RUNTIME_OBSERVED` 时，会把 profile 级 `product_runtime_attestation` 写入 benchmark metrics，供 preflight v7 复验；
+2. canonical adapter 在 `runtime_evidence_binding` 已验证并达到 `RUNTIME_OBSERVED` 时，会把 profile 级 `product_runtime_attestation` 写入 benchmark metrics，供 preflight v8 复验；
 3. MeasurementTruthGate 不再接受裸 reviewer approval / benchmark eligibility 声明进入 `MEASURED`；
 4. preflight 不再接受裸 formal execution approval 或 human budget approval 声明进入 `READY`。
 
