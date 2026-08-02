@@ -30,6 +30,7 @@ def _copy_fixture(tmp_path: Path) -> Path:
         ".agent/programs/work-products/phase22-removal-candidates.yaml",
         "docs/status/production-readiness.md",
         "docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json",
+        "docs/evidence/goal05-phase22-blocked-benchmark/metrics.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
     ]
     for relative in paths:
@@ -113,3 +114,27 @@ def test_measured_benchmark_must_not_use_blocked_manifest(tmp_path: Path) -> Non
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
     assert any("status must be BLOCKED" in error for error in errors)
+
+
+def test_blocked_benchmark_artifact_hash_mismatch_fails(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    benchmark_path = fixture / "docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json"
+    benchmark = json.loads(benchmark_path.read_text(encoding="utf-8"))
+    benchmark["artifact_refs"]["metrics_json"]["sha256"] = "0" * 64
+    benchmark_path.write_text(json.dumps(benchmark), encoding="utf-8")
+
+    errors = verifier.verify_phase22_completion_blockers(fixture)
+
+    assert any("artifact hash mismatch" in error for error in errors)
+
+
+def test_blocked_benchmark_missing_artifact_fails(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    metrics_path = fixture / "docs/evidence/goal05-phase22-blocked-benchmark/metrics.json"
+    metrics_path.unlink()
+
+    errors = verifier.verify_phase22_completion_blockers(fixture)
+
+    assert any("missing blocked benchmark artifact" in error for error in errors)
