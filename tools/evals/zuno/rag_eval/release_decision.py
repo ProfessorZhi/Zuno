@@ -16,8 +16,9 @@ The engine produces a ReleaseDecision containing one of:
                    an unknown failure bucket is present, or a high-risk
                    failure bucket is present.
 * BLOCKED      -- missing profile, profile not measured, missing required
-                   gate content, missing evidence, or a missing per-profile
-                   fingerprint / artifact hash.
+                   gate content, missing evidence, missing per-profile
+                   fingerprint / artifact hash, or missing/inconsistent
+                   measurement attestation.
 * INCOMPARABLE -- at least one comparability fingerprint dimension differs
                    across the four profile fingerprints.
 * ERROR        -- structural / type / range / hash error in the input.
@@ -207,6 +208,8 @@ BLOCKED_REASONS: Final[frozenset[str]] = frozenset(
         "profile_fingerprint_missing",
         "profile_fingerprint_dimension_missing",
         "profile_artifact_hash_missing",
+        "profile_measurement_attestation_missing",
+        "profile_measurement_attestation_mismatch",
         "core_five_block_missing",
         "core_five_metric_missing",
         "citation_safety_block_missing",
@@ -333,6 +336,9 @@ class ReleaseDecision:
 
 DECISION_ENGINE_VERSION: Final[str] = "phase22-release-decision-v3"
 CLOSED_SET_VERSION: Final[str] = "closed-set-v3"
+MEASUREMENT_ATTESTATION_VERSION: Final[str] = (
+    "phase22-release-measurement-attestation.v1"
+)
 
 REPRODUCE_COMMAND_TEMPLATE: Final[str] = (
     "python -m tools.evals.zuno.rag_eval.run_phase22_release_decision "
@@ -483,9 +489,95 @@ class _NormalizedProfile:
     profile_id: str
     measurement_status: str
     artifact: dict[str, str]
+    measurement_attestation: dict[str, Any] | None
     failure_buckets: tuple[str, ...]
     fingerprint: dict[str, str | None]
     evidence_ref: str | None
+
+
+def compute_measurement_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Release Decision measurement attestation."""
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return canonical_sha256(payload)
+
+
+def _fingerprint_hash(fingerprint: Mapping[str, str | None]) -> str:
+    return canonical_sha256(
+        {dimension: fingerprint.get(dimension) for dimension in FINGERPRINT_DIMENSIONS}
+    )
+
+
+def _validate_measurement_attestation(
+    block: Mapping[str, Any],
+    *,
+    profile_id: str,
+    measurement_status: str,
+    artifact_hash: str,
+    fingerprint: Mapping[str, str | None],
+    evidence_ref: str | None,
+) -> dict[str, Any] | None:
+    if measurement_status != "MEASURED":
+        return None
+
+    attestation = block.get("measurement_attestation")
+    if attestation is None:
+        raise _ProfileIncompleteness(
+            "profile_measurement_attestation_missing", profile_id
+        )
+    if not isinstance(attestation, Mapping):
+        raise ReleaseDecisionError("measurement_attestation must be a mapping")
+
+    required_string_fields = (
+        "attestation_ref",
+        "profile_id",
+        "measurement_status",
+        "artifact_hash",
+        "fingerprint_hash",
+        "evidence_ref",
+        "measurement_attestation_contract_version",
+        "attestation_hash",
+    )
+    normalized: dict[str, Any] = {}
+    for field_name in required_string_fields:
+        value = attestation.get(field_name)
+        if not isinstance(value, str) or not value:
+            raise _ProfileIncompleteness(
+                "profile_measurement_attestation_missing", profile_id
+            )
+        normalized[field_name] = value
+
+    if (
+        normalized["measurement_attestation_contract_version"]
+        != MEASUREMENT_ATTESTATION_VERSION
+    ):
+        raise _ProfileIncompleteness(
+            "profile_measurement_attestation_mismatch", profile_id
+        )
+
+    expected_fingerprint_hash = _fingerprint_hash(fingerprint)
+    expected_hash = compute_measurement_attestation_hash(normalized)
+    if normalized["attestation_hash"] != expected_hash:
+        raise _ProfileIncompleteness(
+            "profile_measurement_attestation_mismatch", profile_id
+        )
+
+    if (
+        normalized["profile_id"] != profile_id
+        or normalized["measurement_status"] != measurement_status
+        or normalized["artifact_hash"] != artifact_hash
+        or normalized["fingerprint_hash"] != expected_fingerprint_hash
+        or normalized["evidence_ref"] != evidence_ref
+    ):
+        raise _ProfileIncompleteness(
+            "profile_measurement_attestation_mismatch", profile_id
+        )
+
+    return normalized
 
 
 def _normalize_profile_block(
@@ -541,10 +633,19 @@ def _normalize_profile_block(
         raise ReleaseDecisionError(
             f"evidence_ref string invalid at {field_path}"
         )
+    measurement_attestation = _validate_measurement_attestation(
+        block,
+        profile_id=profile_id_value,
+        measurement_status=measurement_status,
+        artifact_hash=normalized_artifact["artifact_hash"],
+        fingerprint=fingerprint,
+        evidence_ref=evidence_ref_value,
+    )
     return _NormalizedProfile(
         profile_id=profile_id_value,
         measurement_status=measurement_status,
         artifact=normalized_artifact,
+        measurement_attestation=measurement_attestation,
         failure_buckets=failure_buckets,
         fingerprint=fingerprint,
         evidence_ref=evidence_ref_value,
@@ -1155,6 +1256,7 @@ def evaluate_release_decision(payload: Mapping[str, Any]) -> ReleaseDecision:
                 "profile_id": profile_id,
                 "measurement_status": normalized.measurement_status,
                 "artifact": normalized.artifact,
+                "measurement_attestation": normalized.measurement_attestation,
                 "failure_buckets": list(normalized.failure_buckets),
                 "fingerprint": normalized.fingerprint,
             }
@@ -1512,6 +1614,7 @@ __all__ = [
     "FINGERPRINT_DIMENSIONS",
     "HIGH_RISK_FAILURE_BUCKETS",
     "INCOMPARABLE_REASONS",
+    "MEASUREMENT_ATTESTATION_VERSION",
     "PASSED_REASONS",
     "REPRODUCE_COMMAND_TEMPLATE",
     "REQUIRED_PROFILE_IDS",
@@ -1521,6 +1624,7 @@ __all__ = [
     "ReleaseDecisionError",
     "ReleaseDecisionExitCode",
     "ReleaseDecisionStatus",
+    "compute_measurement_attestation_hash",
     "evaluate_release_decision",
     "exit_code_for",
     "is_closed_reason",

@@ -38,11 +38,13 @@ from tools.evals.zuno.rag_eval.release_decision import (  # noqa: E402
     FINGERPRINT_DIMENSIONS,
     FAILURE_BUCKET_TAXONOMY,
     INCOMPARABLE_REASONS,
+    MEASUREMENT_ATTESTATION_VERSION,
     PASSED_REASONS,
     REQUIRED_PROFILE_IDS,
     REQUIRED_TOP_LEVEL_GATES,
     ReleaseDecisionError,
     ReleaseDecisionStatus,
+    compute_measurement_attestation_hash,
     evaluate_release_decision,
     exit_code_for,
     is_closed_reason,
@@ -55,6 +57,35 @@ def _fingerprint(**overrides):
     base["graph_snapshot"] = None
     base.update(overrides)
     return base
+
+
+def _measurement_attestation(
+    *,
+    profile_id,
+    measurement_status,
+    artifact_hash,
+    fingerprint,
+    evidence_ref,
+):
+    attestation = {
+        "attestation_ref": f"attestation://phase22/release-measurement/{profile_id}",
+        "profile_id": profile_id,
+        "measurement_status": measurement_status,
+        "artifact_hash": artifact_hash,
+        "fingerprint_hash": _fingerprint_hash(fingerprint),
+        "evidence_ref": evidence_ref,
+        "measurement_attestation_contract_version": MEASUREMENT_ATTESTATION_VERSION,
+    }
+    attestation["attestation_hash"] = compute_measurement_attestation_hash(
+        attestation
+    )
+    return attestation
+
+
+def _fingerprint_hash(fingerprint):
+    return compute_measurement_attestation_hash(
+        {dimension: fingerprint.get(dimension) for dimension in FINGERPRINT_DIMENSIONS}
+    )
 
 
 def _profile_block(
@@ -77,7 +108,25 @@ def _profile_block(
         "evaluation": {"ok": True},
         "fingerprint": fingerprint,
     }
+    if measurement_status == "MEASURED":
+        block["measurement_attestation"] = _measurement_attestation(
+            profile_id=profile_id,
+            measurement_status=measurement_status,
+            artifact_hash=artifact_hash,
+            fingerprint=fingerprint,
+            evidence_ref=evidence_ref,
+        )
     return block
+
+
+def _refresh_measurement_attestation(profile: dict) -> None:
+    profile["measurement_attestation"] = _measurement_attestation(
+        profile_id=profile["profile_id"],
+        measurement_status=profile["measurement_status"],
+        artifact_hash=profile["artifact"]["artifact_hash"],
+        fingerprint=profile["fingerprint"],
+        evidence_ref=profile["evidence_ref"],
+    )
 
 
 def _good_core_five():
@@ -190,6 +239,36 @@ def test_passed_when_all_gates_satisfied():
     assert set(decision.profile_hashes) == set(REQUIRED_PROFILE_IDS)
 
 
+def test_measured_profile_requires_measurement_attestation():
+    payload = _good_input()
+    payload["profiles"]["standard_rag"].pop("measurement_attestation", None)
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.BLOCKED
+    assert "profile_measurement_attestation_missing" in decision.reason_codes
+
+
+def test_measured_profile_attestation_hash_mismatch_blocks_passed():
+    payload = _good_input()
+    payload["profiles"]["standard_rag"]["measurement_attestation"][
+        "attestation_hash"
+    ] = "1" * 64
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.BLOCKED
+    assert "profile_measurement_attestation_mismatch" in decision.reason_codes
+
+
+def test_measured_profile_attestation_scope_mismatch_blocks_passed():
+    payload = _good_input()
+    attestation = payload["profiles"]["standard_rag"]["measurement_attestation"]
+    attestation["artifact_hash"] = "hash:other"
+    attestation["attestation_hash"] = compute_measurement_attestation_hash(
+        attestation
+    )
+    decision = evaluate_release_decision(payload)
+    assert decision.status == ReleaseDecisionStatus.BLOCKED
+    assert "profile_measurement_attestation_mismatch" in decision.reason_codes
+
+
 def test_failed_when_core_five_below_threshold():
     payload = _good_input()
     payload["core_five"]["standard_rag"]["faithfulness"] = 0.2
@@ -221,6 +300,7 @@ def test_incomparable_emits_only_actual_dimension_mismatch():
     payload["profiles"]["standard_rag"]["fingerprint"] = _fingerprint(
         dataset_version="different-v2"
     )
+    _refresh_measurement_attestation(payload["profiles"]["standard_rag"])
     decision = evaluate_release_decision(payload)
     assert decision.status == ReleaseDecisionStatus.INCOMPARABLE
     assert "dataset_version_mismatch" in decision.reason_codes
@@ -428,6 +508,7 @@ def test_cli_three_for_incomparable(tmp_path: Path):
     payload["profiles"]["standard_rag"]["fingerprint"] = _fingerprint(
         dataset_version="different-v2"
     )
+    _refresh_measurement_attestation(payload["profiles"]["standard_rag"])
     code, pack = _cli_run(payload, tmp_path)
     assert code == 3
     assert pack["release_decision"]["status"] == "INCOMPARABLE"

@@ -50,7 +50,7 @@ never prints tracebacks, raw OS errors, absolute paths, or usernames.
 | ------------- | ------------------------------------------------------------------------------------ |
 | PASSED        | comparable, fully measured, every required gate present and passing.                 |
 | FAILED        | comparable, fully measured, all required gates present, at least one threshold fails, or a high-risk failure bucket is present. |
-| BLOCKED       | missing profile, profile not measured, missing required gate block or evidence.      |
+| BLOCKED       | missing profile, profile not measured, missing required gate block, evidence, fingerprint, artifact hash or measurement attestation. |
 | INCOMPARABLE  | at least one comparability fingerprint dimension differs across profiles.            |
 | ERROR         | structural / type / range / hash error in the input.                                 |
 
@@ -75,6 +75,16 @@ when the block is the wrong shape) and never silently becomes ``PASSED``.
 The comparability fingerprint dimensions are also required; missing
 dimensions trigger ``fingerprint_dimension_missing`` and an ``INCOMPARABLE``
 decision.
+
+Measured profile blocks also require a serialized
+``measurement_attestation``. A naked ``measurement_status="MEASURED"`` string
+is not sufficient to enter ``PASSED``. The attestation binds profile id,
+measurement status, artifact hash, fingerprint hash and evidence ref with a
+canonical hash using
+``MEASUREMENT_ATTESTATION_VERSION = "phase22-release-measurement-attestation.v1"``.
+Missing or inconsistent measurement attestation returns ``BLOCKED`` with
+``profile_measurement_attestation_missing`` or
+``profile_measurement_attestation_mismatch``.
 
 ## 5. Comparability Reason Cleanup
 
@@ -114,8 +124,8 @@ docs/governance/agent-performance/records/pr-63.json
 
 ## 9. Tests / CI / Verification (executed)
 
-* ``python -m pytest tests/evals/test_phase22_release_decision.py -q -p no:cacheprovider``
-  -- 39 passed (the release-decision focused file).
+* ``python -m pytest -q tests/evals/test_phase22_release_decision.py tests/evals/test_phase22_measurement_control_contracts.py tests/evals/test_phase22_benchmark_preflight.py tests/evals/test_canonical_profile_runners.py tests/evals/test_canonical_deep_agentic_runtime.py tests/repo/test_phase22_completion_blockers.py tests/repo/test_phase22_eval_package_contract.py -p no:cacheprovider --tb=short``
+  -- 244 passed, 30 subtests passed.
 * ``python -m compileall -q tools/evals/zuno/rag_eval/release_decision.py \
   tools/evals/zuno/rag_eval/run_phase22_release_decision.py \
   tools/evals/zuno/rag_eval/__init__.py \
