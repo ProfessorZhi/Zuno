@@ -1,8 +1,8 @@
 # PHASE22 Closure Summary
 
 status: in_progress
-current_sha: 8c1e93fedc256205a85929b1e1f8cc8f512157ca
-origin_main_sha: 8c1e93fedc256205a85929b1e1f8cc8f512157ca
+source_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
+origin_main_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
 
 ## Current Truth
 
@@ -33,4 +33,5 @@ origin_main_sha: 8c1e93fedc256205a85929b1e1f8cc8f512157ca
 
 - This report does not claim PHASE22 completed.
 - It is a reproducible closure snapshot for the current in-progress state.
+- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.
 - Program archive and no-active reset are still pending.

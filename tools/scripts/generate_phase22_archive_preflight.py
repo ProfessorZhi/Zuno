@@ -29,14 +29,14 @@ def build_phase22_archive_preflight() -> str:
     current = _read_text(PROGRAM_ROOT / "current.md")
     checklist = _read_text(PROGRAM_ROOT / "closure-checklist.md")
     phase22 = _read_text(PROGRAM_ROOT / "PHASE22_fixed-benchmark-production-readiness-and-closure.md")
-    sha = _git_rev_parse("HEAD")
+    source_sha = _git_rev_parse("HEAD")
 
     return "\n".join(
         [
             "# PHASE22 Archive Preflight",
             "",
             "status: not_ready_for_archive",
-            f"current_sha: {sha}",
+            f"source_sha_at_generation: {source_sha}",
             "",
             "## Archive Target",
             "",
@@ -64,6 +64,7 @@ def build_phase22_archive_preflight() -> str:
             "## Boundary",
             "",
             "- This is a preflight snapshot only.",
+            "- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.",
             "- It does not mutate program state or perform archive copy.",
             "- Program archive is still blocked by measured/review/final-verification gaps.",
             "",

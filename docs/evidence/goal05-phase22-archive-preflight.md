@@ -1,7 +1,7 @@
 # PHASE22 Archive Preflight
 
 status: not_ready_for_archive
-current_sha: 8c1e93fedc256205a85929b1e1f8cc8f512157ca
+source_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
 
 ## Archive Target
 
@@ -29,5 +29,6 @@ current_sha: 8c1e93fedc256205a85929b1e1f8cc8f512157ca
 ## Boundary
 
 - This is a preflight snapshot only.
+- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.
 - It does not mutate program state or perform archive copy.
 - Program archive is still blocked by measured/review/final-verification gaps.

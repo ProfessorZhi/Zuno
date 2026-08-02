@@ -17,16 +17,17 @@ def _git_rev_parse(ref: str) -> str:
     )
     return result.stdout.strip()
 
+
 def test_phase22_closure_summary_generation() -> None:
     from tools.scripts.generate_phase22_closure_summary import build_phase22_closure_summary
 
     text = build_phase22_closure_summary()
-    current_sha = _git_rev_parse("HEAD")
+    source_sha = _git_rev_parse("HEAD")
 
     assert "PHASE22 Closure Summary" in text
     assert "status: in_progress" in text
-    assert f"current_sha: {current_sha}" in text
-    assert f"origin_main_sha: {current_sha}" in text
+    assert f"source_sha_at_generation: {source_sha}" in text
+    assert f"origin_main_sha_at_generation: {source_sha}" in text
     assert "reviewer_approved_count=0" in text
     assert "benchmark_eligible_count=0" in text
     assert "blocked_not_measured" in text

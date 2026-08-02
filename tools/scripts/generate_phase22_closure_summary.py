@@ -43,15 +43,15 @@ def build_phase22_closure_summary() -> str:
     approval = _read_json(REVIEW_PACK_APPROVAL)
     benchmark = _read_json(BLOCKED_BENCHMARK_MANIFEST)
 
-    current_sha = _git_rev_parse("HEAD")
+    source_sha = _git_rev_parse("HEAD")
     origin_main_sha = _git_rev_parse("origin/main")
 
     lines = [
         "# PHASE22 Closure Summary",
         "",
         "status: in_progress",
-        f"current_sha: {current_sha}",
-        f"origin_main_sha: {origin_main_sha}",
+        f"source_sha_at_generation: {source_sha}",
+        f"origin_main_sha_at_generation: {origin_main_sha}",
         "",
         "## Current Truth",
         "",
@@ -82,6 +82,7 @@ def build_phase22_closure_summary() -> str:
         "",
         "- This report does not claim PHASE22 completed.",
         "- It is a reproducible closure snapshot for the current in-progress state.",
+        "- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.",
         "- Program archive and no-active reset are still pending.",
         "",
     ]
