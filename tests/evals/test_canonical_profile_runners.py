@@ -507,6 +507,7 @@ def test_17_artifact_receipt_missing_blocked() -> None:
     state, reason = gate.evaluate(
         is_test_double=False,
         runtime_status="completed",
+        actual_profile="agentic_graphrag",
         snapshot_ref="snap_v1",
         trace_id="trace_001",
         budget_settlement_ref="budget_001",
@@ -525,6 +526,7 @@ def test_18_artifact_receipt_invalid_blocked() -> None:
     state, reason = gate.evaluate(
         is_test_double=False,
         runtime_status="completed",
+        actual_profile="agentic_graphrag",
         snapshot_ref="snap_v1",
         trace_id="trace_001",
         budget_settlement_ref="budget_001",
@@ -561,6 +563,7 @@ def test_20_run_outcome_invalid_blocked() -> None:
     state, reason = gate.evaluate(
         is_test_double=False,
         runtime_status="completed",
+        actual_profile="agentic_graphrag",
         snapshot_ref="snap_v1",
         trace_id="trace_001",
         budget_settlement_ref="budget_001",
@@ -579,6 +582,7 @@ def test_21_all_receipts_valid_reaches_rule6() -> None:
     state, reason = gate.evaluate(
         is_test_double=False,
         runtime_status="completed",
+        actual_profile="agentic_graphrag",
         snapshot_ref="snap_v1",
         trace_id="trace_001",
         budget_settlement_ref="budget_001",
@@ -590,6 +594,32 @@ def test_21_all_receipts_valid_reaches_rule6() -> None:
         reviewer_status="pending",
     )
     assert state == MeasurementState.RUNTIME_OBSERVED
+    assert "reviewer_pending" in reason
+
+
+def test_21b_standard_rag_does_not_require_agent_run_outcome_for_rule6() -> None:
+    """Standard RAG follows runtime_evidence_binding: run_outcome is agentic-only."""
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="standard_rag",
+        actual_profile="standard_rag",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        budget_settlement_valid=True,
+        artifact_receipt_ref="art_001",
+        artifact_receipt_valid=True,
+        run_outcome_ref="",
+        run_outcome_valid=False,
+        reviewer_status="pending",
+        benchmark_eligible=False,
+        has_formal_credentials=False,
+        formal_execution_requested=False,
+    )
+    assert state == MeasurementState.RUNTIME_OBSERVED
+    assert "runtime_evidence_incomplete" not in reason
     assert "reviewer_pending" in reason
 
 
