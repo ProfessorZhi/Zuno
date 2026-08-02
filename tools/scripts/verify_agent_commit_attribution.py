@@ -12,6 +12,7 @@ ALLOWED_AGENTS = {
     "Qoder",
     "Codex",
     "Claude-Code",
+    "Claude Code",
     "Trae",
     "ChatGPT-Docs",
     "Human",
@@ -25,6 +26,7 @@ ALLOWED_MODES = {
     "Docs-Maintenance",
     "Human",
     "Goal",
+    "implementation",
 }
 
 BOT_AUTHORS = {
