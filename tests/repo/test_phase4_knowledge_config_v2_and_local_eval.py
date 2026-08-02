@@ -75,4 +75,4 @@ def test_phase4_runtime_preserves_domain_pack_id_without_loading_pack(monkeypatc
     importlib.import_module("zuno.api.services.knowledge_file")
     importlib.import_module("zuno.platform.services.rag.handler")
     importlib.import_module("zuno.platform.services.graphrag.retriever")
-    importlib.import_module("zuno.evals.rag_eval.ingest_prepared_corpus")
+    importlib.import_module("tools.evals.zuno.rag_eval.ingest_prepared_corpus")

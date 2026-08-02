@@ -9,7 +9,7 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 
 def test_public_enterprise_registry_marks_first_pass_adapters() -> None:
-    from zuno.evals.rag_eval.public_enterprise_datasets import get_dataset_definition
+    from tools.evals.zuno.rag_eval.public_enterprise_datasets import get_dataset_definition
 
     techqa = get_dataset_definition("techqa_rag_eval")
     cfqa = get_dataset_definition("cfqa")
@@ -24,7 +24,7 @@ def test_public_enterprise_registry_marks_first_pass_adapters() -> None:
 
 
 def test_prepare_techqa_rag_eval_writes_corpus_manifest_and_zuno_dataset(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
+    from tools.evals.zuno.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
 
     raw_path = tmp_path / "techqa.jsonl"
     raw_path.write_text(
@@ -73,7 +73,7 @@ def test_prepare_techqa_rag_eval_writes_corpus_manifest_and_zuno_dataset(tmp_pat
 
 
 def test_prepare_cfqa_keeps_page_grounding_without_faking_missing_pdfs(tmp_path: Path) -> None:
-    from zuno.evals.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
+    from tools.evals.zuno.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
 
     raw_path = tmp_path / "cfqa.jsonl"
     raw_path.write_text(
@@ -119,7 +119,7 @@ def test_prepare_enterprise_rag_bench_extracts_expected_docs_from_parquet(tmp_pa
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    from zuno.evals.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
+    from tools.evals.zuno.rag_eval.public_enterprise_datasets import prepare_public_enterprise_eval
 
     raw_path = tmp_path / "questions.jsonl"
     raw_path.write_text(

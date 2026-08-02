@@ -1,5 +1,5 @@
-﻿from zuno.evals.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
-from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles
+﻿from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
+from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles
 
 
 def test_build_eval_knowledge_config_includes_local_embedding_model_refs():

@@ -48,6 +48,24 @@ git push
 
 Avoid force push, force-with-lease, amend, and reset unless explicitly requested.
 
+## 工作树与命令行安全
+
+Preferred:
+
+```powershell
+Get-Location
+git rev-parse --show-toplevel
+git status --short --branch
+git -C <path> status --short --branch
+```
+
+适用规则：
+
+- 先确认当前 shell 真在目标 worktree 里，再改文件或跑脚本。
+- 读写仓库文件优先使用绝对路径和 `-LiteralPath`。
+- 结构化输入（prompt、JSON、长参数）优先走文件，不要依赖多层 shell 透传。
+- 测试 launcher 时先隔离 `PATH`，避免系统里真实同名命令干扰。
+
 ## 标准架构检查
 
 ```powershell

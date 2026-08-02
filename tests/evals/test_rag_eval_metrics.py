@@ -13,7 +13,7 @@ def _write_jsonl(path: Path, rows: list[dict]):
 
 
 def test_rag_eval_metrics_compute_retrieval_and_citation_scores():
-    from zuno.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -93,7 +93,7 @@ def test_rag_eval_metrics_compute_retrieval_and_citation_scores():
 
 
 def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing():
-    from zuno.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -133,7 +133,7 @@ def test_rag_eval_metrics_falls_back_to_text_match_when_source_metadata_missing(
 
 
 def test_rag_eval_metrics_counts_enterprise_doc_id_hits_for_retrieval_only():
-    from zuno.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -208,7 +208,7 @@ def test_rag_eval_metrics_counts_enterprise_doc_id_hits_for_retrieval_only():
 
 
 def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():
-    from zuno.evals.rag_eval.metrics import compute_metrics
+    from tools.evals.zuno.rag_eval.metrics import compute_metrics
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -283,7 +283,7 @@ def test_rag_eval_metrics_compute_source_span_and_unsupported_claim_rate():
 
 
 def test_prepare_python_notes_corpus_deduplicates_file_names():
-    from zuno.evals.rag_eval.prepare_python_notes_corpus import prepare_corpus
+    from tools.evals.zuno.rag_eval.prepare_python_notes_corpus import prepare_corpus
 
     local_tmp_root = Path.cwd() / ".test-tmp"
     local_tmp_root.mkdir(exist_ok=True)
@@ -303,7 +303,7 @@ def test_prepare_python_notes_corpus_deduplicates_file_names():
 
 
 def test_run_eval_writes_profile_outputs(monkeypatch):
-    from zuno.evals.rag_eval import run_eval as run_eval_module
+    from tools.evals.zuno.rag_eval import run_eval as run_eval_module
 
     calls = []
 
@@ -373,7 +373,7 @@ def test_run_eval_writes_profile_outputs(monkeypatch):
 
 
 def test_run_eval_agentic_profile_fuses_standard_floor_with_deep_contexts(monkeypatch):
-    from zuno.evals.rag_eval import run_eval as run_eval_module
+    from tools.evals.zuno.rag_eval import run_eval as run_eval_module
 
     calls = []
 
@@ -467,7 +467,7 @@ def test_run_eval_agentic_profile_fuses_standard_floor_with_deep_contexts(monkey
 
 def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
     from zuno.agent.core.models import manager as model_manager
-    from zuno.evals.rag_eval import run_eval as run_eval_module
+    from tools.evals.zuno.rag_eval import run_eval as run_eval_module
 
     async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
         return {
@@ -546,7 +546,7 @@ def test_run_eval_supports_llm_answer_and_judge_modes(monkeypatch):
 
 
 def test_extract_contexts_uses_query_aware_priority_to_put_graph_evidence_first():
-    from zuno.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -582,7 +582,7 @@ def test_extract_contexts_uses_query_aware_priority_to_put_graph_evidence_first(
 
 
 def test_extract_contexts_keeps_rag_first_when_graph_docs_are_query_noise():
-    from zuno.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -632,7 +632,7 @@ def test_extract_contexts_keeps_rag_first_when_graph_docs_are_query_noise():
 
 
 def test_extract_contexts_does_not_promote_weak_compact_graph_docs_ahead_of_rag():
-    from zuno.evals.rag_eval.run_eval import _extract_contexts
+    from tools.evals.zuno.rag_eval.run_eval import _extract_contexts
 
     contexts = _extract_contexts(
         {
@@ -675,7 +675,7 @@ def test_extract_contexts_does_not_promote_weak_compact_graph_docs_ahead_of_rag(
 
 
 def test_build_extractive_answer_prefers_relevant_clause_snippets():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_contract",
@@ -713,7 +713,7 @@ def test_build_extractive_answer_prefers_relevant_clause_snippets():
 
 
 def test_build_extractive_answer_prefers_law_basis_snippet():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_law_basis",
@@ -740,7 +740,7 @@ def test_build_extractive_answer_prefers_law_basis_snippet():
 
 
 def test_build_extractive_answer_prefers_compact_limit_snippet_over_long_intro():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_upload_limits",
@@ -780,7 +780,7 @@ def test_build_extractive_answer_prefers_compact_limit_snippet_over_long_intro()
 
 
 def test_build_extractive_answer_contract_review_handles_guarantee_scope():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_guarantee",
@@ -807,7 +807,7 @@ def test_build_extractive_answer_contract_review_handles_guarantee_scope():
 
 
 def test_build_answer_strict_grounded_returns_no_evidence_when_citations_do_not_support_answer():
-    from zuno.evals.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
+    from tools.evals.zuno.rag_eval.run_eval import NO_EVIDENCE_ANSWER, _build_answer
 
     sample = {
         "id": "q_strict_grounded",
@@ -838,7 +838,7 @@ def test_build_answer_strict_grounded_returns_no_evidence_when_citations_do_not_
 
 
 def test_build_answer_strict_grounded_keeps_supported_answer_and_bundle():
-    from zuno.evals.rag_eval.run_eval import _build_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_answer
 
     sample = {
         "id": "q_strict_supported",
@@ -869,7 +869,7 @@ def test_build_answer_strict_grounded_keeps_supported_answer_and_bundle():
 
 
 def test_build_extractive_answer_contract_review_handles_saas_data_deletion():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_saas_delete",
@@ -898,7 +898,7 @@ def test_build_extractive_answer_contract_review_handles_saas_data_deletion():
 
 
 def test_build_extractive_answer_contract_review_handles_payment_trigger():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_payment_trigger",
@@ -924,7 +924,7 @@ def test_build_extractive_answer_contract_review_handles_payment_trigger():
 
 
 def test_build_extractive_answer_contract_review_handles_distribution_return():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_distribution_return",
@@ -950,7 +950,7 @@ def test_build_extractive_answer_contract_review_handles_distribution_return():
 
 
 def test_build_extractive_answer_contract_review_handles_guarantee_with_reference_style():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_guarantee_style",
@@ -977,7 +977,7 @@ def test_build_extractive_answer_contract_review_handles_guarantee_with_referenc
 
 
 def test_build_extractive_answer_contract_review_handles_ip_risk_with_reference_style():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_ip_risk_style",
@@ -1001,7 +1001,7 @@ def test_build_extractive_answer_contract_review_handles_ip_risk_with_reference_
 
 
 def test_build_extractive_answer_contract_review_handles_incident_response_with_reference_style():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_incident_style",
@@ -1025,7 +1025,7 @@ def test_build_extractive_answer_contract_review_handles_incident_response_with_
 
 
 def test_build_extractive_answer_contract_review_selects_relevant_citations():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_citation_focus",
@@ -1053,7 +1053,7 @@ def test_build_extractive_answer_contract_review_selects_relevant_citations():
 
 
 def test_build_extractive_answer_contract_review_prefers_canonical_citation_over_variant():
-    from zuno.evals.rag_eval.run_eval import _build_extractive_answer
+    from tools.evals.zuno.rag_eval.run_eval import _build_extractive_answer
 
     sample = {
         "id": "q_canonical_citation",
@@ -1087,7 +1087,7 @@ def test_build_extractive_answer_contract_review_prefers_canonical_citation_over
 
 
 def test_overlap_score_handles_semantically_equivalent_contract_answers():
-    from zuno.evals.rag_eval.run_eval import _overlap_score
+    from tools.evals.zuno.rag_eval.run_eval import _overlap_score
 
     answer = "甲方应在收到交付通知后5个工作日内完成验收，逾期未提出实质性异议的视为该阶段交付物已经验收通过。"
     reference = "在主服务合同中，甲方应在收到交付通知后5个工作日内完成验收；若逾期未提出实质性异议，则视为该阶段交付物已经验收通过。"
@@ -1096,7 +1096,7 @@ def test_overlap_score_handles_semantically_equivalent_contract_answers():
 
 
 def test_judge_answer_heuristic_supports_semantic_contract_fragments():
-    from zuno.evals.rag_eval.run_eval import _judge_answer_heuristic
+    from tools.evals.zuno.rag_eval.run_eval import _judge_answer_heuristic
 
     sample = {
         "id": "q_faithful_contract",
@@ -1122,7 +1122,7 @@ def test_judge_answer_heuristic_supports_semantic_contract_fragments():
 
 
 def test_judge_answer_heuristic_supports_multiline_extracts():
-    from zuno.evals.rag_eval.run_eval import _judge_answer_heuristic
+    from tools.evals.zuno.rag_eval.run_eval import _judge_answer_heuristic
 
     sample = {
         "id": "q_judge",

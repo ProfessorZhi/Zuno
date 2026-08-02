@@ -101,6 +101,9 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 验证失败后先补丁绕过，而不是定位路径、词条或边界根因。
 - 把历史材料从前台删除但没有归档。
 - 模板和 references 同时保存项目知识，造成双真相。
+- 在错误 workspace 落文件，导致 main 和 worktree 产生分叉。
+- 用嵌套 PowerShell 直接透传多行 prompt、JSON 或带引号参数，导致参数被二次解析。
+- 测试时没隔离 PATH，真实 launcher 冒出来，假 runner 结果失真。
 
 ## Debug Playbooks
 
@@ -120,6 +123,14 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 5. 移动、归档或删除本轮生成物。
 6. 同步 docs、`.agent`、verifier、test。
 7. 运行 `git diff --check` 和相关 verifier/test。
+
+### 命令行安全
+
+1. 先确认 `Get-Location` 和 `git rev-parse --show-toplevel`，再改文件。
+2. 读写仓库文件优先用绝对路径和 `-LiteralPath`，不要依赖当前目录猜测。
+3. 结构化输入先写文件，再让脚本读文件；不要把多行 prompt 或 JSON 直接塞进会再次解析的命令行。
+4. 调试 worker / launcher / metrics 时，在测试里隔离 `PATH`，只保留测试桩、`git` 和 `powershell`。
+5. 如果发现文件落到错误 workspace，先停，再核对 worktree、branch 和当前目录。
 
 ### 架构重构
 
