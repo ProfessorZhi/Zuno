@@ -32,8 +32,10 @@ sys.path.insert(0, str(ROOT / "src" / "backend"))
 
 from tools.evals.zuno.rag_eval.benchmark_preflight import (  # noqa: E402
     CANONICAL_PROFILES,
+    FORMAL_CREDENTIAL_ATTESTATION_VERSION,
     PRODUCT_RUNTIME_ATTESTATION_VERSION,
     STATE_READY,
+    compute_formal_credential_attestation_hash,
     compute_product_runtime_attestation_hash,
     evaluate_payload,
 )
@@ -101,6 +103,18 @@ def _valid_preflight_payload() -> dict:
         }
 
     profiles = [profile_payload(name) for name in CANONICAL_PROFILES]
+    formal_credential_attestation = {
+        "attestation_ref": "attestation://phase22/formal-credential/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "credential_ref": "vault://preflight/credentials",
+        "authorization_ref": "auth-ref-001",
+        "security_epoch": "epoch-2026-Q3",
+        "formal_execution_ref": "formal-execution://phase22/eval-run-2026-08-01",
+        "formal_credential_contract_version": FORMAL_CREDENTIAL_ATTESTATION_VERSION,
+    }
+    formal_credential_attestation["attestation_hash"] = (
+        compute_formal_credential_attestation_hash(formal_credential_attestation)
+    )
     return {
         "eval_run_id": "eval-run-2026-08-01",
         "case_set_ref": "case-set-2026-08",
@@ -124,6 +138,7 @@ def _valid_preflight_payload() -> dict:
         "credential_ref": "vault://preflight/credentials",
         "has_formal_credentials": True,
         "formal_execution_requested": True,
+        "formal_credential_attestation": formal_credential_attestation,
         "output_artifact_ref": "s3://zuno-preflight/eval-run-2026-08-01.json",
         "profiles": profiles,
     }
