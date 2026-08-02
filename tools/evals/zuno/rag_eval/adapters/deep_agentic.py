@@ -29,6 +29,7 @@ from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseInput,
     CanonicalCaseResult,
     CanonicalRuntimeDependencies,
+    build_product_runtime_attestation,
 )
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
 from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
@@ -274,6 +275,11 @@ def _result_from_runtime_evidence_binding(
             dependency_gaps=(),
             evidence_refs=retrieved_evidence_refs,
             retrieval_trace={"measurement_gate": reason},
+            product_runtime_attestation=build_product_runtime_attestation(
+                profile_name=profile_name,
+                binding_payload=binding_payload,
+                security_epoch=case_input.security_epoch,
+            ),
         )
     return _build_fail_closed_result(
         case_input=case_input,

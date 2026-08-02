@@ -1870,10 +1870,20 @@ def _canonical_profile_blocked_metrics(
             if len(runtime_statuses) == 1 and runtime_statuses
             else ("blocked" if "blocked" in runtime_statuses else "mixed")
         )
+        profile_attestations = [
+            item.get("product_runtime_attestation")
+            for item in results
+            if isinstance(item.get("product_runtime_attestation"), dict)
+            and item.get("product_runtime_attestation")
+        ]
         profiles[profile_name] = {
             "measured": profile_measurement_state == "MEASURED",
             "runtime_status": profile_runtime_status,
             "measurement_state": profile_measurement_state,
+            "product_runtime_attested": bool(profile_attestations),
+            "product_runtime_attestation": (
+                profile_attestations[0] if profile_attestations else None
+            ),
             "is_test_double": False,
             "aggregate": {},
             "blocked_reasons": sorted({str(item.get("blocked_reason")) for item in results if item.get("blocked_reason")}),
