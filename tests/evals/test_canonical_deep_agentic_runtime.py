@@ -15,6 +15,7 @@ Fail-Closed Boundary Hardening Verification:
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 import pytest
 
@@ -25,6 +26,10 @@ from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
 from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseInput,
     CanonicalRuntimeDependencies,
+)
+from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
+    RECEIPT_OWNERS,
+    compute_reference_binding_hash,
 )
 from zuno.platform.observability.trace_adapter import InMemoryTraceAdapter
 
@@ -129,6 +134,67 @@ def _unit_case_input(profile_name: str = "deep_graphrag") -> CanonicalCaseInput:
     )
 
 
+def _hash(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _receipt(receipt_type: str, ref: str) -> dict[str, str]:
+    return {
+        "receipt_type": receipt_type,
+        "receipt_ref": ref,
+        "owner": RECEIPT_OWNERS[receipt_type],
+        "runtime_version": "rt-1.0",
+        "snapshot_ref": "snapshot_unit_v1",
+        "payload_hash": _hash(ref),
+    }
+
+
+def _runtime_evidence_binding(profile_name: str, **overrides: Any) -> dict[str, Any]:
+    receipts = [
+        _receipt("security_decision", "security-1"),
+        _receipt("trace", "trace-1"),
+        _receipt("usage_receipt", "usage-1"),
+        _receipt("budget_settlement", "budget-1"),
+        _receipt("artifact_receipt", "artifact-1"),
+    ]
+    binding: dict[str, Any] = {
+        "eval_run_id": "run_unit_01",
+        "case_id": "case_unit_01",
+        "requested_profile": profile_name,
+        "actual_profile": profile_name,
+        "runtime_name": f"canonical-{profile_name}-runtime",
+        "runtime_version": "rt-1.0",
+        "corpus_snapshot_ref": "snapshot_unit_v1",
+        "trace_id": "trace-1",
+        "security_decision_ref": "security-1",
+        "plan_version_ref": "",
+        "run_outcome_ref": "",
+        "usage_receipt_ref": "usage-1",
+        "budget_settlement_ref": "budget-1",
+        "artifact_receipt_ref": "artifact-1",
+        "artifact_payload_hash": _hash("artifact-payload"),
+        "result_payload_hash": _hash("result-payload"),
+        "reference_binding_hash": "0" * 64,
+        "receipts": receipts,
+    }
+    if profile_name == "agentic_graphrag":
+        binding["plan_version_ref"] = "plan-1"
+        binding["run_outcome_ref"] = "outcome-1"
+        binding["receipts"] = [
+            _receipt("security_decision", "security-1"),
+            _receipt("plan_version", "plan-1"),
+            _receipt("run_outcome", "outcome-1"),
+            _receipt("usage_receipt", "usage-1"),
+            _receipt("budget_settlement", "budget-1"),
+            _receipt("trace", "trace-1"),
+            _receipt("artifact_receipt", "artifact-1"),
+        ]
+    binding.update(overrides)
+    if "reference_binding_hash" not in overrides:
+        binding["reference_binding_hash"] = compute_reference_binding_hash(binding)
+    return binding
+
+
 # ---------------------------------------------------------------------------
 # Trace Adapter Exception Tests
 # ---------------------------------------------------------------------------
@@ -225,6 +291,96 @@ def test_unit_contract_agentic_status_completed_payload_returns_blocked() -> Non
     assert res.measurement_state == "BLOCKED"
     assert res.failure_class == "canonical_product_runtime_attestation_unavailable"
     assert res.answer == "Test double agentic answer"
+
+
+def test_unit_contract_deep_valid_runtime_evidence_binding_reaches_observed_not_measured() -> None:
+    """Deep adapter validates runtime binding and reaches RUNTIME_OBSERVED, not MEASURED."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "Deep runtime observed answer",
+        "evidence_refs": ("ev_001",),
+        "retrieved_document_refs": ("doc_001",),
+        "retrieval_rounds": 2,
+        "runtime_evidence_binding": _runtime_evidence_binding("deep_graphrag"),
+    })
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
+    res = DeepGraphRAGCanonicalAdapter(deps=deps).run_canonical_case(_unit_case_input("deep_graphrag"))
+
+    assert res.runtime_status == "completed"
+    assert res.measurement_state == "RUNTIME_OBSERVED"
+    assert res.failure_class == ""
+    assert res.trace_id == "trace-1"
+    assert res.budget_settlement_ref == "budget-1"
+    assert res.artifact_receipt_ref == "artifact-1"
+    assert res.blocked_reason.startswith("runtime_observed_pending_formal_gates:")
+
+
+def test_unit_contract_deep_invalid_runtime_evidence_binding_fails_closed() -> None:
+    """Deep adapter must not accept tampered runtime evidence binding."""
+    k_runtime = ContractTestDoubleKnowledgeRuntime(return_payload={
+        "answer": "Deep runtime observed answer",
+        "evidence_refs": ("ev_001",),
+        "retrieved_document_refs": ("doc_001",),
+        "retrieval_rounds": 2,
+        "runtime_evidence_binding": _runtime_evidence_binding(
+            "deep_graphrag",
+            reference_binding_hash="1" * 64,
+        ),
+    })
+    deps = _full_preflight_deps(knowledge_runtime=k_runtime)
+    res = DeepGraphRAGCanonicalAdapter(deps=deps).run_canonical_case(_unit_case_input("deep_graphrag"))
+
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "runtime_evidence_binding_blocked"
+    assert "reference_binding_hash_mismatch" in res.dependency_gaps
+    assert res.trace_id is None
+
+
+def test_unit_contract_agentic_valid_runtime_evidence_binding_reaches_observed_not_measured() -> None:
+    """Agentic adapter validates runtime binding and reaches RUNTIME_OBSERVED, not MEASURED."""
+    agent_runtime = ContractTestDoubleAgentRuntime(return_payload={
+        "status": "completed",
+        "answer": "Agentic runtime observed answer",
+        "evidence_refs": ("ev_001",),
+        "retrieved_document_refs": ("doc_001",),
+        "retrieval_rounds": 1,
+        "runtime_evidence_binding": _runtime_evidence_binding("agentic_graphrag"),
+    })
+    deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
+    res = AgenticGraphRAGCanonicalAdapter(deps=deps).run_canonical_case(_unit_case_input("agentic_graphrag"))
+
+    assert res.runtime_status == "completed"
+    assert res.measurement_state == "RUNTIME_OBSERVED"
+    assert res.failure_class == ""
+    assert res.trace_id == "trace-1"
+    assert res.plan_version_ref == "plan-1"
+    assert res.run_outcome_ref == "outcome-1"
+    assert res.budget_settlement_ref == "budget-1"
+    assert res.artifact_receipt_ref == "artifact-1"
+    assert res.blocked_reason.startswith("runtime_observed_pending_formal_gates:")
+
+
+def test_unit_contract_agentic_invalid_runtime_evidence_binding_fails_closed() -> None:
+    """Agentic adapter must not accept tampered runtime evidence binding."""
+    agent_runtime = ContractTestDoubleAgentRuntime(return_payload={
+        "status": "completed",
+        "answer": "Agentic runtime observed answer",
+        "evidence_refs": ("ev_001",),
+        "retrieved_document_refs": ("doc_001",),
+        "retrieval_rounds": 1,
+        "runtime_evidence_binding": _runtime_evidence_binding(
+            "agentic_graphrag",
+            reference_binding_hash="1" * 64,
+        ),
+    })
+    deps = _full_preflight_deps(agent_run_runtime=agent_runtime)
+    res = AgenticGraphRAGCanonicalAdapter(deps=deps).run_canonical_case(_unit_case_input("agentic_graphrag"))
+
+    assert res.runtime_status == "blocked"
+    assert res.measurement_state == "BLOCKED"
+    assert res.failure_class == "runtime_evidence_binding_blocked"
+    assert "reference_binding_hash_mismatch" in res.dependency_gaps
+    assert res.trace_id is None
 
 
 # ---------------------------------------------------------------------------
