@@ -41,7 +41,11 @@ from tools.evals.zuno.rag_eval.adapters.retrieval import StandardRAGCanonicalAda
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
 from tools.evals.zuno.rag_eval.benchmark_preflight import (
     BenchmarkPreflightEvaluator,
+    FORMAL_EXECUTION_ATTESTATION_VERSION,
+    HUMAN_BUDGET_ATTESTATION_VERSION,
     REVIEWER_ATTESTATION_VERSION,
+    compute_formal_execution_attestation_hash,
+    compute_human_budget_attestation_hash,
     compute_product_runtime_attestation_hash,
     compute_reviewer_attestation_hash,
 )
@@ -211,6 +215,54 @@ def _reviewer_attestation(
         "reviewer_attestation_contract_version": REVIEWER_ATTESTATION_VERSION,
     }
     attestation["attestation_hash"] = compute_reviewer_attestation_hash(attestation)
+    return attestation
+
+
+def _formal_execution_attestation(
+    *,
+    eval_run_id: str,
+    authorization_ref: str,
+    security_epoch: str,
+    formal_execution_approved: bool,
+    formal_execution_requested: bool,
+) -> dict[str, Any]:
+    attestation = {
+        "attestation_ref": f"attestation://phase22/formal-execution/{eval_run_id}",
+        "eval_run_id": eval_run_id,
+        "authorization_ref": authorization_ref,
+        "security_epoch": security_epoch,
+        "formal_execution_approved": formal_execution_approved,
+        "formal_execution_requested": formal_execution_requested,
+        "formal_execution_attestation_contract_version": FORMAL_EXECUTION_ATTESTATION_VERSION,
+    }
+    attestation["attestation_hash"] = compute_formal_execution_attestation_hash(
+        attestation
+    )
+    return attestation
+
+
+def _human_budget_attestation(
+    *,
+    eval_run_id: str,
+    budget_policy_ref: str,
+    provider_cost_limit: float,
+    token_limit: int,
+    deadline: str,
+    human_budget_approved: bool,
+) -> dict[str, Any]:
+    attestation = {
+        "attestation_ref": f"attestation://phase22/human-budget/{eval_run_id}",
+        "eval_run_id": eval_run_id,
+        "budget_policy_ref": budget_policy_ref,
+        "provider_cost_limit": provider_cost_limit,
+        "token_limit": token_limit,
+        "deadline": deadline,
+        "human_budget_approved": human_budget_approved,
+        "human_budget_attestation_contract_version": HUMAN_BUDGET_ATTESTATION_VERSION,
+    }
+    attestation["attestation_hash"] = compute_human_budget_attestation_hash(
+        attestation
+    )
     return attestation
 
 
@@ -539,7 +591,22 @@ def test_06c_canonical_benchmark_preserves_runtime_observed_profile_state(
         "security_epoch": "epoch_2026",
         "security_epoch_stale": False,
         "formal_execution_approved": True,
+        "formal_execution_attestation": _formal_execution_attestation(
+            eval_run_id="canonical_preflight",
+            authorization_ref="auth-ref-001",
+            security_epoch="epoch_2026",
+            formal_execution_approved=True,
+            formal_execution_requested=True,
+        ),
         "human_budget_approved": True,
+        "human_budget_attestation": _human_budget_attestation(
+            eval_run_id="canonical_preflight",
+            budget_policy_ref="budget-policy-standard",
+            provider_cost_limit=100.0,
+            token_limit=1_000_000,
+            deadline="2026-12-31T23:59:59Z",
+            human_budget_approved=True,
+        ),
         "budget_policy_ref": "budget-policy-standard",
         "provider_cost_limit": 100.0,
         "token_limit": 1_000_000,
