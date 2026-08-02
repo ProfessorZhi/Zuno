@@ -37,14 +37,18 @@
   - Deep / Agentic adapter 在 `RUNTIME_OBSERVED` 结果中写入 attestation。
 - `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`
   - canonical profile metrics 传播首个非空 `product_runtime_attestation`，并写入 `product_runtime_attested`。
+- `tools/evals/zuno/rag_eval/measurement_gate.py`
+  - MeasurementTruthGate 的 formal gate 增加 `formal_credential_attested`；
+  - `reviewer_status=approved`、`benchmark_eligible=true`、`has_formal_credentials=true`、`formal_execution_requested=true` 不再足以进入 `MEASURED`；
+  - 缺少 formal credential attestation 时只能进入 `RUNTIME_OBSERVED`，reason 包含 `formal_credential_attestation_missing`。
 
 ## 验证
 
 ```powershell
-python -m pytest -q tests/evals/test_phase22_benchmark_preflight.py tests/evals/test_phase22_measurement_control_contracts.py -p no:cacheprovider --tb=short
+python -m pytest -q tests/evals/test_canonical_profile_runners.py tests/evals/test_canonical_deep_agentic_runtime.py tests/evals/test_phase22_measurement_control_contracts.py -p no:cacheprovider --tb=short
 ```
 
-结果：`135 passed, 30 subtests passed`。
+结果：`56 passed`。
 
 ## 剩余未完成
 

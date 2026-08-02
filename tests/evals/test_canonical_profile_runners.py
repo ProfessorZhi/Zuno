@@ -888,6 +888,28 @@ def test_21b_standard_rag_does_not_require_agent_run_outcome_for_rule6() -> None
     assert "reviewer_pending" in reason
 
 
+def test_21c_formal_credential_bools_without_attestation_cannot_reach_measured() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="standard_rag",
+        actual_profile="standard_rag",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        budget_settlement_valid=True,
+        artifact_receipt_ref="art_001",
+        artifact_receipt_valid=True,
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+    )
+    assert state == MeasurementState.RUNTIME_OBSERVED
+    assert "formal_credential_attestation_missing" in reason
+
+
 def test_22_fake_receipt_strings_cannot_reach_measured() -> None:
     gate = MeasurementTruthGate()
     state, reason = gate.evaluate(
