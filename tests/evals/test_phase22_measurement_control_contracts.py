@@ -32,7 +32,9 @@ sys.path.insert(0, str(ROOT / "src" / "backend"))
 
 from tools.evals.zuno.rag_eval.benchmark_preflight import (  # noqa: E402
     CANONICAL_PROFILES,
+    PRODUCT_RUNTIME_ATTESTATION_VERSION,
     STATE_READY,
+    compute_product_runtime_attestation_hash,
     evaluate_payload,
 )
 from tools.evals.zuno.rag_eval.release_decision import (  # noqa: E402
@@ -62,30 +64,43 @@ def _sha256_hex(value: str) -> str:
 
 def _valid_preflight_payload() -> dict:
     """A complete 11-gate READY preflight payload (no runtime execution)."""
-    profile = {
-        "profile_name": "x",
-        "case_set_ref": "case-set-2026-08",
-        "dataset_version": "dataset-v1",
-        "corpus_snapshot_ref": "snapshot-2026-08-01",
-        "security_epoch": "epoch-2026-Q3",
-        "budget_policy_ref": "budget-policy-standard",
-        "runtime_name": "canonical-runtime",
-        "runtime_version": "1.0.0",
-        "product_runtime_attested": True,
-        "formal_adapter_wired": True,
-        "knowledge_runtime_available": True,
-        "index_runtime_available": True,
-        "agent_run_runtime_available": True,
-        "trace_adapter_available": True,
-        "result_store_available": True,
-        "artifact_store_available": True,
-        "usage_receipt_provider_available": True,
-        "budget_settlement_provider_available": True,
-    }
-    profiles = [
-        {**profile, "profile_name": name, "runtime_name": f"{name}-runtime"}
-        for name in CANONICAL_PROFILES
-    ]
+    def profile_payload(name: str) -> dict:
+        attestation = {
+            "attestation_ref": f"attestation://phase22/{name}",
+            "profile_name": name,
+            "runtime_name": f"{name}-runtime",
+            "runtime_version": "1.0.0",
+            "corpus_snapshot_ref": "snapshot-2026-08-01",
+            "security_epoch": "epoch-2026-Q3",
+            "formal_adapter_ref": f"canonical-adapter://phase22/{name}",
+            "runtime_evidence_contract_version": PRODUCT_RUNTIME_ATTESTATION_VERSION,
+        }
+        attestation["attestation_hash"] = compute_product_runtime_attestation_hash(
+            attestation
+        )
+        return {
+            "profile_name": name,
+            "case_set_ref": "case-set-2026-08",
+            "dataset_version": "dataset-v1",
+            "corpus_snapshot_ref": "snapshot-2026-08-01",
+            "security_epoch": "epoch-2026-Q3",
+            "budget_policy_ref": "budget-policy-standard",
+            "runtime_name": f"{name}-runtime",
+            "runtime_version": "1.0.0",
+            "product_runtime_attested": True,
+            "product_runtime_attestation": attestation,
+            "formal_adapter_wired": True,
+            "knowledge_runtime_available": True,
+            "index_runtime_available": True,
+            "agent_run_runtime_available": True,
+            "trace_adapter_available": True,
+            "result_store_available": True,
+            "artifact_store_available": True,
+            "usage_receipt_provider_available": True,
+            "budget_settlement_provider_available": True,
+        }
+
+    profiles = [profile_payload(name) for name in CANONICAL_PROFILES]
     return {
         "eval_run_id": "eval-run-2026-08-01",
         "case_set_ref": "case-set-2026-08",
