@@ -3,7 +3,7 @@
 status: stop_hook_resolution_complete
 phase: PHASE22
 parent_pr: 97
-integration_head_sha: 13486bf9f0c61f1ad6f7c3c8a3a09a5b2e5a8e7a (approximate, will refresh)
+reviewed_head_sha: 13486bf9f0c61f1ad6f7c3c8a3a09a5b2e5a8e7a ()
 
 ## Stop-Hook Items Resolved
 

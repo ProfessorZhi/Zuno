@@ -5,7 +5,7 @@ phase: PHASE22
 parent_pr: 97
 integration_branch: codex/phase22-final-closure
 integration_base_sha: dfb9981995f4193488ca022ee5ec15eeff6a6349
-integration_setup_sha: c8edb67921dc134c641375dfe624f8b93a048a2a
+reviewed_head_sha: c8edb67921dc134c641375dfe624f8b93a048a2a
 controller_token_status: NOT_AVAILABLE_APP_SESSION
 
 ## Current

@@ -4,7 +4,7 @@ status: controller_report_for_chatgpt_review
 phase: PHASE22
 parent_pr: 97
 integration_branch: codex/phase22-final-closure
-integration_head_sha: 47ba71375849f8ae87057faae3468663bc68ff45
+reviewed_head_sha: 47ba71375849f8ae87057faae3468663bc68ff45
 report_generated_at: 2026-08-02T13:19:02Z
 
 ## Frozen Facts
@@ -114,7 +114,7 @@ Please review exact head `a880e4e539f5d3aa58865f0c09cd78d151494bce` against `mai
 - **Test sufficiency** for prompt-truncation, attribution, worktree-locking, segment isolation, redaction, and MiniMax quota `CONFIG_REQUIRED` non-blocking.
 - **Evidence truthfulness** vs the PHASE22 frozen facts (`PHASE22=in_progress`, Fixed Benchmark `blocked_not_measured`, `actual_case_count=0`, `reviewer_approved_count=0`, `benchmark_eligible_count=0`, Production Readiness `not established`).
 
-PR #97 remains Draft. No merge is requested. The controller will not promote PHASE22 to completed, set reviewer_approved, set benchmark_eligible, mark production ready, or archive the Program without an explicit ChatGPT (or equivalent) sign-off bound to a final head SHA.
+PR #97 remains Draft. No merge is requested. The controller will not promote PHASE22 to completed, set reviewer_approved, set benchmark_eligible, mark production ready, or archive the Program without an explicit ChatGPT (or equivalent) sign-off bound to a reviewed head SHA.
 
 ## Boundary
 

@@ -3,7 +3,7 @@
 status: stop_hook_verification_record
 phase: PHASE22
 parent_pr: 97
-integration_head_sha: 3334547e554483b29534bb06d5928fcbd017ed92
+reviewed_head_sha: 3334547e554483b29534bb06d5928fcbd017ed92
 
 ## Start Timestamp (turn 1)
 
