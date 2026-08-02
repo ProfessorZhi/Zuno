@@ -243,7 +243,10 @@ SEND_EMAIL_CLI = REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "tools"
 REMOTE_PROXY_MAIN = (
     REPO_ROOT / "src" / "backend" / "zuno" / "capability" / "mcp" / "servers" / "remote_proxy" / "main.py"
 )
-KNOWLEDGE_CHUNK_PROJECTION_ADAPTER = (
+KNOWLEDGE_VECTOR_PAYLOAD = (
+    REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "vector_payload.py"
+)
+RETIRED_KNOWLEDGE_CHUNK_PROJECTION_ADAPTER = (
     REPO_ROOT / "src" / "backend" / "zuno" / "knowledge" / "ingestion" / "chunk_projection_adapter.py"
 )
 SANDBOX_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "sandbox" / "__init__.py"
@@ -395,6 +398,9 @@ def _load_active_candidate_allowlist(work_product_path: Path) -> tuple[set[str],
 def verify_phase22_cleanup_boundary() -> list[str]:
     errors: list[str] = []
 
+    if RETIRED_KNOWLEDGE_CHUNK_PROJECTION_ADAPTER.exists():
+        errors.append("retired chunk projection adapter still exists")
+
     if not WORK_PRODUCT.exists():
         errors.append("missing phase22 removal candidates work product")
     else:
@@ -453,7 +459,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/platform/services/memory/",
             "src/backend/zuno/platform/services/sandbox/__init__.py",
             "src/backend/zuno/platform/services/capability_registry.py",
-            "src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py",
+            "src/backend/zuno/knowledge/ingestion/vector_payload.py",
             "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
             "src/backend/zuno/capability/tools/image2text/__init__.py",
             "src/backend/zuno/capability/tools/text2image/__init__.py",
@@ -817,7 +823,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ("text2image init", TEXT2IMAGE_INIT),
         ("send email cli", SEND_EMAIL_CLI),
         ("remote mcp proxy main", REMOTE_PROXY_MAIN),
-        ("knowledge chunk projection adapter", KNOWLEDGE_CHUNK_PROJECTION_ADAPTER),
+        ("knowledge vector payload helper", KNOWLEDGE_VECTOR_PAYLOAD),
         ("sandbox init", SANDBOX_INIT),
         ("capability registry", CAPABILITY_REGISTRY),
         ("upload service", UPLOAD_SERVICE),

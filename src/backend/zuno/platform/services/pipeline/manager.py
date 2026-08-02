@@ -1,9 +1,7 @@
 import os
-import hashlib
 from mimetypes import guess_type
 from pathlib import Path
 from urllib.parse import urlparse
-from datetime import datetime, timezone
 
 from loguru import logger
 
@@ -175,37 +173,9 @@ class KnowledgePipelineManager:
             consumer="knowledge_pipeline_rag_index_stage",
             projection="canonical_index_handoff_vector_documents",
         )
-        from zuno.knowledge.ingestion import build_index_handoff_payload
+        from zuno.knowledge.ingestion.vector_payload import canonical_ir_to_vector_payloads
 
-        handoff = build_index_handoff_payload(document)
-        source_path = urlparse(document.metadata.source_uri or "").path
-        file_name = os.path.basename(source_path) or document.metadata.document_id
-        update_time = datetime.now(timezone.utc).isoformat()
-        document_hash = document.metadata.source_sha256 or document.metadata.hash
-        chunks = []
-        for item in handoff.vector_documents:
-            chunk_id = str(item["id"])
-            content = str(item["text"])
-            metadata = dict(item.get("metadata") or {})
-            chunk_hash = hashlib.sha1(f"{document_hash}|{chunk_id}|{content}".encode("utf-8")).hexdigest()
-            chunks.append(
-                {
-                    "chunk_id": chunk_id,
-                    "content": content,
-                    "file_id": document.metadata.document_id,
-                    "file_name": file_name,
-                    "knowledge_id": task.knowledge_id,
-                    "update_time": update_time,
-                    "summary": "",
-                    "modality": "text",
-                    "source_url": document.metadata.source_uri,
-                    "source_chunk_id": metadata.get("source_span", {}).get("chunk_id") or chunk_id,
-                    "document_hash": document_hash,
-                    "chunk_hash": chunk_hash,
-                    "metadata": metadata,
-                }
-            )
-        return chunks
+        return canonical_ir_to_vector_payloads(document, knowledge_id=task.knowledge_id)
 
     async def mark_queued(self, task_id: str):
         task = await self._load_task(task_id)

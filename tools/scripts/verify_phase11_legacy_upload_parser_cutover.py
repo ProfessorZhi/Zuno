@@ -22,7 +22,7 @@ EXPECTED_ROWS = {
     },
     "P11-LC-04": {
         "path": "src/backend/zuno/platform/services/rag/parser.py",
-        "status": "versioned_adapter_required",
+        "status": "legacy_compatibility_retained",
     },
     "P11-LC-05": {
         "path": "src/backend/zuno/knowledge/ingestion/gateway.py",
@@ -56,15 +56,10 @@ SOURCE_EXPECTATIONS = {
         "run_rag_index_stage",
         "run_graph_stage",
     ],
-    "src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py": [
-        "ParseGateway",
+    "src/backend/zuno/knowledge/ingestion/vector_payload.py": [
         "CanonicalDocumentIR",
-        "versioned.adapter.phase22.chunk_model_projection",
-        "PHASE16",
-    ],
-    "src/backend/zuno/platform/services/rag/parser.py": [
-        "ChunkModel",
-        "parse_doc_into_chunks",
+        "canonical_ir_to_vector_payloads",
+        "build_index_handoff_payload",
     ],
     "src/backend/zuno/knowledge/ingestion/gateway.py": [
         "CanonicalDocumentIR",
@@ -123,7 +118,7 @@ def verify_phase11_legacy_upload_parser_cutover() -> list[str]:
 
     for required_phrase in [
         "PHASE11 为 `completed`",
-        "versioned_adapter_required",
+        "legacy_compatibility_retained",
         "not_phase11_ingestion",
         "canonical_runtime_candidate",
         "生产默认路径已证明完整经过 SourceObject",

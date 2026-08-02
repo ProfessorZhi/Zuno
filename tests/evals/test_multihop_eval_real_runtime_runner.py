@@ -74,8 +74,11 @@ def test_real_runtime_runner_deduplicates_corpus_documents_before_chunk_build():
     chunks = build_chunks_from_corpus(corpus_rows=rows, knowledge_id="kb_1")
 
     assert len(chunks) == 1
-    assert chunks[0].chunk_id == "shared-doc::0"
-    assert chunks[0].file_id == "shared-doc"
+    assert chunks[0]["chunk_id"] == "shared-doc::0"
+    assert chunks[0]["file_id"] == "shared-doc"
+    assert chunks[0]["knowledge_id"] == "kb_1"
+    assert chunks[0]["document_hash"]
+    assert chunks[0]["chunk_hash"]
 
 
 def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():

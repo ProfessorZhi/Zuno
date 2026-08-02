@@ -18,18 +18,7 @@ def test_workspace_document_attachment_uses_canonical_ir_without_chunk_projectio
         url="https://storage.example.test/policy.md",
         mime_type="text/markdown",
     )
-    called_chunk_projection = False
-
-    async def fail_chunk_projection(**kwargs):
-        nonlocal called_chunk_projection
-        called_chunk_projection = True
-        raise AssertionError(f"workspace attachment should not project ChunkModel: {kwargs}")
-
     monkeypatch.setattr(attachment_service, "_download_attachment", lambda _: str(source))
-    monkeypatch.setattr(
-        "zuno.knowledge.ingestion.chunk_projection_adapter.parse_file_into_chunk_model_projection",
-        fail_chunk_projection,
-    )
 
     kind, content = asyncio.run(
         attachment_service._extract_attachment_text(
@@ -40,7 +29,6 @@ def test_workspace_document_attachment_uses_canonical_ir_without_chunk_projectio
 
     assert kind == "document"
     assert "Renewal notice is required." in content
-    assert called_chunk_projection is False
 
 
 def test_workspace_attachment_service_does_not_import_chunk_projection_adapter() -> None:
