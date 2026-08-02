@@ -19,12 +19,16 @@ from __future__ import annotations
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 from zuno.agent.contracts import RetrievalProfile
 from zuno.platform.observability.trace_adapter import (
     ObservabilityTracePort,
     TraceSpanHandle,
+)
+from tools.evals.zuno.rag_eval.benchmark_preflight import (
+    PRODUCT_RUNTIME_ATTESTATION_VERSION,
+    compute_product_runtime_attestation_hash,
 )
 
 
@@ -154,6 +158,48 @@ class CanonicalCaseResult:
     graph_added_non_gold_refs: tuple[str, ...] = ()
     final_candidate_refs: tuple[str, ...] = ()
     retrieval_trace: dict[str, Any] = field(default_factory=dict)
+    product_runtime_attestation: dict[str, Any] = field(default_factory=dict)
+
+
+FORMAL_ADAPTER_REFS: Mapping[str, str] = {
+    "standard_rag": "canonical-adapter://phase22/standard_rag",
+    "local_graphrag": "canonical-adapter://phase22/local_graphrag",
+    "deep_graphrag": "canonical-adapter://phase22/deep_graphrag",
+    "agentic_graphrag": "canonical-adapter://phase22/agentic_graphrag",
+}
+
+
+def build_product_runtime_attestation(
+    *,
+    profile_name: str,
+    binding_payload: Mapping[str, Any],
+    security_epoch: str = "",
+) -> dict[str, Any]:
+    """Build a serialized profile Runtime attestation from validated binding."""
+
+    actual_profile = str(binding_payload.get("actual_profile") or profile_name)
+    attestation: dict[str, Any] = {
+        "attestation_ref": (
+            "attestation://phase22/"
+            f"{actual_profile}/"
+            f"{binding_payload.get('eval_run_id') or ''}/"
+            f"{binding_payload.get('case_id') or ''}/"
+            f"{binding_payload.get('trace_id') or ''}"
+        ),
+        "profile_name": actual_profile,
+        "runtime_name": str(binding_payload.get("runtime_name") or ""),
+        "runtime_version": str(binding_payload.get("runtime_version") or ""),
+        "corpus_snapshot_ref": str(binding_payload.get("corpus_snapshot_ref") or ""),
+        "security_epoch": str(binding_payload.get("security_epoch") or security_epoch),
+        "formal_adapter_ref": FORMAL_ADAPTER_REFS.get(
+            actual_profile, f"canonical-adapter://phase22/{actual_profile}"
+        ),
+        "runtime_evidence_contract_version": PRODUCT_RUNTIME_ATTESTATION_VERSION,
+    }
+    attestation["attestation_hash"] = compute_product_runtime_attestation_hash(
+        attestation
+    )
+    return attestation
 
 
 def _extract_trace_id(handle: Optional[TraceSpanHandle]) -> Optional[str]:

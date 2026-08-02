@@ -39,6 +39,10 @@ from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
 )
 from tools.evals.zuno.rag_eval.adapters.retrieval import StandardRAGCanonicalAdapter
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
+from tools.evals.zuno.rag_eval.benchmark_preflight import (
+    BenchmarkPreflightEvaluator,
+    compute_product_runtime_attestation_hash,
+)
 from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
 from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
     RECEIPT_OWNERS,
@@ -46,6 +50,7 @@ from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
 )
 from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
     CanonicalRuntimeUnavailableError,
+    REQUIRED_MEASURED_PROFILES,
     _render_reproduce_command,
     _to_portable_posix_path,
     run_enterprise_rag_paired_benchmark,
@@ -475,6 +480,74 @@ def test_06c_canonical_benchmark_preserves_runtime_observed_profile_state(
     assert metrics["profiles"]["standard_rag"]["measurement_state"] == "RUNTIME_OBSERVED"
     assert metrics["profiles"]["standard_rag"]["runtime_status"] == "completed"
     assert metrics["profiles"]["standard_rag"]["measured"] is False
+    attestation = metrics["profiles"]["standard_rag"]["product_runtime_attestation"]
+    assert attestation["profile_name"] == "standard_rag"
+    assert attestation["runtime_name"] == "canonical-standard-runtime"
+    assert attestation["runtime_version"] == "rt-1.0"
+    assert attestation["corpus_snapshot_ref"] == "snapshot_v1"
+    assert attestation["security_epoch"] == "epoch_2026"
+    assert attestation["attestation_hash"] == compute_product_runtime_attestation_hash(attestation)
+
+    preflight_payload = {
+        "eval_run_id": "canonical_preflight",
+        "case_set_ref": "case-set-runtime-observed",
+        "dataset_version": "dataset-v1",
+        "dataset_hash": "0" * 64,
+        "candidate_count": 1,
+        "reviewer_status": "approved",
+        "benchmark_eligible": True,
+        "license_status": "verified",
+        "integrity_status": "verified",
+        "runtime_request_schema_gold_free": True,
+        "authorization_ref": "auth-ref-001",
+        "security_epoch": "epoch_2026",
+        "security_epoch_stale": False,
+        "formal_execution_approved": True,
+        "human_budget_approved": True,
+        "budget_policy_ref": "budget-policy-standard",
+        "provider_cost_limit": 100.0,
+        "token_limit": 1_000_000,
+        "deadline": "2026-12-31T23:59:59Z",
+        "credential_ref": "vault://preflight/credentials",
+        "has_formal_credentials": True,
+        "formal_execution_requested": True,
+        "output_artifact_ref": "s3://zuno-preflight/eval-run-2026-08-01.json",
+        "profiles": [
+            {
+                "profile_name": name,
+                "case_set_ref": "case-set-runtime-observed",
+                "dataset_version": "dataset-v1",
+                "corpus_snapshot_ref": "snapshot_v1",
+                "security_epoch": "epoch_2026",
+                "budget_policy_ref": "budget-policy-standard",
+                "runtime_name": (
+                    "canonical-standard-runtime"
+                    if name == "standard_rag"
+                    else f"{name}-runtime"
+                ),
+                "runtime_version": "rt-1.0" if name == "standard_rag" else "1.0.0",
+                "product_runtime_attested": name == "standard_rag",
+                "product_runtime_attestation": (
+                    attestation if name == "standard_rag" else None
+                ),
+                "formal_adapter_wired": True,
+                "knowledge_runtime_available": True,
+                "index_runtime_available": True,
+                "agent_run_runtime_available": True,
+                "trace_adapter_available": True,
+                "result_store_available": True,
+                "artifact_store_available": True,
+                "usage_receipt_provider_available": True,
+                "budget_settlement_provider_available": True,
+            }
+            for name in REQUIRED_MEASURED_PROFILES
+        ],
+    }
+    report = BenchmarkPreflightEvaluator().evaluate(preflight_payload)
+    standard_profile = next(
+        profile for profile in report.profile_results if profile.profile_name == "standard_rag"
+    )
+    assert "product_runtime_attestation_hash_mismatch" not in standard_profile.gap_codes
 
 
 # ---------------------------------------------------------------------------
