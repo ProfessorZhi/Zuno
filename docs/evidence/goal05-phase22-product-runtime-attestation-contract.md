@@ -23,10 +23,10 @@
 ## 验证
 
 ```powershell
-python -m pytest -q tests/evals/test_phase22_benchmark_preflight.py -p no:cacheprovider --tb=short
+python -m pytest -q tests/evals/test_phase22_measurement_control_contracts.py tests/evals/test_phase22_benchmark_preflight.py -p no:cacheprovider --tb=short
 ```
 
-结果：`126 passed, 30 subtests passed`。
+结果：`132 passed, 30 subtests passed`。
 
 ## 剩余未完成
 
