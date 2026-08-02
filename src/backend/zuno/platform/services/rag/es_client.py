@@ -1,20 +1,25 @@
 import json
-from typing import List
-
 from elasticsearch import Elasticsearch
 from loguru import logger
 
 from zuno.platform.config.es_index import ESIndex
-from zuno.api.dto.chunk import ChunkModel
 from zuno.api.dto.search import SearchModel
 from zuno.platform.settings import app_settings
+
+
+def _chunk_to_dict(chunk) -> dict:
+    if isinstance(chunk, dict):
+        return dict(chunk)
+    if hasattr(chunk, "to_dict"):
+        return chunk.to_dict()
+    return dict(chunk)
 
 
 class ESClient:
     def __init__(self):
         self.client = Elasticsearch(hosts=app_settings.rag.elasticsearch.get("hosts"))
 
-    async def insert_documents(self, index_name, chunks: List[ChunkModel]):
+    async def insert_documents(self, index_name, chunks):
         index_config = json.loads(ESIndex.index_config)
 
         if not self.client.indices.exists(index=index_name):
@@ -26,11 +31,12 @@ class ESClient:
                 raise ValueError("index create error")
         try:
             for chunk in chunks:
+                payload = _chunk_to_dict(chunk)
                 self.client.index(
                     index=index_name,
-                    body=chunk.to_dict(),
+                    body=payload,
                 )
-                logger.info(f"chunk id: {chunk.chunk_id} 已存到索引中")
+                logger.info(f"chunk id: {payload.get('chunk_id')} 已存到索引中")
         except Exception as exc:
             logger.error(f"索引增加数据失败: {exc}")
         finally:

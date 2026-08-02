@@ -1,7 +1,9 @@
 import os
+import hashlib
 from mimetypes import guess_type
 from pathlib import Path
 from urllib.parse import urlparse
+from datetime import datetime, timezone
 
 from loguru import logger
 
@@ -23,7 +25,6 @@ from zuno.platform.services.graphrag.client import Neo4jClient
 from zuno.platform.services.graphrag.extractors.cached_extractor import CachedGraphExtractor
 from zuno.platform.services.graphrag.graph_store.graph_writer import GraphWriter
 from zuno.knowledge.ingestion import CanonicalDocumentIR, ParseDocumentRequest, ParseGateway
-from zuno.knowledge.ingestion import parse_file_into_chunk_model_projection
 from zuno.platform.services.redis import redis_client
 
 
@@ -115,23 +116,6 @@ class KnowledgePipelineManager:
         storage_client.download_file(object_key, local_file_path)
         return local_file_path, True
 
-    async def _parse_chunks(self, task):
-        file_path, cleanup = await self._resolve_file_path(task)
-        try:
-            payload = task.payload or {}
-            knowledge_config = await KnowledgeService.get_knowledge_config(task.knowledge_id)
-            chunks = await parse_file_into_chunk_model_projection(
-                file_id=task.knowledge_file_id,
-                file_path=file_path,
-                knowledge_id=task.knowledge_id,
-                source_url=payload.get("oss_url"),
-                knowledge_config=knowledge_config,
-            )
-            return chunks
-        finally:
-            if cleanup and os.path.exists(file_path):
-                os.remove(file_path)
-
     async def _parse_document(
         self,
         task,
@@ -183,6 +167,45 @@ class KnowledgePipelineManager:
 
         handoff = build_index_handoff_payload(document)
         return list(handoff.graphrag_documents)
+
+    async def _parse_rag_index_documents(self, task) -> list[dict]:
+        document = await self._parse_document(
+            task,
+            adapter="knowledge.pipeline.rag_index.canonical_handoff",
+            consumer="knowledge_pipeline_rag_index_stage",
+            projection="canonical_index_handoff_vector_documents",
+        )
+        from zuno.knowledge.ingestion import build_index_handoff_payload
+
+        handoff = build_index_handoff_payload(document)
+        source_path = urlparse(document.metadata.source_uri or "").path
+        file_name = os.path.basename(source_path) or document.metadata.document_id
+        update_time = datetime.now(timezone.utc).isoformat()
+        document_hash = document.metadata.source_sha256 or document.metadata.hash
+        chunks = []
+        for item in handoff.vector_documents:
+            chunk_id = str(item["id"])
+            content = str(item["text"])
+            metadata = dict(item.get("metadata") or {})
+            chunk_hash = hashlib.sha1(f"{document_hash}|{chunk_id}|{content}".encode("utf-8")).hexdigest()
+            chunks.append(
+                {
+                    "chunk_id": chunk_id,
+                    "content": content,
+                    "file_id": document.metadata.document_id,
+                    "file_name": file_name,
+                    "knowledge_id": task.knowledge_id,
+                    "update_time": update_time,
+                    "summary": "",
+                    "modality": "text",
+                    "source_url": document.metadata.source_uri,
+                    "source_chunk_id": metadata.get("source_span", {}).get("chunk_id") or chunk_id,
+                    "document_hash": document_hash,
+                    "chunk_hash": chunk_hash,
+                    "metadata": metadata,
+                }
+            )
+        return chunks
 
     async def mark_queued(self, task_id: str):
         task = await self._load_task(task_id)
@@ -247,7 +270,7 @@ class KnowledgePipelineManager:
                 knowledge_file_id=task.knowledge_file_id,
                 file_patch=build_running_file_patch(KnowledgeTaskStage.rag_indexing, task_id),
             )
-            chunks = await self._parse_chunks(task)
+            chunks = await self._parse_rag_index_documents(task)
             await RagHandler.delete_documents_by_file(task.knowledge_file_id, task.knowledge_id)
             await RagHandler.index_milvus_documents(
                 task.knowledge_id,
@@ -263,7 +286,7 @@ class KnowledgePipelineManager:
                 KnowledgeTaskStage.rag_indexing,
                 KnowledgeTaskStatus.running,
                 "rag indexing completed",
-                detail={"chunk_count": len(chunks)},
+                detail={"chunk_count": len(chunks), "projection": "canonical_index_handoff_vector_documents"},
                 knowledge_file_id=task.knowledge_file_id,
                 file_patch=build_success_file_patch(KnowledgeTaskStage.rag_indexing, task_id),
             )

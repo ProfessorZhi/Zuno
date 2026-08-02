@@ -56,21 +56,6 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch, tmp_path):
     source = tmp_path / "demo.txt"
     source.write_text("hello from canonical parse stage", encoding="utf-8")
 
-    async def fake_parse_file_into_chunk_model_projection(
-        *,
-        file_id,
-        file_path,
-        knowledge_id,
-        source_url=None,
-        knowledge_config=None,
-    ):
-        assert file_id == "f_1"
-        assert file_path == str(source)
-        assert knowledge_id == "k_1"
-        assert source_url is None
-        assert knowledge_config == {"index_capability": "rag"}
-        return [{"chunk_id": "c_1", "content": "hello"}]
-
     async def fake_index_milvus_documents(
         knowledge_id,
         chunks,
@@ -113,10 +98,6 @@ def test_pipeline_manager_updates_task_and_file_state(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
-    )
-    monkeypatch.setattr(
-        "zuno.platform.services.pipeline.manager.parse_file_into_chunk_model_projection",
-        fake_parse_file_into_chunk_model_projection,
     )
     monkeypatch.setattr(
         "zuno.platform.services.rag.handler.RagHandler.index_milvus_documents",
@@ -191,9 +172,6 @@ def test_pipeline_parse_stage_uses_canonical_ir_without_chunk_projection(monkeyp
     async def fake_update_pipeline_fields(_knowledge_file_id, **_kwargs):
         return None
 
-    async def fail_chunk_projection(**kwargs):
-        raise AssertionError(f"parse stage should not project ChunkModel: {kwargs}")
-
     async def fake_get_knowledge_config(knowledge_id):
         assert knowledge_id == "k_parse"
         return {"index_capability": "rag"}
@@ -213,10 +191,6 @@ def test_pipeline_parse_stage_uses_canonical_ir_without_chunk_projection(monkeyp
     monkeypatch.setattr(
         "zuno.platform.database.dao.knowledge_file.KnowledgeFileDao.update_pipeline_fields",
         fake_update_pipeline_fields,
-    )
-    monkeypatch.setattr(
-        "zuno.platform.services.pipeline.manager.parse_file_into_chunk_model_projection",
-        fail_chunk_projection,
     )
     monkeypatch.setattr(
         "zuno.api.services.knowledge.KnowledgeService.get_knowledge_config",
@@ -239,6 +213,9 @@ def test_pipeline_parse_stage_uses_canonical_ir_without_chunk_projection(monkeyp
         == parsing_completed[4]["chunk_count"]
         for update in task_updates
     )
+    import zuno.platform.services.pipeline.manager as pipeline_manager
+
+    assert not hasattr(pipeline_manager, "parse_file_into_chunk_model_projection")
 
 
 def test_pipeline_graph_stage_passes_project_payload_to_extractor(monkeypatch):
@@ -367,9 +344,6 @@ def test_pipeline_graph_stage_uses_canonical_handoff_without_chunk_projection(mo
     async def fake_get_runtime_settings(_knowledge_id):
         return {"project_payload": {"id": "contract_review"}}
 
-    async def fail_chunk_projection(**kwargs):
-        raise AssertionError(f"graph stage should not project ChunkModel: {kwargs}")
-
     async def fake_record_stage(*args, **kwargs):
         return None
 
@@ -406,10 +380,6 @@ def test_pipeline_graph_stage_uses_canonical_handoff_without_chunk_projection(mo
             return None
 
     monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
-    monkeypatch.setattr(
-        "zuno.platform.services.pipeline.manager.parse_file_into_chunk_model_projection",
-        fail_chunk_projection,
-    )
     monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
@@ -426,6 +396,176 @@ def test_pipeline_graph_stage_uses_canonical_handoff_without_chunk_projection(mo
     assert captured["project_payload"] == {"id": "contract_review"}
     assert all("content" in chunk for chunk in captured["chunks"])
     assert all("source_chunk_id" in chunk for chunk in captured["chunks"])
+    import zuno.platform.services.pipeline.manager as pipeline_manager
+
+    assert not hasattr(pipeline_manager, "parse_file_into_chunk_model_projection")
+
+
+def test_pipeline_rag_stage_uses_canonical_handoff_without_chunk_projection(monkeypatch, tmp_path):
+    from zuno.platform.services.pipeline.manager import KnowledgePipelineManager
+
+    source = tmp_path / "policy.md"
+    source.write_text("# Policy\nRenewal notice is required.", encoding="utf-8")
+    task = SimpleNamespace(
+        id="task_rag",
+        knowledge_id="kb_rag",
+        knowledge_file_id="file_rag",
+        payload={"file_path": str(source), "file_name": "policy.md"},
+        result_summary={},
+    )
+    captured = {}
+
+    async def fake_load_task(task_id):
+        assert task_id == "task_rag"
+        return task
+
+    async def fake_get_knowledge_config(_knowledge_id):
+        return {"index_capability": "rag"}
+
+    async def fake_get_runtime_settings(_knowledge_id):
+        return {"text_embedding_config": {"provider": "test"}, "vl_embedding_config": None}
+
+    async def fake_record_stage(*args, **kwargs):
+        captured.setdefault("stage_details", []).append(kwargs.get("detail") or {})
+
+    async def fake_update_task(_task_id, **kwargs):
+        captured.setdefault("task_updates", []).append(kwargs)
+
+    async def fake_update_pipeline_fields(*args, **kwargs):
+        return None
+
+    async def fake_delete_documents_by_file(file_id, knowledge_id):
+        captured["delete"] = (file_id, knowledge_id)
+
+    async def fake_index_milvus_documents(knowledge_id, chunks, **kwargs):
+        captured["milvus"] = (knowledge_id, list(chunks), kwargs)
+
+    async def fake_index_es_documents(knowledge_id, chunks):
+        captured["es"] = (knowledge_id, list(chunks))
+
+    monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
+    monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeTaskDao.update_task", fake_update_task)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeFileDao.update_pipeline_fields", fake_update_pipeline_fields)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.RagHandler.delete_documents_by_file", fake_delete_documents_by_file)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.RagHandler.index_milvus_documents", fake_index_milvus_documents)
+    monkeypatch.setattr("zuno.platform.services.pipeline.manager.RagHandler.index_es_documents", fake_index_es_documents)
+
+    asyncio.run(KnowledgePipelineManager(enable_elasticsearch=True).run_rag_index_stage("task_rag"))
+
+    assert captured["delete"] == ("file_rag", "kb_rag")
+    knowledge_id, chunks, kwargs = captured["milvus"]
+    assert knowledge_id == "kb_rag"
+    assert kwargs["text_embedding_config"] == {"provider": "test"}
+    assert chunks
+    assert all(isinstance(chunk, dict) for chunk in chunks)
+    assert all(chunk["file_id"] == "file_rag" for chunk in chunks)
+    assert all(chunk["knowledge_id"] == "kb_rag" for chunk in chunks)
+    assert all(chunk["modality"] == "text" for chunk in chunks)
+    assert captured["es"][1] == chunks
+    assert any(
+        detail.get("projection") == "canonical_index_handoff_vector_documents"
+        for detail in captured["stage_details"]
+    )
+    import zuno.platform.services.pipeline.manager as pipeline_manager
+
+    assert not hasattr(pipeline_manager, "parse_file_into_chunk_model_projection")
+
+
+def test_milvus_lite_client_accepts_canonical_dict_chunks(monkeypatch):
+    from zuno.platform.services.rag.vector_db.milvus_lite_client import MilvusLiteClient
+
+    inserted = {}
+
+    class FakeCollection:
+        def insert(self, data):
+            inserted["data"] = data
+
+        def flush(self):
+            inserted["flushed"] = True
+
+    client = MilvusLiteClient.__new__(MilvusLiteClient)
+    client.collections = {"kb": FakeCollection()}
+    monkeypatch.setattr(client, "_get_collection_safe", lambda _name: client.collections["kb"])
+
+    chunk = {
+        "chunk_id": "chunk_1",
+        "document_hash": "doc_hash",
+        "chunk_hash": "chunk_hash",
+        "content": "hello",
+        "summary": "",
+        "file_id": "file_1",
+        "file_name": "file.md",
+        "knowledge_id": "kb",
+        "update_time": "2026-08-02T00:00:00+00:00",
+        "source_url": "file:///file.md",
+    }
+
+    asyncio.run(client._insert_collection("kb", [chunk], [[0.1, 0.2]]))
+
+    assert inserted["flushed"] is True
+    assert inserted["data"][0] == ["chunk_1"]
+    assert inserted["data"][3] == ["hello"]
+    assert inserted["data"][6] == ["file_1"]
+
+
+def test_es_client_accepts_canonical_dict_chunks(monkeypatch):
+    from zuno.platform.services.rag.es_client import ESClient
+
+    indexed = []
+
+    class FakeIndices:
+        def exists(self, index):
+            assert index == "kb"
+            return True
+
+    class FakeClient:
+        indices = FakeIndices()
+
+        def index(self, index, body):
+            indexed.append((index, body))
+
+    client = ESClient.__new__(ESClient)
+    client.client = FakeClient()
+
+    async def fake_close():
+        return None
+
+    monkeypatch.setattr(client, "close", fake_close)
+
+    asyncio.run(
+        client.insert_documents(
+            "kb",
+            [
+                {
+                    "chunk_id": "chunk_1",
+                    "content": "hello",
+                    "file_id": "file_1",
+                    "file_name": "file.md",
+                    "knowledge_id": "kb",
+                    "update_time": "2026-08-02T00:00:00+00:00",
+                    "summary": "",
+                }
+            ],
+        )
+    )
+
+    assert indexed == [
+        (
+            "kb",
+            {
+                "chunk_id": "chunk_1",
+                "content": "hello",
+                "file_id": "file_1",
+                "file_name": "file.md",
+                "knowledge_id": "kb",
+                "update_time": "2026-08-02T00:00:00+00:00",
+                "summary": "",
+            },
+        )
+    ]
 
 
 def test_retry_task_creates_new_task_and_redispatches(monkeypatch):
