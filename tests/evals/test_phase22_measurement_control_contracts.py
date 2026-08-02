@@ -33,10 +33,14 @@ sys.path.insert(0, str(ROOT / "src" / "backend"))
 from tools.evals.zuno.rag_eval.benchmark_preflight import (  # noqa: E402
     CANONICAL_PROFILES,
     FORMAL_CREDENTIAL_ATTESTATION_VERSION,
+    FORMAL_EXECUTION_ATTESTATION_VERSION,
+    HUMAN_BUDGET_ATTESTATION_VERSION,
     PRODUCT_RUNTIME_ATTESTATION_VERSION,
     REVIEWER_ATTESTATION_VERSION,
     STATE_READY,
     compute_formal_credential_attestation_hash,
+    compute_formal_execution_attestation_hash,
+    compute_human_budget_attestation_hash,
     compute_product_runtime_attestation_hash,
     compute_reviewer_attestation_hash,
     evaluate_payload,
@@ -131,6 +135,31 @@ def _valid_preflight_payload() -> dict:
     formal_credential_attestation["attestation_hash"] = (
         compute_formal_credential_attestation_hash(formal_credential_attestation)
     )
+    formal_execution_attestation = {
+        "attestation_ref": "attestation://phase22/formal-execution/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "authorization_ref": "auth-ref-001",
+        "security_epoch": "epoch-2026-Q3",
+        "formal_execution_approved": True,
+        "formal_execution_requested": True,
+        "formal_execution_attestation_contract_version": FORMAL_EXECUTION_ATTESTATION_VERSION,
+    }
+    formal_execution_attestation["attestation_hash"] = (
+        compute_formal_execution_attestation_hash(formal_execution_attestation)
+    )
+    human_budget_attestation = {
+        "attestation_ref": "attestation://phase22/human-budget/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "budget_policy_ref": "budget-policy-standard",
+        "provider_cost_limit": 100.0,
+        "token_limit": 1_000_000,
+        "deadline": "2026-12-31T23:59:59Z",
+        "human_budget_approved": True,
+        "human_budget_attestation_contract_version": HUMAN_BUDGET_ATTESTATION_VERSION,
+    }
+    human_budget_attestation["attestation_hash"] = compute_human_budget_attestation_hash(
+        human_budget_attestation
+    )
     return {
         "eval_run_id": "eval-run-2026-08-01",
         "case_set_ref": "case-set-2026-08",
@@ -147,7 +176,9 @@ def _valid_preflight_payload() -> dict:
         "security_epoch": "epoch-2026-Q3",
         "security_epoch_stale": False,
         "formal_execution_approved": True,
+        "formal_execution_attestation": formal_execution_attestation,
         "human_budget_approved": True,
+        "human_budget_attestation": human_budget_attestation,
         "budget_policy_ref": "budget-policy-standard",
         "provider_cost_limit": 100.0,
         "token_limit": 1_000_000,

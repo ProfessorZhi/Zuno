@@ -116,6 +116,35 @@ def _valid_reviewer_attestation() -> Dict[str, Any]:
     return attestation
 
 
+def _valid_formal_execution_attestation() -> Dict[str, Any]:
+    attestation = {
+        "attestation_ref": "attestation://phase22/formal-execution/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "authorization_ref": "auth-ref-001",
+        "security_epoch": "epoch-2026-Q3",
+        "formal_execution_approved": True,
+        "formal_execution_requested": True,
+        "formal_execution_attestation_contract_version": "phase22-formal-execution-attestation.v1",
+    }
+    attestation["attestation_hash"] = _attestation_hash(attestation)
+    return attestation
+
+
+def _valid_human_budget_attestation() -> Dict[str, Any]:
+    attestation = {
+        "attestation_ref": "attestation://phase22/human-budget/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "budget_policy_ref": "budget-policy-standard",
+        "provider_cost_limit": 100.0,
+        "token_limit": 1_000_000,
+        "deadline": "2026-12-31T23:59:59Z",
+        "human_budget_approved": True,
+        "human_budget_attestation_contract_version": "phase22-human-budget-attestation.v1",
+    }
+    attestation["attestation_hash"] = _attestation_hash(attestation)
+    return attestation
+
+
 def _valid_profile(name: str) -> Dict[str, Any]:
     return {
         "profile_name": name,
@@ -157,7 +186,9 @@ def _valid_payload(profiles: List[Dict[str, Any]] | None = None) -> Dict[str, An
         "security_epoch": "epoch-2026-Q3",
         "security_epoch_stale": False,
         "formal_execution_approved": True,
+        "formal_execution_attestation": _valid_formal_execution_attestation(),
         "human_budget_approved": True,
+        "human_budget_attestation": _valid_human_budget_attestation(),
         "budget_policy_ref": "budget-policy-standard",
         "provider_cost_limit": 100.0,
         "token_limit": 1_000_000,
@@ -191,7 +222,7 @@ class ReadyContractTests(unittest.TestCase):
         for pr in report.profile_results:
             self.assertEqual(pr.state, STATE_READY)
             self.assertEqual(pr.gap_codes, ())
-        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v7")
+        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v8")
         self.assertEqual(len(report.input_fingerprint), 64)
 
     def test_02_profile_input_order_does_not_change_state(self) -> None:
@@ -644,6 +675,29 @@ class SecurityGateTests(unittest.TestCase):
         self.assertEqual(report.state, STATE_BLOCKED)
         self.assertIn("formal_execution_not_approved", report.gap_codes)
 
+    def test_44a_formal_execution_approval_requires_attestation(self) -> None:
+        payload = _valid_payload()
+        del payload["formal_execution_attestation"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("formal_execution_attestation_missing", report.gap_codes)
+
+    def test_44b_formal_execution_attestation_hash_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        payload["formal_execution_attestation"]["attestation_hash"] = "1" * 64
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("formal_execution_attestation_hash_mismatch", report.gap_codes)
+
+    def test_44c_formal_execution_attestation_scope_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        attestation = payload["formal_execution_attestation"]
+        attestation["authorization_ref"] = "auth-ref-other"
+        attestation["attestation_hash"] = _attestation_hash(attestation)
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("formal_execution_attestation_scope_mismatch", report.gap_codes)
+
 
 # ---------------------------------------------------------------------------
 # 9. Budget
@@ -657,6 +711,29 @@ class BudgetGateTests(unittest.TestCase):
         report = _evaluate(payload)
         self.assertEqual(report.state, STATE_BLOCKED)
         self.assertIn("human_budget_not_approved", report.gap_codes)
+
+    def test_45a_human_budget_approval_requires_attestation(self) -> None:
+        payload = _valid_payload()
+        del payload["human_budget_attestation"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("human_budget_attestation_missing", report.gap_codes)
+
+    def test_45b_human_budget_attestation_hash_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        payload["human_budget_attestation"]["attestation_hash"] = "1" * 64
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("human_budget_attestation_hash_mismatch", report.gap_codes)
+
+    def test_45c_human_budget_attestation_scope_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        attestation = payload["human_budget_attestation"]
+        attestation["budget_policy_ref"] = "budget-policy-other"
+        attestation["attestation_hash"] = _attestation_hash(attestation)
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("human_budget_attestation_scope_mismatch", report.gap_codes)
 
     def test_46_budget_policy_ref_missing_is_blocked(self) -> None:
         payload = _valid_payload()

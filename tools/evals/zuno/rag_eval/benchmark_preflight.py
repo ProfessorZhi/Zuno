@@ -83,6 +83,13 @@ Version 7 closes the Reviewer attestation gap:
   mapping bound to eval run, case set, dataset version/hash and candidate
   count.
 
+Version 8 closes the approval attestation gap:
+
+* ``formal_execution_approved=true`` and ``human_budget_approved=true`` are
+  not sufficient to pass the Security and Budget gates.
+* The top-level input must include serialized approval attestations bound to
+  their owning gate fields and canonical hashes.
+
 The evaluator enforces the documented 11 gate priority and never raises
 an exception for any input.
 """
@@ -97,10 +104,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
-CONTRACT_VERSION = "phase22-benchmark-preflight.v7"
+CONTRACT_VERSION = "phase22-benchmark-preflight.v8"
 PRODUCT_RUNTIME_ATTESTATION_VERSION = "phase22-product-runtime-attestation.v1"
 FORMAL_CREDENTIAL_ATTESTATION_VERSION = "phase22-formal-credential-attestation.v1"
 REVIEWER_ATTESTATION_VERSION = "phase22-reviewer-attestation.v1"
+FORMAL_EXECUTION_ATTESTATION_VERSION = "phase22-formal-execution-attestation.v1"
+HUMAN_BUDGET_ATTESTATION_VERSION = "phase22-human-budget-attestation.v1"
 
 CANONICAL_PROFILES: Tuple[str, ...] = (
     "standard_rag",
@@ -136,7 +145,9 @@ REQUIRED_TOP_FIELDS: Tuple[str, ...] = (
     "security_epoch",
     "security_epoch_stale",
     "formal_execution_approved",
+    "formal_execution_attestation",
     "human_budget_approved",
+    "human_budget_attestation",
     "budget_policy_ref",
     "provider_cost_limit",
     "token_limit",
@@ -235,6 +246,29 @@ _REQUIRED_REVIEWER_ATTESTATION_FIELDS: Tuple[str, ...] = (
     "attestation_hash",
 )
 
+_REQUIRED_FORMAL_EXECUTION_ATTESTATION_FIELDS: Tuple[str, ...] = (
+    "attestation_ref",
+    "eval_run_id",
+    "authorization_ref",
+    "security_epoch",
+    "formal_execution_approved",
+    "formal_execution_requested",
+    "formal_execution_attestation_contract_version",
+    "attestation_hash",
+)
+
+_REQUIRED_HUMAN_BUDGET_ATTESTATION_FIELDS: Tuple[str, ...] = (
+    "attestation_ref",
+    "eval_run_id",
+    "budget_policy_ref",
+    "provider_cost_limit",
+    "token_limit",
+    "deadline",
+    "human_budget_approved",
+    "human_budget_attestation_contract_version",
+    "attestation_hash",
+)
+
 TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "eval_run_id": (str,),
     "case_set_ref": (str,),
@@ -251,7 +285,9 @@ TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
     "security_epoch": (str,),
     "security_epoch_stale": (bool,),
     "formal_execution_approved": (bool,),
+    "formal_execution_attestation": (Mapping,),
     "human_budget_approved": (bool,),
+    "human_budget_attestation": (Mapping,),
     "budget_policy_ref": (str,),
     "provider_cost_limit": (int, float),
     "token_limit": (int,),
@@ -312,7 +348,9 @@ class BenchmarkPreflightInput:
     security_epoch: str
     security_epoch_stale: bool
     formal_execution_approved: bool
+    formal_execution_attestation: Optional[Mapping[str, Any]]
     human_budget_approved: bool
+    human_budget_attestation: Optional[Mapping[str, Any]]
     budget_policy_ref: str
     provider_cost_limit: float
     token_limit: int
@@ -408,6 +446,28 @@ def compute_formal_credential_attestation_hash(attestation: Mapping[str, Any]) -
 
 def compute_reviewer_attestation_hash(attestation: Mapping[str, Any]) -> str:
     """Canonical hash over a serialized Reviewer attestation."""
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return _canonical_sha256_hex(payload)
+
+
+def compute_formal_execution_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Formal Execution approval attestation."""
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return _canonical_sha256_hex(payload)
+
+
+def compute_human_budget_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Human Budget approval attestation."""
 
     payload = {
         key: value
@@ -745,6 +805,126 @@ def _reviewer_attestation_gap(input_obj: BenchmarkPreflightInput) -> Optional[st
     return None
 
 
+def _formal_execution_attestation_gap(
+    input_obj: BenchmarkPreflightInput,
+) -> Optional[str]:
+    attestation = input_obj.formal_execution_attestation
+    if attestation is None:
+        return "formal_execution_attestation_missing"
+    if not isinstance(attestation, Mapping):
+        return "formal_execution_attestation_invalid"
+
+    for field_name in _REQUIRED_FORMAL_EXECUTION_ATTESTATION_FIELDS:
+        value = attestation.get(field_name)
+        if field_name in ("formal_execution_approved", "formal_execution_requested"):
+            if not isinstance(value, bool):
+                return "formal_execution_attestation_field_missing"
+        elif not _has_non_empty(value):
+            return "formal_execution_attestation_field_missing"
+
+    if (
+        attestation.get("formal_execution_attestation_contract_version")
+        != FORMAL_EXECUTION_ATTESTATION_VERSION
+    ):
+        return "formal_execution_attestation_version_mismatch"
+
+    if not _is_valid_sha256_hex(attestation.get("attestation_hash")):
+        return "formal_execution_attestation_hash_invalid"
+
+    try:
+        expected_hash = compute_formal_execution_attestation_hash(attestation)
+    except (TypeError, ValueError):
+        return "formal_execution_attestation_invalid"
+
+    if attestation.get("attestation_hash") != expected_hash:
+        return "formal_execution_attestation_hash_mismatch"
+
+    if (
+        not _has_non_empty(input_obj.authorization_ref)
+        or not _has_non_empty(input_obj.security_epoch)
+        or input_obj.formal_execution_approved is not True
+        or input_obj.formal_execution_requested is not True
+    ):
+        return None
+
+    if (
+        attestation.get("eval_run_id") != input_obj.eval_run_id
+        or attestation.get("authorization_ref") != input_obj.authorization_ref
+        or attestation.get("security_epoch") != input_obj.security_epoch
+        or attestation.get("formal_execution_approved")
+        is not input_obj.formal_execution_approved
+        or attestation.get("formal_execution_requested")
+        is not input_obj.formal_execution_requested
+    ):
+        return "formal_execution_attestation_scope_mismatch"
+
+    return None
+
+
+def _human_budget_attestation_gap(
+    input_obj: BenchmarkPreflightInput,
+) -> Optional[str]:
+    attestation = input_obj.human_budget_attestation
+    if attestation is None:
+        return "human_budget_attestation_missing"
+    if not isinstance(attestation, Mapping):
+        return "human_budget_attestation_invalid"
+
+    for field_name in _REQUIRED_HUMAN_BUDGET_ATTESTATION_FIELDS:
+        value = attestation.get(field_name)
+        if field_name == "human_budget_approved":
+            if not isinstance(value, bool):
+                return "human_budget_attestation_field_missing"
+        elif field_name == "provider_cost_limit":
+            if not _is_finite_real(value) or value <= 0:
+                return "human_budget_attestation_field_missing"
+        elif field_name == "token_limit":
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                return "human_budget_attestation_field_missing"
+        elif not _has_non_empty(value):
+            return "human_budget_attestation_field_missing"
+
+    if (
+        attestation.get("human_budget_attestation_contract_version")
+        != HUMAN_BUDGET_ATTESTATION_VERSION
+    ):
+        return "human_budget_attestation_version_mismatch"
+
+    if not _is_valid_sha256_hex(attestation.get("attestation_hash")):
+        return "human_budget_attestation_hash_invalid"
+
+    try:
+        expected_hash = compute_human_budget_attestation_hash(attestation)
+    except (TypeError, ValueError):
+        return "human_budget_attestation_invalid"
+
+    if attestation.get("attestation_hash") != expected_hash:
+        return "human_budget_attestation_hash_mismatch"
+
+    if (
+        input_obj.human_budget_approved is not True
+        or not _has_non_empty(input_obj.budget_policy_ref)
+        or not _is_finite_real(input_obj.provider_cost_limit)
+        or input_obj.provider_cost_limit <= 0
+        or input_obj.token_limit <= 0
+        or not _has_non_empty(input_obj.deadline)
+    ):
+        return None
+
+    if (
+        attestation.get("eval_run_id") != input_obj.eval_run_id
+        or attestation.get("budget_policy_ref") != input_obj.budget_policy_ref
+        or attestation.get("provider_cost_limit") != input_obj.provider_cost_limit
+        or attestation.get("token_limit") != input_obj.token_limit
+        or attestation.get("deadline") != input_obj.deadline
+        or attestation.get("human_budget_approved")
+        is not input_obj.human_budget_approved
+    ):
+        return "human_budget_attestation_scope_mismatch"
+
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Evaluator
 # ---------------------------------------------------------------------------
@@ -846,9 +1026,13 @@ class BenchmarkPreflightEvaluator:
             formal_execution_approved=_default_bool(
                 payload.get("formal_execution_approved")
             ),
+            formal_execution_attestation=payload.get(
+                "formal_execution_attestation"
+            ),
             human_budget_approved=_default_bool(
                 payload.get("human_budget_approved")
             ),
+            human_budget_attestation=payload.get("human_budget_attestation"),
             budget_policy_ref=_default_str(payload.get("budget_policy_ref")),
             provider_cost_limit=_default_float(payload.get("provider_cost_limit")),
             token_limit=_default_int(payload.get("token_limit")),
@@ -1156,6 +1340,9 @@ class BenchmarkPreflightEvaluator:
             gaps.append("security_epoch_stale")
         if input_obj.formal_execution_approved is not True:
             gaps.append("formal_execution_not_approved")
+        attestation_gap = _formal_execution_attestation_gap(input_obj)
+        if attestation_gap is not None:
+            gaps.append(attestation_gap)
         if gaps:
             return STATE_BLOCKED, tuple(gaps), ()
         return None
@@ -1170,6 +1357,9 @@ class BenchmarkPreflightEvaluator:
         gaps: List[str] = []
         if input_obj.human_budget_approved is not True:
             gaps.append("human_budget_not_approved")
+        attestation_gap = _human_budget_attestation_gap(input_obj)
+        if attestation_gap is not None:
+            gaps.append(attestation_gap)
         if not _has_non_empty(input_obj.budget_policy_ref):
             gaps.append("budget_policy_ref_missing")
         for p in input_obj.profiles:
@@ -1282,6 +1472,8 @@ __all__ = [
     "PRODUCT_RUNTIME_ATTESTATION_VERSION",
     "FORMAL_CREDENTIAL_ATTESTATION_VERSION",
     "REVIEWER_ATTESTATION_VERSION",
+    "FORMAL_EXECUTION_ATTESTATION_VERSION",
+    "HUMAN_BUDGET_ATTESTATION_VERSION",
     "CANONICAL_PROFILES",
     "STATE_READY",
     "STATE_BLOCKED",
@@ -1300,5 +1492,7 @@ __all__ = [
     "compute_product_runtime_attestation_hash",
     "compute_formal_credential_attestation_hash",
     "compute_reviewer_attestation_hash",
+    "compute_formal_execution_attestation_hash",
+    "compute_human_budget_attestation_hash",
     "validate_gap_code",
 ]
