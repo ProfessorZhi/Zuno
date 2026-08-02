@@ -27,6 +27,14 @@ from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalRuntimeDependencies,
     CanonicalStandardRAGRunner,
 )
+from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
+    AgenticGraphRAGCanonicalAdapter,
+    DeepGraphRAGCanonicalAdapter,
+)
+from tools.evals.zuno.rag_eval.adapters.retrieval import (
+    LocalGraphRAGCanonicalAdapter,
+    StandardRAGCanonicalAdapter,
+)
 from tools.evals.zuno.rag_eval.profile_runners import (
     AgenticGraphRAGProfileRunner,
     BenchmarkProfileRunner,
@@ -116,10 +124,10 @@ class CanonicalProfileRuntimeFactory:
             )
 
         runners = {
-            "standard_rag": CanonicalStandardRAGRunner,
-            "local_graphrag": CanonicalLocalGraphRAGRunner,
-            "deep_graphrag": CanonicalDeepGraphRAGRunner,
-            "agentic_graphrag": CanonicalAgenticGraphRAGRunner,
+            "standard_rag": StandardRAGCanonicalAdapter,
+            "local_graphrag": LocalGraphRAGCanonicalAdapter,
+            "deep_graphrag": DeepGraphRAGCanonicalAdapter,
+            "agentic_graphrag": AgenticGraphRAGCanonicalAdapter,
         }
         cls = runners[profile_name]
         return cls(deps)
