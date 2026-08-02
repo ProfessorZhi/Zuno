@@ -24,6 +24,11 @@ from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalCaseResult,
     CanonicalRuntimeDependencies,
 )
+from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
+from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
+    BindingValidationState,
+    RuntimeEvidenceBindingValidator,
+)
 
 
 class StandardRAGCanonicalAdapter(CanonicalBenchmarkProfileRunner):
@@ -236,6 +241,90 @@ def _normalize_retrieval_payload(
             failure_class="runtime_payload_invalid",
             latency=latency,
             stop_reason="invalid_payload_field_types",
+        )
+
+    binding_payload = payload.get("runtime_evidence_binding")
+    if binding_payload is not None:
+        binding_result = RuntimeEvidenceBindingValidator().validate(binding_payload)
+        if binding_result.state is not BindingValidationState.VALID:
+            end_span({"status": "blocked", "gaps": list(binding_result.gap_codes)})
+            return _build_fail_closed_result(
+                case_input=case_input,
+                profile_name=profile_name,
+                failure_class="runtime_evidence_binding_blocked",
+                latency=latency,
+                answer=raw_answer,
+                retrieved_document_refs=retrieved_docs,
+                retrieved_evidence_refs=evidence_refs,
+                retrieval_rounds=rounds,
+                stop_reason="runtime_blocked",
+                dependency_gaps=binding_result.gap_codes,
+            )
+
+        state, reason = MeasurementTruthGate().evaluate(
+            is_test_double=False,
+            runtime_status="completed",
+            requested_profile=str(binding_payload.get("requested_profile") or profile_name),
+            actual_profile=str(binding_payload.get("actual_profile") or profile_name),
+            snapshot_ref=str(binding_payload.get("corpus_snapshot_ref") or ""),
+            trace_id=str(binding_payload.get("trace_id") or ""),
+            budget_settlement_ref=str(binding_payload.get("budget_settlement_ref") or ""),
+            budget_settlement_valid=True,
+            artifact_receipt_ref=str(binding_payload.get("artifact_receipt_ref") or ""),
+            artifact_receipt_valid=True,
+            run_outcome_ref=str(binding_payload.get("run_outcome_ref") or ""),
+            run_outcome_valid=bool(binding_payload.get("run_outcome_ref")),
+        )
+        end_err = end_span({"status": state.value, "measurement_reason": reason})
+        if end_err is not None:
+            return _build_fail_closed_result(
+                case_input=case_input,
+                profile_name=profile_name,
+                failure_class="trace_delivery_failed",
+                latency=latency,
+                stop_reason="trace_delivery_failed",
+            )
+        if state is MeasurementState.RUNTIME_OBSERVED:
+            return CanonicalCaseResult(
+                eval_run_id=case_input.eval_run_id,
+                case_id=case_input.case_id,
+                profile_name=profile_name,
+                runtime_status="completed",
+                measurement_state=state.value,
+                answer=raw_answer,
+                retrieved_document_refs=retrieved_docs,
+                retrieved_evidence_refs=evidence_refs,
+                citation_refs=evidence_refs,
+                knowledge_snapshot_ref=str(binding_payload.get("corpus_snapshot_ref") or case_input.corpus_snapshot_ref),
+                plan_version_ref=str(binding_payload.get("plan_version_ref") or ""),
+                run_outcome_ref=str(binding_payload.get("run_outcome_ref") or ""),
+                budget_settlement_ref=str(binding_payload.get("budget_settlement_ref") or ""),
+                artifact_receipt_ref=str(binding_payload.get("artifact_receipt_ref") or ""),
+                trace_id=str(binding_payload.get("trace_id") or ""),
+                retrieval_rounds=rounds,
+                latency=latency,
+                token_usage=0,
+                cost=0.0,
+                failure_class="",
+                retry_count=0,
+                standard_floor_preserved=None,
+                is_test_double=False,
+                blocked_reason=reason,
+                dependency_gaps=(),
+                evidence_refs=evidence_refs,
+                retrieval_trace={"measurement_gate": reason},
+            )
+        return _build_fail_closed_result(
+            case_input=case_input,
+            profile_name=profile_name,
+            failure_class="runtime_evidence_binding_blocked",
+            latency=latency,
+            answer=raw_answer,
+            retrieved_document_refs=retrieved_docs,
+            retrieved_evidence_refs=evidence_refs,
+            retrieval_rounds=rounds,
+            stop_reason="runtime_blocked",
+            dependency_gaps=(reason,),
         )
 
     end_err = end_span({"status": "blocked", "rounds": rounds})
