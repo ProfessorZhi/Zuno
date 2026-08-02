@@ -332,7 +332,8 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.dao.agent import AgentDao" in agent
     assert "from zuno.platform.database.dao.dialog import DialogDao" in agent
     assert "from zuno.platform.database.models.user import AdminUser, SystemUser" in agent
-    assert "from zuno.api.dto.chunk import ChunkModel" in history
+    assert "from zuno.api.dto.chunk import ChunkModel" not in history
+    assert "_history_chunk_payload" in history
     assert "from zuno.platform.common.helpers import get_now_beijing_time" in history
     assert "from zuno.platform.common.model_output import strip_model_wrapper_from_user_input" in history
     assert "from zuno.platform.database.dao.history import HistoryDao" in history

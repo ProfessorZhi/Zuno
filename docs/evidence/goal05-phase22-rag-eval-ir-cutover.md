@@ -20,7 +20,7 @@ work_package: P22-T03 / P22-T04
 
 ## Still Open
 
-- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在于 `src/backend/zuno/platform/services/rag/parser.py`、`src/backend/zuno/platform/services/rag/doc_parser/**`、历史服务和若干兼容测试。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在于 `src/backend/zuno/platform/services/rag/parser.py`、`src/backend/zuno/platform/services/rag/doc_parser/**` 和若干兼容测试；history service 已在后续切片改为 canonical dict payload。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

@@ -147,7 +147,7 @@ resolved_this_slice:
     evidence: "tests/api/test_layered_api_boundaries.py"
   - path: "src/backend/zuno/api/services/history.py"
     before: "zuno.database / zuno.schema / zuno.services / zuno.utils aliases"
-    after: "zuno.platform.database / zuno.api.dto / zuno.platform.services / zuno.platform.common canonical imports"
+    after: "zuno.platform.database / zuno.platform.services / zuno.platform.common canonical imports plus canonical dict history RAG payload"
     evidence: "tests/api/test_layered_api_boundaries.py"
   - path: "src/backend/zuno/api/services/llm.py"
     before: "zuno.database / zuno.utils aliases"

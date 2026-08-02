@@ -1,11 +1,11 @@
 import re
+import hashlib
 from typing import List
 from uuid import uuid4
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from zuno.api.services.dialog import DialogService
-from zuno.api.dto.chunk import ChunkModel
 from zuno.platform.common.helpers import get_now_beijing_time
 from zuno.platform.common.model_output import strip_model_wrapper_from_user_input
 from zuno.platform.database.dao.history import HistoryDao
@@ -91,29 +91,33 @@ class HistoryService:
 
     @classmethod
     async def save_es_documents(cls, index_name, content):
-        chunk = ChunkModel(
-            chunk_id=uuid4().hex,
-            content=content,
-            file_id="history_rag",
-            knowledge_id=index_name,
-            summary="history_rag",
-            update_time=get_now_beijing_time(),
-            file_name="history_rag",
-        )
+        chunk = cls._history_chunk_payload(collection_name=index_name, content=content)
         await es_client.index_documents(index_name, [chunk])
 
     @classmethod
     async def save_milvus_documents(cls, collection_name, content):
-        chunk = ChunkModel(
-            chunk_id=uuid4().hex,
-            content=content,
-            file_id="history_rag",
-            knowledge_id=collection_name,
-            update_time=get_now_beijing_time(),
-            summary="history_rag",
-            file_name="history_rag",
-        )
+        chunk = cls._history_chunk_payload(collection_name=collection_name, content=content)
         await milvus_client.insert(collection_name, [chunk])
+
+    @staticmethod
+    def _history_chunk_payload(*, collection_name: str, content: str) -> dict:
+        chunk_id = uuid4().hex
+        document_hash = hashlib.sha1(f"{collection_name}|history_rag|history_rag".encode("utf-8")).hexdigest()
+        return {
+            "chunk_id": chunk_id,
+            "content": content,
+            "file_id": "history_rag",
+            "file_name": "history_rag",
+            "knowledge_id": collection_name,
+            "update_time": get_now_beijing_time(),
+            "summary": "history_rag",
+            "modality": "text",
+            "source_url": "",
+            "source_chunk_id": chunk_id,
+            "document_hash": document_hash,
+            "chunk_hash": hashlib.sha1(f"{document_hash}|{chunk_id}|{content}".encode("utf-8")).hexdigest(),
+            "metadata": {"source": "history_rag"},
+        }
 
     @classmethod
     async def save_chat_history(cls, role, content, events, dialog_id, memory_enable: bool = False):
