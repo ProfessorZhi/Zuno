@@ -41,7 +41,9 @@ from tools.evals.zuno.rag_eval.adapters.retrieval import StandardRAGCanonicalAda
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
 from tools.evals.zuno.rag_eval.benchmark_preflight import (
     BenchmarkPreflightEvaluator,
+    REVIEWER_ATTESTATION_VERSION,
     compute_product_runtime_attestation_hash,
+    compute_reviewer_attestation_hash,
 )
 from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
 from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
@@ -185,6 +187,31 @@ def _receipt(receipt_type: str, ref: str) -> dict[str, str]:
         "snapshot_ref": "snapshot_v1",
         "payload_hash": _hash(ref),
     }
+
+
+def _reviewer_attestation(
+    *,
+    eval_run_id: str,
+    case_set_ref: str,
+    dataset_version: str,
+    dataset_hash: str,
+    candidate_count: int,
+    reviewer_status: str,
+    benchmark_eligible: bool,
+) -> dict[str, Any]:
+    attestation = {
+        "attestation_ref": f"attestation://phase22/reviewer/{eval_run_id}",
+        "eval_run_id": eval_run_id,
+        "case_set_ref": case_set_ref,
+        "dataset_version": dataset_version,
+        "dataset_hash": dataset_hash,
+        "candidate_count": candidate_count,
+        "reviewer_status": reviewer_status,
+        "benchmark_eligible": benchmark_eligible,
+        "reviewer_attestation_contract_version": REVIEWER_ATTESTATION_VERSION,
+    }
+    attestation["attestation_hash"] = compute_reviewer_attestation_hash(attestation)
+    return attestation
 
 
 def _standard_runtime_evidence_binding(**overrides: Any) -> dict[str, Any]:
@@ -496,6 +523,15 @@ def test_06c_canonical_benchmark_preserves_runtime_observed_profile_state(
         "candidate_count": 1,
         "reviewer_status": "approved",
         "benchmark_eligible": True,
+        "reviewer_attestation": _reviewer_attestation(
+            eval_run_id="canonical_preflight",
+            case_set_ref="case-set-runtime-observed",
+            dataset_version="dataset-v1",
+            dataset_hash="0" * 64,
+            candidate_count=1,
+            reviewer_status="approved",
+            benchmark_eligible=True,
+        ),
         "license_status": "verified",
         "integrity_status": "verified",
         "runtime_request_schema_gold_free": True,
@@ -908,6 +944,29 @@ def test_21c_formal_credential_bools_without_attestation_cannot_reach_measured()
     )
     assert state == MeasurementState.RUNTIME_OBSERVED
     assert "formal_credential_attestation_missing" in reason
+
+
+def test_21d_reviewer_bools_without_attestation_cannot_reach_measured() -> None:
+    gate = MeasurementTruthGate()
+    state, reason = gate.evaluate(
+        is_test_double=False,
+        runtime_status="completed",
+        requested_profile="standard_rag",
+        actual_profile="standard_rag",
+        snapshot_ref="snap_v1",
+        trace_id="trace_001",
+        budget_settlement_ref="budget_001",
+        budget_settlement_valid=True,
+        artifact_receipt_ref="art_001",
+        artifact_receipt_valid=True,
+        reviewer_status="approved",
+        benchmark_eligible=True,
+        has_formal_credentials=True,
+        formal_execution_requested=True,
+        formal_credential_attested=True,
+    )
+    assert state == MeasurementState.RUNTIME_OBSERVED
+    assert "reviewer_attestation_missing" in reason
 
 
 def test_22_fake_receipt_strings_cannot_reach_measured() -> None:

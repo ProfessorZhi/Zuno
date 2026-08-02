@@ -100,6 +100,22 @@ def _valid_formal_credential_attestation() -> Dict[str, Any]:
     return attestation
 
 
+def _valid_reviewer_attestation() -> Dict[str, Any]:
+    attestation = {
+        "attestation_ref": "attestation://phase22/reviewer/eval-run-2026-08-01",
+        "eval_run_id": "eval-run-2026-08-01",
+        "case_set_ref": "case-set-2026-08",
+        "dataset_version": "dataset-v1",
+        "dataset_hash": _zero_filled_sha256(),
+        "candidate_count": 12,
+        "reviewer_status": "approved",
+        "benchmark_eligible": True,
+        "reviewer_attestation_contract_version": "phase22-reviewer-attestation.v1",
+    }
+    attestation["attestation_hash"] = _attestation_hash(attestation)
+    return attestation
+
+
 def _valid_profile(name: str) -> Dict[str, Any]:
     return {
         "profile_name": name,
@@ -133,6 +149,7 @@ def _valid_payload(profiles: List[Dict[str, Any]] | None = None) -> Dict[str, An
         "candidate_count": 12,
         "reviewer_status": "approved",
         "benchmark_eligible": True,
+        "reviewer_attestation": _valid_reviewer_attestation(),
         "license_status": "verified",
         "integrity_status": "verified",
         "runtime_request_schema_gold_free": True,
@@ -174,7 +191,7 @@ class ReadyContractTests(unittest.TestCase):
         for pr in report.profile_results:
             self.assertEqual(pr.state, STATE_READY)
             self.assertEqual(pr.gap_codes, ())
-        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v6")
+        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v7")
         self.assertEqual(len(report.input_fingerprint), 64)
 
     def test_02_profile_input_order_does_not_change_state(self) -> None:
@@ -364,6 +381,29 @@ class GovernanceGateTests(unittest.TestCase):
         report = _evaluate(payload)
         self.assertEqual(report.state, STATE_BLOCKED)
         self.assertIn("benchmark_not_eligible", report.gap_codes)
+
+    def test_20a_reviewer_approved_requires_valid_attestation_contract(self) -> None:
+        payload = _valid_payload()
+        del payload["reviewer_attestation"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("reviewer_attestation_missing", report.gap_codes)
+
+    def test_20b_reviewer_attestation_hash_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        payload["reviewer_attestation"]["attestation_hash"] = "1" * 64
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("reviewer_attestation_hash_mismatch", report.gap_codes)
+
+    def test_20c_reviewer_attestation_scope_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        attestation = payload["reviewer_attestation"]
+        attestation["case_set_ref"] = "case-set-other"
+        attestation["attestation_hash"] = _attestation_hash(attestation)
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("reviewer_attestation_scope_mismatch", report.gap_codes)
 
     def test_21_license_pending(self) -> None:
         payload = _valid_payload()
