@@ -39,7 +39,17 @@ def validate_canonical_runtime_config(
     canonical_deps: Any | None = None,
     profile_runtime_factory: Any | None = None,
 ) -> None:
-    if runtime_mode == "canonical":
+    if runtime_mode != "canonical":
+        return
+    if profile_runtime_factory is not None:
+        if hasattr(profile_runtime_factory, "create_runner"):
+            return
+        raise CanonicalRuntimeUnavailableError(
+            "canonical benchmark execution adapters are not implemented"
+        )
+    if canonical_deps is None or (
+        hasattr(canonical_deps, "is_empty") and canonical_deps.is_empty()
+    ):
         raise CanonicalRuntimeUnavailableError(
             "canonical benchmark execution adapters are not implemented"
         )
@@ -1801,6 +1811,115 @@ def _blocked_metrics(
     return metrics
 
 
+def _canonical_profile_blocked_metrics(
+    *,
+    cases: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    runtime_mode: str,
+    reproduce_argv: list[str],
+    reproduce_command: str,
+    canonical_deps: Any | None,
+    profile_runtime_factory: Any | None,
+    chunk_size_override: int | None,
+    overlap_override: int | None,
+    rerank_score_threshold_override: float | None,
+) -> dict[str, Any]:
+    from tools.evals.zuno.rag_eval.canonical_profile_runners import CanonicalCaseInput
+    from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
+
+    factory = profile_runtime_factory or CanonicalProfileRuntimeFactory(
+        runtime_mode="canonical",
+        canonical_deps=canonical_deps,
+    )
+    profiles: dict[str, Any] = {}
+    per_profile_results: dict[str, list[dict[str, Any]]] = {}
+    blocked_reasons: list[str] = []
+
+    for profile_name in REQUIRED_MEASURED_PROFILES:
+        runner = factory.create_runner(profile_name)
+        results = []
+        for row in cases:
+            case_input = CanonicalCaseInput(
+                eval_run_id="canonical_preflight",
+                case_id=str(row.get("id") or row.get("case_id") or ""),
+                profile_name=profile_name,
+                question=str(row.get("question") or row.get("query") or ""),
+                question_type=str(row.get("question_type") or "unknown"),
+                corpus_snapshot_ref=str(manifest.get("snapshot_id") or manifest.get("corpus_snapshot_ref") or "snapshot_v1"),
+                gold_document_refs=tuple(str(item) for item in (row.get("expected_doc_ids") or [])),
+                gold_evidence_refs=tuple(str(item) for item in (row.get("gold_evidence") or [])),
+            )
+            result = runner.run_canonical_case(case_input)
+            result_payload = asdict(result)
+            results.append(result_payload)
+            if result.blocked_reason and result.blocked_reason not in blocked_reasons:
+                blocked_reasons.append(result.blocked_reason)
+        per_profile_results[profile_name] = results
+        profiles[profile_name] = {
+            "measured": False,
+            "runtime_status": "blocked",
+            "measurement_state": "BLOCKED",
+            "is_test_double": False,
+            "aggregate": {},
+            "blocked_reasons": sorted({str(item.get("blocked_reason")) for item in results if item.get("blocked_reason")}),
+            "dependency_gaps": sorted({
+                str(gap)
+                for item in results
+                for gap in (item.get("dependency_gaps") or [])
+            }),
+        }
+
+    profile_case_counts = {profile_name: len(results) for profile_name, results in per_profile_results.items()}
+    profile_completeness = {
+        "complete": False,
+        "expected_case_count": len(cases),
+        "profile_case_counts": profile_case_counts,
+        "blocked_reason": "canonical_profile_execution_blocked:" + ",".join(blocked_reasons),
+    }
+    metrics = {
+        "status": "blocked",
+        "measurement_status": "blocked_not_measured",
+        "metrics_source": "canonical_profile_blocked_preflight",
+        "case_set": {
+            "selected_case_count": len(cases),
+            "measured_case_count": 0,
+            "common_case_ids": [str(row.get("id") or row.get("case_id") or "") for row in cases],
+            "profile_case_counts": profile_case_counts,
+            "question_type_counts": _question_type_counts(cases),
+        },
+        "corpus": manifest,
+        "runtime_config": {
+            "runtime_mode": runtime_mode,
+            "is_test_double": False,
+            "reproduce_argv": reproduce_argv,
+            "reproduce_command": reproduce_command,
+            "chunk_size_override": chunk_size_override,
+            "overlap_override": overlap_override,
+            "rerank_score_threshold_override": rerank_score_threshold_override,
+            "citation_chunking": dict(ENTERPRISE_RAG_CITATION_CHUNKING),
+        },
+        "profiles": profiles,
+        "profile_results": per_profile_results,
+        "profile_completeness": profile_completeness,
+        "deltas": {},
+        "question_type_metrics": {},
+        "agentic_metrics": {},
+        "evidence_conversion_diagnostics": {
+            "measurement_status": "blocked_not_measured",
+            "items": [],
+            "bucket_items": [],
+            "unavailable_items": [],
+        },
+        "gated_agentic_simulation": {},
+        "hard_negative_coverage": _hard_negative_coverage(manifest),
+        "cost_latency": {},
+        "failure_count": 0,
+        "failure_tag_limitations": _failure_tag_limitations(),
+    }
+    metrics["release_gate"] = _build_release_gate(metrics)
+    return metrics
+
+
 def _question_type_counts(rows: Iterable[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for row in rows:
@@ -2026,6 +2145,49 @@ async def run_enterprise_rag_paired_benchmark(
                 git_info=run_git_info,
             )
             return {"status": "prepared", "metrics_source": "prepared_not_measured", "output_root": str(output_root)}
+
+        if runtime_mode == "canonical":
+            metrics = _canonical_profile_blocked_metrics(
+                cases=_read_jsonl(dataset_path),
+                manifest=manifest,
+                runtime_mode=runtime_mode,
+                reproduce_argv=reproduce_argv,
+                reproduce_command=reproduce_cmd,
+                canonical_deps=canonical_deps,
+                profile_runtime_factory=profile_runtime_factory,
+                chunk_size_override=chunk_size_override,
+                overlap_override=overlap_override,
+                rerank_score_threshold_override=rerank_score_threshold_override,
+            )
+            _write_atomic(output_root / "metrics.json", json.dumps(metrics, ensure_ascii=False, indent=2))
+            _write_failure_cases(
+                output_root / "failure_cases.md",
+                [],
+                diagnostics=metrics.get("evidence_conversion_diagnostics"),
+            )
+            _write_report(output_root / "report.md", metrics)
+
+            completed_at = time.time()
+            _build_and_write_benchmark_manifest(
+                output_root=output_root,
+                questions_file=questions_file,
+                status="INCOMPARABLE",
+                measurement_status="blocked_not_measured",
+                created_at=created_at,
+                completed_at=completed_at,
+                arguments=arguments,
+                dataset_path=dataset_path,
+                corpus_manifest_path=corpus_manifest_path,
+                profile_completeness=metrics.get("profile_completeness"),
+                metrics=metrics,
+                incomparable_reason=(metrics.get("profile_completeness") or {}).get("blocked_reason"),
+                git_info=run_git_info,
+            )
+            return {
+                "status": "blocked",
+                "metrics_source": "canonical_profile_blocked_preflight",
+                "output_root": str(output_root),
+            }
 
         stackless_root = output_root / "stackless_profiles"
         try:

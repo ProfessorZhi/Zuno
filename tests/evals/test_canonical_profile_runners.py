@@ -3,10 +3,10 @@
 AG-PR55-GEMINI-3-6-FLASH-TRUE-PREMERGE-CLOSURE
 
 True pre-merge closure tests:
-- Canonical mode unconditionally fails closed with CanonicalRuntimeUnavailableError
-- Fail-closed occurs BEFORE directory creation, file reading, dataset prep, or stackless runner invocation
-- Full dependency bundle, empty dependency bundle, or valid factory cannot bypass canonical fail-closed guard
-- No manifest, metrics, or false is_test_double=False output is generated in canonical mode
+- Canonical mode without an explicit dependency bundle or profile factory fails closed.
+- Canonical mode with a valid bundle/factory enters canonical profile preflight.
+- Canonical mode must not dispatch to stackless contract-smoke test doubles.
+- Generated canonical output remains BLOCKED / not measured until formal execution adapters and receipts exist.
 - AST test: _render_reproduce_command has exactly 1 FunctionDef in run_enterprise_rag_paired_benchmark.py
 - Contract-smoke and prepare-only modes preserve their existing behavior
 """
@@ -101,7 +101,7 @@ def _sample_input(profile_name: str = "standard_rag") -> CanonicalCaseInput:
 
 
 # ---------------------------------------------------------------------------
-# Section 1: Canonical Mode Unconditional Fail-Closed Tests (Section 三)
+# Section 1: Canonical Mode Configuration Gate Tests (Section 三)
 # ---------------------------------------------------------------------------
 
 def test_01_canonical_mode_without_deps_fails_closed(tmp_path: Path) -> None:
@@ -138,21 +138,12 @@ def test_02_canonical_mode_with_empty_deps_fails_closed(tmp_path: Path) -> None:
     assert out_dir.exists() is False
 
 
-def test_03_canonical_mode_with_full_deps_still_fails_closed(tmp_path: Path) -> None:
-    """canonical mode + FULL dependency bundle STILL fails closed (adapters not implemented)."""
-    out_dir = tmp_path / "canonical_out_03"
-    q_file = tmp_path / "non_existent_q.jsonl"
-    full_deps = _full_deps()
-    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
-        asyncio.run(
-            run_enterprise_rag_paired_benchmark(
-                questions_file=q_file,
-                output_root=out_dir,
-                runtime_mode="canonical",
-                canonical_deps=full_deps,
-            )
-        )
-    assert out_dir.exists() is False
+def test_03_canonical_config_with_full_deps_is_admitted_to_profile_preflight() -> None:
+    """canonical mode + full dependency bundle may enter profile preflight."""
+    validate_canonical_runtime_config(
+        runtime_mode="canonical",
+        canonical_deps=_full_deps(),
+    )
 
 
 def test_04_canonical_mode_with_dummy_factory_fails_closed(tmp_path: Path) -> None:
@@ -171,28 +162,25 @@ def test_04_canonical_mode_with_dummy_factory_fails_closed(tmp_path: Path) -> No
     assert out_dir.exists() is False
 
 
-def test_05_canonical_mode_with_valid_factory_fails_closed(tmp_path: Path) -> None:
-    """canonical mode + valid CanonicalProfileRuntimeFactory STILL fails closed."""
-    out_dir = tmp_path / "canonical_out_05"
-    q_file = tmp_path / "non_existent_q.jsonl"
+def test_05_canonical_config_with_valid_factory_is_admitted_to_profile_preflight() -> None:
+    """canonical mode + valid CanonicalProfileRuntimeFactory may enter profile preflight."""
     factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=_full_deps())
-    with pytest.raises(CanonicalRuntimeUnavailableError, match="canonical benchmark execution adapters are not implemented"):
-        asyncio.run(
-            run_enterprise_rag_paired_benchmark(
-                questions_file=q_file,
-                output_root=out_dir,
-                runtime_mode="canonical",
-                profile_runtime_factory=factory,
-            )
-        )
-    assert out_dir.exists() is False
+    validate_canonical_runtime_config(
+        runtime_mode="canonical",
+        profile_runtime_factory=factory,
+    )
 
 
-def test_06_canonical_fails_before_questions_file_read_or_stackless_call(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """canonical mode fails BEFORE reading questions_file and stackless runner call count is 0."""
+def test_06_canonical_with_deps_writes_blocked_manifest_without_stackless_runner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """canonical mode with deps may prepare evidence but must not call stackless test-double runners."""
     out_dir = tmp_path / "canonical_out_06"
     q_file = tmp_path / "questions_06.jsonl"
-    q_file.write_text('{"id":"q1","question":"test"}', encoding="utf-8")
+    q_file.write_text(
+        '{"id":"q1","question":"test","expected_answer":"answer","expected_doc_ids":["doc_1"],'
+        '"question_type":"simple_retrieval","complexity":"low","reviewer_status":"approved",'
+        '"provenance":{"dataset":"unit"}}\n',
+        encoding="utf-8",
+    )
 
     stackless_calls = 0
     async def mock_stackless(*args: Any, **kwargs: Any) -> dict[str, Any]:
@@ -205,19 +193,81 @@ def test_06_canonical_fails_before_questions_file_read_or_stackless_call(tmp_pat
         mock_stackless,
     )
 
-    with pytest.raises(CanonicalRuntimeUnavailableError):
-        asyncio.run(
-            run_enterprise_rag_paired_benchmark(
-                questions_file=q_file,
-                output_root=out_dir,
-                runtime_mode="canonical",
-                canonical_deps=_full_deps(),
-            )
+    result = asyncio.run(
+        run_enterprise_rag_paired_benchmark(
+            questions_file=q_file,
+            output_root=out_dir,
+            runtime_mode="canonical",
+            canonical_deps=_full_deps(),
+            sample_size=1,
+            allow_blocked=True,
         )
+    )
 
     assert stackless_calls == 0
-    assert (out_dir / "benchmark_manifest.json").exists() is False
-    assert (out_dir / "metrics.json").exists() is False
+    assert result["status"] == "blocked"
+    assert (out_dir / "benchmark_manifest.json").exists() is True
+    assert (out_dir / "metrics.json").exists() is True
+
+
+def test_06b_canonical_ready_dataset_uses_profile_factory_not_stackless(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """canonical execution dispatch must use the canonical profile factory, not stackless test doubles."""
+    out_dir = tmp_path / "canonical_out_06b"
+    q_file = tmp_path / "questions_06b.jsonl"
+    q_file.write_text(
+        '{"id":"q1","question":"test","expected_answer":"answer","expected_doc_ids":["doc_1"],'
+        '"question_type":"simple_retrieval","complexity":"low","reviewer_status":"approved",'
+        '"provenance":{"dataset":"unit"}}\n',
+        encoding="utf-8",
+    )
+
+    def fake_prepare_public_enterprise_eval(**kwargs: Any) -> dict[str, Any]:
+        output_dir = Path(kwargs["output_dir"])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        dataset_path = output_dir / "enterprise_eval.jsonl"
+        dataset_path.write_text(
+            '{"id":"q1","question":"test","expected_answer":"answer","expected_doc_ids":["doc_1"],'
+            '"question_type":"simple_retrieval","complexity":"low"}\n',
+            encoding="utf-8",
+        )
+        manifest_path = output_dir / "manifest.json"
+        manifest_path.write_text(
+            '{"case_count":1,"external_documents_required":false,"documents":[]}',
+            encoding="utf-8",
+        )
+        return {
+            "dataset_path": str(dataset_path),
+            "manifest_path": str(manifest_path),
+            "case_count": 1,
+            "external_documents_required": False,
+        }
+
+    async def fail_if_stackless(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        raise AssertionError("canonical mode must not call stackless local eval")
+
+    monkeypatch.setattr(
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark.prepare_public_enterprise_eval",
+        fake_prepare_public_enterprise_eval,
+    )
+    monkeypatch.setattr(
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark.run_stackless_local_eval",
+        fail_if_stackless,
+    )
+
+    result = asyncio.run(
+        run_enterprise_rag_paired_benchmark(
+            questions_file=q_file,
+            output_root=out_dir,
+            runtime_mode="canonical",
+            canonical_deps=_full_deps(),
+            sample_size=1,
+            allow_blocked=True,
+        )
+    )
+
+    assert result["status"] == "blocked"
+    manifest = (out_dir / "benchmark_manifest.json").read_text(encoding="utf-8")
+    assert "canonical_standard_execution_adapter_unavailable" in manifest
 
 
 # ---------------------------------------------------------------------------
