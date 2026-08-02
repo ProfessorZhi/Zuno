@@ -4,7 +4,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src" / "backend"))
 
-from zuno.evals.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles
+from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles
 
 
 def test_public_eval_profiles_expose_phase5_compare_surface():

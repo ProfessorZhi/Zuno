@@ -5,7 +5,7 @@ import pytest
 
 
 def test_stackless_local_eval_exposes_project_named_payload_loader():
-    from zuno.evals.rag_eval.run_stackless_local_eval import (
+    from tools.evals.zuno.rag_eval.run_stackless_local_eval import (
         _load_graph_project_payload,
     )
 
