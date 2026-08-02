@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import time
+from mimetypes import guess_type
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
@@ -25,13 +26,13 @@ from tools.evals.zuno.rag_eval.paths import default_runs_root
 from tools.evals.zuno.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
 from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
 from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
-from zuno.api.dto.chunk import ChunkModel
+from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+from zuno.knowledge.ingestion.vector_payload import canonical_ir_to_vector_payloads
 from zuno.platform.services.graphrag.extractor import GraphExtractor
 from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor
 from zuno.platform.services.graphrag.project.loader import GraphRAGProjectLoader
 from zuno.platform.services.graphrag.retriever import GraphRetriever
 from zuno.platform.services.rag.handler import RagHandler
-from zuno.platform.services.rag.parser import doc_parser
 from zuno.platform.services.rag.vector_db import milvus_client
 from zuno.platform.services.runtime_registry import clear_local_runtime_settings, register_local_runtime_settings
 from zuno.platform.settings import initialize_app_settings, resolve_app_config_path
@@ -147,11 +148,11 @@ class _LocalGraphClient:
 
 
 class _LocalChunkStore:
-    def __init__(self, chunks: list[ChunkModel]):
-        self.by_chunk_id = {str(chunk.chunk_id): chunk.to_dict() for chunk in chunks}
+    def __init__(self, chunks: list[dict[str, Any]]):
+        self.by_chunk_id = {str(chunk.get("chunk_id") or ""): dict(chunk) for chunk in chunks}
         self.by_file_id: dict[str, list[dict[str, Any]]] = {}
         for chunk in chunks:
-            payload = chunk.to_dict()
+            payload = dict(chunk)
             file_id = str(payload.get("file_id") or "")
             if not file_id:
                 continue
@@ -186,26 +187,40 @@ async def _load_chunks(
     knowledge_id: str,
     knowledge_config: dict[str, Any],
     dataset_path: Path | None = None,
-) -> list[ChunkModel]:
+) -> list[dict[str, Any]]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if dataset_path is not None:
         manifest = _filter_manifest_by_dataset(manifest, dataset_path)
-    chunks: list[ChunkModel] = []
+    parser = ParseGateway(
+        adapter_boundary={
+            "adapter": "tools.evals.rag_eval.stackless_local.canonical_handoff",
+            "consumer": "stackless_local_eval",
+            "projection": "canonical_index_handoff_vector_documents",
+        }
+    )
+    chunks: list[dict[str, Any]] = []
     for item in manifest.get("files", []):
         prepared_path = _resolve_prepared_path(manifest_path, item)
-        file_chunks = await doc_parser.parse_doc_into_chunks(
-            _synthetic_file_id(prepared_path),
-            str(prepared_path),
-            knowledge_id,
-            source_url=f"local://{prepared_path.name}",
-            knowledge_config=knowledge_config,
+        result = await parser.parse(
+            ParseDocumentRequest(
+                document_id=_synthetic_file_id(prepared_path),
+                workspace_id=knowledge_id,
+                source_uri=f"file://{prepared_path}",
+                mime_type=guess_type(str(prepared_path))[0] or "",
+                source_object_ref=f"local://{prepared_path.name}",
+                parser_config=knowledge_config,
+            )
         )
+        if result.status != "succeeded" or result.document is None:
+            reason = result.failure.reason if result.failure else result.status
+            raise RuntimeError(f"canonical parse failed for {prepared_path.name}: {reason}")
+        file_chunks = canonical_ir_to_vector_payloads(result.document, knowledge_id=knowledge_id)
         chunks.extend(file_chunks)
     return chunks
 
 
 async def _build_local_graph_retriever(
-    chunks: list[ChunkModel],
+    chunks: list[dict[str, Any]],
     *,
     domain_pack_id: str | None = None,
     graphrag_project_id: str | None = None,
@@ -215,13 +230,14 @@ async def _build_local_graph_retriever(
     extractor = StructuredGraphExtractor() if project_payload else GraphExtractor()
     extracted_documents: list[dict[str, Any]] = []
     for chunk in chunks:
+        knowledge_id = str(chunk.get("knowledge_id") or "")
         if project_payload:
-            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id, project_payload=project_payload)
+            extraction = await extractor.extract_from_chunk(chunk, knowledge_id, project_payload=project_payload)
         else:
-            extraction = await extractor.extract_from_chunk(chunk, chunk.knowledge_id)
+            extraction = await extractor.extract_from_chunk(chunk, knowledge_id)
         extracted_documents.append(
             {
-                "chunk": chunk.to_dict(),
+                "chunk": dict(chunk),
                 "entities": list(extraction.get("entities") or []),
                 "relations": list(extraction.get("relations") or []),
             }

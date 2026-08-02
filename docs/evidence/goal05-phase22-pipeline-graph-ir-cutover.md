@@ -8,7 +8,7 @@ work_package: P22-T03 / P22-T04
 
 本证据记录 PHASE22 cleanup 的一个窄切片：Knowledge pipeline 的 `run_graph_stage` 不再调用 `_parse_chunks` / `parse_file_into_chunk_model_projection`。Graph stage 现在直接通过 `ParseGateway` 生成 `CanonicalDocumentIR`，再使用 `build_index_handoff_payload(document).graphrag_documents` 交给 Graph extractor / writer。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，也不声明全仓 `ChunkModel` 已退休。`run_rag_index_stage` 仍依赖 `_parse_chunks` / `versioned.adapter.phase22.chunk_model_projection`，因为 RAG / Milvus / optional ES indexing consumer 仍接收 `ChunkModel`。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，也不声明全仓 `ChunkModel` 已退休。2026-08-02 后续切片已把 `run_rag_index_stage`、RAG rebuild script 与 fixed/local eval 入口继续推进到 Canonical IR / canonical vector payload；旧 RAG doc_parser / ChunkModel DTO 仅作为兼容残留。
 
 ## Implemented
 
@@ -17,13 +17,11 @@ work_package: P22-T03 / P22-T04
 - Graph extractor 已接收 dict payload；`source_chunk_id` delete 和 project payload 传递保持不变。
 - `tests/storage/test_pipeline.py::test_pipeline_graph_stage_uses_canonical_handoff_without_chunk_projection` 用失败替身证明 graph stage 不调用 `parse_file_into_chunk_model_projection`。
 - `tests/storage/test_pipeline.py::test_pipeline_graph_stage_passes_project_payload_to_extractor` 覆盖 canonical dict payload 仍传递 project payload。
-- `tests/api/test_layered_api_boundaries.py::test_knowledge_pipeline_parse_stage_uses_canonical_ir_before_chunk_projection` 记录默认边界：parse / graph 已 Canonical IR，RAG projection 仍开放。
+- `tests/api/test_layered_api_boundaries.py::test_knowledge_pipeline_parse_stage_uses_canonical_ir_before_chunk_projection` 记录默认边界：parse / graph / rag 已 Canonical IR 或 canonical handoff。
 
 ## Still Open
 
-- `run_rag_index_stage` 仍调用 `_parse_chunks` 并把 ChunkModel 交给 `RagHandler.index_milvus_documents` / optional ES indexing。
-- `src/backend/zuno/platform/services/rag/es_client.py` 与部分 RAG doc parser 仍直接依赖 `ChunkModel`。
-- `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py` 仍存在，直到 Knowledge pipeline RAG indexing consumer 退休 `ChunkModel`。
+- 旧 RAG doc parser 仍直接依赖 `ChunkModel`，但不再由 Knowledge pipeline、RAG rebuild script 或 fixed/local eval 默认入口调用。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
 

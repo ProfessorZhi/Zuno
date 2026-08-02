@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -22,7 +23,6 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
-from zuno.api.dto.chunk import ChunkModel
 from zuno.platform.common.helpers import get_provider_from_model
 from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.services.rag.handler import RagHandler
@@ -335,8 +335,8 @@ def build_gold_doc_ids(question_row: dict[str, Any]) -> list[str]:
     return gold_ids
 
 
-def build_chunks_from_corpus(*, corpus_rows: list[dict[str, Any]], knowledge_id: str) -> list[ChunkModel]:
-    chunks: list[ChunkModel] = []
+def build_chunks_from_corpus(*, corpus_rows: list[dict[str, Any]], knowledge_id: str) -> list[dict[str, Any]]:
+    chunks: list[dict[str, Any]] = []
     seen_doc_ids: set[str] = set()
     for index, row in enumerate(corpus_rows):
         doc_id = str(row.get("doc_id") or row.get("title") or f"doc-{index}")
@@ -347,18 +347,25 @@ def build_chunks_from_corpus(*, corpus_rows: list[dict[str, Any]], knowledge_id:
         if doc_id in seen_doc_ids:
             continue
         seen_doc_ids.add(doc_id)
+        source_url = f"multihop://{row.get('dataset') or 'dataset'}/{doc_id}"
+        document_hash = hashlib.sha1(f"{knowledge_id}|{doc_id}|{title}|{source_url}".encode("utf-8")).hexdigest()
+        chunk_id = f"{doc_id}::0"
         chunks.append(
-            ChunkModel(
-                chunk_id=f"{doc_id}::0",
-                content=text,
-                file_id=doc_id,
-                file_name=title,
-                update_time=str(row.get("metadata", {}).get("update_time") or ""),
-                knowledge_id=knowledge_id,
-                summary=title,
-                modality="text",
-                source_url=f"multihop://{row.get('dataset') or 'dataset'}/{doc_id}",
-            )
+            {
+                "chunk_id": chunk_id,
+                "content": text,
+                "file_id": doc_id,
+                "file_name": title,
+                "update_time": str(row.get("metadata", {}).get("update_time") or ""),
+                "knowledge_id": knowledge_id,
+                "summary": title,
+                "modality": "text",
+                "source_url": source_url,
+                "source_chunk_id": chunk_id,
+                "document_hash": document_hash,
+                "chunk_hash": hashlib.sha1(f"{document_hash}|{chunk_id}|{text}".encode("utf-8")).hexdigest(),
+                "metadata": dict(row.get("metadata") or {}),
+            }
         )
     return chunks
 

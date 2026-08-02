@@ -1,6 +1,7 @@
 import asyncio
 import os
 from collections import defaultdict
+from mimetypes import guess_type
 from urllib.parse import urlparse
 
 from sqlmodel import select
@@ -12,6 +13,8 @@ from zuno.platform.services.rag.vector_db import milvus_client
 from zuno.platform.services.storage import storage_client
 from zuno.platform.settings import initialize_app_settings
 from zuno.platform.common.file_utils import get_object_key_from_public_url, get_save_tempfile
+from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
+from zuno.knowledge.ingestion.vector_payload import canonical_ir_to_vector_payloads
 
 
 def iter_successful_knowledge_files():
@@ -33,9 +36,13 @@ def download_to_local_path(oss_url: str, file_name: str) -> tuple[str, bool]:
 
 async def rebuild_indexes():
     await initialize_app_settings(os.getenv("ZUNO_CONFIG") or os.getenv("AGENTCHAT_CONFIG") or "/app/zuno/config.yaml")
-    from zuno.platform.services.rag.parser import DocParser
-
-    parser = DocParser()
+    parser = ParseGateway(
+        adapter_boundary={
+            "adapter": "tools.scripts.rebuild_rag_indexes.canonical_handoff",
+            "consumer": "rag_rebuild_index_script",
+            "projection": "canonical_index_handoff_vector_documents",
+        }
+    )
     files = iter_successful_knowledge_files()
     if not files:
         print("No successful knowledge files found.")
@@ -62,11 +69,20 @@ async def rebuild_indexes():
             local_path = ""
             try:
                 local_path, cleanup = download_to_local_path(knowledge_file.oss_url, knowledge_file.file_name)
-                chunks = await parser.parse_doc_into_chunks(
-                    knowledge_file.id,
-                    local_path,
-                    knowledge_id,
+                result = await parser.parse(
+                    ParseDocumentRequest(
+                        document_id=knowledge_file.id,
+                        workspace_id=str(getattr(knowledge_file, "workspace_id", None) or knowledge_id),
+                        source_uri=f"file://{local_path}",
+                        mime_type=getattr(knowledge_file, "mime_type", None) or guess_type(local_path)[0] or "",
+                        source_object_ref=getattr(knowledge_file, "object_key", None) or knowledge_file.oss_url or "",
+                        parser_config={},
+                    )
                 )
+                if result.status != "succeeded" or result.document is None:
+                    reason = result.failure.reason if result.failure else result.status
+                    raise RuntimeError(f"canonical parse failed for {knowledge_file.file_name}: {reason}")
+                chunks = canonical_ir_to_vector_payloads(result.document, knowledge_id=knowledge_id)
                 await RagHandler.index_milvus_documents(knowledge_id, chunks)
                 rebuilt_files += 1
                 total_chunks += len(chunks)

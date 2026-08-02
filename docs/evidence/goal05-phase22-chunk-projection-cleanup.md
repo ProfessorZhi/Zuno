@@ -9,26 +9,24 @@ work_package: P22-T03 / P22-T04
 
 ## Scope
 
-本证据记录 PHASE22 cleanup 的一个窄切片：把生产源码中的 `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 退役，迁入明确的 `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py`，并把 workspace attachment 与 knowledge pipeline 的默认调用入口从 `parse_file_into_legacy_chunks` 改为 `parse_file_into_chunk_model_projection`。2026-08-02 后续切片已把 workspace attachment、Knowledge pipeline parse/rag/graph stages 再推进为直接消费 Canonical IR / canonical handoff，详见 `docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-parse-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-graph-ir-cutover.md` 与 `docs/evidence/goal05-phase22-pipeline-rag-ir-cutover.md`。
+本证据记录 PHASE22 cleanup 的历史窄切片：生产源码中的 `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 已退役。2026-08-02 后续切片已把 workspace attachment、Knowledge pipeline parse/rag/graph stages、RAG rebuild script 与 fixed/local eval 入口继续推进为直接消费 Canonical IR / canonical handoff，并删除 `chunk_projection_adapter.py` export surface；详见 `docs/evidence/goal05-phase22-workspace-attachment-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-parse-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-graph-ir-cutover.md`、`docs/evidence/goal05-phase22-pipeline-rag-ir-cutover.md` 与 `docs/evidence/goal05-phase22-rag-eval-ir-cutover.md`。
 
-本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready，不声明 ChunkModel projection 已退休。
+本切片不声明 PHASE22 completed，不声明 fixed benchmark measured，不声明 production ready。
 
 ## Implemented
 
-- `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 物理迁移为 `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py`。
-- Adapter id 从 `temporary.adapter.phase11.legacy_chunk_projection` 改为 `versioned.adapter.phase22.chunk_model_projection`。
+- `src/backend/zuno/knowledge/ingestion/legacy_cutover.py` 已退役；后续 `src/backend/zuno/knowledge/ingestion/chunk_projection_adapter.py` 也已退役。
 - `src/backend/zuno/platform/services/workspace/attachment_service.py` 曾在本切片改为 `parse_file_into_chunk_model_projection`；后续已改为直接走 `ParseGateway` / `CanonicalDocumentIR.blocks`，不再依赖 ChunkModel projection。
-- `src/backend/zuno/platform/services/pipeline/manager.py` 默认 parse / rag index / graph stage chunk projection 入口改为 `parse_file_into_chunk_model_projection`。
-- `src/backend/zuno/platform/services/pipeline/manager.py` 的 parse stage 后续已改为直接走 `ParseGateway` / `CanonicalDocumentIR.blocks`；RAG/Graph indexing 仍使用 projection。
-- `src/backend/zuno/platform/services/pipeline/manager.py` 的 graph stage 后续已改为直接走 canonical `graphrag_documents` handoff；RAG indexing 仍使用 projection。
+- `src/backend/zuno/platform/services/pipeline/manager.py` 的 parse stage 后续已改为直接走 `ParseGateway` / `CanonicalDocumentIR.blocks`。
+- `src/backend/zuno/platform/services/pipeline/manager.py` 的 graph stage 后续已改为直接走 canonical `graphrag_documents` handoff。
 - `src/backend/zuno/platform/services/pipeline/manager.py` 的 RAG indexing 后续已改为直接走 canonical `vector_documents` handoff；pipeline 默认路径不再使用 projection。
-- `src/backend/zuno/knowledge/ingestion/__init__.py` 只导出新的 chunk projection adapter 常量与函数。
+- `src/backend/zuno/knowledge/ingestion/__init__.py` 后续只导出 canonical vector payload helper，不再导出 chunk projection adapter 常量与函数。
 - `.agent/programs/work-products/phase22-removal-candidates.yaml` 把 `legacy_cutover.py` 从 `active_candidate` 改为 `resolved_retired`，并把剩余 blocker 缩小为 ChunkModel projection retirement。
-- `tools/scripts/verify_phase22_cleanup_boundary.py` 改为检查新 adapter，并在生产源码扫描中不再允许旧 `legacy_cutover.py` 通过 active allowlist。
+- `tools/scripts/verify_phase22_cleanup_boundary.py` 后续改为要求 `chunk_projection_adapter.py` 不存在，并检查 canonical vector payload helper。
 
 ## Still Open
 
-- `ChunkModel` projection adapter 仍存在，但 workspace attachment 默认路径和 Knowledge pipeline parse/rag/graph stages 已经退出该 projection；剩余 cleanup 是旧 RAG doc_parser / ChunkModel DTO compatibility 和未使用 projection adapter export surface。
+- 旧 RAG doc_parser / ChunkModel DTO compatibility 仍存在。
 - `src/backend/zuno/agent/core/agents/general_agent.py` 仍是 PHASE22 removal candidates 中唯一 `active_candidate`。
 - Fixed benchmark 仍是 `BLOCKED / blocked_not_measured`。
 - Program 仍不能归档，`.agent/programs/` 不能恢复 no-active。
