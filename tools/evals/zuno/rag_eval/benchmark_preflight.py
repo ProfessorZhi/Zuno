@@ -1,4 +1,4 @@
-"""PHASE22 Benchmark Preflight Contract (v4).
+"""PHASE22 Benchmark Preflight Contract (v5).
 
 Deterministic, read-only preflight evaluation that answers exactly one
 question: whether the upstream confirmed-contract surfaces (governance,
@@ -53,6 +53,17 @@ Version 4 closes the final fail-closed defects:
 * ``bool`` never impersonates ``int``/``float``; NaN/Infinity are INVALID.
 * Every gap code is fixed and never embeds user input.
 
+Version 5 closes the Product Runtime attestation gap:
+
+* ``product_runtime_attested`` remains a boolean readiness declaration, but
+  it is not sufficient to pass the Runtime gate.
+* Every profile must include a serialized ``product_runtime_attestation``
+  mapping bound to the profile/runtime/snapshot/security surface.
+* The attestation hash is canonical JSON SHA-256 over the attestation fields
+  except ``attestation_hash`` itself.
+* Missing, malformed, mismatched, or hash-inconsistent attestations fail
+  closed with fixed Runtime-gate gap codes.
+
 The evaluator enforces the documented 11 gate priority and never raises
 an exception for any input.
 """
@@ -67,7 +78,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
-CONTRACT_VERSION = "phase22-benchmark-preflight.v4"
+CONTRACT_VERSION = "phase22-benchmark-preflight.v5"
+PRODUCT_RUNTIME_ATTESTATION_VERSION = "phase22-product-runtime-attestation.v1"
 
 CANONICAL_PROFILES: Tuple[str, ...] = (
     "standard_rag",
@@ -124,6 +136,7 @@ REQUIRED_PROFILE_FIELDS: Tuple[str, ...] = (
     "runtime_name",
     "runtime_version",
     "product_runtime_attested",
+    "product_runtime_attestation",
     "formal_adapter_wired",
     "knowledge_runtime_available",
     "index_runtime_available",
@@ -161,6 +174,18 @@ _STRING_PROFILE_FIELDS = frozenset(
         "runtime_name",
         "runtime_version",
     }
+)
+
+_REQUIRED_PRODUCT_RUNTIME_ATTESTATION_FIELDS: Tuple[str, ...] = (
+    "attestation_ref",
+    "profile_name",
+    "runtime_name",
+    "runtime_version",
+    "corpus_snapshot_ref",
+    "security_epoch",
+    "formal_adapter_ref",
+    "runtime_evidence_contract_version",
+    "attestation_hash",
 )
 
 TOP_FIELD_TYPES: Dict[str, Tuple[type, ...]] = {
@@ -207,6 +232,7 @@ class ProfilePreflightInput:
     runtime_name: Optional[str]
     runtime_version: Optional[str]
     product_runtime_attested: Optional[bool]
+    product_runtime_attestation: Optional[Mapping[str, Any]]
     formal_adapter_wired: Optional[bool]
     knowledge_runtime_available: Optional[bool]
     index_runtime_available: Optional[bool]
@@ -303,6 +329,21 @@ def _canonical_sha256_hex(value: Any) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def compute_product_runtime_attestation_hash(attestation: Mapping[str, Any]) -> str:
+    """Canonical hash over a serialized Product Runtime attestation.
+
+    ``attestation_hash`` is excluded so callers can validate a self-contained
+    attestation payload without mutating it.
+    """
+
+    payload = {
+        key: value
+        for key, value in attestation.items()
+        if key != "attestation_hash"
+    }
+    return _canonical_sha256_hex(payload)
+
+
 def _sort_key_for_profile(item: Any) -> Tuple[int, int, str]:
     """Stable sort key: canonical profiles first in canonical order, then
     unknown profiles sorted by name, then malformed entries."""
@@ -389,6 +430,9 @@ def _coerce_profiles(
                     pass
                 elif not isinstance(value, bool):
                     return None, "profile_boolean_field_type_invalid"
+            elif field_name == "product_runtime_attestation":
+                if value is not None and not isinstance(value, Mapping):
+                    return None, "profile_attestation_type_invalid"
 
         parsed.append(
             ProfilePreflightInput(
@@ -401,6 +445,9 @@ def _coerce_profiles(
                 runtime_name=item.get("runtime_name"),
                 runtime_version=item.get("runtime_version"),
                 product_runtime_attested=item.get("product_runtime_attested"),
+                product_runtime_attestation=item.get(
+                    "product_runtime_attestation"
+                ),
                 formal_adapter_wired=item.get("formal_adapter_wired"),
                 knowledge_runtime_available=item.get(
                     "knowledge_runtime_available"
@@ -463,6 +510,67 @@ def _default_float(value: Any) -> float:
     if isinstance(value, (int, float)) and math.isfinite(value):
         return float(value)
     return 0.0
+
+
+def _product_runtime_attestation_gap(profile: ProfilePreflightInput) -> Optional[str]:
+    attestation = profile.product_runtime_attestation
+    if attestation is None:
+        return "product_runtime_attestation_missing"
+    if not isinstance(attestation, Mapping):
+        return "product_runtime_attestation_invalid"
+
+    for field_name in _REQUIRED_PRODUCT_RUNTIME_ATTESTATION_FIELDS:
+        value = attestation.get(field_name)
+        if not _has_non_empty(value):
+            return "product_runtime_attestation_field_missing"
+
+    if (
+        attestation.get("runtime_evidence_contract_version")
+        != PRODUCT_RUNTIME_ATTESTATION_VERSION
+    ):
+        return "product_runtime_attestation_version_mismatch"
+
+    if not _is_valid_sha256_hex(attestation.get("attestation_hash")):
+        return "product_runtime_attestation_hash_invalid"
+
+    try:
+        expected_hash = compute_product_runtime_attestation_hash(attestation)
+    except (TypeError, ValueError):
+        return "product_runtime_attestation_invalid"
+
+    if attestation.get("attestation_hash") != expected_hash:
+        return "product_runtime_attestation_hash_mismatch"
+
+    if attestation.get("profile_name") != profile.profile_name:
+        return "product_runtime_attestation_runtime_mismatch"
+
+    if (
+        _has_non_empty(profile.runtime_name)
+        and _has_non_empty(attestation.get("runtime_name"))
+        and attestation.get("runtime_name") != profile.runtime_name
+    ):
+        return "product_runtime_attestation_runtime_mismatch"
+    if (
+        _has_non_empty(profile.runtime_version)
+        and _has_non_empty(attestation.get("runtime_version"))
+        and attestation.get("runtime_version") != profile.runtime_version
+    ):
+        return "product_runtime_attestation_runtime_mismatch"
+
+    if (
+        _has_non_empty(profile.corpus_snapshot_ref)
+        and _has_non_empty(attestation.get("corpus_snapshot_ref"))
+        and attestation.get("corpus_snapshot_ref") != profile.corpus_snapshot_ref
+    ):
+        return "product_runtime_attestation_scope_mismatch"
+    if (
+        _has_non_empty(profile.security_epoch)
+        and _has_non_empty(attestation.get("security_epoch"))
+        and attestation.get("security_epoch") != profile.security_epoch
+    ):
+        return "product_runtime_attestation_scope_mismatch"
+
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -797,6 +905,9 @@ class BenchmarkPreflightEvaluator:
             gaps: List[str] = []
             if profile.product_runtime_attested is not True:
                 gaps.append("product_runtime_not_attested")
+            attestation_gap = _product_runtime_attestation_gap(profile)
+            if attestation_gap is not None:
+                gaps.append(attestation_gap)
             if not _has_non_empty(profile.runtime_name):
                 gaps.append("runtime_name_missing")
             if not _has_non_empty(profile.runtime_version):
@@ -986,6 +1097,7 @@ def evaluate_payload(payload: Mapping[str, Any]) -> BenchmarkPreflightReport:
 
 __all__ = [
     "CONTRACT_VERSION",
+    "PRODUCT_RUNTIME_ATTESTATION_VERSION",
     "CANONICAL_PROFILES",
     "STATE_READY",
     "STATE_BLOCKED",
@@ -1001,5 +1113,6 @@ __all__ = [
     "evaluate_payload",
     "report_to_dict",
     "compute_input_fingerprint",
+    "compute_product_runtime_attestation_hash",
     "validate_gap_code",
 ]

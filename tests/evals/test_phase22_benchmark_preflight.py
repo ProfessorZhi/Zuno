@@ -7,6 +7,7 @@ runtime object.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -56,6 +57,35 @@ def _zero_filled_sha256() -> str:
     return "0" * 64
 
 
+def _attestation_hash(attestation: Dict[str, Any]) -> str:
+    payload = {
+        key: value for key, value in attestation.items() if key != "attestation_hash"
+    }
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    )
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _valid_product_runtime_attestation(name: str) -> Dict[str, Any]:
+    attestation = {
+        "attestation_ref": f"attestation://phase22/{name}",
+        "profile_name": name,
+        "runtime_name": f"{name}-runtime",
+        "runtime_version": "1.0.0",
+        "corpus_snapshot_ref": "snapshot-2026-08-01",
+        "security_epoch": "epoch-2026-Q3",
+        "formal_adapter_ref": f"canonical-adapter://phase22/{name}",
+        "runtime_evidence_contract_version": "phase22-product-runtime-attestation.v1",
+    }
+    attestation["attestation_hash"] = _attestation_hash(attestation)
+    return attestation
+
+
 def _valid_profile(name: str) -> Dict[str, Any]:
     return {
         "profile_name": name,
@@ -67,6 +97,7 @@ def _valid_profile(name: str) -> Dict[str, Any]:
         "runtime_name": f"{name}-runtime",
         "runtime_version": "1.0.0",
         "product_runtime_attested": True,
+        "product_runtime_attestation": _valid_product_runtime_attestation(name),
         "formal_adapter_wired": True,
         "knowledge_runtime_available": True,
         "index_runtime_available": True,
@@ -128,7 +159,7 @@ class ReadyContractTests(unittest.TestCase):
         for pr in report.profile_results:
             self.assertEqual(pr.state, STATE_READY)
             self.assertEqual(pr.gap_codes, ())
-        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v4")
+        self.assertEqual(report.contract_version, "phase22-benchmark-preflight.v5")
         self.assertEqual(len(report.input_fingerprint), 64)
 
     def test_02_profile_input_order_does_not_change_state(self) -> None:
@@ -402,6 +433,34 @@ class RuntimeGateTests(unittest.TestCase):
         report = _evaluate(payload)
         self.assertEqual(report.state, STATE_BLOCKED)
         self.assertIn("product_runtime_not_attested", report.gap_codes)
+
+    def test_29a_product_attestation_requires_valid_evidence_contract(self) -> None:
+        payload = _valid_payload()
+        for profile in payload["profiles"]:
+            del profile["product_runtime_attestation"]
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("product_runtime_attestation_missing", report.gap_codes)
+
+    def test_29b_product_attestation_hash_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        payload["profiles"][0]["product_runtime_attestation"][
+            "attestation_hash"
+        ] = "1" * 64
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn("product_runtime_attestation_hash_mismatch", report.gap_codes)
+
+    def test_29c_product_attestation_runtime_mismatch_fails_closed(self) -> None:
+        payload = _valid_payload()
+        attestation = payload["profiles"][0]["product_runtime_attestation"]
+        attestation["runtime_version"] = "2.0.0"
+        attestation["attestation_hash"] = _attestation_hash(attestation)
+        report = _evaluate(payload)
+        self.assertEqual(report.state, STATE_BLOCKED)
+        self.assertIn(
+            "product_runtime_attestation_runtime_mismatch", report.gap_codes
+        )
 
     def test_30_adapter_unwired(self) -> None:
         payload = _valid_payload()
