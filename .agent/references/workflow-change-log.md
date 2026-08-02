@@ -17,6 +17,23 @@ date
 
 ## Current Truth
 
+### 2026-08-02: command-line and worktree safety rules added to local workflow memory
+
+Summary: 把本轮暴露出的工作树错位、嵌套 PowerShell 参数透传、PATH 污染和结构化输入被二次解析等问题，沉淀进 `.agent/references` 的长期工作流、已知坑和命令目录。
+
+Reason: 这些问题不是一次性提示噪音，而是会反复影响后续 worker dispatch、fake runner 测试和本地脚本执行的长期执行风险。只有进入 reference 体系，后续 Agent 才会在读工作流时主动做 worktree 先验校验、命令行安全处理和 PATH 隔离。
+
+Affected files:
+
+- `.agent/references/workflow.md`
+- `.agent/references/known-pitfalls.md`
+- `.agent/references/command-catalog.md`
+- `.agent/scripts/verify-workflow.ps1`
+
+Status: Current workflow truth for command-line safety and worktree hygiene.
+
+Validation: 由 `git diff --check`、后续 workflow/agent system 基线验证和本次 dispatcher 测试覆盖共同保护。
+
 ### 2026-07-01: workflow rule evidence made machine-checkable
 
 Summary: 工作流规则变化必须留下规则分类证据和写回路径证据，并由 phase 收口模板、workflow change note、Agent verifier 和 repo test 共同检查。

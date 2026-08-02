@@ -120,3 +120,28 @@ Stop Conditions
 ```
 
 其余规则由仓库内 Program 文件提供。这能节省重复提示 Token，同时保持完整架构约束。
+
+## 9. Provider Worker 调度协议
+
+Codex 客户端主线程负责拆分、架构设计、复杂核心实现、审查、集成和最终 Gate 判断。Claude Code Worker 负责边界清楚、可审查、可回滚的 PR-sized 工作；MiniMax 优先承接大量简单任务，DeepSeek 优先承接实现修复、审计和中等复杂任务。
+
+必须区分：
+
+- `execution_available`: `claude-minimax` 或 `claude-deepseek` 能启动并返回结构化 metrics。
+- `quota_snapshot_available`: 能否读取 provider 额度、余额或 token-plan 快照。
+
+`quota_snapshot_available=CONFIG_REQUIRED` 只影响额度元数据，不得阻止 Worker 执行。额度百分比也不得换算为 Token、成本或 Session 归属。
+
+Worker 投递前必须确认：
+
+1. 使用完整 Task Card，不得只传标题。
+2. Prompt 包含 `TASK_ID`、Allowed Paths、Stop Conditions、Required Checks 和 Completion Contract。
+3. 通过 metrics wrapper 启动，并记录 run id、provider、session/cursor 状态。
+
+Worker 完成只接受三种结果：
+
+1. `COMMIT_SHA + CHANGED_FILES + TEST_RESULTS`。
+2. 明确 `PATCH/EVIDENCE + BLOCKER`，由 Codex 审查后决定是否吸收。
+3. 明确 `BLOCKED_<reason>`，并说明无未提交修改。
+
+只输出分析、建议或未提交改动不是完成；此类运行只能记录为 `reviewed_partial` 或 `failed_worker_completion`。Codex 可以吸收其中有效发现，但必须重新审查、测试并由 Codex 自己提交。

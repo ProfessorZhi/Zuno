@@ -55,12 +55,18 @@
 - 看到旧 program 仍在 history 就误以为 active program 未关闭。
 - 为了让文档更短，把 Current / Target / History 边界删掉。
 - 把 `.agent/templates/` 当成知识库，复制项目规则。
+- 在错误 workspace 用 `apply_patch` 或手工编辑，文件会落到另一个 worktree。
+- 嵌套 `powershell -File` 再传 JSON / 多行 prompt 时，外层 shell 可能吞掉引号、反引号或换行。
+- 测试没隔离 `PATH` 时，本机真实 `claude-*` launcher 会污染结果。
 
 ## Debug Playbooks
 
 - Domain Pack 命中：跑 `.agent/scripts/grep-domain-pack.ps1`，分类为 compatibility、history、target reference 或 bug。
 - 旧路径命中：先判断是否在 `docs/history/`，历史命中一般保留。
 - 术语冲突：以 `docs/architecture/architecture.md` 和代码/测试证据判断 Current，以 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/` 判断 Target。
+- 工作树错位：先跑 `git status --short --branch`，再核对 `Get-Location`、`git rev-parse --show-toplevel` 和目标 worktree。
+- 参数被吞：把 prompt、JSON、长路径或敏感字符串移到文件里，再用 `Get-Content -Raw` 或测试桩读取，不要靠多层 shell 透传。
+- launcher 污染：测试环境里固定 `PATH`，只放测试桩、`git` 和 `powershell`。
 
 ## Focused Tests
 
@@ -84,3 +90,4 @@ pytest -q tests/repo/test_agent_system.py tests/repo/test_repo_hygiene.py -p no:
 ## Lessons Learned
 
 最危险的回归通常不是代码坏了，而是 Agent 读到旧前台材料后恢复了已退休方向。
+命令行层面的回归同样危险：同一批输入在文件里是对的，到了嵌套 shell 里就会被重写，所以结构化输入要文件化，工作树和 launcher 也要先验校验。
