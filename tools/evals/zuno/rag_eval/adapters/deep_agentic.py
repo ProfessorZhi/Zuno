@@ -168,7 +168,11 @@ def _safe_start_span(trace_adapter: Any, name: str, span_type: str, metadata: di
     if not callable(start_fn):
         return (None, None)
     try:
+        before_failures = getattr(trace_adapter, "delivery_failures", None)
         handle = start_fn(name, span_type=span_type, metadata=metadata)
+        after_failures = getattr(trace_adapter, "delivery_failures", None)
+        if before_failures is not None and after_failures is not None and after_failures > before_failures:
+            return (None, "trace_delivery_failed")
         return (handle, None)
     except Exception:
         return (None, "trace_delivery_failed")
@@ -185,7 +189,11 @@ def _safe_end_span(trace_adapter: Any, handle: Any, outputs: dict[str, Any]) -> 
     if not callable(end_fn):
         return None
     try:
+        before_failures = getattr(trace_adapter, "delivery_failures", None)
         end_fn(handle, outputs=outputs)
+        after_failures = getattr(trace_adapter, "delivery_failures", None)
+        if before_failures is not None and after_failures is not None and after_failures > before_failures:
+            return "trace_delivery_failed"
         return None
     except Exception:
         return "trace_delivery_failed"

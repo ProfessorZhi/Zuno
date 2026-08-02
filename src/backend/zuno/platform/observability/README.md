@@ -12,7 +12,7 @@ PHASE10 status: contract-foundation
 - ObservabilityTracePort available
 - NoopTraceAdapter available
 - InMemoryTraceAdapter available
-- LangSmith SDK Adapter corrected security, trace_id, content switches & delivery retry semantics available
+- LangSmith SDK Adapter corrected security, trace_id, content switches, delivery retry semantics, and fail-closed delivery-failure truth handling available
 - Adapter focused tests passed
 
 LangChain 自动 Tracing 与手工 Adapter 边界：
