@@ -6,7 +6,11 @@ PROVIDER: MiniMax
 BASE_BRANCH: codex/phase22-final-closure
 WORKER_BRANCH: agent/minimax/phase22-verification-matrix-pr97
 
-MiniMax is currently CONFIG_REQUIRED in controller preflight. Do not run this task until Codex confirms provider availability.
+MiniMax execution is AVAILABLE through `claude-minimax`. MiniMax quota snapshot may remain CONFIG_REQUIRED; that does not block this worker. Report quota context as CONFIG_REQUIRED / NOT_AVAILABLE and do not infer tokens from quota.
+
+You are a Claude Code Worker for Zuno PHASE22. You are not the controller. Codex owns architecture, Program state, reviewer approval, release decision, production readiness and archive/no-active.
+
+This task card must be passed in full. If you only see the title or a truncated prompt, stop and return BLOCKED_PROMPT_TRUNCATED.
 
 Scope when enabled:
 
@@ -23,3 +27,8 @@ Allowed paths:
 
 Final output must use the worker result schema from the controller plan.
 
+Completion contract:
+
+- Commit scoped changes to `WORKER_BRANCH`, or return BLOCKED with an exact blocker and no uncommitted changes.
+- If no commit is made, provide PATCH/EVIDENCE or a blocker classification; analysis-only output is not complete.
+- Do not mark PASS when a dependency is absent or evidence is incomparable.

@@ -18,10 +18,13 @@ The objective path was not present on this machine. Controller used the actual a
 
 ## Provider Status
 
-- DeepSeek: AVAILABLE in preflight snapshot.
-- MiniMax: CONFIG_REQUIRED in preflight snapshot; MM-1, MM-2 and MM-3 were not launched.
+- DeepSeek worker execution: AVAILABLE through the Claude Code DeepSeek launcher.
+- MiniMax worker execution: AVAILABLE through the Claude Code MiniMax launcher.
+- MiniMax quota snapshot: CONFIG_REQUIRED. This only means MiniMax token-plan/quota metadata was unavailable; it must not block MiniMax worker execution.
 - Codex quota: PARTIAL from cockpit app data.
 - controller_token_status: NOT_AVAILABLE_APP_SESSION.
+
+Historical correction: Wave 1 treated MiniMax `CONFIG_REQUIRED` as a worker launch blocker. That was a controller workflow error. Future dispatch must separate `execution_available` from `quota_snapshot_available`; quota status is account metadata, not proof that a Claude Code worker cannot run.
 
 ## Worker Runs
 
@@ -29,6 +32,8 @@ The objective path was not present on this machine. Controller used the actual a
 | --- | --- | --- | --- | --- |
 | DS-1 | `5227c4d2-ea06-4eed-8f60-deb68e182fe0` | DeepSeek | ineffective_segment | Prompt delivery issue; worker received only the heading and made no changes. |
 | DS-1 retry1 | `dc8f94d2-6941-4293-a83b-0d412de50d67` | DeepSeek | reviewed_partial | Worker identified a valid measurement gate blank-reference gap but left an uncommitted change and did not create a child PR. Codex absorbed the valid semantic fix with tests. |
+
+MM-1, MM-2 and MM-3 were not launched in this historical wave because of the obsolete MiniMax quota-gate decision above. They should be considered not attempted, not externally blocked, when planning the next worker wave.
 
 The aggregate also reported one unreadable run excluded from metrics:
 
@@ -50,4 +55,3 @@ Values below are copied from the metrics aggregate and are not manually estimate
 ## Boundary
 
 This summary is an interim PR #97 metrics snapshot. Final PHASE22 reporting still requires reviewer-approved case set, formal four-profile benchmark, final verification, Release Decision, Production Readiness truth and, only after gates pass, Program archive/no-active preparation.
-

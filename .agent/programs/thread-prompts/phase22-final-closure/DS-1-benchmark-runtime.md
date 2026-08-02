@@ -8,6 +8,8 @@ WORKER_BRANCH: agent/deepseek/phase22-benchmark-runtime-pr97
 
 You are a Claude Code Worker for Zuno PHASE22. You are not the controller. Codex owns architecture, Program state, reviewer approval, release decision, production readiness and archive/no-active.
 
+This task card must be passed in full. If you only see the title or a truncated prompt, stop and return BLOCKED_PROMPT_TRUNCATED.
+
 Start by running `Get-Date -Format o`. End by running `Get-Date -Format o`.
 
 Frozen facts:
@@ -50,6 +52,8 @@ Required checks:
 - Add focused tests for any runtime or attestation fix.
 - Run the narrow tests you changed or that prove the runtime boundary.
 - Run `git diff --check`.
+- Commit scoped changes to `WORKER_BRANCH`, or return BLOCKED with an exact blocker and no uncommitted changes.
+- If no commit is made, provide PATCH/EVIDENCE or a blocker classification; analysis-only output is not complete.
 
 Expected final response only:
 
@@ -70,4 +74,3 @@ SCOPE_VIOLATIONS:
 ARCHITECTURE_DEVIATIONS:
 BLOCKERS:
 ```
-

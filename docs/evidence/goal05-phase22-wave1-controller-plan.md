@@ -56,10 +56,62 @@ Wave 3 Formal Four-profile Benchmark
 
 | Worker | Provider | Status | Worktree | Branch | Scope |
 | --- | --- | --- | --- | --- | --- |
-| MM-1 | MiniMax | BLOCKED_EXTERNAL_CONFIG_REQUIRED | TBD | agent/minimax/phase22-dataset-pack-pr97 | Dataset、Corpus、Case、Hash、Manifest、Reviewer Pack；不得批准 Reviewer。 |
-| MM-2 | MiniMax | BLOCKED_EXTERNAL_CONFIG_REQUIRED | TBD | agent/minimax/phase22-canonical-tree-pr97 | Canonical tree scan、低风险 cleanup、boundary evidence。 |
-| MM-3 | MiniMax | BLOCKED_EXTERNAL_CONFIG_REQUIRED | TBD | agent/minimax/phase22-verification-matrix-pr97 | Verification command matrix、真实退出码和 blocked 分类。 |
+| MM-1 | MiniMax | EXECUTION_AVAILABLE_QUOTA_CONFIG_REQUIRED | TBD | agent/minimax/phase22-dataset-pack-pr97 | Dataset、Corpus、Case、Hash、Manifest、Reviewer Pack；不得批准 Reviewer。 |
+| MM-2 | MiniMax | EXECUTION_AVAILABLE_QUOTA_CONFIG_REQUIRED | TBD | agent/minimax/phase22-canonical-tree-pr97 | Canonical tree scan、低风险 cleanup、boundary evidence。 |
+| MM-3 | MiniMax | EXECUTION_AVAILABLE_QUOTA_CONFIG_REQUIRED | TBD | agent/minimax/phase22-verification-matrix-pr97 | Verification command matrix、真实退出码和 blocked 分类。 |
 | DS-1 | DeepSeek | READY | `F:\internship-work\resume&resume project\02_projects\Zuno-worktrees\deepseek-phase22-benchmark-runtime-pr97` | agent/deepseek/phase22-benchmark-runtime-pr97 | Benchmark harness、Profile adapter、runtime evidence binding、measurement attestation、Agentic GraphRAG formal path。 |
+
+## Worker Dispatch Protocol
+
+Worker execution availability and provider quota snapshot availability are separate gates.
+
+```text
+execution_available
+└── provider launcher smoke succeeds:
+    claude-minimax / claude-deepseek can run a read-only `-p` prompt,
+    emit a native Claude session id, and produce `usage=COMPLETE`.
+
+quota_snapshot_available
+└── metrics snapshot succeeds:
+    MiniMax token-plan or DeepSeek balance metadata can be read.
+```
+
+`quota_snapshot_available=CONFIG_REQUIRED` must not block worker execution. It only means quota/balance context is unavailable and must be reported as `CONFIG_REQUIRED` or `NOT_AVAILABLE`; it must never be converted into token usage.
+
+Provider routing for Wave 1:
+
+```text
+MiniMax
+└── primary execution lane for bounded, reviewable PR-sized tasks,
+    including dataset pack, canonical tree cleanup and verification matrix.
+
+DeepSeek
+└── implementation / audit / repair lane for benchmark runtime and higher-risk
+    local fixes.
+
+Codex
+└── controller, architecture owner, integration reviewer and final gate owner.
+```
+
+Prompt delivery is a hard precondition. Before launching a worker, Codex must:
+
+```text
+1. Read the full task card from `.agent/programs/thread-prompts/phase22-final-closure/<TASK>.md`.
+2. Verify prompt length is non-trivial and contains WORKER_TASK_ID, Allowed paths,
+   Forbidden paths or explicit no-governance-write rules, and Expected final response.
+3. Pass the full prompt body through `-ClaudeArgsJson`; never pass only the title.
+4. Record the metrics run id and summary path.
+```
+
+Worker completion is valid only when the final response contains one of:
+
+```text
+COMMIT_SHA + CHANGED_FILES + TEST_RESULTS
+PATCH/EVIDENCE + exact blocker explaining why no commit was made
+BLOCKED + blocker classification + no uncommitted changes
+```
+
+A worker response with analysis only, no commit, no patch/evidence and no explicit blocker is a worker failure. Codex may absorb a valid idea after review, but the worker run remains recorded as partial/failed evidence and must not be treated as a successful worker contribution.
 
 ## Allowed Paths
 
@@ -123,7 +175,7 @@ Wave 3 Formal Four-profile Benchmark
 - Objective path `F:\funny_project\agent-metrics-collector` was not present.
 - Actual metrics root used for read-only preflight: `F:\funny_project\agent-metrics-workspace\agent-metrics-collector`.
 - DeepSeek snapshot status: AVAILABLE.
-- MiniMax snapshot status: CONFIG_REQUIRED.
+- MiniMax execution status: AVAILABLE through `claude-minimax`; MiniMax quota snapshot status: CONFIG_REQUIRED.
 - Codex snapshot status: PARTIAL; controller app token status recorded as NOT_AVAILABLE_APP_SESSION.
 - Snapshot quota context is not treated as this task's token usage.
 
@@ -134,4 +186,3 @@ Wave 3 Formal Four-profile Benchmark
 - Irreversible migration.
 - Any attempt to promote BLOCKED / REVIEW_REQUIRED / test double / naked boolean into MEASURED or PASS.
 - Any attempt to write PHASE22 completed, production ready, archive or no-active before all gates are proven.
-
