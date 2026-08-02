@@ -1855,10 +1855,25 @@ def _canonical_profile_blocked_metrics(
             if result.blocked_reason and result.blocked_reason not in blocked_reasons:
                 blocked_reasons.append(result.blocked_reason)
         per_profile_results[profile_name] = results
+        measurement_states = {str(item.get("measurement_state") or "") for item in results}
+        runtime_statuses = {str(item.get("runtime_status") or "") for item in results}
+        if measurement_states == {"RUNTIME_OBSERVED"}:
+            profile_measurement_state = "RUNTIME_OBSERVED"
+        elif measurement_states == {"MEASURED"}:
+            profile_measurement_state = "MEASURED"
+        elif "BLOCKED" in measurement_states:
+            profile_measurement_state = "BLOCKED"
+        else:
+            profile_measurement_state = sorted(measurement_states)[0] if measurement_states else "BLOCKED"
+        profile_runtime_status = (
+            sorted(runtime_statuses)[0]
+            if len(runtime_statuses) == 1 and runtime_statuses
+            else ("blocked" if "blocked" in runtime_statuses else "mixed")
+        )
         profiles[profile_name] = {
-            "measured": False,
-            "runtime_status": "blocked",
-            "measurement_state": "BLOCKED",
+            "measured": profile_measurement_state == "MEASURED",
+            "runtime_status": profile_runtime_status,
+            "measurement_state": profile_measurement_state,
             "is_test_double": False,
             "aggregate": {},
             "blocked_reasons": sorted({str(item.get("blocked_reason")) for item in results if item.get("blocked_reason")}),

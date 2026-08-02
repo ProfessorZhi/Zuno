@@ -59,6 +59,7 @@ ALLOWED_FAILURE_CLASSES = {
     "canonical_agentic_runtime_exception",
     "runtime_contract_incomplete",
     "runtime_payload_invalid",
+    "runtime_evidence_binding_blocked",
     "canonical_runtime_reported_blocked",
     "trace_delivery_failed",
 }

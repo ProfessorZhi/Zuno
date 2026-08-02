@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import ast
 import asyncio
+import hashlib
+import json
 from pathlib import Path, PurePosixPath
 import time
 from typing import Any
@@ -35,8 +37,13 @@ from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
     AgenticGraphRAGCanonicalAdapter,
     DeepGraphRAGCanonicalAdapter,
 )
+from tools.evals.zuno.rag_eval.adapters.retrieval import StandardRAGCanonicalAdapter
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
 from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
+from tools.evals.zuno.rag_eval.runtime_evidence_binding import (
+    RECEIPT_OWNERS,
+    compute_reference_binding_hash,
+)
 from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
     CanonicalRuntimeUnavailableError,
     _render_reproduce_command,
@@ -158,6 +165,68 @@ def _sample_input(profile_name: str = "standard_rag") -> CanonicalCaseInput:
         budget={},
         attempt_number=1,
     )
+
+
+def _hash(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _receipt(receipt_type: str, ref: str) -> dict[str, str]:
+    return {
+        "receipt_type": receipt_type,
+        "receipt_ref": ref,
+        "owner": RECEIPT_OWNERS[receipt_type],
+        "runtime_version": "rt-1.0",
+        "snapshot_ref": "snapshot_v1",
+        "payload_hash": _hash(ref),
+    }
+
+
+def _standard_runtime_evidence_binding(**overrides: Any) -> dict[str, Any]:
+    binding: dict[str, Any] = {
+        "eval_run_id": "run_test_001",
+        "case_id": "case_001",
+        "requested_profile": "standard_rag",
+        "actual_profile": "standard_rag",
+        "runtime_name": "canonical-standard-runtime",
+        "runtime_version": "rt-1.0",
+        "corpus_snapshot_ref": "snapshot_v1",
+        "trace_id": "trace-1",
+        "security_decision_ref": "security-1",
+        "plan_version_ref": "",
+        "run_outcome_ref": "",
+        "usage_receipt_ref": "usage-1",
+        "budget_settlement_ref": "budget-1",
+        "artifact_receipt_ref": "artifact-1",
+        "artifact_payload_hash": _hash("artifact-payload"),
+        "result_payload_hash": _hash("result-payload"),
+        "reference_binding_hash": "0" * 64,
+        "receipts": [
+            _receipt("security_decision", "security-1"),
+            _receipt("trace", "trace-1"),
+            _receipt("usage_receipt", "usage-1"),
+            _receipt("budget_settlement", "budget-1"),
+            _receipt("artifact_receipt", "artifact-1"),
+        ],
+    }
+    binding.update(overrides)
+    if "reference_binding_hash" not in overrides:
+        binding["reference_binding_hash"] = compute_reference_binding_hash(binding)
+    return binding
+
+
+class EvidenceBindingKnowledgePort:
+    def __init__(self, binding: dict[str, Any]) -> None:
+        self.binding = binding
+
+    def execute_standard_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+        return {
+            "answer": f"Runtime answer for {question}",
+            "evidence_refs": ("ev_runtime",),
+            "retrieved_document_refs": ("doc_runtime",),
+            "retrieval_rounds": 1,
+            "runtime_evidence_binding": self.binding,
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -336,6 +405,78 @@ def test_06b_canonical_ready_dataset_uses_profile_factory_not_stackless(tmp_path
     assert "canonical_product_runtime_attestation_unavailable" in metrics
 
 
+def test_06c_canonical_benchmark_preserves_runtime_observed_profile_state(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Canonical aggregation must not flatten RUNTIME_OBSERVED profile evidence to BLOCKED."""
+    out_dir = tmp_path / "canonical_out_06c"
+    q_file = tmp_path / "questions.jsonl"
+    q_file.write_text(
+        '{"id":"case_001","question":"What did runtime observe?","expected_answer":"answer",'
+        '"expected_doc_ids":["doc_runtime"],"question_type":"simple_retrieval",'
+        '"complexity":"low","reviewer_status":"approved","provenance":{"dataset":"unit"}}\n',
+        encoding="utf-8",
+    )
+
+    def fake_prepare_public_enterprise_eval(**kwargs: Any) -> dict[str, Any]:
+        output_dir = Path(kwargs["output_dir"])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        dataset_path = output_dir / "enterprise_eval.jsonl"
+        dataset_path.write_text(
+            '{"id":"case_001","question":"What did runtime observe?","expected_answer":"answer",'
+            '"expected_doc_ids":["doc_runtime"],"question_type":"simple_retrieval","complexity":"low"}\n',
+            encoding="utf-8",
+        )
+        manifest_path = output_dir / "manifest.json"
+        manifest_path.write_text(
+            '{"case_count":1,"external_documents_required":false,"documents":[],"corpus_snapshot_ref":"snapshot_v1"}',
+            encoding="utf-8",
+        )
+        return {
+            "dataset_path": str(dataset_path),
+            "manifest_path": str(manifest_path),
+            "case_count": 1,
+            "external_documents_required": False,
+        }
+
+    monkeypatch.setattr(
+        "tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark.prepare_public_enterprise_eval",
+        fake_prepare_public_enterprise_eval,
+    )
+
+    deps = _full_deps()
+    deps = CanonicalRuntimeDependencies(
+        knowledge_runtime=EvidenceBindingKnowledgePort(_standard_runtime_evidence_binding(case_id="case_001")),
+        index_runtime=deps.index_runtime,
+        security_gate=deps.security_gate,
+        agent_run_runtime=deps.agent_run_runtime,
+        trace_adapter=deps.trace_adapter,
+        result_store=deps.result_store,
+        artifact_store=deps.artifact_store,
+        usage_receipt_provider=deps.usage_receipt_provider,
+        budget_settlement_provider=deps.budget_settlement_provider,
+    )
+
+    result = asyncio.run(
+        run_enterprise_rag_paired_benchmark(
+            questions_file=q_file,
+            output_root=out_dir,
+            runtime_mode="canonical",
+            canonical_deps=deps,
+            sample_size=1,
+            allow_blocked=True,
+        )
+    )
+
+    metrics = json.loads((out_dir / "metrics.json").read_text(encoding="utf-8"))
+    assert result["status"] == "blocked"
+    assert metrics["measurement_status"] == "blocked_not_measured"
+    assert metrics["profiles"]["standard_rag"]["measurement_state"] == "RUNTIME_OBSERVED"
+    assert metrics["profiles"]["standard_rag"]["runtime_status"] == "completed"
+    assert metrics["profiles"]["standard_rag"]["measured"] is False
+
+
 # ---------------------------------------------------------------------------
 # Section 2: Factory Empty Dependency Guard Tests (Section 四)
 # ---------------------------------------------------------------------------
@@ -393,6 +534,57 @@ def test_09c_factory_uses_formal_standard_and_local_adapters_for_canonical_mode(
     assert not isinstance(standard_runner, CanonicalStandardRAGRunner)
     assert local_runner.__class__.__name__ == "LocalGraphRAGCanonicalAdapter"
     assert not isinstance(local_runner, CanonicalLocalGraphRAGRunner)
+
+
+def test_09d_standard_adapter_validates_runtime_evidence_binding_to_observed_not_measured() -> None:
+    """A VALID binding may become RUNTIME_OBSERVED but must not become MEASURED."""
+    deps = _full_deps()
+    deps = CanonicalRuntimeDependencies(
+        knowledge_runtime=EvidenceBindingKnowledgePort(_standard_runtime_evidence_binding()),
+        index_runtime=deps.index_runtime,
+        security_gate=deps.security_gate,
+        agent_run_runtime=deps.agent_run_runtime,
+        trace_adapter=deps.trace_adapter,
+        result_store=deps.result_store,
+        artifact_store=deps.artifact_store,
+        usage_receipt_provider=deps.usage_receipt_provider,
+        budget_settlement_provider=deps.budget_settlement_provider,
+    )
+    result = StandardRAGCanonicalAdapter(deps).run_canonical_case(_sample_input("standard_rag"))
+
+    assert result.runtime_status == "completed"
+    assert result.measurement_state == MeasurementState.RUNTIME_OBSERVED
+    assert result.failure_class == ""
+    assert result.blocked_reason.startswith("runtime_observed_pending_formal_gates:")
+    assert result.trace_id == "trace-1"
+    assert result.budget_settlement_ref == "budget-1"
+    assert result.artifact_receipt_ref == "artifact-1"
+    assert result.run_outcome_ref == ""
+    assert result.is_test_double is False
+
+
+def test_09e_standard_adapter_invalid_runtime_evidence_binding_fails_closed() -> None:
+    """A tampered binding must stay BLOCKED and expose fixed validation gap codes."""
+    binding = _standard_runtime_evidence_binding(reference_binding_hash="1" * 64)
+    deps = _full_deps()
+    deps = CanonicalRuntimeDependencies(
+        knowledge_runtime=EvidenceBindingKnowledgePort(binding),
+        index_runtime=deps.index_runtime,
+        security_gate=deps.security_gate,
+        agent_run_runtime=deps.agent_run_runtime,
+        trace_adapter=deps.trace_adapter,
+        result_store=deps.result_store,
+        artifact_store=deps.artifact_store,
+        usage_receipt_provider=deps.usage_receipt_provider,
+        budget_settlement_provider=deps.budget_settlement_provider,
+    )
+    result = StandardRAGCanonicalAdapter(deps).run_canonical_case(_sample_input("standard_rag"))
+
+    assert result.runtime_status == "blocked"
+    assert result.measurement_state == MeasurementState.BLOCKED
+    assert result.failure_class == "runtime_evidence_binding_blocked"
+    assert "reference_binding_hash_mismatch" in result.dependency_gaps
+    assert result.trace_id is None
 
 
 # ---------------------------------------------------------------------------
