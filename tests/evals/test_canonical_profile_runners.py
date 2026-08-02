@@ -31,6 +31,10 @@ from tools.evals.zuno.rag_eval.canonical_profile_runners import (
     CanonicalRuntimeDependencies,
     CanonicalStandardRAGRunner,
 )
+from tools.evals.zuno.rag_eval.adapters.deep_agentic import (
+    AgenticGraphRAGCanonicalAdapter,
+    DeepGraphRAGCanonicalAdapter,
+)
 from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate
 from tools.evals.zuno.rag_eval.profile_runtime_factory import CanonicalProfileRuntimeFactory
 from tools.evals.zuno.rag_eval.run_enterprise_rag_paired_benchmark import (
@@ -73,6 +77,62 @@ def _full_deps() -> CanonicalRuntimeDependencies:
         security_gate=object(),
         agent_run_runtime=object(),
         trace_adapter=adapter,
+        result_store=object(),
+        artifact_store=object(),
+        usage_receipt_provider=object(),
+        budget_settlement_provider=object(),
+    )
+
+
+class FactoryPathKnowledgePort:
+    def execute_standard_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+        return {
+            "answer": f"Standard adapter observed {question} at {corpus_snapshot_ref}",
+            "evidence_refs": ("ev_standard_factory",),
+            "retrieved_document_refs": ("doc_standard_factory",),
+            "retrieval_rounds": 1,
+        }
+
+    def execute_deep_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+        return {
+            "answer": f"Deep adapter observed {question} at {corpus_snapshot_ref}",
+            "evidence_refs": ("ev_deep_factory",),
+            "retrieved_document_refs": ("doc_deep_factory",),
+            "retrieval_rounds": 2,
+        }
+
+
+class FactoryPathIndexPort:
+    def execute_local_graph_retrieval(self, question: str, corpus_snapshot_ref: str) -> dict[str, Any]:
+        return {
+            "answer": f"Local adapter observed {question} at {corpus_snapshot_ref}",
+            "evidence_refs": ("ev_local_factory",),
+            "retrieved_document_refs": ("doc_local_factory",),
+            "retrieval_rounds": 1,
+            "graph_added_refs": ("doc_local_graph_added",),
+        }
+
+
+class FactoryPathAgentPort:
+    def execute_agent_run(self, **kwargs: Any) -> dict[str, Any]:
+        return {
+            "status": "completed",
+            "answer": f"Agentic adapter observed {kwargs['case_id']}",
+            "evidence_refs": ("ev_agentic_factory",),
+            "retrieved_document_refs": ("doc_agentic_factory",),
+            "retrieval_rounds": 1,
+        }
+
+
+def _factory_path_deps() -> CanonicalRuntimeDependencies:
+    """Return deps that let Deep and Agentic factory adapters reach their runtime ports."""
+    from zuno.platform.observability.trace_adapter import InMemoryTraceAdapter
+    return CanonicalRuntimeDependencies(
+        knowledge_runtime=FactoryPathKnowledgePort(),
+        index_runtime=FactoryPathIndexPort(),
+        security_gate=object(),
+        agent_run_runtime=FactoryPathAgentPort(),
+        trace_adapter=InMemoryTraceAdapter(config={"enabled": True, "sample_rate": 1.0}),
         result_store=object(),
         artifact_store=object(),
         usage_receipt_provider=object(),
@@ -259,7 +319,7 @@ def test_06b_canonical_ready_dataset_uses_profile_factory_not_stackless(tmp_path
             questions_file=q_file,
             output_root=out_dir,
             runtime_mode="canonical",
-            canonical_deps=_full_deps(),
+            canonical_deps=_factory_path_deps(),
             sample_size=1,
             allow_blocked=True,
         )
@@ -267,7 +327,13 @@ def test_06b_canonical_ready_dataset_uses_profile_factory_not_stackless(tmp_path
 
     assert result["status"] == "blocked"
     manifest = (out_dir / "benchmark_manifest.json").read_text(encoding="utf-8")
-    assert "canonical_standard_execution_adapter_unavailable" in manifest
+    metrics = (out_dir / "metrics.json").read_text(encoding="utf-8")
+    assert "canonical_standard_execution_adapter_unavailable" not in manifest
+    assert "Standard adapter observed test at snapshot_v1" in metrics
+    assert "Local adapter observed test at snapshot_v1" in metrics
+    assert "Deep adapter observed test at snapshot_v1" in metrics
+    assert "Agentic adapter observed q1" in metrics
+    assert "canonical_product_runtime_attestation_unavailable" in metrics
 
 
 # ---------------------------------------------------------------------------
@@ -299,6 +365,34 @@ def test_09_factory_non_empty_incomplete_bundle_creates_boundary_runner() -> Non
     res = runner.run_canonical_case(_sample_input("standard_rag"))
     assert res.runtime_status == "blocked"
     assert "canonical_security_gate_unavailable" in res.dependency_gaps
+
+
+def test_09b_factory_uses_formal_deep_and_agentic_adapters_for_canonical_mode() -> None:
+    """Deep and Agentic adapters must be on the default canonical factory path."""
+    deps = _full_deps()
+    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=deps)
+
+    deep_runner = factory.create_runner("deep_graphrag")
+    agentic_runner = factory.create_runner("agentic_graphrag")
+
+    assert isinstance(deep_runner, DeepGraphRAGCanonicalAdapter)
+    assert not isinstance(deep_runner, CanonicalDeepGraphRAGRunner)
+    assert isinstance(agentic_runner, AgenticGraphRAGCanonicalAdapter)
+    assert not isinstance(agentic_runner, CanonicalAgenticGraphRAGRunner)
+
+
+def test_09c_factory_uses_formal_standard_and_local_adapters_for_canonical_mode() -> None:
+    """Standard and Local adapters must be on the default canonical factory path."""
+    deps = _full_deps()
+    factory = CanonicalProfileRuntimeFactory(runtime_mode="canonical", canonical_deps=deps)
+
+    standard_runner = factory.create_runner("standard_rag")
+    local_runner = factory.create_runner("local_graphrag")
+
+    assert standard_runner.__class__.__name__ == "StandardRAGCanonicalAdapter"
+    assert not isinstance(standard_runner, CanonicalStandardRAGRunner)
+    assert local_runner.__class__.__name__ == "LocalGraphRAGCanonicalAdapter"
+    assert not isinstance(local_runner, CanonicalLocalGraphRAGRunner)
 
 
 # ---------------------------------------------------------------------------
