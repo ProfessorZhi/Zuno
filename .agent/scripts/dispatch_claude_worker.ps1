@@ -56,8 +56,9 @@ function Read-Utf8Strict([string]$Path) {
 
 function Invoke-Git([string]$Repo, [string[]]$Arguments) {
     $output = & git -C $Repo @Arguments 2>&1
+    $exit = $LASTEXITCODE
     return @{
-        exit_code = $LASTEXITCODE
+        exit_code = $exit
         output = (($output | Out-String).Trim())
     }
 }
@@ -161,14 +162,20 @@ function Test-WorkerCompletion([object]$WorkerResult, [bool]$WorktreeCleanAfter,
     $hasResults = ($WorkerResult.PSObject.Properties.Name -contains "test_results") -and (@($WorkerResult.test_results).Count -gt 0)
     if ($hasCommit -and $hasChanged -and $hasCommands -and $hasResults) {
         if (-not [string]::IsNullOrWhiteSpace($Worktree)) {
-            $commitBody = Invoke-Git $Worktree @("log", "-1", "--format=%B", $WorkerResult.commit_sha)
-            if ($commitBody.exit_code -ne 0) {
+            try {
+                $gitLogOutput = & git -C $Worktree log -1 --format=%B $WorkerResult.commit_sha 2>&1
+            } catch {
+                $gitLogOutput = @($_.Exception.Message)
+            }
+            $gitLogExit = $LASTEXITCODE
+            $commitBodyText = (($gitLogOutput | Out-String).Trim())
+            if ($gitLogExit -ne 0 -or [string]::IsNullOrWhiteSpace($commitBodyText)) {
                 return @{
                     status = "FAILED_WORKER_COMPLETION"
                     reason = "commit_sha not found in worktree git log"
                 }
             }
-            if ($commitBody.output -notmatch [regex]::Escape($CommitAttributionMarker)) {
+            if ($commitBodyText -notmatch [regex]::Escape($CommitAttributionMarker)) {
                 return @{
                     status = "FAILED_WORKER_COMPLETION"
                     reason = "commit body missing required Agent: Claude Code attribution"
@@ -273,8 +280,9 @@ try {
     if (-not (Test-Path -LiteralPath $TaskCard -PathType Leaf)) { throw "Task Card does not exist." }
     $taskCardResolved = (Resolve-Path -LiteralPath $TaskCard).Path
     $prompt = Read-Utf8Strict $taskCardResolved
-    $result.prompt.length_chars = $prompt.Length
-    $result.prompt.sha256 = Get-Sha256Hex $prompt
+    $promptNormalizedForDisplay = $prompt -replace "`r`n", "`n" -replace "`r", "`n"
+    $result.prompt.length_chars = $promptNormalizedForDisplay.Length
+    $result.prompt.sha256 = Get-Sha256Hex $promptNormalizedForDisplay
     if ($prompt.Length -lt 800) { throw "Task Card prompt is shorter than 800 characters." }
 
     $taskIdMatch = [regex]::Match($prompt, '(?im)^\s*WORKER_TASK_ID\s*:\s*([A-Za-z0-9._-]+)\s*$')
@@ -345,15 +353,15 @@ try {
     }
 
     $Prompt = Get-Content -LiteralPath $TaskCard -Raw
-    $ClaudeArgsJson = ConvertTo-Json @(
-      "-p",
-      $Prompt,
-      "--output-format",
-      "stream-json",
-      "--verbose",
-      "--max-turns",
-      "$MaxTurns"
-    ) -Compress -Depth 8
+    $maxTurnsStr = [string]$MaxTurns
+    # Normalize line endings: collapse CRLF to LF so the prompt in ClaudeArgsJson
+    # matches the in-memory body produced by the test (and is consistent regardless
+    # of the working copy's autocrlf setting).
+    $PromptNormalized = $Prompt -replace "`r`n", "`n" -replace "`r", "`n"
+    # Build JSON array manually to avoid PowerShell ConvertTo-Json weirdness with
+    # long prompt strings (PowerShell wraps strings that contain JSON-like text).
+    $escapedPrompt = $PromptNormalized -replace '\\', '\\' -replace '"', '\"' -replace "`n", '\n' -replace "`t", '\t'
+    $ClaudeArgsJson = '["-p","' + $escapedPrompt + '","--output-format","stream-json","--verbose","--max-turns","' + $maxTurnsStr + '"]'
     if (-not [string]::IsNullOrWhiteSpace($ResumeSessionId)) {
         $resumeArgs = @($ClaudeArgsJson | ConvertFrom-Json) + @("--resume", $ResumeSessionId)
         $ClaudeArgsJson = ConvertTo-Json $resumeArgs -Compress
@@ -377,10 +385,11 @@ try {
 
     $rawStdout = (& $MetricsRunner @runnerArgs 2> $stderrPath) | Out-String
     $runnerExit = $LASTEXITCODE
-    $sanitizedStdout = Redact-Text $rawStdout $prompt $taskCardResolved
+    $sanitizedStdout = Redact-Text $rawStdout $PromptNormalized $taskCardResolved
+
     $rawStderr = ""
     if (Test-Path -LiteralPath $stderrPath) { $rawStderr = Get-Content -LiteralPath $stderrPath -Raw -Encoding UTF8 }
-    $sanitizedStderr = Redact-Text $rawStderr $prompt $taskCardResolved
+    $sanitizedStderr = Redact-Text $rawStderr $PromptNormalized $taskCardResolved
     Set-Content -LiteralPath $stdoutPath -Value $sanitizedStdout -Encoding UTF8
     Set-Content -LiteralPath $stderrPath -Value $sanitizedStderr -Encoding UTF8
 

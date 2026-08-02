@@ -433,12 +433,16 @@ def test_short_prompt_is_rejected(tmp_path: Path) -> None:
     runner = _write_fake_runner(tmp_path)
     bin_dir = tmp_path / "bin"
     _write_launcher(bin_dir, "claude-minimax.cmd")
-    task, _ = _task_card(tmp_path, short=True)
+    short_task = tmp_path / "short.md"
+    short_task.write_text(
+        "# T\n\nWORKER_TASK_ID: MM-1\n\nAllowed Paths:\nx\n\nRequired Checks:\ngit diff --check\n\nCompletion Contract:\nDONE\n\nCOMMIT_SHA\n\nTEST_RESULTS\n\nBLOCKERS\n\nBLOCKED_PROMPT_TRUNCATED\n\nForbidden Paths:\nfoo\n",
+        encoding="utf-8",
+    )
 
     result, payload, _ = _invoke(
         tmp_path,
         repo,
-        task,
+        short_task,
         runner,
         env={"PATH": str(bin_dir) + os.pathsep + os.environ["PATH"]},
     )
@@ -512,7 +516,12 @@ def test_launcher_falls_back_to_generic_claude(tmp_path: Path) -> None:
     bin_dir = tmp_path / "bin"
     _write_launcher(bin_dir, "claude.cmd")
     task, _ = _task_card(tmp_path)
-    git_dir = Path(os.environ.get("GIT_BIN", "C:/Program Files/Git/bin"))
+    # Locate git dynamically so the test works regardless of Git for Windows install path.
+    git_path_str = subprocess.check_output(
+        [str(Path(os.environ.get("SYSTEMROOT", "C:/Windows")) / "System32" / "where.exe"), "git"],
+        text=True,
+    ).strip().splitlines()[0]
+    git_dir = Path(git_path_str).parent
     isolated_path = os.pathsep.join([str(bin_dir), str(git_dir)])
 
     result, payload, _ = _invoke(
