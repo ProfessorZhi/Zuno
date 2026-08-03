@@ -4,6 +4,20 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from zuno.platform.storage.binding import (
+        OBJECT_STORE_OWNERSHIP,
+        ObjectStoreAdapterDeclaration,
+        ObjectStoreBindingError,
+        ObjectStoreBindingMissing,
+        ObjectStoreCredentialMissing,
+        ObjectStoreLocalAdapterForbidden,
+        binding_declaration_payload,
+        build_local_object_store,
+        object_store_ownership,
+        production_object_store_adapter,
+        require_durable_minio_binding,
+        resolve_durable_minio_binding,
+    )
     from zuno.platform.storage.durable import (
         DurableMinioObjectStore,
         ObjectCommitTicket,
@@ -31,6 +45,18 @@ if TYPE_CHECKING:
 
 _EXPORT_TO_MODULE = {
     "DurableMinioObjectStore": "zuno.platform.storage.durable",
+    "OBJECT_STORE_OWNERSHIP": "zuno.platform.storage.binding",
+    "ObjectStoreAdapterDeclaration": "zuno.platform.storage.binding",
+    "ObjectStoreBindingError": "zuno.platform.storage.binding",
+    "ObjectStoreBindingMissing": "zuno.platform.storage.binding",
+    "ObjectStoreCredentialMissing": "zuno.platform.storage.binding",
+    "ObjectStoreLocalAdapterForbidden": "zuno.platform.storage.binding",
+    "binding_declaration_payload": "zuno.platform.storage.binding",
+    "build_local_object_store": "zuno.platform.storage.binding",
+    "object_store_ownership": "zuno.platform.storage.binding",
+    "production_object_store_adapter": "zuno.platform.storage.binding",
+    "require_durable_minio_binding": "zuno.platform.storage.binding",
+    "resolve_durable_minio_binding": "zuno.platform.storage.binding",
     "LazyStorageClient": "zuno.platform.services.storage",
     "MinioObjectStore": "zuno.platform.storage.object_store",
     "MinioClient": "zuno.platform.services.storage",
@@ -53,6 +79,18 @@ __all__ = [
     "DurableMinioObjectStore",
     "LazyStorageClient",
     "MinioObjectStore",
+    "OBJECT_STORE_OWNERSHIP",
+    "ObjectStoreAdapterDeclaration",
+    "ObjectStoreBindingError",
+    "ObjectStoreBindingMissing",
+    "ObjectStoreCredentialMissing",
+    "ObjectStoreLocalAdapterForbidden",
+    "binding_declaration_payload",
+    "build_local_object_store",
+    "object_store_ownership",
+    "production_object_store_adapter",
+    "require_durable_minio_binding",
+    "resolve_durable_minio_binding",
     "MinioClient",
     "MultipartCleanupReceipt",
     "MultipartPartReceipt",

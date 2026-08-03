@@ -100,7 +100,11 @@ from zuno.platform.security import (
     SecurityProductActionRequest,
     build_product_action_hash,
 )
-from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
+from zuno.platform.storage import (
+    DurableMinioObjectStore,
+    MinioObjectStore,
+    resolve_durable_minio_binding,
+)
 
 
 DEFAULT_PACKAGE_A_UPLOAD_BUCKET = "zuno-ingestion"
@@ -122,28 +126,22 @@ def build_package_a_production_ingestion_runtime(
     durable_object_store_factory: Callable[..., Any] = DurableMinioObjectStore,
     runtime_factory: Callable[..., PackageAProductionIngestionRuntime] = PackageAProductionIngestionRuntime,
 ) -> PackageAProductionIngestionRuntime | None:
-    storage = getattr(settings, "storage", None)
-    if storage is None or getattr(storage, "mode", None) != "minio":
-        return None
-    minio = getattr(storage, "minio", None)
-    if minio is None:
-        return None
-    endpoint = str(getattr(minio, "endpoint", "") or "").strip()
-    access_key = str(getattr(minio, "access_key_id", "") or "").strip()
-    secret_key = str(getattr(minio, "access_key_secret", "") or "").strip()
-    if not endpoint or not access_key or not secret_key:
-        return None
-    object_store = object_store_factory(
-        endpoint=endpoint,
-        access_key=access_key,
-        secret_key=secret_key,
-        secure=False,
-    )
-    durable_object_store = durable_object_store_factory(
-        store=object_store,
+    """Production composition root for the durable ingestion runtime.
+
+    The single production Object Store binding is resolved through the formal
+    binding module (``zuno.platform.storage.binding``): only the MinIO durable
+    adapter is a canonical owner. Unconfigured storage fails closed — the
+    caller receives ``None`` and the API layer rejects uploads with 503.
+    """
+    durable_object_store = resolve_durable_minio_binding(
         engine=engine,
+        settings=settings,
         owner="workspace.file_upload",
+        object_store_factory=object_store_factory,
+        durable_object_store_factory=durable_object_store_factory,
     )
+    if durable_object_store is None:
+        return None
     return runtime_factory(
         engine=engine,
         object_store=durable_object_store,
