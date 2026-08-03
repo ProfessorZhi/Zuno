@@ -20,3 +20,30 @@
 12. worker 只提交候选结果；最终审查、合并、集成验证和 push 由 coordinator 完成。
 13. 成本和时间统计以单个 agent 的一次 PR / handoff 为单位，不以一轮对话为单位。
 14. 简单、大量、重复、下载/环境/格式类任务优先交给 Claude Code worker；复杂判断、根因定位、安全边界、合并和最终验证由 coordinator 收口。
+15. 新建 Claude Code session 时必须使用 `--output-format stream-json --verbose`，从 final `type=result` 事件记录真实 `session_id`；同一 PR / handoff 的后续修复必须优先 `--resume <session_id>`。
+16. worker 不得声称自己的结果已合并；只能报告候选 branch / commit / PR 和 handoff 回执。
+17. worker 必须为 coordinator review 准备自评分输入：范围是否越界、验证是否可复现、evidence 是否真实、风险与 blocker 是否完整、是否存在安全或并发修改阻断项。
+
+## Claude Code Worker Handoff
+
+```text
+agent=<agent>
+model=<model>
+worker=<worker>
+cost_scope=single-agent-pr-handoff
+session_id=<actual session id from stream-json result>
+resume_policy=use --resume <session_id> for follow-up work on the same PR / handoff
+worktree=<absolute worktree path>
+branch=<codex/...>
+commit=<sha or none>
+pr=<url or none>
+changed_files=<files>
+validation=<commands and pass/fail summary>
+api_cost_usd_estimated=<total_cost_usd sum for this PR / handoff>
+provider_quota_basis=token | request | percent | credit | unknown
+duration_ms=<sum for this PR / handoff>
+risk=<remaining risk or none>
+blockers=<blockers or none>
+```
+
+Coordinator 会按 100 分 scorecard 审查 worker 输出。缺身份、缺可复现 evidence、伪造测试、绕过安全门、覆盖并发修改或把 Target 写成 Current 会直接 block。

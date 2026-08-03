@@ -80,6 +80,36 @@ $Lines = & claude-<provider> -p (Get-Content -LiteralPath $PromptPath -Raw) --ou
 $Lines | Set-Content -LiteralPath $Log -Encoding UTF8
 ```
 
+Preferred Claude Code session creation:
+
+```powershell
+$Lines = & claude-<provider> -p (Get-Content -LiteralPath $PromptPath -Raw) --output-format stream-json --verbose --max-turns <n> --max-budget-usd <amount>
+$Lines | Set-Content -LiteralPath $Log -Encoding UTF8
+$SessionId = ($Lines | ConvertFrom-Json | Where-Object { $_.type -eq "result" } | Select-Object -Last 1).session_id
+$SessionId
+```
+
+Preferred Claude Code session resume for the same PR / handoff:
+
+```powershell
+$ResumeLog = Join-Path $env:TEMP "zuno-claude-<agent>-<model>-<worker>-resume-<n>.jsonl"
+$ResumePromptPath = Join-Path $env:TEMP "zuno-claude-<agent>-<model>-<worker>-resume-<n>.prompt.md"
+Set-Content -LiteralPath $ResumePromptPath -Encoding UTF8 -Value @'
+Resume the same PR / handoff.
+agent=<agent>
+model=<model>
+worker=<worker>
+cost_scope=single-agent-pr-handoff
+session_id=<session id returned by the first stream-json result>
+worktree=<absolute worktree path>
+branch=codex/<task>-<agent>-<model>-<worker>
+required_result=<specific rework or validation task>
+append_cost_to_existing_pr_ledger=true
+'@
+$ResumeLines = & claude-<provider> --resume <session_id> -p (Get-Content -LiteralPath $ResumePromptPath -Raw) --output-format stream-json --verbose --max-turns <n> --max-budget-usd <amount>
+$ResumeLines | Set-Content -LiteralPath $ResumeLog -Encoding UTF8
+```
+
 Metrics fields to extract from the final `type=result` event:
 
 ```text
@@ -117,6 +147,8 @@ api_cost_usd_estimated=<total_cost_usd>
 provider_quota_basis=<basis>
 duration_ms=<duration_ms>
 validation=<commands and results>
+coordinator_score=<0-100, filled by coordinator>
+coordinator_decision=accept | request_changes | reject | blocked
 ```
 
 Cost scope rule:
@@ -133,6 +165,24 @@ Dispatch preference:
 ```text
 Claude Code worker: repetitive docs, evidence, download, environment probing, log extraction, low-risk isolated patches.
 Codex coordinator: architecture decisions, root-cause analysis, security/recovery/concurrency/idempotency, review, merge, final verification.
+```
+
+Coordinator scorecard:
+
+```text
+identity and traceability: 10
+scope containment and no unrelated churn: 15
+requirement fit and correctness: 20
+tests and reproducible verification: 15
+evidence quality and honesty: 10
+security / approval / audit / no bypass: 15
+cost and time efficiency: 5
+integration risk and merge readiness: 10
+
+>=85 accept after coordinator verification
+70-84 request changes or split/reassign
+<70 reject/reassign
+security bypass, fake evidence, missing identity, stale-main overwrite, or Target-as-Current claim = blocked
 ```
 
 Avoid:

@@ -29,6 +29,26 @@
 - worker blocker 与升级处理：
 - 成本 / 速度取舍结论：
 
+## Coordinator Worker Review
+
+| PR / handoff | agent | model | worker | commit | score | decision | blocking item | coordinator evidence checked |
+| --- | --- | --- | --- | --- | ---: | --- | --- | --- |
+
+评分口径：
+
+```text
+identity and traceability: 10
+scope containment and no unrelated churn: 15
+requirement fit and correctness: 20
+tests and reproducible verification: 15
+evidence quality and honesty: 10
+security / approval / audit / no bypass: 15
+cost and time efficiency: 5
+integration risk and merge readiness: 10
+```
+
+判定：`>=85` 可接受但仍需合并前验证；`70-84` request changes 或拆小重派；`<70` reject / reassign。安全门绕过、伪造 evidence、缺身份标签、覆盖并发修改、Target 写成 Current 时直接 block。
+
 ## 验收闸门结果
 
 ## 自维护审查

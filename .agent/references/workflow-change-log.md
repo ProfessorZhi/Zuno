@@ -19,9 +19,9 @@ date
 
 ### 2026-08-03: Claude Code worker identity, cost, and coordinator merge workflow
 
-Summary: 明确多 agent / Claude Code worker 必须使用独立 worktree、`codex/` branch 和 `agent + model + worker` 身份标签，并把身份写入 branch、commit、evidence、PR 标题和 PR 描述；同时建立 API token 成本账与 provider 平台额度账的双账统计口径，并规定成本和时间按单个 agent 的一次 PR / handoff 统计。
+Summary: 明确多 agent / Claude Code worker 必须使用独立 worktree、`codex/` branch 和 `agent + model + worker` 身份标签，并把身份写入 branch、commit、evidence、PR 标题和 PR 描述；同时建立 API token 成本账与 provider 平台额度账的双账统计口径，并规定成本和时间按单个 agent 的一次 PR / handoff 统计。追加 Codex coordinator 标准生命周期：分派任务、创建 Claude Code session、用 `--resume <session_id>` 复用同一 PR / handoff、审查 worker diff / evidence / 验证 / 风险 / 成本、按 100 分 scorecard 打分，再决定 accept、request changes、reject 或 block。
 
-Reason: 本轮并发验证了 `claude-minimax` 与 `claude-deepseek` 可以各开多个 session 在独立 worktree 中完成本地提交，但也暴露出三个长期风险：一是 worker 提交如果没有身份标签，后续审查、归因和成本统计会断裂；二是 `stream-json --verbose` 返回的 `total_cost_usd` 只是按 API token 价格估算，不等同于 MiniMax / DeepSeek 等 provider 后台的真实扣费、次数或百分比额度；三是如果把一轮对话成本当成一个 PR 的成本，就无法判断哪个 worker、哪个 PR 和哪类任务真正消耗额度。为了平衡开发速度和成本，简单、大量、重复、下载/环境/格式类任务优先派给 Claude Code worker，复杂架构判断、高风险修复、review、合并和最终验证保留给 coordinator。
+Reason: 本轮并发验证了 `claude-minimax` 与 `claude-deepseek` 可以各开多个 session 在独立 worktree 中完成本地提交，但也暴露出四个长期风险：一是 worker 提交如果没有身份标签，后续审查、归因和成本统计会断裂；二是 `stream-json --verbose` 返回的 `total_cost_usd` 只是按 API token 价格估算，不等同于 MiniMax / DeepSeek 等 provider 后台的真实扣费、次数或百分比额度；三是如果把一轮对话成本当成一个 PR 的成本，就无法判断哪个 worker、哪个 PR 和哪类任务真正消耗额度；四是如果没有固定评分和阻断项，worker PR 容易把候选结果误当成可合并事实。为了平衡开发速度和成本，简单、大量、重复、下载/环境/格式类任务优先派给 Claude Code worker，复杂架构判断、高风险修复、review、合并和最终验证保留给 coordinator。
 
 Affected files:
 
@@ -32,10 +32,11 @@ Affected files:
 - `.agent/templates/phase-closure-report.md`
 - `.agent/references/workflow-change-log.md`
 - `.agent/scripts/verify-workflow.ps1`
+- `README.md`
 
-Status: Current workflow truth for Claude Code worker dispatch, cost accounting, PR handoff and coordinator-owned merge.
+Status: Current workflow truth for Claude Code worker dispatch, session reuse, cost accounting, PR handoff, coordinator scoring and coordinator-owned merge.
 
-Validation: 本条由 `git diff --check`、`python .agent/scripts/verify_agent_system.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1` 和 `pytest -q tests/repo/test_agent_system.py -p no:cacheprovider` 覆盖。
+Validation: 本条由 `git diff --check`、`python .agent/scripts/verify_agent_system.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1`、`python tools/scripts/verify_docs_entrypoints.py` 和 `python tools/scripts/verify_repo_structure.py` 覆盖。`pytest -q tests/repo/test_agent_system.py -p no:cacheprovider` 当前仍暴露 main 基线里的旧架构/program surface 期望不一致，不能作为本条绿色证据。
 
 ### 2026-08-02: command-line and worktree safety rules added to local workflow memory
 
