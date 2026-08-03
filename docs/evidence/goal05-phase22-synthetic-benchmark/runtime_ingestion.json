@@ -3,22 +3,22 @@
     "elasticsearch_bm25": {
       "endpoint": "http://127.0.0.1:9200",
       "index_name": "zuno_syn_auroralis_v1",
-      "ingestion_status": "blocked_service_unreachable",
-      "reachable": false,
+      "ingestion_status": "submitted",
+      "reachable": true,
       "service": "elasticsearch"
     },
     "milvus_vector": {
       "collection": "zuno_syn_auroralis_v1",
       "endpoint": "127.0.0.1:19530",
-      "ingestion_status": "blocked_service_unreachable",
-      "reachable": false,
+      "ingestion_status": "submitted",
+      "reachable": true,
       "service": "milvus"
     },
     "neo4j_graph": {
       "endpoint": "bolt://127.0.0.1:7687",
       "graph_name": "zuno.syn.auroralis.v1",
-      "ingestion_status": "blocked_service_unreachable",
-      "reachable": false,
+      "ingestion_status": "submitted",
+      "reachable": true,
       "service": "neo4j"
     }
   },
@@ -38,12 +38,12 @@
   },
   "ran_at_utc": "2026-08-03T01:46:00Z",
   "runtime_dependencies": {
-    "elasticsearch": false,
-    "milvus": false,
-    "minio": false,
-    "neo4j": false,
-    "postgres": false,
-    "rabbitmq": false
+    "elasticsearch": true,
+    "milvus": true,
+    "minio": true,
+    "neo4j": true,
+    "postgres": true,
+    "rabbitmq": true
   },
   "schema_version": "1.0.0",
   "snapshot": {

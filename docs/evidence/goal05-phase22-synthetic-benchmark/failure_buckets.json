@@ -1,14 +1,30 @@
 {
   "agentic_graphrag": {
-    "canonical_elasticsearch_unavailable": 80
+    "abstain": 5,
+    "answer": 65,
+    "controlled_behavior": 5,
+    "deny": 1,
+    "restricted_answer": 4
   },
   "deep_graphrag": {
-    "canonical_elasticsearch_unavailable": 80
+    "abstain": 5,
+    "answer": 65,
+    "controlled_behavior": 5,
+    "deny": 1,
+    "restricted_answer": 4
   },
   "local_graphrag": {
-    "canonical_elasticsearch_unavailable": 80
+    "abstain": 5,
+    "answer": 65,
+    "controlled_behavior": 5,
+    "deny": 1,
+    "restricted_answer": 4
   },
   "standard_rag": {
-    "canonical_elasticsearch_unavailable": 80
+    "abstain": 5,
+    "answer": 65,
+    "controlled_behavior": 5,
+    "deny": 1,
+    "restricted_answer": 4
   }
 }

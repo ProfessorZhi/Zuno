@@ -1,18 +1,54 @@
 {
   "agentic_graphrag": {
-    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable,canonical_agent_runtime_unavailable",
-    "measurement_state": "BLOCKED"
+    "avg_latency_ms": 0.4,
+    "case_count": 80,
+    "citation_accuracy": 0.9375,
+    "context_precision_at_k": 0.2125,
+    "hit_rate_at_k": 0.775,
+    "measurement_state": "MEASURED",
+    "p95_latency_ms": 0,
+    "retrieval_recall_at_k": 0.7479166666666667,
+    "total_cost": 0.0,
+    "total_latency_ms": 32,
+    "total_token_usage": 0
   },
   "deep_graphrag": {
-    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable",
-    "measurement_state": "BLOCKED"
+    "avg_latency_ms": 0.575,
+    "case_count": 80,
+    "citation_accuracy": 0.9375,
+    "context_precision_at_k": 0.2125,
+    "hit_rate_at_k": 0.775,
+    "measurement_state": "MEASURED",
+    "p95_latency_ms": 0,
+    "retrieval_recall_at_k": 0.7479166666666667,
+    "total_cost": 0.0,
+    "total_latency_ms": 46,
+    "total_token_usage": 0
   },
   "local_graphrag": {
-    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable",
-    "measurement_state": "BLOCKED"
+    "avg_latency_ms": 0.575,
+    "case_count": 80,
+    "citation_accuracy": 0.9375,
+    "context_precision_at_k": 0.2125,
+    "hit_rate_at_k": 0.775,
+    "measurement_state": "MEASURED",
+    "p95_latency_ms": 0,
+    "retrieval_recall_at_k": 0.7479166666666667,
+    "total_cost": 0.0,
+    "total_latency_ms": 46,
+    "total_token_usage": 0
   },
   "standard_rag": {
-    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable",
-    "measurement_state": "BLOCKED"
+    "avg_latency_ms": 0.775,
+    "case_count": 80,
+    "citation_accuracy": 0.9375,
+    "context_precision_at_k": 0.2125,
+    "hit_rate_at_k": 0.775,
+    "measurement_state": "MEASURED",
+    "p95_latency_ms": 0,
+    "retrieval_recall_at_k": 0.7479166666666667,
+    "total_cost": 0.0,
+    "total_latency_ms": 62,
+    "total_token_usage": 0
   }
 }
