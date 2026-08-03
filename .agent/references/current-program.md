@@ -42,6 +42,7 @@ Machine status summary: PHASE10 completed; PHASE16 completed; PHASE17 completed;
 - 使用 Codex GPT-5.5 medium 时，一次只执行一个 Work Package。
 - 任务上下文由 Phase 文件和 Minimal Read Set 提供，不重新推导全部架构。
 - 降低 Token 不能降低架构、故障、安全、恢复或测试要求。
+- 当前 program 继续采用 runtime-first / vertical-slice-first closure guard；只写 contract、schema 或 README 不能关闭 runtime phase。
 - 最小 Vertical Slice 只能作为中间证据，不能关闭 Phase。
 - 每个任务使用独立 Worktree/Branch，完成真实代码、Migration、测试、证据、Commit 和 Push。
 - 当前状态为 `implementation available / measurement in_progress / production readiness not established`。

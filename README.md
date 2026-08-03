@@ -55,12 +55,24 @@ architecture.html
 ## Program 入口
 
 - 当前 program 前台：`.agent/programs/`
-- 当前 active program：none
-- 当前 phase：none
+- 当前 active program：`zuno-canonical-architecture-runtime-realization-v1`
+- 当前 phase：`PHASE22`
 - 最近完成归档：`docs/history/programs/zuno-real-unified-runtime-cutover-v1/`
 - 历史生产完成归档：`docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
 - 历史 runtime-first 归档：`docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
 - 历史 master architecture 归档：`docs/history/programs/zuno-master-architecture-implementation-v1/`
+
+## Agent 协作入口
+
+Zuno 主仓库目录保持为最终集成仓库；临时 worker worktree 放在：
+
+```text
+F:\internship-work\resume project\worktrees\
+```
+
+每个 worker 使用独立 worktree 和 `codex/` branch。Claude Code worker 优先处理简单、大量、重复、下载、环境探测、日志整理和低风险候选补丁；Codex coordinator 负责复杂架构判断、根因定位、安全 / 并发 / 恢复 / 幂等语义、review、合并、最终验证和 push。
+
+worker 的 worktree、branch、commit、evidence、PR 标题和 PR 描述必须带 `agent + model + worker` 身份标签。时间和成本按单个 agent 的一次 PR / handoff 统计，不按一轮对话统计；API token 估算成本和 provider 平台额度扣减分开记录。详细规则见 `.agent/references/workflow.md`、`.agent/references/command-catalog.md` 和 `.agent/templates/phase-closure-report.md`。
 
 ## 本地验证入口
 

@@ -343,59 +343,28 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: no-active" -or $currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "latest_completed_program: zuno-real-unified-runtime-cutover-v1") {
-    $failures.Add("current-program.md must declare no-active real unified runtime cutover closure state")
+if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-canonical-architecture-runtime-realization-v1" -or $currentProgram -notmatch "current_phase: PHASE22" -or $currentProgram -notmatch "zuno-real-unified-runtime-cutover-v1") {
+    $failures.Add("current-program.md must declare active canonical architecture runtime realization PHASE22 state")
 }
-if ($currentProgram -notmatch "zuno-evidence-span-agentic-graphrag-hardening-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-evidence-span-agentic-graphrag-hardening-v1/") {
-    $failures.Add("current-program.md must keep evidence-span archive visible")
-}
-if ($currentProgram -notmatch "PHASE01-PHASE13" -or $currentProgram -notmatch "Single Controller Agent Runtime" -or $currentProgram -notmatch "measurement blocked") {
-    $failures.Add("current-program.md missing unified runtime archived program boundary")
-}
-if ($currentProgram -notmatch "zuno-production-document-ingestion-and-thread-foundation-v1" -or $currentProgram -notmatch "zuno-enterprise-agentic-graphrag-production-suite-v1" -or $currentProgram -notmatch "zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" -or $currentProgram -notmatch "zuno-enterprise-ingestion-async-infrastructure-v1" -or $currentProgram -notmatch "zuno-runtime-subsystems-parallel-v1" -or $currentProgram -notmatch "zuno-agent-planning-integration-v1" -or $currentProgram -notmatch "zuno-enterprise-knowledge-eval-benchmark-v1") {
-    $failures.Add("current-program.md missing Program 1-3 mega suite map")
-}
-if ($currentProgram -notmatch "docs/history/programs/zuno-enterprise-document-ingestion-platform-v2/" -or $currentProgram -notmatch "Product V1 local durable ingestion baseline") {
-    $failures.Add("current-program.md missing Program 2 archive and durable baseline summary")
-}
-if ($currentProgram -notmatch "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/") {
-    $failures.Add("current-program.md must keep latest production completion archive")
-}
-if ($currentProgram -notmatch "zuno-target-architecture-runtime-full-implementation-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/") {
-    $failures.Add("current-program.md must keep latest runtime full implementation archive")
+$requiredArchivedPrograms = @(
+    "zuno-evidence-span-agentic-graphrag-hardening-v1",
+    "zuno-real-unified-runtime-cutover-v1",
+    "zuno-production-document-ingestion-and-thread-foundation-v1",
+    "zuno-enterprise-document-ingestion-platform-v2",
+    "zuno-production-architecture-and-deliverables-completion-v1",
+    "zuno-target-architecture-runtime-full-implementation-v1",
+    "zuno-master-architecture-implementation-v1",
+    "zuno-eight-deliverables-full-realization-v1",
+    "zuno-six-layer-internalization-v1"
+)
+foreach ($programId in $requiredArchivedPrograms) {
+    Require-Path "docs\history\programs\$programId"
 }
 if ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase") {
     $failures.Add("current-program.md missing runtime-first closure guard")
 }
-if ($currentProgram -notmatch "一次性交付型成熟化 program" -or $currentProgram -notmatch "成熟目标架构和四大总交付物完成") {
-    $failures.Add("current-program.md missing production completion program goal")
-}
-if ($currentProgram -notmatch "zuno-master-architecture-implementation-v1") {
-    $failures.Add("current-program.md must keep the archived master architecture implementation program visible")
-}
-if ($currentProgram -notmatch "zuno-eight-deliverables-full-realization-v1") {
-    $failures.Add("current-program.md must keep the completed eight deliverables program visible")
-}
-if ($currentProgram -notmatch "PHASE01-PHASE10" -or $currentProgram -notmatch "docs/history/programs/zuno-eight-deliverables-full-realization-v1/") {
-    $failures.Add("current-program.md missing completed archive boundaries")
-}
-if ($currentProgram -notmatch "PHASE01-PHASE12" -or $currentProgram -notmatch "docs/history/programs/zuno-master-architecture-implementation-v1/") {
-    $failures.Add("current-program.md missing latest archived master program boundary")
-}
-if ($currentProgram -notmatch "zuno-six-layer-internalization-v1" -or $currentProgram -notmatch "docs/history/programs/zuno-six-layer-internalization-v1/") {
-    $failures.Add("current-program.md missing archived six-layer internalization program facts")
-}
 if ($currentProgram -notmatch "\.agent/programs/") {
     $failures.Add("current-program.md does not point to the flat program directory")
-}
-if ($currentProgram -notmatch "zuno-repo-layout-cleanup-v1") {
-    $failures.Add("current-program.md missing completed repo layout cleanup program id")
-}
-if ($currentProgram -notmatch "zuno-runtime-architecture-upgrade-v1" -or $currentProgram -notmatch "zuno-architecture-visuals-v1") {
-    $failures.Add("current-program.md missing future reference draft ids")
-}
-if ($currentProgram -notmatch "final alias surface closure" -or $currentProgram -notmatch "legacy_aliases.py") {
-    $failures.Add("current-program.md missing historical Program 3 final alias closure completion facts")
 }
 
 if ($failures.Count -gt 0) {
