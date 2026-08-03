@@ -1,0 +1,26 @@
+{
+  "probe_kind": "phase22_cc_d_environment",
+  "probe_version": "1.0.0",
+  "captured_at": "2026-08-03T10:42:03Z",
+  "host": "DESKTOP-JG2FFN3",
+  "python_version": "3.12.10",
+  "docker_compose_file": "infra/docker/docker-compose.yml",
+  "services": [
+    {
+      "id": "postgres",
+      "expected_kind": "postgres_domain",
+      "host": "localhost",
+      "port": 5432,
+      "protocol": "tcp",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "postgres:16"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    }
+  ]
+}

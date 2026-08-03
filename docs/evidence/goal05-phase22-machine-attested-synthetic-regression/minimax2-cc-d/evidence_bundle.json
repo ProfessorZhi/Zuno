@@ -1,0 +1,344 @@
+{
+  "schema_version": "1.0.0",
+  "goal_id": "phase22-machine-attested-synthetic-regression",
+  "worker_task_id": "CC-D",
+  "agent_name": "MiniMax2",
+  "provider": "MiniMax",
+  "captured_at": "2026-08-03T10:39:17Z",
+  "matrix_status": "NOT_RUN_DEPENDENCY_BLOCKED",
+  "dependency_pr": "codex/phase22-real-synthetic-benchmark-readiness",
+  "dependency_head_sha": "NOT_RUN_DEPENDENCY_BLOCKED",
+  "snapshot_id": null,
+  "profile_run_ids": [],
+  "matrix_path": "tools\\evals\\zuno\\synthetic_benchmark\\phase22_cc_d_fault_matrix.yaml",
+  "matrix_sha256": "d2e8033ad0bf10b0674cff40aa03e997f95cd6700eca65cc86f61d3a8ceaa4c0",
+  "case_count": 22,
+  "case_runs": [
+    {
+      "case_id": "D-MINIO-UNREACHABLE",
+      "test_command": "python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live MinIO receipt; env probe records only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable"
+      }
+    },
+    {
+      "case_id": "D-POSTGRES-UNREACHABLE",
+      "test_command": "python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live PostgreSQL receipt; env probe records only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable"
+      }
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE"
+      }
+    },
+    {
+      "case_id": "D-ELASTICSEARCH-PARTIAL-SUCCESS",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live three-index receipts; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS"
+      }
+    },
+    {
+      "case_id": "D-MILVUS-WRITE-FAILURE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live Milvus receipt; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE"
+      }
+    },
+    {
+      "case_id": "D-NEO4J-READBACK-MISMATCH",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live Neo4j two-hop readback; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH"
+      }
+    },
+    {
+      "case_id": "D-EMBEDDING-CREDENTIAL-MISSING",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live embedding gateway; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING"
+      }
+    },
+    {
+      "case_id": "D-INDEX-WORKER-CRASH",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live index worker; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH"
+      }
+    },
+    {
+      "case_id": "D-SNAPSHOT-EXIT-BEFORE-ACTIVATION",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B snapshot_activation receipt; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION"
+      }
+    },
+    {
+      "case_id": "D-DUPLICATE-INGEST",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST"
+      }
+    },
+    {
+      "case_id": "D-TENANT-CROSS-VIOLATION",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live tenant isolation runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION"
+      }
+    },
+    {
+      "case_id": "D-WORKSPACE-CROSS-VIOLATION",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live workspace isolation runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION"
+      }
+    },
+    {
+      "case_id": "D-SECURITY-EPOCH-EXPIRED",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live security epoch runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED"
+      }
+    },
+    {
+      "case_id": "D-CANCEL",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CANCEL",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-C live profile runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CANCEL"
+      }
+    },
+    {
+      "case_id": "D-DEADLINE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DEADLINE",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-C live profile runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DEADLINE"
+      }
+    },
+    {
+      "case_id": "D-RESUME",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RESUME",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-C live profile runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RESUME"
+      }
+    },
+    {
+      "case_id": "D-UNKNOWN-SIDE-EFFECT",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B/CC-C live runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT"
+      }
+    },
+    {
+      "case_id": "D-RETRY-EXHAUSTED",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B/CC-C live runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED"
+      }
+    },
+    {
+      "case_id": "D-REPLAN-BARRIER",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live replan barrier runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER"
+      }
+    },
+    {
+      "case_id": "D-PARALLEL-PARTIAL-FAILURE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live parallel indexing runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE"
+      }
+    },
+    {
+      "case_id": "D-CITATION-CONFLICT",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-C live citation arbitration; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT"
+      }
+    },
+    {
+      "case_id": "D-EVIDENCE-INSUFFICIENT-ABSTAIN",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN",
+      "expected_exit_code": 0,
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-C live abstention runtime; harness only.",
+      "execution": {
+        "launched": false,
+        "exit_code": null,
+        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN"
+      }
+    }
+  ],
+  "environment_probe_path": "docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json",
+  "environment_probe_sha256": "fa9486f414866c9df52c40c358ec85332ded376e1d73673d83ece75be817c82c",
+  "commands": [
+    "python tools\\scripts\\phase22_environment_probe.py --output docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json",
+    "python tools/scripts/phase22_fault_matrix_runner.py --case <case_id>",
+    "git diff --check",
+    "python tools/scripts/verify_phase22_synthetic_regression_track.py",
+    "python tools/scripts/verify_phase22_completion_blockers.py"
+  ],
+  "exit_codes": {
+    "git diff --check": 0,
+    "verify_phase22_synthetic_regression_track.py": 0,
+    "verify_phase22_completion_blockers.py": 0,
+    "phase22_environment_probe.py": 0,
+    "phase22_fault_matrix_runner.py": 0
+  },
+  "cleanup": [
+    "drop probe buckets and queues if any probe created them",
+    "remove temp evidence files in repo root (none created)",
+    "leave docker stack as discovered (no start/stop from this worker)"
+  ],
+  "service_versions": {
+    "python": "3.12.10",
+    "docker_compose_file": "infra/docker/docker-compose.yml"
+  },
+  "forbidden_actions_respected": [
+    "no port-reachable == write/read verified",
+    "no handwritten receipt",
+    "no handwritten trace",
+    "no deleted failure assertions",
+    "no secret in evidence",
+    "no UNKNOWN side effect blind retry",
+    "no snapshot activation without receipt",
+    "no BLOCKED rewritten as PASSED"
+  ],
+  "remaining_gaps": [
+    "DeepSeek CC-B must produce snapshot_id + three visibility receipts",
+    "DeepSeek CC-C must produce profile_run_ids + measurement attestation",
+    "this bundle cannot flip any row to PASSED until receipts land"
+  ]
+}

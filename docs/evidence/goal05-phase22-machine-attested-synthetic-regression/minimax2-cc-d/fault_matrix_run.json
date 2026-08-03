@@ -1,0 +1,4400 @@
+{
+  "runs": [
+    {
+      "case_id": "D-MINIO-UNREACHABLE",
+      "test_command": "python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 0,
+        "stdout_tail": "Active code page: 65001\nwrote environment probe report: F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/environment_probe.json\n",
+        "stderr_tail": "NOTE: minio unexpectedly reachable (still NOT_RUN_DEPENDENCY_BLOCKED)\n"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live MinIO receipt; env probe records only."
+    },
+    {
+      "case_id": "D-POSTGRES-UNREACHABLE",
+      "test_command": "python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 0,
+        "stdout_tail": "Active code page: 65001\nwrote environment probe report: F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/environment_probe.json\n",
+        "stderr_tail": "NOTE: postgres unexpectedly reachable (still NOT_RUN_DEPENDENCY_BLOCKED)\n"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live PostgreSQL receipt; env probe records only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 3221225794,
+        "stdout_tail": "",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": 4294967295,
+        "stdout_tail": "Active code page: 65001\nrecorded case D-RABBITMQ-DUPLICATE-MESSAGE to F:/agent_project/Zuno/.claude/worktrees/minimax2-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/fault_matrix_run.json\n",
+        "stderr_tail": ""
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    },
+    {
+      "case_id": "D-RABBITMQ-DUPLICATE-MESSAGE",
+      "test_command": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "expected_exit_code": 0,
+      "execution": {
+        "launched": true,
+        "exit_code": -1,
+        "reason": "command timeout"
+      },
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "depends on DeepSeek CC-B live ingestion runtime; harness only."
+    }
+  ]
+}

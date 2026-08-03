@@ -1,0 +1,445 @@
+schema_version: "1.0.0"
+goal_id: phase22-machine-attested-synthetic-regression
+worker_task_id: CC-D
+matrix_owner: minimax2
+matrix_status: NOT_RUN_DEPENDENCY_BLOCKED
+dependency_pr: codex/phase22-real-synthetic-benchmark-readiness
+dependency_head_sha: NOT_RUN_DEPENDENCY_BLOCKED
+snapshot_id: null
+profile_run_ids: []
+notes: |
+  Matrix is fully specified with all required fields and exact test commands,
+  but every row is marked NOT_RUN_DEPENDENCY_BLOCKED because DeepSeek CC-B
+  (snapshot_id) and CC-C (profile_run_ids) have not produced the live
+  runtime evidence this matrix must execute against. No row may flip to
+  PASSED without an authentic receipt_ref produced by the runtime owner.
+
+required_fields:
+  - case_id
+  - trigger
+  - state_before
+  - state_after
+  - owner
+  - failure_class
+  - propagation
+  - retryability
+  - recovery
+  - idempotency_key
+  - receipt_ref
+  - trace_ref
+  - test_command
+  - exit_code
+  - cleanup
+  - status
+  - not_run_reason
+
+owners:
+  knowledge_ingestion: Knowledge / Canonical Ingestion Runtime
+  object_store: Input / Durable Object Store
+  postgres_domain: PostgreSQL Domain Facts
+  knowledge_index: Knowledge / Index Visibility
+  snapshot_activation: Knowledge / Snapshot Activation
+  observability: Observability / Eval Runtime
+  gold_isolation: Eval / Gold Isolation
+  release_decision: Eval / Release Decision
+  fault_recovery: Fault / Runtime Recovery
+  security_isolation: Security / Tenant Workspace Isolation
+  runtime_resume: Runtime / Resume and Idempotency
+  evidence_reproducibility: Evidence / Reproducibility
+
+cases:
+  - case_id: D-MINIO-UNREACHABLE
+    trigger: MinIO endpoint down or unreachable during object stage / commit
+    state_before: accepted
+    state_after: object_commit_failed
+    owner: knowledge_ingestion
+    failure_class: external_service_unreachable
+    propagation: blocks object_commit, propagates to security_denied and source_upload_aborted
+    retryability: bounded retry with backoff; reconciliation_required on persistent failure
+    recovery: requeue object commit with idempotency_key; require visible receipt before source_upload_complete
+    idempotency_key: source_hash + tenant_id + workspace_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable
+    exit_code: 0
+    cleanup: drop probe bucket; assert no partial objects; assert source row remains in accepted
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live MinIO receipt; env probe records only.
+
+  - case_id: D-POSTGRES-UNREACHABLE
+    trigger: PostgreSQL unreachable during ingestion fact commit or domain event publish
+    state_before: object_committed
+    state_after: credential_blocked_or_postgres_unreachable
+    owner: postgres_domain
+    failure_class: external_service_unreachable
+    propagation: blocks postgres_domain_fact_receipt; blocks downstream snapshot activation
+    retryability: bounded retry; reconcile via postgres_runtime_lease
+    recovery: requeue ingestion with idempotency_key; require postgres_domain_fact_receipt
+    idempotency_key: source_hash + document_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable
+    exit_code: 0
+    cleanup: rollback any partial transaction; assert document_version row absent
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live PostgreSQL receipt; env probe records only.
+
+  - case_id: D-RABBITMQ-DUPLICATE-MESSAGE
+    trigger: RabbitMQ redelivers the same ingestion message after partial commit
+    state_before: indexing
+    state_after: indexing (idempotent re-entry)
+    owner: knowledge_ingestion
+    failure_class: duplicate_message_redelivery
+    propagation: must not produce duplicate Source, DocumentVersion, KnowledgeVersion, Chunk, Entity, Relation
+    retryability: always idempotent on re-entry
+    recovery: idempotency_key dedupe at ingestion boundary; reconciliation_required if facts diverge
+    idempotency_key: source_hash + message_id + tenant_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE
+    exit_code: 0
+    cleanup: assert duplicate fact count == 0; assert only one KnowledgeVersion row exists
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live ingestion runtime; harness only.
+
+  - case_id: D-ELASTICSEARCH-PARTIAL-SUCCESS
+    trigger: ES BM25 visible but Milvus or Neo4j fails before snapshot activation
+    state_before: indexes_visible
+    state_after: index_partially_failed
+    owner: knowledge_index
+    failure_class: partial_index_failure
+    propagation: blocks snapshot_activation; forces reconciliation_required before retry
+    retryability: no retry until reconciliation_required state cleared
+    recovery: requeue failed index job with same idempotency_key; require all three receipts before activation
+    idempotency_key: index_job_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS
+    exit_code: 0
+    cleanup: assert snapshot_id is null; assert missing_receipt_kinds list non-empty
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live three-index receipts; harness only.
+
+  - case_id: D-MILVUS-WRITE-FAILURE
+    trigger: Milvus vector write fails or returns partial index
+    state_before: indexing
+    state_after: index_partially_failed
+    owner: knowledge_index
+    failure_class: external_service_write_failure
+    propagation: blocks snapshot_activation; requires milvus_vector_visibility before retry
+    retryability: bounded retry; reconcile on persistent failure
+    recovery: requeue index job; require milvus_vector_visibility receipt
+    idempotency_key: index_job_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE
+    exit_code: 0
+    cleanup: assert milvus collection absent or rolled back; assert activation_allowed == false
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live Milvus receipt; harness only.
+
+  - case_id: D-NEO4J-READBACK-MISMATCH
+    trigger: Neo4j write reports success but two-hop read-back does not return the expected path
+    state_before: indexing
+    state_after: index_visibility_failed
+    owner: knowledge_index
+    failure_class: readback_mismatch
+    propagation: blocks neo4j_graph_visibility receipt; forces snapshot_activation_blocked
+    retryability: no retry on UNKNOWN side effect; reconciliation_required
+    recovery: reconcile neo4j node count vs source IR; require neo4j_graph_visibility receipt
+    idempotency_key: relation_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH
+    exit_code: 0
+    cleanup: assert no neo4j_graph_visibility receipt produced; assert activation_allowed == false
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live Neo4j two-hop readback; harness only.
+
+  - case_id: D-EMBEDDING-CREDENTIAL-MISSING
+    trigger: Embedding gateway credential absent in runtime config
+    state_before: indexing
+    state_after: credential_blocked
+    owner: knowledge_ingestion
+    failure_class: credential_missing
+    propagation: blocks all index jobs that require embedding; forces credential_blocked before activation
+    retryability: no retry until credential re-injected; tenant-scoped fail-closed
+    recovery: requeue after credential present; require same tenant/workspace binding
+    idempotency_key: tenant_id + workspace_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING
+    exit_code: 0
+    cleanup: assert no embedding gateway call attempted with leaked credential
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live embedding gateway; harness only.
+
+  - case_id: D-INDEX-WORKER-CRASH
+    trigger: Index worker process interrupted mid-write
+    state_before: indexing
+    state_after: reconciliation_required
+    owner: knowledge_index
+    failure_class: worker_crash
+    propagation: blocks index_visibility; forces reconciliation_required before any retry
+    retryability: no retry until reconciliation_required state cleared and idempotency_key verified
+    recovery: resume on a new worker; require all three visibility receipts before activation
+    idempotency_key: index_job_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH
+    exit_code: 0
+    cleanup: assert no partial index visible; assert reconciliation_required state present
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live index worker; harness only.
+
+  - case_id: D-SNAPSHOT-EXIT-BEFORE-ACTIVATION
+    trigger: Process exits before snapshot_activation receipt is written
+    state_before: indexes_visible
+    state_after: snapshot_activation_blocked
+    owner: snapshot_activation
+    failure_class: process_exit_premature
+    propagation: blocks snapshot_id; no public benchmark claim possible
+    retryability: re-run activation only after verifying all three visibility receipts and idempotency_key
+    recovery: snapshot_activation receipt required; never retry without receipts
+    idempotency_key: knowledge_version_id + tenant_id + workspace_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION
+    exit_code: 0
+    cleanup: assert snapshot_id remains null; assert activation_allowed == false
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B snapshot_activation receipt; harness only.
+
+  - case_id: D-DUPLICATE-INGEST
+    trigger: Same source_hash re-ingested end-to-end
+    state_before: snapshot_activated
+    state_after: snapshot_activated (idempotent)
+    owner: runtime_resume
+    failure_class: duplicate_request
+    propagation: must not create duplicate Source, DocumentVersion, KnowledgeVersion, Chunk, Entity, Relation, Index
+    retryability: idempotent on re-entry; facts reused
+    recovery: dedupe at idempotency_key; assert no new knowledge_version_id produced
+    idempotency_key: source_hash + tenant_id + workspace_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST
+    exit_code: 0
+    cleanup: assert duplicate fact count == 0; assert only one KnowledgeVersion per source_hash
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live ingestion runtime; harness only.
+
+  - case_id: D-TENANT-CROSS-VIOLATION
+    trigger: Tenant A attempts to read Tenant B's snapshot or knowledge_version
+    state_before: snapshot_activated
+    state_after: security_denied
+    owner: security_isolation
+    failure_class: tenant_isolation_violation
+    propagation: blocks retrieval; emits security_denied trace; no leakage
+    retryability: never retry a denied request; re-auth required
+    recovery: return security_denied to caller; assert no cross-tenant facts visible
+    idempotency_key: tenant_id + workspace_id + target_resource_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION
+    exit_code: 0
+    cleanup: assert denied response recorded; assert cross-tenant facts count == 0
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live tenant isolation runtime; harness only.
+
+  - case_id: D-WORKSPACE-CROSS-VIOLATION
+    trigger: Same tenant but workspace A reads workspace B's resource
+    state_before: snapshot_activated
+    state_after: security_denied
+    owner: security_isolation
+    failure_class: workspace_isolation_violation
+    propagation: blocks retrieval; emits security_denied trace
+    retryability: never retry a denied request
+    recovery: return security_denied to caller; assert no cross-workspace facts visible
+    idempotency_key: tenant_id + workspace_id + target_resource_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION
+    exit_code: 0
+    cleanup: assert denied response recorded; assert cross-workspace facts count == 0
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live workspace isolation runtime; harness only.
+
+  - case_id: D-SECURITY-EPOCH-EXPIRED
+    trigger: Security epoch token expired during ingestion or retrieval
+    state_before: accepted
+    state_after: credential_blocked
+    owner: security_isolation
+    failure_class: epoch_expired
+    propagation: blocks any ingestion or retrieval; fail-closed
+    retryability: re-auth only; never retry with stale epoch
+    recovery: require refreshed epoch; require new security_scope binding
+    idempotency_key: tenant_id + workspace_id + epoch_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED
+    exit_code: 0
+    cleanup: assert no operations continued under expired epoch
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live security epoch runtime; harness only.
+
+  - case_id: D-CANCEL
+    trigger: Operator cancels a running profile run before completion
+    state_before: profile_running
+    state_after: profile_runtime_observed (with cancel marker)
+    owner: observability
+    failure_class: operator_cancel
+    propagation: blocks release_decision with measurement_status == blocked_not_measured
+    retryability: re-run from scratch with same eval_run_id
+    recovery: profile_run marked cancel; release_decision remains BLOCKED
+    idempotency_key: eval_run_id + profile_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-CANCEL
+    exit_code: 0
+    cleanup: assert cancel marker present; assert no metric artifact published
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-C live profile runtime; harness only.
+
+  - case_id: D-DEADLINE
+    trigger: Profile runtime exceeds deadline before completion
+    state_before: profile_running
+    state_after: profile_runtime_observed (deadline_exceeded)
+    owner: observability
+    failure_class: deadline_exceeded
+    propagation: blocks release_decision with deadline_exceeded marker
+    retryability: re-run with extended deadline only via eval_run_id rerun
+    recovery: deadline_exceeded marker published; release_decision remains BLOCKED
+    idempotency_key: eval_run_id + profile_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-DEADLINE
+    exit_code: 0
+    cleanup: assert deadline_exceeded marker present; assert no metric artifact published
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-C live profile runtime; harness only.
+
+  - case_id: D-RESUME
+    trigger: Resume a crashed profile run with same eval_run_id
+    state_before: profile_runtime_observed (partial)
+    state_after: profile_runtime_observed (complete) or reconciliation_required
+    owner: runtime_resume
+    failure_class: resume_after_crash
+    propagation: must reuse artifacts; must not double-emit metrics
+    retryability: resume only with same eval_run_id; idempotent re-entry
+    recovery: require rerun_variance; require artifact_hash stable across resume
+    idempotency_key: eval_run_id + profile_id + resume_attempt_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-RESUME
+    exit_code: 0
+    cleanup: assert rerun_variance recorded; assert duplicate metric emission == 0
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-C live profile runtime; harness only.
+
+  - case_id: D-UNKNOWN-SIDE-EFFECT
+    trigger: Side effect cannot be classified after partial commit
+    state_before: indexing or profile_runtime_observed
+    state_after: reconciliation_required
+    owner: fault_recovery
+    failure_class: unknown_side_effect
+    propagation: blocks further commits; never blind retry
+    retryability: never retry on UNKNOWN side effect; require manual reconciliation
+    recovery: emit reconciliation_required marker; require explicit resolver before resume
+    idempotency_key: operation_id + side_effect_marker
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT
+    exit_code: 0
+    cleanup: assert reconciliation_required state present; assert no blind retry executed
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B/CC-C live runtime; harness only.
+
+  - case_id: D-RETRY-EXHAUSTED
+    trigger: All retry attempts for an ingestion or profile operation exhausted
+    state_before: retrying
+    state_after: failed_with_receipt
+    owner: fault_recovery
+    failure_class: retry_exhausted
+    propagation: emits failed_with_receipt; blocks downstream
+    retryability: no further automatic retry; require human decision
+    recovery: failed_with_receipt published; downstream snapshot_activation_blocked
+    idempotency_key: operation_id + retry_attempt_count
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED
+    exit_code: 0
+    cleanup: assert retry_attempt_count recorded; assert no further automatic retry
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B/CC-C live runtime; harness only.
+
+  - case_id: D-REPLAN-BARRIER
+    trigger: Replan Barrier requires all sibling operations resolved before commit
+    state_before: partial_replan
+    state_after: replan_barrier_pending then resolved
+    owner: runtime_resume
+    failure_class: replan_barrier_unresolved
+    propagation: blocks commit until all sibling facts resolved
+    retryability: wait for siblings; never partial commit
+    recovery: barrier resolved when all sibling receipts present; commit only then
+    idempotency_key: replan_id + barrier_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER
+    exit_code: 0
+    cleanup: assert no partial commit visible; assert barrier resolved before commit
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live replan barrier runtime; harness only.
+
+  - case_id: D-PARALLEL-PARTIAL-FAILURE
+    trigger: Parallel ingestion tasks partially succeed, partially fail
+    state_before: indexing
+    state_after: index_partially_failed or reconciliation_required
+    owner: knowledge_index
+    failure_class: parallel_partial_failure
+    propagation: blocks snapshot_activation until all parallel tasks resolved
+    retryability: bounded retry only on deterministic failures; reconciliation_required otherwise
+    recovery: require all parallel task receipts before snapshot_activation
+    idempotency_key: parallel_batch_id + knowledge_version_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE
+    exit_code: 0
+    cleanup: assert snapshot_activation_blocked until all receipts present
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-B live parallel indexing runtime; harness only.
+
+  - case_id: D-CITATION-CONFLICT
+    trigger: Two retrieval sources provide conflicting citations for the same span
+    state_before: profile_runtime_observed
+    state_after: citation_conflict_or_abstain
+    owner: release_decision
+    failure_class: citation_conflict
+    propagation: blocks release_decision with citation_conflict marker
+    retryability: never retry on citation_conflict; require arbitration
+    recovery: arbitration chooses one citation or abstains; release_decision stays BLOCKED otherwise
+    idempotency_key: case_id + conflict_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT
+    exit_code: 0
+    cleanup: assert citation_conflict marker present; assert no fabricated arbitration
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-C live citation arbitration; harness only.
+
+  - case_id: D-EVIDENCE-INSUFFICIENT-ABSTAIN
+    trigger: Profile returns insufficient evidence to support a claim
+    state_before: profile_runtime_observed
+    state_after: abstained
+    owner: release_decision
+    failure_class: evidence_insufficient
+    propagation: abstention must be recorded; release_decision stays BLOCKED if any case abstains incorrectly
+    retryability: never retry with synthetic evidence; require authentic runtime receipt
+    recovery: abstained marker present; unsupported_claim_rate must include this case
+    idempotency_key: case_id + abstention_attempt_id
+    receipt_ref: null
+    trace_ref: null
+    test_command: python tools/scripts/phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN
+    exit_code: 0
+    cleanup: assert abstained marker present; assert no synthetic evidence used
+    status: NOT_RUN_DEPENDENCY_BLOCKED
+    not_run_reason: depends on DeepSeek CC-C live abstention runtime; harness only.
