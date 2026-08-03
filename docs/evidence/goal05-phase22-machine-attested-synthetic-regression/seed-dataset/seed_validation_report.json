@@ -1,0 +1,16 @@
+{
+  "case_count": 7,
+  "dataset_hash": "00064456daf21942b2739a9151d6bb86c84ffda7e946cece4b4b548c9f7c9e6a",
+  "distribution": {
+    "abstain_no_answer": 1,
+    "fault_recovery": 1,
+    "graph_reasoning": 1,
+    "multi_hop": 1,
+    "security_scope": 1,
+    "single_doc_fact": 1,
+    "temporal_version": 1
+  },
+  "errors": [],
+  "passed": true,
+  "warnings": []
+}

@@ -5,6 +5,11 @@ from tools.evals.zuno.synthetic_benchmark.dataset_contract import (
     compute_input_hash,
     validate_cases,
 )
+from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
+    build_seed_cases,
+    write_seed_dataset,
+    CORPUS_DOCS,
+)
 
 
 def _case(**overrides):
@@ -72,3 +77,33 @@ def test_dataset_contract_rejects_hash_drift_and_missing_span() -> None:
     assert not result.passed
     assert any("case_hash mismatch" in error for error in result.errors)
     assert any("source span text not found" in error for error in result.errors)
+
+
+def test_seed_dataset_covers_each_target_bucket_without_gold_runtime_fields() -> None:
+    cases = build_seed_cases()
+
+    result = validate_cases(cases, CORPUS_DOCS, require_full_80=False)
+
+    assert result.passed
+    assert result.distribution == {
+        "single_doc_fact": 1,
+        "multi_hop": 1,
+        "graph_reasoning": 1,
+        "temporal_version": 1,
+        "abstain_no_answer": 1,
+        "security_scope": 1,
+        "fault_recovery": 1,
+    }
+    forbidden = {"gold_document_refs", "gold_source_spans", "gold_citations"}
+    assert all(forbidden.isdisjoint(case) for case in cases)
+
+
+def test_seed_dataset_writer_emits_partial_not_runtime_eligible_manifest(tmp_path) -> None:
+    manifest = write_seed_dataset(tmp_path)
+
+    assert manifest["status"] == "PARTIAL_SEED_VALIDATED"
+    assert manifest["case_count"] == 7
+    assert manifest["runtime_eligible"] is False
+    assert manifest["synthetic_regression_eligible"] is False
+    assert (tmp_path / "seed_cases.jsonl").exists()
+    assert (tmp_path / "seed_validation_report.json").exists()

@@ -9,7 +9,7 @@
   "synthetic_public_boundary": {
     "reviewer_approved_count": 0,
     "benchmark_eligible_count": 0,
-    "machine_attested_count": 0,
+    "machine_attested_count": 7,
     "synthetic_regression_eligible_count": 0
   },
   "synthetic_release_decision": {
@@ -36,6 +36,9 @@
   "current_evidence": {
     "dataset_hash": null,
     "corpus_hash": null,
+    "seed_dataset_hash": "00064456daf21942b2739a9151d6bb86c84ffda7e946cece4b4b548c9f7c9e6a",
+    "seed_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+    "seed_case_count": 7,
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,
@@ -46,7 +49,6 @@
     "run_outcome_refs": []
   },
   "not_run": [
-    "80_case_derivation_validator",
     "full_corpus_canonical_ingestion",
     "minio_object_manifest_readback",
     "postgres_domain_fact_idempotency",

@@ -20,6 +20,19 @@ date: 2026-08-03
 
 Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case 独立推导、完整 Corpus 真实 Canonical Ingestion、三索引 Visibility Receipt、Snapshot Activation、同 Snapshot 四 Profile Runtime、Gold 隔离、非零阈值 Release Decision、Fault/Security/Resume/Idempotency 矩阵均未执行完成。
 
+## CC-A 当前进度
+
+已建立当前 schema 的 seed dataset scaffold，用于证明字段、hash、source span、gold 隔离和 validator 机制可执行，但不代表完整 80 case dataset 完成。
+
+- seed case count：7
+- seed case distribution：每个目标 bucket 各 1 个
+- seed dataset hash：`00064456daf21942b2739a9151d6bb86c84ffda7e946cece4b4b548c9f7c9e6a`
+- seed corpus hash：`749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4`
+- runtime eligible：false
+- synthetic regression eligible：false
+
+完整 80/80 derivation validator、完整 corpus、真实 canonical ingestion 和 runtime profile 仍未完成。
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。

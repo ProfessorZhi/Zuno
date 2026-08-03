@@ -1,0 +1,22 @@
+{
+  "blocked_reason": "seed_dataset_only_full_80_not_built",
+  "case_count": 7,
+  "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+  "dataset_hash": "00064456daf21942b2739a9151d6bb86c84ffda7e946cece4b4b548c9f7c9e6a",
+  "dataset_id": "phase22_synthetic_seed_dataset_v1",
+  "distribution": {
+    "abstain_no_answer": 1,
+    "fault_recovery": 1,
+    "graph_reasoning": 1,
+    "multi_hop": 1,
+    "security_scope": 1,
+    "single_doc_fact": 1,
+    "temporal_version": 1
+  },
+  "generation_seed": "phase22-synthetic-regression-seed-v1",
+  "runtime_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "PARTIAL_SEED_VALIDATED",
+  "synthetic_regression_eligible": false,
+  "track_id": "machine_attested_synthetic_regression"
+}
