@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0.0",
+  "agent_name": "MiniMax1",
+  "provider": "MiniMax",
+  "worker_task": "PHASE22-CC-A",
+  "base_sha": "87f6eeed994d1db28f25ad916e052b3a3cd00992",
+  "review_scope": [
+    "80_case_dataset",
+    "synthetic_corpus",
+    "world_model",
+    "derivation_validator",
+    "source_span_evidence",
+    "duplicate_questions",
+    "gold_leakage",
+    "hard_negative",
+    "input_hash_and_case_hash"
+  ],
+  "current_facts_observed": {
+    "case_count": 80,
+    "derivation_valid_count": 80,
+    "source_evidence_valid_count": 80,
+    "unsupported_answer_count": 0,
+    "duplicate_question_count": 0,
+    "gold_leakage_count": 0,
+    "hard_negative_valid_count": 5,
+    "hash_valid_count": 80,
+    "reviewer_approved_count": 0,
+    "benchmark_eligible_count": 0
+  },
+  "distribution_observed": {
+    "single_doc_fact": 20,
+    "multi_hop": 20,
+    "graph_reasoning": 15,
+    "temporal_version": 10,
+    "abstain_no_answer": 5,
+    "security_scope": 5,
+    "fault_recovery": 5
+  },
+  "method_counts_observed": {
+    "single_doc_fact": 20,
+    "multi_hop": 20,
+    "graph_relation": 15,
+    "temporal_version": 10,
+    "abstain_scan": 5,
+    "security_scope": 5,
+    "fault_recovery": 5
+  },
+  "hashes_observed": {
+    "dataset_hash": "b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c",
+    "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+    "world_model_hash": "f3078e20b11feb468285fcca07fa09a920a5be4f280841957dc447938dc76242",
+    "candidate_derivation_report_hash": "7c0a118e77b6d2c49a9b4086b853d3eaf4ddf5a56236bda64cd8644e07e5d834"
+  },
+  "validators_re_run": {
+    "dataset_contract_validate_cases": {
+      "passed": true,
+      "case_count": 80,
+      "errors": [],
+      "warnings": []
+    },
+    "derivation_validator_validate_derivations": {
+      "passed": true,
+      "case_count": 80,
+      "derivation_valid_count": 80,
+      "source_evidence_valid_count": 80,
+      "unsupported_answer_count": 0,
+      "duplicate_question_count": 0,
+      "gold_leakage_count": 0,
+      "hard_negative_valid_count": 5,
+      "hash_valid_count": 80,
+      "answer_derivation_valid_count": 80,
+      "world_model_valid_count": 80,
+      "errors": []
+    }
+  },
+  "duplicate_question_audit": {
+    "unique_case_ids": 80,
+    "total_case_ids": 80,
+    "unique_normalized_questions": 80,
+    "total_questions": 80,
+    "duplicate_case_id_count": 0,
+    "duplicate_question_count": 0
+  },
+  "source_span_evidence_audit": {
+    "total_spans": 125,
+    "unmatched_spans": 0,
+    "unmatched_document_refs": 0
+  },
+  "review_findings": [
+    {
+      "id": "FIND-CC-A-001",
+      "severity": "info",
+      "summary": "80/80 candidate dataset, derivation, source-evidence, hash all pass; duplicate/gold-leakage/hard-negative all zero.",
+      "verdict": "PASS"
+    },
+    {
+      "id": "FIND-CC-A-002",
+      "severity": "info",
+      "summary": "All 125 source_span_refs resolve to their cited document body; no source evidence drift.",
+      "verdict": "PASS"
+    },
+    {
+      "id": "FIND-CC-A-003",
+      "severity": "info",
+      "summary": "World model derives the expected answer for all 80 cases; world_model_hash matches between manifest, report, and seed dataset.",
+      "verdict": "PASS"
+    },
+    {
+      "id": "FIND-CC-A-004",
+      "severity": "info",
+      "summary": "Hard negative (abstain_scan) count is exactly 5, matching the 5-doc global/open scope guard for fy2025_revenue missing fact.",
+      "verdict": "PASS"
+    },
+    {
+      "id": "FIND-CC-A-005",
+      "severity": "info",
+      "summary": "reviewer_approved_count and benchmark_eligible_count remain 0; track is machine-attested candidate only.",
+      "verdict": "PASS"
+    }
+  ],
+  "boundary_assertions": {
+    "second_dataset_created": false,
+    "ph22_status_changed": false,
+    "synthetic_track_status_changed": false,
+    "production_readiness_changed": false,
+    "public_benchmark_status_changed": false,
+    "machine_attestation_replacing_human_reviewer": false
+  },
+  "remaining_gaps_for_coordinator": [
+    {
+      "id": "GAP-META-001",
+      "summary": "phase22-synthetic-handoff-{gap-ledger,manifest}.yaml reference source_pr_107_head=6c9c75eaea16a047107e20fa156824bce068ee4c; actual PR #107 head at review time is 87f6eeed994d1db28f25ad916e052b3a3cd00992. Work-product files are out of CC-A allowed scope; coordinator should refresh them after merge."
+    }
+  ]
+}
