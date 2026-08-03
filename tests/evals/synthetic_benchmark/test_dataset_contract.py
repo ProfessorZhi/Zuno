@@ -23,6 +23,11 @@ from tools.evals.zuno.synthetic_benchmark.source_upload_manifest import (
     validate_source_upload_manifest,
     write_source_upload_manifest,
 )
+from tools.evals.zuno.synthetic_benchmark.canonical_ir_manifest import (
+    build_canonical_ir_manifest,
+    validate_canonical_ir_manifest,
+    write_canonical_ir_manifest,
+)
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -353,3 +358,45 @@ def test_source_upload_manifest_writer_emits_evidence(tmp_path) -> None:
     assert result["source_count"] == 8
     assert (tmp_path / "source_upload_manifest.json").exists()
     assert (tmp_path / "source_upload_manifest_report.json").exists()
+
+
+def test_canonical_ir_manifest_prepares_documents_chunks_entities_and_relations(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+
+    manifest = build_canonical_ir_manifest(dataset_root / "corpus")
+    result = validate_canonical_ir_manifest(manifest)
+
+    assert result.passed
+    assert result.document_count == 8
+    assert result.chunk_count >= 8
+    assert result.entity_count > 0
+    assert result.relation_count > 0
+    assert manifest["parser_runtime_executed"] is False
+    assert manifest["postgres_facts_verified"] is False
+    assert manifest["knowledge_version_created"] is False
+    assert all(relation["direction"] == "outbound" for relation in manifest["relations"])
+
+
+def test_canonical_ir_manifest_rejects_preclaimed_parser_runtime(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    manifest = build_canonical_ir_manifest(dataset_root / "corpus")
+    manifest["parser_runtime_executed"] = True
+
+    result = validate_canonical_ir_manifest(manifest)
+
+    assert not result.passed
+    assert any("parser_runtime_executed must remain false" in error for error in result.errors)
+
+
+def test_canonical_ir_manifest_writer_emits_evidence(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+
+    result = write_canonical_ir_manifest(tmp_path, corpus_root=dataset_root / "corpus")
+
+    assert result["passed"]
+    assert result["document_count"] == 8
+    assert (tmp_path / "canonical_ir_manifest.json").exists()
+    assert (tmp_path / "canonical_ir_manifest_report.json").exists()

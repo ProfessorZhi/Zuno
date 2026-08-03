@@ -1,0 +1,9 @@
+{
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "chunk_count": 24,
+  "document_count": 8,
+  "entity_count": 15,
+  "errors": [],
+  "passed": true,
+  "relation_count": 5
+}

@@ -37,6 +37,8 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/runtime_gold_isolation_report.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/source_upload_manifest.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/source_upload_manifest_report.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/canonical_ir_manifest.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/canonical_ir_manifest_report.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -255,3 +257,20 @@ def test_source_upload_manifest_must_not_claim_runtime_ingestion(tmp_path: Path)
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("runtime_ingested must be false" in error for error in errors)
+
+
+def test_canonical_ir_manifest_must_not_claim_parser_runtime(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    manifest_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/canonical_ir_manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["parser_runtime_executed"] = True
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("parser_runtime_executed must be false" in error for error in errors)

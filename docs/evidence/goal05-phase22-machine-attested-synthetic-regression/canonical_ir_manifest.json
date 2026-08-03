@@ -1,0 +1,494 @@
+{
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "chunk_count": 24,
+  "chunks": [
+    {
+      "chunk_id": "chunk::doc_axis9_release_notes::001",
+      "document_id": "doc_axis9_release_notes",
+      "document_version_id": "document-version::doc_axis9_release_notes::84949fd00028b507",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "ddbcb64d78c4ba0cd0a08e5f7b239d57238ffeaded924648ee16726a0d28e4c9",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_axis9_release_notes::002",
+      "document_id": "doc_axis9_release_notes",
+      "document_version_id": "document-version::doc_axis9_release_notes::84949fd00028b507",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "f45e6c9b280b83160256aaf1eebeb6480c63198166dc83b7a9c9ec668ca66221",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_axis9_release_notes::003",
+      "document_id": "doc_axis9_release_notes",
+      "document_version_id": "document-version::doc_axis9_release_notes::84949fd00028b507",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "4b0285c68522d0621f9d55bb774f86ea1d8809f02ce8e2479cde0b781d931984",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_forge_recall::001",
+      "document_id": "doc_forge_recall",
+      "document_version_id": "document-version::doc_forge_recall::273b2f3596ba078e",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "73f2adeb6c75c2b91e4de95bc05d70f7625c5469f35a3b71b16e01240d7699d3",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_forge_recall::002",
+      "document_id": "doc_forge_recall",
+      "document_version_id": "document-version::doc_forge_recall::273b2f3596ba078e",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "651b023fd7e15f342687baa3e990644c4520badf2421fb8aa3f680aed3320d40",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_forge_recall::003",
+      "document_id": "doc_forge_recall",
+      "document_version_id": "document-version::doc_forge_recall::273b2f3596ba078e",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "9e36aac3dc954cfaa9d1f4f1eaddf95d239cd3c91bd724b767b37f1efa8d2c3c",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_legal_audit_2026_q1::001",
+      "document_id": "doc_legal_audit_2026_q1",
+      "document_version_id": "document-version::doc_legal_audit_2026_q1::d922d366903f3933",
+      "ordinal": 1,
+      "security_scope": "legal/privileged",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "69c5859e7bebab4155a5ac2c76b1acdbb715d827ed982c868f478a8fcf671f1b",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_legal_audit_2026_q1::002",
+      "document_id": "doc_legal_audit_2026_q1",
+      "document_version_id": "document-version::doc_legal_audit_2026_q1::d922d366903f3933",
+      "ordinal": 2,
+      "security_scope": "legal/privileged",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "431bdbb338f1282a216a9e7bda1fd195429d4daa5ed4416d43874c6d49f50c9a",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+      "document_id": "doc_legal_audit_2026_q1",
+      "document_version_id": "document-version::doc_legal_audit_2026_q1::d922d366903f3933",
+      "ordinal": 3,
+      "security_scope": "legal/privileged",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "dd2e5f7417a0faa5791089c034939a9dffbc1fc199203e1fff35aa4ed35eaf17",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::001",
+      "document_id": "doc_northwind_charter",
+      "document_version_id": "document-version::doc_northwind_charter::7ac618d8cd58563d",
+      "ordinal": 1,
+      "security_scope": "division/automation/confidential",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "6ca6a871e6a303ccc10062382d3f568e1f7264ab4080a41351cd40501a1020a7",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::002",
+      "document_id": "doc_northwind_charter",
+      "document_version_id": "document-version::doc_northwind_charter::7ac618d8cd58563d",
+      "ordinal": 2,
+      "security_scope": "division/automation/confidential",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "c4701c33395f423151a54d0d5259201f4b0a72eda5fa83efa6d9841bdd8256ab",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::003",
+      "document_id": "doc_northwind_charter",
+      "document_version_id": "document-version::doc_northwind_charter::7ac618d8cd58563d",
+      "ordinal": 3,
+      "security_scope": "division/automation/confidential",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "f90b3f178d506a3b59b4dd6b0e0e9fafc0eeccc8ea3be2dccec2976164f523ec",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_sdk_overview::001",
+      "document_id": "doc_northwind_sdk_overview",
+      "document_version_id": "document-version::doc_northwind_sdk_overview::61cc1f5e82e2f7e6",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "aadd1215c2da862d58519c11ca0511a213b57bbd379943da59b847cfc6b52a73",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_sdk_overview::002",
+      "document_id": "doc_northwind_sdk_overview",
+      "document_version_id": "document-version::doc_northwind_sdk_overview::61cc1f5e82e2f7e6",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "9c4afdeb9fdecc38159524e4ac9aee77e119ed8ee718fc2b8087bef8a0304f92",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_sdk_overview::003",
+      "document_id": "doc_northwind_sdk_overview",
+      "document_version_id": "document-version::doc_northwind_sdk_overview::61cc1f5e82e2f7e6",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "8490af8986263c2d1ebe74385073cf0a3cc4718f9484bc6c99d3afd1dcfa1b67",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::001",
+      "document_id": "doc_org_chart_2026",
+      "document_version_id": "document-version::doc_org_chart_2026::34caeaa67ca088e5",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "fdff4f8b2181dfd38c015cb56c8f9f437f89021b7527f5dd8e4dd416d392f656",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::002",
+      "document_id": "doc_org_chart_2026",
+      "document_version_id": "document-version::doc_org_chart_2026::34caeaa67ca088e5",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "dfe6e933b7705dfb900dd6a33f774eaefaaed545e648bd671efdbfe7611493cf",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::003",
+      "document_id": "doc_org_chart_2026",
+      "document_version_id": "document-version::doc_org_chart_2026::34caeaa67ca088e5",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "6f1bc11ce153b472cc6a5b379e70274e1b8d78e858c545970245a351c4124bc6",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2024::001",
+      "document_id": "doc_security_policy_2024",
+      "document_version_id": "document-version::doc_security_policy_2024::0eed3f7735830b25",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "637f08e2f95bd87b30c0ea60e7356b183c4000b0755cf5d952d8def57a331af4",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2024::002",
+      "document_id": "doc_security_policy_2024",
+      "document_version_id": "document-version::doc_security_policy_2024::0eed3f7735830b25",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "4a3d5d3a084196c33405f6b0604b624c57d109acf3781520fd6ed158d321d54b",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2024::003",
+      "document_id": "doc_security_policy_2024",
+      "document_version_id": "document-version::doc_security_policy_2024::0eed3f7735830b25",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "a16b3ec281b0f2eacefec1e4d9f692644c92eb7931ce35026f22c2c6f50b8567",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2026::001",
+      "document_id": "doc_security_policy_2026",
+      "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+      "ordinal": 1,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "056c9c9968b73f1c9ac57b3d96004d68bca4b2b0da956626020f799d0d51c618",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2026::002",
+      "document_id": "doc_security_policy_2026",
+      "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+      "ordinal": 2,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "1962d1094dbbe3a0f3bcc260bd3e1a81cf1e086c666fde3664b079d8d8998c18",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2026::003",
+      "document_id": "doc_security_policy_2026",
+      "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+      "ordinal": 3,
+      "security_scope": "global/open",
+      "tenant_id": "tenant_auroralis",
+      "text_hash": "0b5da1385af336d4266d29b5bd94b5343502fe90770a8a581496b70f9bc2cfb7",
+      "workspace_id": "workspace_regression"
+    }
+  ],
+  "document_count": 8,
+  "documents": [
+    {
+      "document_id": "doc_axis9_release_notes",
+      "document_version_id": "document-version::doc_axis9_release_notes::84949fd00028b507",
+      "security_scope": "global/open",
+      "source_hash": "84949fd00028b5079ddb6452cb987d15d618e075fbf31f7094726826fea0be4e",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_axis9_release_notes",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_forge_recall",
+      "document_version_id": "document-version::doc_forge_recall::273b2f3596ba078e",
+      "security_scope": "global/open",
+      "source_hash": "273b2f3596ba078e6da032e7790cf2dee62a475427e34ecc76682a8ec669f26b",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_forge_recall",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_legal_audit_2026_q1",
+      "document_version_id": "document-version::doc_legal_audit_2026_q1::d922d366903f3933",
+      "security_scope": "legal/privileged",
+      "source_hash": "d922d366903f3933778909801ea23fadc859c819a497818f9cefb8c0e30883d4",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_legal_audit_2026_q1",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_northwind_charter",
+      "document_version_id": "document-version::doc_northwind_charter::7ac618d8cd58563d",
+      "security_scope": "division/automation/confidential",
+      "source_hash": "7ac618d8cd58563ddc8c6b2badfa8d7bc01c1b6fb0ebc4d3388755a974720b85",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_northwind_charter",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_northwind_sdk_overview",
+      "document_version_id": "document-version::doc_northwind_sdk_overview::61cc1f5e82e2f7e6",
+      "security_scope": "global/open",
+      "source_hash": "61cc1f5e82e2f7e6f9dc70690ec6634c55e7e67ec4d30622c8bba1d807cb2cc4",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_northwind_sdk_overview",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_org_chart_2026",
+      "document_version_id": "document-version::doc_org_chart_2026::34caeaa67ca088e5",
+      "security_scope": "global/open",
+      "source_hash": "34caeaa67ca088e5d4e4a53008146635114f6689634b680e8ba902a8104fb07b",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_org_chart_2026",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_security_policy_2024",
+      "document_version_id": "document-version::doc_security_policy_2024::0eed3f7735830b25",
+      "security_scope": "global/open",
+      "source_hash": "0eed3f7735830b259976fb93c9e4bb38fe83b2b89ced64671491ff71b59e024e",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_security_policy_2024",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "document_id": "doc_security_policy_2026",
+      "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+      "security_scope": "global/open",
+      "source_hash": "5f77b8d31a06efba957b9c35b1ef543ed3a5ab8ed4a5516401886649c47904ec",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_security_policy_2026",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    }
+  ],
+  "entities": [
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::001",
+      "document_id": "doc_org_chart_2026",
+      "entity_id": "entity::org:Auroralis",
+      "entity_ref": "org:Auroralis",
+      "label": "Auroralis"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::003",
+      "document_id": "doc_northwind_charter",
+      "entity_id": "entity::org:Automation Systems",
+      "entity_ref": "org:Automation Systems",
+      "label": "Automation Systems"
+    },
+    {
+      "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+      "document_id": "doc_legal_audit_2026_q1",
+      "entity_id": "entity::person:Amani Bello",
+      "entity_ref": "person:Amani Bello",
+      "label": "Amani Bello"
+    },
+    {
+      "chunk_id": "chunk::doc_axis9_release_notes::003",
+      "document_id": "doc_axis9_release_notes",
+      "entity_id": "entity::person:Haruto Soma",
+      "entity_ref": "person:Haruto Soma",
+      "label": "Haruto Soma"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::003",
+      "document_id": "doc_org_chart_2026",
+      "entity_id": "entity::person:Iris Vange",
+      "entity_ref": "person:Iris Vange",
+      "label": "Iris Vange"
+    },
+    {
+      "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+      "document_id": "doc_legal_audit_2026_q1",
+      "entity_id": "entity::person:Kjartan Eliasson",
+      "entity_ref": "person:Kjartan Eliasson",
+      "label": "Kjartan Eliasson"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::003",
+      "document_id": "doc_org_chart_2026",
+      "entity_id": "entity::person:Lukas Wenger",
+      "entity_ref": "person:Lukas Wenger",
+      "label": "Lukas Wenger"
+    },
+    {
+      "chunk_id": "chunk::doc_forge_recall::003",
+      "document_id": "doc_forge_recall",
+      "entity_id": "entity::person:Nadya Soroka",
+      "entity_ref": "person:Nadya Soroka",
+      "label": "Nadya Soroka"
+    },
+    {
+      "chunk_id": "chunk::doc_org_chart_2026::003",
+      "document_id": "doc_org_chart_2026",
+      "entity_id": "entity::person:Solveig Hagen",
+      "entity_ref": "person:Solveig Hagen",
+      "label": "Solveig Hagen"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2024::003",
+      "document_id": "doc_security_policy_2024",
+      "entity_id": "entity::policy:Information Security Policy v4.1",
+      "entity_ref": "policy:Information Security Policy v4.1",
+      "label": "Information Security Policy v4.1"
+    },
+    {
+      "chunk_id": "chunk::doc_security_policy_2026::003",
+      "document_id": "doc_security_policy_2026",
+      "entity_id": "entity::policy:Information Security Policy v4.2",
+      "entity_ref": "policy:Information Security Policy v4.2",
+      "label": "Information Security Policy v4.2"
+    },
+    {
+      "chunk_id": "chunk::doc_axis9_release_notes::003",
+      "document_id": "doc_axis9_release_notes",
+      "entity_id": "entity::product:Axis-9 Industrial Controller v9.4.0",
+      "entity_ref": "product:Axis-9 Industrial Controller v9.4.0",
+      "label": "Axis-9 Industrial Controller v9.4.0"
+    },
+    {
+      "chunk_id": "chunk::doc_forge_recall::001",
+      "document_id": "doc_forge_recall",
+      "entity_id": "entity::product:Forge-X1",
+      "entity_ref": "product:Forge-X1",
+      "label": "Forge-X1"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::003",
+      "document_id": "doc_northwind_charter",
+      "entity_id": "entity::product:Northwind SDK v3.0.0",
+      "entity_ref": "product:Northwind SDK v3.0.0",
+      "label": "Northwind SDK v3.0.0"
+    },
+    {
+      "chunk_id": "chunk::doc_northwind_charter::001",
+      "document_id": "doc_northwind_charter",
+      "entity_id": "entity::project:Northwind",
+      "entity_ref": "project:Northwind",
+      "label": "Project Northwind"
+    }
+  ],
+  "entity_count": 15,
+  "knowledge_version_created": false,
+  "parser_runtime_executed": false,
+  "postgres_facts_verified": false,
+  "relation_count": 5,
+  "relations": [
+    {
+      "direction": "outbound",
+      "document_id": "doc_forge_recall",
+      "evidence_chunk_ids": [
+        "chunk::doc_forge_recall::003"
+      ],
+      "from": "person:Nadya Soroka",
+      "kind": "person_issued_corrective_action",
+      "relation_id": "relation::person_issued_corrective_action::person:Nadya Soroka::product:Forge-X1",
+      "to": "product:Forge-X1"
+    },
+    {
+      "direction": "outbound",
+      "document_id": "doc_axis9_release_notes",
+      "evidence_chunk_ids": [
+        "chunk::doc_axis9_release_notes::003"
+      ],
+      "from": "person:Haruto Soma",
+      "kind": "person_released_product",
+      "relation_id": "relation::person_released_product::person:Haruto Soma::product:Axis-9 Industrial Controller v9.4.0",
+      "to": "product:Axis-9 Industrial Controller v9.4.0"
+    },
+    {
+      "direction": "outbound",
+      "document_id": "doc_northwind_sdk_overview",
+      "evidence_chunk_ids": [
+        "chunk::doc_northwind_sdk_overview::003"
+      ],
+      "from": "person:Haruto Soma",
+      "kind": "person_released_product",
+      "relation_id": "relation::person_released_product::person:Haruto Soma::product:Northwind SDK v3.0.0",
+      "to": "product:Northwind SDK v3.0.0"
+    },
+    {
+      "direction": "outbound",
+      "document_id": "doc_northwind_charter",
+      "evidence_chunk_ids": [
+        "chunk::doc_northwind_charter::003"
+      ],
+      "from": "person:Kjartan Eliasson",
+      "kind": "person_sponsors_project",
+      "relation_id": "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
+      "to": "project:Northwind"
+    },
+    {
+      "direction": "outbound",
+      "document_id": "doc_northwind_charter",
+      "evidence_chunk_ids": [
+        "chunk::doc_northwind_charter::003"
+      ],
+      "from": "project:Northwind",
+      "kind": "project_delivers_product",
+      "relation_id": "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0",
+      "to": "product:Northwind SDK v3.0.0"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+  "status": "CANONICAL_IR_INPUTS_PREPARED",
+  "track_id": "machine_attested_synthetic_regression"
+}

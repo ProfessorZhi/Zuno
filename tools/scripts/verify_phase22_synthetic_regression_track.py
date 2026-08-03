@@ -25,6 +25,8 @@ RUNTIME_REQUEST_MANIFEST = TRACK_DIR / "runtime_request_manifest.json"
 RUNTIME_GOLD_ISOLATION_REPORT = TRACK_DIR / "runtime_gold_isolation_report.json"
 SOURCE_UPLOAD_MANIFEST = TRACK_DIR / "source_upload_manifest.json"
 SOURCE_UPLOAD_MANIFEST_REPORT = TRACK_DIR / "source_upload_manifest_report.json"
+CANONICAL_IR_MANIFEST = TRACK_DIR / "canonical_ir_manifest.json"
+CANONICAL_IR_MANIFEST_REPORT = TRACK_DIR / "canonical_ir_manifest_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -68,6 +70,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         RUNTIME_GOLD_ISOLATION_REPORT,
         SOURCE_UPLOAD_MANIFEST,
         SOURCE_UPLOAD_MANIFEST_REPORT,
+        CANONICAL_IR_MANIFEST,
+        CANONICAL_IR_MANIFEST_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -93,6 +97,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     runtime_gold_isolation = _read_json(RUNTIME_GOLD_ISOLATION_REPORT)
     source_upload_manifest = _read_json(SOURCE_UPLOAD_MANIFEST)
     source_upload_report = _read_json(SOURCE_UPLOAD_MANIFEST_REPORT)
+    canonical_ir_manifest = _read_json(CANONICAL_IR_MANIFEST)
+    canonical_ir_report = _read_json(CANONICAL_IR_MANIFEST_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -277,6 +283,43 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("source upload manifest report source_manifest_hash mismatch")
     if current_evidence.get("source_upload_manifest_hash") != source_upload_manifest.get("source_manifest_hash"):
         errors.append("track_manifest current_evidence source_upload_manifest_hash mismatch")
+    if canonical_ir_manifest.get("status") != "CANONICAL_IR_INPUTS_PREPARED":
+        errors.append("canonical IR manifest must be CANONICAL_IR_INPUTS_PREPARED")
+    for field in ["parser_runtime_executed", "postgres_facts_verified", "knowledge_version_created"]:
+        if canonical_ir_manifest.get(field) is not False:
+            errors.append(f"canonical IR manifest {field} must be false")
+    if canonical_ir_manifest.get("source_manifest_hash") != source_upload_manifest.get("source_manifest_hash"):
+        errors.append("canonical IR manifest source_manifest_hash mismatch")
+    if canonical_ir_manifest.get("document_count") != 8:
+        errors.append("canonical IR manifest document_count must be 8")
+    if not canonical_ir_manifest.get("chunk_count"):
+        errors.append("canonical IR manifest chunk_count must be non-zero")
+    if not canonical_ir_manifest.get("entity_count"):
+        errors.append("canonical IR manifest entity_count must be non-zero")
+    if not canonical_ir_manifest.get("relation_count"):
+        errors.append("canonical IR manifest relation_count must be non-zero")
+    relations = canonical_ir_manifest.get("relations", [])
+    if not isinstance(relations, list):
+        errors.append("canonical IR manifest relations must be a list")
+        relations = []
+    for relation in relations:
+        if not isinstance(relation, dict):
+            errors.append("canonical IR manifest relation entry must be an object")
+            continue
+        for field in ["relation_id", "kind", "from", "to", "direction", "evidence_chunk_ids"]:
+            if not relation.get(field):
+                errors.append(f"canonical IR manifest relation missing {field}")
+        if relation.get("direction") != "outbound":
+            errors.append("canonical IR manifest relation direction must be outbound")
+    if canonical_ir_report.get("passed") is not True:
+        errors.append("canonical IR manifest report must pass")
+    for field in ["document_count", "chunk_count", "entity_count", "relation_count"]:
+        if canonical_ir_report.get(field) != canonical_ir_manifest.get(field):
+            errors.append(f"canonical IR manifest report {field} mismatch")
+    if canonical_ir_report.get("canonical_ir_hash") != canonical_ir_manifest.get("canonical_ir_hash"):
+        errors.append("canonical IR manifest report canonical_ir_hash mismatch")
+    if current_evidence.get("canonical_ir_hash") != canonical_ir_manifest.get("canonical_ir_hash"):
+        errors.append("track_manifest current_evidence canonical_ir_hash mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",

@@ -86,6 +86,19 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - object store verified：false
 - postgres facts verified：false
 
+## WP2 Canonical IR 当前进度
+
+已从完整 candidate corpus 生成 Canonical Document IR manifest candidate，包含 document version、chunks、entities 和 directed relations。该 evidence 只证明 IR 输入候选可机器复现，不证明正式 Parser / Canonicalization Runtime、PostgreSQL facts 或 KnowledgeVersion 已执行。
+
+- document count：8
+- chunk count：24
+- entity count：15
+- directed relation count：5
+- canonical IR hash：`43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6`
+- parser runtime executed：false
+- postgres facts verified：false
+- knowledge version created：false
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -99,7 +112,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 ## 当前 Blocker
 
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
-- Ingestion：已有完整 Corpus 的 Source Upload input manifest；仍没有 Source Upload 到 Snapshot Activation 的真实 ID 链。
+- Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
 - Index：没有 ES/Milvus/Neo4j 三索引全量 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
