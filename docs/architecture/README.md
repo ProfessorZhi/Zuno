@@ -30,6 +30,28 @@ Zuno 正式架构设计事实共十三份：
 
 `.agent/architecture/` 是字节级镜像，不是独立事实源。
 
+## Architecture v1 与 v2 路由
+
+现有 Program 与 PHASE01–PHASE22 继续使用其冻结的 Architecture v1 基线：
+
+```text
+c9d099d64a1af28102231751ce55df8217173e89
+```
+
+新的 Evidence-Driven Agentic GraphRAG 目标由以下正式 ADR 独立定义：
+
+```text
+docs/decisions/0006-evidence-driven-agentic-graphrag.md
+```
+
+这样做是为了避免在 PHASE22 收口前，用新 Target 静默改变旧 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权立即实现，也不证明任何 v2 Runtime 已成为 Current。
+
+PHASE22 收口后，Architecture Owner 必须读取最新 Current，把 ADR 0006 与 Module 03、04、06、10 和总架构协调为下一版 Canonical Target，再创建独立 Program。历史路由说明见：
+
+```text
+docs/history/architecture-v1-baseline.md
+```
+
 ## 从云端同步到本地
 
 本仓库架构文档以 GitHub `main` 为共享基线。已有 checkout 时先快进同步：
@@ -46,16 +68,16 @@ git clone https://github.com/ProfessorZhi/Zuno.git
 Set-Location -LiteralPath .\Zuno
 ```
 
-同步后先读三处：
+同步后先读四处：
 
 ```text
 docs/modules/README.md
 docs/architecture/architecture.md
+docs/decisions/0006-evidence-driven-agentic-graphrag.md
 .agent/programs/current.md
 ```
 
-`docs/modules/` 说明十一模块 Target；`architecture.md` 说明跨模块集成；`.agent/programs/current.md` 说明当前 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
-
+`docs/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
 
 ## 规范优先级
 
@@ -67,7 +89,7 @@ docs/architecture/architecture.md
 → architecture.html 渲染
 ```
 
-模块文档更新后，总架构和图必须向模块对齐；禁止根据旧 Mermaid 反向修改新模块 Contract。
+模块文档更新后，总架构和图必须向模块对齐；禁止根据旧 Mermaid 反向修改新模块 Contract。已接受 ADR 与模块文本冲突时，先按 ADR 执行决策治理，再通过后续文档协调 PR 消除冲突。
 
 ## 状态、决策与治理入口
 
