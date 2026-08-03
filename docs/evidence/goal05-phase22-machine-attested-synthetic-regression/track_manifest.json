@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "track_id": "machine_attested_synthetic_regression",
+  "status": "BLOCKED_WITH_EXACT_GAPS",
+  "created_at": "2026-08-03T15:35:36+08:00",
+  "base_origin_main_sha": "c9d099d64a1af28102231751ce55df8217173e89",
+  "stacked_on_pr": 106,
+  "stacked_on_pr_head": "95e17fc522591e7ee543b40b5b568d71963b6aa0",
+  "synthetic_public_boundary": {
+    "reviewer_approved_count": 0,
+    "benchmark_eligible_count": 0,
+    "machine_attested_count": 0,
+    "synthetic_regression_eligible_count": 0
+  },
+  "synthetic_release_decision": {
+    "status": "BLOCKED",
+    "scope": "machine_attested_synthetic_regression",
+    "reason": "real_canonical_ingestion_and_four_profile_runtime_not_executed"
+  },
+  "required_completion_evidence": {
+    "case_count": 80,
+    "derivation_valid_count": 80,
+    "source_evidence_valid_count": 80,
+    "canonical_ingestion_required": true,
+    "durable_object_store_required": true,
+    "postgres_domain_facts_required": true,
+    "elasticsearch_bm25_required": true,
+    "milvus_formal_embedding_required": true,
+    "neo4j_directed_graph_required": true,
+    "snapshot_activation_required": true,
+    "four_profile_same_snapshot_required": true,
+    "gold_runtime_isolation_required": true,
+    "non_zero_thresholds_required": true,
+    "fault_security_resume_idempotency_required": true
+  },
+  "current_evidence": {
+    "dataset_hash": null,
+    "corpus_hash": null,
+    "knowledge_version_id": null,
+    "snapshot_id": null,
+    "embedding_provider": null,
+    "embedding_model": null,
+    "embedding_config_hash": null,
+    "profile_run_ids": [],
+    "visibility_receipt_refs": [],
+    "run_outcome_refs": []
+  },
+  "not_run": [
+    "80_case_derivation_validator",
+    "full_corpus_canonical_ingestion",
+    "minio_object_manifest_readback",
+    "postgres_domain_fact_idempotency",
+    "elasticsearch_full_bm25_visibility",
+    "milvus_formal_embedding_ann_visibility",
+    "neo4j_directed_graph_path_receipt",
+    "snapshot_activation",
+    "standard_rag_same_snapshot",
+    "local_graphrag_same_snapshot",
+    "deep_graphrag_same_snapshot",
+    "agentic_graphrag_same_snapshot",
+    "gold_runtime_isolation",
+    "synthetic_release_decision",
+    "fault_security_resume_matrix"
+  ]
+}
