@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from .contracts import IndexAdapterContract, IndexTarget
+from .contracts import (
+    IndexAdapterContract,
+    IndexTarget,
+    Neo4jPathVisibilityReceipt,
+    build_neo4j_path_visibility_receipt,
+)
 
 
 INDEX_ADAPTER_CONTRACTS = {
@@ -52,7 +58,7 @@ INDEX_ADAPTER_CONTRACTS = {
         engine="Neo4j",
         runtime_status="current",
         external_service=True,
-        operations=["index", "query", "delete"],
+        operations=["index", "query", "delete", "path_visibility_receipt"],
     ),
 }
 
@@ -186,11 +192,13 @@ class Neo4jGraphIndexClient:
         username: str,
         password: str,
         database: str = "neo4j",
+        driver_factory: Any | None = None,
     ) -> None:
         self.uri = uri
         self.username = username
         self.password = password
         self.database = database
+        self._driver_factory = driver_factory
 
     def index_documents(self, index_name: str, documents: list[dict]) -> None:
         driver = self._driver()
@@ -248,7 +256,161 @@ class Neo4jGraphIndexClient:
         finally:
             driver.close()
 
+    def index_graph_relations(
+        self,
+        index_name: str,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        knowledge_version_id: str,
+        snapshot_id: str,
+        entities: list[dict],
+        relations: list[dict],
+    ) -> None:
+        driver = self._driver()
+        try:
+            with driver.session(database=self.database) as session:
+                session.run(
+                    """
+                    MATCH (e:ZunoIndexEntity {index_name: $index_name, tenant_id: $tenant_id,
+                                              workspace_id: $workspace_id,
+                                              knowledge_version_id: $knowledge_version_id,
+                                              snapshot_id: $snapshot_id})
+                    DETACH DELETE e
+                    """,
+                    {
+                        "index_name": index_name,
+                        "tenant_id": tenant_id,
+                        "workspace_id": workspace_id,
+                        "knowledge_version_id": knowledge_version_id,
+                        "snapshot_id": snapshot_id,
+                    },
+                )
+                for entity in entities:
+                    session.run(
+                        """
+                        MERGE (e:ZunoIndexEntity {index_name: $index_name, entity_ref: $entity_ref})
+                        SET e.tenant_id = $tenant_id,
+                            e.workspace_id = $workspace_id,
+                            e.knowledge_version_id = $knowledge_version_id,
+                            e.snapshot_id = $snapshot_id,
+                            e.kind = $kind,
+                            e.name = $name
+                        """,
+                        {
+                            "index_name": index_name,
+                            "entity_ref": str(entity.get("entity_ref") or entity.get("id") or ""),
+                            "tenant_id": tenant_id,
+                            "workspace_id": workspace_id,
+                            "knowledge_version_id": knowledge_version_id,
+                            "snapshot_id": snapshot_id,
+                            "kind": str(entity.get("kind") or ""),
+                            "name": str(entity.get("name") or entity.get("entity_ref") or entity.get("id") or ""),
+                        },
+                    )
+                for relation in relations:
+                    session.run(
+                        """
+                        MATCH (from:ZunoIndexEntity {index_name: $index_name, entity_ref: $from_ref})
+                        MATCH (to:ZunoIndexEntity {index_name: $index_name, entity_ref: $to_ref})
+                        MERGE (from)-[r:ZUNO_DIRECTED_RELATION {index_name: $index_name,
+                                                                 relation_ref: $relation_ref}]->(to)
+                        SET r.tenant_id = $tenant_id,
+                            r.workspace_id = $workspace_id,
+                            r.knowledge_version_id = $knowledge_version_id,
+                            r.snapshot_id = $snapshot_id,
+                            r.kind = $kind
+                        """,
+                        {
+                            "index_name": index_name,
+                            "relation_ref": str(relation.get("relation_ref") or relation.get("id") or ""),
+                            "from_ref": str(relation.get("from") or relation.get("from_ref") or ""),
+                            "to_ref": str(relation.get("to") or relation.get("to_ref") or ""),
+                            "tenant_id": tenant_id,
+                            "workspace_id": workspace_id,
+                            "knowledge_version_id": knowledge_version_id,
+                            "snapshot_id": snapshot_id,
+                            "kind": str(relation.get("kind") or ""),
+                        },
+                    )
+        finally:
+            driver.close()
+
+    def verify_path_visibility_receipt(
+        self,
+        index_name: str,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        knowledge_version_id: str,
+        snapshot_id: str,
+        start_entity_ref: str,
+        end_entity_ref: str,
+        relation_kinds: list[str],
+        query_kind: str = "directed_path",
+        config_hash: str,
+        observed_at: datetime | None = None,
+    ) -> Neo4jPathVisibilityReceipt | None:
+        driver = self._driver()
+        try:
+            with driver.session(database=self.database) as session:
+                result = session.run(
+                    """
+                    MATCH path = (start:ZunoIndexEntity {index_name: $index_name,
+                                                         tenant_id: $tenant_id,
+                                                         workspace_id: $workspace_id,
+                                                         knowledge_version_id: $knowledge_version_id,
+                                                         snapshot_id: $snapshot_id,
+                                                         entity_ref: $start_entity_ref})
+                                 -[:ZUNO_DIRECTED_RELATION*1..5]->
+                                 (end:ZunoIndexEntity {index_name: $index_name,
+                                                       tenant_id: $tenant_id,
+                                                       workspace_id: $workspace_id,
+                                                       knowledge_version_id: $knowledge_version_id,
+                                                       snapshot_id: $snapshot_id,
+                                                       entity_ref: $end_entity_ref})
+                    WHERE [relation IN relationships(path) | relation.kind] = $relation_kinds
+                    RETURN [node IN nodes(path) | node.entity_ref] AS matched_node_refs,
+                           [relation IN relationships(path) | relation.relation_ref] AS matched_relation_refs
+                    LIMIT 1
+                    """,
+                    {
+                        "index_name": index_name,
+                        "tenant_id": tenant_id,
+                        "workspace_id": workspace_id,
+                        "knowledge_version_id": knowledge_version_id,
+                        "snapshot_id": snapshot_id,
+                        "start_entity_ref": start_entity_ref,
+                        "end_entity_ref": end_entity_ref,
+                        "relation_kinds": relation_kinds,
+                    },
+                )
+                rows = [record.data() for record in result]
+        finally:
+            driver.close()
+        if not rows:
+            return None
+        row = rows[0]
+        return build_neo4j_path_visibility_receipt(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+            snapshot_id=snapshot_id,
+            query_kind=query_kind,
+            start_entity_ref=start_entity_ref,
+            end_entity_ref=end_entity_ref,
+            relation_kinds=relation_kinds,
+            matched_node_refs=list(row.get("matched_node_refs") or []),
+            matched_relation_refs=list(row.get("matched_relation_refs") or []),
+            adapter_execution_ref=f"neo4j-path-readback:{index_name}",
+            visibility_status="visible",
+            observed_at=observed_at or datetime.now(timezone.utc),
+            config_hash=config_hash,
+        )
+
     def _driver(self) -> Any:
+        if self._driver_factory is not None:
+            return self._driver_factory()
         from neo4j import GraphDatabase
 
         return GraphDatabase.driver(self.uri, auth=(self.username, self.password))

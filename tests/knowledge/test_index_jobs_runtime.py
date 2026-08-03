@@ -92,6 +92,7 @@ def test_index_runtime_exposes_adapter_contracts_with_current_external_targets()
         assert adapter.runtime_status == "current"
         assert adapter.external_service is True
         assert adapter.blocked_reason is None
+    assert "path_visibility_receipt" in INDEX_ADAPTER_CONTRACTS["neo4j"].operations
 
 
 def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -> None:
@@ -755,3 +756,147 @@ def test_neo4j_path_visibility_receipt_rejects_missing_snapshot_and_wrong_path_s
     assert "matched_node_refs must contain path_length + 1 nodes" in errors
     assert "matched_node_refs must start with start_entity_ref" in errors
     assert "payload_hash mismatch" in errors
+
+
+class _FakeNeo4jRecord:
+    def __init__(self, payload: dict) -> None:
+        self._payload = payload
+
+    def data(self) -> dict:
+        return dict(self._payload)
+
+
+class _FakeNeo4jSession:
+    def __init__(self, path_rows: list[dict]) -> None:
+        self.path_rows = path_rows
+        self.calls: list[dict] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback) -> None:
+        return None
+
+    def run(self, cypher: str, parameters: dict):
+        self.calls.append({"cypher": cypher, "parameters": parameters})
+        if "relationships(path)" in cypher:
+            return [_FakeNeo4jRecord(row) for row in self.path_rows]
+        return []
+
+
+class _FakeNeo4jDriver:
+    def __init__(self, path_rows: list[dict]) -> None:
+        self.session_obj = _FakeNeo4jSession(path_rows)
+        self.closed = False
+
+    def session(self, *, database: str):
+        self.database = database
+        return self.session_obj
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_neo4j_graph_client_generates_path_receipt_from_owner_readback() -> None:
+    from zuno.knowledge.indexing import Neo4jGraphIndexClient
+
+    driver = _FakeNeo4jDriver(
+        [
+            {
+                "matched_node_refs": [
+                    "entity:auroralis:console",
+                    "entity:auroralis:platform",
+                    "entity:auroralis:audit",
+                ],
+                "matched_relation_refs": [
+                    "relation:console-owned-by-platform",
+                    "relation:platform-reviewed-by-audit",
+                ],
+            }
+        ]
+    )
+    client = Neo4jGraphIndexClient(
+        uri="bolt://localhost:7687",
+        username="neo4j",
+        password="unused",
+        driver_factory=lambda: driver,
+    )
+
+    client.index_graph_relations(
+        "phase22_graph",
+        tenant_id="tenant_auroralis",
+        workspace_id="workspace_finance",
+        knowledge_version_id="kv_2026_04",
+        snapshot_id="snapshot_2026_04",
+        entities=[
+            {"entity_ref": "entity:auroralis:console", "kind": "Product"},
+            {"entity_ref": "entity:auroralis:platform", "kind": "System"},
+            {"entity_ref": "entity:auroralis:audit", "kind": "Team"},
+        ],
+        relations=[
+            {
+                "relation_ref": "relation:console-owned-by-platform",
+                "from": "entity:auroralis:console",
+                "to": "entity:auroralis:platform",
+                "kind": "OWNED_BY",
+            },
+            {
+                "relation_ref": "relation:platform-reviewed-by-audit",
+                "from": "entity:auroralis:platform",
+                "to": "entity:auroralis:audit",
+                "kind": "REVIEWED_BY",
+            },
+        ],
+    )
+    receipt = client.verify_path_visibility_receipt(
+        "phase22_graph",
+        tenant_id="tenant_auroralis",
+        workspace_id="workspace_finance",
+        knowledge_version_id="kv_2026_04",
+        snapshot_id="snapshot_2026_04",
+        start_entity_ref="entity:auroralis:console",
+        end_entity_ref="entity:auroralis:audit",
+        relation_kinds=["OWNED_BY", "REVIEWED_BY"],
+        query_kind="two_hop_path",
+        config_hash="sha256:neo4j-config-v1",
+        observed_at=datetime(2026, 8, 3, 10, 0, tzinfo=timezone.utc),
+    )
+
+    assert receipt is not None
+    assert receipt.receipt_id.startswith("neo4j-path-visibility:")
+    assert receipt.path_length == 2
+    assert receipt.matched_relation_refs == [
+        "relation:console-owned-by-platform",
+        "relation:platform-reviewed-by-audit",
+    ]
+    assert receipt.adapter_execution_ref == "neo4j-path-readback:phase22_graph"
+    assert any("MERGE (from)-[r:ZUNO_DIRECTED_RELATION" in call["cypher"] for call in driver.session_obj.calls)
+    assert any("relationships(path)" in call["cypher"] for call in driver.session_obj.calls)
+    assert driver.closed is True
+
+
+def test_neo4j_graph_client_returns_no_receipt_when_path_readback_missing() -> None:
+    from zuno.knowledge.indexing import Neo4jGraphIndexClient
+
+    driver = _FakeNeo4jDriver([])
+    client = Neo4jGraphIndexClient(
+        uri="bolt://localhost:7687",
+        username="neo4j",
+        password="unused",
+        driver_factory=lambda: driver,
+    )
+
+    receipt = client.verify_path_visibility_receipt(
+        "phase22_graph",
+        tenant_id="tenant_auroralis",
+        workspace_id="workspace_finance",
+        knowledge_version_id="kv_2026_04",
+        snapshot_id="snapshot_2026_04",
+        start_entity_ref="entity:auroralis:console",
+        end_entity_ref="entity:auroralis:audit",
+        relation_kinds=["OWNED_BY", "REVIEWED_BY"],
+        config_hash="sha256:neo4j-config-v1",
+    )
+
+    assert receipt is None
+    assert driver.closed is True
