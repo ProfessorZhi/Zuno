@@ -15,6 +15,7 @@ READINESS_REPORT = TRACK_DIR / "readiness-report.md"
 PR100_FILE_CLASSIFICATION = TRACK_DIR / "pr100-file-classification.json"
 SEED_DATASET_MANIFEST = TRACK_DIR / "seed-dataset" / "seed_dataset_manifest.json"
 CANDIDATE_DATASET_MANIFEST = TRACK_DIR / "candidate-dataset" / "candidate_dataset_manifest.json"
+CANDIDATE_DERIVATION_REPORT = TRACK_DIR / "candidate-dataset" / "candidate_derivation_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -48,6 +49,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         PR100_FILE_CLASSIFICATION,
         SEED_DATASET_MANIFEST,
         CANDIDATE_DATASET_MANIFEST,
+        CANDIDATE_DERIVATION_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -63,6 +65,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     pr100_classification = _read_json(PR100_FILE_CLASSIFICATION)
     seed_manifest = _read_json(SEED_DATASET_MANIFEST)
     candidate_manifest = _read_json(CANDIDATE_DATASET_MANIFEST)
+    derivation_report = _read_json(CANDIDATE_DERIVATION_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -103,6 +106,14 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("candidate dataset must not be runtime eligible before ingestion")
     if candidate_manifest.get("synthetic_regression_eligible") is not False:
         errors.append("candidate dataset must not be synthetic regression eligible before runtime")
+    if derivation_report.get("case_count") != 80:
+        errors.append("candidate derivation report case_count must be 80")
+    if derivation_report.get("derivation_valid_count") != 80:
+        errors.append("candidate derivation report derivation_valid_count must be 80")
+    if derivation_report.get("source_evidence_valid_count") != 80:
+        errors.append("candidate derivation report source_evidence_valid_count must be 80")
+    if derivation_report.get("unsupported_answer_count") != 0:
+        errors.append("candidate derivation report unsupported_answer_count must be 0")
 
     required_report_phrases = [
         "status: BLOCKED_WITH_EXACT_GAPS",

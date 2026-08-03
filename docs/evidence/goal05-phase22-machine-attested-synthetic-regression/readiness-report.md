@@ -42,10 +42,11 @@ Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case
 - dataset hash：`b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c`
 - corpus hash：`749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4`
 - validation scope：schema、source_document_refs、source_span_refs、input_hash、case_hash、duplicate_question、runtime_forbidden_gold_fields
+- derivation validator v1：80/80 derivation valid；80/80 source evidence valid；0 unsupported answer；report hash `ccf16f9f684af4a69a09995ba1320f05fe388f5c01410c79c013bd6d530f16a9`
 - runtime eligible：false
 - synthetic regression eligible：false
 
-当前 80-case candidate 还没有证明“独立从 World Model 和 Corpus 语义推导答案”，也没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
+当前 80-case candidate 已具备当前 schema、source span、hash、gold-field 隔离和 derivation validator v1 证据；但 derivation validator v1 仍是结构化闭合校验，不等于完整 formal World Model proof。它也没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
 
 ## 历史 PR 分类
 

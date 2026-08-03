@@ -40,6 +40,10 @@
     "seed_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
     "seed_case_count": 7,
     "candidate_case_count": 80,
+    "candidate_derivation_report_hash": "ccf16f9f684af4a69a09995ba1320f05fe388f5c01410c79c013bd6d530f16a9",
+    "candidate_derivation_valid_count": 80,
+    "candidate_source_evidence_valid_count": 80,
+    "candidate_unsupported_answer_count": 0,
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,
@@ -50,7 +54,6 @@
     "run_outcome_refs": []
   },
   "not_run": [
-    "semantic_derivation_validator_independent_from_expected_answer",
     "full_corpus_canonical_ingestion",
     "minio_object_manifest_readback",
     "postgres_domain_fact_idempotency",

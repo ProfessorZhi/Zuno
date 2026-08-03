@@ -5,6 +5,7 @@ from tools.evals.zuno.synthetic_benchmark.dataset_contract import (
     compute_input_hash,
     validate_cases,
 )
+from tools.evals.zuno.synthetic_benchmark.derivation_validator import validate_derivations
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -133,3 +134,26 @@ def test_full_candidate_dataset_has_required_80_case_distribution_without_runtim
     assert manifest["synthetic_regression_eligible"] is False
     assert (tmp_path / "synthetic_cases.jsonl").exists()
     assert (tmp_path / "candidate_validation_report.json").exists()
+
+
+def test_derivation_validator_validates_candidate_without_expected_answer() -> None:
+    cases = build_full_candidate_cases()
+    stripped = [{k: v for k, v in case.items() if k != "expected_answer"} for case in cases]
+
+    result = validate_derivations(stripped, CORPUS_DOCS)
+
+    assert result.passed
+    assert result.case_count == 80
+    assert result.derivation_valid_count == 80
+    assert result.source_evidence_valid_count == 80
+    assert result.unsupported_answer_count == 0
+
+
+def test_derivation_validator_rejects_unclosed_graph_relation() -> None:
+    case = build_full_candidate_cases()[40]
+    case["derivation_spec"] = {"method": "graph_relation", "relations": []}
+
+    result = validate_derivations([case], CORPUS_DOCS)
+
+    assert not result.passed
+    assert any("graph_relation requires relations" in error for error in result.errors)

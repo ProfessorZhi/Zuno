@@ -1,0 +1,19 @@
+{
+  "case_count": 80,
+  "derivation_valid_count": 80,
+  "errors": [],
+  "method_counts": {
+    "abstain_scan": 5,
+    "fault_recovery": 5,
+    "graph_relation": 15,
+    "multi_hop": 20,
+    "security_scope": 5,
+    "single_doc_fact": 20,
+    "temporal_version": 10
+  },
+  "passed": true,
+  "report_hash": "ccf16f9f684af4a69a09995ba1320f05fe388f5c01410c79c013bd6d530f16a9",
+  "source_evidence_valid_count": 80,
+  "unsupported_answer_count": 0,
+  "warnings": []
+}
