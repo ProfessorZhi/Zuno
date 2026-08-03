@@ -1,0 +1,823 @@
+{
+  "all_visibility_passed": true,
+  "cleanup": {
+    "elasticsearch": "index_deleted",
+    "index_prefix": "deepseek2_phase22_9a9735f3",
+    "milvus": "collection_dropped",
+    "neo4j": "nodes_deleted"
+  },
+  "elapsed_seconds": 168.672,
+  "embedding": {
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+    "dimension": 1024,
+    "gateway_kind": "openai_compatible_embedding_gateway",
+    "model": "text-embedding-v4",
+    "provider": "dashscope",
+    "vector_source": "formal_embedding_gateway"
+  },
+  "evidence_hash": "9156e193d5019445bb381d57d6f4d79e25b9f95c2e7f668098eee8c1022ed2d4",
+  "evidence_kind": "live_three_index_visibility",
+  "index_runtime": {
+    "adapter_dispatch_receipts": {
+      "bm25": {
+        "dispatch_ref": "index-dispatch:bm25:e18aa374fc8f357e",
+        "indexed_document_count": 4,
+        "payload_hash": "e18aa374fc8f357e042b1fd3aed3dfadba552ab093ed4d322c7fe4a281736c55"
+      },
+      "graph": {
+        "dispatch_ref": "index-dispatch:graph:2a5f56bd8d2567fd",
+        "indexed_document_count": 4,
+        "payload_hash": "2a5f56bd8d2567fd9dafc7ebc26bcc1c7aafbee6a287493c9f5d9524107931fc"
+      },
+      "vector": {
+        "dispatch_ref": "index-dispatch:vector:eb85877245e63310",
+        "indexed_document_count": 4,
+        "payload_hash": "eb85877245e633107279804074bd45feff75de58220285e36751ae2cab042aad"
+      }
+    },
+    "adapter_status": {
+      "bm25": "elasticsearch:current",
+      "graph": "neo4j:current",
+      "vector": "milvus:current"
+    },
+    "adapter_visibility_receipts": {
+      "bm25": {
+        "adapter_dispatch_ref": "index-dispatch:bm25:e18aa374fc8f357e",
+        "adapter_id": "elasticsearch",
+        "adapter_status": "current",
+        "adapter_target": "bm25",
+        "document_id": "doc_security_policy_2026",
+        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+        "index_version": "idx_b43a867e526c",
+        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
+        "payload_hash": "6f6db812517fceb3b67ee412dc530efb40dcd591c9fb0a9ef23e4c1a271c7c08",
+        "receipt_kind": "elasticsearch_bm25_visibility",
+        "receipt_ref": "index-visibility:bm25:6f6db812517fceb3",
+        "sample_match_count": 4,
+        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
+        "source_block_count": 3,
+        "visibility": "visible",
+        "visibility_failure_reason": null
+      },
+      "graph": {
+        "adapter_dispatch_ref": "index-dispatch:graph:2a5f56bd8d2567fd",
+        "adapter_id": "neo4j",
+        "adapter_status": "current",
+        "adapter_target": "graph",
+        "document_id": "doc_security_policy_2026",
+        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+        "index_version": "idx_b43a867e526c",
+        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
+        "payload_hash": "bd6fc455372e672222a8d2f14b1a2a4c9bf4023789f337a1e18f9ef02c0a37cb",
+        "receipt_kind": "neo4j_graph_visibility",
+        "receipt_ref": "index-visibility:graph:bd6fc455372e6722",
+        "sample_match_count": 4,
+        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
+        "source_block_count": 3,
+        "visibility": "visible",
+        "visibility_failure_reason": null
+      },
+      "vector": {
+        "adapter_dispatch_ref": "index-dispatch:vector:eb85877245e63310",
+        "adapter_id": "milvus",
+        "adapter_status": "current",
+        "adapter_target": "vector",
+        "document_id": "doc_security_policy_2026",
+        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
+        "index_version": "idx_b43a867e526c",
+        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
+        "payload_hash": "71672246b8621a574621c3b5c198cc6dde1629d275b0973baa82a254f17a576a",
+        "receipt_kind": "milvus_vector_visibility",
+        "receipt_ref": "index-visibility:vector:71672246b8621a57",
+        "sample_match_count": 4,
+        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
+        "source_block_count": 3,
+        "visibility": "visible",
+        "visibility_failure_reason": null
+      }
+    }
+  },
+  "input_authenticity": {
+    "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+    "corpus_chunk_text_hashes_verified": true,
+    "hash_checks": [
+      {
+        "actual_hash": "ddbcb64d78c4ba0c",
+        "chunk_id": "chunk::doc_axis9_release_notes::001",
+        "expected_hash": "ddbcb64d78c4ba0c",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "f45e6c9b280b8316",
+        "chunk_id": "chunk::doc_axis9_release_notes::002",
+        "expected_hash": "f45e6c9b280b8316",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "4b0285c68522d062",
+        "chunk_id": "chunk::doc_axis9_release_notes::003",
+        "expected_hash": "4b0285c68522d062",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "73f2adeb6c75c2b9",
+        "chunk_id": "chunk::doc_forge_recall::001",
+        "expected_hash": "73f2adeb6c75c2b9",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "651b023fd7e15f34",
+        "chunk_id": "chunk::doc_forge_recall::002",
+        "expected_hash": "651b023fd7e15f34",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "9e36aac3dc954cfa",
+        "chunk_id": "chunk::doc_forge_recall::003",
+        "expected_hash": "9e36aac3dc954cfa",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "69c5859e7bebab41",
+        "chunk_id": "chunk::doc_legal_audit_2026_q1::001",
+        "expected_hash": "69c5859e7bebab41",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "431bdbb338f1282a",
+        "chunk_id": "chunk::doc_legal_audit_2026_q1::002",
+        "expected_hash": "431bdbb338f1282a",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "dd2e5f7417a0faa5",
+        "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+        "expected_hash": "dd2e5f7417a0faa5",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "6ca6a871e6a303cc",
+        "chunk_id": "chunk::doc_northwind_charter::001",
+        "expected_hash": "6ca6a871e6a303cc",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "c4701c33395f4231",
+        "chunk_id": "chunk::doc_northwind_charter::002",
+        "expected_hash": "c4701c33395f4231",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "f90b3f178d506a3b",
+        "chunk_id": "chunk::doc_northwind_charter::003",
+        "expected_hash": "f90b3f178d506a3b",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "aadd1215c2da862d",
+        "chunk_id": "chunk::doc_northwind_sdk_overview::001",
+        "expected_hash": "aadd1215c2da862d",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "9c4afdeb9fdecc38",
+        "chunk_id": "chunk::doc_northwind_sdk_overview::002",
+        "expected_hash": "9c4afdeb9fdecc38",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "8490af8986263c2d",
+        "chunk_id": "chunk::doc_northwind_sdk_overview::003",
+        "expected_hash": "8490af8986263c2d",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "fdff4f8b2181dfd3",
+        "chunk_id": "chunk::doc_org_chart_2026::001",
+        "expected_hash": "fdff4f8b2181dfd3",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "dfe6e933b7705dfb",
+        "chunk_id": "chunk::doc_org_chart_2026::002",
+        "expected_hash": "dfe6e933b7705dfb",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "6f1bc11ce153b472",
+        "chunk_id": "chunk::doc_org_chart_2026::003",
+        "expected_hash": "6f1bc11ce153b472",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "637f08e2f95bd87b",
+        "chunk_id": "chunk::doc_security_policy_2024::001",
+        "expected_hash": "637f08e2f95bd87b",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "4a3d5d3a084196c3",
+        "chunk_id": "chunk::doc_security_policy_2024::002",
+        "expected_hash": "4a3d5d3a084196c3",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "a16b3ec281b0f2ea",
+        "chunk_id": "chunk::doc_security_policy_2024::003",
+        "expected_hash": "a16b3ec281b0f2ea",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "056c9c9968b73f1c",
+        "chunk_id": "chunk::doc_security_policy_2026::001",
+        "expected_hash": "056c9c9968b73f1c",
+        "ordinal": 1,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "1962d1094dbbe3a0",
+        "chunk_id": "chunk::doc_security_policy_2026::002",
+        "expected_hash": "1962d1094dbbe3a0",
+        "ordinal": 2,
+        "text_hash_matches_manifest": true
+      },
+      {
+        "actual_hash": "0b5da1385af336d4",
+        "chunk_id": "chunk::doc_security_policy_2026::003",
+        "expected_hash": "0b5da1385af336d4",
+        "ordinal": 3,
+        "text_hash_matches_manifest": true
+      }
+    ],
+    "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a"
+  },
+  "schema_version": "1.0.0",
+  "scope": {
+    "chunk_count": 35,
+    "document_count": 8,
+    "index_prefix": "deepseek2_phase22_9a9735f3",
+    "index_version": "idx_b43a867e526c",
+    "knowledge_version_id": "",
+    "tenant_id": "tenant_auroralis",
+    "workspace_id": "workspace_regression"
+  },
+  "services": {
+    "elasticsearch": {
+      "cluster_name": "docker-cluster",
+      "server_version": "7.17.24"
+    },
+    "milvus": {
+      "client_version": "2.6.11",
+      "server_build": "v2.4.15"
+    },
+    "neo4j": {
+      "driver_version": "5.28.1"
+    }
+  },
+  "started_at": "2026-08-03T13:55:12.897313+00:00",
+  "track_id": "machine_attested_synthetic_regression",
+  "verifications": {
+    "elasticsearch_bm25": {
+      "bm25_query": {
+        "query": "renewal policy",
+        "scoped_hit_count": 4
+      },
+      "chunk_readback": [
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::001::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::002::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite2",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::001::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::002::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::003::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::001::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::002::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite2",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite3",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::001::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::002::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite2",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite3",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite4",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::001::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::002::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite2",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::001::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::002::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite2",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite3",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::001::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::002::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite2",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::001::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::002::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite2",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        }
+      ],
+      "chunk_readback_count": 35,
+      "chunk_readback_ok_count": 35,
+      "document_counts": {
+        "all": 35,
+        "scoped": 35,
+        "wrong_tenant": 0,
+        "wrong_workspace": 0
+      },
+      "index_name": "deepseek2_phase22_9a9735f3_bm25",
+      "tenant_filter": {
+        "scoped_hit_count": 4,
+        "wrong_tenant_hit_count": 0,
+        "wrong_workspace_hit_count": 0
+      },
+      "tenant_isolation_passed": true
+    },
+    "milvus_vector": {
+      "ann_query": {
+        "query": "renewal policy",
+        "scoped_hit_count": 25
+      },
+      "chunk_readback": [
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::001::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::002::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite1",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite2",
+          "document_id": "doc_axis9_release_notes",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::001::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::002::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_forge_recall::block::doc_forge_recall::003::cite1",
+          "document_id": "doc_forge_recall",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::001::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::002::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite1",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite2",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite3",
+          "document_id": "doc_legal_audit_2026_q1",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::001::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::002::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite1",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite2",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite3",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite4",
+          "document_id": "doc_northwind_charter",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::001::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::002::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite1",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite2",
+          "document_id": "doc_northwind_sdk_overview",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::001::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::002::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite1",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite2",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite3",
+          "document_id": "doc_org_chart_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::001::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::002::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite1",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite2",
+          "document_id": "doc_security_policy_2024",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::001::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::002::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite1",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        },
+        {
+          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite2",
+          "document_id": "doc_security_policy_2026",
+          "readback_ok": true
+        }
+      ],
+      "chunk_readback_count": 35,
+      "chunk_readback_ok_count": 35,
+      "document_counts": {
+        "all": 35,
+        "scoped": 35,
+        "wrong_workspace": 0
+      },
+      "embedding_attestation": {
+        "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+        "dimension": 1024,
+        "model": "text-embedding-v4",
+        "provider": "dashscope",
+        "status": "FORMAL_EMBEDDING_GATEWAY_CONFIGURED"
+      },
+      "index_name": "deepseek2_phase22_9a9735f3_vector",
+      "workspace_filter": {
+        "scoped_hit_count": 25,
+        "wrong_workspace_hit_count": 25
+      },
+      "workspace_isolation_passed": true
+    },
+    "neo4j_graph": {
+      "all_paths_store_visible": true,
+      "cross_tenant_path_visible": false,
+      "index_name": "deepseek2_phase22_9a9735f3_graph",
+      "path_readbacks": {
+        "multi_hop_sponsor_delivers": {
+          "canonical_receipt_builder_blocked": [
+            "knowledge_version_id is required; snapshot_id is required"
+          ],
+          "canonical_receipt_emitted": false,
+          "end": "product:Northwind SDK v3.0.0",
+          "kinds": [
+            "person_sponsors_project",
+            "project_delivers_product"
+          ],
+          "path_length": 2,
+          "start": "person:Kjartan Eliasson",
+          "store_matched_node_refs": [
+            "person:Kjartan Eliasson",
+            "project:Northwind",
+            "product:Northwind SDK v3.0.0"
+          ],
+          "store_matched_relation_refs": [
+            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
+            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
+          ],
+          "store_visible": true
+        },
+        "one_hop_person_released_product": {
+          "canonical_receipt_builder_blocked": [
+            "knowledge_version_id is required; snapshot_id is required"
+          ],
+          "canonical_receipt_emitted": false,
+          "end": "product:Axis-9 Industrial Controller v9.4.0",
+          "kinds": [
+            "person_released_product"
+          ],
+          "path_length": 1,
+          "start": "person:Haruto Soma",
+          "store_matched_node_refs": [
+            "person:Haruto Soma",
+            "product:Axis-9 Industrial Controller v9.4.0"
+          ],
+          "store_matched_relation_refs": [
+            "relation::person_released_product::person:Haruto Soma::product:Axis-9 Industrial Controller v9.4.0"
+          ],
+          "store_visible": true
+        },
+        "two_hop_sponsor_delivers": {
+          "canonical_receipt_builder_blocked": [
+            "knowledge_version_id is required; snapshot_id is required"
+          ],
+          "canonical_receipt_emitted": false,
+          "end": "product:Northwind SDK v3.0.0",
+          "kinds": [
+            "person_sponsors_project",
+            "project_delivers_product"
+          ],
+          "path_length": 2,
+          "start": "person:Kjartan Eliasson",
+          "store_matched_node_refs": [
+            "person:Kjartan Eliasson",
+            "project:Northwind",
+            "product:Northwind SDK v3.0.0"
+          ],
+          "store_matched_relation_refs": [
+            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
+            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
+          ],
+          "store_visible": true
+        }
+      },
+      "path_receipt_count": 0,
+      "path_receipts": [],
+      "rebuild_idempotency": {
+        "path_length_after_rebuild": 2,
+        "path_readback_stable_after_rebuild": true
+      },
+      "tenant_isolation_passed": true
+    },
+    "rebuild_idempotency": {
+      "after": {
+        "es": 35,
+        "milvus": 35
+      },
+      "before": {
+        "es": 35,
+        "milvus": 35
+      },
+      "counts_stable": true,
+      "receipt_payload_hashes_stable": true
+    }
+  },
+  "visibility_receipt_refs": {
+    "bm25": {
+      "adapter_id": "elasticsearch",
+      "payload_hash": "6f6db812517fceb3b67ee412dc530efb40dcd591c9fb0a9ef23e4c1a271c7c08",
+      "receipt_kind": "elasticsearch_bm25_visibility",
+      "receipt_ref": "index-visibility:bm25:6f6db812517fceb3",
+      "sample_match_count": 4,
+      "visibility": "visible"
+    },
+    "graph": {
+      "adapter_id": "neo4j",
+      "payload_hash": "bd6fc455372e672222a8d2f14b1a2a4c9bf4023789f337a1e18f9ef02c0a37cb",
+      "receipt_kind": "neo4j_graph_visibility",
+      "receipt_ref": "index-visibility:graph:bd6fc455372e6722",
+      "sample_match_count": 4,
+      "visibility": "visible"
+    },
+    "vector": {
+      "adapter_id": "milvus",
+      "payload_hash": "71672246b8621a574621c3b5c198cc6dde1629d275b0973baa82a254f17a576a",
+      "receipt_kind": "milvus_vector_visibility",
+      "receipt_ref": "index-visibility:vector:71672246b8621a57",
+      "sample_match_count": 4,
+      "visibility": "visible"
+    }
+  },
+  "worker": "deepseek2-cc-b34c"
+}
