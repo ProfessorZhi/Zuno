@@ -36,6 +36,8 @@ Zuno 的本地工作流由以下表面共同组成：
 
 线程可以常驻为“工位”，但任务隔离边界是本轮 worktree + `codex/` branch，不是线程标题。每轮任务开始前，主线程先盘点可复用 Codex 线程和 git worktree；有合适可复用线程就复用；没有合适线程才创建新线程。复用或新建线程后必须改线程标题，并确认或切换 worktree、branch、`git status --short --branch`、允许范围和禁止范围。主线程可以自己以目标模式/计划模式单干，也可以把粗粒度任务分配给常驻线程并行执行。
 
+在 `internship-work` 求职工作区中，`F:\internship-work\resume project\Zuno` 是 Zuno 的主项目入口和最终集成仓库。多 agent / 多 worker 的临时 Git worktree 统一放在 `F:\internship-work\resume project\worktrees\` 下。每个 agent 使用自己的 worktree 和 branch，完工后提交 commit；主线程审查 diff，只吸收通过的文件或 commit 回主项目入口或目标 integration branch；合并、验证、push 后可以删除临时 worktree。临时 worktree 不是长期项目入口。
+
 子线程目标模式提示词默认要求线程内开启多 agent 模式，用于提高并发；只有当任务共享文件高冲突、禁止并行或用户明确要求单线程时，才在提示词里写明禁用原因。线程内多 agent 只能在该线程的写入范围内拆独立子任务，不能让多个 agent 同时改同一批文件。
 
 这里的多 agent 是执行工作流，不是 Zuno runtime 架构目标。近期 runtime 仍保持 Single GeneralAgent，不能因为执行并行而把产品架构写成多 Agent。
@@ -58,6 +60,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 - 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
 - 常驻线程只是执行工位；每轮任务必须以 worktree + `codex/` branch 作为隔离边界。
+- `F:\internship-work\resume project\Zuno` 保持为最终集成入口；临时 worker worktree 放在 `F:\internship-work\resume project\worktrees\`，完成集成后可清理。
 - 多线程模式先盘点可复用 Codex 线程和 git worktree；有合适可复用线程就复用；没有合适线程才创建新线程。
 - 复用或新建线程后必须改线程标题；子线程目标模式提示词默认要求线程内开启多 agent 模式。
 - 多线程模式中，每个子线程都必须是真正的 Codex UI 目标模式；工具不能直接切换 UI 目标模式时，主线程只能输出 `.agent/templates/target-mode-prompt.md` 风格的提示词，并等待用户在 UI 里手动创建目标模式线程。
@@ -92,6 +95,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 不创建 `.agent/skills/` 或 `.agent/workflows/`。
 - 不恢复旧 root-level Agent 入口。
 - 不让多个线程同时编辑同一个共享文件，除非主线程明确负责最终合并。
+- 不让多个 agent 直接在 `F:\internship-work\resume project\Zuno` 同一工作区并发改文件。
+- 不把 `F:\internship-work\resume project\worktrees\` 下的临时 worktree 当作长期事实源或最终项目入口。
 - 不把执行工作流里的多 agent 写成 Zuno runtime 的当前架构。
 - 不把提示词目标模式当成 Codex UI 目标模式。
 
@@ -153,20 +158,22 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 1. 主线程本身必须是真正的 Codex UI 目标模式，并负责 coordinator 工作。
 2. 主线程拆出粗粒度子线程；每个线程要执行一大块互相独立的工作。
 3. 主线程先盘点可复用 Codex 线程和 git worktree。
-4. 主线程必须在生成、改写或投递线程提示词之前完成线程盘点；不能先写提示词再回头找线程。
-5. 有合适可复用线程就复用；没有合适线程才创建新线程。
-6. 复用或新建线程后必须改线程标题，让侧边栏能看出本轮任务、phase 和职责。
-7. 主线程写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
-8. 线程可以常驻，但每轮任务必须重新确认或切换独立 worktree 和独立 `codex/` 分支。
-9. 每个子线程也必须是真正的 Codex UI 目标模式；提示词目标模式不等于 Codex UI 目标模式。
-10. 工具 API 不能直接打开 UI 目标模式时，主线程只输出线程提示词文件路径，等待用户在 UI 里手动创建目标模式线程，或改为挂机模式。
-11. 子线程目标模式提示词默认要求线程内开启多 agent 模式；只有高冲突或用户明确要求单线程时，才在提示词中禁用并说明原因。
-12. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
-13. 多线程提示词统一放在 `.agent/programs/thread-prompts/`，不要和 `PHASE*.md` 混放。
-14. 主线程不能在主对话里直接粘贴完整子线程提示词；主对话只报告线程盘点结果、提示词文件路径和下一步动作。
-15. 下一轮提示词或临时多线程执行方案更新时，主线程默认替换或清理旧提示词和旧临时执行方案；只有用户明确要求归档时才归档。正式 completed program 的归档规则仍按 `docs/history/programs/` 执行。
-16. 写入线程完成后必须提交并推送；只读审计线程返回报告和干净 `git status` 即可。主线程读取 diff、验证结果或审计证据，不只信总结。
-17. 主线程按风险顺序合并，解决冲突后运行集成验证。
+4. 求职工作区内的临时 worktree 默认放在 `F:\internship-work\resume project\worktrees\`；长期入口仍是 `F:\internship-work\resume project\Zuno`。
+5. 主线程必须在生成、改写或投递线程提示词之前完成线程盘点；不能先写提示词再回头找线程。
+6. 有合适可复用线程就复用；没有合适线程才创建新线程。
+7. 复用或新建线程后必须改线程标题，让侧边栏能看出本轮任务、phase 和职责。
+8. 主线程写清每个线程的目标、允许范围、禁止范围、验收闸门和验证命令。
+9. 线程可以常驻，但每轮任务必须重新确认或切换独立 worktree 和独立 `codex/` 分支。
+10. 每个子线程也必须是真正的 Codex UI 目标模式；提示词目标模式不等于 Codex UI 目标模式。
+11. 工具 API 不能直接打开 UI 目标模式时，主线程只输出线程提示词文件路径，等待用户在 UI 里手动创建目标模式线程，或改为挂机模式。
+12. 子线程目标模式提示词默认要求线程内开启多 agent 模式；只有高冲突或用户明确要求单线程时，才在提示词中禁用并说明原因。
+13. 每个线程默认可以使用多 agent 模式，但只能在自己的写入范围内协作。
+14. 多线程提示词统一放在 `.agent/programs/thread-prompts/`，不要和 `PHASE*.md` 混放。
+15. 主线程不能在主对话里直接粘贴完整子线程提示词；主对话只报告线程盘点结果、提示词文件路径和下一步动作。
+16. 下一轮提示词或临时多线程执行方案更新时，主线程默认替换或清理旧提示词和旧临时执行方案；只有用户明确要求归档时才归档。正式 completed program 的归档规则仍按 `docs/history/programs/` 执行。
+17. 写入线程完成后必须提交并推送；只读审计线程返回报告和干净 `git status` 即可。主线程读取 diff、验证结果或审计证据，不只信总结。
+18. 主线程按风险顺序合并，解决冲突后运行集成验证。
+19. 合并、验证、push 完成后，主线程可以清理对应临时 worktree；最终保留主项目入口和远端仓库。
 
 ### Program Closure 自维护审查
 

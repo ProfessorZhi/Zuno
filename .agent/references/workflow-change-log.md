@@ -17,6 +17,23 @@ date
 
 ## Current Truth
 
+### 2026-08-03: Zuno worker worktrees anchored under internship resume project
+
+Summary: 明确 `F:\internship-work\resume project\Zuno` 是最终集成入口，临时 worker worktree 统一放在 `F:\internship-work\resume project\worktrees\`，每个 agent 使用独立 branch/worktree，完工提交后由主线程审查 diff、吸收、验证、push，并在完成后清理临时 worktree。
+
+Reason: 用户明确要求多 agent 分工时最终只保留 Zuno 主项目文件夹，临时工作区集中放置并可清理。这是长期执行规则，不是本轮一次性路径选择。
+
+Affected files:
+
+- `.agent/references/workflow.md`
+- `.agent/references/command-catalog.md`
+- `.agent/references/workflow-change-log.md`
+- `.agent/scripts/verify-workflow.ps1`
+
+Status: Current workflow truth for Zuno multi-agent worktree placement in the internship workspace.
+
+Validation: 由 `git diff --check`、`python .agent/scripts/verify_agent_system.py`、`powershell -NoProfile -ExecutionPolicy Bypass -File .agent/scripts/verify-workflow.ps1` 和 focused workflow review 保护。
+
 ### 2026-08-02: command-line and worktree safety rules added to local workflow memory
 
 Summary: 把本轮暴露出的工作树错位、嵌套 PowerShell 参数透传、PATH 污染和结构化输入被二次解析等问题，沉淀进 `.agent/references` 的长期工作流、已知坑和命令目录。
