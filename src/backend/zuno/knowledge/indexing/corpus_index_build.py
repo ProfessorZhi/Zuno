@@ -25,6 +25,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -203,6 +204,9 @@ class FrozenCorpusPayload:
     chunk_count: int
     chunk_ids: tuple[str, ...]
     chunks: tuple[dict[str, Any], ...]
+    dataset_corpus_hash: str
+    source_manifest_hash: str
+    canonical_ir_hash: str
     content_set_hash: str
     identity_checks: dict[str, Any]
 
@@ -217,25 +221,94 @@ def validate_canonical_corpus_identity(
     canonical_ir_manifest: dict[str, Any],
     corpus_root: Any,
     manifest_chunk_texts: dict[str, str],
+    dataset_corpus_hash: str = "",
 ) -> FrozenCorpusPayload:
-    """Validate exact identity against the frozen candidate manifest.
+    """Validate exact identity against the frozen candidate manifests.
 
-    Rules (fail closed, no re-chunking):
-    1. document count equal;
-    2. chunk count equal;
-    3. chunk id set equal;
-    4. every chunk text hash equal to the manifest text_hash;
-    5. no extra text and no missing chunk.
+    Both the source upload manifest and the canonical IR manifest are
+    validated (fail closed, no re-chunking):
+
+    Source manifest (Task F):
+     1. source_count == 8;
+     2. sources list length consistent;
+     3. every source_path exists under the corpus root;
+     4. every source_hash matches the corpus file content;
+     5. every document_id present and consistent;
+     6. source tenant ids all identical;
+     7. source workspace ids all identical;
+     8. canonical IR documents map 1:1 onto source manifest documents;
+     9. every canonical IR chunk document exists;
+    10. recomputed source_manifest_hash matches the manifest field;
+    11. canonical_ir.source_manifest_hash equals the source manifest hash;
+    12. corpus files exactly match the manifest (no extra, no missing).
+
+    Canonical IR (unchanged):
+    13. document count equal; 14. chunk count equal;
+    15. chunk id set equal; 16. every chunk text hash equal;
+    17. no extra text and no missing chunk.
+
+    The dataset corpus hash is recorded SEPARATELY from the source manifest
+    hash and the canonical IR hash (Task G) — never conflated.
     """
     checks: dict[str, Any] = {}
     documents = canonical_ir_manifest["documents"]
     chunks = canonical_ir_manifest["chunks"]
     expected_document_count = canonical_ir_manifest["document_count"]
     expected_chunk_count = canonical_ir_manifest["chunk_count"]
+    sources = source_manifest.get("sources", [])
+    corpus_files = {path.name for path in corpus_root.glob("*.md")}
+    expected_files = {Path(source["source_path"]).name for source in sources}
 
-    checks["document_count_equal"] = len(documents) == expected_document_count == len(
-        list(corpus_root.glob("*.md"))
+    # ── Source manifest identity ──────────────────────────────────────────
+    checks["source_count_8"] = (
+        source_manifest.get("source_count") == 8 and len(sources) == 8
     )
+    checks["source_count_consistent"] = len(sources) == len(
+        {source["source_id"] for source in sources}
+    )
+    checks["source_paths_exist"] = all(name in corpus_files for name in expected_files)
+    source_hash_mismatches: list[str] = []
+    for source in sources:
+        path = corpus_root / Path(source["source_path"]).name
+        if not path.exists():
+            source_hash_mismatches.append(f"{source['document_id']}:missing_file")
+            continue
+        # The canonical source hash is the sha256 of the UTF-8 text content
+        # (universal newlines), matching build_source_upload_manifest.
+        actual_hash = _sha256_text(path.read_text(encoding="utf-8"))
+        if actual_hash != source.get("source_hash"):
+            source_hash_mismatches.append(
+                f"{source['document_id']}:{actual_hash[:12]}!={source['source_hash'][:12]}"
+            )
+    checks["source_hashes_match"] = not source_hash_mismatches
+    checks["document_ids_present"] = all(
+        str(source.get("document_id") or "").strip() for source in sources
+    )
+    checks["source_tenant_consistent"] = len({source.get("tenant_id") for source in sources}) == 1
+    checks["source_workspace_consistent"] = len({source.get("workspace_id") for source in sources}) == 1
+
+    src_doc_ids = {source["document_id"] for source in sources}
+    ir_doc_ids = {doc["document_id"] for doc in documents}
+    checks["documents_one_to_one"] = (
+        len(src_doc_ids) == len(sources) and src_doc_ids == ir_doc_ids
+    )
+    chunk_doc_ids = {chunk["document_id"] for chunk in chunks}
+    checks["chunk_documents_exist"] = chunk_doc_ids <= ir_doc_ids
+
+    recomputed_source_hash = _sha256_json(
+        {key: value for key, value in source_manifest.items() if key != "source_manifest_hash"}
+    )
+    checks["source_manifest_hash_valid"] = (
+        source_manifest.get("source_manifest_hash") == recomputed_source_hash
+    )
+    checks["canonical_ir_binds_source_manifest"] = (
+        canonical_ir_manifest.get("source_manifest_hash")
+        == source_manifest.get("source_manifest_hash")
+    )
+    checks["corpus_files_exact"] = corpus_files == expected_files
+
+    # ── Canonical IR chunk identity ───────────────────────────────────────
+    checks["document_count_equal"] = len(documents) == expected_document_count
     checks["chunk_count_equal"] = len(chunks) == expected_chunk_count
     checks["chunk_id_set_equal"] = len(manifest_chunk_texts) == len(chunks) and set(
         manifest_chunk_texts
@@ -252,17 +325,19 @@ def validate_canonical_corpus_identity(
             hash_mismatches.append(
                 f"{chunk['chunk_id']}:{actual_hash[:12]}!={chunk['text_hash'][:12]}"
             )
-    checks["chunk_hash_mismatch_count"] = len(hash_mismatches)
+    checks["chunk_hash_mismatch_count"] = len(hash_mismatches) + len(source_hash_mismatches)
     checks["chunk_hashes_all_equal"] = not hash_mismatches
 
     failures = [
         name
         for name, ok in checks.items()
-        if ok is False
+        if name != "chunk_hash_mismatch_count" and ok is not True
     ]
-    if failures or hash_mismatches:
+    if failures or hash_mismatches or source_hash_mismatches:
         raise CorpusInputIdentityError(
-            f"canonical corpus identity mismatch: {','.join(failures)}; {len(hash_mismatches)} hash mismatches"
+            "canonical corpus identity mismatch: "
+            f"{','.join(failures)}; {len(hash_mismatches)} chunk hash mismatches; "
+            f"{len(source_hash_mismatches)} source hash mismatches"
         )
 
     documents_by_id = {doc["document_id"]: doc for doc in documents}
@@ -296,6 +371,9 @@ def validate_canonical_corpus_identity(
         chunk_count=len(chunks),
         chunk_ids=tuple(sorted(chunks_by_id)),
         chunks=tuple(payload_chunks),
+        dataset_corpus_hash=str(dataset_corpus_hash or ""),
+        source_manifest_hash=str(source_manifest.get("source_manifest_hash") or ""),
+        canonical_ir_hash=str(canonical_ir_manifest.get("canonical_ir_hash") or ""),
         content_set_hash=content_set_hash,
         identity_checks=checks,
     )
@@ -307,6 +385,10 @@ def _sha256_json(value: Any) -> str:
 
 def _canonical_json(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def _stable_contract_hash(payload: dict[str, Any]) -> str:
