@@ -75,6 +75,7 @@
     "snapshot_activation_missing_receipt_count": 3,
     "neo4j_path_visibility_receipt_contract": "OWNER_RUNTIME_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
     "milvus_formal_embedding_boundary": "GATEWAY_INJECTION_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
+    "index_visibility_receipt_contract": "RUNTIME_RECEIPT_BUILDER_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,

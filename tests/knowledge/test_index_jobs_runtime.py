@@ -128,6 +128,7 @@ def test_index_manifest_tracks_document_ir_provenance_acl_and_adapter_status() -
     for target, receipt in manifest.adapter_visibility_receipts.items():
         assert receipt["adapter_target"] == target
         assert receipt["adapter_id"] == f"local_{target}"
+        assert receipt["receipt_kind"] == f"local_{target}_{target}_visibility"
         assert receipt["adapter_dispatch_ref"] == manifest.adapter_dispatch_receipts[target]["dispatch_ref"]
         assert receipt["adapter_status"] == "current"
         assert receipt["visibility"] == "visible"
@@ -232,6 +233,7 @@ def test_index_runtime_external_adapter_requires_service_readback_visibility() -
     assert client.search_calls[0]["index_name"] == "goal03_bm25"
     assert manifest.adapter_status == {"bm25": "elasticsearch:current"}
     assert manifest.adapter_dispatch_receipts["bm25"]["adapter_id"] == "elasticsearch"
+    assert manifest.adapter_visibility_receipts["bm25"]["receipt_kind"] == "elasticsearch_bm25_visibility"
     assert manifest.adapter_visibility_receipts["bm25"]["visibility"] == "visible"
     assert manifest.adapter_visibility_receipts["bm25"]["visibility_failure_reason"] is None
     assert manifest.adapter_visibility_receipts["bm25"]["sample_match_count"] > 0
@@ -267,6 +269,7 @@ def test_index_runtime_external_adapter_does_not_serve_without_readback_match() 
 
     assert manifest.adapter_dispatch_receipts["bm25"]["status"] == "succeeded"
     assert manifest.adapter_visibility_receipts["bm25"]["visibility"] == "hidden"
+    assert manifest.adapter_visibility_receipts["bm25"]["receipt_kind"] == "elasticsearch_bm25_visibility"
     assert (
         manifest.adapter_visibility_receipts["bm25"]["visibility_failure_reason"]
         == "external_sample_retrieval_no_source_match"
@@ -313,6 +316,7 @@ def test_index_runtime_milvus_vector_adapter_serves_after_readback() -> None:
     assert client.search_calls[0]["index_name"] == "goal03_vector"
     assert manifest.adapter_status == {"vector": "milvus:current"}
     assert manifest.adapter_dispatch_receipts["vector"]["adapter_id"] == "milvus"
+    assert manifest.adapter_visibility_receipts["vector"]["receipt_kind"] == "milvus_vector_visibility"
     assert manifest.adapter_visibility_receipts["vector"]["visibility"] == "visible"
     assert manifest.adapter_visibility_receipts["vector"]["sample_match_count"] > 0
     assert manifest.target_status["vector"] == "ready"
@@ -428,6 +432,35 @@ def test_milvus_vector_client_rejects_formal_embedding_dimension_mismatch() -> N
 
     with pytest.raises(RuntimeError, match="mismatched vector dimension"):
         client.index_documents("phase22_vector", [{"content": "bad dimension"}])
+
+
+def test_index_visibility_receipt_contract_rejects_forged_kind_and_hash() -> None:
+    from zuno.knowledge.indexing import build_index_visibility_receipt, validate_index_visibility_receipt
+
+    receipt = build_index_visibility_receipt(
+        adapter_target="vector",
+        adapter_id="milvus",
+        adapter_dispatch_ref="index-dispatch:vector:abc",
+        adapter_status="current",
+        visibility="visible",
+        visibility_failure_reason=None,
+        sample_query="supplier renewal",
+        sample_match_count=1,
+        knowledge_space_id="ks_vector",
+        index_version="idx_formal",
+        document_id="doc_001",
+        document_version_id="docv_001",
+        source_block_count=1,
+    )
+    forged = receipt.model_dump()
+    forged["receipt_kind"] = "local_vector_visibility"
+    forged["payload_hash"] = "forged"
+
+    errors = validate_index_visibility_receipt(forged)
+
+    assert "receipt_kind mismatch" in errors
+    assert "payload_hash mismatch" in errors
+    assert "receipt_ref must be derived from payload_hash" in errors
 
 
 def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:
@@ -713,6 +746,7 @@ def test_index_runtime_promotes_normalized_phrase_over_keyword_noise() -> None:
             hash="sha256:phrase",
             parser_id="native",
             parser_version="phase04-test",
+            document_version_id="doc_phrase::v1",
         ),
         blocks=[
             DocumentBlock(
@@ -770,6 +804,7 @@ def test_index_runtime_normalized_phrase_handles_punctuation_and_newlines() -> N
             hash="sha256:phrase-normalized",
             parser_id="native",
             parser_version="phase04-test",
+            document_version_id="doc_phrase_norm::v1",
         ),
         blocks=[
             DocumentBlock(

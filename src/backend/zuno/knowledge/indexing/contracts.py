@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 IndexTarget = Literal["bm25", "vector", "graph"]
 Neo4jPathVisibilityStatus = Literal["visible", "hidden", "inconsistent"]
+IndexVisibilityStatus = Literal["visible", "hidden"]
 
 
 class IndexAdapterContract(BaseModel):
@@ -70,6 +71,126 @@ class IndexQueryResult(BaseModel):
     query: str
     documents_by_source: dict[str, list[dict]] = Field(default_factory=dict)
     manifest: IndexJobManifest
+
+
+class IndexVisibilityReceipt(BaseModel):
+    receipt_ref: str
+    receipt_kind: str
+    adapter_target: IndexTarget
+    adapter_id: str
+    adapter_dispatch_ref: str | None = None
+    adapter_status: str
+    visibility: IndexVisibilityStatus
+    visibility_failure_reason: str | None = None
+    sample_query: str
+    sample_match_count: int
+    knowledge_space_id: str
+    index_version: str
+    document_id: str
+    document_version_id: str
+    source_block_count: int
+    payload_hash: str
+
+
+def build_index_visibility_receipt(
+    *,
+    adapter_target: IndexTarget,
+    adapter_id: str,
+    adapter_dispatch_ref: str | None,
+    adapter_status: str,
+    visibility: IndexVisibilityStatus,
+    visibility_failure_reason: str | None,
+    sample_query: str,
+    sample_match_count: int,
+    knowledge_space_id: str,
+    index_version: str,
+    document_id: str,
+    document_version_id: str,
+    source_block_count: int,
+) -> IndexVisibilityReceipt:
+    receipt_kind = _visibility_receipt_kind(adapter_target=adapter_target, adapter_id=adapter_id)
+    payload = {
+        "receipt_kind": receipt_kind,
+        "adapter_target": adapter_target,
+        "adapter_id": adapter_id,
+        "adapter_dispatch_ref": adapter_dispatch_ref,
+        "adapter_status": adapter_status,
+        "visibility": visibility,
+        "visibility_failure_reason": visibility_failure_reason,
+        "sample_query": sample_query,
+        "sample_match_count": sample_match_count,
+        "knowledge_space_id": knowledge_space_id,
+        "index_version": index_version,
+        "document_id": document_id,
+        "document_version_id": document_version_id,
+        "source_block_count": source_block_count,
+    }
+    payload_hash = _stable_contract_hash(payload)
+    receipt = IndexVisibilityReceipt(
+        receipt_ref=f"index-visibility:{adapter_target}:{payload_hash[:16]}",
+        payload_hash=payload_hash,
+        **payload,
+    )
+    errors = validate_index_visibility_receipt(receipt)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return receipt
+
+
+def validate_index_visibility_receipt(receipt: IndexVisibilityReceipt | dict[str, Any]) -> list[str]:
+    model = receipt if isinstance(receipt, IndexVisibilityReceipt) else IndexVisibilityReceipt(**receipt)
+    errors: list[str] = []
+    for field_name in [
+        "receipt_ref",
+        "receipt_kind",
+        "adapter_target",
+        "adapter_id",
+        "adapter_status",
+        "sample_query",
+        "knowledge_space_id",
+        "index_version",
+        "document_id",
+        "document_version_id",
+        "payload_hash",
+    ]:
+        if not str(getattr(model, field_name) or "").strip():
+            errors.append(f"{field_name} is required")
+    if model.visibility == "visible":
+        if model.visibility_failure_reason is not None:
+            errors.append("visible receipt must not include visibility_failure_reason")
+        if model.sample_match_count < 1:
+            errors.append("visible receipt requires sample_match_count >= 1")
+    if model.visibility == "hidden":
+        if not model.visibility_failure_reason:
+            errors.append("hidden receipt requires visibility_failure_reason")
+        if model.sample_match_count != 0:
+            errors.append("hidden receipt requires sample_match_count == 0")
+    expected_kind = _visibility_receipt_kind(adapter_target=model.adapter_target, adapter_id=model.adapter_id)
+    if model.receipt_kind != expected_kind:
+        errors.append("receipt_kind mismatch")
+    expected_hash = _stable_contract_hash(
+        {
+            "receipt_kind": model.receipt_kind,
+            "adapter_target": model.adapter_target,
+            "adapter_id": model.adapter_id,
+            "adapter_dispatch_ref": model.adapter_dispatch_ref,
+            "adapter_status": model.adapter_status,
+            "visibility": model.visibility,
+            "visibility_failure_reason": model.visibility_failure_reason,
+            "sample_query": model.sample_query,
+            "sample_match_count": model.sample_match_count,
+            "knowledge_space_id": model.knowledge_space_id,
+            "index_version": model.index_version,
+            "document_id": model.document_id,
+            "document_version_id": model.document_version_id,
+            "source_block_count": model.source_block_count,
+        }
+    )
+    if model.payload_hash != expected_hash:
+        errors.append("payload_hash mismatch")
+    if model.receipt_ref != f"index-visibility:{model.adapter_target}:{expected_hash[:16]}":
+        errors.append("receipt_ref must be derived from payload_hash")
+    return errors
 
 
 class Neo4jPathVisibilityReceipt(BaseModel):
@@ -204,14 +325,28 @@ def _stable_contract_hash(payload: dict[str, Any]) -> str:
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+def _visibility_receipt_kind(*, adapter_target: IndexTarget, adapter_id: str) -> str:
+    if adapter_id == "elasticsearch" and adapter_target == "bm25":
+        return "elasticsearch_bm25_visibility"
+    if adapter_id == "milvus" and adapter_target == "vector":
+        return "milvus_vector_visibility"
+    if adapter_id == "neo4j" and adapter_target == "graph":
+        return "neo4j_graph_visibility"
+    return f"{adapter_id}_{adapter_target}_visibility"
+
+
 __all__ = [
     "IndexAdapterContract",
     "IndexJobManifest",
     "IndexQueryResult",
     "IndexTarget",
+    "IndexVisibilityReceipt",
+    "IndexVisibilityStatus",
     "KnowledgeSpaceManifest",
     "Neo4jPathVisibilityReceipt",
     "Neo4jPathVisibilityStatus",
+    "build_index_visibility_receipt",
     "build_neo4j_path_visibility_receipt",
+    "validate_index_visibility_receipt",
     "validate_neo4j_path_visibility_receipt",
 ]

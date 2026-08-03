@@ -126,6 +126,16 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - activation receipt ref：null
 - snapshot activation manifest hash：`8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b`
 
+## Index Visibility Receipt Contract 当前进度
+
+已在 Knowledge Indexing owner 边界定义 `IndexVisibilityReceipt` contract，并将 `KnowledgeIndexRuntime` 的 adapter visibility 输出改为通过 contract builder 生成。Focused unit test 覆盖 Elasticsearch BM25 和 Milvus Vector 的 `receipt_kind`、visible / hidden 语义、payload hash 派生 receipt ref，以及伪造 kind/hash 的拒绝。该 evidence 不证明真实 Elasticsearch 或 Milvus 服务已经产出 visibility receipt。
+
+- contract status：`RUNTIME_RECEIPT_BUILDER_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED`
+- Elasticsearch BM25 receipt kind：`elasticsearch_bm25_visibility`
+- Milvus Vector receipt kind：`milvus_vector_visibility`
+- live Elasticsearch visibility receipt：NOT_RUN
+- live Milvus visibility receipt：NOT_RUN
+
 ## Neo4j Path Visibility Receipt 当前进度
 
 已在 Knowledge Indexing owner 边界定义最小 Neo4j Path Visibility Receipt Contract，并接到 `Neo4jGraphIndexClient` 的 owner runtime 方法。Focused unit test 使用 fake driver 证明 adapter 会写入 Entity / Directed Relation，随后通过两跳 path read-back 生成 receipt；read-back 缺失时返回 `None`，不得生成有效 Visibility Receipt。该 evidence 不证明真实 Neo4j 服务已执行。
@@ -164,7 +174,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
 - Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
-- Index：已有三索引 Index Job manifest candidate 和缺 receipt 时禁止 Snapshot Activation 的 blocked manifest；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
+- Index：已有三索引 Index Job manifest candidate、Index Visibility Receipt contract builder 和缺 receipt 时禁止 Snapshot Activation 的 blocked manifest；仍没有 ES/Milvus/Neo4j 真实写入、回读或 live visibility receipt。
 - Embedding：Milvus client 已有 formal Embedding Gateway 注入和 credential-blocked guard；仍没有 live provider/model/dimension/config hash 和 Milvus ANN read-back evidence。
 - Graph：最小 Neo4j Path Visibility Receipt Contract 已定义并接入 `Neo4jGraphIndexClient` owner 方法；仍缺真实 Neo4j 服务两跳 read-back 和 receipt evidence。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。

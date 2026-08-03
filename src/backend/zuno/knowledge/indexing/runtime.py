@@ -10,7 +10,13 @@ from zuno.knowledge.ingestion.contracts import CanonicalDocumentIR, ParseJobSnap
 from zuno.knowledge.ingestion.router import build_index_handoff_payload
 
 from .adapters import LOCAL_INDEX_ADAPTER_BY_TARGET, adapter_status_for_bindings
-from .contracts import IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
+from .contracts import (
+    IndexJobManifest,
+    IndexQueryResult,
+    IndexTarget,
+    KnowledgeSpaceManifest,
+    build_index_visibility_receipt,
+)
 
 
 class LocalIndexAdapterBinding:
@@ -273,33 +279,22 @@ class KnowledgeIndexRuntime:
                 document=document,
                 indexed_documents=indexed_documents_by_target.get(target, []),
             )
-            payload = {
-                "adapter_target": target,
-                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
-                "document_id": document.metadata.document_id,
-                "document_version_id": document.metadata.document_version_id,
-                "index_version": index_version,
-                "knowledge_space_id": knowledge_space_id,
-                "source_block_ids": [block.block_id for block in document.blocks],
-                "sample_verification": sample_verification,
-            }
-            receipts[target] = {
-                "receipt_ref": f"index-visibility:{target}:{_stable_hash(payload)[:16]}",
-                "adapter_target": target,
-                "adapter_id": dispatch_receipt.get("adapter_id"),
-                "adapter_dispatch_ref": dispatch_receipt.get("dispatch_ref"),
-                "adapter_status": "current",
-                "visibility": "visible" if sample_verification["passed"] else "hidden",
-                "visibility_failure_reason": None if sample_verification["passed"] else sample_verification["reason"],
-                "sample_query": sample_verification["sample_query"],
-                "sample_match_count": sample_verification["match_count"],
-                "knowledge_space_id": knowledge_space_id,
-                "index_version": index_version,
-                "document_id": document.metadata.document_id,
-                "document_version_id": document.metadata.document_version_id,
-                "source_block_count": len(document.blocks),
-                "payload_hash": _stable_hash(payload),
-            }
+            receipt = build_index_visibility_receipt(
+                adapter_target=target,
+                adapter_id=str(dispatch_receipt.get("adapter_id") or ""),
+                adapter_dispatch_ref=dispatch_receipt.get("dispatch_ref"),
+                adapter_status="current",
+                visibility="visible" if sample_verification["passed"] else "hidden",
+                visibility_failure_reason=None if sample_verification["passed"] else sample_verification["reason"],
+                sample_query=sample_verification["sample_query"],
+                sample_match_count=sample_verification["match_count"],
+                knowledge_space_id=knowledge_space_id,
+                index_version=index_version,
+                document_id=document.metadata.document_id,
+                document_version_id=document.metadata.document_version_id,
+                source_block_count=len(document.blocks),
+            )
+            receipts[target] = receipt.model_dump()
         return receipts
 
     def _adapter_for_target(self, target: IndexTarget) -> Any:
