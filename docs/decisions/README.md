@@ -13,6 +13,9 @@
 - [ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结](0003-wave1-cross-module-contract-freeze.md)
   - 当前状态：`accepted-target`；已合并到 `main`，是正式共享 Target Contract，但不是 Current 或实现证据。
   - 冻结范围：服务端权威产品边界、`zuno/platform/**` 物理 Ownership、共享 Envelope、Security Epoch、Secret/Credential、Audit、Model Gateway、派生索引、PreparedToolAction、Failure Code 与 Retry/Recovery Owner。
+- [ADR 0006：Evidence-Driven Agentic GraphRAG Decision Architecture](0006-evidence-driven-agentic-graphrag.md)
+  - 当前状态：`accepted-target`；定义 Architecture v2 的 Broad Evidence Discovery、Evidence Deliberation、Evidence Reasoning Graph、ClaimEvidenceState、Targeted Probe 与安全停止。
+  - 不修改现有 Program 与 PHASE01–PHASE22，不构成代码、Migration、质量或生产就绪证据。
 
 已被替换的决策归档在：
 
