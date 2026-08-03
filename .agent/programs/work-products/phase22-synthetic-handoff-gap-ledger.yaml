@@ -1,0 +1,140 @@
+schema_version: "1.0.0"
+goal_id: phase22-machine-attested-synthetic-regression
+status: BLOCKED_WITH_EXACT_GAPS
+phase22_status: in_progress
+production_readiness: not_established
+source_main_sha: c9d099d64a1af28102231751ce55df8217173e89
+source_pr_106_head: 95e17fc522591e7ee543b40b5b568d71963b6aa0
+source_pr_107_head: 6c9c75eaea16a047107e20fa156824bce068ee4c
+current_facts:
+  candidate_case_count: 80
+  derivation_valid_count: 80
+  source_evidence_valid_count: 80
+  unsupported_answer_count: 0
+  reviewer_approved_count: 0
+  benchmark_eligible_count: 0
+  knowledge_version_id: null
+  snapshot_id: null
+  visibility_receipt_refs: []
+gaps:
+  - gap_id: GAP-B1
+    owner: Knowledge / Canonical Ingestion Runtime
+    current_state: Source upload and Canonical IR manifests are reproducible candidates only; no live full-corpus runtime IDs exist.
+    target_state: Full corpus ingested through canonical runtime with Source, DocumentVersion, Canonical IR and KnowledgeVersion facts.
+    depends_on: [CC-A]
+    allowed_paths: [src/backend/zuno/knowledge/**, tools/evals/zuno/synthetic_benchmark/**, tests/evals/synthetic_benchmark/**, docs/evidence/**]
+    forbidden_paths: [PHASE22 completed claims, whole PR100/104/105 copy, fake runtime IDs]
+    required_receipts: [canonical_ingestion_receipt, knowledge_version_receipt]
+    required_tests: [focused ingestion runtime, duplicate ingestion idempotency]
+    completion_evidence: real source_id, document_id, knowledge_version_id and command log
+    recommended_provider: DeepSeek
+  - gap_id: GAP-B2
+    owner: Input / Durable Object Store and PostgreSQL Domain Facts
+    current_state: Source Upload manifest has 8 sources, but MinIO readback and PostgreSQL fact idempotency are not executed.
+    target_state: Stage, commit, read-back, content hash, manifest visibility and duplicate source hash semantics proven live.
+    depends_on: [GAP-B1]
+    allowed_paths: [src/backend/zuno/knowledge/**, src/backend/zuno/platform/**, infra/docker/**, tests/integration/**, docs/evidence/**]
+    forbidden_paths: [unapproved migration, fake object receipt, filesystem substitute for MinIO]
+    required_receipts: [object_commit_receipt, postgres_domain_fact_receipt]
+    required_tests: [live MinIO readback, live PostgreSQL idempotency, hash mismatch negative]
+    completion_evidence: object_ref, source_id, document_id, knowledge_version_id and cleanup report
+    recommended_provider: DeepSeek
+  - gap_id: GAP-B3
+    owner: Knowledge / Index Visibility
+    current_state: Index job manifest exists with 3 jobs; live ES, Milvus and Neo4j visibility receipt count is 0.
+    target_state: ES BM25, Milvus formal embedding vector and Neo4j directed graph writes are read back with authentic receipts.
+    depends_on: [GAP-B1, GAP-B2]
+    allowed_paths: [src/backend/zuno/knowledge/**, tests/integration/**, infra/docker/**, docs/evidence/**]
+    forbidden_paths: [adapter smoke marketed as formal runtime, deterministic vector as formal embedding, handwritten receipt]
+    required_receipts: [elasticsearch_bm25_visibility, milvus_vector_visibility, neo4j_graph_visibility]
+    required_tests: [BM25 query, formal embedding ANN readback, Neo4j two-hop Cypher path]
+    completion_evidence: receipt refs, adapter execution refs, provider/model/config hash
+    recommended_provider: DeepSeek
+  - gap_id: GAP-B4
+    owner: Knowledge / Snapshot Activation
+    current_state: Snapshot activation is blocked because all three visibility receipts are missing; snapshot_id is null.
+    target_state: Snapshot activates only after required receipts are authentic and same tenant/workspace/KnowledgeVersion bound.
+    depends_on: [GAP-B3]
+    allowed_paths: [src/backend/zuno/knowledge/**, tests/knowledge/**, tests/integration/**, docs/evidence/**]
+    forbidden_paths: [partial index activation, invented snapshot_id, state machine semantic change without review]
+    required_receipts: [snapshot_activation_receipt]
+    required_tests: [all receipts activate, missing receipt blocks, partial index failure blocks]
+    completion_evidence: snapshot_id, activation_receipt_ref, manifest hash and negative-path log
+    recommended_provider: DeepSeek
+  - gap_id: GAP-C1
+    owner: Observability / Eval Runtime
+    current_state: 320 runtime requests exist, but no same-snapshot profile run ids exist.
+    target_state: Standard, Local, Deep and Agentic profiles run on the same activated snapshot with comparable metrics.
+    depends_on: [GAP-B4]
+    allowed_paths: [tools/evals/zuno/**, src/backend/zuno/knowledge/**, src/backend/zuno/agent/**, tests/evals/**, docs/evidence/**]
+    forbidden_paths: [test double measured runtime, threshold lowering, different snapshot per profile]
+    required_receipts: [profile_run_receipts, runtime_metric_artifacts]
+    required_tests: [four-profile same snapshot runtime, measurement truth gate, release decision]
+    completion_evidence: profile_run_ids, metrics artifact hash and release decision hash
+    recommended_provider: DeepSeek
+  - gap_id: GAP-C2
+    owner: Eval / Gold Isolation
+    current_state: Request manifest proves forbidden gold fields are absent, but profile traces are not inspected.
+    target_state: Runtime traces prove no profile reads expected answers, gold spans, derivation spec or world model.
+    depends_on: [GAP-C1]
+    allowed_paths: [tools/evals/zuno/**, tests/evals/**, docs/evidence/**]
+    forbidden_paths: [expected_answer injection, runtime gold read, reviewer approval as machine evidence]
+    required_receipts: [gold_isolation_trace_receipt]
+    required_tests: [trace forbidden-field scan, request isolation, negative gold leakage guard]
+    completion_evidence: trace refs and forbidden field count 0
+    recommended_provider: MiniMax
+  - gap_id: GAP-C3
+    owner: Eval / Release Decision
+    current_state: Non-zero threshold set and BLOCKED decision exist; runtime metrics ref is null.
+    target_state: Release decision consumes measured metrics and emits PASSED, FAILED or BLOCKED without lowering gates.
+    depends_on: [GAP-C1, GAP-C2]
+    allowed_paths: [tools/evals/zuno/**, tests/evals/**, docs/evidence/**]
+    forbidden_paths: [threshold relaxation, incomplete metrics marked comparable, public benchmark claim]
+    required_receipts: [measurement_attestation, release_decision_artifact]
+    required_tests: [metrics completeness, comparable run validation, blocked/pass/fail decisions]
+    completion_evidence: metrics artifact hash, attestation refs and decision hash
+    recommended_provider: DeepSeek
+  - gap_id: GAP-D1
+    owner: Fault / Runtime Recovery
+    current_state: Fault matrix is not executed for the synthetic track.
+    target_state: Partial index failure, outage, crash and retry paths fail closed and produce recovery evidence.
+    depends_on: [GAP-B3, GAP-B4, GAP-C1]
+    allowed_paths: [tests/integration/**, tests/evals/**, infra/docker/**, docs/evidence/**]
+    forbidden_paths: [blind retry on unknown side effect, bypassing reconciliation, reducing failure semantics]
+    required_receipts: [fault_injection_report, recovery_receipt]
+    required_tests: [ES success plus Milvus failure, Neo4j mismatch, unknown side effect reconciliation]
+    completion_evidence: fault matrix report with exact failed and recovered states
+    recommended_provider: DeepSeek
+  - gap_id: GAP-D2
+    owner: Security / Tenant Workspace Isolation
+    current_state: Synthetic runtime security matrix is not executed.
+    target_state: Cross tenant/workspace access is rejected or isolated across ingestion, indexes, snapshots and profiles.
+    depends_on: [GAP-B1, GAP-B3, GAP-C1]
+    allowed_paths: [src/backend/zuno/security/**, src/backend/zuno/knowledge/**, tests/integration/**, tests/evals/**, docs/evidence/**]
+    forbidden_paths: [security bypass, credential leakage, broad policy rewrite without review]
+    required_receipts: [security_isolation_receipt]
+    required_tests: [cross-tenant rejection, workspace isolation, credential redaction]
+    completion_evidence: redacted security matrix with tenant/workspace outcomes
+    recommended_provider: DeepSeek
+  - gap_id: GAP-D3
+    owner: Runtime / Resume and Idempotency
+    current_state: Duplicate dataset guards exist, but full ingestion/index/profile idempotency is not proven.
+    target_state: Re-running ingestion and profiles reuses facts or returns idempotent results without duplicates.
+    depends_on: [GAP-B1, GAP-B2, GAP-B3, GAP-C1]
+    allowed_paths: [src/backend/zuno/**, tests/integration/**, tests/evals/**, docs/evidence/**]
+    forbidden_paths: [duplicate facts, manual cleanup hiding non-idempotency]
+    required_receipts: [idempotency_receipt, resume_receipt]
+    required_tests: [duplicate ingest, duplicate index, resume after crash, no duplicate facts]
+    completion_evidence: before/after counts and reused IDs
+    recommended_provider: DeepSeek
+  - gap_id: GAP-D4
+    owner: Evidence / Reproducibility
+    current_state: Preparation evidence is reproducible, but live runtime evidence bundle is absent.
+    target_state: Commands, versions, hashes, IDs, cleanup, failures and not-run items are captured without secrets.
+    depends_on: [GAP-B1, GAP-B2, GAP-B3, GAP-B4, GAP-C1, GAP-C2, GAP-C3, GAP-D1, GAP-D2, GAP-D3]
+    allowed_paths: [docs/evidence/**, .agent/programs/work-products/**, tools/scripts/**]
+    forbidden_paths: [secret leakage, generated success without command output, root temp artifacts]
+    required_receipts: [evidence_manifest, cleanup_report]
+    required_tests: [repo verifiers, evidence hash verification, report completeness]
+    completion_evidence: immutable evidence manifest with commands and exit codes
+    recommended_provider: MiniMax

@@ -1,0 +1,51 @@
+goal_id: phase22-machine-attested-synthetic-regression
+source_main_sha: c9d099d64a1af28102231751ce55df8217173e89
+source_pr_106_head: 95e17fc522591e7ee543b40b5b568d71963b6aa0
+source_pr_107_head: 6c9c75eaea16a047107e20fa156824bce068ee4c
+generated_at: "2026-08-03T17:43:30+08:00"
+controller: codex
+controller_status: CODEX_HANDOFF_READY
+synthetic_track_status: BLOCKED_WITH_EXACT_GAPS
+phase22_status: in_progress
+production_readiness: not_established
+completed_preparation:
+  - dataset_contract
+  - derivation_validator
+  - source_evidence_validator
+  - duplicate_guard
+  - gold_leakage_guard
+  - hard_negative_guard
+  - hash_guard
+  - readiness_boundary
+worker_tasks:
+  - task_id: CC-A
+    recommended_provider: MiniMax
+    prompt_path: .agent/programs/thread-prompts/phase22-cc-a-dataset-corpus-validator.md
+    depends_on: []
+    integration_order: 1
+  - task_id: CC-B
+    recommended_provider: DeepSeek
+    prompt_path: .agent/programs/thread-prompts/phase22-cc-b-ingestion-three-index-snapshot.md
+    depends_on: [CC-A]
+    integration_order: 2
+  - task_id: CC-C
+    recommended_provider: DeepSeek
+    prompt_path: .agent/programs/thread-prompts/phase22-cc-c-four-profile-benchmark-runtime.md
+    depends_on: [CC-B]
+    integration_order: 3
+  - task_id: CC-D
+    recommended_provider: MiniMax + DeepSeek
+    prompt_path: .agent/programs/thread-prompts/phase22-cc-d-fault-security-resume-evidence.md
+    depends_on: [CC-B, CC-C]
+    integration_order: 4
+integration_policy:
+  selective_only: true
+  whole_branch_merge_forbidden: true
+  coordinator_review_required: true
+  exact_head_merge_approval_required: true
+  forbidden_claims:
+    - SYNTHETIC_REGRESSION_TRACK_READY
+    - PHASE22_COMPLETED
+    - FIXED_PUBLIC_BENCHMARK_PASSED
+    - PRODUCTION_READY
+    - PROGRAM_ARCHIVED
