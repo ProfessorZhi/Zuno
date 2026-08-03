@@ -33,6 +33,11 @@ from tools.evals.zuno.synthetic_benchmark.index_job_manifest import (
     validate_index_job_manifest,
     write_index_job_manifest,
 )
+from tools.evals.zuno.synthetic_benchmark.snapshot_activation_manifest import (
+    build_snapshot_activation_manifest,
+    validate_snapshot_activation_manifest,
+    write_snapshot_activation_manifest,
+)
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -451,3 +456,51 @@ def test_index_job_manifest_writer_emits_evidence(tmp_path) -> None:
     assert result["index_job_count"] == 3
     assert (tmp_path / "index_job_manifest.json").exists()
     assert (tmp_path / "index_job_manifest_report.json").exists()
+
+
+def test_snapshot_activation_manifest_blocks_without_visibility_receipts(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    index_manifest = build_index_job_manifest(build_canonical_ir_manifest(dataset_root / "corpus"))
+
+    manifest = build_snapshot_activation_manifest(index_manifest)
+    result = validate_snapshot_activation_manifest(manifest)
+
+    assert result.passed
+    assert result.required_receipt_count == 3
+    assert result.provided_receipt_count == 0
+    assert result.missing_receipt_count == 3
+    assert result.activation_allowed is False
+    assert manifest["status"] == "snapshot_activation_blocked"
+    assert manifest["snapshot_id"] is None
+
+
+def test_snapshot_activation_manifest_rejects_snapshot_id_when_blocked(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    manifest = build_snapshot_activation_manifest(
+        build_index_job_manifest(build_canonical_ir_manifest(dataset_root / "corpus"))
+    )
+    manifest["snapshot_id"] = "snapshot-forged"
+
+    result = validate_snapshot_activation_manifest(manifest)
+
+    assert not result.passed
+    assert any("snapshot_id must be null" in error for error in result.errors)
+
+
+def test_snapshot_activation_manifest_writer_emits_blocked_evidence(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    write_canonical_ir_manifest(tmp_path, corpus_root=dataset_root / "corpus")
+    write_index_job_manifest(tmp_path, canonical_ir_manifest_path=tmp_path / "canonical_ir_manifest.json")
+
+    result = write_snapshot_activation_manifest(
+        tmp_path,
+        index_job_manifest_path=tmp_path / "index_job_manifest.json",
+    )
+
+    assert result["passed"]
+    assert result["activation_allowed"] is False
+    assert (tmp_path / "snapshot_activation_manifest.json").exists()
+    assert (tmp_path / "snapshot_activation_manifest_report.json").exists()

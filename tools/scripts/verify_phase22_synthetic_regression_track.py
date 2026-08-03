@@ -29,6 +29,8 @@ CANONICAL_IR_MANIFEST = TRACK_DIR / "canonical_ir_manifest.json"
 CANONICAL_IR_MANIFEST_REPORT = TRACK_DIR / "canonical_ir_manifest_report.json"
 INDEX_JOB_MANIFEST = TRACK_DIR / "index_job_manifest.json"
 INDEX_JOB_MANIFEST_REPORT = TRACK_DIR / "index_job_manifest_report.json"
+SNAPSHOT_ACTIVATION_MANIFEST = TRACK_DIR / "snapshot_activation_manifest.json"
+SNAPSHOT_ACTIVATION_MANIFEST_REPORT = TRACK_DIR / "snapshot_activation_manifest_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -76,6 +78,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         CANONICAL_IR_MANIFEST_REPORT,
         INDEX_JOB_MANIFEST,
         INDEX_JOB_MANIFEST_REPORT,
+        SNAPSHOT_ACTIVATION_MANIFEST,
+        SNAPSHOT_ACTIVATION_MANIFEST_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -105,6 +109,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     canonical_ir_report = _read_json(CANONICAL_IR_MANIFEST_REPORT)
     index_job_manifest = _read_json(INDEX_JOB_MANIFEST)
     index_job_report = _read_json(INDEX_JOB_MANIFEST_REPORT)
+    snapshot_activation_manifest = _read_json(SNAPSHOT_ACTIVATION_MANIFEST)
+    snapshot_activation_report = _read_json(SNAPSHOT_ACTIVATION_MANIFEST_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -363,6 +369,40 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("index job manifest report index_job_manifest_hash mismatch")
     if current_evidence.get("index_job_manifest_hash") != index_job_manifest.get("index_job_manifest_hash"):
         errors.append("track_manifest current_evidence index_job_manifest_hash mismatch")
+    if snapshot_activation_manifest.get("status") != "snapshot_activation_blocked":
+        errors.append("snapshot activation manifest must be snapshot_activation_blocked")
+    if snapshot_activation_manifest.get("index_job_manifest_hash") != index_job_manifest.get("index_job_manifest_hash"):
+        errors.append("snapshot activation manifest index_job_manifest_hash mismatch")
+    if snapshot_activation_manifest.get("required_receipt_kinds") != [
+        "elasticsearch_bm25_visibility",
+        "milvus_vector_visibility",
+        "neo4j_graph_visibility",
+    ]:
+        errors.append("snapshot activation manifest required_receipt_kinds mismatch")
+    if snapshot_activation_manifest.get("provided_receipt_count") != 0:
+        errors.append("snapshot activation manifest provided_receipt_count must be 0")
+    if snapshot_activation_manifest.get("missing_receipt_kinds") != [
+        "elasticsearch_bm25_visibility",
+        "milvus_vector_visibility",
+        "neo4j_graph_visibility",
+    ]:
+        errors.append("snapshot activation manifest missing_receipt_kinds mismatch")
+    if snapshot_activation_manifest.get("activation_allowed") is not False:
+        errors.append("snapshot activation manifest activation_allowed must be false")
+    if snapshot_activation_manifest.get("snapshot_id") is not None:
+        errors.append("snapshot activation manifest snapshot_id must be null")
+    if snapshot_activation_manifest.get("activation_receipt_ref") is not None:
+        errors.append("snapshot activation manifest activation_receipt_ref must be null")
+    if snapshot_activation_report.get("passed") is not True:
+        errors.append("snapshot activation manifest report must pass")
+    if snapshot_activation_report.get("activation_allowed") is not False:
+        errors.append("snapshot activation manifest report activation_allowed must be false")
+    if snapshot_activation_report.get("missing_receipt_count") != 3:
+        errors.append("snapshot activation manifest report missing_receipt_count must be 3")
+    if snapshot_activation_report.get("snapshot_activation_manifest_hash") != snapshot_activation_manifest.get("snapshot_activation_manifest_hash"):
+        errors.append("snapshot activation manifest report hash mismatch")
+    if current_evidence.get("snapshot_activation_manifest_hash") != snapshot_activation_manifest.get("snapshot_activation_manifest_hash"):
+        errors.append("track_manifest current_evidence snapshot_activation_manifest_hash mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",

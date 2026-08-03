@@ -113,6 +113,19 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - snapshot activation allowed：false
 - snapshot activation block reason：index_visibility_receipts_missing
 
+## Snapshot Activation Gate 当前进度
+
+已生成 Snapshot Activation manifest，用机器证据固定当前 fail-closed 边界：缺任一三索引 Visibility Receipt 时不得激活 Snapshot。本证据不证明真实 Snapshot 已创建，只证明当前候选链路不能越过 activation gate。
+
+- required receipt count：3
+- provided receipt count：0
+- missing receipt count：3
+- missing receipt kinds：Elasticsearch BM25 / Milvus Vector / Neo4j Graph
+- activation allowed：false
+- snapshot id：null
+- activation receipt ref：null
+- snapshot activation manifest hash：`8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b`
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -127,7 +140,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
 - Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
-- Index：已有三索引 Index Job manifest candidate；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
+- Index：已有三索引 Index Job manifest candidate 和缺 receipt 时禁止 Snapshot Activation 的 blocked manifest；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。

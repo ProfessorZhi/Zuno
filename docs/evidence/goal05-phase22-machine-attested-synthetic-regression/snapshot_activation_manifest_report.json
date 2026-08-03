@@ -1,0 +1,9 @@
+{
+  "activation_allowed": false,
+  "errors": [],
+  "missing_receipt_count": 3,
+  "passed": true,
+  "provided_receipt_count": 0,
+  "required_receipt_count": 3,
+  "snapshot_activation_manifest_hash": "8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b"
+}

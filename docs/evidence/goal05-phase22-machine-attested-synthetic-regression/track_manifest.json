@@ -71,6 +71,8 @@
     "index_job_count": 3,
     "index_visibility_receipt_count": 0,
     "snapshot_activation_allowed": false,
+    "snapshot_activation_manifest_hash": "8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b",
+    "snapshot_activation_missing_receipt_count": 3,
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,

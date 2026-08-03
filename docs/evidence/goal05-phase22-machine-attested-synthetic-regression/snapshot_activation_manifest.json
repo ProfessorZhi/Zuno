@@ -1,0 +1,23 @@
+{
+  "activation_allowed": false,
+  "activation_receipt_ref": null,
+  "block_reason": "index_visibility_receipts_missing",
+  "index_job_manifest_hash": "bdc2401a5c58a94fa330c4d4048d08e3320107516a9d3d981599d4207e80d5d3",
+  "missing_receipt_kinds": [
+    "elasticsearch_bm25_visibility",
+    "milvus_vector_visibility",
+    "neo4j_graph_visibility"
+  ],
+  "provided_receipt_count": 0,
+  "required_receipt_kinds": [
+    "elasticsearch_bm25_visibility",
+    "milvus_vector_visibility",
+    "neo4j_graph_visibility"
+  ],
+  "schema_version": "1.0.0",
+  "snapshot_activation_manifest_hash": "8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b",
+  "snapshot_content_hash": null,
+  "snapshot_id": null,
+  "status": "snapshot_activation_blocked",
+  "track_id": "machine_attested_synthetic_regression"
+}

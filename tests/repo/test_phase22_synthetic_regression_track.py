@@ -41,6 +41,8 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/canonical_ir_manifest_report.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/index_job_manifest.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/index_job_manifest_report.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/snapshot_activation_manifest.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/snapshot_activation_manifest_report.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -293,3 +295,22 @@ def test_index_job_manifest_must_not_allow_snapshot_activation_without_receipts(
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("snapshot_activation_allowed must be false" in error for error in errors)
+
+
+def test_snapshot_activation_manifest_must_not_forge_activation_without_receipts(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    manifest_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/snapshot_activation_manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["activation_allowed"] = True
+    manifest["snapshot_id"] = "snapshot-forged"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("activation_allowed must be false" in error for error in errors)
+    assert any("snapshot_id must be null" in error for error in errors)
