@@ -231,6 +231,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.expect not in {"reachable", "unreachable"}:
+        print(f"ERROR: invalid --expect value {args.expect!r}", file=sys.stderr)
+        return 2
+    if args.service is not None and not any(
+        s["id"] == args.service for s in DEFAULT_SERVICES
+    ):
+        print(f"ERROR: unknown service {args.service}", file=sys.stderr)
+        return 2
     report = probe_all(args.timeout)
     if args.service is not None:
         keep = [s for s in report["services"] if s["id"] == args.service]
@@ -239,20 +247,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: unknown service {args.service}", file=sys.stderr)
             return 2
         only = keep[0]
-        if args.expect == "reachable" and not only["service_reachable"]:
-            print(
-                f"ERROR: {args.service} expected reachable but probe says unreachable",
-                file=sys.stderr,
-            )
-            return 1
-        if args.expect == "unreachable" and only["service_reachable"]:
-            print(
-                f"NOTE: {args.service} unexpectedly reachable (still NOT_RUN_DEPENDENCY_BLOCKED)",
-                file=sys.stderr,
-            )
-            # Port reachable != write/read verified; we still exit 0 because
-            # the matrix row stays NOT_RUN_DEPENDENCY_BLOCKED until DeepSeek
-            # runtime produces receipts.
+        write_report(report, args.output)
+        actual_reachable = bool(only["service_reachable"])
+        expectation_matched = (
+            (args.expect == "reachable" and actual_reachable)
+            or (args.expect == "unreachable" and not actual_reachable)
+        )
+        if expectation_matched:
+            print(f"wrote environment probe report: {args.output.as_posix()}")
+            return 0
+        # Expectation mismatch is a hard failure (exit 1). Port reachable
+        # != write/read verified, so we still always set
+        # ``service_write_read_verified = false`` in the probe record; the
+        # mismatch exit only signals that the expected fault was not (or
+        # was) induced.
+        print(
+            f"ERROR: expectation mismatch for {args.service} "
+            f"(expect={args.expect}, actual={'reachable' if actual_reachable else 'unreachable'}); "
+            "port reachable != write/read verified; matrix row stays "
+            "NOT_RUN_DEPENDENCY_BLOCKED until DeepSeek CC-B receipts land.",
+            file=sys.stderr,
+        )
+        return 1
     write_report(report, args.output)
     print(f"wrote environment probe report: {args.output.as_posix()}")
     return 0

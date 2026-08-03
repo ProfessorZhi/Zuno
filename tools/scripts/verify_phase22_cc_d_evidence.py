@@ -8,6 +8,9 @@ Validates that the CC-D evidence bundle and matrix loader stay honest:
 * No row carries a forged ``receipt_ref`` or ``trace_ref``.
 * The evidence bundle has no secret-like patterns.
 * The environment probe does not claim write/read verified.
+* The ``commands`` log records real ``exit_code`` / ``stdout`` / ``stderr``;
+  unrun commands have ``exit_code == None`` and
+  ``status == NOT_RUN_DEPENDENCY_BLOCKED`` (never a manufactured ``0``).
 * Required counters line up.
 """
 
@@ -61,6 +64,64 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 
 def _scan_text_for_secrets(text: str) -> list[str]:
     return [p.pattern for p in SECRET_PATTERNS if p.search(text)]
+
+
+def _verify_command_truth(record: dict[str, Any]) -> list[str]:
+    """Return errors for any command record that breaks the truth contract."""
+
+    errors: list[str] = []
+    label = record.get("command", "<unknown>")
+    launched = record.get("launched")
+    exit_code = record.get("exit_code")
+    status = record.get("status")
+
+    if launched is True:
+        if exit_code is None and status not in {"TIMEOUT", "LAUNCH_FAILED"}:
+            errors.append(
+                f"command {label!r}: launched=True but exit_code is null and status is not TIMEOUT/LAUNCH_FAILED"
+            )
+        if status in {"NOT_RUN_DEPENDENCY_BLOCKED", "NOT_RUN"}:
+            errors.append(
+                f"command {label!r}: launched=True but status is {status!r}"
+            )
+    elif launched is False:
+        if exit_code is not None:
+            errors.append(
+                f"command {label!r}: launched=False but exit_code={exit_code!r} (must be null)"
+            )
+        if status not in {"NOT_RUN_DEPENDENCY_BLOCKED", "NOT_RUN"}:
+            errors.append(
+                f"command {label!r}: launched=False but status={status!r}"
+            )
+        if not record.get("not_run_reason"):
+            errors.append(
+                f"command {label!r}: launched=False must carry not_run_reason"
+            )
+    else:
+        errors.append(
+            f"command {label!r}: missing launched flag (must be bool)"
+        )
+
+    stdout = record.get("stdout")
+    stderr = record.get("stderr")
+    if launched is True and status not in {"TIMEOUT", "LAUNCH_FAILED"}:
+        if stdout is None:
+            errors.append(
+                f"command {label!r}: launched=True must record stdout (even if empty)"
+            )
+        if stderr is None:
+            errors.append(
+                f"command {label!r}: launched=True must record stderr (even if empty)"
+            )
+
+    if not record.get("started_at"):
+        errors.append(f"command {label!r}: missing started_at")
+    if not record.get("ended_at"):
+        errors.append(f"command {label!r}: missing ended_at")
+    if record.get("elapsed_seconds") is None:
+        errors.append(f"command {label!r}: missing elapsed_seconds")
+
+    return errors
 
 
 def verify() -> list[str]:
@@ -145,11 +206,33 @@ def verify() -> list[str]:
             errors.append("evidence bundle matrix_status must be NOT_RUN_DEPENDENCY_BLOCKED")
         if bundle.get("case_count") != len(cases):
             errors.append("evidence bundle case_count mismatch")
+
+        commands = bundle.get("commands") or []
+        if not isinstance(commands, list) or not commands:
+            errors.append("evidence bundle must carry a non-empty commands log")
+        else:
+            for record in commands:
+                if not isinstance(record, dict):
+                    errors.append("evidence bundle commands entries must be objects")
+                    continue
+                errors.extend(_verify_command_truth(record))
+
+        # Per-case runs: status must never be PASSED while matrix is blocked.
         for run in bundle.get("case_runs", []) or []:
-            if run.get("recorded_run", {}).get("status") == "PASSED":
+            if run.get("status") == "PASSED":
                 errors.append(
                     f"evidence bundle run for {run.get('case_id')} must not be PASSED"
                 )
+            execution = run.get("execution") or {}
+            if execution.get("launched") is True:
+                errors.append(
+                    f"evidence bundle run for {run.get('case_id')} execution.launched must be False while matrix is blocked"
+                )
+            if execution.get("exit_code") is not None:
+                errors.append(
+                    f"evidence bundle run for {run.get('case_id')} execution.exit_code must be null while matrix is blocked"
+                )
+
         secret_hits = _scan_text_for_secrets(json.dumps(bundle, ensure_ascii=False))
         if secret_hits:
             errors.append(

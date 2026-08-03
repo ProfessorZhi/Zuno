@@ -299,7 +299,9 @@ def test_fault_matrix_record_helper_does_not_execute() -> None:
     matrix = _matrix()
     record = _record_matrix_case(cases(matrix)[0])
     assert record["execution"]["launched"] is False
-    assert record["execution"]["reason"].startswith(
+    assert record["execution"]["exit_code"] is None
+    assert record["execution"]["status"] == "NOT_RUN_DEPENDENCY_BLOCKED"
+    assert record["execution"]["not_run_reason"].startswith(
         "test_command recorded but not executed"
     )
 
@@ -325,6 +327,30 @@ def test_required_case_fields_constant_is_complete() -> None:
         "not_run_reason",
     }
     assert set(REQUIRED_CASE_FIELDS) == expected
+
+
+def test_unrun_record_carries_null_exit_code_and_reason() -> None:
+    """Every unrun record must carry exit_code=null, status=NOT_RUN_DEPENDENCY_BLOCKED,
+    and an explicit not_run_reason."""
+
+    from tools.scripts.phase22_evidence_builder import _record_matrix_case
+
+    matrix = _matrix()
+    for case in cases(matrix):
+        record = _record_matrix_case(case)
+        execution = record["execution"]
+        assert execution["launched"] is False
+        assert execution["exit_code"] is None
+        assert execution["status"] == "NOT_RUN_DEPENDENCY_BLOCKED"
+        assert execution["not_run_reason"], (
+            f"case {case.get('case_id')} missing not_run_reason"
+        )
+        assert execution["started_at"] is None
+        assert execution["ended_at"] is None
+        assert execution["elapsed_seconds"] is None
+        assert execution["stdout"] is None
+        assert execution["stderr"] is None
+        assert execution["would_run"] == case["test_command"]
 
 
 def test_matrix_loader_returns_expected_keys() -> None:

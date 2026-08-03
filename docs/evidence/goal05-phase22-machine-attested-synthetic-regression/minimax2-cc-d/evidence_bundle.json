@@ -4,14 +4,14 @@
   "worker_task_id": "CC-D",
   "agent_name": "MiniMax2",
   "provider": "MiniMax",
-  "captured_at": "2026-08-03T10:39:17Z",
+  "captured_at": "2026-08-03T13:20:36Z",
   "matrix_status": "NOT_RUN_DEPENDENCY_BLOCKED",
   "dependency_pr": "codex/phase22-real-synthetic-benchmark-readiness",
   "dependency_head_sha": "NOT_RUN_DEPENDENCY_BLOCKED",
   "snapshot_id": null,
   "profile_run_ids": [],
   "matrix_path": "tools\\evals\\zuno\\synthetic_benchmark\\phase22_cc_d_fault_matrix.yaml",
-  "matrix_sha256": "d2e8033ad0bf10b0674cff40aa03e997f95cd6700eca65cc86f61d3a8ceaa4c0",
+  "matrix_sha256": "c14d0de6ba2829f946dcaa80fe65c2f6faf7f3b0ae6dd2c259a74584acb20c3c",
   "case_count": 22,
   "case_runs": [
     {
@@ -23,8 +23,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_environment_probe.py --service minio --expect unreachable",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-MINIO-UNREACHABLE"
+        ]
       }
     },
     {
@@ -36,8 +48,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_environment_probe.py --service postgres --expect unreachable",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-POSTGRES-UNREACHABLE"
+        ]
       }
     },
     {
@@ -49,8 +73,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-RABBITMQ-DUPLICATE-MESSAGE"
+        ]
       }
     },
     {
@@ -62,8 +98,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-ELASTICSEARCH-PARTIAL-SUCCESS"
+        ]
       }
     },
     {
@@ -75,8 +123,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-MILVUS-WRITE-FAILURE"
+        ]
       }
     },
     {
@@ -88,8 +148,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-NEO4J-READBACK-MISMATCH"
+        ]
       }
     },
     {
@@ -101,8 +173,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-EMBEDDING-CREDENTIAL-MISSING"
+        ]
       }
     },
     {
@@ -114,8 +198,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-INDEX-WORKER-CRASH"
+        ]
       }
     },
     {
@@ -127,8 +223,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-SNAPSHOT-EXIT-BEFORE-ACTIVATION"
+        ]
       }
     },
     {
@@ -140,8 +248,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-DUPLICATE-INGEST"
+        ]
       }
     },
     {
@@ -153,8 +273,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-TENANT-CROSS-VIOLATION"
+        ]
       }
     },
     {
@@ -166,8 +298,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-WORKSPACE-CROSS-VIOLATION"
+        ]
       }
     },
     {
@@ -179,8 +323,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-SECURITY-EPOCH-EXPIRED"
+        ]
       }
     },
     {
@@ -192,8 +348,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CANCEL"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CANCEL",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-CANCEL"
+        ]
       }
     },
     {
@@ -205,8 +373,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DEADLINE"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-DEADLINE",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-DEADLINE"
+        ]
       }
     },
     {
@@ -218,8 +398,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RESUME"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RESUME",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-RESUME"
+        ]
       }
     },
     {
@@ -231,8 +423,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-UNKNOWN-SIDE-EFFECT"
+        ]
       }
     },
     {
@@ -244,8 +448,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-RETRY-EXHAUSTED"
+        ]
       }
     },
     {
@@ -257,8 +473,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-REPLAN-BARRIER"
+        ]
       }
     },
     {
@@ -270,8 +498,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-PARALLEL-PARTIAL-FAILURE"
+        ]
       }
     },
     {
@@ -283,8 +523,20 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-CITATION-CONFLICT"
+        ]
       }
     },
     {
@@ -296,26 +548,403 @@
       "execution": {
         "launched": false,
         "exit_code": null,
-        "reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
-        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN"
+        "started_at": null,
+        "ended_at": null,
+        "elapsed_seconds": null,
+        "stdout": null,
+        "stderr": null,
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "test_command recorded but not executed while matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek CC-B snapshot_id and CC-C profile_run_ids",
+        "would_run": "python tools/scripts/phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN",
+        "would_run_argv": [
+          "E:\\develop\\Python312\\python.exe",
+          "F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py",
+          "--case",
+          "D-EVIDENCE-INSUFFICIENT-ABSTAIN"
+        ]
       }
     }
   ],
   "environment_probe_path": "docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json",
-  "environment_probe_sha256": "fa9486f414866c9df52c40c358ec85332ded376e1d73673d83ece75be817c82c",
+  "environment_probe_sha256": "0f4ce1c260e13f0b252340d2c9ee7f2a255562fef22fc3d23cf3c653119cd7f0",
   "commands": [
-    "python tools\\scripts\\phase22_environment_probe.py --output docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json",
-    "python tools/scripts/phase22_fault_matrix_runner.py --case <case_id>",
-    "git diff --check",
-    "python tools/scripts/verify_phase22_synthetic_regression_track.py",
-    "python tools/scripts/verify_phase22_completion_blockers.py"
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_environment_probe.py --output F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json --timeout 1.0",
+      "started_at": "2026-08-03T13:20:31Z",
+      "ended_at": "2026-08-03T13:20:34Z",
+      "elapsed_seconds": 3.656,
+      "launched": true,
+      "exit_code": 0,
+      "stdout": "wrote environment probe report: F:/agent_project/Zuno-minimax3-phase22-cc-d/docs/evidence/goal05-phase22-machine-attested-synthetic-regression/minimax2-cc-d/environment_probe.json\n",
+      "stderr": "",
+      "status": "PASSED"
+    },
+    {
+      "command": "git diff --check",
+      "started_at": "2026-08-03T13:20:34Z",
+      "ended_at": "2026-08-03T13:20:35Z",
+      "elapsed_seconds": 0.203,
+      "launched": true,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "warning: in the working copy of 'tools/scripts/phase22_evidence_builder.py', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tools/scripts/verify_phase22_cc_d_evidence.py', LF will be replaced by CRLF the next time Git touches it\n",
+      "status": "PASSED"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_synthetic_regression_track.py",
+      "started_at": "2026-08-03T13:20:35Z",
+      "ended_at": "2026-08-03T13:20:35Z",
+      "elapsed_seconds": 0.5,
+      "launched": true,
+      "exit_code": 0,
+      "stdout": "PHASE22 synthetic regression track boundary passed\n",
+      "stderr": "",
+      "status": "PASSED"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_completion_blockers.py",
+      "started_at": "2026-08-03T13:20:35Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.672,
+      "launched": true,
+      "exit_code": 0,
+      "stdout": "PHASE22 completion blocker gate passed\n",
+      "stderr": "",
+      "status": "PASSED"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_cc_d_evidence.py",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.328,
+      "launched": true,
+      "exit_code": 0,
+      "stdout": "PHASE22 CC-D evidence verification passed\n",
+      "stderr": "",
+      "status": "PASSED"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MINIO-UNREACHABLE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-POSTGRES-UNREACHABLE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CANCEL",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DEADLINE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RESUME",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    },
+    {
+      "command": "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN",
+      "started_at": "2026-08-03T13:20:36Z",
+      "ended_at": "2026-08-03T13:20:36Z",
+      "elapsed_seconds": 0.0,
+      "launched": false,
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "",
+      "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+      "not_run_reason": "matrix_status is NOT_RUN_DEPENDENCY_BLOCKED; per-case fault runner must wait for DeepSeek CC-B snapshot_id and CC-C profile_run_ids"
+    }
   ],
   "exit_codes": {
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_environment_probe.py --output F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json --timeout 1.0": 0,
     "git diff --check": 0,
-    "verify_phase22_synthetic_regression_track.py": 0,
-    "verify_phase22_completion_blockers.py": 0,
-    "phase22_environment_probe.py": 0,
-    "phase22_fault_matrix_runner.py": 0
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_synthetic_regression_track.py": 0,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_completion_blockers.py": 0,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_cc_d_evidence.py": 0,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MINIO-UNREACHABLE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-POSTGRES-UNREACHABLE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CANCEL": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DEADLINE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RESUME": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT": null,
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN": null
+  },
+  "command_status": {
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_environment_probe.py --output F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\environment_probe.json --timeout 1.0": "PASSED",
+    "git diff --check": "PASSED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_synthetic_regression_track.py": "PASSED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_completion_blockers.py": "PASSED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\verify_phase22_cc_d_evidence.py": "PASSED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MINIO-UNREACHABLE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-POSTGRES-UNREACHABLE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RABBITMQ-DUPLICATE-MESSAGE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-ELASTICSEARCH-PARTIAL-SUCCESS": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-MILVUS-WRITE-FAILURE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-NEO4J-READBACK-MISMATCH": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EMBEDDING-CREDENTIAL-MISSING": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-INDEX-WORKER-CRASH": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SNAPSHOT-EXIT-BEFORE-ACTIVATION": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DUPLICATE-INGEST": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-TENANT-CROSS-VIOLATION": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-WORKSPACE-CROSS-VIOLATION": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-SECURITY-EPOCH-EXPIRED": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CANCEL": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-DEADLINE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RESUME": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-UNKNOWN-SIDE-EFFECT": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-RETRY-EXHAUSTED": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-REPLAN-BARRIER": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-PARALLEL-PARTIAL-FAILURE": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-CITATION-CONFLICT": "NOT_RUN_DEPENDENCY_BLOCKED",
+    "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno-minimax3-phase22-cc-d\\tools\\scripts\\phase22_fault_matrix_runner.py --case D-EVIDENCE-INSUFFICIENT-ABSTAIN": "NOT_RUN_DEPENDENCY_BLOCKED"
   },
   "cleanup": [
     "drop probe buckets and queues if any probe created them",
@@ -334,7 +963,9 @@
     "no secret in evidence",
     "no UNKNOWN side effect blind retry",
     "no snapshot activation without receipt",
-    "no BLOCKED rewritten as PASSED"
+    "no BLOCKED rewritten as PASSED",
+    "no fabricated exit_code (real subprocess exit codes only)",
+    "no recorded-as-run commands without real launch"
   ],
   "remaining_gaps": [
     "DeepSeek CC-B must produce snapshot_id + three visibility receipts",

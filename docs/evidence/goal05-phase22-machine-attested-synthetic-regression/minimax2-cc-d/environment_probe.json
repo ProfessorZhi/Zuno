@@ -1,7 +1,7 @@
 {
   "probe_kind": "phase22_cc_d_environment",
   "probe_version": "1.0.0",
-  "captured_at": "2026-08-03T10:42:03Z",
+  "captured_at": "2026-08-03T13:20:34Z",
   "host": "DESKTOP-JG2FFN3",
   "python_version": "3.12.10",
   "docker_compose_file": "infra/docker/docker-compose.yml",
@@ -20,6 +20,111 @@
       },
       "service_reachable": true,
       "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "redis",
+      "expected_kind": "redis_optional",
+      "host": "localhost",
+      "port": 6379,
+      "protocol": "tcp",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "redis:7.0-alpine"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "rabbitmq",
+      "expected_kind": "queue",
+      "host": "localhost",
+      "port": 5672,
+      "protocol": "tcp",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "rabbitmq:3.13-management-alpine"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "neo4j",
+      "expected_kind": "knowledge_index",
+      "host": "localhost",
+      "port": 7687,
+      "protocol": "tcp",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "neo4j:5-community"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "minio",
+      "expected_kind": "object_store",
+      "host": "localhost",
+      "port": 9000,
+      "protocol": "http",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "minio/minio:RELEASE.2023-03-20T20-16-18Z"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "http": {
+        "reachable": false,
+        "error": "HTTP Error 403: Forbidden"
+      },
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "milvus",
+      "expected_kind": "knowledge_index",
+      "host": "localhost",
+      "port": 19530,
+      "protocol": "tcp",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "milvusdb/milvus:v2.4.15"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "probe_state": "SERVICE_REACHABLE"
+    },
+    {
+      "id": "elasticsearch",
+      "expected_kind": "knowledge_index",
+      "host": "localhost",
+      "port": 9200,
+      "protocol": "http",
+      "docker": {
+        "docker_available": true,
+        "container_reachable": true,
+        "health": "healthy",
+        "image": "docker.elastic.co/elasticsearch/elasticsearch:7.17.24"
+      },
+      "service_reachable": true,
+      "service_write_read_verified": false,
+      "http": {
+        "reachable": true,
+        "status": 200,
+        "server": ""
+      },
       "probe_state": "SERVICE_REACHABLE"
     }
   ]
