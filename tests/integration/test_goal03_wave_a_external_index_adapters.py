@@ -1,10 +1,35 @@
 from __future__ import annotations
 
+import os
 import socket
 import urllib.request
 from uuid import uuid4
 
 import pytest
+
+
+def _neo4j_credentials() -> dict[str, str]:
+    """Neo4j credentials come from the environment only.
+
+    Missing credentials fail closed with ``credential_blocked`` (the tests
+    skip; the harness reports the blocked reason instead of fabricating a
+    run with hardcoded credentials).
+    """
+    uri = os.environ.get("ZUNO_TEST_NEO4J_URI")
+    username = os.environ.get("ZUNO_TEST_NEO4J_USERNAME")
+    password = os.environ.get("ZUNO_TEST_NEO4J_PASSWORD")
+    missing = [
+        name
+        for name, value in [
+            ("ZUNO_TEST_NEO4J_URI", uri),
+            ("ZUNO_TEST_NEO4J_USERNAME", username),
+            ("ZUNO_TEST_NEO4J_PASSWORD", password),
+        ]
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(f"credential_blocked: missing env {', '.join(missing)}")
+    return {"uri": uri, "username": username, "password": password}
 
 
 def _sample_document():
@@ -113,16 +138,25 @@ def test_phase12_milvus_vector_adapter_requires_real_service_readback() -> None:
 
 
 @pytest.mark.skipif(not _neo4j_available(), reason="Neo4j integration service is not available on localhost:7687")
+@pytest.mark.skipif(
+    not (
+        os.environ.get("ZUNO_TEST_NEO4J_URI")
+        and os.environ.get("ZUNO_TEST_NEO4J_USERNAME")
+        and os.environ.get("ZUNO_TEST_NEO4J_PASSWORD")
+    ),
+    reason="credential_blocked: ZUNO_TEST_NEO4J_* environment credentials are not set",
+)
 def test_phase12_neo4j_graph_adapter_requires_real_service_readback() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime, Neo4jGraphIndexClient, external_adapter_bindings
 
     document = _sample_document()
+    credentials = _neo4j_credentials()
     runtime = KnowledgeIndexRuntime(
         adapter_bindings=external_adapter_bindings(
             neo4j_client=Neo4jGraphIndexClient(
-                uri="bolt://localhost:7687",
-                username="neo4j",
-                password="neo4j12345",
+                uri=credentials["uri"],
+                username=credentials["username"],
+                password=credentials["password"],
             ),
             index_prefix=f"goal03_{uuid4().hex[:8]}",
         )
