@@ -70,7 +70,7 @@ def main() -> int:
     parser.add_argument("--visibility-evidence", type=Path, default=DEFAULT_EVIDENCE_DIR / "live_three_index_visibility_evidence.json")
     parser.add_argument("--knowledge-version-id", default="")
     parser.add_argument("--dependency-pr", default="112")
-    parser.add_argument("--dependency-head-sha", default="bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b")
+    parser.add_argument("--dependency-head-sha", default="ce495af2a39c01379878a9e2c1bb58d876456b1e")
     args = parser.parse_args()
 
     evidence = _load_visibility_evidence(args.visibility_evidence)

@@ -1,16 +1,16 @@
 {
   "block_reason": "knowledge_version_dependency_missing",
-  "blocked_at": "2026-08-03T14:47:18.548117+00:00",
+  "blocked_at": "2026-08-03T16:53:25.859829+00:00",
   "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
   "dataset_hash": "b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c",
   "dependency": {
     "dependency_accepted": false,
-    "dependency_head_sha": "bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b",
+    "dependency_head_sha": "ce495af2a39c01379878a9e2c1bb58d876456b1e",
     "dependency_pr": "112",
     "knowledge_version_id": null
   },
-  "elapsed_seconds": 35.188,
-  "evidence_hash": "323d5b723ccbeca65f80fed12d1127bee63d6f9ba67aa8dfdf76df58d9c84a80",
+  "elapsed_seconds": 26.594,
+  "evidence_hash": "3fb78fc39ca9944e8722d7f66dcd119be15f9e6475e697c1136359003d7520fa",
   "evidence_kind": "four_profile_runtime",
   "gold_isolation": {
     "forbidden_field_count": 0,
@@ -180,7 +180,7 @@
   },
   "schema_version": "1.0.0",
   "snapshot_id": null,
-  "started_at": "2026-08-03T14:47:18.548117+00:00",
+  "started_at": "2026-08-03T16:53:25.859829+00:00",
   "status": "FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED",
   "track_id": "machine_attested_synthetic_regression",
   "worker": "deepseek2-cc-b34c"

@@ -160,18 +160,27 @@ def verify_runtime_truth() -> list[str]:
     if path_receipt_count != 0:
         errors.append(f"5: canonical path receipt count must be 0 while knowledge_version_id is blocked, got {path_receipt_count}")
     for label, path_info in live.get("adapter_smoke", {}).get("neo4j_paths", {}).get("path_readbacks", {}).items():
-        if path_info.get("store_visible") is not True:
-            errors.append(f"5: neo4j path {label} not visible in store")
+        # While the knowledge_version_id is blocked every path query must be
+        # REJECTED (fail closed) — never executed and never "visible".
+        if path_info.get("rejected") is not True:
+            errors.append(f"5: neo4j path {label} must be rejected while kv is blocked")
+        if path_info.get("query_executed") is True:
+            errors.append(f"5: neo4j path {label} executed an unscoped query")
 
-    # ── 6: Milvus tenant isolation exercised ──────────────────────────────
+    # ── 6: Milvus tenant isolation exercised (fail-closed matrix) ─────────
     milvus_matrix = live.get("adapter_smoke", {}).get("scope_matrix", {}).get("milvus", {}).get("matrix", {})
     if "same_workspace_different_tenant" not in milvus_matrix:
         errors.append("6: Milvus scope matrix missing same_workspace_different_tenant")
-    elif milvus_matrix.get("same_workspace_different_tenant") != 0:
-        errors.append(f"6: Milvus same-workspace-different-tenant returned {milvus_matrix.get('same_workspace_different_tenant')} rows")
+    else:
+        entry = milvus_matrix.get("same_workspace_different_tenant")
+        if entry.get("query_executed") is not True or entry.get("result") != 0:
+            errors.append(f"6: Milvus same-workspace-different-tenant must execute and return 0 rows, got {entry!r}")
     for key in ["same_tenant_different_workspace", "same_tenant_workspace_different_kv", "foreign_snapshot_scope"]:
-        if key not in milvus_matrix:
+        entry = milvus_matrix.get(key)
+        if entry is None:
             errors.append(f"6: Milvus scope matrix missing {key}")
+        elif entry.get("query_executed") is not True or entry.get("result") != 0:
+            errors.append(f"6: Milvus {key} must execute and return 0 rows, got {entry!r}")
     if live.get("adapter_smoke", {}).get("scope_matrix", {}).get("milvus", {}).get("injection_contained") is not True:
         errors.append("6: Milvus expr injection attempt must be contained")
 
@@ -234,6 +243,102 @@ def verify_runtime_truth() -> list[str]:
         errors.append(f"12: snapshot activation status must be NOT_RUN_DEPENDENCY_BLOCKED, got {snapshot.get('activation_status')!r}")
     if snapshot.get("dependency", {}).get("dependency_accepted") is not False:
         errors.append("12: dependency_accepted must be false while DeepSeek1 PR is REQUEST_WORKER_CHANGES")
+
+    # ── 1-8: ACTIVATED evidence would have to prove the persistence gate ──
+    # (the evidence must remain blocked this round, so an ACTIVATED claim is
+    # rejected outright; the gate itself is enforced by unit tests).
+    activation_evidence = snapshot.get("activation_receipt", {})
+    if activation_evidence.get("activation_status") == "ACTIVATED":
+        errors.append("1: evidence claims ACTIVATED while dependency is blocked")
+    for check_name in ["consistency_checks", "provided_corpus_receipt_kinds"]:
+        if activation_evidence.get(check_name) is None:
+            errors.append(f"8: activation receipt missing {check_name}")
+
+    # ── 9: no unscoped query may have been executed ───────────────────────
+    for index_kind, scope_block in live.get("adapter_smoke", {}).get("scope_matrix", {}).items():
+        matrix = scope_block.get("matrix", {})
+        for entry_name in ["missing_scope", "empty_scope", "same_tenant_workspace_kv"]:
+            entry = matrix.get(entry_name)
+            if entry is None:
+                errors.append(f"9: scope matrix {index_kind} missing {entry_name}")
+                continue
+            if entry.get("query_executed") is True:
+                errors.append(f"9: {index_kind} {entry_name} executed an unscoped query")
+            if entry.get("rejected") is not True:
+                errors.append(f"9: {index_kind} {entry_name} must be recorded as rejected")
+        for entry_name in [
+            "same_workspace_different_tenant",
+            "same_tenant_different_workspace",
+            "same_tenant_workspace_different_kv",
+            "foreign_snapshot_scope",
+        ]:
+            entry = matrix.get(entry_name)
+            if entry is None:
+                errors.append(f"9: scope matrix {index_kind} missing {entry_name}")
+            elif entry.get("query_executed") is not True or entry.get("result") != 0:
+                errors.append(f"9: {index_kind} {entry_name} must execute and return 0 rows, got {entry!r}")
+
+    # ── 10: source manifest must be validated ─────────────────────────────
+    identity_checks = live.get("input", {}).get("identity_checks", {})
+    for check_name in [
+        "source_count_8",
+        "source_paths_exist",
+        "source_hashes_match",
+        "documents_one_to_one",
+        "chunk_documents_exist",
+        "source_manifest_hash_valid",
+        "canonical_ir_binds_source_manifest",
+        "corpus_files_exact",
+        "document_count_equal",
+        "chunk_count_equal",
+        "chunk_id_set_equal",
+        "chunk_hashes_all_equal",
+    ]:
+        if identity_checks.get(check_name) is not True:
+            errors.append(f"10: canonical identity check failed: {check_name}")
+
+    # ── 11: five hash identities recorded separately ──────────────────────
+    input_hashes = live.get("input", {})
+    for hash_name in [
+        "dataset_corpus_hash",
+        "source_manifest_hash",
+        "canonical_ir_hash",
+        "content_set_hash",
+        "embedding_config_hash",
+    ]:
+        if not str(input_hashes.get(hash_name) or "").strip():
+            errors.append(f"11: evidence missing separated hash field {hash_name}")
+    distinct_hashes = {input_hashes.get(name) for name in [
+        "dataset_corpus_hash",
+        "source_manifest_hash",
+        "canonical_ir_hash",
+        "content_set_hash",
+        "embedding_config_hash",
+    ]}
+    if len(distinct_hashes) != 5:
+        errors.append("11: the five hash identities must be distinct (conflation detected)")
+
+    # ── 12b: dependency head must be the current PR #112 candidate ────────
+    for evidence in (snapshot, four_profile):
+        dependency_head = evidence.get("dependency", {}).get("dependency_head_sha")
+        if dependency_head == "bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b":
+            errors.append("12b: evidence still records the stale DeepSeek1 head bf4b2cb1")
+        if dependency_head != "ce495af2a39c01379878a9e2c1bb58d876456b1e":
+            errors.append(f"12b: dependency_head_sha must be the current candidate ce495af2…, got {dependency_head!r}")
+        if evidence.get("dependency", {}).get("dependency_pr") != "112":
+            errors.append("12b: dependency_pr must be 112")
+
+    # ── 14: no measurement success with null profile runs ─────────────────
+    for profile_id, block in four_profile.get("per_profile", {}).items():
+        if block.get("measurement_status") == "MEASURED" and block.get("profile_run_id") is None:
+            errors.append(f"14: profile {profile_id} claims MEASURED with null profile_run_id")
+
+    # ── 15: no CI Passed claim without CI ─────────────────────────────────
+    for path in [LIVE_EVIDENCE, SNAPSHOT_EVIDENCE, FOUR_PROFILE_EVIDENCE]:
+        text = path.read_text(encoding="utf-8")
+        lowered = text.lower()
+        if "ci_passed" in lowered or "ci passed" in lowered or "github_actions_passed" in lowered:
+            errors.append(f"15: evidence claims CI Passed without CI: {path.name}")
 
     # ── 13 + 14: placeholder runtime markers in the harness ───────────────
     harness_path = REPO_ROOT / "tools" / "evals" / "zuno" / "rag_eval" / "run_phase22_four_profile_benchmark.py"
