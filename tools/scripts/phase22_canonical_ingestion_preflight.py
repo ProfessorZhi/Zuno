@@ -29,17 +29,12 @@ Required dependencies checked (PHASE22 canonical ingestion owner entrypoints):
 from __future__ import annotations
 
 import ast
-import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PRODUCTION_ROOTS = (
-    "src/backend/zuno/knowledge",
-    "src/backend/zuno/platform",
-)
 CONFIG_EXAMPLE_REL = "src/backend/zuno/platform/config/config.example.yaml"
 
 READY = "READY_FOR_CANONICAL_INGESTION"
@@ -60,7 +55,6 @@ class EntrypointRequirement:
 class DependencySpec:
     name: str
     requirements: tuple[EntrypointRequirement, ...]
-    role_marker: str | None = None
     credential_path: tuple[str, ...] | None = None
 
 
@@ -92,11 +86,16 @@ DEPENDENCIES: tuple[DependencySpec, ...] = (
         name="object store",
         requirements=(
             EntrypointRequirement(
-                "src/backend/zuno/platform/storage/object_store.py",
-                "MinioObjectStore",
+                "src/backend/zuno/knowledge/ingestion/production_runtime.py",
+                "PackageAProductionIngestionRuntime",
+                fields=("object_store",),
+            ),
+            EntrypointRequirement(
+                "src/backend/zuno/platform/storage/durable.py",
+                "DurableMinioObjectStore",
+                methods=("stage", "commit", "reconcile_committed", "read_committed"),
             ),
         ),
-        role_marker="ObjectStore",
     ),
     DependencySpec(
         name="postgresql",
@@ -200,6 +199,19 @@ def parse_module_surface(module_path: Path) -> ModuleSurface:
             for child in node.body:
                 if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     surface.methods[node.name].add(child.name)
+                    for arg in child.args.args + child.args.kwonlyargs:
+                        if arg.arg:
+                            surface.fields[node.name].add(arg.arg)
+                    if child.name == "__init__":
+                        for statement in ast.walk(child):
+                            if (
+                                isinstance(statement, ast.Assign)
+                                and statement.targets
+                                and isinstance(statement.targets[0], ast.Attribute)
+                                and isinstance(statement.targets[0].value, ast.Name)
+                                and statement.targets[0].value.id == "self"
+                            ):
+                                surface.fields[node.name].add(statement.targets[0].attr)
                 elif isinstance(child, ast.AnnAssign) and isinstance(child.target, ast.Name):
                     surface.fields[node.name].add(child.target.id)
                 elif (
@@ -232,21 +244,6 @@ def credential_declared(config_path: Path, path: tuple[str, ...]) -> bool:
     if not config_path.is_file():
         return False
     return yaml_key_path_present(config_path.read_text(encoding="utf-8"), path)
-
-
-def classes_matching_marker(repo_root: Path, marker: str) -> list[str]:
-    """Top-level production classes whose name ends with the role marker."""
-    found: list[str] = []
-    for root in PRODUCTION_ROOTS:
-        base = repo_root / root
-        if not base.is_dir():
-            continue
-        for py_file in base.rglob("*.py"):
-            surface = parse_module_surface(py_file)
-            for name in sorted(surface.top_level):
-                if name.endswith(marker):
-                    found.append(f"{name} ({py_file.relative_to(repo_root).as_posix()})")
-    return found
 
 
 @dataclass
@@ -301,13 +298,8 @@ def run_preflight(repo_root: Path, dependencies: Iterable[DependencySpec] = DEPE
                 problems.append(f"module {requirement.module_rel} missing")
             else:
                 problems.extend(_check_entrypoint(surface, requirement))
-        if spec.role_marker is not None:
-            owners = classes_matching_marker(repo_root, spec.role_marker)
-            if len(owners) != 1:
-                problems.append(
-                    f"owner non-unique (expected exactly one *{spec.role_marker}, found {len(owners)})"
-                )
-                problems.extend(f"candidate: {owner}" for owner in owners)
+        if spec.name == "object store":
+            problems.extend(_check_object_store_binding(repo_root))
         if spec.credential_path is not None and not credential_declared(
             config_path, spec.credential_path
         ):
@@ -319,6 +311,68 @@ def run_preflight(repo_root: Path, dependencies: Iterable[DependencySpec] = DEPE
                 Gap(dependency=spec.name, reason=problems[0], detail="; ".join(problems[1:]))
             )
     return result
+
+
+def _check_object_store_binding(repo_root: Path) -> list[str]:
+    """Validate the production object-store binding without class-name guessing.
+
+    Domain ports, local adapters and physical clients may coexist. The preflight
+    only fails owner uniqueness when more than one production ingestion runtime
+    constructor binds a competing durable object-store adapter as the default
+    production dependency.
+    """
+
+    runtime_path = repo_root / "src/backend/zuno/knowledge/ingestion/production_runtime.py"
+    if not runtime_path.is_file():
+        return ["OBJECT_STORE_BINDING_AMBIGUITY: production runtime module missing"]
+
+    tree = ast.parse(runtime_path.read_text(encoding="utf-8-sig"), filename=str(runtime_path))
+    bindings: list[str] = []
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef) or node.name != "PackageAProductionIngestionRuntime":
+            continue
+        for child in node.body:
+            if not isinstance(child, ast.FunctionDef) or child.name != "__init__":
+                continue
+            for arg in child.args.kwonlyargs:
+                if "object_store" not in arg.arg:
+                    continue
+                annotation = _annotation_name(arg.annotation)
+                if annotation:
+                    bindings.append(annotation)
+
+    if not bindings:
+        return ["OBJECT_STORE_BINDING_AMBIGUITY: PackageAProductionIngestionRuntime.object_store has no explicit binding"]
+    production_bindings = [name for name in bindings if name != "LocalObjectStore"]
+    if len(set(production_bindings)) > 1:
+        return [
+            "OWNER_NON_UNIQUE: multiple production object-store bindings: "
+            + ", ".join(sorted(set(production_bindings)))
+        ]
+    if "LocalObjectStore" in bindings and production_bindings:
+        return ["OWNER_NON_UNIQUE: LocalObjectStore is bound together with a production adapter"]
+    if bindings == ["LocalObjectStore"]:
+        return ["OBJECT_STORE_BINDING_AMBIGUITY: LocalObjectStore is the only explicit binding"]
+    if production_bindings != ["DurableMinioObjectStore"]:
+        return [
+            "OBJECT_STORE_BINDING_AMBIGUITY: unexpected production binding "
+            + ", ".join(sorted(set(production_bindings)))
+        ]
+    return []
+
+
+def _annotation_name(annotation: ast.expr | None) -> str:
+    if annotation is None:
+        return ""
+    if isinstance(annotation, ast.Name):
+        return annotation.id
+    if isinstance(annotation, ast.Attribute):
+        return annotation.attr
+    if isinstance(annotation, ast.Constant):
+        return str(annotation.value)
+    if isinstance(annotation, ast.Subscript):
+        return _annotation_name(annotation.value)
+    return ""
 
 
 def main(argv: list[str] | None = None) -> int:

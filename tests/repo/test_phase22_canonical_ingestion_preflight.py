@@ -41,6 +41,8 @@ def _write(repo_root: Path, rel: str, content: str) -> None:
 READY_MODULES: dict[str, str] = {
     "src/backend/zuno/knowledge/ingestion/production_runtime.py": (
         "class PackageAProductionIngestionRuntime:\n"
+        "    def __init__(self, *, object_store: DurableMinioObjectStore):\n"
+        "        self.object_store = object_store\n"
         "    def accept_workspace_upload(self, command):\n        ...\n"
         "    def confirm_snapshot_handoff_published(self, receipt):\n        ...\n"
     ),
@@ -54,6 +56,13 @@ READY_MODULES: dict[str, str] = {
         "class IngestionRepository:\n    pass\n"
     ),
     "src/backend/zuno/platform/storage/object_store.py": "class MinioObjectStore:\n    pass\n",
+    "src/backend/zuno/platform/storage/durable.py": (
+        "class DurableMinioObjectStore:\n"
+        "    def stage(self):\n        ...\n"
+        "    def commit(self):\n        ...\n"
+        "    def reconcile_committed(self):\n        ...\n"
+        "    def read_committed(self):\n        ...\n"
+    ),
     "src/backend/zuno/platform/database/foundation.py": (
         "def create_foundation_engine(database_url, **kwargs):\n    ...\n"
     ),
@@ -140,7 +149,7 @@ def test_missing_credential_blocks_with_exact_gap(tmp_path: Path):
     assert "rag.vector_db" in gap.reason
 
 
-def test_non_unique_owner_blocks_with_exact_gap(tmp_path: Path):
+def test_local_object_store_class_does_not_create_owner_conflict(tmp_path: Path):
     _build_ready_repo(tmp_path)
     _write(
         tmp_path,
@@ -148,11 +157,40 @@ def test_non_unique_owner_blocks_with_exact_gap(tmp_path: Path):
         "class LocalObjectStore:\n    pass\n",
     )
     result = _run(tmp_path)
+    assert result.verdict == "READY_FOR_CANONICAL_INGESTION"
+
+
+def test_missing_object_store_composition_binding_blocks_with_ambiguity(tmp_path: Path):
+    _build_ready_repo(tmp_path)
+    _write(
+        tmp_path,
+        "src/backend/zuno/knowledge/ingestion/production_runtime.py",
+        "class PackageAProductionIngestionRuntime:\n"
+        "    def accept_workspace_upload(self, command):\n        ...\n"
+        "    def confirm_snapshot_handoff_published(self, receipt):\n        ...\n",
+    )
+    result = _run(tmp_path)
     assert result.verdict == "BLOCKED_WITH_EXACT_GAP"
     gap = next(g for g in result.gaps if g.dependency == "object store")
-    assert "non-unique" in gap.reason
-    assert "MinioObjectStore" in gap.detail
-    assert "LocalObjectStore" in gap.detail
+    assert "OBJECT_STORE_BINDING_AMBIGUITY" in gap.detail
+
+
+def test_competing_default_production_bindings_block_with_owner_non_unique(tmp_path: Path):
+    _build_ready_repo(tmp_path)
+    _write(
+        tmp_path,
+        "src/backend/zuno/knowledge/ingestion/production_runtime.py",
+        "class PackageAProductionIngestionRuntime:\n"
+        "    def __init__(self, *, object_store: DurableMinioObjectStore, backup_object_store: OtherDurableObjectStore):\n"
+        "        self.object_store = object_store\n"
+        "        self.backup_object_store = backup_object_store\n"
+        "    def accept_workspace_upload(self, command):\n        ...\n"
+        "    def confirm_snapshot_handoff_published(self, receipt):\n        ...\n",
+    )
+    result = _run(tmp_path)
+    assert result.verdict == "BLOCKED_WITH_EXACT_GAP"
+    gap = next(g for g in result.gaps if g.dependency == "object store")
+    assert "OWNER_NON_UNIQUE" in gap.reason
 
 
 def test_missing_snapshot_activation_entrypoint_blocks(tmp_path: Path):

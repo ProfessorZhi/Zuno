@@ -159,12 +159,12 @@ Accepted worker commits:
 
 | worker | model | session_id | commit | score | decision |
 | --- | --- | --- | --- | ---: | --- |
-| CC-MM-1 | claude-minimax | `be9c0934-546c-452a-9231-a650fe5997a0` | `410d439e224d13d8d5e10765fe389894bf98649a5` | 90 | `WORKER_ACCEPTED_FOR_INTEGRATION` |
-| CC-DS-1 | claude-deepseek | `b2624440-d104-4b55-aa64-b92712d844cf` | `4e01675311194eb2ac10a155442f560026450533` | 92 | `WORKER_ACCEPTED_FOR_INTEGRATION` |
+| CC-MM-1 | claude-minimax | `be9c0934-546c-452a-9231-a650fe5997a0` | `410d439e224d13d8d5e10765fe389894bf98649a5` | 90 | `CONTROLLER_RECOVERED_PARTIAL` |
+| CC-DS-1 | claude-deepseek | `b2624440-d104-4b55-aa64-b92712d844cf` | `4e01675311194eb2ac10a155442f560026450533` | 92 | `CONTROLLER_RECOVERED_PARTIAL` |
 
 Codex selectively absorbed exact paths only and added the controller-owned
 `phase22_execution_candidate_gate.py`. The dependency result on the real tree is
-`DEPENDENCY_REWORKED_BY_CODEX` and fail-closed because canonical ingestion
-preflight reports non-unique object-store ownership. PHASE22 remains
+`DEPENDENCY_COMPATIBLE` after object-store preflight was corrected to inspect
+composition binding instead of counting `*ObjectStore` class names. PHASE22 remains
 `in_progress`, fixed benchmark remains `blocked_not_measured`, and production
 readiness remains `not_established`.

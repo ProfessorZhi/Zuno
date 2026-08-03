@@ -114,9 +114,7 @@ def evaluate_execution_candidate(
         else:
             reasons.append("canonical_ingestion_preflight_blocked")
 
-    dependency_status = (
-        "DEPENDENCY_COMPATIBLE" if not reasons else "DEPENDENCY_REWORKED_BY_CODEX"
-    )
+    dependency_status = "DEPENDENCY_COMPATIBLE" if not reasons else "DEPENDENCY_BLOCKED"
     return ExecutionCandidateDecision(
         status=EXECUTION_CANDIDATE if not reasons else BLOCKED_WITH_EXACT_GAP,
         derivation_pack_status=derivation.status,

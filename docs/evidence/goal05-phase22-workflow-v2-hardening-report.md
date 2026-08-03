@@ -21,12 +21,14 @@ base_drift=none
 
 | worker | model | session_id | resume segment status | commit | decision |
 | --- | --- | --- | --- | --- | --- |
-| CC-MM-1 | claude-minimax | `be9c0934-546c-452a-9231-a650fe5997a0` | `error_max_turns`; worker produced code but stopped before commit; Codex amended Enum/direction root cause and committed worker branch | `410d439e224d13d8d5e10765fe389894bf98649a5` | `WORKER_ACCEPTED_FOR_INTEGRATION` |
-| CC-DS-1 | claude-deepseek | `b2624440-d104-4b55-aa64-b92712d844cf` | `error_max_budget_usd`; worker produced code/tests but stopped before evidence/commit; Codex added evidence and committed worker branch | `4e01675311194eb2ac10a155442f560026450533` | `WORKER_ACCEPTED_FOR_INTEGRATION` |
+| CC-MM-1 | claude-minimax | `be9c0934-546c-452a-9231-a650fe5997a0` | `error_max_turns`; worker produced candidate code but stopped before autonomous commit/handoff; Codex amended Enum/direction root cause and committed worker branch | `410d439e224d13d8d5e10765fe389894bf98649a5` | `CONTROLLER_RECOVERED_PARTIAL` |
+| CC-DS-1 | claude-deepseek | `b2624440-d104-4b55-aa64-b92712d844cf` | `error_max_budget_usd`; worker produced candidate code/tests but stopped before autonomous evidence/commit; Codex added evidence and committed worker branch | `4e01675311194eb2ac10a155442f560026450533` | `CONTROLLER_RECOVERED_PARTIAL` |
 
-Both commits were pushed to their isolated worker branches and selectively
-absorbed by Controller with `git restore --source=<worker_sha> -- <exact paths>`.
-No worker branch was merged as a whole.
+Both commits were created after Controller recovery and pushed to their isolated
+worker branches, then selectively absorbed with
+`git restore --source=<worker_sha> -- <exact paths>`. No worker branch was
+merged as a whole. Session resume and code production are verified; autonomous
+worker resume-to-commit/handoff remains unproven and is not claimed here.
 
 ## Accepted Paths
 
@@ -67,7 +69,7 @@ security / approval / audit: 15/15
 cost and time efficiency: 3/5
 integration risk: 8/10
 total=90/100
-decision=WORKER_ACCEPTED_FOR_INTEGRATION
+decision=CONTROLLER_RECOVERED_PARTIAL
 ```
 
 Review notes:
@@ -92,7 +94,7 @@ security / approval / audit: 15/15
 cost and time efficiency: 3/5
 integration risk: 8/10
 total=92/100
-decision=WORKER_ACCEPTED_FOR_INTEGRATION
+decision=CONTROLLER_RECOVERED_PARTIAL
 ```
 
 Review notes:
@@ -100,8 +102,8 @@ Review notes:
 - Allowed paths only.
 - Tool is read-only: AST parsing, no imports of production runtime, no TCP
   readiness check, no writes, no receipts.
-- Real repository verdict is honestly `BLOCKED_WITH_EXACT_GAP` because the
-  object-store owner role has four candidate classes.
+- Real repository verdict is based on explicit composition binding, not
+  `*ObjectStore` class-name counting.
 - Worker stopped at budget exhaustion before evidence/commit; Codex added
   evidence and committed the worker branch.
 
@@ -115,7 +117,7 @@ Canonical contract:
 derivation_pack_status=legal|invalid
 canonical_ingestion_preflight_status=READY_FOR_CANONICAL_INGESTION|BLOCKED_WITH_EXACT_GAP
 status=execution_candidate|blocked_with_exact_gap
-dependency_status=DEPENDENCY_COMPATIBLE|DEPENDENCY_REWORKED_BY_CODEX
+dependency_status=DEPENDENCY_COMPATIBLE|DEPENDENCY_REWORKED_BY_CODEX|DEPENDENCY_BLOCKED
 ```
 
 Rule:
@@ -136,15 +138,15 @@ Current real-tree result:
 
 ```text
 derivation_pack_status=legal
-canonical_ingestion_preflight_status=BLOCKED_WITH_EXACT_GAP
-dependency_status=DEPENDENCY_REWORKED_BY_CODEX
-status=blocked_with_exact_gap
+canonical_ingestion_preflight_status=READY_FOR_CANONICAL_INGESTION
+dependency_status=DEPENDENCY_COMPATIBLE
+status=execution_candidate
 ```
 
 Dependency conclusion:
 
 ```text
-DEPENDENCY_REWORKED_BY_CODEX
+DEPENDENCY_COMPATIBLE
 ```
 
 ## Cost Ledger
@@ -190,8 +192,9 @@ python tools/scripts/phase22_execution_candidate_gate.py
 git diff --check
 ```
 
-Expected note: `phase22_execution_candidate_gate.py` exits `1` on the real tree
-because the current preflight is blocked by non-unique object-store ownership.
+Expected note: `phase22_execution_candidate_gate.py` exits `1` only when the
+current preflight has an exact unresolved gap. After the object-store preflight
+correction, the real tree exits `0` with `execution_candidate`.
 
 Broader validation is recorded in the PR body after final run.
 

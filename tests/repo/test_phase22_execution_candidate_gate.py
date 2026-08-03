@@ -34,6 +34,8 @@ def _write(repo_root: Path, rel: str, content: str) -> None:
 READY_MODULES: dict[str, str] = {
     "src/backend/zuno/knowledge/ingestion/production_runtime.py": (
         "class PackageAProductionIngestionRuntime:\n"
+        "    def __init__(self, *, object_store: DurableMinioObjectStore):\n"
+        "        self.object_store = object_store\n"
         "    def accept_workspace_upload(self, command):\n        ...\n"
         "    def confirm_snapshot_handoff_published(self, receipt):\n        ...\n"
     ),
@@ -48,6 +50,13 @@ READY_MODULES: dict[str, str] = {
     ),
     "src/backend/zuno/platform/storage/object_store.py": (
         "class MinioObjectStore:\n    pass\n"
+    ),
+    "src/backend/zuno/platform/storage/durable.py": (
+        "class DurableMinioObjectStore:\n"
+        "    def stage(self):\n        ...\n"
+        "    def commit(self):\n        ...\n"
+        "    def reconcile_committed(self):\n        ...\n"
+        "    def read_committed(self):\n        ...\n"
     ),
     "src/backend/zuno/platform/database/foundation.py": (
         "def create_foundation_engine(database_url, **kwargs):\n    ...\n"
@@ -111,7 +120,7 @@ def test_preflight_blocked_fails_closed(tmp_path: Path) -> None:
     assert decision.status == "blocked_with_exact_gap"
     assert decision.derivation_pack_status == "legal"
     assert decision.canonical_ingestion_preflight_status == "BLOCKED_WITH_EXACT_GAP"
-    assert decision.dependency_status == "DEPENDENCY_REWORKED_BY_CODEX"
+    assert decision.dependency_status == "DEPENDENCY_BLOCKED"
 
 
 def test_invalid_derivation_pack_fails_closed(tmp_path: Path) -> None:
