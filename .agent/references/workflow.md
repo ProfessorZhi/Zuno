@@ -61,6 +61,39 @@ worker 的 branch、commit、evidence 文件、PR 标题和 PR 描述都必须�
 
 worker 完成后只能提交自己的 branch，并返回身份、session、commit、验证、风险、时间和成本回执。push / PR 可以由 worker 执行，也可以由主线程执行；合并只能由主线程 coordinator 完成。coordinator 必须读取 diff、验证结果和 evidence，不只信 worker 总结。通过的文件或 commit 才能合并回 Zuno 目标分支；未通过的 worker branch 保持隔离或删除。
 
+Codex coordinator 调度 Claude Code worker 的标准生命周期：
+
+1. `fetch origin main --prune`，记录当前 `origin/main` SHA，确认主仓库只作为最终集成仓库。
+2. 按任务性质分流：简单、大量、重复、低冲突任务派 worker；跨模块架构、安全、并发、恢复、幂等、合并和 production readiness 判断由 coordinator 保留。
+3. 为每个 worker 创建或复用独立 worktree、独立 `codex/` branch 和唯一身份；worktree 目录必须位于 `F:\internship-work\resume project\worktrees\`。
+4. 用 prompt 文件启动 `claude-<provider> --output-format stream-json --verbose`，不要把多行 prompt、JSON 或 commit message 直接嵌入多层 PowerShell 参数。
+5. 从 final `type=result` 事件保存 Claude Code 生成的 `session_id`、token、cost 和 duration；后续同一 PR / handoff 用 `--resume <session_id>` 复用，而不是手写或猜测 session id。
+6. worker 完成后提交自己的 branch，返回 handoff 回执；同一 PR 的多次 resume、验证重跑和补丁追加到同一 worker cost ledger。
+7. coordinator 审查 `git diff origin/main..HEAD`、commit、evidence、测试输出、风险声明和成本账，并给出评分。
+8. 评分通过且无阻断项时，coordinator 才能 push / 开 PR / 合并；评分不足时要求 rework、拆小重派、换模型或拒绝。
+9. 合并前确认目标分支已包含最新 main，不覆盖并发修改；合并后运行集成验证并 push。
+10. 验证和 push 完成后，临时 worktree 可以删除；被拒绝或未完成的 worktree 保持隔离，直到明确处理。
+
+Coordinator 审查评分按 100 分执行，并在 PR / closure 报告里留下结论：
+
+```text
+identity and traceability: 10
+scope containment and no unrelated churn: 15
+requirement fit and correctness: 20
+tests and reproducible verification: 15
+evidence quality and honesty: 10
+security / approval / audit / no bypass: 15
+cost and time efficiency: 5
+integration risk and merge readiness: 10
+```
+
+默认判定：
+
+- `>= 85`：可以接受，但仍需 coordinator 合并前验证。
+- `70 - 84`：request changes 或拆小后重派。
+- `< 70`：reject / reassign。
+- 任一安全门绕过、Target 写成 Current、伪造测试、覆盖并发修改、缺身份标签、缺可复现 evidence，直接 block，不受总分抵消。
+
 时间和成本统计采用双账：
 
 - API 成本账：记录 `stream-json --verbose` 返回的 `total_cost_usd`、`modelUsage.*.costUSD`、`input_tokens`、`cache_read_input_tokens`、`cache_creation_input_tokens`、`output_tokens`、`duration_ms`、`duration_api_ms` 和 `session_id`。这是按当时 API token 价格估算的成本。
@@ -116,6 +149,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 9. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 10. 如果使用 Claude Code worker，先写明 `agent`、`model`、`worker`、`session_id` 获取方式、worktree、branch、PR 标题格式、验证命令、成本预算和回执字段。
 11. 分配任务时先区分“重复执行型”和“复杂判断型”：重复执行型默认派 Claude Code worker，复杂判断型默认由 coordinator 亲自做或先拆解后派发。
+12. 分配给 Claude Code worker 前，先写清本次 PR / handoff 的评分标准、阻断项、允许合并条件和 session resume 规则。
 
 ## Allowed Changes
 
@@ -195,6 +229,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 9. coordinator 审查 `git diff origin/main..HEAD`、验证结果和 evidence 后，才允许 push/开 PR/合并。
 10. PR 标题和描述必须包含 `agent=<agent> model=<model> worker=<worker>`；没有身份标签的 PR 视为不合格 handoff。
 11. 合并、集成验证和 push 只由 coordinator 收口；临时 worktree 在合并完成后可删除。
+12. coordinator 必须给 worker PR / handoff 打分；缺 identity、缺 evidence、缺验证、越权改共享文件或绕过安全门时直接 block。
+13. 同一 PR 的后续修复必须优先 `--resume <session_id>`，只有 session 不可恢复、任务重切或换模型时才开新 session，并在 cost ledger 说明原因。
 
 ### Dispatch triage
 

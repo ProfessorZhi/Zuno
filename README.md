@@ -72,7 +72,9 @@ F:\internship-work\resume project\worktrees\
 
 每个 worker 使用独立 worktree 和 `codex/` branch。Claude Code worker 优先处理简单、大量、重复、下载、环境探测、日志整理和低风险候选补丁；Codex coordinator 负责复杂架构判断、根因定位、安全 / 并发 / 恢复 / 幂等语义、review、合并、最终验证和 push。
 
-worker 的 worktree、branch、commit、evidence、PR 标题和 PR 描述必须带 `agent + model + worker` 身份标签。时间和成本按单个 agent 的一次 PR / handoff 统计，不按一轮对话统计；API token 估算成本和 provider 平台额度扣减分开记录。详细规则见 `.agent/references/workflow.md`、`.agent/references/command-catalog.md` 和 `.agent/templates/phase-closure-report.md`。
+worker 的 worktree、branch、commit、evidence、PR 标题和 PR 描述必须带 `agent + model + worker` 身份标签。Claude Code session 用 `stream-json --verbose` 创建并记录真实 `session_id`；同一 PR / handoff 的后续修复优先用 `--resume <session_id>` 复用。时间和成本按单个 agent 的一次 PR / handoff 统计，不按一轮对话统计；API token 估算成本和 provider 平台额度扣减分开记录。
+
+Codex coordinator 必须审查 worker diff、evidence、验证结果、风险和成本账，并按 100 分 scorecard 打分后决定 accept、request changes、reject 或 block。worker PR 只是候选贡献；最终合并、集成验证和 push 只由 coordinator 收口。详细规则见 `.agent/references/workflow.md`、`.agent/references/command-catalog.md` 和 `.agent/templates/phase-closure-report.md`。
 
 ## 本地验证入口
 
