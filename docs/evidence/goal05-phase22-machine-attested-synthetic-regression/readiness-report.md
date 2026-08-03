@@ -99,6 +99,20 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - postgres facts verified：false
 - knowledge version created：false
 
+## WP3 Index Job 当前进度
+
+已从 Canonical IR manifest 生成三索引 Index Job manifest candidate，覆盖 Elasticsearch BM25、Milvus Vector 和 Neo4j Graph。该 evidence 只证明 index jobs 输入和 fail-closed activation gate 可机器复现，不证明任何 adapter 已写入、回读或生成 Visibility Receipt。
+
+- index job count：3
+- Elasticsearch job count：1
+- Milvus job count：1
+- Neo4j job count：1
+- index job manifest hash：`bdc2401a5c58a94fa330c4d4048d08e3320107516a9d3d981599d4207e80d5d3`
+- indexes visible：false
+- visibility receipt refs：[]
+- snapshot activation allowed：false
+- snapshot activation block reason：index_visibility_receipts_missing
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -113,7 +127,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
 - Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
-- Index：没有 ES/Milvus/Neo4j 三索引全量 visibility receipt。
+- Index：已有三索引 Index Job manifest candidate；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。

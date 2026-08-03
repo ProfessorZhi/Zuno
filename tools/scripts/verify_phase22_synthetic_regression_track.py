@@ -27,6 +27,8 @@ SOURCE_UPLOAD_MANIFEST = TRACK_DIR / "source_upload_manifest.json"
 SOURCE_UPLOAD_MANIFEST_REPORT = TRACK_DIR / "source_upload_manifest_report.json"
 CANONICAL_IR_MANIFEST = TRACK_DIR / "canonical_ir_manifest.json"
 CANONICAL_IR_MANIFEST_REPORT = TRACK_DIR / "canonical_ir_manifest_report.json"
+INDEX_JOB_MANIFEST = TRACK_DIR / "index_job_manifest.json"
+INDEX_JOB_MANIFEST_REPORT = TRACK_DIR / "index_job_manifest_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -72,6 +74,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         SOURCE_UPLOAD_MANIFEST_REPORT,
         CANONICAL_IR_MANIFEST,
         CANONICAL_IR_MANIFEST_REPORT,
+        INDEX_JOB_MANIFEST,
+        INDEX_JOB_MANIFEST_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -99,6 +103,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     source_upload_report = _read_json(SOURCE_UPLOAD_MANIFEST_REPORT)
     canonical_ir_manifest = _read_json(CANONICAL_IR_MANIFEST)
     canonical_ir_report = _read_json(CANONICAL_IR_MANIFEST_REPORT)
+    index_job_manifest = _read_json(INDEX_JOB_MANIFEST)
+    index_job_report = _read_json(INDEX_JOB_MANIFEST_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -320,6 +326,43 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("canonical IR manifest report canonical_ir_hash mismatch")
     if current_evidence.get("canonical_ir_hash") != canonical_ir_manifest.get("canonical_ir_hash"):
         errors.append("track_manifest current_evidence canonical_ir_hash mismatch")
+    if index_job_manifest.get("status") != "INDEX_JOBS_PREPARED":
+        errors.append("index job manifest must be INDEX_JOBS_PREPARED")
+    if index_job_manifest.get("canonical_ir_hash") != canonical_ir_manifest.get("canonical_ir_hash"):
+        errors.append("index job manifest canonical_ir_hash mismatch")
+    if index_job_manifest.get("index_job_count") != 3:
+        errors.append("index job manifest index_job_count must be 3")
+    if index_job_manifest.get("index_kinds") != ["elasticsearch_bm25", "milvus_vector", "neo4j_graph"]:
+        errors.append("index job manifest index_kinds mismatch")
+    if index_job_manifest.get("indexes_visible") is not False:
+        errors.append("index job manifest indexes_visible must be false")
+    if index_job_manifest.get("visibility_receipt_refs") != []:
+        errors.append("index job manifest visibility_receipt_refs must be empty")
+    if index_job_manifest.get("snapshot_activation_allowed") is not False:
+        errors.append("index job manifest snapshot_activation_allowed must be false")
+    jobs = index_job_manifest.get("jobs", [])
+    if not isinstance(jobs, list):
+        errors.append("index job manifest jobs must be a list")
+        jobs = []
+    for job in jobs:
+        if not isinstance(job, dict):
+            errors.append("index job manifest job entry must be an object")
+            continue
+        if job.get("state") != "prepared":
+            errors.append("index job manifest job state must be prepared")
+        for field in ["submitted_to_worker", "write_read_verified"]:
+            if job.get(field) is not False:
+                errors.append(f"index job manifest job {field} must be false")
+        if job.get("visibility_receipt_ref") is not None:
+            errors.append("index job manifest job visibility_receipt_ref must be null")
+    if index_job_report.get("passed") is not True:
+        errors.append("index job manifest report must pass")
+    if index_job_report.get("index_job_count") != index_job_manifest.get("index_job_count"):
+        errors.append("index job manifest report index_job_count mismatch")
+    if index_job_report.get("index_job_manifest_hash") != index_job_manifest.get("index_job_manifest_hash"):
+        errors.append("index job manifest report index_job_manifest_hash mismatch")
+    if current_evidence.get("index_job_manifest_hash") != index_job_manifest.get("index_job_manifest_hash"):
+        errors.append("track_manifest current_evidence index_job_manifest_hash mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",

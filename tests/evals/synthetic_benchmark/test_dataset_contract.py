@@ -28,6 +28,11 @@ from tools.evals.zuno.synthetic_benchmark.canonical_ir_manifest import (
     validate_canonical_ir_manifest,
     write_canonical_ir_manifest,
 )
+from tools.evals.zuno.synthetic_benchmark.index_job_manifest import (
+    build_index_job_manifest,
+    validate_index_job_manifest,
+    write_index_job_manifest,
+)
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -400,3 +405,49 @@ def test_canonical_ir_manifest_writer_emits_evidence(tmp_path) -> None:
     assert result["document_count"] == 8
     assert (tmp_path / "canonical_ir_manifest.json").exists()
     assert (tmp_path / "canonical_ir_manifest_report.json").exists()
+
+
+def test_index_job_manifest_prepares_three_indexes_without_visibility(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    canonical_ir = build_canonical_ir_manifest(dataset_root / "corpus")
+
+    manifest = build_index_job_manifest(canonical_ir)
+    result = validate_index_job_manifest(manifest)
+
+    assert result.passed
+    assert result.index_job_count == 3
+    assert result.elasticsearch_job_count == 1
+    assert result.milvus_job_count == 1
+    assert result.neo4j_job_count == 1
+    assert manifest["indexes_visible"] is False
+    assert manifest["visibility_receipt_refs"] == []
+    assert manifest["snapshot_activation_allowed"] is False
+
+
+def test_index_job_manifest_rejects_preclaimed_snapshot_activation(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    manifest = build_index_job_manifest(build_canonical_ir_manifest(dataset_root / "corpus"))
+    manifest["snapshot_activation_allowed"] = True
+
+    result = validate_index_job_manifest(manifest)
+
+    assert not result.passed
+    assert any("snapshot_activation_allowed must remain false" in error for error in result.errors)
+
+
+def test_index_job_manifest_writer_emits_evidence(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+    write_canonical_ir_manifest(tmp_path, corpus_root=dataset_root / "corpus")
+
+    result = write_index_job_manifest(
+        tmp_path,
+        canonical_ir_manifest_path=tmp_path / "canonical_ir_manifest.json",
+    )
+
+    assert result["passed"]
+    assert result["index_job_count"] == 3
+    assert (tmp_path / "index_job_manifest.json").exists()
+    assert (tmp_path / "index_job_manifest_report.json").exists()

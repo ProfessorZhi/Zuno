@@ -1,0 +1,73 @@
+{
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "index_job_count": 3,
+  "index_job_manifest_hash": "bdc2401a5c58a94fa330c4d4048d08e3320107516a9d3d981599d4207e80d5d3",
+  "index_kinds": [
+    "elasticsearch_bm25",
+    "milvus_vector",
+    "neo4j_graph"
+  ],
+  "indexes_visible": false,
+  "jobs": [
+    {
+      "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "idempotency_key": "phase22-index-job::elasticsearch_bm25::43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "index_job_id": "index-job::elasticsearch_bm25::43d4842d41ea528c",
+      "index_kind": "elasticsearch_bm25",
+      "payload_ref_count": 24,
+      "payload_refs_hash": "9c3b4ee28023e88e48e78e9fb290a8c5e771cae42bc287c295e0154a2feb7887",
+      "state": "prepared",
+      "submitted_to_worker": false,
+      "tenant_ids": [
+        "tenant_auroralis"
+      ],
+      "visibility_receipt_ref": null,
+      "workspace_ids": [
+        "workspace_regression"
+      ],
+      "write_read_verified": false
+    },
+    {
+      "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "idempotency_key": "phase22-index-job::milvus_vector::43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "index_job_id": "index-job::milvus_vector::43d4842d41ea528c",
+      "index_kind": "milvus_vector",
+      "payload_ref_count": 24,
+      "payload_refs_hash": "9c3b4ee28023e88e48e78e9fb290a8c5e771cae42bc287c295e0154a2feb7887",
+      "state": "prepared",
+      "submitted_to_worker": false,
+      "tenant_ids": [
+        "tenant_auroralis"
+      ],
+      "visibility_receipt_ref": null,
+      "workspace_ids": [
+        "workspace_regression"
+      ],
+      "write_read_verified": false
+    },
+    {
+      "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "idempotency_key": "phase22-index-job::neo4j_graph::43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "index_job_id": "index-job::neo4j_graph::43d4842d41ea528c",
+      "index_kind": "neo4j_graph",
+      "payload_ref_count": 20,
+      "payload_refs_hash": "f7f6d2696f47fdeec952add57d5adf9d31f9d646821bcca8cc5b5e3706bc438f",
+      "state": "prepared",
+      "submitted_to_worker": false,
+      "tenant_ids": [
+        "tenant_auroralis"
+      ],
+      "visibility_receipt_ref": null,
+      "workspace_ids": [
+        "workspace_regression"
+      ],
+      "write_read_verified": false
+    }
+  ],
+  "schema_version": "1.0.0",
+  "snapshot_activation_allowed": false,
+  "snapshot_activation_block_reason": "index_visibility_receipts_missing",
+  "status": "INDEX_JOBS_PREPARED",
+  "track_id": "machine_attested_synthetic_regression",
+  "visibility_receipt_refs": []
+}

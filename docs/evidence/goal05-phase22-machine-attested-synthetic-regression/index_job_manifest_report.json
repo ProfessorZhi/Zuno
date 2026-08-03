@@ -1,0 +1,9 @@
+{
+  "elasticsearch_job_count": 1,
+  "errors": [],
+  "index_job_count": 3,
+  "index_job_manifest_hash": "bdc2401a5c58a94fa330c4d4048d08e3320107516a9d3d981599d4207e80d5d3",
+  "milvus_job_count": 1,
+  "neo4j_job_count": 1,
+  "passed": true
+}
