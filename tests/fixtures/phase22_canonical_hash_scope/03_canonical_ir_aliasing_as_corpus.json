@@ -1,0 +1,10 @@
+{
+  "fixture_id": "03_canonical_ir_aliasing_as_corpus",
+  "description": "canonical_ir_hash is reused in the dataset_corpus_hash field. Verifier must reject aliasing.",
+  "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "dataset_corpus_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "scopes": [
+    {"tenant_id": "tenant_auroralis", "workspace_id": "workspace_regression", "source": "knowledge_versions"}
+  ]
+}

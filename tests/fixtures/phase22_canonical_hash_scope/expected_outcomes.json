@@ -1,0 +1,16 @@
+{
+  "01_correct_separation": {"expected_status_kind": "CANONICAL_HASH_SCOPE_CONFIRMED"},
+  "02_source_aliasing_as_corpus": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"},
+  "03_canonical_ir_aliasing_as_corpus": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"},
+  "04_missing_dataset_corpus_hash": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"},
+  "05_tampered_corpus_hash": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"},
+  "06_official_scope_consistent": {"expected_status_kind": "CANONICAL_HASH_SCOPE_CONFIRMED"},
+  "07_tenant_renamed_to_verify": {"expected_status_kind": "SCOPE_CONTRACT_VIOLATION"},
+  "08_workspace_renamed_to_verify": {"expected_status_kind": "SCOPE_CONTRACT_VIOLATION"},
+  "09_source_id_scope_diverges_from_db": {"expected_status_kind": "SCOPE_CONTRACT_VIOLATION"},
+  "10_security_decision_scope_off": {"expected_status_kind": "SCOPE_CONTRACT_VIOLATION"},
+  "11_knowledge_version_scope_off": {"expected_status_kind": "SCOPE_CONTRACT_VIOLATION"},
+  "12_isolated_db_official_scope": {"expected_status_kind": "CANONICAL_HASH_SCOPE_CONFIRMED"},
+  "13_evidence_field_name_ambiguous": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"},
+  "14_dynamic_unresolved_hash": {"expected_status_kind": "HASH_CONTRACT_VIOLATION"}
+}

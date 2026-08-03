@@ -1,0 +1,10 @@
+{
+  "fixture_id": "04_missing_dataset_corpus_hash",
+  "description": "dataset_corpus_hash is missing (null). Verifier must reject.",
+  "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "dataset_corpus_hash": null,
+  "scopes": [
+    {"tenant_id": "tenant_auroralis", "workspace_id": "workspace_regression", "source": "knowledge_versions"}
+  ]
+}

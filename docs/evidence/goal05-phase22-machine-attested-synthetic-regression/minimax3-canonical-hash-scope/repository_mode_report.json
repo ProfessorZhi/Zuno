@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0.0",
+  "gate_kind": "phase22_canonical_hash_scope",
+  "status": "CANONICAL_HASH_SCOPE_CONFIRMED",
+  "exit_code": 0,
+  "base_sha": null,
+  "repository_status": "{\"docs/evidence/goal05-phase22-machine-attested-synthetic-regression/canonical_ir_manifest.json\": \"CANONICAL_IR_INPUTS_PREPARED\", \"docs/evidence/goal05-phase22-machine-attested-synthetic-regression/runtime_request_manifest.json\": \"RUNTIME_INPUT_GOLD_ISOLATED\", \"docs/evidence/goal05-phase22-machine-attested-synthetic-regression/source_upload_manifest.json\": \"SOURCE_UPLOAD_INPUTS_PREPARED\"}",
+  "expected_hashes": {
+    "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+    "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+    "dataset_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4"
+  },
+  "detected_hashes": {
+    "source_manifest_hash": {
+      "value": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+      "field_source": "$.source_manifest_hash"
+    },
+    "canonical_ir_hash": {
+      "value": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+      "field_source": "$.canonical_ir_hash"
+    },
+    "dataset_corpus_hash": {
+      "value": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+      "field_source": "$.corpus_hash"
+    }
+  },
+  "detected_scope": {
+    "source_upload_manifest": [
+      "tenant_id=tenant_auroralis@$.sources[0].tenant_id",
+      "workspace_id=workspace_regression@$.sources[0].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[1].tenant_id",
+      "workspace_id=workspace_regression@$.sources[1].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[2].tenant_id",
+      "workspace_id=workspace_regression@$.sources[2].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[3].tenant_id",
+      "workspace_id=workspace_regression@$.sources[3].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[4].tenant_id",
+      "workspace_id=workspace_regression@$.sources[4].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[5].tenant_id",
+      "workspace_id=workspace_regression@$.sources[5].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[6].tenant_id",
+      "workspace_id=workspace_regression@$.sources[6].workspace_id",
+      "tenant_id=tenant_auroralis@$.sources[7].tenant_id",
+      "workspace_id=workspace_regression@$.sources[7].workspace_id"
+    ],
+    "canonical_ir_manifest": [
+      "tenant_id=tenant_auroralis@$.chunks[0].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[0].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[1].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[1].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[2].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[2].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[3].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[3].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[4].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[4].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[5].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[5].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[6].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[6].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[7].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[7].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[8].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[8].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[9].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[9].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[10].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[10].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[11].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[11].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[12].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[12].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[13].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[13].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[14].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[14].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[15].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[15].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[16].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[16].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[17].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[17].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[18].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[18].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[19].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[19].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[20].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[20].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[21].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[21].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[22].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[22].workspace_id",
+      "tenant_id=tenant_auroralis@$.chunks[23].tenant_id",
+      "workspace_id=workspace_regression@$.chunks[23].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[0].tenant_id",
+      "workspace_id=workspace_regression@$.documents[0].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[1].tenant_id",
+      "workspace_id=workspace_regression@$.documents[1].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[2].tenant_id",
+      "workspace_id=workspace_regression@$.documents[2].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[3].tenant_id",
+      "workspace_id=workspace_regression@$.documents[3].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[4].tenant_id",
+      "workspace_id=workspace_regression@$.documents[4].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[5].tenant_id",
+      "workspace_id=workspace_regression@$.documents[5].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[6].tenant_id",
+      "workspace_id=workspace_regression@$.documents[6].workspace_id",
+      "tenant_id=tenant_auroralis@$.documents[7].tenant_id",
+      "workspace_id=workspace_regression@$.documents[7].workspace_id"
+    ],
+    "runtime_request_manifest": []
+  },
+  "violations": [],
+  "not_proven_boundary": [
+    "live database column tenant_id/workspace_id introspection",
+    "KnowledgeSpace scope column vs manifest scope",
+    "security_decisions (security_authorization_decisions) scope consistency",
+    "KnowledgeVersion persistence in knowledge_versions table",
+    "source_upload_manifest.runtime_ingested live attestation",
+    "canonical_ir_manifest.parser_runtime_executed live attestation",
+    "canonical_ir_manifest.postgres_facts_verified live attestation"
+  ],
+  "official_scope": {
+    "tenant_id": "tenant_auroralis",
+    "workspace_id": "workspace_regression"
+  },
+  "verification_scope": {
+    "tenant_id": "tenant_auroralis_verify",
+    "workspace_id": "workspace_regression_verify"
+  }
+}

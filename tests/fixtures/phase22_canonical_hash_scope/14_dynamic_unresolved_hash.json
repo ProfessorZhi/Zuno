@@ -1,0 +1,10 @@
+{
+  "fixture_id": "14_dynamic_unresolved_hash",
+  "description": "Hash field carries a placeholder marker instead of a frozen 64-char hex. Verifier must reject as IDENTITY_UNRESOLVED.",
+  "source_manifest_hash": "DYNAMIC_AT_RUNTIME",
+  "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+  "dataset_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+  "scopes": [
+    {"tenant_id": "tenant_auroralis", "workspace_id": "workspace_regression", "source": "knowledge_versions"}
+  ]
+}

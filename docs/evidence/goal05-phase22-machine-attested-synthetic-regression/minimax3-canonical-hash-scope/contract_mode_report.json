@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "gate_kind": "phase22_canonical_hash_scope",
+  "status": "CANONICAL_HASH_SCOPE_CONFIRMED",
+  "exit_code": 0,
+  "base_sha": null,
+  "repository_status": null,
+  "expected_hashes": {
+    "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+    "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
+    "dataset_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4"
+  },
+  "detected_hashes": {},
+  "detected_scope": {
+    "_contract_summary": [
+      "passed=14",
+      "failed=0"
+    ]
+  },
+  "violations": [],
+  "not_proven_boundary": [],
+  "official_scope": {
+    "tenant_id": "tenant_auroralis",
+    "workspace_id": "workspace_regression"
+  },
+  "verification_scope": {
+    "tenant_id": "tenant_auroralis_verify",
+    "workspace_id": "workspace_regression_verify"
+  }
+}
