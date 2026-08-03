@@ -1,437 +1,546 @@
 # Zuno Architecture Visual Atlas Source
 
-updated: 2026-08-04
-status: normative-target-architecture-views
-architecture_generation: v2
-formal_path: `docs/architecture/architecture-views.md`
+updated: 2026-07-14
+status: normative-target-visual-source
+text_design_source: `docs/architecture/architecture.md`
+canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
 
-> 本文是 Zuno Architecture v2 的架构图集合源。图只表达 `architecture.md` 与十一模块文档中的规范语义，不独立拥有 Contract。
->
-> 当前 Program 与 PHASE01–PHASE22 不因本图集更新而改变。图中的 Evidence-Driven Agentic GraphRAG 属于 Target v2。
+本文件只提供说明性 Mermaid。领域 Contract、状态、Failure、持久化和测试以十一份模块文档为准；跨模块关系以 `architecture.md` 为准；本图源和 HTML 优先级最低。
 
----
+箭头规范：`==>` 命令/控制，`-->` 数据/结果，`-.->` 横切约束/观测。
 
-# 1. 文档体系视图
+## 一、4+1 View Model
 
-```mermaid
-flowchart TD
-    A[Accepted ADR and Global Principles] --> B[11 Canonical Module Architecture Docs]
-    B --> C[architecture.md Cross-module Integration]
-    C --> D[architecture-views.md]
-    D --> E[architecture.html]
-    B --> F[Governance and Contract Registry]
-    B --> G[Program and Phases]
-    G --> H[Code Migration Test Trace Eval]
-    H --> I[Status Current Target Future]
-```
+### Logical View (4+1)
 
-规则：
-
-- Module 文档拥有模块内部 Target；
-- 总架构拥有跨模块集成；
-- Program / Phase 负责从 Current 到 Target 的实施；
-- Status 与 Evidence 决定 Target 是否已经成为 Current；
-- HTML 与 Mermaid 不覆盖规范正文。
-
----
-
-# 2. 十一模块逻辑视图
+#### Overall — Eleven Modules and Canonical Owners
 
 ```mermaid
 flowchart TB
-    PS[01 Product Surface]
-    ING[02 Input and Ingestion]
-    K[03 Knowledge / Evidence-Driven Agentic GraphRAG]
-    MG[04 Model Gateway]
-    MC[05 Memory and Context]
-    AC[06 Agent Core]
-    CS[07 Capability and Skill]
-    TR[08 Tool Runtime]
-    SEC[09 Security]
-    OE[10 Observability and Eval]
-    INF[11 Infrastructure]
-
-    PS --> AC
-    ING --> K
-    AC --> K
-    AC --> MC
-    AC --> CS
-    AC --> TR
-    AC --> MG
-    K --> MG
-    MC --> MG
-    TR --> MG
-    SEC --> PS
-    SEC --> AC
-    SEC --> K
-    SEC --> TR
-    INF --> ING
-    INF --> K
-    INF --> MG
-    INF --> MC
-    INF --> AC
-    INF --> TR
-    OE -. typed events .-> PS
-    OE -. typed events .-> AC
-    OE -. typed events .-> K
-    OE -. typed events .-> MG
-    OE -. typed events .-> TR
+  PS[01 Product Surface] ==>|RuntimeRequest / Signal| AC[06 Agent Core]
+  AC -->|Publication / RunOutcome| PS
+  PS ==>|InputSubmission| IN[02 Input]
+  IN -->|IndexableDocumentSnapshot| KN[03 Knowledge]
+  AC ==>|KnowledgeQueryRequest| KN
+  KN -->|KnowledgeRetrievalOutcome / KnowledgeControlProposal| AC
+  AC ==>|ModelRoleRequirement| MG[04 Model Gateway]
+  MG -->|ModelResponse / UsageReceipt| AC
+  AC ==>|MemoryReadRequest| MM[05 Memory]
+  MM -->|ContextPackVersion| AC
+  AC ==>|CapabilityRequirement| CP[07 Capability]
+  CP -->|AvailabilitySnapshot / SelectionResult| AC
+  AC ==>|ActionProposal| TR[08 Tool Runtime]
+  TR -->|ToolObservation / EffectReceipt / Reconciliation| AC
+  SEC[09 Security] -.-> PS & IN & KN & MG & MM & AC & CP & TR
+  OBS[10 Observability and Eval] -.-> PS & IN & KN & MG & MM & AC & CP & TR & SEC
+  PS & IN & KN & MG & MM & AC & CP & TR & SEC & OBS --> INF[11 Infrastructure]
 ```
 
----
+#### Local — Agent Core Control Stack
 
-# 3. 完整在线运行视图
+```mermaid
+flowchart TB
+  RUN[Fixed AgentRunGraph] --> TASK[TaskContract / GoalVersion]
+  TASK --> SNAP[ExecutionContextSnapshot]
+  SNAP --> PLAN[Dynamic immutable Plan DAG]
+  PLAN --> READY[ReadySet / Admission / Budget]
+  READY --> DISPATCH[Dispatch commit before Send]
+  DISPATCH --> STEP[Fixed StepExecutionGraph]
+  STEP --> ACCEPT[Action Evaluation / Step Acceptance]
+  ACCEPT --> JOIN[Join Evaluation / Reflection]
+  JOIN --> DECIDE[Agent Core ControlDecision]
+  DECIDE -->|replan| BARRIER[Replan Barrier + new PlanVersion]
+  DECIDE -->|complete| FINAL[Final Gate / Publication / RunOutcome]
+```
+
+#### Local — Evidence Memory and Publication Boundaries
+
+```mermaid
+flowchart LR
+  SOURCE[DocumentVersion / SourceSpan] --> EVID[Knowledge Evidence / CitationLineage]
+  EVID --> CONTEXT[Memory ContextPackVersion]
+  CONTEXT --> CORE[Agent Core Step / Final Synthesis]
+  CORE --> CAND[FinalCandidate]
+  CAND --> GATE[Final Gate]
+  GATE --> PUB[Agent Core Publication]
+  PUB --> VIEW[Product authorized Projection]
+  VIEW --> DELIVERY[ChannelDelivery / ClientRender / UserRead]
+```
+
+### Development View (4+1)
+
+#### Overall — Repository Ownership and Dependency
+
+```mermaid
+flowchart TB
+  WEB[apps/web] --> API[src/backend/zuno/api]
+  API --> PRODUCT[zuno product application]
+  PRODUCT --> AGENT[zuno/agent]
+  AGENT --> KNOW[zuno/knowledge]
+  AGENT --> MEMORY[zuno/memory]
+  AGENT --> CAP[zuno/capability]
+  AGENT --> TOOL[zuno/tool_runtime]
+  KNOW & MEMORY & CAP & TOOL & AGENT --> PLATFORM[zuno/platform ports and adapters]
+  DOCS[11 module docs + architecture] --> VERIFY[verifiers and repo tests]
+```
+
+#### Local — Module Package Rule
+
+```mermaid
+flowchart LR
+  DOMAIN[Domain objects and transitions] --> APP[Application services]
+  APP --> PORTS[Typed inbound and outbound Ports]
+  ADAPTERS[Provider and storage Adapters] --> PORTS
+  ADAPTERS --> INFRA[Infrastructure primitives]
+  API[Inbound API / Worker] --> APP
+  DOMAIN -.->|no Provider SDK / no cross-owner DB write| ADAPTERS
+```
+
+#### Local — Architecture Fact Source and Build Chain
+
+```mermaid
+flowchart LR
+  ADR[Global principles / accepted ADR / Registry] --> MOD[Eleven canonical module docs]
+  MOD --> ARCH[architecture.md integration]
+  ARCH --> VIEWS[architecture-views.md explanatory Mermaid]
+  VIEWS --> HTML[architecture.html renderer]
+  MOD & ARCH --> PROGRAM[Confirmed Program]
+  PROGRAM --> CODE[Code / Migration / Tests / Evidence]
+  MOD & ARCH & VIEWS & HTML --> GUARD[semantic alignment verifier]
+```
+
+### Process View (4+1)
+
+#### Overall — AgentRunGraph Controller Loop
+
+```mermaid
+flowchart TB
+  REQ[RuntimeRequest] --> TASK[TaskContract / GoalVersion]
+  TASK --> SNAP[ExecutionContextSnapshot]
+  SNAP --> PLAN[Plan Proposal / Validate / Repair / Activate]
+  PLAN --> CTRL[Controller Loop]
+  CTRL --> ARB[Command arbitration + Domain/Checkpoint reconcile]
+  ARB --> READY[ReadySet + liveness]
+  READY --> RES[Budget / resource / capacity reservation]
+  RES --> COMMIT[DispatchGroup / DispatchItem / StepRun commit]
+  COMMIT --> SEND[LangGraph dynamic Send]
+  SEND --> COLLECT[BranchResultRef collection]
+  COLLECT --> REDUCE[Idempotent Reducer]
+  REDUCE --> JOIN[Join Evaluation]
+  JOIN -->|continue| CTRL
+  JOIN -->|wait| WAIT[Interrupt / external wait]
+  WAIT --> CTRL
+  JOIN -->|complete| FINAL[Finalization / Publication / RunOutcome]
+```
+
+#### Local — Dispatch Commit Send Join and Replan
+
+```mermaid
+flowchart LR
+  ACTIVE[Active PlanVersion] --> READY[Ready Step]
+  READY --> CHECK[Dependency / input / security / capability / budget / conflict]
+  CHECK --> TX[Transaction: DispatchGroup + Item + StepRun + reservations]
+  TX --> EVENT[DispatchCommittedEvent]
+  EVENT --> SEND[Send worker]
+  SEND --> RESULT[Immutable BranchResultRef]
+  RESULT --> GUARD[PlanVersion / epoch / fencing / hash guard]
+  GUARD --> JOIN[JoinPolicy + Join Evaluation]
+  JOIN -->|assumption invalid| BARRIER[Replan Barrier]
+  BARRIER --> NEW[Validate and activate new PlanVersion]
+```
+
+#### Local — StepExecutionGraph and External Effect
+
+```mermaid
+flowchart TB
+  LOAD[Load StepDefinition / verify epochs] --> INPUT[Resolve inputs / resource claims / budget]
+  INPUT --> SEC[Preflight Security]
+  SEC --> PROPOSE[ActionProposal / validation]
+  PROPOSE --> PREP[PreparedToolAction when side effect]
+  PREP --> APPROVE[Approval and latest Epoch]
+  APPROVE --> CLAIM[Audit receipt / IdempotencyClaim / SecretLease]
+  CLAIM --> EXEC[Execute owning module]
+  EXEC --> OBS[Normalized Observation]
+  OBS --> EVAL[Action Evaluation]
+  EVAL --> ACCEPT[Step Acceptance]
+  ACCEPT -->|unknown effect| RECON[EffectReconciliation]
+  ACCEPT -->|continue / retry / repair / fallback / replan / complete| DECIDE[ControlDecision]
+```
+
+### Physical View (4+1)
+
+#### Overall — Canonical Server Target
+
+```mermaid
+flowchart TB
+  CLIENT[Web / Desktop / External API] --> API[Server-hosted Product API]
+  API --> CONTROL[Controller role]
+  API --> WORKER[Async worker roles]
+  CONTROL --> PG[(PostgreSQL domain facts)]
+  CONTROL --> CHECK[(LangGraph PostgreSQL Checkpointer)]
+  WORKER --> PG
+  WORKER --> OBJ[(S3-compatible Object Store)]
+  WORKER --> Q[(RabbitMQ durable quorum queue)]
+  WORKER --> IDX[(BM25 / Milvus / Neo4j projections)]
+  CONTROL --> IDX
+  CONTROL --> OBS[(Trace / Audit / Eval stores)]
+  CONTROL & WORKER --> SECRET[Secret Manager / KMS Adapter]
+```
+
+#### Local — Domain Facts Checkpoint and Projections
+
+```mermaid
+flowchart LR
+  PG[(PostgreSQL canonical domain facts)] --> OUTBOX[Transactional Outbox]
+  OUTBOX --> Q[(RabbitMQ)]
+  Q --> WORKER[Idempotent worker with Lease / Fencing]
+  WORKER --> OBJ[(Immutable Object Store)]
+  WORKER --> PROJ[(Rebuildable indexes and read models)]
+  PROJ --> RECEIPT[Visibility / verification / watermark receipts]
+  RECEIPT --> PG
+  CHECK[(Checkpointer control state)] -. references committed generation .-> PG
+```
+
+#### Local — Recovery Reconciliation and Fencing
+
+```mermaid
+flowchart TB
+  RESTART[Process or worker restart] --> DOMAIN[(Domain Store)]
+  RESTART --> CHECK[(Checkpoint)]
+  DOMAIN & CHECK --> GEN[Domain / Checkpoint Generation Reconciler]
+  GEN --> ORPHAN[Run / Dispatch / Lease / Interrupt / Publication Reconcilers]
+  ORPHAN --> EFFECT[Unknown Model / Tool / Index / Delivery Reconciliation]
+  EFFECT --> RESUME[Resume first safe deterministic node]
+  LEASE[Lease / heartbeat / fencing token] -.-> ORPHAN & RESUME
+  INBOX[Inbox / Outbox / idempotency claim] -.-> ORPHAN & RESUME
+```
+
+### Scenarios View (4+1)
+
+#### Overall — Strict Grounded Answer
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant P as 01 Product Surface
-    participant S as 09 Security
-    participant A as 06 Agent Core
-    participant K as 03 Knowledge
-    participant M as 05 Memory & Context
-    participant G as 04 Model Gateway
-    participant T as 08 Tool Runtime
-    participant O as 10 Observability
-
-    U->>P: Command
-    P->>S: authorize principal / tenant / workspace
-    S-->>P: authorization + security epoch
-    P->>A: create AgentRun
-    A->>G: task analysis / planning proposal
-    G-->>A: structured proposal
-    A->>A: validate and activate immutable PlanVersion
-    A->>K: KnowledgeQueryRequest
-    K->>S: validate authorized knowledge scope
-    S-->>K: AuthorizedKnowledgeScope
-    K->>G: Evidence critic / claim / probe proposals
-    G-->>K: validated structured proposals
-    K-->>A: EvidenceSetVerdict + SelectedEvidenceBundle / ControlProposal
-    A->>M: build ContextPack
-    M-->>A: ContextPack
-    A->>T: PreparedToolAction when needed
-    T-->>A: EffectReceipt / UNKNOWN
-    A->>G: synthesis / final critic when policy requires
-    G-->>A: answer proposal
-    A->>A: Final Gate and RunOutcome
-    A-->>P: Projection events
-    P-->>U: SSE / final result
-    P-->>O: typed events
-    A-->>O: typed events
-    K-->>O: typed events
-    G-->>O: typed events
-    T-->>O: typed events
+  participant U as User
+  participant P as Product Surface
+  participant S as Security
+  participant A as Agent Core
+  participant K as Knowledge
+  participant C as Memory Context
+  participant M as Model Gateway
+  U->>P: submit strict grounded task
+  P->>S: authenticate and authorize entry
+  S-->>P: PrincipalContext and allowed scope
+  P->>A: RuntimeRequest
+  A->>K: KnowledgeQueryRequest + EvidenceRequirement
+  K-->>A: SelectedEvidenceBundle + CitationLineage
+  A->>C: build ContextPackVersion
+  C-->>A: immutable ContextPackVersion
+  A->>M: SYNTHESIZER / FINAL_CRITIC requirements
+  M-->>A: candidate responses
+  A->>A: Step Acceptance + Final Gate
+  A-->>P: Publication + RunOutcome
+  P-->>U: authorized answer / citations / quality disclosure
 ```
 
----
+#### Local — Approval Interrupt Resume and Effect Reconciliation
 
-# 4. Agent Core 控制视图
+```mermaid
+sequenceDiagram
+  participant A as Agent Core
+  participant T as Tool Runtime
+  participant S as Security
+  participant P as Product Surface
+  participant U as Approver
+  participant I as Infrastructure
+  A->>T: ActionProposal
+  T->>S: PreparedToolAction + canonical hash
+  S-->>P: ApprovalRequest
+  P-->>U: authorized approval view
+  U->>P: approval command
+  P->>S: signed command and current principal
+  S-->>A: SecurityApprovalDecision
+  A->>T: resume execution
+  T->>S: execute gate + latest Epoch
+  T->>I: audit receipt + idempotency + lease + secret lease
+  T-->>A: EffectReceipt or EffectReconciliation
+  A->>A: ControlDecision
+```
+
+#### Local — Ingestion Publication Deletion and Revoke
+
+```mermaid
+sequenceDiagram
+  participant P as Product
+  participant S as Security
+  participant I as Input
+  participant K as Knowledge
+  participant M as Memory
+  participant F as Infrastructure
+  P->>I: upload command
+  I->>I: SourceObject / ParseSnapshot / Quality Gate
+  I->>K: IndexableDocumentSnapshot
+  K->>F: IndexWriteBatch
+  F-->>K: write / visibility / verification receipts
+  K->>K: Acceptance and Cutover
+  P->>S: delete or revoke command
+  S-->>I: authorized deletion
+  I->>K: document tombstone
+  K->>M: evidence invalidation
+  K->>F: physical deletion request
+  F-->>K: deletion verification
+  K-->>P: no-longer-retrievable projection
+```
+
+## 二、Views & Beyond
+
+### Module View (Views & Beyond)
+
+#### Overall — Eleven Modules to Six Runtime Domains
+
+```mermaid
+flowchart LR
+  PS[01 Product] --> PD[Product and API]
+  IN[02 Input] --> KD[Knowledge and Memory Runtime]
+  KN[03 Knowledge] --> KD
+  MM[05 Memory] --> KD
+  MG[04 Model Gateway] --> AC[Agent Control Plane]
+  AG[06 Agent Core] --> AC
+  CP[07 Capability] --> TD[Capability and Tool]
+  TR[08 Tool Runtime] --> TD
+  SEC[09 Security] --> GD[Governance Plane]
+  OBS[10 Observability] --> GD
+  INF[11 Infrastructure] --> ID[Durable Infrastructure]
+```
+
+#### Local — Owns Consumes Produces
+
+```mermaid
+flowchart LR
+  CONSUMER[Consumer module] ==>|typed command or request| OWNER[Canonical Owner]
+  OWNER -->|versioned domain result| CONSUMER
+  OWNER -->|domain event + Outbox| OBS[Observability ingest]
+  OWNER ==>|primitive request| INF[Infrastructure]
+  INF -->|physical receipt only| OWNER
+  PROJ[Product / Observability Projection] -. read only .-> CONSUMER
+```
+
+#### Local — Model Proposal and Deterministic Gates
+
+```mermaid
+flowchart LR
+  MODEL[Model Proposal / Candidate / Score] --> SCHEMA[Schema and canonical validation]
+  CLIENT[Client command] --> AUTH[Authentication and authorization]
+  SCHEMA & AUTH --> OWNER[Canonical Owner application service]
+  OWNER --> POLICY[Security / Budget / Acceptance / Final Gate]
+  POLICY --> FACT[Versioned domain fact]
+  BYPASS[Direct SDK / cross-owner DB write / frontend terminal state] --> REJECT[Repository and runtime guard]
+```
+
+### Component-and-Connector View (Views & Beyond)
+
+#### Overall — Commands Results Events and Receipts
 
 ```mermaid
 flowchart TB
-    RG[Fixed AgentRunGraph] --> PD[Dynamic Plan DAG]
-    PD --> R1[Ready Step A]
-    PD --> R2[Ready Step B]
-    R1 --> SG1[Fixed StepExecutionGraph]
-    R2 --> SG2[Fixed StepExecutionGraph]
-    SG1 --> BR[BranchResultRef]
-    SG2 --> BR
-    BR --> J[Join Evaluation]
-    J -->|continue| PD
-    J -->|retry branch| PD
-    J -->|replan| RB[Replan Barrier]
-    RB --> NP[New Immutable PlanVersion]
-    NP --> PD
-    J -->|finalize| FG[Final Gate]
-    FG --> RO[RunOutcome]
+  PRODUCT ==>|ProductCommand / RuntimeRequest| CORE[Agent Core]
+  CORE ==>|Knowledge / Model / Memory / Capability / Tool request| DOMAIN[Canonical Domain Owners]
+  DOMAIN -->|Domain result or Proposal| CORE
+  CORE -->|PublicationEvent| PRODUCT
+  DOMAIN -->|DomainEvent via Outbox| OBS[Observability and Eval]
+  DOMAIN ==>|Physical operation| INF[Infrastructure]
+  INF -->|Receipt / Watermark / Lease| DOMAIN
+  SEC[Security] -. gates .-> PRODUCT & CORE & DOMAIN
 ```
 
-质量控制层：
+#### Local — CrossModuleEnvelope Validation
 
 ```mermaid
 flowchart LR
-    A[Action Evaluation] --> B[Step Acceptance]
-    B -->|risk conflict repeated failure| C[Step Reflection]
-    B --> D[Join Evaluation]
-    C --> D
-    D -->|partial conflict| E[Join Reflection]
-    D --> F[Final Gate]
-    E --> F
-    F -->|complex / strict grounded| G[Final Reflection]
-    F --> H[RunOutcome]
-    G --> H
+  PROD[Producer] --> ENV[CrossModuleEnvelopeV1]
+  ENV --> CONTRACT[Contract / schema / enum version]
+  ENV --> SCOPE[Tenant / Workspace / Principal]
+  ENV --> EPOCH[Authorization / EffectiveSecurityEpoch]
+  ENV --> ORDER[Aggregate version / expected generation]
+  ENV --> TIME[Deadline / correlation / causation / trace]
+  ENV --> HASH[Payload and schema hash]
+  CONTRACT & SCOPE & EPOCH & ORDER & TIME & HASH --> VALID[Consumer validation]
+  VALID -->|valid| INBOX[Inbox / idempotent handler]
+  VALID -->|invalid| FAIL[Producer-owned Failure namespace]
 ```
 
----
-
-# 5. Evidence-Driven Agentic GraphRAG 总体视图
-
-```mermaid
-flowchart TD
-    A[KnowledgeQueryRequest] --> B[Evidence Goal Interpretation]
-    B --> C[Initial Evidence Collection Plan]
-    C --> D[Bounded Multi-route Retrieval]
-    D --> E[Normalize and Provenance Binding]
-    E --> F[Deterministic Eligibility Gate]
-    F --> G[Semantic Evidence Assessment]
-    G --> H[Evidence Reasoning Graph]
-    H --> I[Claim Hypothesis and Provisional Answer]
-    I --> J[Claim-level Sufficiency and Conflict Evaluation]
-
-    J -->|sufficient and stable| K[Selected Evidence Bundle]
-    J -->|critical gap is probeable| L[Evidence Probe Planning]
-    J -->|need user information| M[Ask User Proposal]
-    J -->|task assumption failed| N[Replan Required Proposal]
-    J -->|no suitable evidence| O[Insufficient Evidence Outcome]
-
-    L --> P[Targeted Retrieval Round]
-    P --> E
-    K --> Q[05 Memory and Context]
-    M --> R[06 Agent Core]
-    N --> R
-    O --> R
-```
-
----
-
-# 6. 首轮 Route 选择视图
+#### Local — Capability Selection to Tool Execution
 
 ```mermaid
 flowchart LR
-    G[Evidence Goal] --> D{Question and Gap Features}
-    D -->|exact term / clause / id| B[BM25]
-    D -->|semantic meaning| V[Vector]
-    D -->|entity relation / path| L[Graph Local]
-    D -->|global themes| GL[Graph Global / Community]
-    D -->|broad then recursive| DR[Graph DRIFT]
-    D -->|known source / authority / time| SS[Scoped Retrieval]
-    D -->|business facts| ST[Structured Lookup]
-
-    B --> F[Fusion / Rerank]
-    V --> F
-    L --> F
-    GL --> F
-    DR --> F
-    SS --> F
-    ST --> F
+  STEP[Step Requirement] --> SKILL[Skill discovery and progressive loading]
+  SKILL --> AVAIL[CapabilityAvailabilitySnapshot]
+  AVAIL --> SELECT[CapabilitySelectionResult]
+  SELECT --> FEAS[Agent Core StepFeasibilityDecision]
+  FEAS --> ACTION[ActionProposal with exact versions]
+  ACTION --> TOOL[Tool Runtime PreparedToolAction]
+  TOOL --> GATES[Security / Approval / Audit / Idempotency]
+  GATES --> ATTEMPT[ToolAttempt]
+  ATTEMPT --> EFFECT[EffectReceipt or EffectReconciliation]
 ```
 
-门禁：Capability、Authorized Scope、Profile、Budget、deadline、预计信息增益、多样性与重复度。
+### Data View (Views & Beyond)
 
-`DEEP` 不是所有 Route 全开；`STANDARD` 也不是无条件只走一条路径。
-
----
-
-# 7. Knowledge Graph 与 Evidence Reasoning Graph 双图
-
-```mermaid
-flowchart LR
-    subgraph KG[Knowledge Graph]
-      E[Entity]
-      R[Relation]
-      C[Community]
-      D[Document]
-      T[Text Unit]
-      E --> R
-      R --> E
-      E --> C
-      D --> T
-      R --> T
-    end
-
-    subgraph ERG[Evidence Reasoning Graph]
-      CL[Claim]
-      EV[Evidence]
-      SO[Source]
-      DV[DocumentVersion]
-      GP[GraphPath]
-      CS[CommunitySummary]
-      EV -->|SUPPORTS / CONTRADICTS / QUALIFIES| CL
-      EV -->|DERIVED_FROM| SO
-      SO --> DV
-      GP -->|DERIVED_FROM| EV
-      CS -->|SUMMARIZES| EV
-    end
-
-    KG -->|discovery candidates| ERG
-```
-
----
-
-# 8. 同源证据去重视图
-
-```mermaid
-flowchart LR
-    D[2026 Policy Document]
-    S[SourceSpan]
-    E1[Original Text Evidence]
-    E2[Graph Local Result]
-    E3[Community Summary]
-    C[Claim]
-
-    D --> S
-    S --> E1
-    E2 -->|DERIVED_FROM| E1
-    E3 -->|SUMMARIZES| E1
-    E1 -->|SUPPORTS| C
-    E2 -->|auxiliary| C
-    E3 -->|auxiliary| C
-```
-
-E1、E2、E3 只能计为一个 Source Family。派生证据可以帮助解释和发现，但不能重复提升独立支持度。
-
----
-
-# 9. Evidence 四层评价视图
-
-```mermaid
-flowchart TD
-    E[Evidence Candidate] --> L1[1 Deterministic Eligibility]
-    L1 -->|fail| X[EXCLUDED]
-    L1 -->|pass| L2[2 Semantic Assessment]
-    L2 --> L3[3 ClaimEvidenceState]
-    L3 --> L4[4 EvidenceSetVerdict]
-    L4 -->|sufficient| A[Accept]
-    L4 -->|gap| P[Targeted Probe]
-    L4 -->|conflict| C[Disclose / Resolve / Ask User]
-    L4 -->|no evidence| N[Partial / Abstain]
-```
-
-硬门不能被模型评分覆盖。模型只产生结构化 Proposal。
-
----
-
-# 10. Evidence Probe 视图
-
-```mermaid
-flowchart TD
-    U[Unresolved Claim Gap] --> P[Probe Candidate Set]
-    P --> Q[Query Rewrite / Multi-query]
-    P --> S[Source / Authority / Temporal Scoped]
-    P --> X[Parent / Adjacent / Citation Expansion]
-    P --> G[Graph Local / Path / Global / DRIFT]
-    P --> T[Structured Lookup]
-    Q --> R[Expected Information Gain and Cost]
-    S --> R
-    X --> R
-    G --> R
-    T --> R
-    R -->|admit| RR[Targeted Retrieval Round]
-    R -->|low gain / blocked| ST[Stop Proposal]
-```
-
----
-
-# 11. Retry、Probe、Replan 边界视图
-
-```mermaid
-flowchart LR
-    F[Failure or Gap] --> D{What changed?}
-    D -->|same action temporarily failed| R[Retry]
-    D -->|local args / schema repairable| RP[Repair]
-    D -->|same capability alternate route| FB[Fallback]
-    D -->|knowledge gap is probeable| P[Evidence Probe]
-    D -->|task assumptions / dependencies failed| RE[Replan]
-    RE --> B[Replan Barrier]
-    B --> N[New PlanVersion]
-```
-
----
-
-# 12. Tool 副作用安全视图
-
-```mermaid
-flowchart LR
-    A[ActionProposal] --> C[Canonical Args]
-    C --> S[Security Gate]
-    S --> AP[Approval when required]
-    AP --> I[Idempotency]
-    I --> E[Execute]
-    E -->|success| SU[Effect SUCCESS]
-    E -->|known failure| FA[Effect FAILURE]
-    E -->|timeout / unknown| UN[Effect UNKNOWN]
-    UN --> R[Reconciliation]
-    R -->|applied| SU
-    R -->|not applied| FA
-    R -->|needs undo| CP[Compensation Proposal]
-```
-
----
-
-# 13. PostgreSQL 与 LangGraph Checkpointer 边界
+#### Overall — Authoritative Facts and Rebuildable Projections
 
 ```mermaid
 flowchart TB
-    LG[LangGraph Checkpointer]
-    PG[PostgreSQL Domain Facts]
-    N[Graph Node]
-    R[Recovery]
-
-    N -->|control cursor / pending writes / interrupt refs| LG
-    N -->|AgentRun / PlanVersion / Evidence / Effect / Outcome| PG
-    LG --> R
-    PG --> R
-    R -->|domain facts win; resume first uncommitted deterministic node| N
+  PG[(PostgreSQL)] --> DOMAIN[Structured canonical domain facts]
+  OBJ[(Object Store)] --> LARGE[Large immutable payloads]
+  CHECK[(LangGraph Checkpointer)] --> CONTROL[Graph control state]
+  DOMAIN --> BM25[(BM25 projection)]
+  DOMAIN --> VECTOR[(Vector projection)]
+  DOMAIN --> GRAPH[(Graph projection)]
+  DOMAIN --> PRODUCT[Product read models]
+  DOMAIN --> OBS[Trace / Metric / Eval projections]
+  LARGE --> BM25 & VECTOR & GRAPH
+  CONTROL -. references .-> DOMAIN
 ```
 
----
-
-# 14. Document 到 Evidence 的版本链
+#### Local — Knowledge and Memory Version Publication
 
 ```mermaid
 flowchart LR
-    O[SourceObject] --> DV[DocumentVersion]
-    DV --> PS[ParseSnapshot]
-    PS --> IR[CanonicalDocumentIR]
-    IR --> SP[SourceSpan Manifest]
-    SP --> KV[KnowledgeVersion]
-    KV --> KS[KnowledgeSnapshot]
-    KS --> ER[EvidenceRecord]
-    ER --> CL[Claim Binding]
-    CL --> CI[Citation]
+  SPEC[Knowledge IndexSpec or Memory ProjectionSpec] --> BATCH[IndexWriteBatch]
+  BATCH --> WR[IndexWriteReceipt]
+  WR --> VR[WriteVisibilityReceipt]
+  VR --> VERIFY[IndexVerification]
+  VERIFY --> MAN[Domain IndexManifest]
+  MAN --> ACCEPT[Knowledge or Memory Acceptance]
+  ACCEPT --> CUT[CAS IndexCutover]
+  CUT --> WATER[ServingWatermark / active Snapshot]
 ```
 
-源内容、解析配置、索引配置分别版本化。Run 固定 Snapshot，不因 Cutover 静默变化。
-
----
-
-# 15. 可观测性与评测视图
+#### Local — ExecutionContextSnapshot and Version Pinning
 
 ```mermaid
 flowchart TB
-    EV[Typed Domain Events] --> TP[Trace Projection]
-    TP --> MET[Metrics]
-    TP --> ER[Eval Run]
-    DS[Fixed Eval Dataset] --> ER
-    CFG[Commit / Model / Prompt / Snapshot / Budget] --> ER
-    ER --> FB[Failure Buckets]
-    ER --> CMP[Experiment Comparison]
-    CMP --> RG[Release Gate]
-    RG -->|PASS| REL[Release Candidate]
-    RG -->|FAIL / BLOCKED / INCONCLUSIVE| STOP[Do not promote]
+  RUN[AgentRun] --> GOAL[GoalVersion]
+  RUN --> PLAN[PlanVersion]
+  RUN --> KS[KnowledgeSnapshot]
+  RUN --> MS[MemorySnapshot]
+  RUN --> MODEL[Model routing and prompt bundle]
+  RUN --> CAP[CapabilityAvailabilitySnapshot / exact versions]
+  RUN --> SEC[Security Policy / EffectiveSecurityEpoch]
+  RUN --> RUNTIME[GraphBundle / RuntimePolicy / AnswerPolicy]
+  GOAL & PLAN & KS & MS & MODEL & CAP & SEC & RUNTIME --> HASH[ExecutionContextSnapshot hash]
 ```
 
----
+### Quality View (Views & Beyond)
 
-# 16. Architecture v1 到 v2 的关系
+#### Overall — Telemetry Audit Eval and Evidence Pipeline
 
 ```mermaid
 flowchart LR
-    C[Current implementation evidence]
-    V1[Target v1 baseline used by existing Program]
-    P[PHASE01 to PHASE22]
-    V2[Architecture v2 Target]
-    NP[Future Program after PHASE22]
-    IM[Code Migration Test Trace Eval]
-    NC[New Current]
-
-    V1 --> P
-    C --> P
-    P -->|closure evidence| C
-    C --> NP
-    V2 --> NP
-    NP --> IM
-    IM --> NC
+  OWNER[Domain transaction] --> OUTBOX[Transactional Outbox]
+  OUTBOX --> ENV[TelemetryEnvelopeV1]
+  ENV --> GUARD[Schema / Scope / Epoch / Redaction / Hash]
+  GUARD --> INGEST[Append-only Ingest]
+  INGEST --> TRACE[Trace Metric Log Projections]
+  INGEST --> AUDIT[Accepted immutable AuditEvent]
+  INGEST --> EVID[Evidence Registry]
+  TRACE & EVID --> EVAL[EvalRun / MetricAttempt / Judge]
+  EVAL --> BENCH[BenchmarkComparison]
+  BENCH --> GATE[ReleaseGateEvaluation]
 ```
 
-本次只更新 V2，不修改既有 Program / Phase。
+#### Local — Measurement and Release Gate States
+
+```mermaid
+stateDiagram-v2
+  [*] --> PREPARED
+  PREPARED --> RUNTIME_OBSERVED
+  RUNTIME_OBSERVED --> MEASURED
+  PREPARED --> BLOCKED
+  PREPARED --> UNAVAILABLE
+  RUNTIME_OBSERVED --> BLOCKED
+  RUNTIME_OBSERVED --> UNAVAILABLE
+  BLOCKED --> MEASURED
+  UNAVAILABLE --> MEASURED
+  MEASURED --> QUALITY_PROVEN
+  state ReleaseGate {
+    [*] --> PASSED
+    [*] --> FAILED
+    [*] --> BLOCKED_GATE
+    [*] --> INCOMPARABLE
+    [*] --> ERROR
+  }
+```
+
+#### Local — Requirement Test Evidence and Release Gate
+
+```mermaid
+flowchart LR
+  REQ[ARCH Requirement] --> CONTROL[Runtime or repository Control]
+  CONTROL --> UNIT[Unit / Contract]
+  CONTROL --> INT[Integration]
+  CONTROL --> FAULT[Fault Injection]
+  CONTROL --> E2E[E2E]
+  CONTROL --> EVAL[Eval]
+  UNIT & INT & FAULT & E2E & EVAL --> EVID[EvidenceRecord]
+  EVID --> GATE[ReleaseGateEvaluation]
+  GATE -->|hard constraints pass| ELIGIBLE[Eligible]
+  GATE -->|failed blocked unavailable incomparable error| NOCLAIM[No release or quality claim]
+```
+
+## 三、Zuno Product Core
+
+### Agentic GraphRAG Evidence and Agent Loop (Zuno)
+
+#### Overall — Outer Agent Control and Inner Knowledge Retrieval
+
+```mermaid
+flowchart TB
+  TASK[TaskContract / GoalVersion] --> NEED[Agent Core RetrievalNeedDecision]
+  NEED --> REQ[EvidenceRequirement / KnowledgeQueryRequest]
+  REQ --> KG[Fixed KnowledgeRetrievalGraph]
+  KG --> PLAN[RetrievalPlan / RetrievalRound]
+  PLAN --> RET[Parallel RetrieverBatch]
+  RET --> LEDGER[EvidenceLedger / EvidenceFrontier]
+  LEDGER --> VERDICT[RetrievalQualityVerdict]
+  VERDICT -->|inner correction| CORR[CorrectiveRetrievalDecision + new RetrievalRound]
+  CORR --> PLAN
+  VERDICT -->|sufficient or partial| OUT[SelectedEvidenceBundle / KnowledgeRetrievalOutcome]
+  VERDICT -->|task-level proposal| PROP[KnowledgeControlProposal]
+  OUT --> ACCEPT[Agent Core Step Acceptance]
+  PROP --> DECIDE[Agent Core ControlDecision]
+  DECIDE -->|replan| BARRIER[Replan Barrier + new PlanVersion]
+  ACCEPT --> FINAL[Final Gate / Publication]
+```
+
+#### Local — Evidence Lineage and Context Assembly
+
+```mermaid
+flowchart LR
+  DOC[DocumentVersion] --> SPAN[SourceSpan]
+  SPAN --> CHUNK[CitationChunk]
+  CHUNK --> GRAPH[Entity / Relation / Community Evidence Backlink]
+  GRAPH --> ATTEMPT[RetrieverAttempt]
+  ATTEMPT --> ROUND[RetrievalRound]
+  ROUND --> LEDGER[EvidenceLedger / EvidenceFrontier]
+  LEDGER --> BUNDLE[SelectedEvidenceBundle]
+  BUNDLE --> CONTEXT[ContextPackVersion]
+  CONTEXT --> CLAIM[ClaimEvidenceBinding]
+  CLAIM --> CITATION[Citation / Publication]
+```
+
+#### Local — Corrective Retrieval versus Agent Replan
+
+```mermaid
+flowchart TB
+  GAP[Evidence gap or conflict] --> CLASS{Failure classification}
+  CLASS -->|query / path / citation / conflict| KCORR[Knowledge CorrectiveRetrievalDecision]
+  KCORR --> NEWROUND[Append-only next RetrievalRound]
+  NEWROUND --> KVERDICT[Updated RetrievalQualityVerdict]
+  CLASS -->|task goal / dependency / capability assumption invalid| KPROP[KnowledgeControlProposal]
+  KPROP --> ADECIDE[Agent Core validates and decides]
+  ADECIDE -->|replan accepted| BARRIER[Replan Barrier]
+  BARRIER --> NEWPLAN[New immutable PlanVersion]
+  ADECIDE -->|ask user / external tool / abstain| OTHER[Interrupt or terminal ControlDecision]
+  CLASS -->|no safe evidence path| ABSTAIN[ABSTAIN_PROPOSAL]
+```
